@@ -519,6 +519,7 @@ public final class ItemStack {
         return this.getItem().f(this);
     }
 
+    // i: is always zero?
     public void a(World world, EntityLiving entityliving, int i) {
         this.getItem().a(this, world, entityliving, i);
     }

@@ -47,7 +47,7 @@ public class ItemBow extends Item {
                     itemstack1 = new ItemStack(Items.ARROW);
                 }
 
-                int j = this.e(itemstack) - i;
+                int j = this.e(itemstack) - i;  // 72000 - i. i = 0?
                 float f = b(j);
 
                 if ((double) f >= 0.1D) {

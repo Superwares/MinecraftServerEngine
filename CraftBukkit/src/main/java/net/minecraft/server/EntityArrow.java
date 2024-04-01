@@ -24,18 +24,32 @@ public abstract class EntityArrow extends Entity implements IProjectile {
         }
     }});
     private static final DataWatcherObject<Byte> g = DataWatcher.a(EntityArrow.class, DataWatcherRegistry.a);
+
+    // block position when the arrow in ground.
+    // if the values is -1, it is not in ground.
+    // xTile
     public int h; // PAIL: private->public
+    // yTile
     public int at; // PAIL: private->public
+    // zTile
     public int au; // PAIL: private->public
+
     private Block av;
     private int aw;
     public boolean inGround;
+
+    // the time when in ground
     protected int b;
     public EntityArrow.PickupStatus fromPlayer;
     public int shake;
     public Entity shooter;
+
+    // life when in ground
     private int ax;
+
+    // life when not in ground
     private int ay;
+
     private double damage;
     public int knockbackStrength;
 
@@ -68,10 +82,11 @@ public abstract class EntityArrow extends Entity implements IProjectile {
         this.datawatcher.register(EntityArrow.g, Byte.valueOf((byte) 0));
     }
 
+    // f: pitch, f1: yaw, f2: not used, f3: ?, f4: is always 1.0f
     public void a(Entity entity, float f, float f1, float f2, float f3, float f4) {
-        float f5 = -MathHelper.sin(f1 * 0.017453292F) * MathHelper.cos(f * 0.017453292F);
-        float f6 = -MathHelper.sin(f * 0.017453292F);
-        float f7 = MathHelper.cos(f1 * 0.017453292F) * MathHelper.cos(f * 0.017453292F);
+        float f5 = -MathHelper.sin(f1 * 0.017453292F) * MathHelper.cos(f * 0.017453292F);  // x?
+        float f6 = -MathHelper.sin(f * 0.017453292F);  // y ?
+        float f7 = MathHelper.cos(f1 * 0.017453292F) * MathHelper.cos(f * 0.017453292F);  // z?
 
         this.shoot((double) f5, (double) f6, (double) f7, f3, f4);
         this.motX += entity.motX;
@@ -82,9 +97,13 @@ public abstract class EntityArrow extends Entity implements IProjectile {
 
     }
 
+    // d0: x, d1: y, d2: z,
     public void shoot(double d0, double d1, double d2, float f, float f1) {
-        float f2 = MathHelper.sqrt(d0 * d0 + d1 * d1 + d2 * d2);
+        /*System.out.println("Call shoot!");*/
 
+        float f2 = MathHelper.sqrt(d0 * d0 + d1 * d1 + d2 * d2);  // get length of vector (d0, d1, d2)
+
+        // get unit vector of the vector (d0, d1, d2)
         d0 /= (double) f2;
         d1 /= (double) f2;
         d2 /= (double) f2;
@@ -97,6 +116,8 @@ public abstract class EntityArrow extends Entity implements IProjectile {
         this.motX = d0;
         this.motY = d1;
         this.motZ = d2;
+        /*System.out.println("this.motX:" + this.motX + ", this.motY" + this.motY + ", this.motZ" + this.motZ);*/
+
         float f3 = MathHelper.sqrt(d0 * d0 + d2 * d2);
 
         this.yaw = (float) (MathHelper.c(d0, d2) * 57.2957763671875D);
@@ -107,6 +128,7 @@ public abstract class EntityArrow extends Entity implements IProjectile {
     }
 
     public void B_() {
+
         super.B_();
         if (this.lastPitch == 0.0F && this.lastYaw == 0.0F) {
             float f = MathHelper.sqrt(this.motX * this.motX + this.motZ * this.motZ);
@@ -122,7 +144,7 @@ public abstract class EntityArrow extends Entity implements IProjectile {
         Block block = iblockdata.getBlock();
 
         if (iblockdata.getMaterial() != Material.AIR) {
-            AxisAlignedBB axisalignedbb = iblockdata.d(this.world, blockposition);
+            AxisAlignedBB axisalignedbb = iblockdata.d(this.world, blockposition);  // Get Bounding Box of block
 
             if (axisalignedbb != Block.k && axisalignedbb.a(blockposition).b(new Vec3D(this.locX, this.locY, this.locZ))) {
                 this.inGround = true;
@@ -136,6 +158,7 @@ public abstract class EntityArrow extends Entity implements IProjectile {
         if (this.inGround) {
             int i = block.toLegacyData(iblockdata);
 
+            // if the below block is removed?
             if ((block != this.av || i != this.aw) && !this.world.a(this.getBoundingBox().g(0.05D))) {
                 this.inGround = false;
                 this.motX *= (double) (this.random.nextFloat() * 0.2F);
@@ -191,6 +214,8 @@ public abstract class EntityArrow extends Entity implements IProjectile {
             this.locX += this.motX;
             this.locY += this.motY;
             this.locZ += this.motZ;
+            /*System.out.println("2: this.motX:" + this.motX + ", this.motY" + this.motY + ", this.motZ" + this.motZ);*/
+
             float f1 = MathHelper.sqrt(this.motX * this.motX + this.motZ * this.motZ);
 
             this.yaw = (float) (MathHelper.c(this.motX, this.motZ) * 57.2957763671875D);
@@ -318,6 +343,7 @@ public abstract class EntityArrow extends Entity implements IProjectile {
                 }
             }
         } else {
+            System.out.println("1");
             BlockPosition blockposition = movingobjectposition.a();
 
             this.h = blockposition.getX();
@@ -349,15 +375,17 @@ public abstract class EntityArrow extends Entity implements IProjectile {
     public void move(EnumMoveType enummovetype, double d0, double d1, double d2) {
         super.move(enummovetype, d0, d1, d2);
         if (this.inGround) {
-            this.h = MathHelper.floor(this.locX);
-            this.at = MathHelper.floor(this.locY);
-            this.au = MathHelper.floor(this.locZ);
+
+            this.h = MathHelper.floor(this.locX);  // get xTile
+            this.at = MathHelper.floor(this.locY);  // get yTile
+            this.au = MathHelper.floor(this.locZ);  // get zTile
         }
 
     }
 
     protected void a(EntityLiving entityliving) {}
 
+    //
     @Nullable
     protected Entity a(Vec3D vec3d, Vec3D vec3d1) {
         Entity entity = null;

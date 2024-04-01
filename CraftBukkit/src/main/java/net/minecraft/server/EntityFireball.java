@@ -7,9 +7,12 @@ public abstract class EntityFireball extends Entity {
     public EntityLiving shooter;
     private int e;
     private int f;
+
+    // power vector
     public double dirX;
     public double dirY;
     public double dirZ;
+
     public float bukkitYield = 1; // CraftBukkit
     public boolean isIncendiary = true; // CraftBukkit
 
@@ -20,12 +23,14 @@ public abstract class EntityFireball extends Entity {
 
     protected void i() {}
 
+    // d0, d1, d2: entity position
+    // d3, d4, d5: power?
     public EntityFireball(World world, double d0, double d1, double d2, double d3, double d4, double d5) {
         super(world);
         this.setSize(1.0F, 1.0F);
         this.setPositionRotation(d0, d1, d2, this.yaw, this.pitch);
         this.setPosition(d0, d1, d2);
-        double d6 = (double) MathHelper.sqrt(d3 * d3 + d4 * d4 + d5 * d5);
+        double d6 = (double) MathHelper.sqrt(d3 * d3 + d4 * d4 + d5 * d5);  // get length of power vector
 
         this.dirX = d3 / d6 * 0.1D;
         this.dirY = d4 / d6 * 0.1D;
@@ -84,7 +89,7 @@ public abstract class EntityFireball extends Entity {
             this.locY += this.motY;
             this.locZ += this.motZ;
             ProjectileHelper.a(this, 0.2F);
-            float f = this.l();
+            float f = this.l();  // return 0.95F;
 
             if (this.isInWater()) {
                 for (int i = 0; i < 4; ++i) {
@@ -165,19 +170,22 @@ public abstract class EntityFireball extends Entity {
         if (this.isInvulnerable(damagesource)) {
             return false;
         } else {
-            this.ax();
+            this.ax();  // this.velocityChanged = true;
             if (damagesource.getEntity() != null) {
                 // CraftBukkit start
                 if (CraftEventFactory.handleNonLivingEntityDamageEvent(this, damagesource, f)) {
                     return false;
                 }
                 // CraftBukkit end
+                // Get opposite direction of entity's pitch and yaw.
+                // What is the magnitude of that vector?
                 Vec3D vec3d = damagesource.getEntity().aJ();
 
                 if (vec3d != null) {
                     this.motX = vec3d.x;
                     this.motY = vec3d.y;
                     this.motZ = vec3d.z;
+                    // Scaling the vector down to 1/10
                     this.dirX = this.motX * 0.1D;
                     this.dirY = this.motY * 0.1D;
                     this.dirZ = this.motZ * 0.1D;

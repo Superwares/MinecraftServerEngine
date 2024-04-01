@@ -784,6 +784,8 @@ public abstract class World implements IBlockAccess {
         return this.rayTrace(vec3d, vec3d1, flag, false, false);
     }
 
+    // vec3d: start position vector, vec3d1: end position vector
+    // Get MovingObjectPosition on the ray from vec3d to vec3d1.
     @Nullable
     public MovingObjectPosition rayTrace(Vec3D vec3d, Vec3D vec3d1, boolean flag, boolean flag1, boolean flag2) {
         if (!Double.isNaN(vec3d.x) && !Double.isNaN(vec3d.y) && !Double.isNaN(vec3d.z)) {

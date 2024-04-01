@@ -70,15 +70,22 @@ public abstract class Entity implements ICommandListener {
     private Entity au;
     public boolean attachedToPlayer;
     public World world;
+
+    // previous position vector
     public double lastX;
     public double lastY;
     public double lastZ;
-    public double locX;
-    public double locY;
-    public double locZ;
+
+    // current position vector
+    public double locX;  // the center of the entity
+    public double locY;  // the end of the entity's foot
+    public double locZ;  // the center of the entity
+
+    // motion vector, like velocity
     public double motX;
     public double motY;
     public double motZ;
+
     public float yaw;
     public float pitch;
     public float lastYaw;
@@ -144,6 +151,7 @@ public abstract class Entity implements ICommandListener {
     private long aK;
     // CraftBukkit start
     public boolean valid;
+    // craft entity (shooter) to ProjectileSource
     public org.bukkit.projectiles.ProjectileSource projectileSource; // For projectiles only
     public boolean forceExplosionKnockback; // SPIGOT-949
 
@@ -295,7 +303,14 @@ public abstract class Entity implements ICommandListener {
         float f = this.width / 2.0F;
         float f1 = this.length;
 
-        this.a(new AxisAlignedBB(d0 - (double) f, d1, d2 - (double) f, d0 + (double) f, d1 + (double) f1, d2 + (double) f));
+        this.a(new AxisAlignedBB(
+                d0 - (double) f,  // min X
+                d1,  // minx Y
+                d2 - (double) f,  // min Z
+                d0 + (double) f,  // max X
+                d1 + (double) f1,  // max Y
+                d2 + (double) f  // max Z
+        ));
         if (valid) world.entityJoinedWorld(this, false); // CraftBukkit
     }
 
@@ -1369,6 +1384,7 @@ public abstract class Entity implements ICommandListener {
         }
     }
 
+    // Get opposite vector of a given pitch f, yaw f1
     protected final Vec3D f(float f, float f1) {
         float f2 = MathHelper.cos(-f1 * 0.017453292F - 3.1415927F);
         float f3 = MathHelper.sin(-f1 * 0.017453292F - 3.1415927F);
@@ -1931,6 +1947,7 @@ public abstract class Entity implements ICommandListener {
         return 0.0F;
     }
 
+    // Get opposite direction
     public Vec3D aJ() {
         return this.f(this.pitch, this.yaw);
     }
@@ -2548,6 +2565,9 @@ public abstract class Entity implements ICommandListener {
         return this.boundingBox;
     }
 
+    // Adjust given the bounding box's width, height, and depth size to have a size of 64
+    // if the length is greater than 64,
+    // and set it to the current member variable this.boundingBox.
     public void a(AxisAlignedBB axisalignedbb) {
         // CraftBukkit start - block invalid bounding boxes
         double a = axisalignedbb.a,
@@ -2557,15 +2577,15 @@ public abstract class Entity implements ICommandListener {
                 e = axisalignedbb.e,
                 f = axisalignedbb.f;
         double len = axisalignedbb.d - axisalignedbb.a;
-        if (len < 0) d = a;
+        if (len < 0) d = a;  // never reach
         if (len > 64) d = a + 64.0;
 
         len = axisalignedbb.e - axisalignedbb.b;
-        if (len < 0) e = b;
+        if (len < 0) e = b;  // never reach
         if (len > 64) e = b + 64.0;
 
         len = axisalignedbb.f - axisalignedbb.c;
-        if (len < 0) f = c;
+        if (len < 0) f = c;  // never reach
         if (len > 64) f = c + 64.0;
         this.boundingBox = new AxisAlignedBB(a, b, c, d, e, f);
         // CraftBukkit end
