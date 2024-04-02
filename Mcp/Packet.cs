@@ -391,3 +391,41 @@ public class SetCompressionPacket : ClientboundLoginPacket
     }
 
 }
+
+public class StartLoginPacket : ServerboundLoginPacket
+{
+    public readonly string Username;
+
+    public static StartLoginPacket Read(Buffer buffer)
+    {
+        return new(buffer.ReadString());
+    }
+
+    public StartLoginPacket(string username) : base(Ids.StartLoginPacketId)
+    {
+        Username = username;
+    }
+
+    public override void Write(Buffer buffer)
+    {
+        buffer.WriteString(Username);
+    }
+}
+
+public class EncryptionResponsePacket : ServerboundLoginPacket
+{
+    public static EncryptionResponsePacket Read(Buffer buffer)
+    { 
+        throw new NotImplementedException(); 
+    }
+
+    public EncryptionResponsePacket() : base(Ids.EncryptionResponsePacketId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Write(Buffer buffer)
+    { 
+        throw new NotImplementedException(); 
+    }
+}
