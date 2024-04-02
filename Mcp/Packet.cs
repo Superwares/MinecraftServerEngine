@@ -27,21 +27,25 @@ public abstract class Packet
     public Packet() { }
 
     public abstract void Write(Buffer buffer);
+
 }
 
 public abstract class HandshakingPacket : Packet
 {
     public override States State { get { return States.Handshaking; } }
+
 }
 
 public abstract class StatusPacket : Packet
 {
     public override States State { get { return States.Status; } }
+
 }
 
 public abstract class LoginPacket : Packet
 {
     public override States State { get { return States.Login; } }
+
 }
 
 public abstract class ServerboundHandshakingPacket : HandshakingPacket
@@ -59,6 +63,7 @@ public abstract class ServerboundHandshakingPacket : HandshakingPacket
     {
         _Id = id;
     }
+
 }
 public abstract class ClientboundStatusPacket : StatusPacket
 {
@@ -76,6 +81,7 @@ public abstract class ClientboundStatusPacket : StatusPacket
     {
         _Id = id;
     }
+
 }
 
 public abstract class ServerboundStatusPacket : StatusPacket
@@ -94,6 +100,7 @@ public abstract class ServerboundStatusPacket : StatusPacket
     {
         _Id = id;
     }
+
 }
 
 public abstract class ClientboundLoginPacket : LoginPacket
@@ -114,6 +121,7 @@ public abstract class ClientboundLoginPacket : LoginPacket
     {
         _Id = id;
     }
+
 }
 
 public abstract class ServerboundLoginPacket : LoginPacket
@@ -132,14 +140,15 @@ public abstract class ServerboundLoginPacket : LoginPacket
     {
         _Id = id;
     }
+
 }
 
 public class SetProtocolPacket : ServerboundHandshakingPacket
 {
-    private readonly int _Version;
-    private readonly string _Hostname;
-    private readonly ushort _Port;
-    private readonly States _NextState;
+    public readonly int Version;
+    public readonly string Hostname;
+    public readonly ushort Port;
+    public readonly States NextState;
 
     public static SetProtocolPacket Read(Buffer buffer)
     {
@@ -158,13 +167,13 @@ public class SetProtocolPacket : ServerboundHandshakingPacket
         Debug.Assert(version == _ProtocolVersion);
         Debug.Assert(port > 0);
         Debug.Assert(
-            _NextState == States.Status ||
-            _NextState == States.Login);
+            NextState == States.Status ||
+            NextState == States.Login);
 
-        _Version = version;
-        _Hostname = hostname;
-        _Port = port;
-        _NextState = nextState;
+        Version = version;
+        Hostname = hostname;
+        Port = port;
+        NextState = nextState;
     }
 
     public SetProtocolPacket(string hostname, ushort port, States nextState)
@@ -175,22 +184,23 @@ public class SetProtocolPacket : ServerboundHandshakingPacket
     {
         Debug.Assert(_Id == Ids.HandshakePacketId);
         Debug.Assert(
-            _NextState == States.Status ||
-            _NextState == States.Login);
-        int a = _NextState == States.Status ? 1 : 2;
-        buffer.WriteInt(_Version, true);
-        buffer.WriteString(_Hostname);
-        buffer.WriteUshort(_Port);
+            NextState == States.Status ||
+            NextState == States.Login);
+        int a = NextState == States.Status ? 1 : 2;
+        buffer.WriteInt(Version, true);
+        buffer.WriteString(Hostname);
+        buffer.WriteUshort(Port);
         buffer.WriteInt(a, true);
     }
+
 }
 
 public class ResponsePacket : ClientboundStatusPacket
 {
 
-    private readonly int _maxPlayers;
-    private readonly int _onlinePlayers;
-    private readonly string _description;
+    public readonly int MaxPlayers;
+    public readonly int OnlinePlayers;
+    public readonly string Description;
 
     public static ResponsePacket Read(Buffer buffer)
     {
@@ -205,9 +215,9 @@ public class ResponsePacket : ClientboundStatusPacket
     {
         Debug.Assert(maxPlayers >= onlinePlayers);
 
-        _maxPlayers = maxPlayers;
-        _onlinePlayers = onlinePlayers;
-        _description = description;
+        MaxPlayers = maxPlayers;
+        OnlinePlayers = onlinePlayers;
+        Description = description;
     }
 
     public override void Write(Buffer buffer)
@@ -229,7 +239,7 @@ public class ResponsePacket : ClientboundStatusPacket
                 "\"favicon\":\"data:image/png;base64,<data>\"," +
                 "\"enforcesSecureChat\":true," +
                 "\"previewsChat\":true" +
-            "}", _MinecraftVersion, _ProtocolVersion, _maxPlayers, _onlinePlayers, _description);
+            "}", _MinecraftVersion, _ProtocolVersion, MaxPlayers, OnlinePlayers, Description);
         
         buffer.WriteString(jsonString);
     }
@@ -238,7 +248,7 @@ public class ResponsePacket : ClientboundStatusPacket
 
 public class PongPacket : ClientboundStatusPacket
 {
-    private readonly long _Payload;
+    public readonly long Payload;
 
     public static PongPacket Read(Buffer buffer)
     {
@@ -247,13 +257,14 @@ public class PongPacket : ClientboundStatusPacket
 
     public PongPacket(long payload) : base(Ids.PongPacketId)
     {
-        _Payload = payload;
+        Payload = payload;
     }
 
     public override void Write(Buffer buffer)
     {
-        buffer.WriteLong(_Payload);
+        buffer.WriteLong(Payload);
     }
+
 }
 
 public class RequestPacket : ServerboundStatusPacket
@@ -266,11 +277,12 @@ public class RequestPacket : ServerboundStatusPacket
     public RequestPacket() : base(Ids.RequestPacketId) { }
 
     public override void Write(Buffer buffer) { }
+
 }
 
 public class PingPacket : ServerboundStatusPacket
 {
-    private readonly long _Payload;
+    public readonly long Payload;
 
     public static PingPacket Read(Buffer buffer)
     {
@@ -279,14 +291,103 @@ public class PingPacket : ServerboundStatusPacket
 
     private PingPacket(long payload) : base(Ids.PingPacketId)
     {
-        _Payload = payload;
+        Payload = payload;
     }
 
     public PingPacket() : this(DateTime.Now.Ticks) { }
 
     public override void Write(Buffer buffer)
     {
-        buffer.WriteLong(_Payload);
+        buffer.WriteLong(Payload);
     }
+
 }
 
+public class DisconnectPacket : ClientboundLoginPacket
+{
+    public readonly string Reason;
+
+    public static DisconnectPacket Read(Buffer buffer)
+    {
+        return new(buffer.ReadString());
+    }
+
+    public DisconnectPacket(string reason) : base(Ids.DisconnectPacketId)
+    {
+        Reason = reason;
+    }
+    
+    public override void Write(Buffer buffer)
+    {
+        buffer.WriteString(Reason);
+    }
+
+}
+
+public class EncryptionRequestPacket : ClientboundLoginPacket
+{
+    public static EncryptionRequestPacket Read(Buffer buffer)
+    {
+        throw new NotImplementedException();
+    }
+
+    private EncryptionRequestPacket() : base(Ids.EncryptionRequestPacketId)
+    {
+        throw new NotImplementedException();
+    }
+    
+    public override void Write(Buffer buffer)
+    { 
+        throw new NotImplementedException(); 
+    }
+
+}
+
+public class LoginSuccessPacket : ClientboundLoginPacket
+{
+    public readonly Guid UserId;
+    public readonly string Username;
+
+    public static LoginSuccessPacket Read(Buffer buffer)
+    {
+        return new(
+            Guid.Parse(buffer.ReadString()), 
+            buffer.ReadString());
+    }
+
+    public LoginSuccessPacket(Guid userId, string username) 
+        : base(Ids.LoginSuccessPacketId)
+    {
+        UserId = userId;
+        Username = username;
+    }
+    
+    public override void Write(Buffer buffer)
+    {
+        buffer.WriteString(UserId.ToString());
+        buffer.WriteString(Username);
+    }
+
+}
+
+public class SetCompressionPacket : ClientboundLoginPacket
+{
+    public readonly int Threshold;
+
+    public static SetCompressionPacket Read(Buffer buffer)
+    {
+        return new(buffer.ReadInt(true));
+    }
+
+    public SetCompressionPacket(int threshold) 
+        : base(Ids.SetCompressionPacketId)
+    {
+        Threshold = threshold;
+    }
+    
+    public override void Write(Buffer buffer)
+    {
+        buffer.WriteInt(Threshold, true);
+    }
+
+}
