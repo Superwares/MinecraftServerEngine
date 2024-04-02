@@ -4,13 +4,13 @@ using System;
 using System.Diagnostics;
 using System.Text;
 
-// TODO: Data exceeded the expected size.
+// TODO
 public class E1 : Exception
 {
     public E1() : base("No data to read.") { }
 }
 
-// TODO: Data exceeded the expected size.
+// TODO
 public class E2 : Exception
 {
     public E2() : base("Unexpected Data.") { }
