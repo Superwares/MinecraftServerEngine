@@ -1,23 +1,77 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
+using Containers;
 
 namespace Application
 {
 
-    // TODO
-    public class E1 : Exception
+
+    public abstract class McpException : Exception
     {
-        public E1() : base("No data to read.") { }
+        public McpException(string message) : base(message) { }
     }
 
     // TODO
-    public class E2 : Exception
+    public class EndofFileException : McpException
     {
-        public E2() : base("Unexpected Data.") { }
+        public EndofFileException() : base("EOF reached unexpectedly.") { }
+    }
+
+    // TODO
+    public class UnexpectedDataException : McpException
+    {
+        public UnexpectedDataException() : base("Received unexpected data from the network.") { }
+    }
+
+    internal static class SocketMethods
+    {
+        public static byte RecvByte(Socket socket)
+        {
+            byte[] buffer = new byte[1];
+
+            int n = socket.Receive(buffer);
+            if (n == 0)
+                throw new EndofFileException();
+
+            Debug.Assert(n == 1);
+
+            return buffer[0];
+        }
+
+        public static int RecvBytes(
+            Socket socket, byte[] buffer, int offset, int size)
+        {
+            int n = socket.Receive(buffer, offset, size, SocketFlags.None);
+            if (n == 0)
+                throw new EndofFileException();
+
+            Debug.Assert(n <= size);
+
+            return n;
+        }
+
+        public static void SendByte(Socket socket, byte v)
+        {
+            int n = socket.Send([v]);
+            Debug.Assert(n == 1);
+        }
+
+        public static void SendBytes(Socket socket, byte[] data)
+        {
+            Debug.Assert(data != null);
+            int n = socket.Send(data);
+            Debug.Assert(n == data.Length);
+        }
+
+        public static void Close(Socket socket)
+        {
+            socket.Close();
+        }
     }
 
     // TODO: Check system is little- or big-endian.
@@ -29,9 +83,9 @@ namespace Application
         private static readonly byte _SEGMENT_BITS = 0x7F;
         private static readonly byte _CONTINUE_BIT = 0x80;
 
-        private static readonly int _BOOL_DATATYPE_SIZE = 1;
+        /*private static readonly int _BOOL_DATATYPE_SIZE = 1;
         private static readonly int _SBYTE_DATATYPE_SIZE = 1;
-        private static readonly int _BYTE_DATATYPE_SIZE = 1;
+        private static readonly int _BYTE_DATATYPE_SIZE = 1;*/
         private static readonly int _SHORT_DATATYPE_SIZE = 2;
         private static readonly int _USHORT_DATATYPE_SIZE = 2;
         private static readonly int _INT_DATATYPE_SIZE = 4;
@@ -62,13 +116,6 @@ namespace Application
             _data = new byte[_INITIAL_DATA_SIZE];
         }
 
-        internal Buffer(byte[] data)
-        {
-            _size = data.Length;
-            _data = new byte[_size];
-            Array.Copy(data, _data, _size);
-        }
-
         public bool IsEmpty()
         {
             Debug.Assert(Size >= 0);
@@ -79,7 +126,7 @@ namespace Application
         {
             Debug.Assert(_last >= _first);
             if (_first == _last)
-                throw new E1();
+                throw new EndofFileException();
 
             return _data[_first++];
         }
@@ -99,7 +146,7 @@ namespace Application
             Debug.Assert(_last >= _first);
 
             if (_first + size > _last)
-                throw new E1();
+                throw new EndofFileException();
 
             byte[] data = new byte[size];
             Array.Copy(_data, _first, data, 0, size);
@@ -253,7 +300,7 @@ namespace Application
                 position += 7;
 
                 if (position >= 32)
-                    throw new E2();
+                    throw new UnexpectedDataException();
 
                 Debug.Assert(position > 0);
             }
@@ -280,7 +327,7 @@ namespace Application
                 position += 7;
 
                 if (position >= 64)
-                    throw new E2();
+                    throw new UnexpectedDataException();
 
                 Debug.Assert(position > 0);
             }
@@ -380,6 +427,7 @@ namespace Application
             }
 
             uint uvalue = (uint)value;
+
             while (true)
             {
                 if ((uvalue & ~_SEGMENT_BITS) == 0)
@@ -391,6 +439,7 @@ namespace Application
                 InsertByte((byte)((uvalue & _SEGMENT_BITS) | _CONTINUE_BIT));
                 uvalue >>= 7;
             }
+
         }
 
         public void WriteLong(long value, bool encode)
@@ -428,6 +477,16 @@ namespace Application
         {
             byte[] data = value.ToByteArray();
             Debug.Assert(data.Length == _GUID_DATATYPE_SIZE);
+            InsertBytes(data);
+        }
+
+        internal byte[] ReadData()
+        {
+            return ExtractBytes(Size);
+        }
+
+        internal void WriteData(byte[] data)
+        {
             InsertBytes(data);
         }
 
@@ -637,8 +696,8 @@ namespace Application
             Debug.Assert(version == _ProtocolVersion);
             Debug.Assert(port > 0);
             Debug.Assert(
-                NextState == States.Status ||
-                NextState == States.Login);
+                nextState == States.Status ||
+                nextState == States.Login);
 
             Version = version;
             Hostname = hostname;
@@ -692,24 +751,7 @@ namespace Application
 
         public override void Write(Buffer buffer)
         {
-            string jsonString =
-                String.Format("{" +
-                    "\"version\":" +
-                        "{" +
-                            "\"name\":\"{0}\"," +
-                            "\"protocol\":{1}" +
-                        "}," +
-                    "\"players\":" +
-                        "{" +
-                            "\"max\":{2}," +
-                            "\"online\":{3}," +
-                            "\"sample\":[]" +
-                        "}," +
-                    "\"description\":{\"text\":\"{4}\"}," +
-                    "\"favicon\":\"data:image/png;base64,<data>\"," +
-                    "\"enforcesSecureChat\":true," +
-                    "\"previewsChat\":true" +
-                "}", _MinecraftVersion, _ProtocolVersion, MaxPlayers, OnlinePlayers, Description);
+            string jsonString = "{\"version\":{\"name\":\"1.12.2\",\"protocol\":340},\"players\":{\"max\":100,\"online\":0,\"sample\":[]},\"description\":{\"text\":\"Hello, World!\"},\"favicon\":\"data:image/png;base64,<data>\",\"enforcesSecureChat\":true,\"previewsChat\":true}";
 
             buffer.WriteString(jsonString);
         }
@@ -900,54 +942,45 @@ namespace Application
         }
     }
 
-    internal class Client
+    public class Connection
     {
         private static readonly byte _SEGMENT_BITS = 0x7F;
         private static readonly byte _CONTINUE_BIT = 0x80;
+
+        public enum Steps
+        {
+            Handshake,
+            Request,
+            Ping,
+            StartLogin,
+            JoinGame,
+            Playing,
+        }
+
+        public Steps step = Steps.Handshake;
 
         private int _x = 0, _y = 0;
         private byte[]? _data = null;
 
         private Socket _socket;
 
-        internal static Client Accept(Socket socket)
+        internal static Connection Accept(Socket socket)
         {
-            Debug.Assert(socket.Blocking == false);
             // TODO: the socket is Binding and listening correctly.
             Debug.Assert(socket.IsBound == true);
-            
+
             Socket newSocket = socket.Accept();
             newSocket.Blocking = false;
 
             return new(newSocket);
         }
 
-        private Client(Socket socket)
+        private Connection(Socket socket)
         {
-            Debug.Assert(socket.Blocking == false);
-
             _socket = socket;
         }
 
-        public Client(string ipAddress, ushort port)
-        {
-            _socket = new(SocketType.Stream, ProtocolType.Tcp);
-            _socket.Blocking = false;
-
-            IPEndPoint localEndPoint = new(IPAddress.Parse(ipAddress), port);
-            _socket.Connect(localEndPoint);
-        }
-
-        private byte RecvByte()
-        {
-            byte[] buffer = new byte[1];
-            int n = _socket.Receive(buffer);
-            Debug.Assert(n == 1);
-
-            return buffer[0];
-        }
-
-        private int RecvInt()
+        private int RecvSize()
         {
             uint uvalue = (uint)_x;
             int position = _y;
@@ -956,7 +989,7 @@ namespace Application
             {
                 while (true)
                 {
-                    byte b = RecvByte();
+                    byte b = SocketMethods.RecvByte(_socket);
 
                     uvalue |= (uint)(b & _SEGMENT_BITS) << position;
                     if ((b & _CONTINUE_BIT) == 0)
@@ -965,10 +998,11 @@ namespace Application
                     position += 7;
 
                     if (position >= 32)
-                        throw new E2();
+                        throw new UnexpectedDataException();
 
                     Debug.Assert(position > 0);
                 }
+
             }
             finally
             {
@@ -980,13 +1014,32 @@ namespace Application
             return (int)uvalue;
         }
 
-        public Buffer Recv()
+        private void SendSize(int size)
+        {
+            uint uvalue = (uint)size;
+
+            while (true)
+            {
+                if ((uvalue & ~_SEGMENT_BITS) == 0)
+                {
+                    SocketMethods.SendByte(_socket, (byte)uvalue);
+                    break;
+                }
+
+                SocketMethods.SendByte(
+                    _socket, (byte)((uvalue & _SEGMENT_BITS) | _CONTINUE_BIT));
+                uvalue >>= 7;
+            }
+
+        }
+
+        public Buffer RecvBuffer()
         {
             if (_data == null)
             {
-                int size = RecvInt();
+                int size = RecvSize();
                 _x = size;
-                _y = 0;
+                Debug.Assert(_y == 0);
 
                 if (size == 0)
                     return new();  // TODO: make EmptyBuffer and return it.
@@ -996,66 +1049,123 @@ namespace Application
                 Debug.Assert(size > 0);
             }
 
-            int availSize = _x;
-            int totalSize = _y;
+            int availSize = _x, offset = _y;
 
             do
             {
                 try
                 {
-                    byte[] buffer = new byte[availSize];
-                    int n = _socket.Receive(buffer);
+                    int n = SocketMethods.RecvBytes(_socket, _data, offset, availSize);
+                    Debug.Assert(n <= availSize);
 
                     availSize -= n;
-                    totalSize += n;
+                    offset += n;
                 }
                 finally
                 {
                     _x = availSize;
-                    _y = totalSize;
+                    _y = offset;
                 }
             } while (availSize > 0);
 
-            Buffer retval = new(_data);
+            Buffer result = new();
+            result.WriteData(_data);
 
             _x = 0;
             _y = 0;
             _data = null;
 
-            return retval;
+
+            return result;
         }
 
-        public void Send()
+        public void SendBuffer(Buffer buffer)
+        {
+            byte[] data = buffer.ReadData();
+            SendSize(data.Length);
+            SocketMethods.SendBytes(_socket, data);
+        }
+
+        public PlayingPacket RecvPacket()
         {
             throw new NotImplementedException();
         }
 
-    }
-
-    public class PlayerConnection
-    {
-        private Client _client;
-
-        internal PlayerConnection(Client client)
-        {
-            _client = client;
-        }
-
-        public PlayerConnection(string ipAddress, ushort port)
-        {
-            _client = new(ipAddress, port);
-
-            throw new NotImplementedException();
-        }
-
-        public PlayingPacket Recv()
+        public void SendPacket(PlayingPacket packet)
         {
             throw new NotImplementedException();
         }
 
-        public void Send(PlayingPacket packet)
+        public bool Handle()
         {
-            throw new NotImplementedException();
+            if (step == Steps.Handshake)
+            {
+                Buffer buffer = RecvBuffer();
+
+                int packetId = buffer.ReadInt(true);
+                if (ServerboundHandshakingPacket.Ids.HandshakePacketId !=
+                    (ServerboundHandshakingPacket.Ids)packetId)
+                    throw new UnexpectedDataException();
+
+                SetProtocolPacket packet = SetProtocolPacket.Read(buffer);
+                Packet.States state = packet.NextState;
+
+                if (state == Packet.States.Status)
+                    step = Steps.Request;
+                else if (state == Packet.States.Login)
+                    step = Steps.StartLogin;
+                else
+                    throw new NotImplementedException();
+            }
+
+            if (step == Steps.Request)
+            {
+                Buffer buffer = RecvBuffer();
+
+                int packetId = buffer.ReadInt(true);
+                if (ServerboundStatusPacket.Ids.RequestPacketId !=
+                    (ServerboundStatusPacket.Ids)packetId)
+                    throw new UnexpectedDataException();
+
+                RequestPacket requestPacket = RequestPacket.Read(buffer);
+
+                // TODO
+                ResponsePacket responsePacket = new(100, 10, "Hello, World!");
+                buffer.WriteInt((int)responsePacket.Id, true);
+                responsePacket.Write(buffer);
+                SendBuffer(buffer);
+
+                step = Steps.Ping;
+            }
+
+            if (step == Steps.Ping)
+            {
+                Buffer buffer = RecvBuffer();
+
+                int packetId = buffer.ReadInt(true);
+                if (ServerboundStatusPacket.Ids.PingPacketId !=
+                    (ServerboundStatusPacket.Ids)packetId)
+                    throw new UnexpectedDataException();
+
+                PingPacket inPacket = PingPacket.Read(buffer);
+
+                PongPacket pongPacket = new(inPacket.Payload);
+                buffer.WriteInt((int)pongPacket.Id, true);
+                pongPacket.Write(buffer);
+                SendBuffer(buffer);
+            }
+
+            else if (step == Steps.StartLogin)
+            {
+                throw new NotImplementedException();
+            }
+
+            return true;
+        }
+
+        public void Close()
+        {
+            SocketMethods.Close(_socket);
         }
     }
 
@@ -1063,8 +1173,7 @@ namespace Application
     {
         private Socket _socket;
 
-        private Queue<Client> _clientQueue = new();
-        private Queue<Packet.States> _stateQueue = new();
+        private Channel<Connection> _guestConns = new();
 
         public Listener()
         {
@@ -1072,75 +1181,55 @@ namespace Application
 
         }
 
-        private void HandleNonplayerConnections(
-            ConcurrentQueue<PlayerConnection> playerConnQueue)
+        private void HandleNonplayerConnections(object? obj)
         {
-            int clientQueueCount = _clientQueue.Count;
-            Debug.Assert(clientQueueCount == _stateQueue.Count);
-            if (clientQueueCount == 0)
+            Debug.Assert(obj != null);
+            SyncQueue<Connection> playerConns = (SyncQueue<Connection>)obj;
+
+            if (_guestConns.Empty == true)
                 return;
-            for (int i = 0; i < clientQueueCount; ++i)
+
+            bool skip = false;
+
+            while (true)
             {
-                Client client = _clientQueue.Dequeue();
-                Packet.States state = _stateQueue.Dequeue();
+                Connection connection = _guestConns.Dequeue();
+                skip = false;
+
+                Connection guestConn = _guestConns.Dequeue();
 
                 try
                 {
-                    if (state == Packet.States.Playing)
-                        throw new NotImplementedException();
-                    
-                    if (state == Packet.States.Handshaking)
-                    {
-                        Buffer buffer = client.Recv();
-                        SetProtocolPacket packet = SetProtocolPacket.Read(buffer);
-                        Console.WriteLine(
-                            $"Version: {packet.Version}, " +
-                            $"Hostname: {packet.Hostname}, " +
-                            $"Port: {packet.Port}, " +
-                            $"NextState: {packet.NextState}");
-                        state = packet.NextState;
-                        Debug.Assert(
-                            state == Packet.States.Status ||
-                            state == Packet.States.Login);
-                    }
-
-                    if (state == Packet.States.Status)
-                    {
-                        continue;
-                    } else if (state == Packet.States.Login)
-                    {
-                        continue;
-                    }
-
-                    throw new NotImplementedException();
-
+                    guestConn.Handle();
                 }
                 catch (SocketException e)
                 {
                     if (e.SocketErrorCode != SocketError.WouldBlock)
                         throw new NotImplementedException();
 
+                    Debug.Assert(e.SocketErrorCode == SocketError.WouldBlock);
+                }
+                catch (McpException)
+                {
+                    skip = true;
+                }
+                catch (Exception e)
+                {
+                    throw new NotImplementedException();
+                }
 
-                }
-                catch (E2)
-                {
-                    throw new NotImplementedException();
-                }
-                catch (Exception)
-                {
-                    throw new NotImplementedException();
-                }
-                finally
-                {
-                    _clientQueue.Enqueue(client);
-                    _stateQueue.Enqueue(state);
-                }
+                if (skip == false)
+                    _guestConns.Enqueue(guestConn);
+                
             }
 
         }
 
-        public void Accept(ushort port, ConcurrentQueue<PlayerConnection> playerConnQueue)
+        public void Accept(ushort port, SyncQueue<Connection> playerConns)
         {
+            Thread handler = new(HandleNonplayerConnections);
+            handler.Start(playerConns);
+
             try
             {
                 IPEndPoint localEndPoint = new(IPAddress.Any, port);
@@ -1148,35 +1237,27 @@ namespace Application
                 _socket.Blocking = false;
                 _socket.Bind(localEndPoint);
                 _socket.Listen();
+
+                while (true)
+                {
+                    Connection connection = Connection.Accept(_socket);
+                    _guestConns.Enqueue(connection);
+
+                }
+                
             }
             catch (Exception)
             {
                 throw new NotImplementedException();
             }
-
-            while (true)
+            finally
             {
-                try
-                {
-                    HandleNonplayerConnections(playerConnQueue);
-
-                    Client client = Client.Accept(_socket);
-                    _clientQueue.Enqueue(client);
-
-                    /*return new(client);*/
-
-                }
-                catch (SocketException e)
-                {
-                    if (e.SocketErrorCode != SocketError.WouldBlock)
-                        throw new NotImplementedException();
-                }
-                catch (Exception)
-                {
-                    throw new NotImplementedException();
-                }
+                _guestConns.Exit();
+                handler.Join();
             }
+
         }
+
     }
 
     public class Application
@@ -1185,7 +1266,12 @@ namespace Application
         {
             Console.WriteLine("Hello, World!");
 
+            ushort port = 25565;
 
+            ConcurrentQueue<PlayerConnection> playerConnQueue = new();
+
+            Listener listener = new();
+            listener.Accept(port, playerConnQueue);
         }
     }
 }
