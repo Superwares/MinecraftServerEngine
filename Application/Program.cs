@@ -1365,12 +1365,79 @@ namespace Application
 
     }
 
+    public class ThreadManager
+    {
+        public delegate void StartRoutine<T>(T arg);
+
+        private interface IThreadContext
+        {
+            void Call();
+        }
+
+        private struct ThreadContextWithArg<T> : IThreadContext
+        {
+            private readonly StartRoutine<T> _f;
+            private readonly T _arg;
+
+            public ThreadContextWithArg(StartRoutine<T> f, T arg)
+            {
+                _f = f;
+                _arg = arg;
+            }
+
+            public void Call()
+            {
+                _f(_arg);
+            }
+        }
+
+        public static readonly int MainId = Thread.CurrentThread.ManagedThreadId;
+        public static readonly ThreadManager Instance = new();
+
+        public ThreadManager()
+        {
+            Thread mainThread = Thread.CurrentThread;
+            Debug.Assert(mainThread.ManagedThreadId == MainId);
+
+
+        }
+
+        
+
+        private void _StartRoutine(object? obj)
+        {
+            Debug.Assert(obj != null);
+            IThreadContext ctx = (IThreadContext)obj;
+            ctx.Call();
+        }
+
+        public void Run<T>(StartRoutine<T> f, T arg)
+        {
+             IThreadContext ctx = new ThreadContextWithArg<T>(f, arg);
+
+            Thread thread = new Thread(new ParameterizedThreadStart(_StartRoutine));
+            thread.Start(ctx);
+        }
+        
+    }
+
+
     public class Application
     {
-        
+        public static void F(int a)
+        {
+            Thread currentThread = Thread.CurrentThread;
+            Console.WriteLine($"a: {a}");
+
+            Console.WriteLine($"currentThread: {currentThread.ManagedThreadId}");
+        }
 
         public static void Main()
         {
+            Debug.Assert(Thread.CurrentThread.ManagedThreadId == ThreadManager.MainId);
+
+            ThreadManager.Instance.Run(F, 1);
+
             Console.WriteLine("Hello, World!");
 
             /*Console.CancelKeyPress += */
@@ -1379,6 +1446,7 @@ namespace Application
 
             Listener listener = new();
             listener.Accept(port);
+
         }
     }
 }
