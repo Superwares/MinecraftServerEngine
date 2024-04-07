@@ -6,7 +6,6 @@ using System.Text;
 namespace Application
 {
 
-
     public abstract class ProtocolException : Exception
     {
         public ProtocolException(string message) : base(message) { }
@@ -962,7 +961,7 @@ namespace Application
 
         internal static Client Accept(Socket socket)
         {
-            //TODO: the socket is Binding and listening correctly.
+            //TODO: Check the socket is Binding and listening correctly.
             Debug.Assert(socket.IsBound == true);
 
             Socket newSocket = socket.Accept();
@@ -1130,55 +1129,30 @@ namespace Application
 
     }
 
-    //public class Connection
-    //{
-        
-    //    public enum Steps
-    //    {
-    //        Handshake,
-    //        Request,
-    //        Ping,
-    //        StartLogin,
-    //        JoinGame,
-    //        Playing,
-    //    }
+    public class Connection
+    {
+        private Client _client;
 
-    //    public Steps step = Steps.Handshake;
+        internal Connection(Client client)
+        {
+            _client = client;
+        }
 
-    //    private Socket _socket;
+        public PlayingPacket RecvPacket()
+        {
+            throw new NotImplementedException();
+        }
 
-    //    internal static Connection Accept(Socket socket)
-    //    {
-    //        // TODO: the socket is Binding and listening correctly.
-    //        Debug.Assert(socket.IsBound == true);
+        public void SendPacket(PlayingPacket packet)
+        {
+            throw new NotImplementedException();
+        }
 
-    //        Socket newSocket = socket.Accept();
-    //        newSocket.Blocking = false;
-
-    //        return new(newSocket);
-    //    }
-
-    //    public PlayingPacket RecvPacket()
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-
-    //    public void SendPacket(PlayingPacket packet)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-
-    //    public bool Handle()
-    //    {
-    
-    //        return true;
-    //    }
-
-    //    public void Close()
-    //    {
-    //        SocketMethods.Close(_socket);
-    //    }
-    //}
+        public void Close()
+        {
+            _client.Close();
+        }
+    }
 
     public class Listener
     {
@@ -1188,7 +1162,7 @@ namespace Application
             Request,
             Ping,
             StartLogin,
-            //JoinGame,
+            JoinGame,
             //Playing,
         }
 
@@ -1317,7 +1291,7 @@ namespace Application
 
         }
 
-        public void Accept(Application app, ushort port)
+        public void Accept(ushort port)
         {
             using Socket socket = new(SocketType.Stream, ProtocolType.Tcp);
 
@@ -1325,9 +1299,9 @@ namespace Application
             socket.Bind(localEndPoint);
             socket.Listen();
 
-            while (app.Closed == false)
+            while (Application.Running)
             {
-                TimeSpan interval = TimeSpan.FromMicroseconds(1_000_000);
+                
                 try
                 {
                     /*Console.WriteLine();*/
@@ -1376,31 +1350,27 @@ namespace Application
     
     public sealed class Application
     {
-        public delegate void StartRoutine(Application app);
-        public delegate void StartRoutineWithArg<T>(Application app, T arg);
+        public delegate void StartRoutine();
+        public delegate void StartRoutineWithArg<T>(T arg);
 
         private interface IThreadContext
         {
             void Call();
         }
 
-        private readonly struct ThreadContext(
-            Application app, StartRoutine f) : IThreadContext
+        private readonly struct ThreadContext(StartRoutine f) : IThreadContext
         {
-            private readonly Application _app = app;
             private readonly StartRoutine _f = f;
 
-            public void Call() { _f(_app); }
+            public void Call() { _f(); }
         }
 
-        private readonly struct ThreadContextWithArg<T>(
-            Application app, StartRoutineWithArg<T> f, T arg) : IThreadContext
+        private readonly struct ThreadContextWithArg<T>(StartRoutineWithArg<T> f, T arg) : IThreadContext
         {
-            private readonly Application _app = app;
             private readonly StartRoutineWithArg<T> _f = f;
             private readonly T _arg = arg;
 
-            public void Call() { _f(_app, _arg); }
+            public void Call() { _f(_arg); }
         }
 
         private static readonly Thread _MainThread = Thread.CurrentThread;
@@ -1408,35 +1378,31 @@ namespace Application
         private static readonly Application Instance = new();
 
         private readonly object _SharedObject = new();
+
         private bool _closed = false;
+        public static bool Closed => Instance._closed;
+        public static bool Running => !Closed;
 
         private Containers.Queue<Thread> _threadQueue = new();
 
-        public bool Closed
-        {
-            get {
-                lock (_SharedObject)
-                {
-                    return _closed;
-                }
-            }
-        }
-
         private void Close()
         {
-            lock (_SharedObject)
-            {
-                _closed = true;
+            Debug.Assert(Thread.CurrentThread.ManagedThreadId != _MainId);
 
-            }
-            // TODO: wait until threads were closed.
+            _closed = true;
+
+            foreach (Thread t in _threadQueue)
+                t.Join();
+
+            /*Thread.Sleep(1000 * 5);*/
 
             Console.WriteLine("Close!");
+            lock (_SharedObject) Monitor.Pulse(_SharedObject);
         }
 
         private Application()
         {
-            Console.CancelKeyPress += (sender, e) => { Close(); };
+            Console.CancelKeyPress += (sender, e) => Close();
         }
 
         private void HandleContext(object? obj)
@@ -1445,36 +1411,49 @@ namespace Application
             IThreadContext ctx = (IThreadContext)obj;
             ctx.Call();
 
-            if (Closed == false)
-                throw new NotImplementedException();
+            Debug.Assert(Closed == true);
+        }
+
+        private void _Run(IThreadContext ctx)
+        {
+            Thread thread = new(HandleContext);
+            thread.Start(ctx);
+
+            Debug.Assert(thread.ManagedThreadId != _MainId);
+
+            _threadQueue.Enqueue(thread);
         }
 
         private void Run(StartRoutine f)
         {
             Debug.Assert(Closed == false);
 
-            IThreadContext ctx = new ThreadContext(Instance, f);
+            IThreadContext ctx = new ThreadContext(f);
 
-            Thread thread = new(HandleContext);
-            thread.Start(ctx);
-
-            Debug.Assert(thread.ManagedThreadId != _MainId);
-
-            _threadQueue.Enqueue(thread);
+            _Run(ctx);
         }
 
         private void Run<T>(StartRoutineWithArg<T> f, T arg)
         {
             Debug.Assert(Closed == false);
 
-            IThreadContext ctx = new ThreadContextWithArg<T>(Instance, f, arg);
+            IThreadContext ctx = new ThreadContextWithArg<T>(f, arg);
 
-            Thread thread = new(HandleContext);
-            thread.Start(ctx);
+            _Run(ctx);
+        }
 
-            Debug.Assert(thread.ManagedThreadId != _MainId);
+        private void FinishMainFunction()
+        {
+            Debug.Assert(Thread.CurrentThread.ManagedThreadId == _MainId);
+            Debug.Assert(Closed == true);
 
-            _threadQueue.Enqueue(thread);
+            lock (_SharedObject) Monitor.Wait(_SharedObject);
+            
+        }
+
+        private static void StartCoreRoutine()
+        {
+            
         }
 
         public static void Main()
@@ -1483,18 +1462,19 @@ namespace Application
 
             Console.WriteLine("Hello, World!");
 
+            
 
             ushort port = 25565;
 
             Listener listener = new();
             Instance.Run(listener.Accept, port);
 
-            while (true)
+            while (Running)
             {
-
+                Thread.Sleep(1000);
             }
 
-
+            Instance.FinishMainFunction();
         }
     }
 }

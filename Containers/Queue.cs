@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Containers
 {
-    public class Queue<T>
+    public class Queue<T> : IEnumerable<T>
     {
         protected class Node(T value)
         {
@@ -75,17 +76,38 @@ namespace Containers
 
         public T Dequeue() => _Dequeue();
 
+        public IEnumerator<T> GetEnumerator()
+        {
+            if (_outNode == null)
+                yield break;
+
+            Debug.Assert(_inNode != null);
+            Node? node = _outNode;
+
+            while (node != null)
+            {
+                yield return node.Value;
+                node = node.NextNode;
+            }
+
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
     }
 
     public class SyncQueue<T> : Queue<T>
     {
-        private readonly object _sharedObject = new();
+        private readonly object _SharedObject = new();
 
         public new int Count 
         { 
             get 
             {
-                lock (_sharedObject)
+                lock (_SharedObject)
                 {
                     return _count;
                 }
@@ -98,18 +120,29 @@ namespace Containers
 
         public new void Enqueue(T value)
         {
-            lock (_sharedObject)
+            lock (_SharedObject)
             {
                 _Enqueue(value);
             }
+
         }
 
         public new T Dequeue()
         {
-            lock (_sharedObject)
+            lock (_SharedObject)
             {
                 return _Dequeue();
             }
+
+        }
+
+        public new IEnumerator<T> GetEnumerator()
+        {
+            lock (_SharedObject)
+            {
+                return base.GetEnumerator();
+            }
+
         }
 
     }
