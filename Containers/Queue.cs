@@ -81,6 +81,19 @@ namespace Containers
     {
         private readonly object _sharedObject = new();
 
+        public new int Count 
+        { 
+            get 
+            {
+                lock (_sharedObject)
+                {
+                    return _count;
+                }
+            } 
+        }
+
+        public new bool Empty => (Count == 0);
+
         public SyncQueue() { }
 
         public new void Enqueue(T value)
@@ -88,8 +101,6 @@ namespace Containers
             lock (_sharedObject)
             {
                 _Enqueue(value);
-
-                // TODO signal
             }
         }
 
@@ -99,56 +110,6 @@ namespace Containers
             {
                 return _Dequeue();
             }
-        }
-
-    }
-
-    public class Channel<T> : Queue<T>
-    {
-        private readonly object _sharedObject = new();
-        private bool _wait = false;
-
-        public new void Enqueue(T value)
-        {
-            lock (_sharedObject)
-            {
-                if (_wait == true)
-                {
-                    Debug.Assert(Empty == true);
-
-                    Monitor.Pulse(_sharedObject);
-                }
-
-                _Enqueue(value);
-            }
-        }
-
-        public new T Dequeue(int millisecondsTimeout)
-        {
-            T? value;
-
-            lock (_sharedObject)
-            {
-
-                if (Empty == true)
-                {
-                    Debug.Assert(_wait == false);
-                    _wait = true;
-
-                    Monitor.Wait(_sharedObject, millisecondsTimeout);
-                    if (Empty == true)
-                    {
-                        _wait = false;
-                        throw new TimeoutException();
-                    }
-                }
-
-                value = _Dequeue();
-
-            }
-
-            Debug.Assert(value != null);
-            return value;
         }
 
     }

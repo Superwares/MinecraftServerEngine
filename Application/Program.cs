@@ -1297,6 +1297,12 @@ namespace Application
                 catch (ProtocolException)
                 {
                     close = true;
+
+                    if (step >= Steps.StartLogin)
+                    {
+                        throw new NotImplementedException();
+                        // TODO: Handle send Disconnect packet.
+                    }
                 }
 
                 if (close == false)
@@ -1311,7 +1317,7 @@ namespace Application
 
         }
 
-        public void Accept(ushort port)
+        public void Accept(Application app, ushort port)
         {
             using Socket socket = new(SocketType.Stream, ProtocolType.Tcp);
 
@@ -1319,7 +1325,7 @@ namespace Application
             socket.Bind(localEndPoint);
             socket.Listen();
 
-            while (true)
+            while (app.Closed == false)
             {
                 TimeSpan interval = TimeSpan.FromMicroseconds(1_000_000);
                 try
@@ -1356,96 +1362,138 @@ namespace Application
                 catch (TimeoutException)
                 {
                     /*Console.WriteLine($"Timeout! {DateTime.Now}");*/
+
                 }
 
             }
+
+            // TODO: Handle client, send Disconnet Packet if the client's step is after StartLogin;
 
 
         }
 
     }
-
-    public class ThreadManager
+    
+    public sealed class Application
     {
-        public delegate void StartRoutine<T>(T arg);
+        public delegate void StartRoutine(Application app);
+        public delegate void StartRoutineWithArg<T>(Application app, T arg);
 
         private interface IThreadContext
         {
             void Call();
         }
 
-        private struct ThreadContextWithArg<T> : IThreadContext
+        private readonly struct ThreadContext(
+            Application app, StartRoutine f) : IThreadContext
         {
-            private readonly StartRoutine<T> _f;
-            private readonly T _arg;
+            private readonly Application _app = app;
+            private readonly StartRoutine _f = f;
 
-            public ThreadContextWithArg(StartRoutine<T> f, T arg)
-            {
-                _f = f;
-                _arg = arg;
-            }
+            public void Call() { _f(_app); }
+        }
 
-            public void Call()
-            {
-                _f(_arg);
+        private readonly struct ThreadContextWithArg<T>(
+            Application app, StartRoutineWithArg<T> f, T arg) : IThreadContext
+        {
+            private readonly Application _app = app;
+            private readonly StartRoutineWithArg<T> _f = f;
+            private readonly T _arg = arg;
+
+            public void Call() { _f(_app, _arg); }
+        }
+
+        private static readonly Thread _MainThread = Thread.CurrentThread;
+        private static readonly int _MainId = _MainThread.ManagedThreadId;
+        private static readonly Application Instance = new();
+
+        private readonly object _SharedObject = new();
+        private bool _closed = false;
+
+        private Containers.Queue<Thread> _threadQueue = new();
+
+        public bool Closed
+        {
+            get {
+                lock (_SharedObject)
+                {
+                    return _closed;
+                }
             }
         }
 
-        public static readonly int MainId = Thread.CurrentThread.ManagedThreadId;
-        public static readonly ThreadManager Instance = new();
-
-        public ThreadManager()
+        private void Close()
         {
-            Thread mainThread = Thread.CurrentThread;
-            Debug.Assert(mainThread.ManagedThreadId == MainId);
+            lock (_SharedObject)
+            {
+                _closed = true;
 
+            }
+            // TODO: wait until threads were closed.
 
+            Console.WriteLine("Close!");
         }
 
-        
+        private Application()
+        {
+            Console.CancelKeyPress += (sender, e) => { Close(); };
+        }
 
-        private void _StartRoutine(object? obj)
+        private void HandleContext(object? obj)
         {
             Debug.Assert(obj != null);
             IThreadContext ctx = (IThreadContext)obj;
             ctx.Call();
+
+            if (Closed == false)
+                throw new NotImplementedException();
         }
 
-        public void Run<T>(StartRoutine<T> f, T arg)
+        private void Run(StartRoutine f)
         {
-             IThreadContext ctx = new ThreadContextWithArg<T>(f, arg);
+            Debug.Assert(Closed == false);
 
-            Thread thread = new Thread(new ParameterizedThreadStart(_StartRoutine));
+            IThreadContext ctx = new ThreadContext(Instance, f);
+
+            Thread thread = new(HandleContext);
             thread.Start(ctx);
+
+            Debug.Assert(thread.ManagedThreadId != _MainId);
+
+            _threadQueue.Enqueue(thread);
         }
-        
-    }
 
-
-    public class Application
-    {
-        public static void F(int a)
+        private void Run<T>(StartRoutineWithArg<T> f, T arg)
         {
-            Thread currentThread = Thread.CurrentThread;
-            Console.WriteLine($"a: {a}");
+            Debug.Assert(Closed == false);
 
-            Console.WriteLine($"currentThread: {currentThread.ManagedThreadId}");
+            IThreadContext ctx = new ThreadContextWithArg<T>(Instance, f, arg);
+
+            Thread thread = new(HandleContext);
+            thread.Start(ctx);
+
+            Debug.Assert(thread.ManagedThreadId != _MainId);
+
+            _threadQueue.Enqueue(thread);
         }
 
         public static void Main()
         {
-            Debug.Assert(Thread.CurrentThread.ManagedThreadId == ThreadManager.MainId);
-
-            ThreadManager.Instance.Run(F, 1);
+            Debug.Assert(Thread.CurrentThread.ManagedThreadId == _MainId);
 
             Console.WriteLine("Hello, World!");
 
-            /*Console.CancelKeyPress += */
 
             ushort port = 25565;
 
             Listener listener = new();
-            listener.Accept(port);
+            Instance.Run(listener.Accept, port);
+
+            while (true)
+            {
+
+            }
+
 
         }
     }
