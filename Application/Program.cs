@@ -947,6 +947,99 @@ namespace Application
         }
     }
 
+    public abstract class Block
+    {
+        public enum Ids : ushort
+        {
+            Air = 0,
+            Stone,
+            GrassBlock,
+            Dirt,
+        }
+
+        private readonly Ids _id;  // 9 bits
+        public Ids Id => _id;
+
+        public Block(Ids id)
+        {
+            _id = id;
+        }
+
+        protected abstract byte GetMetadata();
+
+        public ushort GetGlobalPaletteID()
+        {
+            byte metadata = GetMetadata();
+            Debug.Assert((metadata & 0b_11110000) == 0);  // metadata is 4 bits
+
+            ushort id = (ushort)_id;
+            Debug.Assert((id & 0b_11111110_00000000) == 0);  // id is 9 bits
+            return (ushort)(id << 4 | metadata);  // 13 bits
+        }
+
+
+    }
+
+    public class Air : Block
+    { 
+
+        public Air() : base(Ids.Air) { }
+
+        protected override byte GetMetadata()
+        {
+            return 0;
+        }
+    }
+
+    public class Stone : Block
+    {
+        public enum Types : byte
+        {
+            Normal = 0,
+            Granite,
+            PolishedGranite,
+            Diorite,
+            PolishedDiorite,
+            Andesite,
+            PolishedAndesite,
+        }
+
+        private readonly Types _type;  // 4 bits
+        public Types Type => _type;
+
+
+        public Stone(Types type) : base(Ids.Stone)
+        {
+            _type = type;
+        }
+
+        protected override byte GetMetadata()
+        {
+            return (byte)_type;
+        }
+            
+    }
+
+    public class GrassBlock : Block
+    {
+        public GrassBlock() : base(Ids.GrassBlock) { }
+
+        protected override byte GetMetadata()
+        {
+            return 0;
+        }
+    }
+
+    public class CheckSection
+    {
+        private static readonly int _BlocksNumber = 16 * 16 * 16;
+
+        private Block?[] _blocks = new Block?[_BlocksNumber];
+
+
+
+    }
+
     internal class Client : IDisposable
     {
         private static readonly byte _SEGMENT_BITS = 0x7F;
