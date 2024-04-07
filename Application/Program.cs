@@ -1,31 +1,41 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
-using System.Net.WebSockets;
 using System.Text;
-using Containers;
 
 namespace Application
 {
 
 
-    public abstract class McpException : Exception
+    public abstract class ProtocolException : Exception
     {
-        public McpException(string message) : base(message) { }
+        public ProtocolException(string message) : base(message) { }
     }
 
-    // TODO
-    public class EndofFileException : McpException
+    public class EndofFileException : ProtocolException
     {
         public EndofFileException() : base("EOF reached unexpectedly.") { }
     }
 
-    // TODO
-    public class UnexpectedDataException : McpException
+    public class EmptyBufferException : ProtocolException
     {
-        public UnexpectedDataException() : base("Received unexpected data from the network.") { }
+        public EmptyBufferException() : base("Attempting to read from an empty buffer.") { }
+    }
+
+    public class UnexpectedPacketException : ProtocolException
+    {
+        public UnexpectedPacketException() : base("Encountered an unexpected packet.") { }
+    }
+
+    public class InvalidEncodingException : ProtocolException
+    {
+        public InvalidEncodingException() : base("Failed to decode the data due to invalid encoding.") { }
+    }
+
+    // TODO: It needs the corrent name and message.
+    public class TimeoutException : ProtocolException
+    {
+        public TimeoutException() : base("Connections are not pending.") { }
     }
 
     internal static class SocketMethods
@@ -68,10 +78,6 @@ namespace Application
             Debug.Assert(n == data.Length);
         }
 
-        public static void Close(Socket socket)
-        {
-            socket.Close();
-        }
     }
 
     // TODO: Check system is little- or big-endian.
@@ -110,7 +116,7 @@ namespace Application
             }
         }
 
-        public Buffer() 
+        public Buffer()
         {
             _size = _INITIAL_DATA_SIZE;
             _data = new byte[_INITIAL_DATA_SIZE];
@@ -126,7 +132,7 @@ namespace Application
         {
             Debug.Assert(_last >= _first);
             if (_first == _last)
-                throw new EndofFileException();
+                throw new EmptyBufferException();
 
             return _data[_first++];
         }
@@ -146,7 +152,7 @@ namespace Application
             Debug.Assert(_last >= _first);
 
             if (_first + size > _last)
-                throw new EndofFileException();
+                throw new EmptyBufferException();
 
             byte[] data = new byte[size];
             Array.Copy(_data, _first, data, 0, size);
@@ -300,7 +306,7 @@ namespace Application
                 position += 7;
 
                 if (position >= 32)
-                    throw new UnexpectedDataException();
+                    throw new InvalidEncodingException();
 
                 Debug.Assert(position > 0);
             }
@@ -327,7 +333,7 @@ namespace Application
                 position += 7;
 
                 if (position >= 64)
-                    throw new UnexpectedDataException();
+                    throw new InvalidEncodingException();
 
                 Debug.Assert(position > 0);
             }
@@ -942,46 +948,47 @@ namespace Application
         }
     }
 
-    public class Connection
+    internal class Client : IDisposable
     {
         private static readonly byte _SEGMENT_BITS = 0x7F;
         private static readonly byte _CONTINUE_BIT = 0x80;
 
-        public enum Steps
-        {
-            Handshake,
-            Request,
-            Ping,
-            StartLogin,
-            JoinGame,
-            Playing,
-        }
-
-        public Steps step = Steps.Handshake;
+        private bool _disposed = false;
 
         private int _x = 0, _y = 0;
         private byte[]? _data = null;
 
         private Socket _socket;
 
-        internal static Connection Accept(Socket socket)
+        internal static Client Accept(Socket socket)
         {
-            // TODO: the socket is Binding and listening correctly.
+            //TODO: the socket is Binding and listening correctly.
             Debug.Assert(socket.IsBound == true);
 
             Socket newSocket = socket.Accept();
             newSocket.Blocking = false;
 
+            /*Console.WriteLine($"socket: {socket.LocalEndPoint}");*/
+
+            
             return new(newSocket);
         }
 
-        private Connection(Socket socket)
+        private Client(Socket socket)
         {
+            Debug.Assert(socket.Blocking == false);
             _socket = socket;
+        }
+
+        ~Client()
+        {
+            Dispose(false);
         }
 
         private int RecvSize()
         {
+            if (_disposed) throw new ObjectDisposedException(this.GetType().Name);
+
             uint uvalue = (uint)_x;
             int position = _y;
 
@@ -998,7 +1005,7 @@ namespace Application
                     position += 7;
 
                     if (position >= 32)
-                        throw new UnexpectedDataException();
+                        throw new InvalidEncodingException();
 
                     Debug.Assert(position > 0);
                 }
@@ -1016,6 +1023,8 @@ namespace Application
 
         private void SendSize(int size)
         {
+            if (_disposed) throw new ObjectDisposedException(this.GetType().Name);
+
             uint uvalue = (uint)size;
 
             while (true)
@@ -1035,6 +1044,8 @@ namespace Application
 
         public Buffer RecvBuffer()
         {
+            if (_disposed) throw new ObjectDisposedException(this.GetType().Name);
+
             if (_data == null)
             {
                 int size = RecvSize();
@@ -1081,180 +1092,274 @@ namespace Application
 
         public void SendBuffer(Buffer buffer)
         {
+            if (_disposed) throw new ObjectDisposedException(this.GetType().Name);
+
             byte[] data = buffer.ReadData();
             SendSize(data.Length);
             SocketMethods.SendBytes(_socket, data);
         }
 
-        public PlayingPacket RecvPacket()
+        protected virtual void Dispose(bool disposing)
         {
-            throw new NotImplementedException();
+            if (_disposed == false)
+            {
+                if (disposing == true)
+                {
+                    // managed objects
+                    _data = null;
+                }
+
+                // unmanaged objects
+                _socket.Dispose();
+
+                _disposed = true;
+            }
         }
 
-        public void SendPacket(PlayingPacket packet)
+
+        public void Dispose()
         {
-            throw new NotImplementedException();
-        }
-
-        public bool Handle()
-        {
-            if (step == Steps.Handshake)
-            {
-                Buffer buffer = RecvBuffer();
-
-                int packetId = buffer.ReadInt(true);
-                if (ServerboundHandshakingPacket.Ids.HandshakePacketId !=
-                    (ServerboundHandshakingPacket.Ids)packetId)
-                    throw new UnexpectedDataException();
-
-                SetProtocolPacket packet = SetProtocolPacket.Read(buffer);
-                Packet.States state = packet.NextState;
-
-                if (state == Packet.States.Status)
-                    step = Steps.Request;
-                else if (state == Packet.States.Login)
-                    step = Steps.StartLogin;
-                else
-                    throw new NotImplementedException();
-            }
-
-            if (step == Steps.Request)
-            {
-                Buffer buffer = RecvBuffer();
-
-                int packetId = buffer.ReadInt(true);
-                if (ServerboundStatusPacket.Ids.RequestPacketId !=
-                    (ServerboundStatusPacket.Ids)packetId)
-                    throw new UnexpectedDataException();
-
-                RequestPacket requestPacket = RequestPacket.Read(buffer);
-
-                // TODO
-                ResponsePacket responsePacket = new(100, 10, "Hello, World!");
-                buffer.WriteInt((int)responsePacket.Id, true);
-                responsePacket.Write(buffer);
-                SendBuffer(buffer);
-
-                step = Steps.Ping;
-            }
-
-            if (step == Steps.Ping)
-            {
-                Buffer buffer = RecvBuffer();
-
-                int packetId = buffer.ReadInt(true);
-                if (ServerboundStatusPacket.Ids.PingPacketId !=
-                    (ServerboundStatusPacket.Ids)packetId)
-                    throw new UnexpectedDataException();
-
-                PingPacket inPacket = PingPacket.Read(buffer);
-
-                PongPacket pongPacket = new(inPacket.Payload);
-                buffer.WriteInt((int)pongPacket.Id, true);
-                pongPacket.Write(buffer);
-                SendBuffer(buffer);
-            }
-
-            else if (step == Steps.StartLogin)
-            {
-                throw new NotImplementedException();
-            }
-
-            return true;
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         public void Close()
         {
-            SocketMethods.Close(_socket);
+            Dispose();
         }
+
     }
+
+    //public class Connection
+    //{
+        
+    //    public enum Steps
+    //    {
+    //        Handshake,
+    //        Request,
+    //        Ping,
+    //        StartLogin,
+    //        JoinGame,
+    //        Playing,
+    //    }
+
+    //    public Steps step = Steps.Handshake;
+
+    //    private Socket _socket;
+
+    //    internal static Connection Accept(Socket socket)
+    //    {
+    //        // TODO: the socket is Binding and listening correctly.
+    //        Debug.Assert(socket.IsBound == true);
+
+    //        Socket newSocket = socket.Accept();
+    //        newSocket.Blocking = false;
+
+    //        return new(newSocket);
+    //    }
+
+    //    public PlayingPacket RecvPacket()
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+
+    //    public void SendPacket(PlayingPacket packet)
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+
+    //    public bool Handle()
+    //    {
+    
+    //        return true;
+    //    }
+
+    //    public void Close()
+    //    {
+    //        SocketMethods.Close(_socket);
+    //    }
+    //}
 
     public class Listener
     {
-        private Socket _socket;
-
-        private Channel<Connection> _guestConns = new();
-
-        public Listener()
+        public enum Steps
         {
-            _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-
+            Handshake,
+            Request,
+            Ping,
+            StartLogin,
+            //JoinGame,
+            //Playing,
         }
 
-        private void HandleNonplayerConnections(object? obj)
-        {
-            Debug.Assert(obj != null);
-            SyncQueue<Connection> playerConns = (SyncQueue<Connection>)obj;
+        private static readonly TimeSpan PENDING_TIMEOUT = TimeSpan.FromSeconds(1);
 
-            if (_guestConns.Empty == true)
+        private Containers.Queue<Client> _clientQueue = new();
+        private Containers.Queue<Steps> _stepQueue = new();
+
+        public Listener() { }
+
+        private void HandleNonplayers()
+        {
+            /*Console.WriteLine($"Call HandleNonplayers.");*/
+
+            int count = _clientQueue.Count;
+            if (count == 0)
                 return;
 
-            bool skip = false;
+            bool close = false;
 
-            while (true)
+            for (; count > 0; --count)
             {
-                Connection connection = _guestConns.Dequeue();
-                skip = false;
+                close = false;
 
-                Connection guestConn = _guestConns.Dequeue();
+                Client client = _clientQueue.Dequeue();
+                Steps step = _stepQueue.Dequeue();
 
                 try
                 {
-                    guestConn.Handle();
+                    if (step == Steps.Handshake)
+                    {
+                        /*Console.WriteLine("Handshake!");*/
+                        Buffer buffer = client.RecvBuffer();
+
+                        int packetId = buffer.ReadInt(true);
+                        if (ServerboundHandshakingPacket.Ids.HandshakePacketId !=
+                            (ServerboundHandshakingPacket.Ids)packetId)
+                            throw new UnexpectedPacketException();
+
+                        SetProtocolPacket packet = SetProtocolPacket.Read(buffer);
+                        Packet.States state = packet.NextState;
+
+                        if (state == Packet.States.Status)
+                            step = Steps.Request;
+                        else if (state == Packet.States.Login)
+                            step = Steps.StartLogin;
+                        else
+                            throw new NotImplementedException();
+                    }
+
+                    if (step == Steps.Request)
+                    {
+                        /*Console.WriteLine("Request!");*/
+                        Buffer buffer = client.RecvBuffer();
+
+                        int packetId = buffer.ReadInt(true);
+                        if (ServerboundStatusPacket.Ids.RequestPacketId !=
+                            (ServerboundStatusPacket.Ids)packetId)
+                            throw new UnexpectedPacketException();
+
+                        RequestPacket requestPacket = RequestPacket.Read(buffer);
+
+                        // TODO
+                        ResponsePacket responsePacket = new(100, 10, "Hello, World!");
+                        buffer.WriteInt((int)responsePacket.Id, true);
+                        responsePacket.Write(buffer);
+                        client.SendBuffer(buffer);
+
+                        step = Steps.Ping;
+                    }
+
+                    if (step == Steps.Ping)
+                    {
+                        /*Console.WriteLine("Ping!");*/
+                        Buffer buffer = client.RecvBuffer();
+
+                        int packetId = buffer.ReadInt(true);
+                        if (ServerboundStatusPacket.Ids.PingPacketId !=
+                            (ServerboundStatusPacket.Ids)packetId)
+                            throw new UnexpectedPacketException();
+
+                        PingPacket inPacket = PingPacket.Read(buffer);
+
+                        PongPacket pongPacket = new(inPacket.Payload);
+                        buffer.WriteInt((int)pongPacket.Id, true);
+                        pongPacket.Write(buffer);
+                        client.SendBuffer(buffer);
+                    }
+
+                    if (step == Steps.StartLogin)
+                    {
+                        throw new NotImplementedException();
+                    }
+
+                    close = true;
+
                 }
                 catch (SocketException e)
                 {
                     if (e.SocketErrorCode != SocketError.WouldBlock)
                         throw new NotImplementedException();
 
-                    Debug.Assert(e.SocketErrorCode == SocketError.WouldBlock);
+                    /*Console.WriteLine($"SocketError.WouldBlock!");*/
+
                 }
-                catch (McpException)
+                catch (ProtocolException)
                 {
-                    skip = true;
-                }
-                catch (Exception e)
-                {
-                    throw new NotImplementedException();
+                    close = true;
                 }
 
-                if (skip == false)
-                    _guestConns.Enqueue(guestConn);
-                
+                if (close == false)
+                {
+                    _clientQueue.Enqueue(client);
+                    _stepQueue.Enqueue(step);
+                }
+                else
+                    client.Close();
+
             }
 
         }
 
-        public void Accept(ushort port, SyncQueue<Connection> playerConns)
+        public void Accept(ushort port)
         {
-            Thread handler = new(HandleNonplayerConnections);
-            handler.Start(playerConns);
+            using Socket socket = new(SocketType.Stream, ProtocolType.Tcp);
 
-            try
+            IPEndPoint localEndPoint = new(IPAddress.Any, port);
+            socket.Bind(localEndPoint);
+            socket.Listen();
+
+            while (true)
             {
-                IPEndPoint localEndPoint = new(IPAddress.Any, port);
-
-                _socket.Blocking = false;
-                _socket.Bind(localEndPoint);
-                _socket.Listen();
-
-                while (true)
+                TimeSpan interval = TimeSpan.FromMicroseconds(1_000_000);
+                try
                 {
-                    Connection connection = Connection.Accept(_socket);
-                    _guestConns.Enqueue(connection);
+                    /*Console.WriteLine();*/
+
+                    HandleNonplayers();
+
+                    if (_clientQueue.Count == 0)
+                        socket.Blocking = true;
+
+                    /*Console.WriteLine($"_clientQueue.Count: {_clientQueue.Count}");*/
+
+                    if (socket.Blocking == true && 
+                        socket.Poll(PENDING_TIMEOUT, SelectMode.SelectRead) == false)
+                        throw new TimeoutException();
+
+                    Client client = Client.Accept(socket);
+
+                    _clientQueue.Enqueue(client);
+                    _stepQueue.Enqueue(Steps.Handshake);
+
+                    socket.Blocking = false;
+
 
                 }
-                
+                catch (SocketException e)
+                {
+                    if (e.SocketErrorCode != SocketError.WouldBlock)
+                        throw new NotImplementedException();
+
+                    /*Console.WriteLine(DateTime.Now);*/
+                }
+                catch (TimeoutException)
+                {
+                    /*Console.WriteLine($"Timeout! {DateTime.Now}");*/
+                }
+
             }
-            catch (Exception)
-            {
-                throw new NotImplementedException();
-            }
-            finally
-            {
-                _guestConns.Exit();
-                handler.Join();
-            }
+
 
         }
 
@@ -1262,16 +1367,18 @@ namespace Application
 
     public class Application
     {
+        
+
         public static void Main()
         {
             Console.WriteLine("Hello, World!");
 
+            /*Console.CancelKeyPress += */
+
             ushort port = 25565;
 
-            ConcurrentQueue<PlayerConnection> playerConnQueue = new();
-
             Listener listener = new();
-            listener.Accept(port, playerConnQueue);
+            listener.Accept(port);
         }
     }
 }
