@@ -8,7 +8,18 @@ using System.Threading.Tasks;
 
 namespace Containers
 {
-    public class Queue<T> : IEnumerable<T>
+
+    public interface IQueue<T>
+    {
+        int Count { get; }
+        bool Empty { get; }
+
+        void Enqueue(T value);
+        T Dequeue();
+
+    }
+
+    public class Queue<T> : IEnumerable<T>, IQueue<T>
     {
         protected class Node(T value)
         {
@@ -27,8 +38,10 @@ namespace Containers
 
         public Queue() { }
 
-        protected void _Enqueue(T value)
+        public void Enqueue(T value)
         {
+            System.Collections.Generic.Queue()
+
             Node newNode = new(value);
 
             if (_count == 0)
@@ -47,10 +60,8 @@ namespace Containers
 
             _count++;
         }
-
-        public void Enqueue(T value) => _Enqueue(value);
-
-        protected T _Dequeue()
+        
+        public T Dequeue()
         {
             if (_count == 0)
                 throw new EmptyQueueException();
@@ -73,8 +84,6 @@ namespace Containers
 
             return resultNode.Value;
         }
-
-        public T Dequeue() => _Dequeue();
 
         public IEnumerator<T> GetEnumerator()
         {
@@ -99,20 +108,9 @@ namespace Containers
 
     }
 
-    public class SyncQueue<T> : Queue<T>
+    public class SyncQueue<T> : Queue<T>, IEnumerable<T>, IQueue<T>
     {
         private readonly object _SharedObject = new();
-
-        public new int Count 
-        { 
-            get 
-            {
-                lock (_SharedObject)
-                {
-                    return _count;
-                }
-            } 
-        }
 
         public new bool Empty => (Count == 0);
 
@@ -122,7 +120,7 @@ namespace Containers
         {
             lock (_SharedObject)
             {
-                _Enqueue(value);
+                base.Enqueue(value);
             }
 
         }
@@ -131,7 +129,7 @@ namespace Containers
         {
             lock (_SharedObject)
             {
-                return _Dequeue();
+                return base.Dequeue();
             }
 
         }
@@ -143,6 +141,11 @@ namespace Containers
                 return base.GetEnumerator();
             }
 
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
     }
