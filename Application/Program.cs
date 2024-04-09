@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Numerics;
 using System.Text;
 using System.Text.Json;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Application
 {
@@ -523,204 +524,102 @@ namespace Application
         public abstract States State { get; }
         public abstract WhereBound BoundTo { get; }
 
-        public Packet() { }
+        public readonly int Id;
 
-        protected abstract int GetId();
+        public Packet(int id) { Id = id; }
+
         protected abstract void WriteData(Buffer buffer);
 
         public void Write(Buffer buffer)
         {
-            buffer.WriteInt(GetId(), true);
+            buffer.WriteInt(Id, true);
             WriteData(buffer);
         }
 
     }
 
-    public abstract class HandshakingPacket : Packet
+    public abstract class HandshakingPacket(int id) : Packet(id)
     {
-        public override States State { get { return States.Handshaking; } }
+        public override States State => States.Handshaking;
 
     }
 
-    public abstract class StatusPacket : Packet
+    public abstract class StatusPacket(int id) : Packet(id)
     {
-        public override States State { get { return States.Status; } }
+        public override States State => States.Status;
 
     }
 
-    public abstract class LoginPacket : Packet
+    public abstract class LoginPacket(int id) : Packet(id)
     {
-        public override States State { get { return States.Login; } }
+        public override States State => States.Login;
 
     }
 
-    public abstract class PlayingPacket : Packet
+    public abstract class PlayingPacket(int id) : Packet(id)
     {
         public override States State => States.Playing;
     }
 
-    public abstract class ServerboundHandshakingPacket : HandshakingPacket
+    public abstract class ServerboundHandshakingPacket(int id) : HandshakingPacket(id)
     {
-        public enum Ids
-        {
-            HandshakePacketId = 0x00,
-        }
+        public static readonly int SetProtocolPacketId = 0x00;
 
-        protected readonly Ids _Id;
-        public Ids Id { get { return _Id; } }
         public override WhereBound BoundTo { get { return WhereBound.Serverbound; } }
 
-        protected ServerboundHandshakingPacket(Ids id)
-        {
-            _Id = id;
-        }
-
-        protected override int GetId()
-        {
-            return (int)_Id;
-        }
-
     }
-    public abstract class ClientboundStatusPacket : StatusPacket
-    {
-        public enum Ids
-        {
-            ResponsePacketId = 0x00,
-            PongPacketId = 0x01,
-        }
 
-        protected readonly Ids _Id;
-        public Ids Id { get { return _Id; } }
+    public abstract class ClientboundStatusPacket(int id) : StatusPacket(id)
+    {
+        public static readonly int ResponsePacketId = 0x00;
+        public static readonly int PongPacketId = 0x01;
+
         public override WhereBound BoundTo { get { return WhereBound.Clientbound; } }
 
-        protected ClientboundStatusPacket(Ids id)
-        {
-            _Id = id;
-        }
-
-        protected override int GetId()
-        {
-            return (int)_Id;
-        }
-
     }
 
-    public abstract class ServerboundStatusPacket : StatusPacket
+    public abstract class ServerboundStatusPacket(int id) : StatusPacket(id)
     {
-        public enum Ids
-        {
-            RequestPacketId = 0x00,
-            PingPacketId = 0x01,
-        }
+        public static readonly int RequestPacketId = 0x00;
+        public static readonly int PingPacketId = 0x01;
 
-        protected readonly Ids _Id;
-        public Ids Id { get { return _Id; } }
         public override WhereBound BoundTo { get { return WhereBound.Serverbound; } }
 
-        protected ServerboundStatusPacket(Ids id)
-        {
-            _Id = id;
-        }
-
-        protected override int GetId()
-        {
-            return (int)_Id;
-        }
-
     }
 
-    public abstract class ClientboundLoginPacket : LoginPacket
+    public abstract class ClientboundLoginPacket(int id) : LoginPacket(id)
     {
-        public enum Ids
-        {
-            DisconnectPacketId = 0x00,
-            EncryptionRequestPacketId = 0x01,
-            LoginSuccessPacketId = 0x02,
-            SetCompressionPacketId = 0x03,
-        }
+        public static readonly int DisconnectPacketId = 0x00;
+        public static readonly int EncryptionRequestPacketId = 0x01;
+        public static readonly int LoginSuccessPacketId = 0x02;
+        public static readonly int SetCompressionPacketId = 0x03;
 
-        protected readonly Ids _Id;
-        public Ids Id => _Id;
         public override WhereBound BoundTo => WhereBound.Clientbound;
 
-        protected ClientboundLoginPacket(Ids id)
-        {
-            _Id = id;
-        }
-
-        protected override int GetId()
-        {
-            return (int)_Id;
-        }
-
     }
 
-    public abstract class ServerboundLoginPacket : LoginPacket
+    public abstract class ServerboundLoginPacket(int id) : LoginPacket(id)
     {
-        public enum Ids
-        {
-            StartLoginPacketId = 0x00,
-            EncryptionResponsePacketId = 0x01,
-        }
+        public static readonly int StartLoginPacketId = 0x00;
+        public static readonly int EncryptionResponsePacketId = 0x01;
 
-        protected readonly Ids _Id;
-        public Ids Id => _Id;
         public override WhereBound BoundTo => WhereBound.Clientbound;
 
-        protected ServerboundLoginPacket(Ids id)
-        {
-            _Id = id;
-        }
-
-        protected override int GetId()
-        {
-            return (int)_Id;
-        }
-
     }
 
-    public abstract class ClientboundPlayingPacket : PlayingPacket
+    public abstract class ClientboundPlayingPacket(int id) : PlayingPacket(id)
     {
-        public enum Ids
-        {
+        public static readonly int LoadChunkPacketId = 0x20;
+        public static readonly int UnloadChunkPacketId = 0x1D;
 
-        }
-
-        protected readonly Ids _Id;
-        public Ids Id => _Id;
         public override WhereBound BoundTo => WhereBound.Clientbound;
 
-        protected ClientboundPlayingPacket(Ids id)
-        {
-            _Id = id;
-        }
-
-        protected override int GetId()
-        {
-            return (int)_Id;
-        }
     }
 
-    public abstract class ServerboundPlayingPacket : PlayingPacket
+    public abstract class ServerboundPlayingPacket(int id) : PlayingPacket(id)
     {
-        public enum Ids
-        {
-
-        }
-
-        protected readonly Ids _Id;
-        public Ids Id => _Id;
         public override WhereBound BoundTo => WhereBound.Serverbound;
 
-        protected ServerboundPlayingPacket(Ids id)
-        {
-            _Id = id;
-        }
-
-        protected override int GetId()
-        {
-            return (int)_Id;
-        }
     }
 
     public class SetProtocolPacket : ServerboundHandshakingPacket
@@ -730,7 +629,7 @@ namespace Application
         public readonly ushort Port;
         public readonly States NextState;
 
-        public static Packet.States ReadNextState(Buffer buffer)
+        public static States ReadNextState(Buffer buffer)
         {
             int a = buffer.ReadInt(true);
             States nextState = (a == 1 ? States.Status : States.Login);
@@ -751,8 +650,7 @@ namespace Application
         private SetProtocolPacket(
             int version,
             string hostname, ushort port,
-            States nextState)
-            : base(Ids.HandshakePacketId)
+            States nextState) : base(SetProtocolPacketId)
         {
             Debug.Assert(version == _ProtocolVersion);
             Debug.Assert(port > 0);
@@ -767,15 +665,15 @@ namespace Application
         }
 
         public SetProtocolPacket(string hostname, ushort port, States nextState)
-            : this(_ProtocolVersion, hostname, port, nextState)
-        { }
+            : this(_ProtocolVersion, hostname, port, nextState) { }
 
         protected override void WriteData(Buffer buffer)
         {
-            Debug.Assert(_Id == Ids.HandshakePacketId);
+            Debug.Assert(Id == SetProtocolPacketId);
             Debug.Assert(
                 NextState == States.Status ||
                 NextState == States.Login);
+
             int a = NextState == States.Status ? 1 : 2;
             buffer.WriteInt(Version, true);
             buffer.WriteString(Hostname);
@@ -794,14 +692,13 @@ namespace Application
 
         public static ResponsePacket Read(Buffer buffer)
         {
-            string jsonString = buffer.ReadString();
+            /*string jsonString = buffer.ReadString();*/
             // TODO
             throw new NotImplementedException();
         }
 
-        public ResponsePacket(
-            int maxPlayers, int onlinePlayers, string description)
-            : base(Ids.ResponsePacketId)
+        public ResponsePacket(int maxPlayers, int onlinePlayers, string description)
+            : base(ResponsePacketId)
         {
             Debug.Assert(maxPlayers >= onlinePlayers);
 
@@ -829,7 +726,7 @@ namespace Application
             return new(buffer.ReadLong());
         }
 
-        public PongPacket(long payload) : base(Ids.PongPacketId)
+        public PongPacket(long payload) : base(PongPacketId)
         {
             Payload = payload;
         }
@@ -848,7 +745,7 @@ namespace Application
             return new();
         }
 
-        public RequestPacket() : base(Ids.RequestPacketId) { }
+        public RequestPacket() : base(RequestPacketId) { }
 
         protected override void WriteData(Buffer buffer) { }
 
@@ -863,7 +760,7 @@ namespace Application
             return new(buffer.ReadLong());
         }
 
-        private PingPacket(long payload) : base(Ids.PingPacketId)
+        private PingPacket(long payload) : base(PingPacketId)
         {
             Payload = payload;
         }
@@ -886,7 +783,7 @@ namespace Application
             return new(buffer.ReadString());
         }
 
-        public DisconnectPacket(string reason) : base(Ids.DisconnectPacketId)
+        public DisconnectPacket(string reason) : base(DisconnectPacketId)
         {
             Reason = reason;
         }
@@ -905,7 +802,7 @@ namespace Application
             throw new NotImplementedException();
         }
 
-        private EncryptionRequestPacket() : base(Ids.EncryptionRequestPacketId)
+        private EncryptionRequestPacket() : base(EncryptionRequestPacketId)
         {
             throw new NotImplementedException();
         }
@@ -930,7 +827,7 @@ namespace Application
         }
 
         public LoginSuccessPacket(Guid userId, string username)
-            : base(Ids.LoginSuccessPacketId)
+            : base(LoginSuccessPacketId)
         {
             UserId = userId;
             Username = username;
@@ -954,7 +851,7 @@ namespace Application
         }
 
         public SetCompressionPacket(int threshold)
-            : base(Ids.SetCompressionPacketId)
+            : base(SetCompressionPacketId)
         {
             Threshold = threshold;
         }
@@ -975,7 +872,7 @@ namespace Application
             return new(buffer.ReadString());
         }
 
-        public StartLoginPacket(string username) : base(Ids.StartLoginPacketId)
+        public StartLoginPacket(string username) : base(StartLoginPacketId)
         {
             Username = username;
         }
@@ -993,7 +890,7 @@ namespace Application
             throw new NotImplementedException();
         }
 
-        public EncryptionResponsePacket() : base(Ids.EncryptionResponsePacketId)
+        public EncryptionResponsePacket() : base(EncryptionResponsePacketId)
         {
             throw new NotImplementedException();
         }
@@ -1002,6 +899,58 @@ namespace Application
         {
             throw new NotImplementedException();
         }
+    }
+
+    public class LoadChunk : ClientboundPlayingPacket
+    {
+        public readonly int XChunk, ZChunk;
+        public readonly byte[] Data;
+
+        public static LoadChunk Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public LoadChunk(
+            int xChunk, int zChunk,
+            byte[] data) : base(LoadChunkPacketId)
+        {
+            XChunk = xChunk;
+            ZChunk = zChunk;
+            Data = data;  // TODO: move semantics
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteInt(XChunk);
+            buffer.WriteInt(ZChunk);
+            buffer.WriteData(Data);
+            buffer.WriteInt(0, true);  // TODO: Block entities
+        }
+
+    }
+
+    public class UnloadChunk : ClientboundPlayingPacket
+    {
+        public readonly int XChunk, ZChunk;
+
+        public static UnloadChunk Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public UnloadChunk(int xChunk, int zChunk) : base(UnloadChunkPacketId)
+        {
+            XChunk = xChunk;
+            ZChunk = zChunk;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteInt(XChunk);
+            buffer.WriteInt(ZChunk);
+        }
+
     }
 
     public abstract class Block
@@ -1024,14 +973,14 @@ namespace Application
 
         protected abstract byte GetMetadata();
 
-        public ushort GetGlobalPaletteID()
+        public ulong GetGlobalPaletteID()
         {
             byte metadata = GetMetadata();
             Debug.Assert((metadata & 0b_11110000) == 0);  // metadata is 4 bits
 
             ushort id = (ushort)_id;
             Debug.Assert((id & 0b_11111110_00000000) == 0);  // id is 9 bits
-            return (ushort)(id << 4 | metadata);  // 13 bits
+            return (ulong)(id << 4 | metadata);  // 13 bits
         }
 
 
@@ -1064,7 +1013,6 @@ namespace Application
         private readonly Types _type;  // 4 bits
         public Types Type => _type;
 
-
         public Stone(Types type) : base(Ids.Stone)
         {
             _type = type;
@@ -1091,27 +1039,120 @@ namespace Application
 
     public class Chunk
     {
+        public static readonly int Width = 16;
+        public static readonly int Height = 16 * 16;
+
         private class Section
         {
-            private static readonly int _BlocksNumber = 16 * 16 * 16;
+            public static readonly int Width = Chunk.Width;
+            public static readonly int Height = Chunk.Height / Width;
 
-            private Block?[] _blocks = new Block?[_BlocksNumber];
+            public static readonly int BlocksNumber = Width * Width * Height;
+            private Block?[] _blocks = new Block?[BlocksNumber];
 
+            public static void Write(Buffer buffer, Section section)
+            {
+                int bitsPerBlock = 13;
+                buffer.WriteByte((byte)bitsPerBlock);
+                buffer.WriteInt(0, true);
+
+                int totalBlocksBits = (BlocksNumber) * bitsPerBlock, ulongBits = (sizeof(ulong) * 8);
+                int length = totalBlocksBits / ulongBits;
+                Debug.Assert(totalBlocksBits % ulongBits == 0);
+                ulong[] data = new ulong[length];
+
+
+                for (int y = 0; y < Height; ++y)
+                {
+                    for (int z = 0; z < Width; ++z)
+                    {
+                        for (int x = 0; x < Width; ++x)
+                        {
+                            int i = (((y * Height) + z) * Width) + x;
+
+                            int start = (i * bitsPerBlock) / ulongBits,
+                                offset = (i * bitsPerBlock) & ulongBits,
+                                end = (((i + 1) * bitsPerBlock) - 1) / ulongBits;
+
+                            Block? block = section._blocks[i];
+                            if (block == null)
+                            {
+                                block = new Air();
+                            }
+
+                            ulong id = (ulong)block.GetGlobalPaletteID();
+                            Debug.Assert((id >> bitsPerBlock) == 0);
+
+                            data[start] |= (ulong)(id << offset);
+
+                            if (start != end)
+                            {
+                                data[end] = (id >> (ulongBits - offset));
+                            }
+                        }
+                    }
+                }
+
+                Debug.Assert(unchecked((long)ulong.MaxValue) == -1);
+                buffer.WriteInt(length, true);
+                for (int i = 0; i < length; ++i)
+                {
+                    buffer.WriteLong((long)data[i]);  // TODO
+                }
+
+                for (int y = 0; y < Height; ++y)
+                {
+                    for (int z = 0; z < Width; ++z)
+                    {
+                        for (int x = 0; x < Width; x += 2)
+                        {
+                            buffer.WriteByte(byte.MaxValue / 2);  // TODO
+
+                        }
+                    }
+                }
+
+                for (int y = 0; y < Height; ++y)
+                {
+                    for (int z = 0; z < Width; ++z)
+                    {
+                        for (int x = 0; x < Width; x += 2)
+                        {
+                            buffer.WriteByte(byte.MaxValue / 2);  // TODO
+
+                        }
+                    }
+                }
+            }
+
+            private Section?[] _sections = new Section?[Height / Section.Height];
 
 
         }
+        public static byte[] Write(Chunk chunk)
+        {
+            Buffer buffer = new();
 
-        private static readonly int _SectionsNumber = 16;
-        private Section?[] _sections = new Section?[_SectionsNumber];
+            /*buffer.WriteBool(true);
+            buffer.WriteInt(PrimaryBitmask, true);
+            buffer.WriteInt(Data.Length, true);
+            buffer.WriteData(Data);*/
+            
+            return buffer.ReadData();
+        }
+
+        public readonly int X;
+        public readonly int Z;
+
+        public Chunk(int x, int z)
+        {
+            X = x;
+            Z = z;
+        }
+
+
 
     }
-
-    /*public class World
-    {
-        private Table<(int, int), Chunk> _chunks = new();
-        private MultiTable<(int, int), eid, Player> _players = new();
-
-    }*/
 
     public abstract class Entity
     {
@@ -1121,6 +1162,7 @@ namespace Application
         internal Entity(Vector3 p)
         {
             _p = p;
+                
         }
     }
 
@@ -1657,8 +1699,7 @@ namespace Application
                         Buffer buffer = visitor.RecvBuffer();
 
                         int packetId = buffer.ReadInt(true);
-                        if (ServerboundHandshakingPacket.Ids.HandshakePacketId !=
-                            (ServerboundHandshakingPacket.Ids)packetId)
+                        if (ServerboundHandshakingPacket.SetProtocolPacketId != packetId)
                             throw new UnexpectedPacketException();
 
                         SetProtocolPacket packet = SetProtocolPacket.Read(buffer);
@@ -1683,8 +1724,7 @@ namespace Application
                         Buffer buffer = visitor.RecvBuffer();
 
                         int packetId = buffer.ReadInt(true);
-                        if (ServerboundStatusPacket.Ids.RequestPacketId !=
-                            (ServerboundStatusPacket.Ids)packetId)
+                        if (ServerboundStatusPacket.RequestPacketId != packetId)
                             throw new UnexpectedPacketException();
 
                         RequestPacket requestPacket = RequestPacket.Read(buffer);
@@ -1703,8 +1743,7 @@ namespace Application
                         Buffer buffer = visitor.RecvBuffer();
 
                         int packetId = buffer.ReadInt(true);
-                        if (ServerboundStatusPacket.Ids.PingPacketId !=
-                            (ServerboundStatusPacket.Ids)packetId)
+                        if (ServerboundStatusPacket.PingPacketId != packetId)
                             throw new UnexpectedPacketException();
 
                         PingPacket inPacket = PingPacket.Read(buffer);
@@ -1719,8 +1758,7 @@ namespace Application
                         Buffer buffer = visitor.RecvBuffer();
 
                         int packetId = buffer.ReadInt(true);
-                        if (ServerboundLoginPacket.Ids.StartLoginPacketId !=
-                            (ServerboundLoginPacket.Ids)packetId)
+                        if (ServerboundLoginPacket.StartLoginPacketId != packetId)
                             throw new UnexpectedPacketException();
 
                         StartLoginPacket inPacket = StartLoginPacket.Read(buffer);
@@ -1774,6 +1812,7 @@ namespace Application
                 }
                 catch (ProtocolException)
                 {
+                    Debug.Assert(loginSuccess == false);
                     close = true;
 
                     if (level >= 3)
