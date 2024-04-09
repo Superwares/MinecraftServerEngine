@@ -611,6 +611,7 @@ namespace Application
     {
         public static readonly int LoadChunkPacketId = 0x20;
         public static readonly int UnloadChunkPacketId = 0x1D;
+        public static readonly int SetPlayerAbilitiesId = 0x2C;
 
         public override WhereBound BoundTo => WhereBound.Clientbound;
 
@@ -904,6 +905,8 @@ namespace Application
     public class LoadChunk : ClientboundPlayingPacket
     {
         public readonly int XChunk, ZChunk;
+        public readonly bool Continuous;
+        public readonly int Mask;
         public readonly byte[] Data;
 
         public static LoadChunk Read(Buffer buffer)
@@ -912,11 +915,14 @@ namespace Application
         }
 
         public LoadChunk(
-            int xChunk, int zChunk,
-            byte[] data) : base(LoadChunkPacketId)
+            int xChunk, int zChunk, 
+            bool continuous, int mask, byte[] data) 
+            : base(LoadChunkPacketId)
         {
             XChunk = xChunk;
             ZChunk = zChunk;
+            Continuous = continuous;
+            Mask = mask;
             Data = data;  // TODO: move semantics
         }
 
@@ -924,6 +930,9 @@ namespace Application
         {
             buffer.WriteInt(XChunk);
             buffer.WriteInt(ZChunk);
+            buffer.WriteBool(Continuous);
+            buffer.WriteInt(Mask, true);
+            buffer.WriteInt(Data.Length, true);
             buffer.WriteData(Data);
             buffer.WriteInt(0, true);  // TODO: Block entities
         }
@@ -949,6 +958,45 @@ namespace Application
         {
             buffer.WriteInt(XChunk);
             buffer.WriteInt(ZChunk);
+        }
+
+    }
+
+    public class SetPlayerAbilities : ClientboundPlayingPacket
+    {
+        private readonly byte _flags;
+        private readonly float _flyingSpeed;
+        private readonly float _fovModifier;  // fov * _fovModifier;
+
+        public static SetPlayerAbilities Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public SetPlayerAbilities(
+            bool invulnerable, bool flying, bool allowFlying, bool creativeMode,
+            float flyingSpeed, float fovModifier) : base(SetPlayerAbilitiesId)
+        {
+            byte flags = 0;
+            if (invulnerable)
+                flags |= 0x01;
+            if (flying)
+                flags |= 0x02;
+            if (allowFlying)
+                flags |= 0x04;
+            if (creativeMode)
+                flags |= 0x08;
+
+            _flags = flags;
+            _flyingSpeed = flyingSpeed;
+            _fovModifier = fovModifier;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteByte(_flags);
+            buffer.WriteFloat(_flyingSpeed);
+            buffer.WriteFloat(_fovModifier);
         }
 
     }
@@ -1047,22 +1095,23 @@ namespace Application
             public static readonly int Width = Chunk.Width;
             public static readonly int Height = Chunk.Height / Width;
 
-            public static readonly int BlocksNumber = Width * Width * Height;
-            private Block?[] _blocks = new Block?[BlocksNumber];
+            public static readonly int BlockTotalCount = Width * Width * Height;
+            // (0, 0, 0) to (16, 16, 16)
+            private Block?[] _blocks = new Block?[BlockTotalCount];
 
             public static void Write(Buffer buffer, Section section)
             {
-                int bitsPerBlock = 13;
-                buffer.WriteByte((byte)bitsPerBlock);
-                buffer.WriteInt(0, true);
+                int blockBitCount = 13;
+                buffer.WriteByte((byte)blockBitCount);
+                buffer.WriteInt(0, true);  // Write pallete as globally
 
-                int totalBlocksBits = (BlocksNumber) * bitsPerBlock, ulongBits = (sizeof(ulong) * 8);
-                int length = totalBlocksBits / ulongBits;
-                Debug.Assert(totalBlocksBits % ulongBits == 0);
-                ulong[] data = new ulong[length];
+                int blockBitTotalCount = (BlockTotalCount) * blockBitCount,
+                    ulongBitCount = (sizeof(ulong) * 8);  // TODO: Make as constants
+                int dataLength = blockBitTotalCount / ulongBitCount;
+                Debug.Assert(blockBitTotalCount % ulongBitCount == 0);
+                ulong[] data = new ulong[dataLength];
 
-
-                for (int y = 0; y < Height; ++y)
+                for (int y = 0; y < Height; ++y)    
                 {
                     for (int z = 0; z < Width; ++z)
                     {
@@ -1070,75 +1119,96 @@ namespace Application
                         {
                             int i = (((y * Height) + z) * Width) + x;
 
-                            int start = (i * bitsPerBlock) / ulongBits,
-                                offset = (i * bitsPerBlock) & ulongBits,
-                                end = (((i + 1) * bitsPerBlock) - 1) / ulongBits;
+                            int start = (i * blockBitCount) / ulongBitCount,
+                                offset = (i * blockBitCount) % ulongBitCount,
+                                end = (((i + 1) * blockBitCount) - 1) / ulongBitCount;
 
                             Block? block = section._blocks[i];
                             if (block == null)
-                            {
                                 block = new Air();
-                            }
 
-                            ulong id = (ulong)block.GetGlobalPaletteID();
-                            Debug.Assert((id >> bitsPerBlock) == 0);
+                            ulong id = block.GetGlobalPaletteID();
+                            Debug.Assert((id >> blockBitCount) == 0);
 
-                            data[start] |= (ulong)(id << offset);
+                            data[start] |= (id << offset);
 
                             if (start != end)
                             {
-                                data[end] = (id >> (ulongBits - offset));
+                                data[end] = (id >> (ulongBitCount - offset));
                             }
+
                         }
                     }
                 }
 
                 Debug.Assert(unchecked((long)ulong.MaxValue) == -1);
-                buffer.WriteInt(length, true);
-                for (int i = 0; i < length; ++i)
+                buffer.WriteInt(dataLength, true);
+                for (int i = 0; i < dataLength; ++i)
                 {
                     buffer.WriteLong((long)data[i]);  // TODO
                 }
 
+                // TODO
                 for (int y = 0; y < Height; ++y)
                 {
                     for (int z = 0; z < Width; ++z)
                     {
                         for (int x = 0; x < Width; x += 2)
                         {
-                            buffer.WriteByte(byte.MaxValue / 2);  // TODO
+                            buffer.WriteByte(byte.MaxValue / 2);
 
                         }
                     }
                 }
 
+                // TODO
                 for (int y = 0; y < Height; ++y)
                 {
                     for (int z = 0; z < Width; ++z)
                     {
                         for (int x = 0; x < Width; x += 2)
                         {
-                            buffer.WriteByte(byte.MaxValue / 2);  // TODO
+                            buffer.WriteByte(byte.MaxValue / 2); 
 
                         }
                     }
                 }
+
+
             }
 
-            private Section?[] _sections = new Section?[Height / Section.Height];
-
-
         }
-        public static byte[] Write(Chunk chunk)
+
+        public static readonly int SectionTotalCount = Height / Section.Height;
+        // bottom to top
+        private Section?[] _sections = new Section?[SectionTotalCount];  
+
+        public static (bool, int, byte[]) Write(Chunk chunk)
         {
             Buffer buffer = new();
 
-            /*buffer.WriteBool(true);
-            buffer.WriteInt(PrimaryBitmask, true);
-            buffer.WriteInt(Data.Length, true);
-            buffer.WriteData(Data);*/
-            
-            return buffer.ReadData();
+            buffer.WriteBool(true);
+            int mask = 0;
+            Debug.Assert(SectionTotalCount == 16);
+            for (int i = 0; i < SectionTotalCount; ++i)
+            {
+                Section? section = chunk._sections[i];
+                if (section == null) continue;
+
+                mask |= (1 << i);  // TODO;
+                Section.Write(buffer, section);
+            }
+
+            // TODO
+            for (int z = 0; z < Width; ++z)
+            {
+                for (int x = 0; x < Width; ++x)
+                {
+                    buffer.WriteByte(0);
+                }
+            }
+
+            return (true, mask, buffer.ReadData());
         }
 
         public readonly int X;
@@ -1149,8 +1219,6 @@ namespace Application
             X = x;
             Z = z;
         }
-
-
 
     }
 
@@ -1175,8 +1243,6 @@ namespace Application
 
     public class Player : LivingEntity
     {
-        private Queue<ServerboundPlayingPacket> _inPackets = new();
-        private Queue<ClientboundPlayingPacket> _outPackets = new();
 
         public Player(Vector3 p) : base(p) { }
     }
