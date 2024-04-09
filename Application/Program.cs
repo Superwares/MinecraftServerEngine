@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
 using System.Text;
+using System.Text.Json;
 
 namespace Application
 {
@@ -348,7 +349,7 @@ namespace Application
             Debug.Assert(size >= 0);
 
             byte[] data = ExtractBytes(size);
-            return BitConverter.ToString(data);
+            return Encoding.UTF8.GetString(data);
         }
 
         public Guid ReadGuid()
@@ -523,7 +524,14 @@ namespace Application
 
         public Packet() { }
 
-        public abstract void Write(Buffer buffer);
+        protected abstract int GetId();
+        protected abstract void WriteData(Buffer buffer);
+
+        public void Write(Buffer buffer)
+        {
+            buffer.WriteInt(GetId(), true);
+            WriteData(buffer);
+        }
 
     }
 
@@ -566,6 +574,11 @@ namespace Application
             _Id = id;
         }
 
+        protected override int GetId()
+        {
+            return (int)_Id;
+        }
+
     }
     public abstract class ClientboundStatusPacket : StatusPacket
     {
@@ -582,6 +595,11 @@ namespace Application
         protected ClientboundStatusPacket(Ids id)
         {
             _Id = id;
+        }
+
+        protected override int GetId()
+        {
+            return (int)_Id;
         }
 
     }
@@ -601,6 +619,11 @@ namespace Application
         protected ServerboundStatusPacket(Ids id)
         {
             _Id = id;
+        }
+
+        protected override int GetId()
+        {
+            return (int)_Id;
         }
 
     }
@@ -624,6 +647,11 @@ namespace Application
             _Id = id;
         }
 
+        protected override int GetId()
+        {
+            return (int)_Id;
+        }
+
     }
 
     public abstract class ServerboundLoginPacket : LoginPacket
@@ -643,6 +671,11 @@ namespace Application
             _Id = id;
         }
 
+        protected override int GetId()
+        {
+            return (int)_Id;
+        }
+
     }
 
     public abstract class ClientboundPlayingPacket : PlayingPacket
@@ -660,6 +693,11 @@ namespace Application
         {
             _Id = id;
         }
+
+        protected override int GetId()
+        {
+            return (int)_Id;
+        }
     }
 
     public abstract class ServerboundPlayingPacket : PlayingPacket
@@ -676,6 +714,11 @@ namespace Application
         protected ServerboundPlayingPacket(Ids id)
         {
             _Id = id;
+        }
+
+        protected override int GetId()
+        {
+            return (int)_Id;
         }
     }
 
@@ -726,7 +769,7 @@ namespace Application
             : this(_ProtocolVersion, hostname, port, nextState)
         { }
 
-        public override void Write(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             Debug.Assert(_Id == Ids.HandshakePacketId);
             Debug.Assert(
@@ -766,8 +809,9 @@ namespace Application
             Description = description;
         }
 
-        public override void Write(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
+            // TODO
             string jsonString = "{\"version\":{\"name\":\"1.12.2\",\"protocol\":340},\"players\":{\"max\":100,\"online\":0,\"sample\":[]},\"description\":{\"text\":\"Hello, World!\"},\"favicon\":\"data:image/png;base64,<data>\",\"enforcesSecureChat\":true,\"previewsChat\":true}";
 
             buffer.WriteString(jsonString);
@@ -789,7 +833,7 @@ namespace Application
             Payload = payload;
         }
 
-        public override void Write(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             buffer.WriteLong(Payload);
         }
@@ -805,7 +849,7 @@ namespace Application
 
         public RequestPacket() : base(Ids.RequestPacketId) { }
 
-        public override void Write(Buffer buffer) { }
+        protected override void WriteData(Buffer buffer) { }
 
     }
 
@@ -825,7 +869,7 @@ namespace Application
 
         public PingPacket() : this(DateTime.Now.Ticks) { }
 
-        public override void Write(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             buffer.WriteLong(Payload);
         }
@@ -846,7 +890,7 @@ namespace Application
             Reason = reason;
         }
 
-        public override void Write(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             buffer.WriteString(Reason);
         }
@@ -865,7 +909,7 @@ namespace Application
             throw new NotImplementedException();
         }
 
-        public override void Write(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             throw new NotImplementedException();
         }
@@ -891,7 +935,7 @@ namespace Application
             Username = username;
         }
 
-        public override void Write(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             buffer.WriteString(UserId.ToString());
             buffer.WriteString(Username);
@@ -914,7 +958,7 @@ namespace Application
             Threshold = threshold;
         }
 
-        public override void Write(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             buffer.WriteInt(Threshold, true);
         }
@@ -935,7 +979,7 @@ namespace Application
             Username = username;
         }
 
-        public override void Write(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             buffer.WriteString(Username);
         }
@@ -953,7 +997,7 @@ namespace Application
             throw new NotImplementedException();
         }
 
-        public override void Write(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             throw new NotImplementedException();
         }
@@ -1283,29 +1327,69 @@ namespace Application
 
     }
 
-    public class Connection
+    public class Connection : IDisposable
     {
+        private bool _disposed = false;
+
         private Client _client;
 
-        internal Connection(Client client)
+        public readonly int Id;
+        public readonly Guid UserId;
+        public readonly string Username;
+
+        internal Connection(Client client, Guid userId, string username)
         {
             _client = client;
+
+            Id = NumberList.Alloc();
+            UserId = userId;
+            Username = username;
         }
 
-        public PlayingPacket RecvPacket()
+        ~Connection()
+        {
+            Dispose(false);
+        }
+
+        public ServerboundPlayingPacket RecvPacket()
         {
             throw new NotImplementedException();
         }
 
-        public void SendPacket(PlayingPacket packet)
+        public void SendPacket(ClientboundPlayingPacket packet)
         {
             throw new NotImplementedException();
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed == false)
+            {
+                if (disposing == true)
+                {
+                    // managed objects
+                }
+
+                // unmanaged objects
+                NumberList.Dealloc(Id);
+                _client.Dispose();
+
+                _disposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         public void Close()
         {
-            _client.Close();
+            _client.Dispose();
         }
+
+        
     }
 
     public sealed class Application
@@ -1350,11 +1434,11 @@ namespace Application
         public static bool Closed => Instance._closed;
         public static bool Running => !Closed;
 
-        private Queue<Thread> _threadQueue = new();
+        private Queue<Thread> _threads = new();
 
         private Dictionary<(int, int), Chunk> _chunks = new();
-        private Dictionary<int, Client> _clients = new();
 
+        private Queue<Connection> _newJoinedConnections = new();
         private Queue<Connection> _connections = new();
 
         private void Close()
@@ -1363,7 +1447,7 @@ namespace Application
 
             _closed = true;
 
-            foreach (Thread t in _threadQueue)
+            foreach (Thread t in _threads)
                 t.Join();
 
             /*Thread.Sleep(1000 * 5);*/
@@ -1393,7 +1477,7 @@ namespace Application
 
             Debug.Assert(thread.ManagedThreadId != _MainId);
 
-            _threadQueue.Enqueue(thread);
+            _threads.Enqueue(thread);
         }
 
         private static void Run(StartRoutine f)
@@ -1414,7 +1498,6 @@ namespace Application
             Instance._Run(ctx);
         }
 
-
         private void FinishMainFunction()
         {
             Debug.Assert(Thread.CurrentThread.ManagedThreadId == _MainId);
@@ -1431,10 +1514,12 @@ namespace Application
             if (count == 0) return 0;
 
             bool close;
+            bool loginSuccess;
 
             for (; count > 0; --count)
             {
                 close = false;
+                loginSuccess = false;
 
                 Client visitor = visitors.Dequeue();
                 int level = levelQueue.Dequeue();
@@ -1482,7 +1567,6 @@ namespace Application
 
                         // TODO
                         ResponsePacket responsePacket = new(100, 10, "Hello, World!");
-                        buffer.WriteInt((int)responsePacket.Id, true);
                         responsePacket.Write(buffer);
                         visitor.SendBuffer(buffer);
 
@@ -1501,15 +1585,55 @@ namespace Application
 
                         PingPacket inPacket = PingPacket.Read(buffer);
 
-                        PongPacket pongPacket = new(inPacket.Payload);
-                        buffer.WriteInt((int)pongPacket.Id, true);
-                        pongPacket.Write(buffer);
+                        PongPacket outPacket = new(inPacket.Payload);
+                        outPacket.Write(buffer);
                         visitor.SendBuffer(buffer);
                     }
 
                     if (level == 3)  // Start Login
                     {
-                        throw new NotImplementedException();
+                        Buffer buffer = visitor.RecvBuffer();
+
+                        int packetId = buffer.ReadInt(true);
+                        if (ServerboundLoginPacket.Ids.StartLoginPacketId !=
+                            (ServerboundLoginPacket.Ids)packetId)
+                            throw new UnexpectedPacketException();
+
+                        StartLoginPacket inPacket = StartLoginPacket.Read(buffer);
+
+                        // TODO: Check username is empty or invalid.
+
+                        HttpClient httpClient = new();
+                        string url = string.Format("https://api.mojang.com/users/profiles/minecraft/{0}", inPacket.Username);
+                        /*Console.WriteLine(inPacket.Username);
+                        Console.WriteLine($"url: {url}");*/
+                        using HttpRequestMessage request = new(HttpMethod.Get, url);
+
+                        // TODO: handle HttpRequestException
+                        using HttpResponseMessage response = httpClient.Send(request);
+
+                        using Stream stream = response.Content.ReadAsStream();
+                        using StreamReader reader = new(stream);
+                        string str = reader.ReadToEnd();
+                        Dictionary<string, string>? dictionary = JsonSerializer.Deserialize<Dictionary<string, string>>(str);
+                        Debug.Assert(dictionary != null);
+
+                        Guid userId = Guid.Parse(dictionary["id"]);
+                        string username = dictionary["name"];  // TODO: check username is valid
+                        /*Console.WriteLine($"userId: {userId}");
+                        Console.WriteLine($"username: {username}");*/
+
+                        // TODO: Handle to throw exception
+                        Debug.Assert(inPacket.Username == username);
+
+                        LoginSuccessPacket outPacket = new(userId, username);
+                        outPacket.Write(buffer);
+                        visitor.SendBuffer(buffer);
+
+                        Connection conn = new(visitor, userId, username);
+                        _newJoinedConnections.Enqueue(conn);
+
+                        loginSuccess = true;
                     }
 
                     close = true;
@@ -1534,6 +1658,9 @@ namespace Application
                     }
                 }
 
+                if (loginSuccess == true)
+                    continue;
+
                 if (close == false)
                 {
                     visitors.Enqueue(visitor);
@@ -1549,7 +1676,7 @@ namespace Application
             return visitors.Count;
         }
 
-        private void StartListenerRoutine(ListenerContext _ctx)
+        private void _StartListenerRoutine(ListenerContext _ctx)
         {
             ushort port = _ctx.Port;
             using Socket socket = new(SocketType.Stream, ProtocolType.Tcp);
@@ -1596,6 +1723,10 @@ namespace Application
             // TODO: Handle client, send Disconnet Packet if the client's step is after StartLogin;
         }
 
+        private static void StartListenerRoutine(ListenerContext _ctx)
+        {
+            Instance._StartListenerRoutine(_ctx);
+        }
 
         public static void Main()
         {
@@ -1604,8 +1735,7 @@ namespace Application
             Console.WriteLine("Hello, World!");
             
             ushort port = 25565;
-
-            Run(Instance.StartListenerRoutine, new ListenerContext(port));
+            Run(StartListenerRoutine, new ListenerContext(port));
 
             while (Running)
             {
