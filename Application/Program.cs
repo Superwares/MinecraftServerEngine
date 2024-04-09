@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
@@ -1140,6 +1141,129 @@ namespace Application
 
     public class NumberList
     {
+        private readonly int _MIN = 0;
+        private readonly int _MAX = int.MaxValue;
+
+        private class Node(int from, int to)
+        {
+            public int from = from, to = to;
+            public Node? next = null;
+
+        }
+
+        private Node _first;
+
+        public NumberList()
+        {
+            _first = new(_MIN, _MAX);
+        }
+
+        ~NumberList()
+        {
+            Debug.Assert(_first != null);
+            Debug.Assert(_first.next == null);
+            Debug.Assert(_first.from == _MIN);
+            Debug.Assert(_first.to == _MAX);
+        }
+
+        public int Alloc()
+        {
+            int from = _first.from, to = _first.to;
+            Debug.Assert(from <= to);
+
+            int number;
+
+            if (from < to)
+            {
+                number = from++;
+                _first.from = from;
+            }
+            else
+            {
+                Debug.Assert(from == to);
+
+                number = from;
+                Node? next = _first.next;
+                Debug.Assert(next != null);
+                _first = next;
+            }
+
+            return number;
+        }
+
+        public void Dealloc(int number)
+        {
+            Debug.Assert(_first != null);
+
+            Node? prev;
+            Node? current = _first;
+
+            int from = current.from,
+                to = current.to;
+            Debug.Assert(from <= to);
+            Debug.Assert(!(from <= number && number <= to));
+
+            if (number < from)
+            {
+                if (from > 0)
+                {
+                    if (number == (from - 1))
+                    {
+                        current.from--;
+                    }
+                    else
+                    {
+                        prev = new(number, number);
+                        prev.next = current;
+                        _first = prev;
+                    }
+                }
+                else
+                    Debug.Assert(false);
+            }
+            else
+            {
+                do
+                {
+                    Debug.Assert(current.from <= current.to);
+                    Debug.Assert(!(current.from <= number && number <= current.to));
+                    Debug.Assert(current.to < number);
+
+                    prev = current;
+                    current = prev.next;
+                    Debug.Assert(current != null);
+                }
+                while (!(prev.to < number && number < current.from));
+
+                to = prev.to;
+                from = current.from;
+
+                if ((to + 1) == (from - 1))
+                {
+                    Debug.Assert((to + 1) == number);
+                    prev.to = current.to;
+                    prev.next = current.next;
+                }
+                else if ((to + 1) < number && number < (from - 1))
+                {
+                    Node between = new(number, number);
+                    between.next = current;
+                    prev.next = between;
+                }
+                else if ((to + 1) == number)
+                {
+                    Debug.Assert((to + 1) + 1 < from);
+                    prev.to++;
+                }
+                else
+                {
+                    Debug.Assert(to < (from - 1) - 1);
+                    current.from--;
+                }
+            }
+
+        }
+
 
     }
 
@@ -1147,9 +1271,6 @@ namespace Application
     {
         private static readonly byte _SEGMENT_BITS = 0x7F;
         private static readonly byte _CONTINUE_BIT = 0x80;
-
-        private int _id;
-        public int Id => _id;
 
         private bool _disposed = false;
 
@@ -1331,17 +1452,19 @@ namespace Application
     {
         private bool _disposed = false;
 
+        public readonly int Id;
+
         private Client _client;
 
-        public readonly int Id;
         public readonly Guid UserId;
         public readonly string Username;
 
-        internal Connection(Client client, Guid userId, string username)
+        internal Connection(int id, Client client, Guid userId, string username)
         {
+            Id = id;
+
             _client = client;
 
-            Id = NumberList.Alloc();
             UserId = userId;
             Username = username;
         }
@@ -1371,7 +1494,6 @@ namespace Application
                 }
 
                 // unmanaged objects
-                NumberList.Dealloc(Id);
                 _client.Dispose();
 
                 _disposed = true;
@@ -1427,6 +1549,8 @@ namespace Application
         private static readonly Thread _MainThread = Thread.CurrentThread;
         private static readonly int _MainId = _MainThread.ManagedThreadId;
         private static readonly Application Instance = new();
+
+        private readonly NumberList numberList = new();
 
         private readonly object _SharedObject = new();
 
@@ -1630,7 +1754,8 @@ namespace Application
                         outPacket.Write(buffer);
                         visitor.SendBuffer(buffer);
 
-                        Connection conn = new(visitor, userId, username);
+                        int id = numberList.Alloc();  // TODO: Must dealloc id when connection is disposed.
+                        Connection conn = new(id, visitor, userId, username);
                         _newJoinedConnections.Enqueue(conn);
 
                         loginSuccess = true;
