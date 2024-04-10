@@ -1531,7 +1531,7 @@ namespace Application
         }
     }
 
-    public sealed class Queue<T> : IDisposable
+    public class Queue<T> : IDisposable
     {
         private class Node(T value)
         {
@@ -1617,7 +1617,7 @@ namespace Application
             return value;
         }
 
-        private void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
             if (_disposed) return;
          
@@ -1642,32 +1642,71 @@ namespace Application
             GC.SuppressFinalize(this);
         }
 
-        public void Close()
-        {
-            Dispose();
-        }
-
     }
 
-    public sealed class ConcurrentQueue<T> : IDisposable
+    public sealed class ConcurrentQueue<T> : Queue<T>
     {
-        private class Node(T value)
-        {
-            private T _value = value;
-            public T Value => _value;
-
-            public Node? NextNode = null;
-
-        }
-
         private readonly object _SharedResource = new();
 
         private bool _disposed = false;
 
-        private Node? _outNode = null, _inNode = null;
+        public ConcurrentQueue() { }
+
+        ~ConcurrentQueue() => Dispose(false);
+
+        public new void Enqueue(T value)
+        {
+            Debug.Assert(!_disposed);
+
+            lock (_SharedResource)
+            {
+                base.Enqueue(value);
+            }
+        }
+
+        public new T Dequeue()
+        {
+            Debug.Assert(!_disposed);
+
+            lock (_SharedResource)
+            {
+                return base.Dequeue();
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing == true)
+                {
+                    // Release managed resources.
+                }
+
+                // Release unmanaged resources.
+
+                _disposed = true;
+            }
+
+            base.Dispose(disposing);
+        }
+
+    }
+
+    public class Table<T> : IDisposable
+    {
+        private static readonly int _MinLength = 16;
+        private static readonly int _ExpansionFactor = 2;
+        private static readonly float _LoadFactor = 0.75F;
+        private static readonly int _C = 5;
+
+        private bool[] _flags = new bool[_MinLength];
+        private int[] _keys = new int[_MinLength];
+        private T[] _values = new T[_MinLength];
+        private int _length = _MinLength;
 
         private int _count = 0;
-        public int Count  // TODO: Check whether it needs concurrency.
+        public int Count
         {
             get
             {
@@ -1677,84 +1716,39 @@ namespace Application
             }
         }
 
-        public bool Empty => (_count == 0);
+        private bool _disposed = false;
 
-        public ConcurrentQueue() { }
+        public Table() { }
 
-        ~ConcurrentQueue()
+        ~Table() => Dispose(false);
+
+        public void Insert(int key, T value)
         {
-            Dispose(false);
+            throw new NotImplementedException();
         }
 
-        public void Enqueue(T value)
+        public T Extract(int key)
         {
-            Debug.Assert(!_disposed);
-
-            lock (_SharedResource)
-            {
-                Node newNode = new(value);
-
-                if (_count == 0)
-                {
-                    Debug.Assert(_outNode == null);
-                    Debug.Assert(_inNode == null);
-
-                    _outNode = _inNode = newNode;
-                }
-                else
-                {
-                    Debug.Assert(_outNode != null);
-                    Debug.Assert(_inNode != null);
-
-                    _inNode.NextNode = newNode;
-                    _inNode = newNode;
-                }
-
-                _count++;
-            }
+            throw new NotImplementedException();
         }
 
-        public T Dequeue()
+        public T Lookup(int key)
         {
-            Debug.Assert(!_disposed);
-
-            lock (_SharedResource)
-            {
-                if (_count == 0)
-                    throw new EmptyQueueException();
-
-                Debug.Assert(_inNode != null);
-                Debug.Assert(_outNode != null);
-                T value = _outNode.Value;
-
-                if (_count == 1)
-                {
-                    _inNode = _outNode = null;
-                }
-                else
-                {
-                    Debug.Assert(_count > 1);
-                    _outNode = _outNode.NextNode;
-                }
-
-                _count--;
-
-                return value;
-            }
+            throw new NotImplementedException();
         }
 
-        private void Dispose(bool disposing)
+        public bool Contains(int key)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected virtual void Dispose(bool disposing)
         {
             if (_disposed) return;
-
-            Debug.Assert(Count == 0);
-            Debug.Assert(_outNode == null);
-            Debug.Assert(_inNode == null);
 
             if (disposing == true)
             {
                 // Release managed resources.
-                _outNode = _inNode = null;
             }
 
             // Release unmanaged resources.
@@ -1768,20 +1762,31 @@ namespace Application
             GC.SuppressFinalize(this);
         }
 
-        public void Close()
-        {
-            Dispose();
-        }
     }
 
-    public class Table<K, T> : IDisposable
+    // TODO: Change to correct name.
+    public class LongTable<T> : IDisposable
     {
         private bool _disposed = false;
-        public Table() { }
 
-        ~Table()
+        private readonly Table<Queue<T>> _data = new();
+
+        LongTable() { }
+
+        ~LongTable()
         {
             Dispose(false);
+        }
+
+        public void Enqueue(int key, T value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public T Dequeue(int key)
+        {
+            // TODO: If the queue is empty after dequeue value, the queue must be released.
+            throw new NotImplementedException();
         }
 
         protected virtual void Dispose(bool disposing)
@@ -1791,43 +1796,7 @@ namespace Application
             if (disposing == true)
             {
                 // managed objects
-            }
-
-            // unmanaged objects
-
-            _disposed = true;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    public class PacketTable<T> : IDisposable
-    {
-        private bool _disposed = false;
-
-        private readonly Table<int, Queue<T>> _outPackets = new();
-        private readonly Table<int, Queue<T>> _inPackets = new();
-
-        PacketTable() { }
-
-        ~PacketTable()
-        {
-            Dispose(false);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (_disposed) return;
-
-            if (disposing == true)
-            {
-                // managed objects
-                _outPackets.Dispose();
-                _inPackets.Dispose();
+                _data.Dispose();
             }
 
             // unmanaged objects
@@ -2148,7 +2117,6 @@ namespace Application
         private readonly Queue<Player> _players = new();
 
         /*private readonly Dictionary<int, Queue<ClientboundPlayingPacket>> _outPackets = new();*/
-
 
         private void Close()
         {
