@@ -19,7 +19,7 @@ namespace Containers
 
     }
 
-    public class Queue<T> : IEnumerable<T>, IQueue<T>
+    /*public class Queue<T> : IEnumerable<T>, IQueue<T>
     {
         protected class Node(T value)
         {
@@ -61,7 +61,7 @@ namespace Containers
             return GetEnumerator();
         }
 
-    }
+    }*/
 
     public class SyncQueue<T> : Queue<T>, IEnumerable<T>, IQueue<T>
     {

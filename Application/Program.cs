@@ -18,9 +18,35 @@ namespace Application
         public EmptyQueueException() : base("No elements in the queue.") { }
 
     }
+
     public abstract class ProtocolException : Exception
     {
         public ProtocolException(string message) : base(message) { }
+    }
+
+    public abstract class UnexpectedDataException : ProtocolException
+    {
+        public UnexpectedDataException(string message) : base(message) { }
+    }
+
+    public class UnexpectedPacketException : UnexpectedDataException
+    {
+        public UnexpectedPacketException() : base("Encountered an unexpected packet.") { }
+    }
+
+    public class InvalidEncodingException : UnexpectedDataException
+    {
+        public InvalidEncodingException() : base("Failed to decode the data due to invalid encoding.") { }
+    }
+
+    public class BufferOverflowException : UnexpectedDataException
+    {
+        public BufferOverflowException() : base("Unexpected buffer overflow occurred due to excessive data.") { }
+    }
+
+    public class EmptyBufferException : UnexpectedDataException
+    {
+        public EmptyBufferException() : base("Attempting to read from an empty buffer.") { }
     }
 
     public class EndofFileException : ProtocolException
@@ -28,33 +54,12 @@ namespace Application
         public EndofFileException() : base("EOF reached unexpectedly.") { }
     }
 
-    public class EmptyBufferException : ProtocolException
-    {
-        public EmptyBufferException() : base("Attempting to read from an empty buffer.") { }
-    }
-
-    public class UnexpectedPacketException : ProtocolException
-    {
-        public UnexpectedPacketException() : base("Encountered an unexpected packet.") { }
-    }
-
-    public class InvalidEncodingException : ProtocolException
-    {
-        public InvalidEncodingException() : base("Failed to decode the data due to invalid encoding.") { }
-    }
-
     // TODO: It needs the corrent name and message.
     public class TimeoutException : ProtocolException
     {
         public TimeoutException() : base("Connections are not pending.") { }
     }
-
-    public class UnexpectedDataException : ProtocolException
-    {
-        public UnexpectedDataException() : base("This is an unexpected data.") { }
-    }
-
-
+    
     internal static class SocketMethods
     {
         public static byte RecvByte(Socket socket)
@@ -524,7 +529,7 @@ namespace Application
 
         public void Flush()
         {
-            Debug.Assert(Size >= _InitDatasize);
+            Debug.Assert(_dataSize >= _InitDatasize);
             if (Size == 0)
                 return;
 
@@ -1933,7 +1938,7 @@ namespace Application
 
         private readonly Dictionary<(int, int), Chunk> _chunks = new();
 
-        private readonly Queue<Connection> _newJoinedConnections = new();
+        /*private readonly ConcurrentQueue<Connection> _newJoinedConnections = new();*/
         private readonly Queue<Connection> _connections = new();
 
         private readonly Queue<Player> _newJoinedPlayers = new();
@@ -2010,22 +2015,23 @@ namespace Application
 
         private int HandleVisitors(Queue<Client> visitors, Queue<int> levelQueue)
         {
+            Console.Write(".");
+
             int count = visitors.Count;
             Debug.Assert(count == levelQueue.Count);
             if (count == 0) return 0;
 
-            bool close;
-            bool loginSuccess;
+            bool close, success;
 
             for (; count > 0; --count)
             {
-                close = false;
-                loginSuccess = false;
+                close = success = false;
 
                 Client visitor = visitors.Dequeue();
                 int level = levelQueue.Dequeue();
-                Debug.Assert(level >= 0);
+                /*Console.WriteLine($"count: {count}, level: {level}");*/
 
+                Debug.Assert(level >= 0);
                 using Buffer buffer = new();
 
                 try
@@ -2037,12 +2043,12 @@ namespace Application
 
                         int packetId = buffer.ReadInt(true);
                         if (ServerboundHandshakingPacket.SetProtocolPacketId != packetId)
-                            throw new UnexpectedDataException();
+                            throw new UnexpectedPacketException();
 
                         SetProtocolPacket packet = SetProtocolPacket.Read(buffer);
 
                         if (buffer.Size > 0)
-                            throw new UnexpectedDataException();
+                            throw new BufferOverflowException();
 
                         switch (packet.NextState)
                         {
@@ -2055,7 +2061,7 @@ namespace Application
                                 level = 3;
                                 break;
                         }
-                        
+
                     }
 
                     if (level == 1)  // Request
@@ -2065,12 +2071,12 @@ namespace Application
 
                         int packetId = buffer.ReadInt(true);
                         if (ServerboundStatusPacket.RequestPacketId != packetId)
-                            throw new UnexpectedDataException();
+                            throw new UnexpectedPacketException();
 
                         RequestPacket requestPacket = RequestPacket.Read(buffer);
 
                         if (buffer.Size > 0)
-                            throw new UnexpectedDataException();
+                            throw new BufferOverflowException();
 
                         // TODO
                         ResponsePacket responsePacket = new(100, 10, "Hello, World!");
@@ -2087,12 +2093,12 @@ namespace Application
 
                         int packetId = buffer.ReadInt(true);
                         if (ServerboundStatusPacket.PingPacketId != packetId)
-                            throw new UnexpectedDataException();
+                            throw new UnexpectedPacketException();
 
                         PingPacket inPacket = PingPacket.Read(buffer);
 
                         if (buffer.Size > 0)
-                            throw new UnexpectedDataException();
+                            throw new BufferOverflowException();
 
                         PongPacket outPacket = new(inPacket.Payload);
                         outPacket.Write(buffer);
@@ -2105,12 +2111,12 @@ namespace Application
 
                         int packetId = buffer.ReadInt(true);
                         if (ServerboundLoginPacket.StartLoginPacketId != packetId)
-                            throw new UnexpectedDataException();
+                            throw new UnexpectedPacketException();
 
                         StartLoginPacket inPacket = StartLoginPacket.Read(buffer);
 
                         if (buffer.Size > 0)
-                            throw new UnexpectedDataException();
+                            throw new BufferOverflowException();
 
                         // TODO: Check username is empty or invalid.
 
@@ -2137,18 +2143,56 @@ namespace Application
                         // TODO: Handle to throw exception
                         Debug.Assert(inPacket.Username == username);
 
-                        LoginSuccessPacket outPacket = new(userId, username);
-                        outPacket.Write(buffer);
+                        LoginSuccessPacket outPacket1 = new(userId, username);
+                        outPacket1.Write(buffer);
                         visitor.Send(buffer);
 
-                        // TODO: send join game packet
+                        int id = idList.Alloc();
+                        JoinGamePacket outPacket2 = new(id, 1, 0, 0, "default", false);
+                        outPacket2.Write(buffer);
+                        visitor.Send(buffer);
 
-                        int id = idList.Alloc();  // TODO: Must dealloc id when connection is disposed.
-                        Connection conn = new(id, visitor, userId, username);
-                        _newJoinedConnections.Enqueue(conn);
+                        /*  // TODO: Must dealloc id when connection is disposed.
+                        
 
-                        loginSuccess = true;
+                        /*success = true;*/
+
+                        level = 4;
                     }
+
+                    if (level == 4)  // Client Settings
+                    {
+                        visitor.Recv(buffer);
+
+                        int packetId = buffer.ReadInt(true);
+                        if (packetId != 0x04)
+                            throw new UnexpectedPacketException();
+
+                        // TODO: Handle this packet. (Client Settings)
+
+                        buffer.Flush();
+
+                        level = 5;
+                    }
+
+                    if (level == 5)  // Plugin Message
+                    {
+                        visitor.Recv(buffer);
+
+                        int packetId = buffer.ReadInt(true);
+                        if (packetId != 0x09)
+                            throw new UnexpectedPacketException();
+
+                        // TODO: Handle this packet. (Plugin Message)
+
+                        buffer.Flush();
+
+                        /*Connection conn = new(id, visitor, userId, username);
+                        _newJoinedConnections.Enqueue(conn);*/
+
+                        success = true;
+                    }
+
 
                     Debug.Assert(buffer.Size == 0);
 
@@ -2157,37 +2201,50 @@ namespace Application
                 }
                 catch (SocketException e)
                 {
-                    if (e.SocketErrorCode != SocketError.WouldBlock)
-                        throw new NotImplementedException();
+                    if (e.SocketErrorCode == SocketError.ConnectionAborted ||
+                        false)  // Add other Exceptions here!
+                        close = true;
+                    else if (e.SocketErrorCode != SocketError.WouldBlock)
+                        Debug.Assert(false);
 
                     /*Console.WriteLine($"SocketError.WouldBlock!");*/
-
                 }
                 catch (UnexpectedDataException)
                 {
-                    Debug.Assert(loginSuccess == false);
+                    Debug.Assert(success == false);
+                    Debug.Assert(close == false);
                     close = true;
 
                     buffer.Flush();
 
-                    if (level >= 3)
+                    if (level >= 3)  // >= Start Login level
                     {
                         Debug.Assert(false);
-                        // TODO: Handle send Disconnect packet.
+                        // TODO: Handle send Disconnect packet with reason.
                     }
                 }
-
-                if (loginSuccess == true)
-                    continue;
-
-                if (close == false)
+                catch (EndofFileException)
                 {
-                    visitors.Enqueue(visitor);
-                    levelQueue.Enqueue(level);
+                    Debug.Assert(success == false);
+                    Debug.Assert(close == false);
+                    close = true;
+
+                    /*Console.Write("~");*/
+
+                    buffer.Flush();
                 }
-                else
+
+                if (!success)
                 {
-                    visitor.Close();
+                    if (close == false)
+                    {
+                        visitors.Enqueue(visitor);
+                        levelQueue.Enqueue(level);
+                    }
+                    else
+                    {
+                        visitor.Close();
+                    }
                 }
 
             }
@@ -2204,19 +2261,29 @@ namespace Application
             socket.Listen();
 
             Queue<Client> visitors = new();
-            // 0: Handshake, 1: Request, 2: Ping, 3: StartLogin
+            /*
+             * 0: Handshake
+             * 1: Request
+             * 2: Ping
+             * 3: Start Login
+             * 4: Client Settings
+             * 5: Plugin Message
+             */
             Queue<int> levelQueue = new();
+
+            socket.Blocking = true;
 
             while (Running)
             {
                 try
                 {
-                    if (HandleVisitors(visitors, levelQueue) == 0)
+                    if (!socket.Blocking &&
+                        HandleVisitors(visitors, levelQueue) == 0)
                     {
                         socket.Blocking = true;
                     }
-
-                    if (socket.Blocking == true &&
+                    
+                    if (socket.Blocking &&
                         socket.Poll(PendingTimeout, SelectMode.SelectRead) == false)
                     {
                         throw new TimeoutException();
@@ -2234,7 +2301,10 @@ namespace Application
                     if (e.SocketErrorCode != SocketError.WouldBlock)
                         throw new NotImplementedException();
                 }
-                catch (TimeoutException) { }
+                catch (TimeoutException) 
+                {
+                    Console.WriteLine("!");
+                }
 
             }
 
@@ -2246,7 +2316,11 @@ namespace Application
         {
             while (Running)
             {
-                while (_newJoinedConnections.Count > 0)
+                // recv packets using connections
+
+                // Barrier
+
+                /*while (_newJoinedConnections.Count > 0)
                 {
                     Connection conn = _newJoinedConnections.Dequeue();
 
@@ -2257,10 +2331,14 @@ namespace Application
                     Player player = new(id, new(0, 60, 0));
                     _newJoinedPlayers.Enqueue(player);
 
-                    /*InitOutPackets(id);*/
+                    *//*InitOutPackets(id);*//*
 
                     _connections.Enqueue(conn);
                 }
+*/
+                // Barrier
+
+                // handle players
 
                 // Barrier
 
