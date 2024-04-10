@@ -4,8 +4,10 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
+using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Application
@@ -611,6 +613,7 @@ namespace Application
     {
         public static readonly int LoadChunkPacketId = 0x20;
         public static readonly int UnloadChunkPacketId = 0x1D;
+        public static readonly int JoinGamePacketId = 0x23;
         public static readonly int SetPlayerAbilitiesId = 0x2C;
 
         public override WhereBound BoundTo => WhereBound.Clientbound;
@@ -962,18 +965,61 @@ namespace Application
 
     }
 
-    public class SetPlayerAbilities : ClientboundPlayingPacket
+    public class JoinGamePacket : ClientboundPlayingPacket
+    {
+        private readonly int _entityId;
+        private readonly byte _gamemode;
+        private readonly int _dimension;
+        private readonly byte _difficulty;
+        private readonly string _levelType;
+        private readonly bool _reducedDebugInfo;
+
+        public static JoinGamePacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public JoinGamePacket(
+            int entityId, 
+            byte gamemode, 
+            int dimension, 
+            byte difficulty, 
+            string levelType, 
+            bool reducedDebugInfo) : base(JoinGamePacketId)
+        {
+            _entityId = entityId;
+            _gamemode = gamemode;
+            _dimension = dimension;
+            _difficulty = difficulty;
+            _levelType = levelType;
+            _reducedDebugInfo = reducedDebugInfo;
+
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteInt(_entityId);
+            buffer.WriteByte(_gamemode);
+            buffer.WriteInt(_dimension);
+            buffer.WriteByte(_difficulty);
+            buffer.WriteByte(0);
+            buffer.WriteString(_levelType);
+            buffer.WriteBool(_reducedDebugInfo);
+        }
+    }
+
+    public class SetAbilitiesPacket : ClientboundPlayingPacket
     {
         private readonly byte _flags;
         private readonly float _flyingSpeed;
         private readonly float _fovModifier;  // fov * _fovModifier;
 
-        public static SetPlayerAbilities Read(Buffer buffer)
+        public static SetAbilitiesPacket Read(Buffer buffer)
         {
             throw new NotImplementedException();
         }
 
-        public SetPlayerAbilities(
+        public SetAbilitiesPacket(
             bool invulnerable, bool flying, bool allowFlying, bool creativeMode,
             float flyingSpeed, float fovModifier) : base(SetPlayerAbilitiesId)
         {
@@ -1083,12 +1129,27 @@ namespace Application
         }
     }
 
-    
+    public struct EntityPosition(float x, float y, float z)
+    {
+        public float X = x, Y = y, Z = z;
+    }
+
+    public struct ChunkPosition(int x, int z)
+    {
+        public int X = x, Z = z;
+    }
 
     public class Chunk
     {
         public static readonly int Width = 16;
         public static readonly int Height = 16 * 16;
+
+        public static ChunkPosition Convert(EntityPosition p)
+        {
+            return new(
+                (p.X >= 0) ? ((int)p.X / 16) : (((int)p.X / 17) - 1),
+                (p.Z >= 0) ? ((int)p.Z / 16) : (((int)p.Z / 17) - 1));
+        }
 
         private class Section
         {
@@ -1224,13 +1285,15 @@ namespace Application
 
     public abstract class Entity
     {
-        private Vector3 _p;
-        public Vector3 Position => _p;
+        public readonly int Id;
 
-        internal Entity(Vector3 p)
+        public EntityPosition PPrev;
+        public EntityPosition P;
+
+        internal Entity(int id, EntityPosition p)
         {
-            _p = p;
-                
+            Id = id;
+            P = p;
         }
     }
 
@@ -1238,17 +1301,19 @@ namespace Application
     {
         /*private int _health;*/
 
-        public LivingEntity(Vector3 p) : base(p) { }
+        public LivingEntity(int id, EntityPosition p) : base(id, p) { }
     }
 
     public class Player : LivingEntity
     {
 
-        public Player(Vector3 p) : base(p) { }
+        public Player(int id, EntityPosition p) : base(id, p) { }
     }
 
-    public class NumberList
+    public class NumList : IDisposable
     {
+        private bool _disposed = false;
+
         private readonly int _MIN = 0;
         private readonly int _MAX = int.MaxValue;
 
@@ -1261,17 +1326,14 @@ namespace Application
 
         private Node _first;
 
-        public NumberList()
+        public NumList()
         {
             _first = new(_MIN, _MAX);
         }
 
-        ~NumberList()
+        ~NumList()
         {
-            Debug.Assert(_first != null);
-            Debug.Assert(_first.next == null);
-            Debug.Assert(_first.from == _MIN);
-            Debug.Assert(_first.to == _MAX);
+            Dispose(false);
         }
 
         public int Alloc()
@@ -1372,7 +1434,36 @@ namespace Application
 
         }
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed == false)
+            {
+                // unmanaged objects
+                Debug.Assert(_first != null);
+                Debug.Assert(_first.next == null);
+                Debug.Assert(_first.from == _MIN);
+                Debug.Assert(_first.to == _MAX);
 
+                if (disposing == true)
+                {
+                    // managed objects
+                    /*_first = null;*/  // TODO
+                }
+
+                _disposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        public void Close()
+        {
+            Dispose();
+        }
     }
 
     internal class Client : IDisposable
@@ -1468,6 +1559,11 @@ namespace Application
             }
 
         }
+
+        /*public void A()
+        {
+            _socket.Blocking = true;
+        }*/
 
         public Buffer RecvBuffer()
         {
@@ -1658,7 +1754,7 @@ namespace Application
         private static readonly int _MainId = _MainThread.ManagedThreadId;
         private static readonly Application Instance = new();
 
-        private readonly NumberList numberList = new();
+        private readonly NumList numberList = new();
 
         private readonly object _SharedObject = new();
 
@@ -1672,6 +1768,11 @@ namespace Application
 
         private Queue<Connection> _newJoinedConnections = new();
         private Queue<Connection> _connections = new();
+
+        private Queue<Player> _newSpawnedPlayers = new();
+        private Queue<Player> _players = new();
+
+        private Dictionary<int, Queue<ClientboundPlayingPacket>> _outPackets = new();
 
         private void Close()
         {
@@ -1958,12 +2059,57 @@ namespace Application
             Instance._StartListenerRoutine(_ctx);
         }
 
+        private void _StartCoreRoutine()
+        {
+            while (Running)
+            {
+                while (_newJoinedConnections.Count > 0)
+                {
+                    Connection conn = _newJoinedConnections.Dequeue();
+
+                    // TODO
+                    Player player = new(conn.Id, new(0, 60, 0));
+                    _newSpawnedPlayers.Enqueue(player);
+
+                    _connections.Enqueue(conn);
+                }
+
+                // Barrier
+
+                while (_newSpawnedPlayers.Count > 0)
+                {
+                    Player player = _newSpawnedPlayers.Dequeue();
+
+                    // load chunks
+
+                    _players.Enqueue(player);
+                }
+
+                // Barrier
+
+                while (_connections.Count > 0)
+                {
+                    Connection conn = _connections.Dequeue();
+
+                    // send packets
+                    _connections.Enqueue(conn);
+                }
+            }
+        }
+
+        private static void StartCoreRoutine()
+        {
+            Instance._StartCoreRoutine();
+        }
+
         public static void Main()
         {
             Debug.Assert(Thread.CurrentThread.ManagedThreadId == _MainId);
 
             Console.WriteLine("Hello, World!");
             
+
+
             ushort port = 25565;
             Run(StartListenerRoutine, new ListenerContext(port));
 
@@ -1975,4 +2121,5 @@ namespace Application
             Instance.FinishMainFunction();
         }
     }
+
 }
