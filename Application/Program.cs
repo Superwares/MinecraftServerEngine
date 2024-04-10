@@ -1,9 +1,12 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 
 namespace Application
 {
@@ -1544,7 +1547,16 @@ namespace Application
         private Node? _outNode = null, _inNode = null;
 
         private int _count = 0;
-        public int Count => _count;
+        public int Count
+        {
+            get
+            {
+                Debug.Assert(!_disposed);
+
+                return _count;
+            }
+        }
+
         public bool Empty => (_count == 0);
 
         public Queue() { }
@@ -1556,6 +1568,7 @@ namespace Application
 
         public void Enqueue(T value)
         {
+            Debug.Assert(!_disposed);
 
             Node newNode = new(value);
 
@@ -1580,6 +1593,8 @@ namespace Application
 
         public T Dequeue()
         {
+            Debug.Assert(!_disposed);
+
             if (_count == 0)
                 throw new EmptyQueueException();
 
@@ -1631,6 +1646,201 @@ namespace Application
         {
             Dispose();
         }
+
+    }
+
+    public sealed class ConcurrentQueue<T> : IDisposable
+    {
+        private class Node(T value)
+        {
+            private T _value = value;
+            public T Value => _value;
+
+            public Node? NextNode = null;
+
+        }
+
+        private readonly object _SharedResource = new();
+
+        private bool _disposed = false;
+
+        private Node? _outNode = null, _inNode = null;
+
+        private int _count = 0;
+        public int Count  // TODO: Check whether it needs concurrency.
+        {
+            get
+            {
+                Debug.Assert(!_disposed);
+
+                return _count;
+            }
+        }
+
+        public bool Empty => (_count == 0);
+
+        public ConcurrentQueue() { }
+
+        ~ConcurrentQueue()
+        {
+            Dispose(false);
+        }
+
+        public void Enqueue(T value)
+        {
+            Debug.Assert(!_disposed);
+
+            lock (_SharedResource)
+            {
+                Node newNode = new(value);
+
+                if (_count == 0)
+                {
+                    Debug.Assert(_outNode == null);
+                    Debug.Assert(_inNode == null);
+
+                    _outNode = _inNode = newNode;
+                }
+                else
+                {
+                    Debug.Assert(_outNode != null);
+                    Debug.Assert(_inNode != null);
+
+                    _inNode.NextNode = newNode;
+                    _inNode = newNode;
+                }
+
+                _count++;
+            }
+        }
+
+        public T Dequeue()
+        {
+            Debug.Assert(!_disposed);
+
+            lock (_SharedResource)
+            {
+                if (_count == 0)
+                    throw new EmptyQueueException();
+
+                Debug.Assert(_inNode != null);
+                Debug.Assert(_outNode != null);
+                T value = _outNode.Value;
+
+                if (_count == 1)
+                {
+                    _inNode = _outNode = null;
+                }
+                else
+                {
+                    Debug.Assert(_count > 1);
+                    _outNode = _outNode.NextNode;
+                }
+
+                _count--;
+
+                return value;
+            }
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            Debug.Assert(Count == 0);
+            Debug.Assert(_outNode == null);
+            Debug.Assert(_inNode == null);
+
+            if (disposing == true)
+            {
+                // Release managed resources.
+                _outNode = _inNode = null;
+            }
+
+            // Release unmanaged resources.
+
+            _disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        public void Close()
+        {
+            Dispose();
+        }
+    }
+
+    public class Table<K, T> : IDisposable
+    {
+        private bool _disposed = false;
+        public Table() { }
+
+        ~Table()
+        {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            if (disposing == true)
+            {
+                // managed objects
+            }
+
+            // unmanaged objects
+
+            _disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    public class PacketTable<T> : IDisposable
+    {
+        private bool _disposed = false;
+
+        private readonly Table<int, Queue<T>> _outPackets = new();
+        private readonly Table<int, Queue<T>> _inPackets = new();
+
+        PacketTable() { }
+
+        ~PacketTable()
+        {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            if (disposing == true)
+            {
+                // managed objects
+                _outPackets.Dispose();
+                _inPackets.Dispose();
+            }
+
+            // unmanaged objects
+
+            _disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
     }
 
     internal sealed class Client : IDisposable
@@ -1885,13 +2095,6 @@ namespace Application
         
     }
 
-    /*public class PacketTable : IDisposable
-    {
-        private Dictionary<int, Queue<ClientboundPlayingPacket>> _outPackets = new();
-
-        PacketTable
-    }*/
-
     public sealed class Application : IDisposable
     {
         public delegate void StartRoutine();
@@ -1934,11 +2137,11 @@ namespace Application
 
         private readonly Queue<Thread> _threads = new();
 
-        private readonly NumList idList = new();
+        private readonly NumList _idList = new();
 
         private readonly Dictionary<(int, int), Chunk> _chunks = new();
 
-        /*private readonly ConcurrentQueue<Connection> _newJoinedConnections = new();*/
+        private readonly ConcurrentQueue<Connection> _newJoinedConnections = new();
         private readonly Queue<Connection> _connections = new();
 
         private readonly Queue<Player> _newJoinedPlayers = new();
@@ -2132,7 +2335,8 @@ namespace Application
                         using Stream stream = response.Content.ReadAsStream();
                         using StreamReader reader = new(stream);
                         string str = reader.ReadToEnd();
-                        Dictionary<string, string>? dictionary = JsonSerializer.Deserialize<Dictionary<string, string>>(str);
+                        System.Collections.Generic.Dictionary<string, string>? dictionary = 
+                            JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, string>>(str);
                         Debug.Assert(dictionary != null);
 
                         Guid userId = Guid.Parse(dictionary["id"]);
@@ -2147,7 +2351,7 @@ namespace Application
                         outPacket1.Write(buffer);
                         visitor.Send(buffer);
 
-                        int id = idList.Alloc();
+                        int id = _idList.Alloc();
                         JoinGamePacket outPacket2 = new(id, 1, 0, 0, "default", false);
                         outPacket2.Write(buffer);
                         visitor.Send(buffer);
@@ -2311,7 +2515,6 @@ namespace Application
             // TODO: Handle client, send Disconnet Packet if the client's step is after StartLogin;
         }
 
-
         private void StartCoreRoutine()
         {
             while (Running)
@@ -2320,7 +2523,8 @@ namespace Application
 
                 // Barrier
 
-                /*while (_newJoinedConnections.Count > 0)
+                int count = _newJoinedConnections.Count;
+                for (int i = 0; i < count; ++i)
                 {
                     Connection conn = _newJoinedConnections.Dequeue();
 
@@ -2331,18 +2535,18 @@ namespace Application
                     Player player = new(id, new(0, 60, 0));
                     _newJoinedPlayers.Enqueue(player);
 
-                    *//*InitOutPackets(id);*//*
+                    InitOutPackets(id);
 
                     _connections.Enqueue(conn);
                 }
-*/
+
                 // Barrier
 
                 // handle players
 
                 // Barrier
 
-                while (_newJoinedPlayers.Count > 0)
+                while (!_newJoinedPlayers.Empty)
                 {
                     Player player = _newJoinedPlayers.Dequeue();
 
@@ -2380,7 +2584,8 @@ namespace Application
             if (disposing == true)
             {
                 // Release managed resources.
-                idList.Dispose();
+                _idList.Dispose();
+                _newJoinedConnections.Dispose();
                 // TODO: Add data structures.
             }
 
@@ -2401,6 +2606,8 @@ namespace Application
 
             ushort port = 25565;
             using Application app = new(port);
+
+            
 
 
             Console.WriteLine("Hello, World!");
