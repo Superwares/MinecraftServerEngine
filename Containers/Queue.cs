@@ -38,52 +38,7 @@ namespace Containers
 
         public Queue() { }
 
-        public void Enqueue(T value)
-        {
-            System.Collections.Generic.Queue()
-
-            Node newNode = new(value);
-
-            if (_count == 0)
-            {
-                Debug.Assert(_outNode == null && _inNode == null);
-
-                _outNode = _inNode = newNode;
-            }
-            else
-            {
-                Debug.Assert(_outNode != null && _inNode != null);
-
-                _inNode.NextNode = newNode;
-                _inNode = newNode;
-            }
-
-            _count++;
-        }
         
-        public T Dequeue()
-        {
-            if (_count == 0)
-                throw new EmptyQueueException();
-
-            Debug.Assert(_inNode != null);
-            Debug.Assert(_outNode != null);
-            Node resultNode = _outNode;
-
-            if (_count == 1)
-            {
-                _inNode = _outNode = null;
-            }
-            else
-            {
-                Debug.Assert(_count > 1);
-                _outNode = _outNode.NextNode;
-            }
-
-            _count--;
-
-            return resultNode.Value;
-        }
 
         public IEnumerator<T> GetEnumerator()
         {

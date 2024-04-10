@@ -2,7 +2,8 @@ using Application;
 using System.Diagnostics;
 using System.Numerics;
 
-namespace Testing
+
+namespace Application
 {
     public class Tests
     {

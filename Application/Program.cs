@@ -1,18 +1,23 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
-using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
-using System.Xml.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Application
 {
+    public class ContainerException : Exception
+    {
+        public ContainerException(string message) : base(message) { }
 
+    }
+
+    public class EmptyQueueException : ContainerException
+    {
+        public EmptyQueueException() : base("No elements in the queue.") { }
+
+    }
     public abstract class ProtocolException : Exception
     {
         public ProtocolException(string message) : base(message) { }
@@ -43,6 +48,12 @@ namespace Application
     {
         public TimeoutException() : base("Connections are not pending.") { }
     }
+
+    public class UnexpectedDataException : ProtocolException
+    {
+        public UnexpectedDataException() : base("This is an unexpected data.") { }
+    }
+
 
     internal static class SocketMethods
     {
@@ -87,7 +98,7 @@ namespace Application
     }
 
     // TODO: Check system is little- or big-endian.
-    public class Buffer
+    public sealed class Buffer : IDisposable
     {
         private static readonly int _EXPANSION_FACTOR = 2;
         private static readonly float _LOAD_FACTOR = 0.7F;
@@ -106,9 +117,11 @@ namespace Application
         private static readonly int _DOUBLE_DATATYPE_SIZE = 8;
         private static readonly int _GUID_DATATYPE_SIZE = 16;
 
-        private const int _INITIAL_DATA_SIZE = 16;
+        private const int _InitDatasize = 16;
 
-        private int _size;
+        private bool _disposed = false;
+
+        private int _dataSize;
         private byte[] _data;
 
         private int _first = 0, _last = 0;
@@ -121,11 +134,18 @@ namespace Application
                 return _last - _first;
             }
         }
+        
+        public bool Empty => (Size == 0);
 
         public Buffer()
         {
-            _size = _INITIAL_DATA_SIZE;
-            _data = new byte[_INITIAL_DATA_SIZE];
+            _dataSize = _InitDatasize;
+            _data = new byte[_InitDatasize];
+        }
+
+        ~Buffer()
+        {
+            Dispose(false);
         }
 
         public bool IsEmpty()
@@ -173,7 +193,7 @@ namespace Application
             if (addedSize == 0)
                 return;
 
-            int prevSize = _size,
+            int prevSize = _dataSize,
                 newSize = prevSize,
                 requiredSize = _last + addedSize;
 
@@ -186,7 +206,7 @@ namespace Application
 
             Debug.Assert(prevSize <= newSize);
 
-            _size = newSize;
+            _dataSize = newSize;
 
             var newData = new byte[newSize];
             if (Size > 0)
@@ -500,6 +520,39 @@ namespace Application
         internal void WriteData(byte[] data)
         {
             InsertBytes(data);
+        }
+
+        public void Flush()
+        {
+            Debug.Assert(Size >= _InitDatasize);
+            if (Size == 0)
+                return;
+
+            Debug.Assert(_last >= _first);
+            _first = _last;
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+             
+            Debug.Assert(Size == 0);
+
+            if (disposing)
+            {
+                // Release managed resources.
+                _data = null;
+            }
+
+            // Release unmanaged resources.
+                
+            _disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
     }
@@ -1310,7 +1363,7 @@ namespace Application
         public Player(int id, EntityPosition p) : base(id, p) { }
     }
 
-    public class NumList : IDisposable
+    public sealed class NumList : IDisposable
     {
         private bool _disposed = false;
 
@@ -1338,6 +1391,8 @@ namespace Application
 
         public int Alloc()
         {
+            Debug.Assert(!_disposed);
+
             int from = _first.from, to = _first.to;
             Debug.Assert(from <= to);
 
@@ -1363,6 +1418,8 @@ namespace Application
 
         public void Dealloc(int number)
         {
+            Debug.Assert(!_disposed);
+
             Debug.Assert(_first != null);
 
             Node? prev;
@@ -1434,24 +1491,24 @@ namespace Application
 
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
-            if (_disposed == false)
+            if (_disposed == true) return;
+
+            Debug.Assert(_first != null);
+            Debug.Assert(_first.next == null);
+            Debug.Assert(_first.from == _MIN);
+            Debug.Assert(_first.to == _MAX);
+
+            if (disposing == true)
             {
-                // unmanaged objects
-                Debug.Assert(_first != null);
-                Debug.Assert(_first.next == null);
-                Debug.Assert(_first.from == _MIN);
-                Debug.Assert(_first.to == _MAX);
-
-                if (disposing == true)
-                {
-                    // managed objects
-                    /*_first = null;*/  // TODO
-                }
-
-                _disposed = true;
+                // managed objects
+                _first = null;
             }
+
+            // Release unmanaged objects
+
+            _disposed = true;
         }
 
         public void Dispose()
@@ -1466,7 +1523,112 @@ namespace Application
         }
     }
 
-    internal class Client : IDisposable
+    public sealed class Queue<T> : IDisposable
+    {
+        private class Node(T value)
+        {
+            private T _value = value;
+            public T Value => _value;
+
+            public Node? NextNode = null;
+
+        }
+
+        private bool _disposed = false;
+
+        private Node? _outNode = null, _inNode = null;
+
+        private int _count = 0;
+        public int Count => _count;
+        public bool Empty => (_count == 0);
+
+        public Queue() { }
+
+        ~Queue() 
+        {
+            Dispose(false);
+        }
+
+        public void Enqueue(T value)
+        {
+
+            Node newNode = new(value);
+
+            if (_count == 0)
+            {
+                Debug.Assert(_outNode == null);
+                Debug.Assert(_inNode == null);
+
+                _outNode = _inNode = newNode;
+            }
+            else
+            {
+                Debug.Assert(_outNode != null);
+                Debug.Assert(_inNode != null);
+
+                _inNode.NextNode = newNode;
+                _inNode = newNode;
+            }
+
+            _count++;
+        }
+
+        public T Dequeue()
+        {
+            if (_count == 0)
+                throw new EmptyQueueException();
+
+            Debug.Assert(_inNode != null);
+            Debug.Assert(_outNode != null);
+            T value = _outNode.Value;
+
+            if (_count == 1)
+            {
+                _inNode = _outNode = null;
+            }
+            else
+            {
+                Debug.Assert(_count > 1);
+                _outNode = _outNode.NextNode;
+            }
+
+            _count--;
+
+            return value;
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+         
+            Debug.Assert(Count == 0);
+            Debug.Assert(_outNode == null);
+            Debug.Assert(_inNode == null);
+
+            if (disposing == true)
+            {
+                // Release managed resources.
+                _outNode = _inNode = null;
+            }
+
+            // Release unmanaged resources.
+
+            _disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        public void Close()
+        {
+            Dispose();
+        }
+    }
+
+    internal sealed class Client : IDisposable
     {
         private static readonly byte _SEGMENT_BITS = 0x7F;
         private static readonly byte _CONTINUE_BIT = 0x80;
@@ -1505,7 +1667,7 @@ namespace Application
 
         private int RecvSize()
         {
-            if (_disposed) throw new ObjectDisposedException(this.GetType().Name);
+            Debug.Assert(!_disposed);
 
             uint uvalue = (uint)_x;
             int position = _y;
@@ -1541,7 +1703,7 @@ namespace Application
 
         private void SendSize(int size)
         {
-            if (_disposed) throw new ObjectDisposedException(this.GetType().Name);
+            Debug.Assert(!_disposed);
 
             uint uvalue = (uint)size;
 
@@ -1565,9 +1727,9 @@ namespace Application
             _socket.Blocking = true;
         }*/
 
-        public Buffer RecvBuffer()
+        public void Recv(Buffer buffer)
         {
-            if (_disposed) throw new ObjectDisposedException(this.GetType().Name);
+            Debug.Assert(!_disposed);
 
             if (_data == null)
             {
@@ -1576,7 +1738,7 @@ namespace Application
                 Debug.Assert(_y == 0);
 
                 if (size == 0)
-                    return new();  // TODO: make EmptyBuffer and return it.
+                    return;  // TODO: make EmptyBuffer and return it.
 
                 Debug.Assert(_data == null);
                 _data = new byte[size];
@@ -1602,41 +1764,37 @@ namespace Application
                 }
             } while (availSize > 0);
 
-            Buffer result = new();
-            result.WriteData(_data);
+            buffer.WriteData(_data);
 
             _x = 0;
             _y = 0;
             _data = null;
 
-
-            return result;
         }
 
-        public void SendBuffer(Buffer buffer)
+        public void Send(Buffer buffer)
         {
-            if (_disposed) throw new ObjectDisposedException(this.GetType().Name);
+            Debug.Assert(!_disposed);
 
             byte[] data = buffer.ReadData();
             SendSize(data.Length);
             SocketMethods.SendBytes(_socket, data);
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
-            if (_disposed == false)
+            if (_disposed) return;
+         
+            if (disposing == true)
             {
-                if (disposing == true)
-                {
-                    // managed objects
-                    _data = null;
-                }
-
-                // unmanaged objects
+                // Release managed resources.
                 _socket.Dispose();
-
-                _disposed = true;
+                _data = null;
             }
+
+            // Release unmanaged resources.
+
+            _disposed = true;
         }
 
         public void Dispose()
@@ -1680,28 +1838,32 @@ namespace Application
 
         public ServerboundPlayingPacket RecvPacket()
         {
+            Debug.Assert(!_disposed);
+
             throw new NotImplementedException();
         }
 
         public void SendPacket(ClientboundPlayingPacket packet)
         {
+            Debug.Assert(!_disposed);
+
             throw new NotImplementedException();
         }
 
         protected virtual void Dispose(bool disposing)
         {
-            if (_disposed == false)
+            if (_disposed) return;
+             
+            if (disposing == true)
             {
-                if (disposing == true)
-                {
-                    // managed objects
-                }
-
-                // unmanaged objects
+                // managed objects
+                /*Username.Dispose();*/  // TODO
                 _client.Dispose();
-
-                _disposed = true;
             }
+
+            // unmanaged objects
+
+            _disposed = true;
         }
 
         public void Dispose()
@@ -1718,7 +1880,14 @@ namespace Application
         
     }
 
-    public sealed class Application
+    /*public class PacketTable : IDisposable
+    {
+        private Dictionary<int, Queue<ClientboundPlayingPacket>> _outPackets = new();
+
+        PacketTable
+    }*/
+
+    public sealed class Application : IDisposable
     {
         public delegate void StartRoutine();
         public delegate void StartRoutineWithArg<T>(T arg);
@@ -1742,37 +1911,36 @@ namespace Application
 
             public void Call() { _f(_arg); }
         }
-
-        private readonly struct ListenerContext(ushort port)
-        {
-            public readonly ushort Port = port;
-        }
-
+        
         private static readonly TimeSpan PendingTimeout = TimeSpan.FromSeconds(1);
 
         private static readonly Thread _MainThread = Thread.CurrentThread;
         private static readonly int _MainId = _MainThread.ManagedThreadId;
-        private static readonly Application Instance = new();
 
-        private readonly NumList numberList = new();
+        public readonly ushort Port;
+
+        private bool _disposed = false;
 
         private readonly object _SharedObject = new();
 
         private bool _closed = false;
-        public static bool Closed => Instance._closed;
-        public static bool Running => !Closed;
+        public bool Closed => _closed;
+        public bool Running => !_closed;
 
-        private Queue<Thread> _threads = new();
+        private readonly Queue<Thread> _threads = new();
 
-        private Dictionary<(int, int), Chunk> _chunks = new();
+        private readonly NumList idList = new();
 
-        private Queue<Connection> _newJoinedConnections = new();
-        private Queue<Connection> _connections = new();
+        private readonly Dictionary<(int, int), Chunk> _chunks = new();
 
-        private Queue<Player> _newSpawnedPlayers = new();
-        private Queue<Player> _players = new();
+        private readonly Queue<Connection> _newJoinedConnections = new();
+        private readonly Queue<Connection> _connections = new();
 
-        private Dictionary<int, Queue<ClientboundPlayingPacket>> _outPackets = new();
+        private readonly Queue<Player> _newJoinedPlayers = new();
+        private readonly Queue<Player> _players = new();
+
+        /*private readonly Dictionary<int, Queue<ClientboundPlayingPacket>> _outPackets = new();*/
+
 
         private void Close()
         {
@@ -1780,24 +1948,39 @@ namespace Application
 
             _closed = true;
 
-            foreach (Thread t in _threads)
+            while (_threads.Count > 0)
+            {
+                Thread t = _threads.Dequeue();
                 t.Join();
+            }
 
             /*Thread.Sleep(1000 * 5);*/
 
             Console.WriteLine("Close!");
-            lock (_SharedObject) Monitor.Pulse(_SharedObject);
+            lock (_SharedObject) 
+                Monitor.Pulse(_SharedObject);
         }
 
-        private Application()
+        private Application(ushort port)
         {
+            Debug.Assert(Thread.CurrentThread.ManagedThreadId == _MainId);
+
+            Port = port;
+
             Console.CancelKeyPress += (sender, e) => Close();
         }
 
-        private void HandleContext(object? obj)
+        ~Application()
+        {
+            /*Dispose(false);*/
+            Debug.Assert(false);
+        }
+
+        private void StartThreadRoutine(object? obj)
         {
             Debug.Assert(obj != null);
             IThreadContext ctx = (IThreadContext)obj;
+
             ctx.Call();
 
             Debug.Assert(Closed == true);
@@ -1805,7 +1988,9 @@ namespace Application
 
         private void _Run(IThreadContext ctx)
         {
-            Thread thread = new(HandleContext);
+            Debug.Assert(Closed == false);
+
+            Thread thread = new(StartThreadRoutine);
             thread.Start(ctx);
 
             Debug.Assert(thread.ManagedThreadId != _MainId);
@@ -1813,32 +1998,15 @@ namespace Application
             _threads.Enqueue(thread);
         }
 
-        private static void Run(StartRoutine f)
+        private void Run(StartRoutine f) => _Run(new ThreadContext(f));
+        private void Run<T>(StartRoutineWithArg<T> f, T arg) => 
+            _Run(new ThreadContextWithArg<T>(f, arg));
+
+ /*       private void InitOutPackets(int id)
         {
-            Debug.Assert(Closed == false);
-
-            IThreadContext ctx = new ThreadContext(f);
-
-            Instance._Run(ctx);
-        }
-
-        private static void Run<T>(StartRoutineWithArg<T> f, T arg)
-        {
-            Debug.Assert(Closed == false);
-
-            IThreadContext ctx = new ThreadContextWithArg<T>(f, arg);
-
-            Instance._Run(ctx);
-        }
-
-        private void FinishMainFunction()
-        {
-            Debug.Assert(Thread.CurrentThread.ManagedThreadId == _MainId);
-            Debug.Assert(Closed == true);
-
-            lock (_SharedObject) Monitor.Wait(_SharedObject);
-            
-        }
+            Debug.Assert(_outPackets.ContainsKey(id) == false);
+            _outPackets.Add(id, new());
+        }*/
 
         private int HandleVisitors(Queue<Client> visitors, Queue<int> levelQueue)
         {
@@ -1858,18 +2026,23 @@ namespace Application
                 int level = levelQueue.Dequeue();
                 Debug.Assert(level >= 0);
 
+                using Buffer buffer = new();
+
                 try
                 {
                     if (level == 0)
                     {
                         /*Console.WriteLine("Handshake!");*/
-                        Buffer buffer = visitor.RecvBuffer();
+                        visitor.Recv(buffer);
 
                         int packetId = buffer.ReadInt(true);
                         if (ServerboundHandshakingPacket.SetProtocolPacketId != packetId)
-                            throw new UnexpectedPacketException();
+                            throw new UnexpectedDataException();
 
                         SetProtocolPacket packet = SetProtocolPacket.Read(buffer);
+
+                        if (buffer.Size > 0)
+                            throw new UnexpectedDataException();
 
                         switch (packet.NextState)
                         {
@@ -1888,18 +2061,21 @@ namespace Application
                     if (level == 1)  // Request
                     {
                         /*Console.WriteLine("Request!");*/
-                        Buffer buffer = visitor.RecvBuffer();
+                        visitor.Recv(buffer);
 
                         int packetId = buffer.ReadInt(true);
                         if (ServerboundStatusPacket.RequestPacketId != packetId)
-                            throw new UnexpectedPacketException();
+                            throw new UnexpectedDataException();
 
                         RequestPacket requestPacket = RequestPacket.Read(buffer);
+
+                        if (buffer.Size > 0)
+                            throw new UnexpectedDataException();
 
                         // TODO
                         ResponsePacket responsePacket = new(100, 10, "Hello, World!");
                         responsePacket.Write(buffer);
-                        visitor.SendBuffer(buffer);
+                        visitor.Send(buffer);
 
                         level = 2;
                     }
@@ -1907,28 +2083,34 @@ namespace Application
                     if (level == 2)  // Ping
                     {
                         /*Console.WriteLine("Ping!");*/
-                        Buffer buffer = visitor.RecvBuffer();
+                        visitor.Recv(buffer);
 
                         int packetId = buffer.ReadInt(true);
                         if (ServerboundStatusPacket.PingPacketId != packetId)
-                            throw new UnexpectedPacketException();
+                            throw new UnexpectedDataException();
 
                         PingPacket inPacket = PingPacket.Read(buffer);
 
+                        if (buffer.Size > 0)
+                            throw new UnexpectedDataException();
+
                         PongPacket outPacket = new(inPacket.Payload);
                         outPacket.Write(buffer);
-                        visitor.SendBuffer(buffer);
+                        visitor.Send(buffer);
                     }
 
                     if (level == 3)  // Start Login
                     {
-                        Buffer buffer = visitor.RecvBuffer();
+                        visitor.Recv(buffer);
 
                         int packetId = buffer.ReadInt(true);
                         if (ServerboundLoginPacket.StartLoginPacketId != packetId)
-                            throw new UnexpectedPacketException();
+                            throw new UnexpectedDataException();
 
                         StartLoginPacket inPacket = StartLoginPacket.Read(buffer);
+
+                        if (buffer.Size > 0)
+                            throw new UnexpectedDataException();
 
                         // TODO: Check username is empty or invalid.
 
@@ -1957,14 +2139,18 @@ namespace Application
 
                         LoginSuccessPacket outPacket = new(userId, username);
                         outPacket.Write(buffer);
-                        visitor.SendBuffer(buffer);
+                        visitor.Send(buffer);
 
-                        int id = numberList.Alloc();  // TODO: Must dealloc id when connection is disposed.
+                        // TODO: send join game packet
+
+                        int id = idList.Alloc();  // TODO: Must dealloc id when connection is disposed.
                         Connection conn = new(id, visitor, userId, username);
                         _newJoinedConnections.Enqueue(conn);
 
                         loginSuccess = true;
                     }
+
+                    Debug.Assert(buffer.Size == 0);
 
                     close = true;
 
@@ -1977,14 +2163,16 @@ namespace Application
                     /*Console.WriteLine($"SocketError.WouldBlock!");*/
 
                 }
-                catch (ProtocolException)
+                catch (UnexpectedDataException)
                 {
                     Debug.Assert(loginSuccess == false);
                     close = true;
 
+                    buffer.Flush();
+
                     if (level >= 3)
                     {
-                        throw new NotImplementedException();
+                        Debug.Assert(false);
                         // TODO: Handle send Disconnect packet.
                     }
                 }
@@ -2007,12 +2195,11 @@ namespace Application
             return visitors.Count;
         }
 
-        private void _StartListenerRoutine(ListenerContext _ctx)
+        private void StartListenerRoutine()
         {
-            ushort port = _ctx.Port;
             using Socket socket = new(SocketType.Stream, ProtocolType.Tcp);
 
-            IPEndPoint localEndPoint = new(IPAddress.Any, port);
+            IPEndPoint localEndPoint = new(IPAddress.Any, Port);
             socket.Bind(localEndPoint);
             socket.Listen();
 
@@ -2054,12 +2241,8 @@ namespace Application
             // TODO: Handle client, send Disconnet Packet if the client's step is after StartLogin;
         }
 
-        private static void StartListenerRoutine(ListenerContext _ctx)
-        {
-            Instance._StartListenerRoutine(_ctx);
-        }
 
-        private void _StartCoreRoutine()
+        private void StartCoreRoutine()
         {
             while (Running)
             {
@@ -2067,18 +2250,23 @@ namespace Application
                 {
                     Connection conn = _newJoinedConnections.Dequeue();
 
+
+                    int id = conn.Id;
+
                     // TODO
-                    Player player = new(conn.Id, new(0, 60, 0));
-                    _newSpawnedPlayers.Enqueue(player);
+                    Player player = new(id, new(0, 60, 0));
+                    _newJoinedPlayers.Enqueue(player);
+
+                    /*InitOutPackets(id);*/
 
                     _connections.Enqueue(conn);
                 }
 
                 // Barrier
 
-                while (_newSpawnedPlayers.Count > 0)
+                while (_newJoinedPlayers.Count > 0)
                 {
-                    Player player = _newSpawnedPlayers.Dequeue();
+                    Player player = _newJoinedPlayers.Dequeue();
 
                     // load chunks
 
@@ -2097,28 +2285,55 @@ namespace Application
             }
         }
 
-        private static void StartCoreRoutine()
+        private void Dispose(bool disposing)
         {
-            Instance._StartCoreRoutine();
+            Debug.Assert(Thread.CurrentThread.ManagedThreadId == _MainId);
+            Debug.Assert(Closed == true);
+
+            lock (_SharedObject)
+                Monitor.Wait(_SharedObject);
+
+            if (_disposed) return;
+
+            Debug.Assert(_threads.Count == 0);
+            /*Debug.Assert(_chunks.Count == 0);*/
+            // TODO: Check the data structures must be empty.
+             
+            if (disposing == true)
+            {
+                // Release managed resources.
+                idList.Dispose();
+                // TODO: Add data structures.
+            }
+
+            // Release unmanaged resources.
+
+            _disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         public static void Main()
         {
             Debug.Assert(Thread.CurrentThread.ManagedThreadId == _MainId);
 
+            ushort port = 25565;
+            using Application app = new(port);
+
+
             Console.WriteLine("Hello, World!");
             
+            app.Run(app.StartListenerRoutine);
 
-
-            ushort port = 25565;
-            Run(StartListenerRoutine, new ListenerContext(port));
-
-            while (Running)
+            while (app.Running)
             {
                 Thread.Sleep(1000);
             }
 
-            Instance.FinishMainFunction();
         }
     }
 
