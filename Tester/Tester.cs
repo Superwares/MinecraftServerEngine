@@ -73,9 +73,73 @@ namespace Application
         }
 
         [Test]
+        public void TestQueue()
+        {
+            int N = 1_000_000;
+
+            using Queue<int> queue = new();
+
+            for (int i = 0; i < N; ++i)
+            {
+                queue.Enqueue(i);
+            }
+
+            for (int i = 0; i < N; ++i)
+            {
+                int v = queue.Dequeue();
+                Assert.That(i, Is.EqualTo(v));
+            }
+
+        }
+
+        [Test]
+        public void TestTable()
+        {
+            int N = 1_000_000;
+
+            using Table<int, object> table = new();
+            object[] objects = new object[N];
+
+            for (int i = 0; i < N; ++i)
+            {
+                objects[i] = new();
+            }
+
+            for (int i = 0; i < N; ++i)
+            {
+                table.Insert(i, objects[i]);
+            }
+
+            for (int i = 0; i < N; ++i)
+            {
+                bool objectExists = table.Contains(i);
+                Assert.That(objectExists, Is.EqualTo(true));
+            }
+
+            for (int i = 0; i < N; ++i)
+            {
+                object expected = objects[i];
+                object value = table.Lookup(i);
+                Assert.That(
+                    ReferenceEquals(expected, value),
+                    Is.EqualTo(true));
+            }
+
+            for (int i = 0; i < N; ++i)
+            {
+                object expected = objects[i];
+                object value = table.Extract(i);
+                Assert.That(
+                    ReferenceEquals(expected, value),
+                    Is.EqualTo(true));
+            }
+
+        }
+
+        [Test]
         public void TestConvertEntityToChunkPosition()
         {
-            EntityPosition[] positions = [
+            Entity.Position[] positions = [
                 new(10, 0, 10), 
                 new(20, 0, 20), 
                 new(-14, 0, -14), 
@@ -84,7 +148,7 @@ namespace Application
                 new(-32, 0, -32),
                 new(-35, 0, 20),
                 ];
-            ChunkPosition[] expectations = [
+            Chunk.Position[] expectations = [
                 new(0, 0),
                 new(1, 1),
                 new(-1, -1),
@@ -97,10 +161,10 @@ namespace Application
 
             for (int i = 0; i < positions.Length; ++i)
             {
-                EntityPosition p = positions[i];
-                ChunkPosition pChunkExpected = expectations[i];
+                Entity.Position p = positions[i];
+                Chunk.Position pChunkExpected = expectations[i];
 
-                ChunkPosition pChunk = Chunk.Convert(p);
+                Chunk.Position pChunk = Chunk.Position.Convert(p);
                 Assert.That(pChunkExpected, Is.EqualTo(pChunk));
             }
 
@@ -126,6 +190,28 @@ namespace Application
                 string a = "Hello, World!", b = "Hello, World!";
 
                 Assert.That(a.Equals(b), Is.EqualTo(true));
+
+                // a == b is false.
+                // Because "Hello, World!" is located at text region of memory layout, 
+                // so a and b have same reference(address).
+                Assert.That(a == b, Is.EqualTo(true));
+            }
+
+            {
+                // Reference Types
+                string a = "Hello, World!",
+                    b = new String(['H', 'e', 'l', 'l', 'o', ',', ' ', 'W', 'o', 'r', 'l', 'd', '!']);
+
+                Assert.That(a.Equals(b), Is.EqualTo(true));
+                Assert.That(a == b, Is.EqualTo(true));
+            }
+
+            {
+                // Reference Types
+                object a = "Hello, World!",
+                    b = new String([ 'H','e','l','l','o',',',' ','W','o','r','l','d','!' ]);
+
+                Assert.That(a.Equals(b), Is.EqualTo(true));
                 Assert.That(a == b, Is.EqualTo(false));
             }
 
@@ -138,7 +224,6 @@ namespace Application
             }
 
         }
-
 
     }
 }
