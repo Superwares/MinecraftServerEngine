@@ -106,5 +106,39 @@ namespace Application
 
             Assert.Pass();
         }
+
+        [Test]
+        public void TestBasicOperations()
+        {
+            {
+                int N = 1_000_000;
+                bool[] boolArr = new bool[N];
+                bool defaultBoolValue = false;
+
+                for (int i = 0; i < N; ++i)
+                {
+                    Assert.That(boolArr[i], Is.EqualTo(defaultBoolValue));
+                }
+            }
+
+            {
+                // Reference Types
+                string a = "Hello, World!", b = "Hello, World!";
+
+                Assert.That(a.Equals(b), Is.EqualTo(true));
+                Assert.That(a == b, Is.EqualTo(false));
+            }
+
+            {
+                // Value Types
+                int a = 999, b = 999;
+
+                Assert.That(a.Equals(b), Is.EqualTo(true));
+                Assert.That(a == b, Is.EqualTo(true));
+            }
+
+        }
+
+
     }
 }

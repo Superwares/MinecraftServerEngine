@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
@@ -20,6 +21,18 @@ namespace Application
     {
         public EmptyQueueException() : base("No elements in the queue.") { }
 
+    }
+
+    public class DuplicateKeyException : ContainerException
+    {
+        // TODO: Set Message
+        public DuplicateKeyException() : base("") { }
+    }
+
+    public class NotFoundException : ContainerException
+    {
+        // TODO: Set Message
+        public NotFoundException() : base("") { }
     }
 
     public abstract class ProtocolException : Exception
@@ -1693,7 +1706,9 @@ namespace Application
 
     }
 
-    public class Table<T> : IDisposable
+    public class Table<K, V> : IDisposable
+        where K : struct, IEquatable<K>
+        where V : class
     {
         private static readonly int _MinLength = 16;
         private static readonly int _ExpansionFactor = 2;
@@ -1701,10 +1716,9 @@ namespace Application
         private static readonly int _C = 5;
 
         private bool[] _flags = new bool[_MinLength];
-        private int[] _keys = new int[_MinLength];
-        private T[] _values = new T[_MinLength];
+        private K[] _keys = new K[_MinLength];
+        private V?[] _values = new V?[_MinLength];
         private int _length = _MinLength;
-
         private int _count = 0;
         public int Count
         {
@@ -1718,37 +1732,273 @@ namespace Application
 
         private bool _disposed = false;
 
-        public Table() { }
+        public Table()
+        {
+
+        }
 
         ~Table() => Dispose(false);
 
-        public void Insert(int key, T value)
+        private int Hash(K key)
         {
+            Debug.Assert(!_disposed);
+
+            /*Debug.Assert(key != null);*/
+            return key.GetHashCode() * _C;
+        }
+
+        private void Resize(int newLength)
+        {
+            Debug.Assert(!_disposed);
+
+            Debug.Assert(_flags.Length >= _MinLength);
+            Debug.Assert(_keys.Length >= _MinLength);
+            Debug.Assert(_values.Length >= _MinLength);
+            Debug.Assert(_length >= _MinLength);
+            Debug.Assert(_count > 0);
+
+            bool[] oldFlags = _flags;
+            K[] oldKeys = _keys;
+            V?[] oldValues = _values;
+            int oldLength = _length;
+
+            bool[] newFlags = new bool[newLength];
+            K[] newKeys = new K[newLength];
+            V?[] newValues = new V?[newLength];
+
+            for (int i = 0; i < oldLength; ++i)
+            {
+                if (!oldFlags[i])
+                    continue;
+
+                K key = oldKeys[i];
+                int hash = Hash(key);
+                for (int j = 0; j < newLength; ++j)
+                {
+                    int index = (hash + j) % newLength;
+
+                    if (newFlags[index])
+                        continue;
+
+                    newFlags[index] = true;
+                    newKeys[index] = key;
+                    Debug.Assert(oldValues[i] != null);
+                    newValues[index] = oldValues[i];
+
+                    break;
+                }
+
+            }
+
+            _flags = newFlags;
+            _keys = newKeys;
+            _values = newValues;
+            _length = newLength;
+
+            oldFlags = null;
+            oldKeys = null;
+            oldValues = null;
+
+        }
+
+        public void Insert(K key, V value)
+        {
+            Debug.Assert(!_disposed);
+
+            Debug.Assert(_flags.Length >= _MinLength);
+            Debug.Assert(_keys.Length >= _MinLength);
+            Debug.Assert(_values.Length >= _MinLength);
+            Debug.Assert(_length >= _MinLength);
+            Debug.Assert(_count > 0);
+
+            int hash = Hash(key);
+            for (int i = 0; i < _length; ++i)
+            {
+                int index = (hash + i) % _length;
+                K currentKey = _keys[index];
+
+                if (_flags[index])
+                {
+                    if (key.Equals(currentKey))
+                        throw new DuplicateKeyException();
+
+                    continue;
+                }
+
+                _flags[index] = true;
+                _keys[index] = key;
+                _values[index] = value;
+                _count++;
+
+                float factor = (float)_count / (float)_length;
+                if (factor < _LoadFactor)
+                    return;
+
+                Resize(_length * _ExpansionFactor);
+
+                return;
+            }
+
             throw new NotImplementedException();
         }
 
-        public T Extract(int key)
+        private bool CanShift(int targetIndex, int currentIndex, int originIndex)
         {
-            throw new NotImplementedException();
+            return (targetIndex < currentIndex && currentIndex < originIndex) ||
+                (originIndex < targetIndex && targetIndex < currentIndex) ||
+                (currentIndex < originIndex && originIndex < targetIndex) ||
+                (originIndex == targetIndex);
         }
 
-        public T Lookup(int key)
+        public V Extract(K key)
         {
-            throw new NotImplementedException();
+            Debug.Assert(!_disposed);
+
+            Debug.Assert(_flags.Length >= _MinLength);
+            Debug.Assert(_keys.Length >= _MinLength);
+            Debug.Assert(_values.Length >= _MinLength);
+            Debug.Assert(_length >= _MinLength);
+            Debug.Assert(_count > 0);
+
+            V? value = null;
+
+            int targetIndex = -1, nextI = -1;
+            int hash = Hash(key);
+            for (int i = 0; i < _length; ++i)
+            {
+                int index = (hash + i) % _length;
+
+                if (!_flags[index])
+                    throw new NotFoundException();
+
+                if (!_keys[index].Equals(key))
+                    continue;
+
+                value = _values[index];
+                Debug.Assert(value != null);
+
+                _count--;
+
+                if (_MinLength < _length)
+                {
+                    int reducedLength = _length / _ExpansionFactor;
+                    float factor = (float)_count / (float)reducedLength;
+                    if (factor < _LoadFactor)
+                    {
+                        _flags[index] = false;
+                        Resize(reducedLength);
+
+                        Debug.Assert(value != null);
+                        return value;
+                    }
+                }
+
+                targetIndex = index;
+                nextI = i + 1;
+
+                break;
+            }
+
+            Debug.Assert(targetIndex >= 0);
+            Debug.Assert(nextI > 0);
+            for (int i = nextI; i < _length; ++i)
+            {
+                int index = (hash + i) % _length;
+
+                if (!_flags[index]) break;
+
+                K shiftedKey = _keys[index];
+                int originIndex = Hash(shiftedKey) % _length;
+                if (!CanShift(targetIndex, index, originIndex))
+                    continue;
+
+                _keys[targetIndex] = shiftedKey;
+                Debug.Assert(_values[index] != null);
+                _values[targetIndex] = _values[index];
+
+                targetIndex = index;
+            }
+
+            _flags[targetIndex] = false;
+
+            Debug.Assert(value != null);
+            return value;
         }
 
-        public bool Contains(int key)
+        public V Lookup(K key)
         {
-            throw new NotImplementedException();
+            Debug.Assert(!_disposed);
+
+            Debug.Assert(_flags.Length >= _MinLength);
+            Debug.Assert(_keys.Length >= _MinLength);
+            Debug.Assert(_values.Length >= _MinLength);
+            Debug.Assert(_length >= _MinLength);
+            Debug.Assert(_count > 0);
+
+            V? value = null;
+
+            int hash = Hash(key);
+            for (int i = 0; i < _length; ++i)
+            {
+                int index = (hash + i) % _length;
+
+                if (!_flags[index])
+                    throw new NotFoundException();
+
+                if (!_keys[index].Equals(key))
+                    continue;
+
+                value = _values[index];
+                break;
+            }
+
+            Debug.Assert(value != null);
+            return value;
+        }
+
+        public bool Contains(K key)
+        {
+            Debug.Assert(!_disposed);
+
+            Debug.Assert(_flags.Length >= _MinLength);
+            Debug.Assert(_keys.Length >= _MinLength);
+            Debug.Assert(_values.Length >= _MinLength);
+            Debug.Assert(_length >= _MinLength);
+            Debug.Assert(_count > 0);
+
+            int hash = Hash(key);
+            for (int i = 0; i < _length; ++i)
+            {
+                int index = (hash + i) % _length;
+
+                if (!_flags[index])
+                    return false;
+
+                if (!_keys[index].Equals(key))
+                    continue;
+
+                return true;
+            }
+
+            return false;
         }
 
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed) return;
+            
+            Debug.Assert(_flags.Length == _MinLength);
+            Debug.Assert(_keys.Length == _MinLength);
+            Debug.Assert(_values.Length == _MinLength);
+            Debug.Assert(_length == _MinLength);
+            Debug.Assert(_count == 0);
 
             if (disposing == true)
             {
                 // Release managed resources.
+                _flags = null;
+                _keys = null;
+                _values = null;
             }
 
             // Release unmanaged resources.
@@ -1769,13 +2019,18 @@ namespace Application
     {
         private bool _disposed = false;
 
-        private readonly Table<Queue<T>> _data = new();
+        private readonly Table<int, Queue<T>> _data = new();
 
         LongTable() { }
 
         ~LongTable()
         {
             Dispose(false);
+        }
+
+        public void Init(int key)
+        {
+            throw new NotImplementedException();
         }
 
         public void Enqueue(int key, T value)
@@ -1786,6 +2041,11 @@ namespace Application
         public T Dequeue(int key)
         {
             // TODO: If the queue is empty after dequeue value, the queue must be released.
+            throw new NotImplementedException();
+        }
+
+        public void Close(int key)
+        {
             throw new NotImplementedException();
         }
 
@@ -2503,7 +2763,7 @@ namespace Application
                     Player player = new(id, new(0, 60, 0));
                     _newJoinedPlayers.Enqueue(player);
 
-                    InitOutPackets(id);
+                    /*InitOutPackets(id);*/
 
                     _connections.Enqueue(conn);
                 }
@@ -2591,3 +2851,4 @@ namespace Application
     }
 
 }
+
