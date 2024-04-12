@@ -18,7 +18,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Applications\Applications.csproj" />
     <ProjectReference Include="..\Application\Server.csproj" />
+    <ProjectReference Include="..\Containers\Containers.csproj" />
+    <ProjectReference Include="..\Protocol\Protocol.csproj" />
+    <ProjectReference Include="..\Server\Server.csproj" />
   </ItemGroup>
 
   <ItemGroup>

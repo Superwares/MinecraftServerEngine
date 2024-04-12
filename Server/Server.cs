@@ -104,8 +104,7 @@ namespace Application
         private readonly Queue<Player> _newPlayers = new();
         private readonly Queue<Player> _players = new();
 
-
-        /*private readonly Table<(int, int), Chunk> _chunks = new();*/
+        private readonly Table<Chunk.Position, Chunk> _chunks = new();
 
         private Server() { }
 
@@ -219,15 +218,37 @@ namespace Application
 
                 // Barrier
 
-                /*while (!_newJoinedPlayers.Empty)
                 {
-                    Player player = _newJoinedPlayers.Dequeue();
+                    int count = _newPlayers.Count;
+                    for (int i = 0; i < count; ++i)
+                    {
+                        Player player = _newPlayers.Dequeue();
 
-                    // load chunks
+                        // load chunks
+                        Chunk.Position pChunk = player.PosChunk;
+                        int d = player.Settings.renderDistance;
+                        foreach (var p in Chunk.Position.GenerateGridAroundCenter(pChunk, d))
+                        {
+                            bool continuous;
+                            int mask;
+                            byte[] data;
+                            try
+                            {
+                                Chunk chunk = _chunks.Lookup(p);
+                                (continuous, mask, data) = Chunk.Write(chunk);
+                            }
+                            catch(NotFoundException)
+                            {
+                                (continuous, mask, data) = Chunk.Write();
+                            }
 
+                            LoadChunk packet = new(p.X, p.Z, continuous, mask, data);
+                            // TODO: send packet
+                        }
 
-                    _players.Enqueue(player);
-                }*/
+                        _players.Enqueue(player);
+                    }
+                }
 
                 // Barrier
 
