@@ -1,6 +1,14 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.IO;
+using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
+using System.Threading;
+using Applications;
+using Containers;
 
 namespace Protocol
 {
@@ -575,7 +583,7 @@ namespace Protocol
 
         internal abstract void WriteData(Buffer buffer);
 
-        public void Write(Buffer buffer)
+        internal void Write(Buffer buffer)
         {
             buffer.WriteInt(Id, true);
             WriteData(buffer);
@@ -583,19 +591,19 @@ namespace Protocol
 
     }
 
-    public abstract class HandshakingPacket(int id) : Packet(id)
+    internal abstract class HandshakingPacket(int id) : Packet(id)
     {
         public override States State => States.Handshaking;
 
     }
 
-    public abstract class StatusPacket(int id) : Packet(id)
+    internal abstract class StatusPacket(int id) : Packet(id)
     {
         public override States State => States.Status;
 
     }
 
-    public abstract class LoginPacket(int id) : Packet(id)
+    internal abstract class LoginPacket(int id) : Packet(id)
     {
         public override States State => States.Login;
 
@@ -606,7 +614,7 @@ namespace Protocol
         public override States State => States.Playing;
     }
 
-    public abstract class ServerboundHandshakingPacket(int id) : HandshakingPacket(id)
+    internal abstract class ServerboundHandshakingPacket(int id) : HandshakingPacket(id)
     {
         public static readonly int SetProtocolPacketId = 0x00;
 
@@ -614,7 +622,7 @@ namespace Protocol
 
     }
 
-    public abstract class ClientboundStatusPacket(int id) : StatusPacket(id)
+    internal abstract class ClientboundStatusPacket(int id) : StatusPacket(id)
     {
         public static readonly int ResponsePacketId = 0x00;
         public static readonly int PongPacketId = 0x01;
@@ -623,7 +631,7 @@ namespace Protocol
 
     }
 
-    public abstract class ServerboundStatusPacket(int id) : StatusPacket(id)
+    internal abstract class ServerboundStatusPacket(int id) : StatusPacket(id)
     {
         public static readonly int RequestPacketId = 0x00;
         public static readonly int PingPacketId = 0x01;
@@ -632,7 +640,7 @@ namespace Protocol
 
     }
 
-    public abstract class ClientboundLoginPacket(int id) : LoginPacket(id)
+    internal abstract class ClientboundLoginPacket(int id) : LoginPacket(id)
     {
         public static readonly int DisconnectPacketId = 0x00;
         public static readonly int EncryptionRequestPacketId = 0x01;
@@ -643,7 +651,7 @@ namespace Protocol
 
     }
 
-    public abstract class ServerboundLoginPacket(int id) : LoginPacket(id)
+    internal abstract class ServerboundLoginPacket(int id) : LoginPacket(id)
     {
         public static readonly int StartLoginPacketId = 0x00;
         public static readonly int EncryptionResponsePacketId = 0x01;
@@ -671,14 +679,14 @@ namespace Protocol
 
     }
 
-    public class SetProtocolPacket : ServerboundHandshakingPacket
+    internal class SetProtocolPacket : ServerboundHandshakingPacket
     {
         public readonly int Version;
         public readonly string Hostname;
         public readonly ushort Port;
         public readonly States NextState;
 
-        public static States ReadNextState(Buffer buffer)
+        private static States ReadNextState(Buffer buffer)
         {
             int a = buffer.ReadInt(true);
             States nextState = (a == 1 ? States.Status : States.Login);
@@ -732,7 +740,7 @@ namespace Protocol
 
     }
 
-    public class ResponsePacket : ClientboundStatusPacket
+    internal class ResponsePacket : ClientboundStatusPacket
     {
 
         public readonly int MaxPlayers;
@@ -766,7 +774,7 @@ namespace Protocol
 
     }
 
-    public class PongPacket : ClientboundStatusPacket
+    internal class PongPacket : ClientboundStatusPacket
     {
         public readonly long Payload;
 
@@ -787,7 +795,7 @@ namespace Protocol
 
     }
 
-    public class RequestPacket : ServerboundStatusPacket
+    internal class RequestPacket : ServerboundStatusPacket
     {
         internal static RequestPacket Read(Buffer buffer)
         {
@@ -800,7 +808,7 @@ namespace Protocol
 
     }
 
-    public class PingPacket : ServerboundStatusPacket
+    internal class PingPacket : ServerboundStatusPacket
     {
         public readonly long Payload;
 
@@ -823,7 +831,7 @@ namespace Protocol
 
     }
 
-    public class DisconnectPacket : ClientboundLoginPacket
+    internal class DisconnectPacket : ClientboundLoginPacket
     {
         public readonly string Reason;
 
@@ -844,7 +852,7 @@ namespace Protocol
 
     }
 
-    public class EncryptionRequestPacket : ClientboundLoginPacket
+    internal class EncryptionRequestPacket : ClientboundLoginPacket
     {
         internal static EncryptionRequestPacket Read(Buffer buffer)
         {
@@ -863,7 +871,7 @@ namespace Protocol
 
     }
 
-    public class LoginSuccessPacket : ClientboundLoginPacket
+    internal class LoginSuccessPacket : ClientboundLoginPacket
     {
         public readonly Guid UserId;
         public readonly string Username;
@@ -890,7 +898,7 @@ namespace Protocol
 
     }
 
-    public class SetCompressionPacket : ClientboundLoginPacket
+    internal class SetCompressionPacket : ClientboundLoginPacket
     {
         public readonly int Threshold;
 
@@ -912,7 +920,7 @@ namespace Protocol
 
     }
 
-    public class StartLoginPacket : ServerboundLoginPacket
+    internal class StartLoginPacket : ServerboundLoginPacket
     {
         public readonly string Username;
 
@@ -932,7 +940,7 @@ namespace Protocol
         }
     }
 
-    public class EncryptionResponsePacket : ServerboundLoginPacket
+    internal class EncryptionResponsePacket : ServerboundLoginPacket
     {
         internal static EncryptionResponsePacket Read(Buffer buffer)
         {
@@ -1658,13 +1666,308 @@ namespace Protocol
 
     }
 
+    /*public sealed class PlayerList
+    {
+        private readonly NumList _idList;
+
+        public PlayerList(NumList idList)
+        {
+            _idList = idList;
+        }
+
+        public int Alloc(Guid userId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Dealloc(int id)
+        {
+            throw new NotImplementedException();
+        }
+
+    }*/
+
     public class Listener
     {
         private static readonly TimeSpan PendingTimeout = TimeSpan.FromSeconds(1);
 
-        public void StartRoutine()
+        public Listener() { }
+
+        private int HandleVisitors(Queue<Client> visitors, Queue<int> levelQueue,
+            NumList idList, ConcurrentQueue<Connection> connections)
         {
-            throw new NotImplementedException();
+            Console.Write(".");
+
+            int count = visitors.Count;
+            Debug.Assert(count == levelQueue.Count);
+            if (count == 0) return 0;
+
+            bool close, success;
+
+            for (; count > 0; --count)
+            {
+                close = success = false;
+
+                Client visitor = visitors.Dequeue();
+                int level = levelQueue.Dequeue();
+
+                /*Console.WriteLine($"count: {count}, level: {level}");*/
+
+                Debug.Assert(level >= 0);
+                using Buffer buffer = new();
+
+                try
+                {
+                    if (level == 0)
+                    {
+                        /*Console.WriteLine("Handshake!");*/
+                        visitor.Recv(buffer);
+
+                        int packetId = buffer.ReadInt(true);
+                        if (ServerboundHandshakingPacket.SetProtocolPacketId != packetId)
+                            throw new UnexpectedPacketException();
+
+                        SetProtocolPacket packet = SetProtocolPacket.Read(buffer);
+
+                        if (buffer.Size > 0)
+                            throw new BufferOverflowException();
+
+                        switch (packet.NextState)
+                        {
+                            default:
+                                throw new InvalidEncodingException();
+                            case Packet.States.Status:
+                                level = 1;
+                                break;
+                            case Packet.States.Login:
+                                level = 3;
+                                break;
+                        }
+
+                    }
+
+                    if (level == 1)  // Request
+                    {
+                        /*Console.WriteLine("Request!");*/
+                        visitor.Recv(buffer);
+
+                        int packetId = buffer.ReadInt(true);
+                        if (ServerboundStatusPacket.RequestPacketId != packetId)
+                            throw new UnexpectedPacketException();
+
+                        RequestPacket requestPacket = RequestPacket.Read(buffer);
+
+                        if (buffer.Size > 0)
+                            throw new BufferOverflowException();
+
+                        // TODO
+                        ResponsePacket responsePacket = new(100, 10, "Hello, World!");
+                        responsePacket.Write(buffer);
+                        visitor.Send(buffer);
+
+                        level = 2;
+                    }
+
+                    if (level == 2)  // Ping
+                    {
+                        /*Console.WriteLine("Ping!");*/
+                        visitor.Recv(buffer);
+
+                        int packetId = buffer.ReadInt(true);
+                        if (ServerboundStatusPacket.PingPacketId != packetId)
+                            throw new UnexpectedPacketException();
+
+                        PingPacket inPacket = PingPacket.Read(buffer);
+
+                        if (buffer.Size > 0)
+                            throw new BufferOverflowException();
+
+                        PongPacket outPacket = new(inPacket.Payload);
+                        outPacket.Write(buffer);
+                        visitor.Send(buffer);
+                    }
+
+                    if (level == 3)  // Start Login
+                    {
+                        visitor.Recv(buffer);
+
+                        int packetId = buffer.ReadInt(true);
+                        if (ServerboundLoginPacket.StartLoginPacketId != packetId)
+                            throw new UnexpectedPacketException();
+
+                        StartLoginPacket inPacket = StartLoginPacket.Read(buffer);
+
+                        if (buffer.Size > 0)
+                            throw new BufferOverflowException();
+
+                        // TODO: Check username is empty or invalid.
+
+                        HttpClient httpClient = new();
+                        string url = string.Format("https://api.mojang.com/users/profiles/minecraft/{0}", inPacket.Username);
+                        /*Console.WriteLine(inPacket.Username);
+                        Console.WriteLine($"url: {url}");*/
+                        using HttpRequestMessage request = new(HttpMethod.Get, url);
+
+                        // TODO: handle HttpRequestException
+                        using HttpResponseMessage response = httpClient.Send(request);
+
+                        using Stream stream = response.Content.ReadAsStream();
+                        using StreamReader reader = new(stream);
+                        string str = reader.ReadToEnd();
+                        System.Collections.Generic.Dictionary<string, string>? dictionary =
+                            JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, string>>(str);
+                        Debug.Assert(dictionary != null);
+
+                        Guid userId = Guid.Parse(dictionary["id"]);
+                        string username = dictionary["name"];  // TODO: check username is valid
+                        /*Console.WriteLine($"userId: {userId}");
+                        Console.WriteLine($"username: {username}");*/
+
+                        // TODO: Handle to throw exception
+                        Debug.Assert(inPacket.Username == username);
+
+                        LoginSuccessPacket outPacket1 = new(userId, username);
+                        outPacket1.Write(buffer);
+                        visitor.Send(buffer);
+
+                        // TODO: Must dealloc id when connection is disposed.
+                        int id = idList.Alloc();
+
+                        Connection conn = new(id, visitor, userId, username);
+                        connections.Enqueue(conn);
+
+                        success = true;
+                    }
+
+
+                    Debug.Assert(buffer.Size == 0);
+
+                    if (!success) close = true;
+
+                }
+                catch (SocketException e)
+                {
+                    if (e.SocketErrorCode == SocketError.ConnectionAborted ||
+                        false)  // Add other Exceptions here!
+                        close = true;
+                    else if (e.SocketErrorCode != SocketError.WouldBlock)
+                        Debug.Assert(false);
+
+                    Debug.Assert(
+                        (e.SocketErrorCode == SocketError.WouldBlock) ?
+                        close == false : true);
+
+                    Console.Write($"SocketError.WouldBlock!");
+                }
+                catch (UnexpectedDataException)
+                {
+                    Debug.Assert(success == false);
+                    Debug.Assert(close == false);
+                    close = true;
+
+                    buffer.Flush();
+
+                    if (level >= 3)  // >= Start Login level
+                    {
+                        Debug.Assert(false);
+                        // TODO: Handle send Disconnect packet with reason.
+                    }
+
+                    /*Console.Write($"UnexpectedDataException");*/
+                }
+                catch (EndofFileException)
+                {
+                    Debug.Assert(success == false);
+                    Debug.Assert(close == false);
+                    close = true;
+
+                    /*Console.Write("~");*/
+
+                    buffer.Flush();
+
+                    /*Console.Write($"EndofFileException");*/
+                }
+
+                if (!success)
+                {
+                    if (close == false)
+                    {
+                        visitors.Enqueue(visitor);
+                        levelQueue.Enqueue(level);
+                    }
+                    else
+                    {
+                        visitor.Close();
+                    }
+                }
+                else
+                    Debug.Assert(close == false);
+
+
+            }
+
+            return visitors.Count;
         }
+
+        public void StartRoutine(ConsoleApplication app, ushort port,
+            NumList idList, ConcurrentQueue<Connection> connections)
+        {
+            using Socket socket = new(SocketType.Stream, ProtocolType.Tcp);
+
+            IPEndPoint localEndPoint = new(IPAddress.Any, port);
+            socket.Bind(localEndPoint);
+            socket.Listen();
+
+            using Queue<Client> visitors = new();
+            /*
+             * 0: Handshake
+             * 1: Request
+             * 2: Ping
+             * 3: Start Login
+             */
+            using Queue<int> levelQueue = new();
+
+            socket.Blocking = true;
+
+            while (app.Running)
+            {
+                try
+                {
+                    if (!socket.Blocking &&
+                        HandleVisitors(visitors, levelQueue,
+                            idList, connections) == 0)
+                    {
+                        socket.Blocking = true;
+                    }
+
+                    if (socket.Blocking &&
+                        socket.Poll(PendingTimeout, SelectMode.SelectRead) == false)
+                    {
+                        throw new TimeoutException();
+                    }
+
+                    Client client = Client.Accept(socket);
+                    visitors.Enqueue(client);
+                    levelQueue.Enqueue(0);
+
+                    socket.Blocking = false;
+
+                }
+                catch (SocketException e)
+                {
+                    if (e.SocketErrorCode != SocketError.WouldBlock)
+                        throw new NotImplementedException();
+                }
+                catch (TimeoutException)
+                {
+                    Console.WriteLine("!");
+                }
+
+            }
+
+            // TODO: Handle client, send Disconnet Packet if the client's step is after StartLogin;
+        }
+
     }
+
 }

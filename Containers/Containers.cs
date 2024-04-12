@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 
 namespace Containers
 {
@@ -348,9 +349,7 @@ namespace Containers
 
     }
 
-    public class Table<K, V> : IDisposable
-        where K : struct, IEquatable<K>
-        where V : class
+    public class Table<K, V> : IDisposable where K : struct, IEquatable<K>
     {
         private static readonly int _MinLength = 16;
         private static readonly int _ExpansionFactor = 2;
@@ -359,7 +358,7 @@ namespace Containers
 
         private bool[] _flags = new bool[_MinLength];
         private K[] _keys = new K[_MinLength];
-        private V?[] _values = new V?[_MinLength];
+        private V[] _values = new V[_MinLength];
         private int _length = _MinLength;
         private int _count = 0;
         public int Count
@@ -401,12 +400,12 @@ namespace Containers
 
             bool[] oldFlags = _flags;
             K[] oldKeys = _keys;
-            V?[] oldValues = _values;
+            V[] oldValues = _values;
             int oldLength = _length;
 
             bool[] newFlags = new bool[newLength];
             K[] newKeys = new K[newLength];
-            V?[] newValues = new V?[newLength];
+            V[] newValues = new V[newLength];
 
             for (int i = 0; i < oldLength; ++i)
             {
@@ -424,7 +423,6 @@ namespace Containers
 
                     newFlags[index] = true;
                     newKeys[index] = key;
-                    Debug.Assert(oldValues[i] != null);
                     newValues[index] = oldValues[i];
 
                     break;
@@ -502,7 +500,7 @@ namespace Containers
             Debug.Assert(_length >= _MinLength);
             Debug.Assert(_count > 0);
 
-            V? value = null;
+            V? value = default;
 
             int targetIndex = -1, nextI = -1;
             int hash = Hash(key);
@@ -517,7 +515,6 @@ namespace Containers
                     continue;
 
                 value = _values[index];
-                Debug.Assert(value != null);
 
                 _count--;
 
@@ -577,7 +574,7 @@ namespace Containers
             Debug.Assert(_length >= _MinLength);
             Debug.Assert(_count > 0);
 
-            V? value = null;
+            V? value = default;
 
             int hash = Hash(key);
             for (int i = 0; i < _length; ++i)

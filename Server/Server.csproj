@@ -7,4 +7,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Applications\Applications.csproj" />
+    <ProjectReference Include="..\Containers\Containers.csproj" />
+    <ProjectReference Include="..\Protocol\Protocol.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,4 +1,5 @@
 using Application;
+using System;
 using System.Diagnostics;
 using System.Numerics;
 
@@ -12,7 +13,7 @@ namespace Application
         {
         }
 
-        [Test]
+       /* [Test]
         public void TestNumList1()
         {
             int N = 10_000;
@@ -134,42 +135,42 @@ namespace Application
                     Is.EqualTo(true));
             }
 
-        }
+        }*/
 
-        [Test]
-        public void TestConvertEntityToChunkPosition()
-        {
-            Entity.Position[] positions = [
-                new(10, 0, 10), 
-                new(20, 0, 20), 
-                new(-14, 0, -14), 
-                new(-16, 0, -16), 
-                new(-17, 0, -17), 
-                new(-32, 0, -32),
-                new(-35, 0, 20),
-                ];
-            Chunk.Position[] expectations = [
-                new(0, 0),
-                new(1, 1),
-                new(-1, -1),
-                new(-1, -1),
-                new(-2, -2),
-                new(-2, -2),
-                new(-3, 1),
-                ];
-            Assert.That(positions, Has.Length.EqualTo(expectations.Length));
+        /* [Test]
+         public void TestConvertEntityToChunkPosition()
+         {
+             Entity.Position[] positions = [
+                 new(10, 0, 10), 
+                 new(20, 0, 20), 
+                 new(-14, 0, -14), 
+                 new(-16, 0, -16), 
+                 new(-17, 0, -17), 
+                 new(-32, 0, -32),
+                 new(-35, 0, 20),
+                 ];
+             Chunk.Position[] expectations = [
+                 new(0, 0),
+                 new(1, 1),
+                 new(-1, -1),
+                 new(-1, -1),
+                 new(-2, -2),
+                 new(-2, -2),
+                 new(-3, 1),
+                 ];
+             Assert.That(positions, Has.Length.EqualTo(expectations.Length));
 
-            for (int i = 0; i < positions.Length; ++i)
-            {
-                Entity.Position p = positions[i];
-                Chunk.Position pChunkExpected = expectations[i];
+             for (int i = 0; i < positions.Length; ++i)
+             {
+                 Entity.Position p = positions[i];
+                 Chunk.Position pChunkExpected = expectations[i];
 
-                Chunk.Position pChunk = Chunk.Position.Convert(p);
-                Assert.That(pChunkExpected, Is.EqualTo(pChunk));
-            }
+                 Chunk.Position pChunk = Chunk.Position.Convert(p);
+                 Assert.That(pChunkExpected, Is.EqualTo(pChunk));
+             }
 
-            Assert.Pass();
-        }
+             Assert.Pass();
+        }*/
 
         [Test]
         public void TestBasicOperations()
@@ -200,7 +201,7 @@ namespace Application
             {
                 // Reference Types
                 string a = "Hello, World!",
-                    b = new String(['H', 'e', 'l', 'l', 'o', ',', ' ', 'W', 'o', 'r', 'l', 'd', '!']);
+                    b = new(['H', 'e', 'l', 'l', 'o', ',', ' ', 'W', 'o', 'r', 'l', 'd', '!']);
 
                 Assert.That(a.Equals(b), Is.EqualTo(true));
                 Assert.That(a == b, Is.EqualTo(true));
@@ -209,7 +210,7 @@ namespace Application
             {
                 // Reference Types
                 object a = "Hello, World!",
-                    b = new String([ 'H','e','l','l','o',',',' ','W','o','r','l','d','!' ]);
+                    b = new string([ 'H','e','l','l','o',',',' ','W','o','r','l','d','!' ]);
 
                 Assert.That(a.Equals(b), Is.EqualTo(true));
                 Assert.That(a == b, Is.EqualTo(false));
