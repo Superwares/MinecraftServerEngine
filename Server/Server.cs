@@ -2,6 +2,8 @@
 using Containers;
 using Protocol;
 using System;
+using System.Diagnostics;
+using System.Numerics;
 using System.Threading;
 
 namespace Application
@@ -93,15 +95,21 @@ namespace Application
     {
         private bool _disposed = false;
 
-        private readonly NumList _idList = new();
-        private readonly ConcurrentQueue<Connection> _newConnections = new();
-         
+        private readonly ConcurrentNumList _idList = new();
+
+        private readonly ConcurrentQueue<(Connection, Player.ClientsideSettings?)> 
+            _newConnections = new();
+        private readonly Queue<Connection> _connections = new();
+
+        private readonly Queue<Player> _newPlayers = new();
+        private readonly Queue<Player> _players = new();
+
+
         /*private readonly Table<(int, int), Chunk> _chunks = new();*/
 
         private Server() { }
 
         ~Server() => Dispose(false);
-
 
         /*       private void InitOutPackets(int id)
         {
@@ -109,7 +117,93 @@ namespace Application
             _outPackets.Add(id, new());
         }*/
 
-        /*private void StartCoreRoutine()
+        private void HandleNewConnections()
+        {
+            bool start, close;
+
+            int count = _newConnections.Count;
+            for (int i = 0; i < count; ++i)
+            {
+                (Connection conn, Player.ClientsideSettings? settings)
+                    = _newConnections.Dequeue();
+
+                start = close = false;
+
+                try
+                {
+                    conn.HandleSetupProcess(ref settings);
+
+                    Debug.Assert(!start);
+                    Debug.Assert(!close);
+                    Debug.Assert(settings != null);
+
+                    start = true;
+                }
+                catch (TryAgainException)
+                {
+                    Debug.Assert(!start);
+                    Debug.Assert(!close);
+
+                    /*Console.WriteLine("TryAgainException!");*/
+                }
+                catch (DataReadTimeoutException)
+                {
+                    Debug.Assert(!start);
+                    Debug.Assert(!close);
+
+                    close = true;
+
+                    /*Console.WriteLine("DataReadTimeoutException!");*/
+                }
+                catch (UnexpectedDataException)
+                {
+                    Debug.Assert(!start);
+                    Debug.Assert(!close);
+
+                    close = true;
+
+                    // TODO: Send packets with reason.
+
+                    /*Console.WriteLine("UnexpectedDataException!");*/
+                }
+                catch (DisconnectedException)
+                {
+                    Debug.Assert(!start);
+                    Debug.Assert(!close);
+
+                    close = true;
+
+                    /*Console.WriteLine("DisconnectedException!");*/
+                }
+
+                if (!start)
+                {
+                    if (!close)
+                    {
+                        _newConnections.Enqueue((conn, settings));
+                    }
+                    else
+                    {
+                        conn.Close();
+                    }
+                }
+                else
+                {
+                    Debug.Assert(!close);
+                    /*Console.WriteLine("Start Game!");*/
+
+                    _connections.Enqueue(conn);
+
+                    Debug.Assert(settings != null);
+                    Player player = new(conn.Id, new(0, 61, 0), settings);
+                    _newPlayers.Enqueue(player);
+                }
+
+            }
+
+        }
+
+        private void StartCoreRoutine()
         {
             while (Running)
             {
@@ -117,23 +211,7 @@ namespace Application
 
                 // Barrier
 
-                int count = _newJoinedConnections.Count;
-                for (int i = 0; i < count; ++i)
-                {
-                    Connection conn = _newJoinedConnections.Dequeue();
-
-
-                    int id = conn.Id;
-
-                    // TODO
-                    Player player = new(id, new(0, 60, 0));
-                    _newJoinedPlayers.Enqueue(player);
-
-                    _inPackets.Init(id);
-                    _outPackets.Init(id);
-
-                    _connections.Enqueue(conn);
-                }
+                HandleNewConnections();
 
                 // Barrier
 
@@ -141,7 +219,7 @@ namespace Application
 
                 // Barrier
 
-                while (!_newJoinedPlayers.Empty)
+                /*while (!_newJoinedPlayers.Empty)
                 {
                     Player player = _newJoinedPlayers.Dequeue();
 
@@ -149,20 +227,23 @@ namespace Application
 
 
                     _players.Enqueue(player);
-                }
+                }*/
 
                 // Barrier
 
+                /*
                 while (_connections.Count > 0)
                 {
                     Connection conn = _connections.Dequeue();
 
                     // send packets
                     _connections.Enqueue(conn);
-                }
+                }*/
+
             }
+
         }
-*/
+
         protected override void Dispose(bool disposing)
         {
             if (!_disposed)
@@ -184,12 +265,13 @@ namespace Application
 
         public static void Main()
         {
+            Console.WriteLine("Hello, World!");
+
             ushort port = 25565;
 
             using Server app = new();
 
-
-            Console.WriteLine("Hello, World!");
+            app.Run(app.StartCoreRoutine);
 
             Listener listener = new();
             app.Run(() => 

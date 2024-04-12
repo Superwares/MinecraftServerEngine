@@ -27,7 +27,7 @@ namespace Containers
         public NotFoundException() : base("") { }
     }
 
-    public sealed class NumList : IDisposable
+    public class NumList : IDisposable
     {
         private bool _disposed = false;
 
@@ -60,27 +60,27 @@ namespace Containers
             int from = _first.from, to = _first.to;
             Debug.Assert(from <= to);
 
-            int number;
+            int num;
 
             if (from < to)
             {
-                number = from++;
+                num = from++;
                 _first.from = from;
             }
             else
             {
                 Debug.Assert(from == to);
 
-                number = from;
+                num = from;
                 Node? next = _first.next;
                 Debug.Assert(next != null);
                 _first = next;
             }
 
-            return number;
+            return num;
         }
 
-        public void Dealloc(int number)
+        public void Dealloc(int num)
         {
             Debug.Assert(!_disposed);
 
@@ -92,19 +92,19 @@ namespace Containers
             int from = current.from,
                 to = current.to;
             Debug.Assert(from <= to);
-            Debug.Assert(!(from <= number && number <= to));
+            Debug.Assert(!(from <= num && num <= to));
 
-            if (number < from)
+            if (num < from)
             {
                 if (from > 0)
                 {
-                    if (number == (from - 1))
+                    if (num == (from - 1))
                     {
                         current.from--;
                     }
                     else
                     {
-                        prev = new(number, number);
+                        prev = new(num, num);
                         prev.next = current;
                         _first = prev;
                     }
@@ -117,31 +117,31 @@ namespace Containers
                 do
                 {
                     Debug.Assert(current.from <= current.to);
-                    Debug.Assert(!(current.from <= number && number <= current.to));
-                    Debug.Assert(current.to < number);
+                    Debug.Assert(!(current.from <= num && num <= current.to));
+                    Debug.Assert(current.to < num);
 
                     prev = current;
                     current = prev.next;
                     Debug.Assert(current != null);
                 }
-                while (!(prev.to < number && number < current.from));
+                while (!(prev.to < num && num < current.from));
 
                 to = prev.to;
                 from = current.from;
 
                 if ((to + 1) == (from - 1))
                 {
-                    Debug.Assert((to + 1) == number);
+                    Debug.Assert((to + 1) == num);
                     prev.to = current.to;
                     prev.next = current.next;
                 }
-                else if ((to + 1) < number && number < (from - 1))
+                else if ((to + 1) < num && num < (from - 1))
                 {
-                    Node between = new(number, number);
+                    Node between = new(num, num);
                     between.next = current;
                     prev.next = between;
                 }
-                else if ((to + 1) == number)
+                else if ((to + 1) == num)
                 {
                     Debug.Assert((to + 1) + 1 < from);
                     prev.to++;
@@ -155,7 +155,7 @@ namespace Containers
 
         }
 
-        private void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
             if (_disposed == true) return;
 
@@ -185,6 +185,53 @@ namespace Containers
         {
             Dispose();
         }
+    }
+
+    public class ConcurrentNumList : NumList
+    {
+        private readonly object _SharedResource = new();
+
+        private bool _disposed = false;
+
+        ~ConcurrentNumList() => Dispose(false);
+
+        public new int Alloc()
+        {
+            Debug.Assert(!_disposed);
+
+            lock (_SharedResource)
+            {
+                return base.Alloc();
+            }
+        }
+
+        public new void Dealloc(int num)
+        {
+            Debug.Assert(!_disposed);
+
+            lock (_SharedResource)
+            {
+                base.Dealloc(num);
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing == true)
+                {
+                    // Release managed resources.
+                }
+
+                // Release unmanaged resources.
+
+                _disposed = true;
+            }
+
+            base.Dispose(disposing);
+        }
+
     }
 
     public class Queue<T> : IDisposable

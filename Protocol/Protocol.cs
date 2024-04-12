@@ -379,7 +379,7 @@ namespace Protocol
                 ((long)data[7] << 0));
         }
 
-        public float ReadFLoat()
+        public float ReadFloat()
         {
             byte[] data = ExtractBytes(_FLOAT_DATATYPE_SIZE);
             Debug.Assert(data.Length == _FLOAT_DATATYPE_SIZE);
@@ -1498,7 +1498,7 @@ namespace Protocol
 
     internal sealed class Client : IDisposable
     {
-        private static readonly int _TimeoutCount = 5;
+        private static readonly int _TimeoutCount = 100;
 
         private static readonly byte _SEGMENT_BITS = 0x7F;
         private static readonly byte _CONTINUE_BIT = 0x80;
@@ -1701,12 +1701,22 @@ namespace Protocol
 
     public class Connection : IDisposable
     {
+        private enum _SetupSteps
+        {
+            JoinGame = 0,
+            ClientSettings,
+            PluginMessage,
+            StartPlaying,
+        }
+
         public readonly int Id;
 
         private Client _client;
 
         public readonly Guid UserId;
         public readonly string Username;
+
+        private _SetupSteps _step = _SetupSteps.JoinGame;
 
         private bool _disposed = false;
 
@@ -1728,9 +1738,89 @@ namespace Protocol
             Dispose(false);
         }
 
+        public void HandleSetupProcess(ref Player.ClientsideSettings? settings)
+        {
+            using Buffer buffer = new();
+            try
+            {
+                if (_step == _SetupSteps.JoinGame)
+                {
+                    /*Console.WriteLine("JoinGame!");*/
+
+                    Debug.Assert(settings == null);
+
+                    JoinGamePacket packet = new(Id, 1, 0, 0, "default", false);
+                    packet.Write(buffer);
+                    _client.Send(buffer);
+
+                    _step = _SetupSteps.ClientSettings;
+                }
+                
+                if (_step == _SetupSteps.ClientSettings)
+                {
+                    /*Console.WriteLine("ClientSettings!");*/
+
+                    Debug.Assert(settings == null);
+
+                    _client.Recv(buffer);
+
+                    int packetId = buffer.ReadInt(true);
+                    if (ServerboundPlayingPacket.ClientSettingsPacketId != packetId)
+                        throw new UnexpectedPacketException();
+
+                    ClientSettingsPacket packet = ClientSettingsPacket.Read(buffer);
+
+                    if (buffer.Size > 0)
+                        throw new BufferOverflowException();
+
+                    settings = new(packet.RenderDistance);
+                    
+
+                    _step = _SetupSteps.PluginMessage;
+                }
+
+                if (_step == _SetupSteps.PluginMessage)
+                {
+                    /*Console.WriteLine("PluginMessage!");*/
+
+                    Debug.Assert(settings != null);
+
+                    _client.Recv(buffer);
+
+                    int packetId = buffer.ReadInt(true);
+                    if (0x09 != packetId)
+                        throw new UnexpectedPacketException();
+
+                    buffer.Flush();
+
+                    if (buffer.Size > 0)
+                        throw new BufferOverflowException();
+
+                    _step = _SetupSteps.StartPlaying;
+                }
+
+                Debug.Assert(settings != null);
+
+            }
+            catch (UnexpectedDataException)
+            {
+                buffer.Flush();
+
+                throw;
+            }
+            catch (DisconnectedException)
+            {
+                buffer.Flush();
+
+                throw;
+            }
+
+        }
+
         public ServerboundPlayingPacket RecvPacket()
         {
             Debug.Assert(!_disposed);
+            Debug.Assert(_step >= _SetupSteps.StartPlaying);
 
             throw new NotImplementedException();
         }
@@ -1738,6 +1828,7 @@ namespace Protocol
         public void SendPacket(ClientboundPlayingPacket packet)
         {
             Debug.Assert(!_disposed);
+            Debug.Assert(_step >= _SetupSteps.StartPlaying);
 
             throw new NotImplementedException();
         }
@@ -1798,10 +1889,12 @@ namespace Protocol
 
         public Listener() { }
 
-        private int HandleVisitors(Queue<Client> visitors, Queue<int> levelQueue,
-            NumList idList, ConcurrentQueue<Connection> connections)
+        private int HandleVisitors(
+            Queue<Client> visitors, Queue<int> levelQueue,
+            NumList idList, 
+            ConcurrentQueue<(Connection, Player.ClientsideSettings?)> newConnections)
         {
-            Console.Write(".");
+            /*Console.Write(".");*/
 
             int count = visitors.Count;
             Debug.Assert(count == levelQueue.Count);
@@ -1813,7 +1906,7 @@ namespace Protocol
             {
                 close = success = false;
 
-                Client visitor = visitors.Dequeue();
+                Client client = visitors.Dequeue();
                 int level = levelQueue.Dequeue();
 
                 /*Console.WriteLine($"count: {count}, level: {level}");*/
@@ -1826,7 +1919,7 @@ namespace Protocol
                     if (level == 0)
                     {
                         /*Console.WriteLine("Handshake!");*/
-                        visitor.Recv(buffer);
+                        client.Recv(buffer);
 
                         int packetId = buffer.ReadInt(true);
                         if (ServerboundHandshakingPacket.SetProtocolPacketId != packetId)
@@ -1854,7 +1947,7 @@ namespace Protocol
                     if (level == 1)  // Request
                     {
                         /*Console.WriteLine("Request!");*/
-                        visitor.Recv(buffer);
+                        client.Recv(buffer);
 
                         int packetId = buffer.ReadInt(true);
                         if (ServerboundStatusPacket.RequestPacketId != packetId)
@@ -1868,7 +1961,7 @@ namespace Protocol
                         // TODO
                         ResponsePacket responsePacket = new(100, 10, "Hello, World!");
                         responsePacket.Write(buffer);
-                        visitor.Send(buffer);
+                        client.Send(buffer);
 
                         level = 2;
                     }
@@ -1876,7 +1969,7 @@ namespace Protocol
                     if (level == 2)  // Ping
                     {
                         /*Console.WriteLine("Ping!");*/
-                        visitor.Recv(buffer);
+                        client.Recv(buffer);
 
                         int packetId = buffer.ReadInt(true);
                         if (ServerboundStatusPacket.PingPacketId != packetId)
@@ -1889,12 +1982,12 @@ namespace Protocol
 
                         PongPacket outPacket = new(inPacket.Payload);
                         outPacket.Write(buffer);
-                        visitor.Send(buffer);
+                        client.Send(buffer);
                     }
 
                     if (level == 3)  // Start Login
                     {
-                        visitor.Recv(buffer);
+                        client.Recv(buffer);
 
                         int packetId = buffer.ReadInt(true);
                         if (ServerboundLoginPacket.StartLoginPacketId != packetId)
@@ -1907,7 +2000,7 @@ namespace Protocol
 
                         // TODO: Check username is empty or invalid.
 
-                        HttpClient httpClient = new();
+                        using HttpClient httpClient = new();
                         string url = string.Format("https://api.mojang.com/users/profiles/minecraft/{0}", inPacket.Username);
                         /*Console.WriteLine(inPacket.Username);
                         Console.WriteLine($"url: {url}");*/
@@ -1933,13 +2026,12 @@ namespace Protocol
 
                         LoginSuccessPacket outPacket1 = new(userId, username);
                         outPacket1.Write(buffer);
-                        visitor.Send(buffer);
+                        client.Send(buffer);
 
                         // TODO: Must dealloc id when connection is disposed.
                         int id = idList.Alloc();
-
-                        Connection conn = new(id, visitor, userId, username);
-                        connections.Enqueue(conn);
+                        Connection conn = new(id, client, userId, username);
+                        newConnections.Enqueue((conn, null));
 
                         success = true;
                     }
@@ -1955,12 +2047,13 @@ namespace Protocol
                     Debug.Assert(success == false);
                     Debug.Assert(close == false);
 
-                    Console.Write($"TryAgain!");
+                    /*Console.Write($"TryAgain!");*/
                 }
                 catch (DataReadTimeoutException)
                 {
                     Debug.Assert(success == false);
                     Debug.Assert(close == false);
+
                     close = true;
 
                 }
@@ -1968,6 +2061,7 @@ namespace Protocol
                 {
                     Debug.Assert(success == false);
                     Debug.Assert(close == false);
+
                     close = true;
 
                     buffer.Flush();
@@ -1999,12 +2093,12 @@ namespace Protocol
                 {
                     if (close == false)
                     {
-                        visitors.Enqueue(visitor);
+                        visitors.Enqueue(client);
                         levelQueue.Enqueue(level);
                     }
                     else
                     {
-                        visitor.Close();
+                        client.Close();
                     }
                 }
                 else
@@ -2016,8 +2110,10 @@ namespace Protocol
             return visitors.Count;
         }
 
-        public void StartRoutine(ConsoleApplication app, ushort port,
-            NumList idList, ConcurrentQueue<Connection> connections)
+        public void StartRoutine(
+            ConsoleApplication app, ushort port,
+            NumList idList, 
+            ConcurrentQueue<(Connection, Player.ClientsideSettings?)> newConnections)
         {
             using Socket socket = SocketMethods.Establish(port);
 
@@ -2037,8 +2133,10 @@ namespace Protocol
                 try
                 {
                     if (!SocketMethods.IsBlocking(socket) &&
-                        HandleVisitors(visitors, levelQueue,
-                            idList, connections) == 0)
+                        HandleVisitors(
+                            visitors, levelQueue,
+                            idList, 
+                            newConnections) == 0)
                     {
                         SocketMethods.SetBlocking(socket, true);
                     }
@@ -2058,7 +2156,7 @@ namespace Protocol
                 }
                 catch (PendingTimeoutException)
                 {
-                    Console.WriteLine("!");
+                    /*Console.WriteLine("!");*/
                 }
 
             }
