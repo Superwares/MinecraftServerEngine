@@ -109,7 +109,7 @@ namespace Application
             _outPackets.Add(id, new());
         }*/
 
-        private void StartCoreRoutine()
+        /*private void StartCoreRoutine()
         {
             while (Running)
             {
@@ -162,7 +162,7 @@ namespace Application
                 }
             }
         }
-
+*/
         protected override void Dispose(bool disposing)
         {
             if (!_disposed)

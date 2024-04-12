@@ -54,6 +54,11 @@ namespace Protocol
         public PendingTimeoutException() : base("Connections are not pending.") { }
     }
 
+    public class DataReadTimeoutException : ProtocolException
+    {
+        public DataReadTimeoutException() : base("A timeout occurred while attempting to read data.") { }
+    }
+
     public class TryAgainException : ProtocolException
     {
         public TryAgainException() : base("No data is waiting to be received.") { }
@@ -85,7 +90,10 @@ namespace Protocol
                 if (e.SocketErrorCode != SocketError.WouldBlock)
                     throw new NotImplementedException($"Must hanle this exception: {e}");
                 else
+                {
+                    Debug.Assert(e.SocketErrorCode == SocketError.WouldBlock);
                     throw new TryAgainException();
+                }
             }
 
             throw new NotImplementedException();
@@ -129,12 +137,8 @@ namespace Protocol
             {
                 if (e.SocketErrorCode == SocketError.WouldBlock)
                     throw new TryAgainException();
-                else if (e.SocketErrorCode == SocketError.ConnectionAborted ||
-                    false)  // Add other Exceptions here!
-                    throw new DisconnectedException();
-                else
-                    throw new NotImplementedException($"Must handle this exception: {e}");
 
+                throw;
             }
 
         }
@@ -149,18 +153,29 @@ namespace Protocol
             return buffer[0];
         }
 
-        public static void SendByte(Socket socket, byte v)
-        {
-            int n = socket.Send([v]);
-            Debug.Assert(n == 1);
-        }
-
         public static void SendBytes(Socket socket, byte[] data)
         {
-            Debug.Assert(data != null);
-            int n = socket.Send(data);
-            Debug.Assert(n == data.Length);
+            try
+            {
+                Debug.Assert(data != null);
+                int n = socket.Send(data);
+                Debug.Assert(n == data.Length);
+            }
+            catch (SocketException e)
+            {
+                if (e.SocketErrorCode == SocketError.ConnectionAborted)
+                    throw new DisconnectedException();
+
+                throw;
+            }
+
         }
+
+        public static void SendByte(Socket socket, byte v)
+        {
+            SendBytes(socket, [v]);
+        }
+        
 
     }
 
@@ -1483,6 +1498,8 @@ namespace Protocol
 
     internal sealed class Client : IDisposable
     {
+        private static readonly int _TimeoutCount = 5;
+
         private static readonly byte _SEGMENT_BITS = 0x7F;
         private static readonly byte _CONTINUE_BIT = 0x80;
 
@@ -1491,12 +1508,13 @@ namespace Protocol
         private int _x = 0, _y = 0;
         private byte[]? _data = null;
 
+        private int _count = 0;
+
         private Socket _socket;
 
         internal static Client Accept(Socket socket)
         {
             //TODO: Check the socket is Binding and listening correctly.
-            Debug.Assert(socket.IsBound == true);
 
             Socket newSocket = SocketMethods.Accept(socket);
             SocketMethods.SetBlocking(newSocket, false);
@@ -1588,44 +1606,58 @@ namespace Protocol
 
             Debug.Assert(SocketMethods.IsBlocking(_socket) == false);
 
-            if (_data == null)
+            try
             {
-                int size = RecvSize();
-                _x = size;
-                Debug.Assert(_y == 0);
+                if (_data == null)
+                {
+                    int size = RecvSize();
+                    _x = size;
+                    Debug.Assert(_y == 0);
 
-                if (size == 0)
-                    return;  // TODO: make EmptyBuffer and return it.
+                    if (size == 0)
+                        return;  // TODO: make EmptyBuffer and return it.
 
-                Debug.Assert(_data == null);
-                _data = new byte[size];
-                Debug.Assert(size > 0);
+                    Debug.Assert(_data == null);
+                    _data = new byte[size];
+                    Debug.Assert(size > 0);
+                }
+
+                int availSize = _x, offset = _y;
+
+                do
+                {
+                    try
+                    {
+                        int n = SocketMethods.RecvBytes(_socket, _data, offset, availSize);
+                        Debug.Assert(n <= availSize);
+
+                        availSize -= n;
+                        offset += n;
+                    }
+                    finally
+                    {
+                        _x = availSize;
+                        _y = offset;
+                    }
+
+                } while (availSize > 0);
+
+                buffer.WriteData(_data);
+
+                _x = 0;
+                _y = 0;
+                _data = null;
+
+                _count = 0;
             }
-
-            int availSize = _x, offset = _y;
-
-            do
+            catch (TryAgainException)
             {
-                try
-                {
-                    int n = SocketMethods.RecvBytes(_socket, _data, offset, availSize);
-                    Debug.Assert(n <= availSize);
-
-                    availSize -= n;
-                    offset += n;
-                }
-                finally
-                {
-                    _x = availSize;
-                    _y = offset;
-                }
-            } while (availSize > 0);
-
-            buffer.WriteData(_data);
-
-            _x = 0;
-            _y = 0;
-            _data = null;
+                /*Console.WriteLine($"count: {_count}");*/
+                if (_TimeoutCount <= _count++)
+                    throw new DataReadTimeoutException();
+                
+                throw;
+            }
 
         }
 
@@ -1762,7 +1794,7 @@ namespace Protocol
 
     public class Listener
     {
-        private static readonly TimeSpan PendingTimeout = TimeSpan.FromSeconds(1);
+        private static readonly TimeSpan _PendingTimeout = TimeSpan.FromSeconds(1);
 
         public Listener() { }
 
@@ -1918,21 +1950,19 @@ namespace Protocol
                     if (!success) close = true;
 
                 }
-                catch (SocketException e)
+                catch (TryAgainException)
                 {
-                    asdfasdf
-                    // TODO: try again
-                    if (e.SocketErrorCode == SocketError.ConnectionAborted ||
-                        false)  // Add other Exceptions here!
-                        close = true;
-                    else if (e.SocketErrorCode != SocketError.WouldBlock)
-                        Debug.Assert(false);
+                    Debug.Assert(success == false);
+                    Debug.Assert(close == false);
 
-                    Debug.Assert(
-                        (e.SocketErrorCode == SocketError.WouldBlock) ?
-                        close == false : true);
+                    Console.Write($"TryAgain!");
+                }
+                catch (DataReadTimeoutException)
+                {
+                    Debug.Assert(success == false);
+                    Debug.Assert(close == false);
+                    close = true;
 
-                    Console.Write($"SocketError.WouldBlock!");
                 }
                 catch (UnexpectedDataException)
                 {
@@ -1962,6 +1992,8 @@ namespace Protocol
 
                     /*Console.Write($"EndofFileException");*/
                 }
+
+                Debug.Assert(buffer.Empty);
 
                 if (!success)
                 {
@@ -2011,7 +2043,7 @@ namespace Protocol
                         SocketMethods.SetBlocking(socket, true);
                     }
 
-                    SocketMethods.Poll(socket, PendingTimeout);
+                    SocketMethods.Poll(socket, _PendingTimeout);
 
                     Client client = Client.Accept(socket);
                     visitors.Enqueue(client);
