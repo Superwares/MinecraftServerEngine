@@ -101,7 +101,7 @@ namespace Application
         private Server() { }
 
         ~Server() => Dispose(false);
-        
+
 
         /*       private void InitOutPackets(int id)
         {
@@ -109,7 +109,7 @@ namespace Application
             _outPackets.Add(id, new());
         }*/
 
-        /*private void StartCoreRoutine()
+        private void StartCoreRoutine()
         {
             while (Running)
             {
@@ -146,7 +146,7 @@ namespace Application
                     Player player = _newJoinedPlayers.Dequeue();
 
                     // load chunks
-                    
+
 
                     _players.Enqueue(player);
                 }
@@ -161,7 +161,7 @@ namespace Application
                     _connections.Enqueue(conn);
                 }
             }
-        }*/
+        }
 
         protected override void Dispose(bool disposing)
         {

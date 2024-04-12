@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -42,42 +43,110 @@ namespace Protocol
         public EmptyBufferException() : base("Attempting to read from an empty buffer.") { }
     }
 
-    public class EndofFileException : ProtocolException
+    public class DisconnectedException : ProtocolException
     {
-        public EndofFileException() : base("EOF reached unexpectedly.") { }
+        public DisconnectedException() : base("The connection with the client has been terminated.") { }
     }
 
     // TODO: It needs the corrent name and message.
-    public class TimeoutException : ProtocolException
+    internal class PendingTimeoutException : ProtocolException
     {
-        public TimeoutException() : base("Connections are not pending.") { }
+        public PendingTimeoutException() : base("Connections are not pending.") { }
+    }
+
+    public class TryAgainException : ProtocolException
+    {
+        public TryAgainException() : base("No data is waiting to be received.") { }
     }
 
     internal static class SocketMethods
     {
-        public static byte RecvByte(Socket socket)
+        public static Socket Establish(ushort port)
         {
-            byte[] buffer = new byte[1];
+            Socket socket = new(SocketType.Stream, ProtocolType.Tcp);
 
-            int n = socket.Receive(buffer);
-            if (n == 0)
-                throw new EndofFileException();
+            IPEndPoint localEndPoint = new(IPAddress.Any, port);
+            socket.Bind(localEndPoint);
+            socket.Listen();
 
-            Debug.Assert(n == 1);
+            return socket;
+        }
 
-            return buffer[0];
+        public static Socket Accept(Socket socket)
+        {
+            try
+            {
+                Socket newSocket = socket.Accept();
+
+                return newSocket;
+            }
+            catch (SocketException e)
+            {
+                if (e.SocketErrorCode != SocketError.WouldBlock)
+                    throw new NotImplementedException($"Must hanle this exception: {e}");
+                else
+                    throw new TryAgainException();
+            }
+
+            throw new NotImplementedException();
+        }
+
+        public static void Poll(Socket socket, TimeSpan span)
+        {
+            // TODO: check the socket is binding and listening.
+
+            if (IsBlocking(socket) &&
+                socket.Poll(span, SelectMode.SelectRead) == false)
+            {
+                throw new PendingTimeoutException();
+            }
+        }
+
+        public static void SetBlocking(Socket socket, bool f)
+        {
+            socket.Blocking = f;
+        }
+
+        public static bool IsBlocking(Socket socket)
+        {
+            return socket.Blocking;
         }
 
         public static int RecvBytes(
             Socket socket, byte[] buffer, int offset, int size)
         {
-            int n = socket.Receive(buffer, offset, size, SocketFlags.None);
-            if (n == 0)
-                throw new EndofFileException();
+            try
+            {
+                int n = socket.Receive(buffer, offset, size, SocketFlags.None);
+                if (n == 0)
+                    throw new DisconnectedException();
 
-            Debug.Assert(n <= size);
+                Debug.Assert(n <= size);
 
-            return n;
+                return n;
+            }
+            catch (SocketException e)
+            {
+                if (e.SocketErrorCode == SocketError.WouldBlock)
+                    throw new TryAgainException();
+                else if (e.SocketErrorCode == SocketError.ConnectionAborted ||
+                    false)  // Add other Exceptions here!
+                    throw new DisconnectedException();
+                else
+                    throw new NotImplementedException($"Must handle this exception: {e}");
+
+            }
+
+        }
+
+        public static byte RecvByte(Socket socket)
+        {
+            byte[] buffer = new byte[1];
+
+            int n = RecvBytes(socket, buffer, 0, 1);
+            Debug.Assert(n == 1);
+
+            return buffer[0];
         }
 
         public static void SendByte(Socket socket, byte v)
@@ -1429,8 +1498,8 @@ namespace Protocol
             //TODO: Check the socket is Binding and listening correctly.
             Debug.Assert(socket.IsBound == true);
 
-            Socket newSocket = socket.Accept();
-            newSocket.Blocking = false;
+            Socket newSocket = SocketMethods.Accept(socket);
+            SocketMethods.SetBlocking(newSocket, false);
 
             /*Console.WriteLine($"socket: {socket.LocalEndPoint}");*/
 
@@ -1440,7 +1509,7 @@ namespace Protocol
 
         private Client(Socket socket)
         {
-            Debug.Assert(socket.Blocking == false);
+            Debug.Assert(SocketMethods.IsBlocking(socket) == false);
             _socket = socket;
         }
 
@@ -1452,6 +1521,8 @@ namespace Protocol
         private int RecvSize()
         {
             Debug.Assert(!_disposed);
+
+            Debug.Assert(SocketMethods.IsBlocking(_socket) == false);
 
             uint uvalue = (uint)_x;
             int position = _y;
@@ -1508,12 +1579,14 @@ namespace Protocol
 
         /*public void A()
         {
-            _socket.Blocking = true;
+            SocketMethods.SetBlocking(_socket, true);
         }*/
 
         public void Recv(Buffer buffer)
         {
             Debug.Assert(!_disposed);
+
+            Debug.Assert(SocketMethods.IsBlocking(_socket) == false);
 
             if (_data == null)
             {
@@ -1847,6 +1920,8 @@ namespace Protocol
                 }
                 catch (SocketException e)
                 {
+                    asdfasdf
+                    // TODO: try again
                     if (e.SocketErrorCode == SocketError.ConnectionAborted ||
                         false)  // Add other Exceptions here!
                         close = true;
@@ -1875,7 +1950,7 @@ namespace Protocol
 
                     /*Console.Write($"UnexpectedDataException");*/
                 }
-                catch (EndofFileException)
+                catch (DisconnectedException)
                 {
                     Debug.Assert(success == false);
                     Debug.Assert(close == false);
@@ -1912,11 +1987,7 @@ namespace Protocol
         public void StartRoutine(ConsoleApplication app, ushort port,
             NumList idList, ConcurrentQueue<Connection> connections)
         {
-            using Socket socket = new(SocketType.Stream, ProtocolType.Tcp);
-
-            IPEndPoint localEndPoint = new(IPAddress.Any, port);
-            socket.Bind(localEndPoint);
-            socket.Listen();
+            using Socket socket = SocketMethods.Establish(port);
 
             using Queue<Client> visitors = new();
             /*
@@ -1927,38 +1998,33 @@ namespace Protocol
              */
             using Queue<int> levelQueue = new();
 
-            socket.Blocking = true;
+            SocketMethods.SetBlocking(socket, true);
 
             while (app.Running)
             {
                 try
                 {
-                    if (!socket.Blocking &&
+                    if (!SocketMethods.IsBlocking(socket) &&
                         HandleVisitors(visitors, levelQueue,
                             idList, connections) == 0)
                     {
-                        socket.Blocking = true;
+                        SocketMethods.SetBlocking(socket, true);
                     }
 
-                    if (socket.Blocking &&
-                        socket.Poll(PendingTimeout, SelectMode.SelectRead) == false)
-                    {
-                        throw new TimeoutException();
-                    }
+                    SocketMethods.Poll(socket, PendingTimeout);
 
                     Client client = Client.Accept(socket);
                     visitors.Enqueue(client);
                     levelQueue.Enqueue(0);
 
-                    socket.Blocking = false;
+                    SocketMethods.SetBlocking(socket, false);
 
                 }
-                catch (SocketException e)
+                catch (TryAgainException)
                 {
-                    if (e.SocketErrorCode != SocketError.WouldBlock)
-                        throw new NotImplementedException();
+                    continue;
                 }
-                catch (TimeoutException)
+                catch (PendingTimeoutException)
                 {
                     Console.WriteLine("!");
                 }
