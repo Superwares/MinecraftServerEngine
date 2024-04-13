@@ -57,4 +57,9 @@ namespace Protocol
         public TryAgainException() : base("No data is waiting to be received.") { }
     }
 
+    public class TeleportConfirmTimeoutException : ProtocolException
+    {
+        public TeleportConfirmTimeoutException() : base("") { }  // TODO
+    }
+
 }

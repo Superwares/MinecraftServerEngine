@@ -118,7 +118,7 @@ namespace Protocol
         public static readonly int UnloadChunkPacketId = 0x1D;
         public static readonly int JoinGamePacketId = 0x23;
         public static readonly int SetPlayerAbilitiesId = 0x2C;
-        public static readonly int SetPlayerPosAndLookPacketId = 0x2F;
+        public static readonly int TeleportPacketId = 0x2F;
 
         public override WhereBound BoundTo => WhereBound.Clientbound;
 
@@ -126,6 +126,7 @@ namespace Protocol
 
     public abstract class ServerboundPlayingPacket(int id) : PlayingPacket(id)
     {
+        public static readonly int ConfirmTeleportPacketId = 0x00;
         public static readonly int ClientSettingsPacketId = 0x04;
 
         public override WhereBound BoundTo => WhereBound.Serverbound;
@@ -553,25 +554,25 @@ namespace Protocol
 
     }
     
-    public class SetPlayerPosAndLookPacket : ClientboundPlayingPacket
+    public class TeleportPacket : ClientboundPlayingPacket
     {
         public readonly double X, Y, Z;
         public readonly float Yaw, Pitch;
         private readonly byte _flags;
-        public readonly int TeleportId;
+        public readonly int Payload;
 
-        internal static SetPlayerPosAndLookPacket Read(Buffer buffer)
+        internal static TeleportPacket Read(Buffer buffer)
         {
             throw new NotImplementedException();
         }
 
-        public SetPlayerPosAndLookPacket(
+        public TeleportPacket(
             double x, double y, double z, 
             float yaw, float pitch, 
             bool relativeX, bool relativeY, bool relativeZ,
             bool relativeYaw, bool relativePitch,
-            int teleportId)
-            : base(SetPlayerPosAndLookPacketId)
+            int payload)
+            : base(TeleportPacketId)
         {
             X = x; Y = y; Z = z;
             Yaw = yaw; Pitch = pitch;
@@ -589,7 +590,7 @@ namespace Protocol
                 flags |= (1 << 4);
             _flags = flags;
 
-            TeleportId = teleportId;
+            Payload = payload;
         }
 
         internal override void WriteData(Buffer buffer)
@@ -600,8 +601,29 @@ namespace Protocol
             buffer.WriteFloat(Yaw);
             buffer.WriteFloat(Pitch);
             buffer.WriteByte(_flags);
-            buffer.WriteInt(TeleportId, true);
+            buffer.WriteInt(Payload, true);
 
+        }
+
+    }
+
+    public class ConfirmTeleportPacket : ServerboundPlayingPacket
+    {
+        public readonly int Payload;
+
+        public static ConfirmTeleportPacket Read(Buffer buffer)
+        {
+            return new(buffer.ReadInt(true));
+        }
+
+        public ConfirmTeleportPacket(int payload) : base(ConfirmTeleportPacketId)
+        {
+            Payload = payload;
+        }
+
+        internal override void WriteData(Buffer buffer)
+        {
+            throw new NotImplementedException();
         }
 
     }

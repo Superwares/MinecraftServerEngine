@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace Application
 {
-   
+    
 
     public sealed class Server : ConsoleApplication
     {
@@ -16,15 +16,17 @@ namespace Application
 
         private readonly ConcurrentNumList _idList = new();
 
+        private readonly Table<int, Queue<TeleportRecord>> _teleportRecords = new();
+
         private readonly ConcurrentQueue<(Connection, Player.ClientsideSettings?)> 
             _newConnections = new();
-        private readonly Queue<Connection> _disConnections = new();
+        private readonly Queue<Connection> _abortedConnections = new();
+        private readonly Queue<Connection> _unexpectedConnections = new();
         private readonly Queue<Connection> _connections = new();
 
-        private readonly Queue<Player> _newPlayers = new();
+        private readonly Queue<Player> _spawnedPlayers = new();
         private readonly Table<int, Player> _playerTable = new();
         private readonly Queue<Player> _players = new();
-        private readonly Queue<(Player, int)> _teleportedPlayers = new();
 
         private readonly Table<Chunk.Position, Chunk> _chunks = new();
 
@@ -132,7 +134,7 @@ namespace Application
                             Debug.Assert(player.connected == true);
 
                             _playerTable.Insert(id, player);
-                            _newPlayers.Enqueue(player);
+                            _spawnedPlayers.Enqueue(player);
 
                             _inPacketTable.Insert(id, new());
                             _outPacketTable.Insert(id, new());
@@ -143,19 +145,46 @@ namespace Application
 
                 // Barrier
 
-                // Handle teleported players
+                // handle players
+                {
+                    int count = _players.Count;
+                    for (int i = 0; i < count; ++i)
+                    {
+                        Player player = _players.Dequeue();
+                        int id = player.Id;
+
+                        if (player.connected == false)
+                        {
+                            // Release resources of players.
+                            Debug.Assert(!_inPacketTable.Contains(id));
+                            Debug.Assert(!_outPacketTable.Contains(id));
+
+                            _playerTable.Extract(id);
+                            continue;
+                        }
+
+                        ServerboundPlayingPacket[] inPackets = _inPacketTable.Lookup(id).Flush();
+
+                        foreach (var _p in inPackets)
+                        {
+                            throw new NotImplementedException();
+                        }
+
+                        _players.Enqueue(player);
+                    }
+                }
 
                 // Barrier
 
-                // handle players
+                // Handle entities.
 
                 // Barrier
 
                 {
-                    int count = _newPlayers.Count;
+                    int count = _spawnedPlayers.Count;
                     for (int i = 0; i < count; ++i)
                     {
-                        Player player = _newPlayers.Dequeue();
+                        Player player = _spawnedPlayers.Dequeue();
 
                         int id = player.Id;
 
@@ -189,20 +218,25 @@ namespace Application
                             outPackets.Enqueue(packet);
                         }
 
-                        int teleportId = new Random().Next();
-
                         {
                             // teleport
+                            TeleportRecord record = new();
+
                             // enqueue set player position and look packet
-                            SetPlayerPosAndLookPacket packet = new(
+                            TeleportPacket packet = new(
                                 player.Pos.X, player.Pos.Y, player.Pos.Z,
                                 0, 0,  // TODO
                                 false, false, false, false, false,
-                                teleportId);
+                                record.Payload);
                             outPackets.Enqueue(packet);
+
+                            if (!_teleportRecords.Contains(id))
+                                _teleportRecords.Insert(id, new());
+
+                            _teleportRecords.Lookup(id).Enqueue(record);
                         }
 
-                        _teleportedPlayers.Enqueue((player, teleportId));
+                        _players.Enqueue(player);
                     }
                 }
 
@@ -220,11 +254,11 @@ namespace Application
 
                         int id = conn.Id;
 
-                        ClientboundPlayingPacket[] packets = _outPacketTable.Lookup(id).Flush();
+                        ClientboundPlayingPacket[] outPackets = _outPacketTable.Lookup(id).Flush();
 
                         try
                         {
-                            foreach (var p in packets) conn.Send(p);
+                            foreach (var p in outPackets) conn.Send(p);
 
                         }
                         catch (DisconnectedException)
@@ -240,7 +274,7 @@ namespace Application
                             continue;
                         }
 
-                        _disConnections.Enqueue(conn);
+                        _abortedConnections.Enqueue(conn);
 
                         Player player = _playerTable.Lookup(id);
                         Debug.Assert(player.connected == true);
@@ -252,10 +286,10 @@ namespace Application
                 // Barrier
 
                 {
-                    int count = _disConnections.Count;
+                    int count = _abortedConnections.Count;
                     for (int i = 0; i < count; ++i)
                     {
-                        Connection conn = _disConnections.Dequeue();
+                        Connection conn = _abortedConnections.Dequeue();
 
                         int id = conn.Id;
 

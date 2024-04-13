@@ -1320,6 +1320,32 @@ namespace Protocol
 
     }*/
 
+    public class TeleportRecord
+    {
+        public static readonly int MaxTicks = 20;  // 1 seconds
+
+        public readonly int Payload;
+        private int _ticks = 0;
+
+        public TeleportRecord()
+        {
+            Payload = new Random().Next();
+        }
+
+        public void Update()
+        {
+            Debug.Assert(_ticks >= 0);
+
+            if (++_ticks > MaxTicks)
+            {
+                throw new TeleportConfirmTimeoutException();
+            }
+
+        }
+
+    }
+
+
     public class Listener
     {
         private static readonly TimeSpan _PendingTimeout = TimeSpan.FromSeconds(1);
@@ -1602,5 +1628,6 @@ namespace Protocol
         }
 
     }
+
 
 }
