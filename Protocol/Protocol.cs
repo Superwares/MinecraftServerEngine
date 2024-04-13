@@ -1261,7 +1261,13 @@ namespace Protocol
             Debug.Assert(!_disposed);
             Debug.Assert(_step >= _SetupSteps.StartPlaying);
 
-            throw new NotImplementedException();
+            using Buffer buffer = new();
+
+            packet.Write(buffer);
+
+            _client.Send(buffer);
+
+            Debug.Assert(buffer.Empty);
         }
 
         protected virtual void Dispose(bool disposing)

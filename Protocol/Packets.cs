@@ -118,6 +118,7 @@ namespace Protocol
         public static readonly int UnloadChunkPacketId = 0x1D;
         public static readonly int JoinGamePacketId = 0x23;
         public static readonly int SetPlayerAbilitiesId = 0x2C;
+        public static readonly int SetPlayerPosAndLookPacketId = 0x2F;
 
         public override WhereBound BoundTo => WhereBound.Clientbound;
 
@@ -470,7 +471,7 @@ namespace Protocol
 
     }
 
-    public class JoinGamePacket : ClientboundPlayingPacket
+    internal class JoinGamePacket : ClientboundPlayingPacket
     {
         private readonly int _entityId;
         private readonly byte _gamemode;
@@ -551,8 +552,61 @@ namespace Protocol
         }
 
     }
+    
+    public class SetPlayerPosAndLookPacket : ClientboundPlayingPacket
+    {
+        public readonly double X, Y, Z;
+        public readonly float Yaw, Pitch;
+        private readonly byte _flags;
+        public readonly int TeleportId;
 
-    public class ClientSettingsPacket : ServerboundPlayingPacket
+        internal static SetPlayerPosAndLookPacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public SetPlayerPosAndLookPacket(
+            double x, double y, double z, 
+            float yaw, float pitch, 
+            bool relativeX, bool relativeY, bool relativeZ,
+            bool relativeYaw, bool relativePitch,
+            int teleportId)
+            : base(SetPlayerPosAndLookPacketId)
+        {
+            X = x; Y = y; Z = z;
+            Yaw = yaw; Pitch = pitch;
+
+            byte flags = 0;
+            if (relativeX)
+                flags |= (1 << 0);
+            if (relativeY)
+                flags |= (1 << 1);
+            if (relativeZ)
+                flags |= (1 << 2);
+            if (relativeYaw)  // TODO: It is correct?
+                flags |= (1 << 3);
+            if (relativePitch)  // TODO: It is correct?
+                flags |= (1 << 4);
+            _flags = flags;
+
+            TeleportId = teleportId;
+        }
+
+        internal override void WriteData(Buffer buffer)
+        {
+            buffer.WriteDouble(X);
+            buffer.WriteDouble(Y);
+            buffer.WriteDouble(Z);
+            buffer.WriteFloat(Yaw);
+            buffer.WriteFloat(Pitch);
+            buffer.WriteByte(_flags);
+            buffer.WriteInt(TeleportId, true);
+
+        }
+
+    }
+
+    internal class ClientSettingsPacket : ServerboundPlayingPacket
     {
         public readonly byte RenderDistance;
 

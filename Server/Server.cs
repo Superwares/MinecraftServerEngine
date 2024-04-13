@@ -18,12 +18,13 @@ namespace Application
 
         private readonly ConcurrentQueue<(Connection, Player.ClientsideSettings?)> 
             _newConnections = new();
-        private readonly Queue<Connection> _disconnectedConnections = new();
+        private readonly Queue<Connection> _disConnections = new();
         private readonly Queue<Connection> _connections = new();
 
         private readonly Queue<Player> _newPlayers = new();
         private readonly Table<int, Player> _playerTable = new();
         private readonly Queue<Player> _players = new();
+        private readonly Queue<(Player, int)> _teleportedPlayers = new();
 
         private readonly Table<Chunk.Position, Chunk> _chunks = new();
 
@@ -142,6 +143,10 @@ namespace Application
 
                 // Barrier
 
+                // Handle teleported players
+
+                // Barrier
+
                 // handle players
 
                 // Barrier
@@ -155,6 +160,11 @@ namespace Application
                         int id = player.Id;
 
                         Queue<ClientboundPlayingPacket> outPackets = _outPacketTable.Lookup(id);
+
+                        {
+                            SetAbilitiesPacket packet = new(true, true, true, true, 1, 0);
+                            outPackets.Enqueue(packet);
+                        }
 
                         // load chunks
                         Chunk.Position pChunk = player.PosChunk;
@@ -174,11 +184,25 @@ namespace Application
                                 (continuous, mask, data) = Chunk.Write();
                             }
 
+                            Debug.Assert(continuous);
                             LoadChunk packet = new(p.X, p.Z, continuous, mask, data);
                             outPackets.Enqueue(packet);
                         }
 
-                        _players.Enqueue(player);
+                        int teleportId = new Random().Next();
+
+                        {
+                            // teleport
+                            // enqueue set player position and look packet
+                            SetPlayerPosAndLookPacket packet = new(
+                                player.Pos.X, player.Pos.Y, player.Pos.Z,
+                                0, 0,  // TODO
+                                false, false, false, false, false,
+                                teleportId);
+                            outPackets.Enqueue(packet);
+                        }
+
+                        _teleportedPlayers.Enqueue((player, teleportId));
                     }
                 }
 
@@ -216,7 +240,7 @@ namespace Application
                             continue;
                         }
 
-                        _disconnectedConnections.Enqueue(conn);
+                        _disConnections.Enqueue(conn);
 
                         Player player = _playerTable.Lookup(id);
                         Debug.Assert(player.connected == true);
@@ -228,10 +252,10 @@ namespace Application
                 // Barrier
 
                 {
-                    int count = _disconnectedConnections.Count;
+                    int count = _disConnections.Count;
                     for (int i = 0; i < count; ++i)
                     {
-                        Connection conn = _disconnectedConnections.Dequeue();
+                        Connection conn = _disConnections.Dequeue();
 
                         int id = conn.Id;
 
