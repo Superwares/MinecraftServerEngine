@@ -179,9 +179,11 @@ namespace Application
             // Barrier
 
             {
+                
                 int count = _spawnedPlayers.Count;
                 for (int i = 0; i < count; ++i)
                 {
+
                     Player player = _spawnedPlayers.Dequeue();
 
                     int id = player.Id;
@@ -196,20 +198,20 @@ namespace Application
                     // load chunks
                     Chunk.Position pChunk = player.PosChunk;
                     int d = player.Settings.renderDistance;
-                    foreach (var p in Chunk.Position.GenerateGridAroundCenter(pChunk, d))
+                    Chunk.Position[] positions = Chunk.Position.GenerateGridAroundCenter(pChunk, d);
+                    /*Console.WriteLine(positions.Length);*/
+                    foreach (var p in positions)
                     {
                         bool continuous;
                         int mask;
                         byte[] data;
-                        try
+                        if (_chunks.Contains(p))
                         {
                             Chunk chunk = _chunks.Lookup(p);
                             (continuous, mask, data) = Chunk.Write(chunk);
                         }
-                        catch (NotFoundException)
-                        {
+                        else
                             (continuous, mask, data) = Chunk.Write();
-                        }
 
                         Debug.Assert(continuous);
                         LoadChunk packet = new(p.X, p.Z, continuous, mask, data);
@@ -235,6 +237,7 @@ namespace Application
                     }
 
                     _players.Enqueue(player);
+
                 }
             }
 
@@ -257,7 +260,6 @@ namespace Application
                     try
                     {
                         foreach (var p in outPackets) conn.Send(p);
-
                     }
                     catch (DisconnectedException)
                     {
@@ -326,6 +328,7 @@ namespace Application
 
                 if (elapsed > interval)
                 {
+                    Console.WriteLine($"elapsed: {elapsed}");
                     Console.WriteLine("The task is taking longer than expected.");
                 }
                 /*else
