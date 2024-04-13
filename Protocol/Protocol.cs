@@ -915,6 +915,8 @@ namespace Protocol
 
         public readonly ClientsideSettings Settings;
 
+        public bool connected = true;
+
         public Player(
             int id,
             Position p,

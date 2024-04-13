@@ -18,9 +18,11 @@ namespace Application
 
         private readonly ConcurrentQueue<(Connection, Player.ClientsideSettings?)> 
             _newConnections = new();
+        private readonly Queue<Connection> _disconnectedConnections = new();
         private readonly Queue<Connection> _connections = new();
 
         private readonly Queue<Player> _newPlayers = new();
+        private readonly Table<int, Player> _playerTable = new();
         private readonly Queue<Player> _players = new();
 
         private readonly Table<Chunk.Position, Chunk> _chunks = new();
@@ -38,97 +40,6 @@ namespace Application
             _outPackets.Add(id, new());
         }*/
 
-        private void HandleNewConnections()
-        {
-            bool start, close;
-
-            int count = _newConnections.Count;
-            for (int i = 0; i < count; ++i)
-            {
-                (Connection conn, Player.ClientsideSettings? settings)
-                    = _newConnections.Dequeue();
-
-                start = close = false;
-
-                try
-                {
-                    conn.HandleSetupProcess(ref settings);
-
-                    Debug.Assert(!start);
-                    Debug.Assert(!close);
-                    Debug.Assert(settings != null);
-
-                    start = true;
-                }
-                catch (TryAgainException)
-                {
-                    Debug.Assert(!start);
-                    Debug.Assert(!close);
-
-                    /*Console.WriteLine("TryAgainException!");*/
-                }
-                catch (DataReadTimeoutException)
-                {
-                    Debug.Assert(!start);
-                    Debug.Assert(!close);
-
-                    close = true;
-
-                    /*Console.WriteLine("DataReadTimeoutException!");*/
-                }
-                catch (UnexpectedDataException)
-                {
-                    Debug.Assert(!start);
-                    Debug.Assert(!close);
-
-                    close = true;
-
-                    // TODO: Send packets with reason.
-
-                    /*Console.WriteLine("UnexpectedDataException!");*/
-                }
-                catch (DisconnectedException)
-                {
-                    Debug.Assert(!start);
-                    Debug.Assert(!close);
-
-                    close = true;
-
-                    /*Console.WriteLine("DisconnectedException!");*/
-                }
-
-                if (!start)
-                {
-                    if (!close)
-                    {
-                        _newConnections.Enqueue((conn, settings));
-                    }
-                    else
-                    {
-                        conn.Close();
-                    }
-                }
-                else
-                {
-                    Debug.Assert(!close);
-                    /*Console.WriteLine("Start Game!");*/
-
-                    _connections.Enqueue(conn);
-
-                    int id = conn.Id;
-
-                    Debug.Assert(settings != null);
-                    Player player = new(id, new(0, 61, 0), settings);
-                    _newPlayers.Enqueue(player);
-
-                    _inPacketTable.Insert(id, new());
-                    _outPacketTable.Insert(id, new());
-                }
-
-            }
-
-        }
-
         private void StartCoreRoutine()
         {
             while (Running)
@@ -137,7 +48,97 @@ namespace Application
 
                 // Barrier
 
-                HandleNewConnections();
+                {
+                    bool start, close;
+
+                    int count = _newConnections.Count;
+                    for (int i = 0; i < count; ++i)
+                    {
+                        (Connection conn, Player.ClientsideSettings? settings)
+                            = _newConnections.Dequeue();
+
+                        start = close = false;
+
+                        try
+                        {
+                            conn.HandleSetupProcess(ref settings);
+
+                            Debug.Assert(!start);
+                            Debug.Assert(!close);
+                            Debug.Assert(settings != null);
+
+                            start = true;
+                        }
+                        catch (TryAgainException)
+                        {
+                            Debug.Assert(!start);
+                            Debug.Assert(!close);
+
+                            /*Console.WriteLine("TryAgainException!");*/
+                        }
+                        catch (DataReadTimeoutException)
+                        {
+                            Debug.Assert(!start);
+                            Debug.Assert(!close);
+
+                            close = true;
+
+                            /*Console.WriteLine("DataReadTimeoutException!");*/
+                        }
+                        catch (UnexpectedDataException)
+                        {
+                            Debug.Assert(!start);
+                            Debug.Assert(!close);
+
+                            close = true;
+
+                            // TODO: Send packets with reason.
+
+                            /*Console.WriteLine("UnexpectedDataException!");*/
+                        }
+                        catch (DisconnectedException)
+                        {
+                            Debug.Assert(!start);
+                            Debug.Assert(!close);
+
+                            close = true;
+
+                            /*Console.WriteLine("DisconnectedException!");*/
+                        }
+
+                        if (!start)
+                        {
+                            if (!close)
+                            {
+                                _newConnections.Enqueue((conn, settings));
+                            }
+                            else
+                            {
+                                conn.Close();
+                            }
+                        }
+                        else
+                        {
+                            Debug.Assert(!close);
+                            /*Console.WriteLine("Start Game!");*/
+
+                            _connections.Enqueue(conn);
+
+                            int id = conn.Id;
+
+                            Debug.Assert(settings != null);
+                            Player player = new(id, new(0, 61, 0), settings);
+                            Debug.Assert(player.connected == true);
+
+                            _playerTable.Insert(id, player);
+                            _newPlayers.Enqueue(player);
+
+                            _inPacketTable.Insert(id, new());
+                            _outPacketTable.Insert(id, new());
+                        }
+
+                    }
+                }
 
                 // Barrier
 
@@ -184,31 +185,58 @@ namespace Application
                 // Barrier
 
                 {
+
+                    bool close;
                     int count = _connections.Count;
                     for (int i = 0; i < count; ++i)
                     {
+                        close = false;
+
                         Connection conn = _connections.Dequeue();
 
                         int id = conn.Id;
 
-                        Queue<ClientboundPlayingPacket> outPackets = _outPacketTable.Lookup(id);
+                        ClientboundPlayingPacket[] packets = _outPacketTable.Lookup(id).Flush();
 
                         try
                         {
-                            while (!outPackets.Empty)
-                            {
-                                ClientboundPlayingPacket packet = outPackets.Dequeue();
-                                conn.Send(packet);
-                            }
+                            foreach (var p in packets) conn.Send(p);
 
-                            Debug.Assert(outPackets.Empty);
                         }
                         catch (DisconnectedException)
                         {
-                            TODO: handle disconnected connection
+                            Debug.Assert(close == false);
+                            close = true;
+
                         }
 
-                        /*_connections.Enqueue(conn);*/
+                        if (!close)
+                        {
+                            _connections.Enqueue(conn);
+                            continue;
+                        }
+
+                        _disconnectedConnections.Enqueue(conn);
+
+                        Player player = _playerTable.Lookup(id);
+                        Debug.Assert(player.connected == true);
+                        player.connected = false;
+
+                    }
+                }
+
+                // Barrier
+
+                {
+                    int count = _disconnectedConnections.Count;
+                    for (int i = 0; i < count; ++i)
+                    {
+                        Connection conn = _disconnectedConnections.Dequeue();
+
+                        int id = conn.Id;
+
+                        _inPacketTable.Extract(id).Close();
+                        _outPacketTable.Extract(id).Close();
                     }
                 }
 

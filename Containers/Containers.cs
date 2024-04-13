@@ -185,6 +185,7 @@ namespace Containers
         {
             Dispose();
         }
+
     }
 
     public class ConcurrentNumList : NumList
@@ -320,6 +321,35 @@ namespace Containers
             return value;
         }
 
+        public T[] Flush()
+        {
+            Debug.Assert(!_disposed);
+
+            if (_count == 0)
+                return [];
+
+            Debug.Assert(_inNode != null);
+            Debug.Assert(_outNode != null);
+
+            T[] values = new T[_count];
+
+            Node? node = _outNode;
+            
+            for (int i = 0; i < _count; ++i)
+            {
+                Debug.Assert(node != null);
+                values[i] = node.Value;
+                node = node.NextNode;
+            }
+            Debug.Assert(node == null);
+
+            _inNode = null;
+            _outNode = null;
+            _count = 0;
+
+            return values;
+        }
+
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed) return;
@@ -343,6 +373,11 @@ namespace Containers
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        public void Close()
+        {
+            Dispose();
         }
 
     }
@@ -374,6 +409,16 @@ namespace Containers
             lock (_SharedResource)
             {
                 return base.Dequeue();
+            }
+        }
+
+        public new T[] Flush()
+        {
+            Debug.Assert(!_disposed);
+
+            lock (_SharedResource)
+            {
+                return base.Flush();
             }
         }
 
@@ -696,6 +741,11 @@ namespace Containers
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        public void Close()
+        {
+            Dispose();
         }
 
     }

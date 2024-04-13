@@ -10,13 +10,17 @@
 * Make chunk section with indirect or direct palette.
 * Mask variables as private in all packet class
 * Create own containers library. (Table, Set, NumList...)
-* 마인크래프트 클라이언트에서 Refresh 를 누르다보면 해당 Client가 Queue 에서 소멸하지 않고 계속 루프를 돌게됨. 왜 그런지 이유를 찾아내야됨. 아마도 WouldBlock 에 의해 넘어가는 코드인것 같지만 어떨때는 루프가 안끝나는 경우가 있음.
+* 마인크래프트 클라이언트에서 Refresh 를 누르다보면 해당 Client가 Queue 에서 소멸하지 않고 계속 루프를 돌게됨. 왜 그런지 이유를 찾아내야됨. 아마도 Nonblokcing 에 의해 넘어가는 코드인것 같지만 어떨때는 루프가 안끝나는 경우가 있음.
 * WHat is difference between EndOfFileException and SocketError.WouldBlock in SocketException?
+
 
 
 ### Done
 
 ## Conventions
+
+### Containers
+All containers must be implemented as IDisposable interface, and have empty data if the container is disposed.
 
 ### Dispose Pattern
 
