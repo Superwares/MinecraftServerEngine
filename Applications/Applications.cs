@@ -14,6 +14,11 @@ namespace Applications
     {
         public delegate void StartRoutine();
 
+        private static ulong GetCurrentTimeInMicroseconds()
+        {
+            return (ulong)(DateTime.Now.Ticks / TimeSpan.TicksPerMicrosecond);
+        }
+
         private readonly object _SharedObject = new();
 
         private bool _closed = false;
@@ -52,12 +57,12 @@ namespace Applications
 
         ~ConsoleApplication() => Dispose(false);
 
-        protected void Run(StartRoutine f)
+        protected void Run(StartRoutine startRoutine)
         {
             Debug.Assert(!_disposed);
             Debug.Assert(Closed == false);
 
-            Thread thread = new(new ThreadStart(f));
+            Thread thread = new(new ThreadStart(startRoutine));
             thread.Start();
 
             _threads.Enqueue(thread);

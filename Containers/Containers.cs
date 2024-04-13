@@ -590,7 +590,10 @@ namespace Containers
             Debug.Assert(_keys.Length >= _MinLength);
             Debug.Assert(_values.Length >= _MinLength);
             Debug.Assert(_length >= _MinLength);
-            Debug.Assert(_count > 0);
+            Debug.Assert(_count >= 0);
+
+            if (_count == 0)
+                throw new NotFoundException();
 
             V? value = default;
 
@@ -698,7 +701,9 @@ namespace Containers
             Debug.Assert(_keys.Length >= _MinLength);
             Debug.Assert(_values.Length >= _MinLength);
             Debug.Assert(_length >= _MinLength);
-            Debug.Assert(_count > 0);
+            Debug.Assert(_count >= 0);
+            if (_count == 0)
+                return false;
 
             int hash = Hash(key);
             for (int i = 0; i < _length; ++i)

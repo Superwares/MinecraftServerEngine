@@ -611,7 +611,7 @@ namespace Protocol
     {
         public readonly int Payload;
 
-        public static ConfirmTeleportPacket Read(Buffer buffer)
+        internal static ConfirmTeleportPacket Read(Buffer buffer)
         {
             return new(buffer.ReadInt(true));
         }
