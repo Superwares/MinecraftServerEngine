@@ -128,7 +128,7 @@ public abstract class EntityArrow extends Entity implements IProjectile {
     }
 
     public void B_() {
-
+        /*System.out.println("locY: " + locY);*/
         super.B_();
         if (this.lastPitch == 0.0F && this.lastYaw == 0.0F) {
             float f = MathHelper.sqrt(this.motX * this.motX + this.motZ * this.motZ);

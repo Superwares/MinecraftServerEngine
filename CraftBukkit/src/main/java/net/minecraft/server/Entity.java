@@ -67,7 +67,7 @@ public abstract class Entity implements ICommandListener {
     public boolean i;
     public final List<Entity> passengers;
     protected int j;
-    private Entity au;
+    private Entity au;  // riding entity
     public boolean attachedToPlayer;
     public World world;
 
@@ -107,9 +107,9 @@ public abstract class Entity implements ICommandListener {
     public float fallDistance;
     private int ax;
     private float ay;
-    public double M;
-    public double N;
-    public double O;
+    public double M;  // lastX?
+    public double N;  // lastY?
+    public double O;  // lastZ?
     public float P;
     public boolean noclip;
     public float R;
@@ -316,7 +316,7 @@ public abstract class Entity implements ICommandListener {
 
     public void B_() {
         if (!this.world.isClientSide) {
-            this.setFlag(6, this.aW());
+            this.setFlag(6, this.aW());  // Set Glowing effect
         }
 
         this.Y();
@@ -425,6 +425,8 @@ public abstract class Entity implements ICommandListener {
             this.world.methodProfiler.b();
         }
         */
+
+        //////
 
         this.as();
         this.aq();
@@ -1317,7 +1319,9 @@ public abstract class Entity implements ICommandListener {
 
     public void d(EntityHuman entityhuman) {}
 
+
     public void collide(Entity entity) {
+
         if (!this.x(entity)) {
             if (!entity.noclip && !this.noclip) {
                 double d0 = entity.locX - this.locX;

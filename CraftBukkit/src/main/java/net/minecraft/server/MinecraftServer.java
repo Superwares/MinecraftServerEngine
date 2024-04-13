@@ -715,6 +715,8 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IAs
             }
         }
 
+
+
         int i;
 
         for (i = 0; i < this.worlds.size(); ++i) { // CraftBukkit

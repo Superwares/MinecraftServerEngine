@@ -933,6 +933,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
 
     }
 
+    // close current active inventory, ex) player own inventory or chest
     public void closeInventory() {
         CraftEventFactory.handleInventoryCloseEvent(this); // CraftBukkit
         this.playerConnection.sendPacket(new PacketPlayOutCloseWindow(this.activeContainer.windowId));
@@ -960,8 +961,8 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
                 this.bg = f1;
             }
 
-            this.bd = flag;
-            this.setSneaking(flag1);
+            this.bd = flag;  // jump
+            this.setSneaking(flag1);  // unmount
         }
 
     }

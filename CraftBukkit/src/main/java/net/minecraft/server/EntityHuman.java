@@ -33,7 +33,10 @@ public abstract class EntityHuman extends EntityLiving {
     public PlayerInventory inventory = new PlayerInventory(this);
     protected InventoryEnderChest enderChest = new InventoryEnderChest(this); // CraftBukkit - add "this" to constructor
     public Container defaultContainer;
+
+    // current active container. ex) player own inventory, chest, or foreign inventory
     public Container activeContainer;
+
     protected FoodMetaData foodData = new FoodMetaData(this); // CraftBukkit - add "this" to constructor
     protected int bA;
     public float bB;

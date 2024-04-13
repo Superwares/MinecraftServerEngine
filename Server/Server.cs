@@ -8,88 +8,7 @@ using System.Threading;
 
 namespace Application
 {
-
-
-    // TODO: Change to correct name.
-    /*public class PacketTable<T> : IDisposable where T : PlayingPacket
-    {
-        private bool _disposed = false;
-
-        private readonly Table<int, Queue<T>> _data = new();
-
-        public PacketTable() { }
-
-        ~PacketTable()
-        {
-            Dispose(false);
-        }
-
-        public void Init(int key)
-        {
-            Debug.Assert(!_disposed);
-
-            Debug.Assert(!_data.Contains(key));
-
-            Queue<T> queue = new();
-            _data.Insert(key, queue);
-        }
-
-        public void Close(int key)
-        {
-            Debug.Assert(!_disposed);
-
-            Debug.Assert(_data.Contains(key));
-
-            Queue<T> queue = _data.Extract(key);
-            Debug.Assert(queue.Count == 0);
-        }
-
-        public void Enqueue(int key, T value)
-        {
-            Debug.Assert(!_disposed);
-
-            Debug.Assert(_data.Contains(key));
-
-            Queue<T> queue = _data.Lookup(key);
-            Debug.Assert(queue != null);
-
-            queue.Enqueue(value);
-        }
-
-        public T Dequeue(int key)
-        {
-            Debug.Assert(!_disposed);
-
-            Debug.Assert(_data.Contains(key));
-
-            Queue<T> queue = _data.Lookup(key);
-            Debug.Assert(queue != null);
-
-            return queue.Dequeue();
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (_disposed) return;
-
-            if (disposing == true)
-            {
-                // managed objects
-                _data.Dispose();
-            }
-
-            // unmanaged objects
-
-            _disposed = true;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-    }*/
+   
 
     public sealed class Server : ConsoleApplication
     {
@@ -105,6 +24,9 @@ namespace Application
         private readonly Queue<Player> _players = new();
 
         private readonly Table<Chunk.Position, Chunk> _chunks = new();
+
+        private readonly Table<int, Queue<ServerboundPlayingPacket>> _inPacketTable = new();
+        private readonly Table<int, Queue<ClientboundPlayingPacket>> _outPacketTable = new();
 
         private Server() { }
 
@@ -193,9 +115,14 @@ namespace Application
 
                     _connections.Enqueue(conn);
 
+                    int id = conn.Id;
+
                     Debug.Assert(settings != null);
-                    Player player = new(conn.Id, new(0, 61, 0), settings);
+                    Player player = new(id, new(0, 61, 0), settings);
                     _newPlayers.Enqueue(player);
+
+                    _inPacketTable.Insert(id, new());
+                    _outPacketTable.Insert(id, new());
                 }
 
             }
@@ -224,6 +151,10 @@ namespace Application
                     {
                         Player player = _newPlayers.Dequeue();
 
+                        int id = player.Id;
+
+                        Queue<ClientboundPlayingPacket> outPackets = _outPacketTable.Lookup(id);
+
                         // load chunks
                         Chunk.Position pChunk = player.PosChunk;
                         int d = player.Settings.renderDistance;
@@ -243,7 +174,7 @@ namespace Application
                             }
 
                             LoadChunk packet = new(p.X, p.Z, continuous, mask, data);
-                            // TODO: send packet
+                            outPackets.Enqueue(packet);
                         }
 
                         _players.Enqueue(player);
@@ -252,14 +183,34 @@ namespace Application
 
                 // Barrier
 
-                /*
-                while (_connections.Count > 0)
                 {
-                    Connection conn = _connections.Dequeue();
+                    int count = _connections.Count;
+                    for (int i = 0; i < count; ++i)
+                    {
+                        Connection conn = _connections.Dequeue();
 
-                    // send packets
-                    _connections.Enqueue(conn);
-                }*/
+                        int id = conn.Id;
+
+                        Queue<ClientboundPlayingPacket> outPackets = _outPacketTable.Lookup(id);
+
+                        try
+                        {
+                            while (!outPackets.Empty)
+                            {
+                                ClientboundPlayingPacket packet = outPackets.Dequeue();
+                                conn.Send(packet);
+                            }
+
+                            Debug.Assert(outPackets.Empty);
+                        }
+                        catch (DisconnectedException)
+                        {
+                            TODO: handle disconnected connection
+                        }
+
+                        /*_connections.Enqueue(conn);*/
+                    }
+                }
 
             }
 
@@ -274,6 +225,9 @@ namespace Application
                     // Release managed resources.
                     _idList.Dispose();
                     _newConnections.Dispose();
+                    _chunks.Dispose();
+                    _inPacketTable.Dispose();
+                    _outPacketTable.Dispose();
                 }
 
                 // Release unmanaged resources.
@@ -300,6 +254,8 @@ namespace Application
 
             while (app.Running)
             {
+
+                // Handle Barriers
                 Thread.Sleep(1000);
             }
 

@@ -1246,7 +1246,7 @@ namespace Protocol
 
         }
 
-        public ServerboundPlayingPacket RecvPacket()
+        public ServerboundPlayingPacket Recv()
         {
             Debug.Assert(!_disposed);
             Debug.Assert(_step >= _SetupSteps.StartPlaying);
@@ -1254,7 +1254,7 @@ namespace Protocol
             throw new NotImplementedException();
         }
 
-        public void SendPacket(ClientboundPlayingPacket packet)
+        public void Send(ClientboundPlayingPacket packet)
         {
             Debug.Assert(!_disposed);
             Debug.Assert(_step >= _SetupSteps.StartPlaying);

@@ -1271,6 +1271,8 @@ public abstract class World implements IBlockAccess {
         int i;
         Entity entity;
 
+
+
         for (i = 0; i < this.j.size(); ++i) {
             entity = (Entity) this.j.get(i);
             // CraftBukkit start - Fixed an NPE
@@ -1300,6 +1302,8 @@ public abstract class World implements IBlockAccess {
             }
         }
 
+        ////////
+
         this.methodProfiler.c("remove");
         this.entityList.removeAll(this.f);
 
@@ -1315,6 +1319,8 @@ public abstract class World implements IBlockAccess {
             }
         }
 
+        ///////
+
         for (i = 0; i < this.f.size(); ++i) {
             this.c((Entity) this.f.get(i));
         }
@@ -1325,6 +1331,8 @@ public abstract class World implements IBlockAccess {
 
         CrashReportSystemDetails crashreportsystemdetails1;
         CrashReport crashreport1;
+
+        ////
 
         // CraftBukkit start - Use field for loop variable
         for (this.tickPosition = 0; this.tickPosition < this.entityList.size(); ++this.tickPosition) {
@@ -1340,6 +1348,9 @@ public abstract class World implements IBlockAccess {
                 entity.stopRiding();
             }
 
+
+            //////
+
             this.methodProfiler.a("tick");
             if (!entity.dead && !(entity instanceof EntityPlayer)) {
                 try {
@@ -1352,8 +1363,21 @@ public abstract class World implements IBlockAccess {
                 }
             }
 
+
+            ////
+
+
+
             this.methodProfiler.b();
+
+
+            ////
+
             this.methodProfiler.a("remove");
+
+
+            ////
+
             if (entity.dead) {
                 j = entity.ab;
                 int l = entity.ad;
@@ -1366,8 +1390,13 @@ public abstract class World implements IBlockAccess {
                 this.c(entity);
             }
 
+
+            /////
+
             this.methodProfiler.b();
         }
+
+        /////
 
         this.methodProfiler.c("blockEntities");
         if (!this.tileEntityListUnload.isEmpty()) {

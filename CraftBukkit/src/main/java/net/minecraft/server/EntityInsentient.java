@@ -183,6 +183,8 @@ public abstract class EntityInsentient extends EntityLiving {
     }
 
     public void Y() {
+
+
         super.Y();
         this.world.methodProfiler.a("mobBaseTick");
         if (this.isAlive() && this.random.nextInt(1000) < this.a_++) {

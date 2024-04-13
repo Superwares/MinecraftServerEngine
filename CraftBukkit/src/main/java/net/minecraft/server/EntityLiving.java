@@ -81,7 +81,7 @@ public abstract class EntityLiving extends Entity {
     protected float ba;
     protected int bb;
     public float lastDamage;
-    protected boolean bd;
+    protected boolean bd;  // jump?
     public float be;
     public float bf;
     public float bg;
@@ -191,6 +191,8 @@ public abstract class EntityLiving extends Entity {
     }
 
     public void Y() {
+
+
         this.aC = this.aD;
         super.Y();
         this.world.methodProfiler.a("livingEntityBaseTick");
@@ -1547,6 +1549,8 @@ public abstract class EntityLiving extends Entity {
     public void A(Entity entity) {
         double d0;
 
+
+
         if (!(entity instanceof EntityBoat) && !(entity instanceof EntityHorseAbstract)) {
             double d1 = entity.locX;
             double d2 = entity.getBoundingBox().b + (double) entity.length;
@@ -1555,6 +1559,7 @@ public abstract class EntityLiving extends Entity {
             EnumDirection enumdirection = entity.bu();
 
             if (enumdirection != null) {
+
                 EnumDirection enumdirection1 = enumdirection.e();
                 int[][] aint = new int[][] { { 0, 1}, { 0, -1}, { -1, 1}, { -1, -1}, { 1, 1}, { 1, -1}, { -1, 0}, { 1, 0}, { 0, 1}};
                 double d3 = Math.floor(this.locX) + 0.5D;
@@ -1664,7 +1669,7 @@ public abstract class EntityLiving extends Entity {
             float f4;
             float f5;
 
-            if (this.isInWater() && (!(this instanceof EntityHuman) || !((EntityHuman) this).abilities.isFlying)) {
+            if (this.isInWater() && (!(this instanceof EntityHuman) || !((EntityHuman) this).abilities.isFlying)) {  // in water
                 d2 = this.locY;
                 f4 = this.cx();
                 f3 = 0.02F;
@@ -1694,7 +1699,7 @@ public abstract class EntityLiving extends Entity {
                 if (this.positionChanged && this.c(this.motX, this.motY + 0.6000000238418579D - this.locY + d2, this.motZ)) {
                     this.motY = 0.30000001192092896D;
                 }
-            } else if (this.au() && (!(this instanceof EntityHuman) || !((EntityHuman) this).abilities.isFlying)) {
+            } else if (this.au() && (!(this instanceof EntityHuman) || !((EntityHuman) this).abilities.isFlying)) {  // In lava
                 d2 = this.locY;
                 this.b(f, f1, f2, 0.02F);
                 this.move(EnumMoveType.SELF, this.motX, this.motY, this.motZ);
@@ -1708,7 +1713,7 @@ public abstract class EntityLiving extends Entity {
                 if (this.positionChanged && this.c(this.motX, this.motY + 0.6000000238418579D - this.locY + d2, this.motZ)) {
                     this.motY = 0.30000001192092896D;
                 }
-            } else if (this.cP()) {
+            } else if (this.cP()) {  // Flying with elytra
                 if (this.motY > -0.5D) {
                     this.fallDistance = 1.0F;
                 }
@@ -1763,7 +1768,7 @@ public abstract class EntityLiving extends Entity {
                     if (getFlag(7) && !CraftEventFactory.callToggleGlideEvent(this, false).isCancelled()) // CraftBukkit
                     this.setFlag(7, false);
                 }
-            } else {
+            } else {  // Normal Situation
                 float f9 = 0.91F;
                 BlockPosition.PooledBlockPosition blockposition_pooledblockposition = BlockPosition.PooledBlockPosition.d(this.locX, this.getBoundingBox().b - 1.0D, this.locZ);
 
@@ -1817,9 +1822,10 @@ public abstract class EntityLiving extends Entity {
                         }
                     } else if (!this.isNoGravity()) {
                         this.motY -= 0.08D;
+
                     }
                 }
-
+                /*System.out.println(this.motY);*/
                 this.motY *= 0.9800000190734863D;
                 this.motX *= (double) f9;
                 this.motZ *= (double) f9;
@@ -1859,8 +1865,13 @@ public abstract class EntityLiving extends Entity {
     }
 
     public void B_() {
+
         super.B_();
+
         this.cI();
+
+        //////////////
+
         if (!this.world.isClientSide) {
             int i = this.getArrowCount();
 
@@ -1931,7 +1942,12 @@ public abstract class EntityLiving extends Entity {
             }
         }
 
+        ////////////////////
+
         this.n();
+
+        ////////////
+
         double d0 = this.locX - this.lastX;
         double d1 = this.locZ - this.lastZ;
         float f = (float) (d0 * d0 + d1 * d1);
@@ -2083,6 +2099,8 @@ public abstract class EntityLiving extends Entity {
             this.world.methodProfiler.b();
         }
 
+        //////////////
+
         this.world.methodProfiler.b();
         this.world.methodProfiler.a("jump");
         if (this.bd) {
@@ -2098,6 +2116,8 @@ public abstract class EntityLiving extends Entity {
             this.bD = 0;
         }
 
+        /////////////////
+
         this.world.methodProfiler.b();
         this.world.methodProfiler.a("travel");
         this.be *= 0.98F;
@@ -2105,9 +2125,18 @@ public abstract class EntityLiving extends Entity {
         this.bh *= 0.9F;
         this.r();
         this.a(this.be, this.bf, this.bg);
+
+        ////////////////////
+
         this.world.methodProfiler.b();
         this.world.methodProfiler.a("push");
+
+        ///////////////
+
         this.cB();
+
+        //////////
+
         this.world.methodProfiler.b();
     }
 
@@ -2138,6 +2167,8 @@ public abstract class EntityLiving extends Entity {
 
     protected void doTick() {}
 
+
+    // Collision Detection
     protected void cB() {
         List list = this.world.getEntities(this, this.getBoundingBox(), IEntitySelector.a(this));
 
@@ -2162,7 +2193,7 @@ public abstract class EntityLiving extends Entity {
             for (j = 0; j < list.size(); ++j) {
                 Entity entity = (Entity) list.get(j);
 
-                this.C(entity);
+                this.C(entity);  // Collision Resolution
             }
         }
 
@@ -2430,6 +2461,7 @@ public abstract class EntityLiving extends Entity {
         }
     }
 
+    // Is Flying with elytra
     public boolean cP() {
         return this.getFlag(7);
     }
