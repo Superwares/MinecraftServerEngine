@@ -1175,7 +1175,7 @@ namespace Protocol
                 {
                     int size = RecvSize();
                     _x = size;
-                    Debug.Assert(_y == 0);
+                    _y = 0;
 
                     if (size == 0) return;
 
@@ -1417,6 +1417,7 @@ namespace Protocol
                     switch (packetId)
                     {
                         default:
+                            Console.WriteLine($"packetId: {packetId:X}");
                             throw new NotImplementedException();
                         case ServerboundPlayingPacket.ConfirmTeleportPacketId:
                             {

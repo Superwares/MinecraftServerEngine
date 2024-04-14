@@ -21,6 +21,25 @@ namespace Protocol
         public DataReadTimeoutException() : base("A timeout occurred while attempting to read data.") { }
     }
 
+    public abstract class TeleportConfirmException : UnexpectedBehaviorExecption
+    {
+        public TeleportConfirmException(string message) : base(message) { }  // TODO
+    }
+
+    public class TeleportConfirmTimeoutException : TeleportConfirmException
+    {
+        public TeleportConfirmTimeoutException() : base("") { }  // TODO
+    }
+
+    public class UnknownTeleportConfirmException : TeleportConfirmException
+    {
+        public UnknownTeleportConfirmException() : base("") { }  // TODO
+    }
+    public class InvalidTeleportConfirmPayloadException : TeleportConfirmException
+    {
+        public InvalidTeleportConfirmPayloadException() : base("") { }  // TODO
+    }
+
     public abstract class UnexpectedDataException : UnexpectedBehaviorExecption
     {
         public UnexpectedDataException(string message) : base(message) { }
@@ -60,11 +79,6 @@ namespace Protocol
     public class TryAgainException : ProtocolException
     {
         public TryAgainException() : base("No data is waiting to be received.") { }
-    }
-
-    public class TeleportConfirmTimeoutException : ProtocolException
-    {
-        public TeleportConfirmTimeoutException() : base("") { }  // TODO
     }
 
 }

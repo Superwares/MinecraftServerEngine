@@ -4,6 +4,7 @@ using Protocol;
 using System;
 using System.Diagnostics;
 using System.Numerics;
+using System.Security.AccessControl;
 using System.Threading;
 
 namespace Application
@@ -30,7 +31,6 @@ namespace Application
         private readonly Table<int, Queue<TeleportRecord>> _teleportRecordsTable = new();
 
         private readonly Table<int, Queue<Control>> _controlsTable = new();
-        private readonly Table<int, Queue<Confirm>> _confirmsTable = new();
         private readonly Table<int, Queue<Report>> _reportsTable = new();
 
         private readonly Table<Chunk.Position, Chunk> _chunks = new();
@@ -38,12 +38,6 @@ namespace Application
         private Server() { }
 
         ~Server() => Dispose(false);
-
-        /*       private void InitOutPackets(int id)
-        {
-            Debug.Assert(_outPackets.ContainsKey(id) == false);
-            _outPackets.Add(id, new());
-        }*/
 
         private void RecvData()
         {
@@ -61,11 +55,36 @@ namespace Application
                 int id = conn.Id;
 
                 Queue<Control> controls = _controlsTable.Lookup(id);
-                Queue<Confirm> confirms = _confirmsTable.Lookup(id);
+                using Queue<Confirm> confirms = new();
+
+                Queue<TeleportRecord> records = _teleportRecordsTable.Lookup(id);
 
                 try
                 {
                     conn.Recv(controls, confirms);
+
+                    while (!confirms.Empty)
+                    {
+                        Confirm _c = confirms.Dequeue();
+                        if (_c is TeleportConfirm teleportConfirm)
+                        {
+                            // TODO: Handle this logic in the Protocol library.
+                            if (records.Empty)
+                                throw new UnknownTeleportConfirmException();  
+
+                            var record = records.Dequeue();
+                            if (record.Payload != teleportConfirm.Payload)
+                                throw new InvalidTeleportConfirmPayloadException();
+
+                        }
+                        else if (_c is ChangeClientSettingsConfirm changeClientSettingsConfirm)
+                        {
+                            throw new NotImplementedException();
+                        }
+                    }
+
+                    Debug.Assert(confirms.Empty);
+
                 }
                 catch (UnexpectedBehaviorExecption)
                 {
@@ -86,6 +105,8 @@ namespace Application
 
                 if (close)
                 {
+                    confirms.Flush();
+
                     Player player = _playerTable.Lookup(id);
                     Debug.Assert(player.connected == true);
                     player.connected = false;
@@ -181,7 +202,6 @@ namespace Application
                     _teleportRecordsTable.Insert(id, new());
 
                     _controlsTable.Insert(id, new());
-                    _confirmsTable.Insert(id, new());
                     _reportsTable.Insert(id, new());
                 }
 
@@ -189,7 +209,7 @@ namespace Application
 
         }
 
-        private void HandleConfirms()
+        private void HandlePlayers()
         {
             if (_players.Empty) return;
 
@@ -200,42 +220,9 @@ namespace Application
                 Player player = _players.Dequeue();
                 if (!player.connected)
                 {
-                    throw new NotImplementedException();
+                    // TODO: Add logic to determine the player is appear or disappear when disconnected.
                     continue;
                 }
-
-                int id = player.Id;
-
-                Queue<Confirm> confirms = _confirmsTable.Lookup(id);
-                if (confirms.Empty) continue;
-
-                while (!confirms.Empty)
-                {
-                    Confirm _c = confirms.Dequeue();
-                    if (_c is TeleportConfirm teleportConfirm)
-                    {
-                        throw new NotImplementedException();
-                    }
-                    else if (_c is ChangeClientSettingsConfirm changeClientSettingsConfirm)
-                    {
-                        throw new NotImplementedException();
-                    }
-                }
-
-                _players.Enqueue(player);
-            }
-        }
-
-        private void HandleControls()
-        {
-            if (_players.Empty) return;
-
-            int count = _players.Count;
-            Debug.Assert(count > 0);
-            for (int i = 0; i < count; ++i)
-            {
-                Player player = _players.Dequeue();
-                Debug.Assert(player.connected);
 
                 int id = player.Id;
 
@@ -243,7 +230,10 @@ namespace Application
                 if (controls.Empty) continue;
 
                 throw new NotImplementedException();
+
+                // TODO: load/unload chunks.
             }
+
         }
 
         private void HandleSpawnedPlayers()
@@ -373,16 +363,15 @@ namespace Application
                 Queue<TeleportRecord> teleportRecords = _teleportRecordsTable.Extract(id);
 
                 Queue<Control> controls = _controlsTable.Extract(id);
-                Queue<Confirm> confirms = _confirmsTable.Extract(id);
                 Queue<Report> reports = _reportsTable.Extract(id);
 
+                // TODO: Handle flush and release garbage.
                 teleportRecords.Flush();
-                confirms.Flush();
+                controls.Flush();
                 reports.Flush();
 
                 teleportRecords.Close();
                 controls.Close();
-                confirms.Close();
                 reports.Close();
 
             }
@@ -394,19 +383,11 @@ namespace Application
 
             // Barrier
 
-            HandleConfirms();
-
-            // Barrier
-
-            HandleControls();
-
-            // Barrier
-
             HandleNewConnections();
 
             // Barrier
 
-            /*HandleEntities();*/
+            HandlePlayers();
 
             // Barrier
 
@@ -489,7 +470,6 @@ namespace Application
                     _teleportRecordsTable.Dispose();
 
                     _controlsTable.Dispose();
-                    _confirmsTable.Dispose();
                     _reportsTable.Dispose();
 
                     _chunks.Dispose();
