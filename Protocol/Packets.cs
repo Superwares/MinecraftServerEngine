@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace Protocol
 {
-    public abstract class Packet
+    internal abstract class Packet
     {
-        protected static readonly string _MinecraftVersion = "1.12.2";
-        protected static readonly int _ProtocolVersion = 340;
+        protected const string _MinecraftVersion = "1.12.2";
+        protected const int _ProtocolVersion = 340;
 
         public enum States
         {
@@ -33,7 +33,7 @@ namespace Protocol
 
         public Packet(int id) { Id = id; }
 
-        internal abstract void WriteData(Buffer buffer);
+        protected abstract void WriteData(Buffer buffer);
 
         internal void Write(Buffer buffer)
         {
@@ -61,14 +61,14 @@ namespace Protocol
 
     }
 
-    public abstract class PlayingPacket(int id) : Packet(id)
+    internal abstract class PlayingPacket(int id) : Packet(id)
     {
         public override States State => States.Playing;
     }
 
     internal abstract class ServerboundHandshakingPacket(int id) : HandshakingPacket(id)
     {
-        public static readonly int SetProtocolPacketId = 0x00;
+        public const int SetProtocolPacketId = 0x00;
 
         public override WhereBound BoundTo { get { return WhereBound.Serverbound; } }
 
@@ -76,8 +76,8 @@ namespace Protocol
 
     internal abstract class ClientboundStatusPacket(int id) : StatusPacket(id)
     {
-        public static readonly int ResponsePacketId = 0x00;
-        public static readonly int PongPacketId = 0x01;
+        public const int ResponsePacketId = 0x00;
+        public const int PongPacketId = 0x01;
 
         public override WhereBound BoundTo { get { return WhereBound.Clientbound; } }
 
@@ -85,8 +85,8 @@ namespace Protocol
 
     internal abstract class ServerboundStatusPacket(int id) : StatusPacket(id)
     {
-        public static readonly int RequestPacketId = 0x00;
-        public static readonly int PingPacketId = 0x01;
+        public const int RequestPacketId = 0x00;
+        public const int PingPacketId = 0x01;
 
         public override WhereBound BoundTo { get { return WhereBound.Serverbound; } }
 
@@ -94,10 +94,10 @@ namespace Protocol
 
     internal abstract class ClientboundLoginPacket(int id) : LoginPacket(id)
     {
-        public static readonly int DisconnectPacketId = 0x00;
-        public static readonly int EncryptionRequestPacketId = 0x01;
-        public static readonly int LoginSuccessPacketId = 0x02;
-        public static readonly int SetCompressionPacketId = 0x03;
+        public const int DisconnectPacketId = 0x00;
+        public const int EncryptionRequestPacketId = 0x01;
+        public const int LoginSuccessPacketId = 0x02;
+        public const int SetCompressionPacketId = 0x03;
 
         public override WhereBound BoundTo => WhereBound.Clientbound;
 
@@ -105,29 +105,29 @@ namespace Protocol
 
     internal abstract class ServerboundLoginPacket(int id) : LoginPacket(id)
     {
-        public static readonly int StartLoginPacketId = 0x00;
-        public static readonly int EncryptionResponsePacketId = 0x01;
+        public const int StartLoginPacketId = 0x00;
+        public const int EncryptionResponsePacketId = 0x01;
 
         public override WhereBound BoundTo => WhereBound.Clientbound;
 
     }
 
-    public abstract class ClientboundPlayingPacket(int id) : PlayingPacket(id)
+    internal abstract class ClientboundPlayingPacket(int id) : PlayingPacket(id)
     {
-        public static readonly int LoadChunkPacketId = 0x20;
-        public static readonly int UnloadChunkPacketId = 0x1D;
-        public static readonly int JoinGamePacketId = 0x23;
-        public static readonly int SetPlayerAbilitiesId = 0x2C;
-        public static readonly int TeleportPacketId = 0x2F;
+        public const int LoadChunkPacketId = 0x20;
+        public const int UnloadChunkPacketId = 0x1D;
+        public const int JoinGamePacketId = 0x23;
+        public const int SetPlayerAbilitiesId = 0x2C;
+        public const int TeleportPacketId = 0x2F;
 
         public override WhereBound BoundTo => WhereBound.Clientbound;
 
     }
 
-    public abstract class ServerboundPlayingPacket(int id) : PlayingPacket(id)
+    internal abstract class ServerboundPlayingPacket(int id) : PlayingPacket(id)
     {
-        public static readonly int ConfirmTeleportPacketId = 0x00;
-        public static readonly int ClientSettingsPacketId = 0x04;
+        public const int ConfirmTeleportPacketId = 0x00;
+        public const int ClientSettingsPacketId = 0x04;
 
         public override WhereBound BoundTo => WhereBound.Serverbound;
 
@@ -150,6 +150,10 @@ namespace Protocol
             return nextState;
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static SetProtocolPacket Read(Buffer buffer)
         {
             return new SetProtocolPacket(
@@ -178,7 +182,7 @@ namespace Protocol
         public SetProtocolPacket(string hostname, ushort port, States nextState)
             : this(_ProtocolVersion, hostname, port, nextState) { }
 
-        internal override void WriteData(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             Debug.Assert(Id == SetProtocolPacketId);
             Debug.Assert(
@@ -201,6 +205,10 @@ namespace Protocol
         public readonly int OnlinePlayers;
         public readonly string Description;
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static ResponsePacket Read(Buffer buffer)
         {
             /*string jsonString = buffer.ReadString();*/
@@ -218,7 +226,7 @@ namespace Protocol
             Description = description;
         }
 
-        internal override void WriteData(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             // TODO
             string jsonString = "{\"version\":{\"name\":\"1.12.2\",\"protocol\":340},\"players\":{\"max\":100,\"online\":0,\"sample\":[]},\"description\":{\"text\":\"Hello, World!\"},\"favicon\":\"data:image/png;base64,<data>\",\"enforcesSecureChat\":true,\"previewsChat\":true}";
@@ -232,6 +240,10 @@ namespace Protocol
     {
         public readonly long Payload;
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static PongPacket Read(Buffer buffer)
         {
             return new(buffer.ReadLong());
@@ -242,7 +254,7 @@ namespace Protocol
             Payload = payload;
         }
 
-        internal override void WriteData(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             buffer.WriteLong(Payload);
         }
@@ -251,6 +263,10 @@ namespace Protocol
 
     internal class RequestPacket : ServerboundStatusPacket
     {
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static RequestPacket Read(Buffer buffer)
         {
             return new();
@@ -258,7 +274,7 @@ namespace Protocol
 
         public RequestPacket() : base(RequestPacketId) { }
 
-        internal override void WriteData(Buffer buffer) { }
+        protected override void WriteData(Buffer buffer) { }
 
     }
 
@@ -266,6 +282,10 @@ namespace Protocol
     {
         public readonly long Payload;
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static PingPacket Read(Buffer buffer)
         {
             return new(buffer.ReadLong());
@@ -278,7 +298,7 @@ namespace Protocol
 
         public PingPacket() : this(DateTime.Now.Ticks) { }
 
-        internal override void WriteData(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             buffer.WriteLong(Payload);
         }
@@ -289,6 +309,10 @@ namespace Protocol
     {
         public readonly string Reason;
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static DisconnectPacket Read(Buffer buffer)
         {
             return new(buffer.ReadString());
@@ -299,7 +323,7 @@ namespace Protocol
             Reason = reason;
         }
 
-        internal override void WriteData(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             buffer.WriteString(Reason);
         }
@@ -308,6 +332,10 @@ namespace Protocol
 
     internal class EncryptionRequestPacket : ClientboundLoginPacket
     {
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static EncryptionRequestPacket Read(Buffer buffer)
         {
             throw new NotImplementedException();
@@ -318,7 +346,7 @@ namespace Protocol
             throw new NotImplementedException();
         }
 
-        internal override void WriteData(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             throw new NotImplementedException();
         }
@@ -330,6 +358,10 @@ namespace Protocol
         public readonly Guid UserId;
         public readonly string Username;
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static LoginSuccessPacket Read(Buffer buffer)
         {
             return new(
@@ -344,7 +376,7 @@ namespace Protocol
             Username = username;
         }
 
-        internal override void WriteData(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             buffer.WriteString(UserId.ToString());
             buffer.WriteString(Username);
@@ -356,6 +388,10 @@ namespace Protocol
     {
         public readonly int Threshold;
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static SetCompressionPacket Read(Buffer buffer)
         {
             return new(buffer.ReadInt(true));
@@ -367,7 +403,7 @@ namespace Protocol
             Threshold = threshold;
         }
 
-        internal override void WriteData(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             buffer.WriteInt(Threshold, true);
         }
@@ -378,6 +414,10 @@ namespace Protocol
     {
         public readonly string Username;
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static StartLoginPacket Read(Buffer buffer)
         {
             return new(buffer.ReadString());
@@ -388,7 +428,7 @@ namespace Protocol
             Username = username;
         }
 
-        internal override void WriteData(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             buffer.WriteString(Username);
         }
@@ -396,6 +436,10 @@ namespace Protocol
 
     internal class EncryptionResponsePacket : ServerboundLoginPacket
     {
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static EncryptionResponsePacket Read(Buffer buffer)
         {
             throw new NotImplementedException();
@@ -406,25 +450,29 @@ namespace Protocol
             throw new NotImplementedException();
         }
 
-        internal override void WriteData(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             throw new NotImplementedException();
         }
     }
 
-    public class LoadChunk : ClientboundPlayingPacket
+    internal class LoadChunkPacket : ClientboundPlayingPacket
     {
         public readonly int XChunk, ZChunk;
         public readonly bool Continuous;
         public readonly int Mask;
         public readonly byte[] Data;
 
-        internal static LoadChunk Read(Buffer buffer)
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
+        internal static LoadChunkPacket Read(Buffer buffer)
         {
             throw new NotImplementedException();
         }
 
-        public LoadChunk(
+        public LoadChunkPacket(
             int xChunk, int zChunk,
             bool continuous, int mask, byte[] data)
             : base(LoadChunkPacketId)
@@ -436,7 +484,7 @@ namespace Protocol
             Data = data;  // TODO: move semantics
         }
 
-        internal override void WriteData(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             buffer.WriteInt(XChunk);
             buffer.WriteInt(ZChunk);
@@ -449,22 +497,26 @@ namespace Protocol
 
     }
 
-    public class UnloadChunk : ClientboundPlayingPacket
+    internal class UnloadChunkPacket : ClientboundPlayingPacket
     {
         public readonly int XChunk, ZChunk;
 
-        internal static UnloadChunk Read(Buffer buffer)
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
+        internal static UnloadChunkPacket Read(Buffer buffer)
         {
             throw new NotImplementedException();
         }
 
-        public UnloadChunk(int xChunk, int zChunk) : base(UnloadChunkPacketId)
+        public UnloadChunkPacket(int xChunk, int zChunk) : base(UnloadChunkPacketId)
         {
             XChunk = xChunk;
             ZChunk = zChunk;
         }
 
-        internal override void WriteData(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             buffer.WriteInt(XChunk);
             buffer.WriteInt(ZChunk);
@@ -481,6 +533,10 @@ namespace Protocol
         private readonly string _levelType;
         private readonly bool _reducedDebugInfo;
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static JoinGamePacket Read(Buffer buffer)
         {
             throw new NotImplementedException();
@@ -503,7 +559,7 @@ namespace Protocol
 
         }
 
-        internal override void WriteData(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             buffer.WriteInt(_entityId);
             buffer.WriteByte(_gamemode);
@@ -515,18 +571,22 @@ namespace Protocol
         }
     }
 
-    public class SetAbilitiesPacket : ClientboundPlayingPacket
+    internal class SetPlayerAbilitiesPacket : ClientboundPlayingPacket
     {
         private readonly byte _flags;
         private readonly float _flyingSpeed;
         private readonly float _fovModifier;  // fov * _fovModifier;
 
-        internal static SetAbilitiesPacket Read(Buffer buffer)
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
+        internal static SetPlayerAbilitiesPacket Read(Buffer buffer)
         {
             throw new NotImplementedException();
         }
 
-        public SetAbilitiesPacket(
+        public SetPlayerAbilitiesPacket(
             bool invulnerable, bool flying, bool allowFlying, bool creativeMode,
             float flyingSpeed, float fovModifier) : base(SetPlayerAbilitiesId)
         {
@@ -545,7 +605,7 @@ namespace Protocol
             _fovModifier = fovModifier;
         }
 
-        internal override void WriteData(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             buffer.WriteByte(_flags);
             buffer.WriteFloat(_flyingSpeed);
@@ -554,13 +614,17 @@ namespace Protocol
 
     }
     
-    public class TeleportPacket : ClientboundPlayingPacket
+    internal class TeleportPacket : ClientboundPlayingPacket
     {
         public readonly double X, Y, Z;
         public readonly float Yaw, Pitch;
         private readonly byte _flags;
         public readonly int Payload;
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static TeleportPacket Read(Buffer buffer)
         {
             throw new NotImplementedException();
@@ -593,7 +657,7 @@ namespace Protocol
             Payload = payload;
         }
 
-        internal override void WriteData(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             buffer.WriteDouble(X);
             buffer.WriteDouble(Y);
@@ -607,10 +671,14 @@ namespace Protocol
 
     }
 
-    public class ConfirmTeleportPacket : ServerboundPlayingPacket
+    internal class ConfirmTeleportPacket : ServerboundPlayingPacket
     {
         public readonly int Payload;
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static ConfirmTeleportPacket Read(Buffer buffer)
         {
             return new(buffer.ReadInt(true));
@@ -621,7 +689,7 @@ namespace Protocol
             Payload = payload;
         }
 
-        internal override void WriteData(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             throw new NotImplementedException();
         }
@@ -632,6 +700,10 @@ namespace Protocol
     {
         public readonly byte RenderDistance;
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static ClientSettingsPacket Read(Buffer buffer)
         {
             buffer.ReadString();
@@ -650,7 +722,7 @@ namespace Protocol
             RenderDistance = renderDistance;
         }
 
-        internal override void WriteData(Buffer buffer)
+        protected override void WriteData(Buffer buffer)
         {
             throw new NotImplementedException();
         }

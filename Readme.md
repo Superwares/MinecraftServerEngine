@@ -13,11 +13,17 @@
 * 마인크래프트 클라이언트에서 Refresh 를 누르다보면 해당 Client가 Queue 에서 소멸하지 않고 계속 루프를 돌게됨. 왜 그런지 이유를 찾아내야됨. 아마도 Nonblokcing 에 의해 넘어가는 코드인것 같지만 어떨때는 루프가 안끝나는 경우가 있음.
 * WHat is difference between EndOfFileException and SocketError.WouldBlock in SocketException?
 * Make Common library project.
+* Reduce using try/catch.
 
 
 ### Done
 
 ## Conventions
+
+### Exceptions
+In case of exceptions that must be handled, they must be documented using XML tags.
+If not, they don't need documentation. 
+For instance, the exception NotImplementedException should not be handled internally, but should be passed on to the user.
 
 ### Containers
 All containers must be implemented as IDisposable interface, and have empty data if the container is disposed.

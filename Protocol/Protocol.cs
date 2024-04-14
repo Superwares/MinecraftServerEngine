@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Net.Sockets;
+using System.Net.Sockets;  // TODO: Use custom socket object in common library.
 using System.Text;
 using System.Text.Json;
 using Applications;
@@ -28,6 +26,12 @@ namespace Protocol
             return socket;
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <param name="socket">TODO: Add description.</param>
+        /// <returns>TODO: Add description.</returns>
+        /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
         public static Socket Accept(Socket socket)
         {
             try
@@ -38,19 +42,22 @@ namespace Protocol
             }
             catch (SocketException e)
             {
-                if (e.SocketErrorCode != SocketError.WouldBlock)
-                    throw new NotImplementedException($"Must hanle this exception: {e}");
-                else
-                {
-                    Debug.Assert(e.SocketErrorCode == SocketError.WouldBlock);
+                if (e.SocketErrorCode == SocketError.WouldBlock)
                     throw new TryAgainException();
-                }
+
+                throw;
             }
 
             throw new NotImplementedException();
         }
 
-        public static void Poll(Socket socket, TimeSpan span)
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <param name="socket">TODO: Add description.</param>
+        /// <param name="span">TODO: Add description.</param>
+        /// <exception cref="PendingTimeoutException">TODO: Why it's thrown.</exception>
+        public static void Poll(Socket socket, TimeSpan span)  // TODO: Use own TimeSpan in common library.
         {
             // TODO: check the socket is binding and listening.
 
@@ -71,6 +78,16 @@ namespace Protocol
             return socket.Blocking;
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <param name="socket">TODO: Add description.</param>
+        /// <param name="buffer">TODO: Add description.</param>
+        /// <param name="offset">TODO: Add description.</param>
+        /// <param name="size">TODO: Add description.</param>
+        /// <returns></returns>
+        /// <exception cref="DisconnectedException">TODO: Why it's thrown.</exception>
+        /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
         public static int RecvBytes(
             Socket socket, byte[] buffer, int offset, int size)
         {
@@ -94,6 +111,13 @@ namespace Protocol
 
         }
 
+        /// <summary>
+        /// TODO: Add description..
+        /// </summary>
+        /// <param name="socket">TODO: Add description..</param>
+        /// <returns>TODO: Add description..</returns>
+        /// <exception cref="DisconnectedException">TODO: Why it's thrown.</exception>
+        /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
         public static byte RecvByte(Socket socket)
         {
             byte[] buffer = new byte[1];
@@ -104,6 +128,12 @@ namespace Protocol
             return buffer[0];
         }
 
+        /// <summary>
+        /// TODO: Add description..
+        /// </summary>
+        /// <param name="socket">TODO: Add description..</param>
+        /// <param name="data">TODO: Add description..</param>
+        /// <exception cref="DisconnectedException">TODO: Why it's thrown.</exception>
         public static void SendBytes(Socket socket, byte[] data)
         {
             try
@@ -122,6 +152,12 @@ namespace Protocol
 
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <param name="socket">TODO: Add description.</param>
+        /// <param name="v">TODO: Add description.</param>
+        /// <exception cref="DisconnectedException">TODO: Why it's thrown.</exception>
         public static void SendByte(Socket socket, byte v)
         {
             SendBytes(socket, [v]);
@@ -187,6 +223,11 @@ namespace Protocol
             return (Size == 0);
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <returns>TODO: Add description.</returns>
+        /// <exception cref="UnexpectedBehaviorExecption">TODO: WHy it's thrown.</exception>
         private byte ExtractByte()
         {
             Debug.Assert(_last >= _first);
@@ -196,6 +237,12 @@ namespace Protocol
             return _data[_first++];
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <param name="size">TODO: Add description.</param>
+        /// <returns>TODO: Add description.</returns>
+        /// <exception cref="UnexpectedBehaviorExecption">TODO: WHy it's thrown.</exception>
         private byte[] ExtractBytes(int size)
         {
             Debug.Assert(size >= 0);
@@ -265,6 +312,10 @@ namespace Protocol
             _last += size;
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
         public bool ReadBool()
         {
             byte data = ExtractByte();
@@ -272,16 +323,28 @@ namespace Protocol
             return (data > 0x00);
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
         public sbyte ReadSbyte()
         {
             return (sbyte)ExtractByte();
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
         public byte ReadByte()
         {
             return (byte)ExtractByte();
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
         public short ReadShort()
         {
             byte[] data = ExtractBytes(_SHORT_DATATYPE_SIZE);
@@ -292,6 +355,10 @@ namespace Protocol
                 ((short)data[1] << 0));
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
         public ushort ReadUshort()
         {
             byte[] data = ExtractBytes(_USHORT_DATATYPE_SIZE);
@@ -302,6 +369,10 @@ namespace Protocol
                 ((ushort)data[1] << 0));
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
         public int ReadInt()
         {
             byte[] data = ExtractBytes(_INT_DATATYPE_SIZE);
@@ -314,6 +385,10 @@ namespace Protocol
                 ((int)data[3] << 0));
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
         public long ReadLong()
         {
             byte[] data = ExtractBytes(_LONG_DATATYPE_SIZE);
@@ -330,6 +405,10 @@ namespace Protocol
                 ((long)data[7] << 0));
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
         public float ReadFloat()
         {
             byte[] data = ExtractBytes(_FLOAT_DATATYPE_SIZE);
@@ -338,6 +417,10 @@ namespace Protocol
             return BitConverter.ToSingle(data);
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
         public double ReadDouble()
         {
             byte[] data = ExtractBytes(_DOUBLE_DATATYPE_SIZE);
@@ -346,6 +429,12 @@ namespace Protocol
             return BitConverter.ToDouble(data);
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <param name="decode">TODO: Add description.</param>
+        /// <returns>TODO: Add description.</returns>
+        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
         public int ReadInt(bool decode)
         {
             if (decode == false)
@@ -373,6 +462,12 @@ namespace Protocol
             return (int)uvalue;
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <param name="decode">TODO: Add description.</param>
+        /// <returns>TODO: Add description.</returns>
+        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
         public long ReadLong(bool decode)
         {
             if (decode == false)
@@ -400,6 +495,10 @@ namespace Protocol
             return (long)uvalue;
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
         public string ReadString()
         {
             int size = ReadInt(true);
@@ -409,12 +508,25 @@ namespace Protocol
             return Encoding.UTF8.GetString(data);
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
         public Guid ReadGuid()
         {
             byte[] data = ExtractBytes(_GUID_DATATYPE_SIZE);
             Debug.Assert(data.Length == _GUID_DATATYPE_SIZE);
 
             return new Guid(data);
+        }
+
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        internal byte[] ReadData()
+        {
+            // UnexpectedBehaviorExecption is not handled by try/catch.
+            return ExtractBytes(Size);
         }
 
         public void WriteBool(bool value)
@@ -543,11 +655,6 @@ namespace Protocol
             byte[] data = value.ToByteArray();
             Debug.Assert(data.Length == _GUID_DATATYPE_SIZE);
             InsertBytes(data);
-        }
-
-        internal byte[] ReadData()
-        {
-            return ExtractBytes(Size);
         }
 
         internal void WriteData(byte[] data)
@@ -816,7 +923,7 @@ namespace Protocol
         // bottom to top
         private Section?[] _sections = new Section?[SectionTotalCount];
 
-        public static (bool, int, byte[]) Write(Chunk chunk)
+        internal static (int, byte[]) Write(Chunk chunk)
         {
             Buffer buffer = new();
 
@@ -836,14 +943,14 @@ namespace Protocol
             {
                 for (int x = 0; x < Width; ++x)
                 {
-                    buffer.WriteByte(0);
+                    buffer.WriteByte(127);  // Void Biome
                 }
             }
 
-            return (true, mask, buffer.ReadData());
+            return (mask, buffer.ReadData());
         }
 
-        public static (bool, int, byte[]) Write()
+        internal static (int, byte[]) Write()
         {
             Buffer buffer = new();
 
@@ -859,14 +966,14 @@ namespace Protocol
                 }
             }
 
-            return (true, mask, buffer.ReadData());
+            return (mask, buffer.ReadData());
         }
 
-        public readonly Position Pos;
+        public readonly Position p;
 
         public Chunk(Position p)
         {
-            Pos = p;
+            this.p = p;
         }
 
     }
@@ -886,14 +993,14 @@ namespace Protocol
 
         public readonly int Id;
 
-        public Position PosPrev, Pos;
-        public Chunk.Position PosChunkPrev, PosChunk;
+        public Position p_prev, p;
+        public Chunk.Position p_chunk_prev, p_chunk;
 
         internal Entity(int id, Position p)
         {
             Id = id;
-            Pos = PosPrev = p;
-            PosChunk = PosChunkPrev = Chunk.Position.Convert(p);
+            this.p = p_prev = p;
+            p_chunk = p_chunk_prev = Chunk.Position.Convert(p);
         }
 
     }
@@ -943,6 +1050,12 @@ namespace Protocol
 
         private Socket _socket;
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <param name="socket">TODO: Add description.</param>
+        /// <returns>TODO: Add description.</returns>
+        /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
         internal static Client Accept(Socket socket)
         {
             //TODO: Check the socket is Binding and listening correctly.
@@ -967,6 +1080,13 @@ namespace Protocol
             Dispose(false);
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <returns>TODO: Add description.</returns>
+        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="DisconnectedException">TODO: Why it's thrown.</exception>
+        /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
         private int RecvSize()
         {
             Debug.Assert(!_disposed);
@@ -980,10 +1100,10 @@ namespace Protocol
             {
                 while (true)
                 {
-                    byte b = SocketMethods.RecvByte(_socket);
+                    byte v = SocketMethods.RecvByte(_socket);
 
-                    uvalue |= (uint)(b & _SEGMENT_BITS) << position;
-                    if ((b & _CONTINUE_BIT) == 0)
+                    uvalue |= (uint)(v & _SEGMENT_BITS) << position;
+                    if ((v & _CONTINUE_BIT) == 0)
                         break;
 
                     position += 7;
@@ -1005,6 +1125,11 @@ namespace Protocol
             return (int)uvalue;
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <param name="size">TODO: Add description.</param>
+        /// <exception cref="DisconnectedException">TODO: Why it's thrown.</exception>
         private void SendSize(int size)
         {
             Debug.Assert(!_disposed);
@@ -1031,6 +1156,13 @@ namespace Protocol
             SocketMethods.SetBlocking(_socket, true);
         }*/
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <param name="buffer">TODO: Add description.</param>
+        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="DisconnectedException">TODO: Why it's thrown.</exception>
+        /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
         public void Recv(Buffer buffer)
         {
             Debug.Assert(!_disposed);
@@ -1045,8 +1177,7 @@ namespace Protocol
                     _x = size;
                     Debug.Assert(_y == 0);
 
-                    if (size == 0)
-                        return;  // TODO: make EmptyBuffer and return it.
+                    if (size == 0) return;
 
                     Debug.Assert(_data == null);
                     _data = new byte[size];
@@ -1092,6 +1223,11 @@ namespace Protocol
 
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <param name="buffer">TODO: Add description.</param>
+        /// <exception cref="DisconnectedException">TODO: Why it's thrown.</exception>
         public void Send(Buffer buffer)
         {
             Debug.Assert(!_disposed);
@@ -1132,7 +1268,7 @@ namespace Protocol
 
     public class Connection : IDisposable
     {
-        private enum _SetupSteps
+        private enum SetupSteps
         {
             JoinGame = 0,
             ClientSettings,
@@ -1147,7 +1283,7 @@ namespace Protocol
         public readonly Guid UserId;
         public readonly string Username;
 
-        private _SetupSteps _step = _SetupSteps.JoinGame;
+        private SetupSteps _step = SetupSteps.JoinGame;
 
         private bool _disposed = false;
 
@@ -1169,12 +1305,19 @@ namespace Protocol
             Dispose(false);
         }
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <param name="settings">TODO: Add description.</param>
+        /// <exception cref="UnexpectedBehaviorExecption"></exception>
+        /// <exception cref="DisconnectedException"></exception>
+        /// <exception cref="TryAgainException"></exception>
         public void HandleSetupProcess(ref Player.ClientsideSettings? settings)
         {
             using Buffer buffer = new();
             try
             {
-                if (_step == _SetupSteps.JoinGame)
+                if (_step == SetupSteps.JoinGame)
                 {
                     /*Console.WriteLine("JoinGame!");*/
 
@@ -1184,10 +1327,10 @@ namespace Protocol
                     packet.Write(buffer);
                     _client.Send(buffer);
 
-                    _step = _SetupSteps.ClientSettings;
+                    _step = SetupSteps.ClientSettings;
                 }
                 
-                if (_step == _SetupSteps.ClientSettings)
+                if (_step == SetupSteps.ClientSettings)
                 {
                     /*Console.WriteLine("ClientSettings!");*/
 
@@ -1207,10 +1350,10 @@ namespace Protocol
                     settings = new(packet.RenderDistance);
                     
 
-                    _step = _SetupSteps.PluginMessage;
+                    _step = SetupSteps.PluginMessage;
                 }
 
-                if (_step == _SetupSteps.PluginMessage)
+                if (_step == SetupSteps.PluginMessage)
                 {
                     /*Console.WriteLine("PluginMessage!");*/
 
@@ -1227,7 +1370,7 @@ namespace Protocol
                     if (buffer.Size > 0)
                         throw new BufferOverflowException();
 
-                    _step = _SetupSteps.StartPlaying;
+                    _step = SetupSteps.StartPlaying;
                 }
 
                 Debug.Assert(settings != null);
@@ -1248,26 +1391,79 @@ namespace Protocol
 
         }
 
-        public ServerboundPlayingPacket Recv()
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <returns>TODO: Add description.</returns>
+        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="DisconnectedException">TODO: Why it's thrown.</exception>
+        public void Recv(Queue<Control> controls, Queue<Confirm> confirms)
         {
             Debug.Assert(!_disposed);
-            Debug.Assert(_step >= _SetupSteps.StartPlaying);
+            Debug.Assert(_step >= SetupSteps.StartPlaying);
 
-            throw new NotImplementedException();
+            Debug.Assert(controls.Count == 0);
+            Debug.Assert(confirms.Count == 0);
+
+            try
+            {
+                Buffer buffer = new();
+
+                while (true)
+                {
+                    _client.Recv(buffer);
+
+                    int packetId = buffer.ReadInt(true);
+                    switch (packetId)
+                    {
+                        default:
+                            throw new NotImplementedException();
+                        case ServerboundPlayingPacket.ConfirmTeleportPacketId:
+                            {
+                                ConfirmTeleportPacket packet = ConfirmTeleportPacket.Read(buffer);
+                                TeleportConfirm confirm = new(packet.Payload);
+                                confirms.Enqueue(confirm);
+                            }
+                            break;
+                        case ServerboundPlayingPacket.ClientSettingsPacketId:
+                            {
+                                ClientSettingsPacket packet = ClientSettingsPacket.Read(buffer);
+                                ChangeClientSettingsConfirm confirm = new(packet.RenderDistance);
+                                confirms.Enqueue(confirm);
+                            }
+                            break;
+                    }
+
+                    if (!buffer.Empty)
+                        throw new BufferOverflowException();
+                }
+            }
+            catch (TryAgainException) { }
+
+
         }
 
-        public void Send(ClientboundPlayingPacket packet)
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <param name="packet">TODO: Add description.</param>
+        public void Send(Queue<Report> reports)
         {
             Debug.Assert(!_disposed);
-            Debug.Assert(_step >= _SetupSteps.StartPlaying);
+            Debug.Assert(_step >= SetupSteps.StartPlaying);
 
             using Buffer buffer = new();
 
-            packet.Write(buffer);
+            while (!reports.Empty)
+            {
+                Report r = reports.Dequeue();
+                r.Write(buffer);
+                _client.Send(buffer);
 
-            _client.Send(buffer);
+                Debug.Assert(buffer.Empty);
+            }
 
-            Debug.Assert(buffer.Empty);
+            Debug.Assert(reports.Empty);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -1390,7 +1586,7 @@ namespace Protocol
 
                         SetProtocolPacket packet = SetProtocolPacket.Read(buffer);
 
-                        if (buffer.Size > 0)
+                        if (!buffer.Empty)
                             throw new BufferOverflowException();
 
                         switch (packet.NextState)
@@ -1418,7 +1614,7 @@ namespace Protocol
 
                         RequestPacket requestPacket = RequestPacket.Read(buffer);
 
-                        if (buffer.Size > 0)
+                        if (!buffer.Empty)
                             throw new BufferOverflowException();
 
                         // TODO
@@ -1440,7 +1636,7 @@ namespace Protocol
 
                         PingPacket inPacket = PingPacket.Read(buffer);
 
-                        if (buffer.Size > 0)
+                        if (!buffer.Empty)
                             throw new BufferOverflowException();
 
                         PongPacket outPacket = new(inPacket.Payload);
@@ -1458,11 +1654,12 @@ namespace Protocol
 
                         StartLoginPacket inPacket = StartLoginPacket.Read(buffer);
 
-                        if (buffer.Size > 0)
+                        if (!buffer.Empty)
                             throw new BufferOverflowException();
 
                         // TODO: Check username is empty or invalid.
 
+                        // TODO: Use own http client in common library.
                         using HttpClient httpClient = new();
                         string url = string.Format("https://api.mojang.com/users/profiles/minecraft/{0}", inPacket.Username);
                         /*Console.WriteLine(inPacket.Username);
@@ -1512,15 +1709,7 @@ namespace Protocol
 
                     /*Console.Write($"TryAgain!");*/
                 }
-                catch (DataReadTimeoutException)
-                {
-                    Debug.Assert(success == false);
-                    Debug.Assert(close == false);
-
-                    close = true;
-
-                }
-                catch (UnexpectedDataException)
+                catch (UnexpectedBehaviorExecption)
                 {
                     Debug.Assert(success == false);
                     Debug.Assert(close == false);
@@ -1535,7 +1724,6 @@ namespace Protocol
                         // TODO: Handle send Disconnect packet with reason.
                     }
 
-                    /*Console.Write($"UnexpectedDataException");*/
                 }
                 catch (DisconnectedException)
                 {

@@ -11,7 +11,17 @@ namespace Protocol
         public ProtocolException(string message) : base(message) { }
     }
 
-    public abstract class UnexpectedDataException : ProtocolException
+    public abstract class UnexpectedBehaviorExecption : ProtocolException
+    {
+        public UnexpectedBehaviorExecption(string message) : base(message) { }
+    }
+
+    public class DataReadTimeoutException : UnexpectedBehaviorExecption
+    {
+        public DataReadTimeoutException() : base("A timeout occurred while attempting to read data.") { }
+    }
+
+    public abstract class UnexpectedDataException : UnexpectedBehaviorExecption
     {
         public UnexpectedDataException(string message) : base(message) { }
     }
@@ -45,11 +55,6 @@ namespace Protocol
     internal class PendingTimeoutException : ProtocolException
     {
         public PendingTimeoutException() : base("Connections are not pending.") { }
-    }
-
-    public class DataReadTimeoutException : ProtocolException
-    {
-        public DataReadTimeoutException() : base("A timeout occurred while attempting to read data.") { }
     }
 
     public class TryAgainException : ProtocolException

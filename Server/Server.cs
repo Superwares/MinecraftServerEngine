@@ -16,7 +16,6 @@ namespace Application
 
         private readonly ConcurrentNumList _idList = new();
 
-        private readonly Table<int, Queue<TeleportRecord>> _teleportRecords = new();
 
         private readonly ConcurrentQueue<(Connection, Player.ClientsideSettings?)> 
             _newConnections = new();
@@ -24,14 +23,17 @@ namespace Application
         private readonly Queue<Connection> _unexpectedConnections = new();
         private readonly Queue<Connection> _connections = new();
 
-        private readonly Queue<Player> _spawnedPlayers = new();
         private readonly Table<int, Player> _playerTable = new();
+        private readonly Queue<Player> _spawnedPlayers = new();
         private readonly Queue<Player> _players = new();
 
-        private readonly Table<Chunk.Position, Chunk> _chunks = new();
+        private readonly Table<int, Queue<TeleportRecord>> _teleportRecordsTable = new();
 
-        private readonly Table<int, Queue<ServerboundPlayingPacket>> _inPacketTable = new();
-        private readonly Table<int, Queue<ClientboundPlayingPacket>> _outPacketTable = new();
+        private readonly Table<int, Queue<Control>> _controlsTable = new();
+        private readonly Table<int, Queue<Confirm>> _confirmsTable = new();
+        private readonly Table<int, Queue<Report>> _reportsTable = new();
+
+        private readonly Table<Chunk.Position, Chunk> _chunks = new();
 
         private Server() { }
 
@@ -43,260 +45,382 @@ namespace Application
             _outPackets.Add(id, new());
         }*/
 
-        private void StartGameRoutine()
+        private void RecvData()
         {
-            // recv packets using connections
+            if (_connections.Empty) return;
 
-            // Barrier
+            bool close;
 
+            int count = _connections.Count;
+            Debug.Assert(count > 0);
+            for (int i = 0; i < count; ++i)
             {
-                bool start, close;
+                close = false;
 
-                int count = _newConnections.Count;
-                for (int i = 0; i < count; ++i)
+                Connection conn = _connections.Dequeue();
+                int id = conn.Id;
+
+                Queue<Control> controls = _controlsTable.Lookup(id);
+                Queue<Confirm> confirms = _confirmsTable.Lookup(id);
+
+                try
                 {
-                    (Connection conn, Player.ClientsideSettings? settings)
-                        = _newConnections.Dequeue();
-
-                    start = close = false;
-
-                    try
-                    {
-                        conn.HandleSetupProcess(ref settings);
-
-                        Debug.Assert(!start);
-                        Debug.Assert(!close);
-                        Debug.Assert(settings != null);
-
-                        start = true;
-                    }
-                    catch (TryAgainException)
-                    {
-                        Debug.Assert(!start);
-                        Debug.Assert(!close);
-
-                        /*Console.WriteLine("TryAgainException!");*/
-                    }
-                    catch (DataReadTimeoutException)
-                    {
-                        Debug.Assert(!start);
-                        Debug.Assert(!close);
-
-                        close = true;
-
-                        /*Console.WriteLine("DataReadTimeoutException!");*/
-                    }
-                    catch (UnexpectedDataException)
-                    {
-                        Debug.Assert(!start);
-                        Debug.Assert(!close);
-
-                        close = true;
-
-                        // TODO: Send packets with reason.
-
-                        /*Console.WriteLine("UnexpectedDataException!");*/
-                    }
-                    catch (DisconnectedException)
-                    {
-                        Debug.Assert(!start);
-                        Debug.Assert(!close);
-
-                        close = true;
-
-                        /*Console.WriteLine("DisconnectedException!");*/
-                    }
-
-                    if (!start)
-                    {
-                        if (!close)
-                        {
-                            _newConnections.Enqueue((conn, settings));
-                        }
-                        else
-                        {
-                            conn.Close();
-                        }
-                    }
-                    else
-                    {
-                        Debug.Assert(!close);
-                        /*Console.WriteLine("Start Game!");*/
-
-                        _connections.Enqueue(conn);
-
-                        int id = conn.Id;
-
-                        Debug.Assert(settings != null);
-                        Player player = new(id, new(0, 61, 0), settings);
-                        Debug.Assert(player.connected == true);
-
-                        _playerTable.Insert(id, player);
-                        _spawnedPlayers.Enqueue(player);
-
-                        _inPacketTable.Insert(id, new());
-                        _outPacketTable.Insert(id, new());
-                    }
-
+                    conn.Recv(controls, confirms);
                 }
-            }
-
-            // Barrier
-
-            // handle players
-            {
-                int count = _players.Count;
-                for (int i = 0; i < count; ++i)
+                catch (UnexpectedBehaviorExecption)
                 {
-                    Player player = _players.Dequeue();
-                    int id = player.Id;
+                    Debug.Assert(close == false);
 
-                    if (player.connected == false)
-                    {
-                        // Release resources of players.
-                        Debug.Assert(!_inPacketTable.Contains(id));
-                        Debug.Assert(!_outPacketTable.Contains(id));
+                    _unexpectedConnections.Enqueue(conn);
 
-                        _playerTable.Extract(id);
-                        continue;
-                    }
-
-                    ServerboundPlayingPacket[] inPackets = _inPacketTable.Lookup(id).Flush();
-
-                    foreach (var _p in inPackets)
-                    {
-                        throw new NotImplementedException();
-                    }
-
-                    _players.Enqueue(player);
+                    close = true;
                 }
-            }
-
-            // Barrier
-
-            // Handle entities.
-
-            // Barrier
-
-            {
-                
-                int count = _spawnedPlayers.Count;
-                for (int i = 0; i < count; ++i)
+                catch (DisconnectedException)
                 {
-
-                    Player player = _spawnedPlayers.Dequeue();
-
-                    int id = player.Id;
-
-                    Queue<ClientboundPlayingPacket> outPackets = _outPacketTable.Lookup(id);
-
-                    {
-                        SetAbilitiesPacket packet = new(true, true, true, true, 1, 0);
-                        outPackets.Enqueue(packet);
-                    }
-
-                    // load chunks
-                    Chunk.Position pChunk = player.PosChunk;
-                    int d = player.Settings.renderDistance;
-                    Chunk.Position[] positions = Chunk.Position.GenerateGridAroundCenter(pChunk, d);
-                    /*Console.WriteLine(positions.Length);*/
-                    foreach (var p in positions)
-                    {
-                        bool continuous;
-                        int mask;
-                        byte[] data;
-                        if (_chunks.Contains(p))
-                        {
-                            Chunk chunk = _chunks.Lookup(p);
-                            (continuous, mask, data) = Chunk.Write(chunk);
-                        }
-                        else
-                            (continuous, mask, data) = Chunk.Write();
-
-                        Debug.Assert(continuous);
-                        LoadChunk packet = new(p.X, p.Z, continuous, mask, data);
-                        outPackets.Enqueue(packet);
-                    }
-
-                    {
-                        // teleport
-                        TeleportRecord record = new();
-
-                        // enqueue set player position and look packet
-                        TeleportPacket packet = new(
-                            player.Pos.X, player.Pos.Y, player.Pos.Z,
-                            0, 0,  // TODO
-                            false, false, false, false, false,
-                            record.Payload);
-                        outPackets.Enqueue(packet);
-
-                        if (!_teleportRecords.Contains(id))
-                            _teleportRecords.Insert(id, new());
-
-                        _teleportRecords.Lookup(id).Enqueue(record);
-                    }
-
-                    _players.Enqueue(player);
-
-                }
-            }
-
-            // Barrier
-
-            {
-
-                bool close;
-                int count = _connections.Count;
-                for (int i = 0; i < count; ++i)
-                {
-                    close = false;
-
-                    Connection conn = _connections.Dequeue();
-
-                    int id = conn.Id;
-
-                    ClientboundPlayingPacket[] outPackets = _outPacketTable.Lookup(id).Flush();
-
-                    try
-                    {
-                        foreach (var p in outPackets) conn.Send(p);
-                    }
-                    catch (DisconnectedException)
-                    {
-                        Debug.Assert(close == false);
-                        close = true;
-
-                    }
-
-                    if (!close)
-                    {
-                        _connections.Enqueue(conn);
-                        continue;
-                    }
+                    Debug.Assert(close == false);
 
                     _abortedConnections.Enqueue(conn);
 
+                    close = true;
+                }
+
+                if (close)
+                {
                     Player player = _playerTable.Lookup(id);
                     Debug.Assert(player.connected == true);
                     player.connected = false;
 
+                    continue;
                 }
+
+                _connections.Enqueue(conn);
             }
 
-            // Barrier
+        }
 
+        private void HandleNewConnections()
+        {
+            if (_newConnections.Empty) return;
+
+            bool start, close;
+
+            int count = _newConnections.Count;
+            Debug.Assert(count > 0);
+            for (int i = 0; i < count; ++i)
             {
-                int count = _abortedConnections.Count;
-                for (int i = 0; i < count; ++i)
+                (Connection conn, Player.ClientsideSettings? settings)
+                    = _newConnections.Dequeue();
+
+                start = close = false;
+
+                try
                 {
-                    Connection conn = _abortedConnections.Dequeue();
+                    conn.HandleSetupProcess(ref settings);
+
+                    Debug.Assert(!start);
+                    Debug.Assert(!close);
+                    Debug.Assert(settings != null);
+
+                    start = true;
+                }
+                catch (TryAgainException)
+                {
+                    Debug.Assert(!start);
+                    Debug.Assert(!close);
+
+                    /*Console.WriteLine("TryAgainException!");*/
+                }
+                catch (UnexpectedBehaviorExecption)
+                {
+                    Debug.Assert(!start);
+                    Debug.Assert(!close);
+
+                    close = true;
+
+                    // TODO: Send why disconnected...
+
+                    /*Console.WriteLine("UnexpectedBehaviorExecption!");*/
+                }
+                catch (DisconnectedException)
+                {
+                    Debug.Assert(!start);
+                    Debug.Assert(!close);
+
+                    close = true;
+
+                    /*Console.WriteLine("DisconnectedException!");*/
+                }
+
+                if (!start)
+                {
+                    if (!close)
+                    {
+                        _newConnections.Enqueue((conn, settings));
+                    }
+                    else
+                    {
+                        conn.Close();
+                    }
+                }
+                else
+                {
+                    Debug.Assert(!close);
+                    /*Console.WriteLine("Start Game!");*/
+
+                    _connections.Enqueue(conn);
 
                     int id = conn.Id;
 
-                    _inPacketTable.Extract(id).Close();
-                    _outPacketTable.Extract(id).Close();
+                    Debug.Assert(settings != null);
+                    Player player = new(id, new(0, 61, 0), settings);
+                    Debug.Assert(player.connected == true);
+
+                    _playerTable.Insert(id, player);
+                    _spawnedPlayers.Enqueue(player);
+
+                    _teleportRecordsTable.Insert(id, new());
+
+                    _controlsTable.Insert(id, new());
+                    _confirmsTable.Insert(id, new());
+                    _reportsTable.Insert(id, new());
                 }
+
             }
+
+        }
+
+        private void HandleConfirms()
+        {
+            if (_players.Empty) return;
+
+            int count = _players.Count;
+            Debug.Assert(count > 0);
+            for (int i = 0; i < count; ++i)
+            {
+                Player player = _players.Dequeue();
+                if (!player.connected)
+                {
+                    throw new NotImplementedException();
+                    continue;
+                }
+
+                int id = player.Id;
+
+                Queue<Confirm> confirms = _confirmsTable.Lookup(id);
+                if (confirms.Empty) continue;
+
+                while (!confirms.Empty)
+                {
+                    Confirm _c = confirms.Dequeue();
+                    if (_c is TeleportConfirm teleportConfirm)
+                    {
+                        throw new NotImplementedException();
+                    }
+                    else if (_c is ChangeClientSettingsConfirm changeClientSettingsConfirm)
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+
+                _players.Enqueue(player);
+            }
+        }
+
+        private void HandleControls()
+        {
+            if (_players.Empty) return;
+
+            int count = _players.Count;
+            Debug.Assert(count > 0);
+            for (int i = 0; i < count; ++i)
+            {
+                Player player = _players.Dequeue();
+                Debug.Assert(player.connected);
+
+                int id = player.Id;
+
+                Queue<Control> controls = _controlsTable.Lookup(id);
+                if (controls.Empty) continue;
+
+                throw new NotImplementedException();
+            }
+        }
+
+        private void HandleSpawnedPlayers()
+        {
+            if (_spawnedPlayers.Empty) return;
+
+            int count = _spawnedPlayers.Count;
+            Debug.Assert(count > 0);
+            for (int i = 0; i < count; ++i)
+            {
+
+                Player player = _spawnedPlayers.Dequeue();
+
+                int id = player.Id;
+
+                Queue<Report> reports = _reportsTable.Lookup(id);
+
+                {
+                    SetPlayerAbilitiesReport report = new(true, true, true, true, 1, 0);
+                    reports.Enqueue(report);
+                }
+
+                {
+                    Report? report = null;
+
+                    // load chunks
+                    Chunk.Position c = player.p_chunk;
+                    int d = player.Settings.renderDistance;
+                    Chunk.Position[] P = Chunk.Position.GenerateGridAroundCenter(c, d);
+                    foreach (var p in P)
+                    {
+                        if (_chunks.Contains(p))
+                        {
+                            Chunk chunk = _chunks.Lookup(p);
+                            report = new LoadChunkReport(chunk);
+                        }
+                        else
+                            report = new LoadEmptyChunkReport(p);
+
+                        Debug.Assert(report != null);
+                        reports.Enqueue(report);
+                    }
+                }
+
+                {
+                    // teleport
+                    TeleportRecord record = new();
+
+                    // enqueue set player position and look packet
+                    AbsoluteTeleportReport report = new(
+                        player.p.X, player.p.Y, player.p.Z,
+                        0, 0,  // TODO: Set yaw and pitch.
+                        record.Payload);
+                    reports.Enqueue(report);
+
+                    Debug.Assert(_teleportRecordsTable.Contains(id));
+
+                    _teleportRecordsTable.Lookup(id).Enqueue(record);
+                }
+
+                _players.Enqueue(player);
+
+            }
+        }
+
+        private void HandleEntities()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void SendData()
+        {
+            if (_connections.Empty) return;
+
+            bool close;
+            int count = _connections.Count;
+            Debug.Assert(count > 0);
+            for (int i = 0; i < count; ++i)
+            {
+                close = false;
+
+                Connection conn = _connections.Dequeue();
+
+                int id = conn.Id;
+
+                Queue<Report> reports = _reportsTable.Lookup(id);
+
+                try
+                {
+                    conn.Send(reports);
+                }
+                catch (DisconnectedException)
+                {
+                    Debug.Assert(close == false);
+
+                    _abortedConnections.Enqueue(conn);
+
+                    close = true;
+                }
+
+                if (close)
+                {
+                    Player player = _playerTable.Lookup(id);
+                    Debug.Assert(player.connected == true);
+                    player.connected = false;
+
+                    continue;
+                }
+
+                _connections.Enqueue(conn);
+
+            }
+        }
+
+        private void HandleAbortedConnections()
+        {
+            if (_abortedConnections.Empty) return;
+
+            int count = _abortedConnections.Count;
+            Debug.Assert(count > 0);
+            for (int i = 0; i < count; ++i)
+            {
+                Connection conn = _abortedConnections.Dequeue();
+
+                int id = conn.Id;
+
+                Queue<TeleportRecord> teleportRecords = _teleportRecordsTable.Extract(id);
+
+                Queue<Control> controls = _controlsTable.Extract(id);
+                Queue<Confirm> confirms = _confirmsTable.Extract(id);
+                Queue<Report> reports = _reportsTable.Extract(id);
+
+                teleportRecords.Flush();
+                confirms.Flush();
+                reports.Flush();
+
+                teleportRecords.Close();
+                controls.Close();
+                confirms.Close();
+                reports.Close();
+
+            }
+        }
+
+        private void StartGameRoutine()
+        {
+            RecvData();
+
+            // Barrier
+
+            HandleConfirms();
+
+            // Barrier
+
+            HandleControls();
+
+            // Barrier
+
+            HandleNewConnections();
+
+            // Barrier
+
+            /*HandleEntities();*/
+
+            // Barrier
+
+            HandleSpawnedPlayers();
+
+            // Barrier
+
+            SendData();
+
+            // Barrier
+
+            HandleAbortedConnections();
+
+            // Barrier
 
         }
 
@@ -353,10 +477,22 @@ namespace Application
                 {
                     // Release managed resources.
                     _idList.Dispose();
+                    
                     _newConnections.Dispose();
+                    _abortedConnections.Dequeue();
+                    _connections.Dispose();
+
+                    _playerTable.Dispose();
+                    _spawnedPlayers.Dispose();
+                    _players.Dispose();
+
+                    _teleportRecordsTable.Dispose();
+
+                    _controlsTable.Dispose();
+                    _confirmsTable.Dispose();
+                    _reportsTable.Dispose();
+
                     _chunks.Dispose();
-                    _inPacketTable.Dispose();
-                    _outPacketTable.Dispose();
                 }
 
                 // Release unmanaged resources.
