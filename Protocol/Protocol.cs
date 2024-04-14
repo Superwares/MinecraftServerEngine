@@ -786,15 +786,20 @@ namespace Protocol
         public static readonly int Width = 16;
         public static readonly int Height = 16 * 16;
 
-        public struct Position(int x, int z) : IEquatable<Position>
+        public struct Position : IEquatable<Position>
         {
-            public int X = x, Z = z;
+            public int x, z;
 
-            public static Position Convert(Entity.Position p)
+            public Position(int x, int z)
+            {
+                this.x = x; this.z = z;
+            }
+
+            public static Position Convert(Entity.Position pos)
             {
                 return new(
-                    (p.X >= 0) ? ((int)p.X / Width) : (((int)p.X / (Width + 1)) - 1),
-                    (p.Z >= 0) ? ((int)p.Z / Width) : (((int)p.Z / (Width + 1)) - 1));
+                    (pos.x >= 0) ? ((int)pos.x / Width) : (((int)pos.x / (Width + 1)) - 1),
+                    (pos.z >= 0) ? ((int)pos.z / Width) : (((int)pos.z / (Width + 1)) - 1));
             }
 
             public static Position[] GenerateGridAroundCenter(Position c, int d)
@@ -803,8 +808,8 @@ namespace Protocol
                 if (d == 0)
                     return [c];
 
-                int xMax = c.X + d, zMax = c.Z + d,
-                    xMin = c.X - d, zMin = c.Z - d;
+                int xMax = c.x + d, zMax = c.z + d,
+                    xMin = c.x - d, zMin = c.z - d;
 
                 int a = (2 * d) + 1;
                 int length = a * a;
@@ -825,7 +830,7 @@ namespace Protocol
 
             public bool Equals(Position other)
             {
-                return (X == other.X) && (Z == other.Z);
+                return (x == other.x) && (z == other.z);
             }
 
         }
@@ -980,27 +985,54 @@ namespace Protocol
 
     public abstract class Entity
     {
-        public struct Position(float x, float y, float z)
+        public struct Position : IEquatable<Position>
         {
-            public float X = x, Y = y, Z = z;
+            public double x, y, z;
+
+            public Position(double x, double y, double z)
+            {
+                this.x = x; this.y = y; this.z = z;
+            }
 
             public static Position Convert(Chunk.Position p)
             {
                 throw new NotImplementedException();
             }
 
+            public bool Equals(Position other)
+            {
+                return (x == other.x) && (y == other.y) && (z == other.z);
+
+            }
         }
+
+        public struct Look
+        {
+            public float yaw, pitch;
+
+            public Look(float yaw, float pitch)
+            {
+                this.yaw = yaw;
+                this.pitch = pitch;
+            }
+
+        }
+
 
         public readonly int Id;
 
-        public Position p_prev, p;
-        public Chunk.Position p_chunk_prev, p_chunk;
+        public Position posPrev, pos;
+        public Look look;
+        public Chunk.Position posChunkPrev, posChunk;
+        public bool onGround;
 
-        internal Entity(int id, Position p)
+        internal Entity(int id, Position pos, Look look, bool onGround)
         {
             Id = id;
-            this.p = p_prev = p;
-            p_chunk = p_chunk_prev = Chunk.Position.Convert(p);
+            this.pos = posPrev = pos;
+            this.look = look;
+            posChunk = posChunkPrev = Chunk.Position.Convert(pos);
+            this.onGround = onGround;
         }
 
     }
@@ -1009,7 +1041,8 @@ namespace Protocol
     {
         /*private int _health;*/
 
-        public LivingEntity(int id, Position p) : base(id, p) { }
+        public LivingEntity(int id, Position pos, Look look, bool onGround) 
+            : base(id, pos, look, onGround) { }
 
     }
 
@@ -1025,9 +1058,9 @@ namespace Protocol
         public bool connected = true;
 
         public Player(
-            int id,
-            Position p,
-            ClientsideSettings settings) : base(id, p)
+            int id, Position pos, Look look, bool onGround,
+            ClientsideSettings settings) 
+            : base(id, pos, look, onGround)
         {
             Settings = settings;
         }
@@ -1323,7 +1356,7 @@ namespace Protocol
 
                     Debug.Assert(settings == null);
 
-                    JoinGamePacket packet = new(Id, 1, 0, 0, "default", false);
+                    JoinGamePacket packet = new(Id, 1, 0, 0, "default", false);  // TODO
                     packet.Write(buffer);
                     _client.Send(buffer);
 
@@ -1429,8 +1462,35 @@ namespace Protocol
                         case ServerboundPlayingPacket.ClientSettingsPacketId:
                             {
                                 ClientSettingsPacket packet = ClientSettingsPacket.Read(buffer);
-                                ChangeClientSettingsConfirm confirm = new(packet.RenderDistance);
-                                confirms.Enqueue(confirm);
+                                controls.Enqueue(new ClientSettingsControl(packet.RenderDistance));
+                            }
+                            break;
+                        case ServerboundPlayingPacket.PlayerPacketId:
+                            {
+                                PlayerPacket packet = PlayerPacket.Read(buffer);
+                                controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
+                            }
+                            break;
+                        case ServerboundPlayingPacket.PlayerPositionPacketId:
+                            {
+                                PlayerPositionPacket packet = PlayerPositionPacket.Read(buffer);
+                                controls.Enqueue(new PlayerMovementControl(packet.X, packet.Y, packet.Z));
+                                controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
+                            }
+                            break;
+                        case ServerboundPlayingPacket.PlayerPosAndLookPacketId:
+                            {
+                                PlayerPosAndLookPacket packet = PlayerPosAndLookPacket.Read(buffer);
+                                controls.Enqueue(new PlayerMovementControl(packet.X, packet.Y, packet.Z));
+                                controls.Enqueue(new PlayerLookControl(packet.Yaw, packet.Pitch));
+                                controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
+                            }
+                            break;
+                        case ServerboundPlayingPacket.PlayerLookPacketId:
+                            {
+                                PlayerLookPacket packet = PlayerLookPacket.Read(buffer);
+                                controls.Enqueue(new PlayerLookControl(packet.Yaw, packet.Pitch));
+                                controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
                             }
                             break;
                     }

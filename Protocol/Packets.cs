@@ -128,6 +128,10 @@ namespace Protocol
     {
         public const int ConfirmTeleportPacketId = 0x00;
         public const int ClientSettingsPacketId = 0x04;
+        public const int PlayerPacketId = 0x0C;
+        public const int PlayerPositionPacketId = 0x0D;
+        public const int PlayerPosAndLookPacketId = 0x0E;
+        public const int PlayerLookPacketId = 0x0F;
 
         public override WhereBound BoundTo => WhereBound.Serverbound;
 
@@ -706,12 +710,12 @@ namespace Protocol
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static ClientSettingsPacket Read(Buffer buffer)
         {
-            buffer.ReadString();
-            byte renderDistance = buffer.ReadByte();
-            buffer.ReadInt(true);
-            buffer.ReadBool();
-            buffer.ReadSbyte();
-            buffer.ReadInt(true);
+            buffer.ReadString();  // TODO
+            byte renderDistance = buffer.ReadByte(); 
+            buffer.ReadInt(true);  // TODO
+            buffer.ReadBool();  // TODO
+            buffer.ReadSbyte();  // TODO
+            buffer.ReadInt(true);  // TODO
 
             return new(renderDistance);
         }
@@ -727,4 +731,113 @@ namespace Protocol
             throw new NotImplementedException();
         }
     }
+
+    internal class PlayerPacket : ServerboundPlayingPacket
+    {
+        public readonly bool OnGround;
+
+        internal static PlayerPacket Read(Buffer buffer)
+        {
+            return new(buffer.ReadBool());
+        }
+
+        public PlayerPacket(bool onGround) : base(PlayerPacketId)
+        {
+            OnGround = onGround;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+    }
+
+    internal class PlayerPositionPacket : ServerboundPlayingPacket
+    {
+        public readonly double X, Y, Z;
+        public readonly bool OnGround;
+
+        internal static PlayerPositionPacket Read(Buffer buffer)
+        {
+            return new(
+                buffer.ReadDouble(), buffer.ReadDouble(), buffer.ReadDouble(), 
+                buffer.ReadBool());
+        }
+
+        public PlayerPositionPacket(
+            double x, double y, double z,
+            bool onGround)
+            : base(PlayerPositionPacketId)
+        {
+            X = x; Y = y; Z = z;
+            OnGround = onGround;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+    }
+
+    internal class PlayerPosAndLookPacket : ServerboundPlayingPacket
+    {
+        public readonly double X, Y, Z;
+        public readonly float Yaw, Pitch;
+        public readonly bool OnGround;
+
+        internal static PlayerPosAndLookPacket Read(Buffer buffer)
+        {
+            return new(
+                buffer.ReadDouble(), buffer.ReadDouble(), buffer.ReadDouble(),
+                buffer.ReadFloat(), buffer.ReadFloat(), 
+                buffer.ReadBool());
+        }
+
+        public PlayerPosAndLookPacket(
+            double x, double y, double z, 
+            float yaw, float pitch,
+            bool onGround)
+            : base(PlayerPosAndLookPacketId)
+        {
+            X = x; Y = y; Z = z;
+            Yaw = yaw; Pitch = pitch;
+            OnGround = onGround;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+    }
+
+    internal class PlayerLookPacket : ServerboundPlayingPacket
+    {
+        public readonly float Yaw, Pitch;
+        public readonly bool OnGround;
+
+        internal static PlayerLookPacket Read(Buffer buffer)
+        {
+            return new(
+                buffer.ReadFloat(), buffer.ReadFloat(),
+                buffer.ReadBool());
+        }
+
+        public PlayerLookPacket(
+            float yaw, float pitch,
+            bool onGround) 
+            : base(PlayerLookPacketId)
+        {
+            Yaw = yaw; Pitch = pitch;
+            OnGround = onGround;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
 }

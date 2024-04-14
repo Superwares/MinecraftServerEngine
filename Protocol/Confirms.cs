@@ -21,15 +21,4 @@ namespace Protocol
 
     }
 
-    public class ChangeClientSettingsConfirm : Confirm
-    {
-        public readonly byte RenderDistance;
-
-        internal ChangeClientSettingsConfirm(byte renderDistance)
-        {
-            RenderDistance = renderDistance;
-        }
-
-    }
-
 }

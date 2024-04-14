@@ -70,17 +70,15 @@ namespace Application
                         {
                             // TODO: Handle this logic in the Protocol library.
                             if (records.Empty)
-                                throw new UnknownTeleportConfirmException();  
+                                throw new UnknownTeleportConfirmException();
 
                             var record = records.Dequeue();
                             if (record.Payload != teleportConfirm.Payload)
                                 throw new InvalidTeleportConfirmPayloadException();
 
                         }
-                        else if (_c is ChangeClientSettingsConfirm changeClientSettingsConfirm)
-                        {
+                        else
                             throw new NotImplementedException();
-                        }
                     }
 
                     Debug.Assert(confirms.Empty);
@@ -227,11 +225,39 @@ namespace Application
                 int id = player.Id;
 
                 Queue<Control> controls = _controlsTable.Lookup(id);
-                if (controls.Empty) continue;
+                while (!controls.Empty)
+                {
+                    Control _c = controls.Dequeue();
 
-                throw new NotImplementedException();
+                    if (_c is ClientSettingsControl clientSettingsControl)
+                    {
+                        player.Settings.renderDistance = clientSettingsControl.RenderDistance;
+                    }
+                    else if (_c is PlayerOnGroundControl playerOnGroundControl)
+                    {
+                        player.onGround = playerOnGroundControl.OnGround;
+                    }
+                    else if (_c is PlayerMovementControl playerMovementControl)
+                    {
+                        player.posPrev = player.pos;
+                        player.posChunkPrev = player.posChunk;
+                        
+                        player.pos = playerMovementControl.Pos;
+                        player.posChunk = Chunk.Position.Convert(playerMovementControl.Pos);
+
+                    }
+                    else if (_c is PlayerLookControl playerLookControl)
+                    {
+                        player.look = playerLookControl.Look;
+
+                    }
+                    else
+                        throw new NotImplementedException();
+
+                }
 
                 // TODO: load/unload chunks.
+                throw new NotImplementedException();
             }
 
         }
@@ -260,7 +286,7 @@ namespace Application
                     Report? report = null;
 
                     // load chunks
-                    Chunk.Position c = player.p_chunk;
+                    Chunk.Position c = player.posChunk;
                     int d = player.Settings.renderDistance;
                     Chunk.Position[] P = Chunk.Position.GenerateGridAroundCenter(c, d);
                     foreach (var p in P)
@@ -284,7 +310,7 @@ namespace Application
 
                     // enqueue set player position and look packet
                     AbsoluteTeleportReport report = new(
-                        player.p.X, player.p.Y, player.p.Z,
+                        player.pos.X, player.pos.Y, player.pos.Z,
                         0, 0,  // TODO: Set yaw and pitch.
                         record.Payload);
                     reports.Enqueue(report);
