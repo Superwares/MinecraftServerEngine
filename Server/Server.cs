@@ -17,15 +17,12 @@ namespace Application
 
         private readonly ConcurrentNumList _idList = new();
 
-        private readonly Table<int, Connection> _connTable = new();
         private readonly Queue<Connection> _connections = new();
         private readonly Queue<Connection> _abortedConnections = new();
         private readonly Queue<(Connection, string)> _unexpectedConnections = new();
 
-        private readonly Table<int, Player> _playerTable = new();
         private readonly Queue<Player> _players = new();
 
-        private readonly Table<int, Queue<Control>> _controlsTable = new();
         private readonly Table<int, Queue<Report>> _reportsTable = new();
 
         private readonly Table<Chunk.Position, Chunk> _chunks = new();
@@ -47,13 +44,10 @@ namespace Application
                 close = false;
 
                 Connection conn = _connections.Dequeue();
-                int id = conn.PlayerId;
-
-                Queue<Control> controls = _controlsTable.Lookup(id);
 
                 try
                 {
-                    conn.Recv(controls);
+                    conn.Recv();
                 }
                 catch (UnexpectedClientBehaviorExecption e)
                 {
@@ -93,39 +87,13 @@ namespace Application
                 Player player = _players.Dequeue();
                 int id = player.Id;
 
-                if (!_connTable.Contains(id))
+                if (!player.connected)
                 {
                     // TODO: Release resources of player object.
 
-                    _playerTable.Extract(id);
                     _idList.Dealloc(id);
                     /*Console.WriteLine("Disconnected!");*/
                     continue;
-
-                }
-
-                Queue<Control> controls = _controlsTable.Lookup(id);
-
-                while (!controls.Empty)
-                {
-                    Control _c = controls.Dequeue();
-
-                    if (_c is PlayerOnGroundControl playerOnGroundControl)
-                    {
-                        player.onGround = playerOnGroundControl.OnGround;
-                    }
-                    else if (_c is PlayerPositionControl playerMovementControl)
-                    {
-                        player.posPrev = player.pos;
-
-                        player.pos = playerMovementControl.Pos;
-                    }
-                    else if (_c is PlayerLookControl playerLookControl)
-                    {
-                        player.look = playerLookControl.Look;
-                    }
-                    else
-                        throw new NotImplementedException();
 
                 }
 
@@ -184,20 +152,15 @@ namespace Application
             {
                 (Connection conn, string msg) = _unexpectedConnections.Dequeue();
 
-                int id = conn.PlayerId;
+                int id = conn.Id;
 
-                _connTable.Extract(id);
-
-                Queue<Control> controls = _controlsTable.Extract(id);
                 Queue<Report> reports = _reportsTable.Extract(id);
 
                 // TODO: Send message why disconnected.
 
                 // TODO: Handle flush and release garbage.
-                Debug.Assert(controls.Empty);
                 reports.Flush();
 
-                controls.Close();
                 reports.Close();
             }
         }
@@ -212,18 +175,13 @@ namespace Application
             {
                 Connection conn = _abortedConnections.Dequeue();
 
-                int id = conn.PlayerId;
+                int id = conn.Id;
 
-                _connTable.Extract(id);
-
-                Queue<Control> controls = _controlsTable.Extract(id);
                 Queue<Report> reports = _reportsTable.Extract(id);
 
                 // TODO: Handle flush and release garbage.
-                Debug.Assert(controls.Empty);
                 reports.Flush();
 
-                controls.Close();
                 reports.Close();
 
             }
@@ -246,9 +204,8 @@ namespace Application
 
             connListener.Accept(
                 _idList, 
-                _connTable, _connections, 
-                _playerTable, _players, 
-                _controlsTable, _reportsTable, 
+                _connections, _players, 
+                _reportsTable, 
                 _chunks, 
                 new(0, 60, 0), new(0, 0));
 
@@ -315,15 +272,12 @@ namespace Application
                     // Release managed resources.
                     _idList.Dispose();
 
-                    _connTable.Dispose();
                     _connections.Dispose();
                     _abortedConnections.Dispose();
                     _unexpectedConnections.Dispose();
 
-                    _playerTable.Dispose();
                     _players.Dispose();
 
-                    _controlsTable.Dispose();
                     _reportsTable.Dispose();
 
                     _chunks.Dispose();

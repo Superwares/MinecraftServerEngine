@@ -4,9 +4,9 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;  // TODO: Use custom socket object in common library.
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using Applications;
 using Containers;
 
@@ -1066,6 +1066,8 @@ namespace Protocol
 
     public class Player : LivingEntity
     {
+        public bool connected = true;
+
         public Player(
             int id, Position pos, Look look, bool onGround) 
             : base(id, pos, look, onGround) { }
@@ -1341,9 +1343,11 @@ namespace Protocol
             public byte renderDistance = renderDistance;
         }
 
-        public readonly int PlayerId;
-
         private Client _client;
+
+        private readonly Player _player;
+
+        public int Id => _player.Id;
 
         public readonly Guid UserId;
         public readonly string Username;
@@ -1359,16 +1363,16 @@ namespace Protocol
         private bool _disposed = false;
 
         internal Connection(
-            int id,
             Client client,
+            Player player,
             Guid userId, string username,
             ClientsideSettings settings,
             Queue<Report> reports,
             (Chunk.Position, Chunk.Position) loadedChunkGrid)
         {
-            PlayerId = id;
-
             _client = client;
+
+            _player = player;
 
             UserId = userId;
             Username = username;
@@ -1391,12 +1395,13 @@ namespace Protocol
         /// <returns>TODO: Add description.</returns>
         /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
-        public void Recv(Queue<Control> controls)
+        public void Recv()
         {
             Debug.Assert(!_disposed);
 
-            Debug.Assert(controls.Count == 0);
-
+            using Queue<Control> controls = new();
+            using Queue<Confirm> confirms = new();
+            
             try
             {
                 Buffer buffer = new();
@@ -1414,76 +1419,41 @@ namespace Protocol
                         case ServerboundPlayingPacket.ConfirmTeleportPacketId:
                             {
                                 ConfirmTeleportPacket packet = ConfirmTeleportPacket.Read(buffer);
-
-                                if (_teleportRecords.Empty)
-                                    throw new UnexpectedPacketException();
-
-                                TeleportRecord record = _teleportRecords.Dequeue();
-                                if (record.Payload != packet.Payload)
-                                    throw new UnexpectedValueException("Payload");
+                                confirms.Enqueue(new TeleportConfirm(packet.Payload));
                             }
                             break;
                         case ServerboundPlayingPacket.ClientSettingsPacketId:
                             {
                                 ClientSettingsPacket packet = ClientSettingsPacket.Read(buffer);
-
                                 throw new NotImplementedException();
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerPacketId:
                             {
                                 PlayerPacket packet = PlayerPacket.Read(buffer);
-
-                                if (!_teleportRecords.Empty)
-                                {
-                                    controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
-                                }
-                                else
-                                    Console.Write("Ignore Any Controls");
+                                controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerPositionPacketId:
                             {
                                 PlayerPositionPacket packet = PlayerPositionPacket.Read(buffer);
-
-                                if (!_teleportRecords.Empty)
-                                {
-                                    controls.Enqueue(new PlayerPositionControl(packet.X, packet.Y, packet.Z));
-                                    controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
-
-                                    // TODO: load/unload chunks...
-                                }
-                                else
-                                    Console.Write("Ignore Any Controls");
+                                controls.Enqueue(new PlayerPositionControl(packet.X, packet.Y, packet.Z));
+                                controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerPosAndLookPacketId:
                             {
                                 PlayerPosAndLookPacket packet = PlayerPosAndLookPacket.Read(buffer);
-
-                                if (!_teleportRecords.Empty)
-                                {
-                                    controls.Enqueue(new PlayerPositionControl(packet.X, packet.Y, packet.Z));
-                                    controls.Enqueue(new PlayerLookControl(packet.Yaw, packet.Pitch));
-                                    controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
-
-                                    // TODO: load/unload chunks...
-                                }
-                                else
-                                    Console.Write("Ignore Any Controls");
+                                controls.Enqueue(new PlayerPositionControl(packet.X, packet.Y, packet.Z));
+                                controls.Enqueue(new PlayerLookControl(packet.Yaw, packet.Pitch));
+                                controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerLookPacketId:
                             {
                                 PlayerLookPacket packet = PlayerLookPacket.Read(buffer);
-
-                                if (!_teleportRecords.Empty)
-                                {
-                                    controls.Enqueue(new PlayerLookControl(packet.Yaw, packet.Pitch));
-                                    controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
-                                }
-                                else
-                                    Console.Write("Ignore Any Controls");
+                                controls.Enqueue(new PlayerLookControl(packet.Yaw, packet.Pitch));
+                                controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
                             }
                             break;
                     }
@@ -1494,17 +1464,76 @@ namespace Protocol
             }
             catch (TryAgainException) 
             {
+
+            }
+
+            while (!confirms.Empty)
+            {
+                Confirm _confirm = confirms.Dequeue();
+            
+                switch (_confirm)
+                {
+                    case TeleportConfirm teleportConfirm:
+                        {
+                            if (_teleportRecords.Empty)
+                                throw new UnexpectedPacketException();
+
+                            TeleportRecord record = _teleportRecords.Dequeue();
+                            if (record.Payload != teleportConfirm.Payload)
+                                throw new UnexpectedValueException("TeleportPayload");
+                        }
+                        break;
+                    case ClientSettingsConfirm:
+                        throw new NotImplementedException();
+                        break;
+                }
+            }
+
+            while (!controls.Empty)
+            {
                 if (!_teleportRecords.Empty)
                 {
-                    int count = _teleportRecords.Count;
-                    for (int i = 0; i < count; ++i)
-                    {
-                        TeleportRecord record = _teleportRecords.Dequeue();
-                        record.Update();
-                        _teleportRecords.Enqueue(record);
-                    }
+                    Console.Write("Ignore Any Controls");
+                    break;
                 }
 
+                Control _control = controls.Dequeue();
+
+                switch (_control)
+                {
+                    case PlayerOnGroundControl playerOnGroundControl:
+                        {
+                            _player.onGround = playerOnGroundControl.OnGround;
+                        }
+                        break;
+                    case PlayerPositionControl playerPositionControl:
+                        {
+                            _player.posPrev = _player.pos;
+                            _player.pos = playerPositionControl.Pos;
+
+                            // load/unload chunks
+                        }
+                        break;
+                    case PlayerLookControl playerLookControl:
+                        {
+                            _player.look = playerLookControl.Look;
+                        }
+                        break;
+                }
+
+            }
+
+            controls.Flush();
+
+            if (!_teleportRecords.Empty)
+            {
+                int count = _teleportRecords.Count;
+                for (int i = 0; i < count; ++i)
+                {
+                    TeleportRecord record = _teleportRecords.Dequeue();
+                    record.Update();
+                    _teleportRecords.Enqueue(record);
+                }
             }
 
         }
@@ -1611,9 +1640,7 @@ namespace Protocol
 
         public void Accept(
             NumList idList,
-            Table<int, Connection> connectionTable, Queue<Connection> connections, 
-            Table<int, Player> playerTable, Queue<Player> players,
-            Table<int, Queue<Control>> controlsTable,
+            Queue<Connection> connections, Queue<Player> players,
             Table<int, Queue<Report>> reportsTable,
             Table<Chunk.Position, Chunk> _chunks,  // TODO: readonly
             Entity.Position posInitial, Entity.Look lookInitial)
@@ -1645,6 +1672,7 @@ namespace Protocol
                         Debug.Assert(settings == null);
                         Debug.Assert(entityId == -1);
 
+                        // TODO: If already player exists, use id of that player object, not new alloc id.
                         entityId = idList.Alloc();
 
                         JoinGamePacket packet = new(entityId, 1, 0, 0, "default", false);  // TODO
@@ -1817,21 +1845,18 @@ namespace Protocol
 
 
                 Connection conn = new(
-                    id,
                     client,
+                    player,
                     userId, username,
                     settings, 
                     reports,
                     loadedChunkGrid);
 
-                connectionTable.Insert(id, conn);
                 connections.Enqueue(conn);
 
-                // TODO: when player is exists in the world, the below code was not needed.
-                playerTable.Insert(id, player);
+                // TODO: when player is exists in the world, doesn't enqueue player.
                 players.Enqueue(player);
 
-                controlsTable.Insert(id, new());
                 reportsTable.Insert(id, reports);
 
                 Console.Write("Finish init connection!");

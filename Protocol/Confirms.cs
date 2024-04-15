@@ -21,4 +21,15 @@ namespace Protocol
 
     }
 
+    public class ClientSettingsConfirm : Confirm
+    {
+        public readonly Connection.ClientsideSettings Settings;
+
+        internal ClientSettingsConfirm(
+            Connection.ClientsideSettings settings)
+        {
+            Settings = settings;
+        }
+    }
+
 }
