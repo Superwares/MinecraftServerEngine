@@ -1492,6 +1492,7 @@ namespace Protocol
                 if (!_teleportRecords.Empty)
                 {
                     Console.Write("Ignore Any Controls");
+                    controls.Flush();
                     break;
                 }
 
@@ -1520,8 +1521,6 @@ namespace Protocol
                 }
 
             }
-
-            controls.Flush();
 
             if (!_teleportRecords.Empty)
             {
@@ -1568,7 +1567,6 @@ namespace Protocol
         // TODO: Make chunks to readonly using interface? in this function.
         public void UpdateChunks(Table<Chunk.Position, Chunk> chunks, Player player)  
         {
-            Console.WriteLine("UpdateChunks!");
             Chunk.Position pChunkCenter = Chunk.Position.Convert(player.pos);
             int d = Settings.renderDistance;
             Debug.Assert(d >= ClientsideSettings.MinRenderDistance);
@@ -1599,7 +1597,7 @@ namespace Protocol
                 for (int x = pChunkMin.x; x <= pChunkMax.x; ++x)
                 {
                     if (x <= pChunkBetweenMax.x && x >= pChunkBetweenMin.x &&
-                        z <= pChunkBetweenMax.z && z >= pChunkBetweenMin.x)
+                        z <= pChunkBetweenMax.z && z >= pChunkBetweenMin.z)
                         continue;
 
                     Chunk.Position pChunkLoad = new(x, z);
@@ -1623,7 +1621,7 @@ namespace Protocol
                 for (int x = pChunkPrevMin.x; x <= pChunkPrevMax.x; ++x)
                 {
                     if (x <= pChunkBetweenMax.x && x >= pChunkBetweenMin.x &&
-                        z <= pChunkBetweenMax.z && z >= pChunkBetweenMin.x)
+                        z <= pChunkBetweenMax.z && z >= pChunkBetweenMin.z)
                         continue;
 
                     Chunk.Position pChunkUnload = new(x, z);
@@ -1632,6 +1630,8 @@ namespace Protocol
                     _reports.Enqueue(report);
                 }
             }
+
+            _loadedChunkGrid = (pChunkMax, pChunkMin);
 
         }
 
