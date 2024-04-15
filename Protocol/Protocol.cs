@@ -1507,6 +1507,8 @@ namespace Protocol
                         break;
                     case PlayerPositionControl playerPositionControl:
                         {
+                            // TODO: Check validation. (유효성 검사)
+
                             player.posPrev = player.pos;
                             player.pos = playerPositionControl.Pos;
 
