@@ -11,21 +11,6 @@ namespace Protocol
     {
     }
 
-    public class ClientSettingsControl : Control
-    {
-        public readonly Player.ClientsideSettings settings;
-
-        internal ClientSettingsControl(Player.ClientsideSettings settings)
-        {
-            if (settings.renderDistance < Player.ClientsideSettings.MinRenderDistance ||
-                settings.renderDistance > Player.ClientsideSettings.MaxRenderDistance)
-                throw new UnexpectedValueException("VideoSettings.RenderDistance");
-
-            this.settings = settings;
-        }
-
-    }
-
     public class PlayerOnGroundControl : Control
     {
         public readonly bool OnGround;

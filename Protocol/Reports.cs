@@ -15,7 +15,7 @@ namespace Protocol
 
     }
 
-    public class LoadChunkReport : Report
+    internal class LoadChunkReport : Report
     {
         public readonly Chunk.Position p;
         private readonly int _Mask;
@@ -38,7 +38,7 @@ namespace Protocol
 
     }
 
-    public class LoadEmptyChunkReport : Report
+    internal class LoadEmptyChunkReport : Report
     {
         public readonly Chunk.Position p;
 
@@ -56,7 +56,7 @@ namespace Protocol
 
     }
 
-    public class UnloadChunkReport : Report
+    internal class UnloadChunkReport : Report
     {
         public readonly Chunk.Position p;
 
@@ -72,7 +72,7 @@ namespace Protocol
         }
     }
 
-    public class UnloadChunksReport : Report
+    internal class UnloadChunksReport : Report
     {
         public readonly Chunk.Position[] P;
 
@@ -100,9 +100,9 @@ namespace Protocol
             bool invulnerable, bool flying, bool allowFlying, bool creativeMode,
             float flyingSpeed, float fovModifier)
         {
-            Invulnerable = invulnerable; 
-            Flying = flying; 
-            AllowFlying = allowFlying; 
+            Invulnerable = invulnerable;
+            Flying = flying;
+            AllowFlying = allowFlying;
             CreativeMode = creativeMode;
             FlyingSpeed = flyingSpeed; FovModifier = fovModifier;
         }
@@ -117,15 +117,14 @@ namespace Protocol
 
     }
 
-    public class AbsoluteTeleportReport : Report
+    public abstract class TeleportReport : Report
     {
         public readonly Entity.Position Pos;
         public readonly Entity.Look Look;
         public readonly int Payload;
 
-        public AbsoluteTeleportReport(
-            Entity.Position pos, Entity.Look look,
-            int payload)
+        public TeleportReport(
+            Entity.Position pos, Entity.Look look)
         {
             Debug.Assert(
                 look.yaw >= Entity.Look.MinYaw &&
@@ -134,8 +133,16 @@ namespace Protocol
                 look.pitch <= Entity.Look.MaxPitch);
 
             Pos = pos; Look = look;
-            Payload = payload;
+            Payload = new Random().Next();  // TODO: Make own random generator in common library.
         }
+
+
+    }
+
+    public class AbsoluteTeleportReport : TeleportReport
+    {
+        public AbsoluteTeleportReport(Entity.Position pos, Entity.Look look) 
+            : base(pos, look) { }
 
         internal override void Write(Buffer buffer)
         {
@@ -149,25 +156,10 @@ namespace Protocol
 
     }
 
-    public class RelativeTeleportReport : Report
+    public class RelativeTeleportReport : TeleportReport
     {
-        public readonly Entity.Position Pos;
-        public readonly Entity.Look Look;
-        public readonly int Payload;
-
-        public RelativeTeleportReport(
-            Entity.Position pos, Entity.Look look,
-            int payload)
-        {
-            Debug.Assert(
-                look.yaw >= Entity.Look.MinYaw &&
-                look.yaw <= Entity.Look.MaxYaw &&
-                look.pitch >= Entity.Look.MinPitch &&
-                look.pitch <= Entity.Look.MaxPitch);
-
-            Pos = pos; Look = look;
-            Payload = payload;
-        }
+        public RelativeTeleportReport(Entity.Position pos, Entity.Look look) 
+            : base(pos, look) { }
 
         internal override void Write(Buffer buffer)
         {

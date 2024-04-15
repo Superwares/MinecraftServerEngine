@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;  // TODO: Use custom socket object in common library.
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using Applications;
@@ -983,7 +984,7 @@ namespace Protocol
             {
                 for (int x = 0; x < Width; ++x)
                 {
-                    buffer.WriteByte(0);
+                    buffer.WriteByte(127);  // Void Biome
                 }
             }
 
@@ -1042,7 +1043,6 @@ namespace Protocol
 
         public Position posPrev, pos;
         public Look look;
-        public Chunk.Position posChunkPrev, posChunk;
         public bool onGround;
 
         internal Entity(int id, Position pos, Look look, bool onGround)
@@ -1050,7 +1050,6 @@ namespace Protocol
             Id = id;
             this.pos = posPrev = pos;
             this.look = look;
-            posChunk = posChunkPrev = Chunk.Position.Convert(pos);
             this.onGround = onGround;
         }
 
@@ -1067,24 +1066,9 @@ namespace Protocol
 
     public class Player : LivingEntity
     {
-        public sealed class ClientsideSettings(byte renderDistance)
-        {
-            public const byte MinRenderDistance = 2, MaxRenderDistance = 32;
-
-            public byte renderDistance = renderDistance;
-        }
-
-        public readonly ClientsideSettings Settings;
-
-        public bool connected = true;
-
         public Player(
-            int id, Position pos, Look look, bool onGround,
-            ClientsideSettings settings) 
-            : base(id, pos, look, onGround)
-        {
-            Settings = settings;
-        }
+            int id, Position pos, Look look, bool onGround) 
+            : base(id, pos, look, onGround) { }
 
     }
 
@@ -1323,14 +1307,38 @@ namespace Protocol
 
     }
 
+    public sealed class TeleportRecord
+    {
+        private const int MaxTicks = 20;  // 1 seconds
+
+        public readonly int Payload;
+        private int _ticks = 0;
+
+        public TeleportRecord(int payload)
+        {
+            Payload = payload;
+        }
+
+        public void Update()
+        {
+            Debug.Assert(_ticks >= 0);
+
+            if (++_ticks > MaxTicks)
+            {
+                throw new TeleportConfirmTimeoutException();
+            }
+
+        }
+
+    }
+
     public class Connection : IDisposable
     {
-        private enum SetupSteps
+        public sealed class ClientsideSettings(byte renderDistance)
         {
-            JoinGame = 0,
-            ClientSettings,
-            PluginMessage,
-            StartPlaying,
+            public const byte MinRenderDistance = 2, MaxRenderDistance = 32;
+
+            public byte renderDistance = renderDistance;
         }
 
         public readonly int PlayerId;
@@ -1340,14 +1348,23 @@ namespace Protocol
         public readonly Guid UserId;
         public readonly string Username;
 
-        private SetupSteps _step = SetupSteps.JoinGame;
+        public readonly ClientsideSettings Settings;
+
+        Queue<Report> _reports;
+
+        private (Chunk.Position, Chunk.Position) _loadedChunkGrid;
+
+        Queue<TeleportRecord> _teleportRecords = new();
 
         private bool _disposed = false;
 
         internal Connection(
             int id,
             Client client,
-            Guid userId, string username)
+            Guid userId, string username,
+            ClientsideSettings settings,
+            Queue<Report> reports,
+            (Chunk.Position, Chunk.Position) loadedChunkGrid)
         {
             PlayerId = id;
 
@@ -1355,6 +1372,12 @@ namespace Protocol
 
             UserId = userId;
             Username = username;
+
+            Settings = settings;
+
+            _reports = reports;
+
+            _loadedChunkGrid = loadedChunkGrid;
         }
 
         ~Connection()
@@ -1365,102 +1388,14 @@ namespace Protocol
         /// <summary>
         /// TODO: Add description.
         /// </summary>
-        /// <param name="settings">TODO: Add description.</param>
-        /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
-        /// <exception cref="DisconnectedClientException"></exception>
-        /// <exception cref="TryAgainException"></exception>
-        public void HandleSetupProcess(ref Player.ClientsideSettings? settings)
-        {
-            using Buffer buffer = new();
-            try
-            {
-                if (_step == SetupSteps.JoinGame)
-                {
-                    /*Console.WriteLine("JoinGame!");*/
-
-                    Debug.Assert(settings == null);
-
-                    JoinGamePacket packet = new(PlayerId, 1, 0, 0, "default", false);  // TODO
-                    packet.Write(buffer);
-                    _client.Send(buffer);
-
-                    _step = SetupSteps.ClientSettings;
-                }
-                
-                if (_step == SetupSteps.ClientSettings)
-                {
-                    /*Console.WriteLine("ClientSettings!");*/
-
-                    Debug.Assert(settings == null);
-
-                    _client.Recv(buffer);
-
-                    int packetId = buffer.ReadInt(true);
-                    if (ServerboundPlayingPacket.ClientSettingsPacketId != packetId)
-                        throw new UnexpectedPacketException();
-
-                    ClientSettingsPacket packet = ClientSettingsPacket.Read(buffer);
-
-                    if (buffer.Size > 0)
-                        throw new BufferOverflowException();
-
-                    settings = new(packet.RenderDistance);
-                    
-
-                    _step = SetupSteps.PluginMessage;
-                }
-
-                if (_step == SetupSteps.PluginMessage)
-                {
-                    /*Console.WriteLine("PluginMessage!");*/
-
-                    Debug.Assert(settings != null);
-
-                    _client.Recv(buffer);
-
-                    int packetId = buffer.ReadInt(true);
-                    if (0x09 != packetId)
-                        throw new UnexpectedPacketException();
-
-                    buffer.Flush();
-
-                    if (buffer.Size > 0)
-                        throw new BufferOverflowException();
-
-                    _step = SetupSteps.StartPlaying;
-                }
-
-                Debug.Assert(settings != null);
-
-            }
-            catch (UnexpectedClientBehaviorExecption)
-            {
-                buffer.Flush();
-
-                throw;
-            }
-            catch (DisconnectedClientException)
-            {
-                buffer.Flush();
-
-                throw;
-            }
-
-        }
-
-        /// <summary>
-        /// TODO: Add description.
-        /// </summary>
         /// <returns>TODO: Add description.</returns>
         /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
-        public void Recv(Queue<Control> controls, Queue<Confirm> confirms)
+        public void Recv(Queue<Control> controls)
         {
             Debug.Assert(!_disposed);
-            Debug.Assert(_step >= SetupSteps.StartPlaying);
 
             Debug.Assert(controls.Count == 0);
-            Debug.Assert(confirms.Count == 0);
 
             try
             {
@@ -1474,48 +1409,77 @@ namespace Protocol
                     switch (packetId)
                     {
                         default:
-                            Console.WriteLine($"packetId: {packetId:X}");
+                            Console.WriteLine($"packetId: 0x{packetId:X}");
                             throw new NotImplementedException();
                         case ServerboundPlayingPacket.ConfirmTeleportPacketId:
                             {
                                 ConfirmTeleportPacket packet = ConfirmTeleportPacket.Read(buffer);
-                                TeleportConfirm confirm = new(packet.Payload);
-                                confirms.Enqueue(confirm);
+
+                                if (_teleportRecords.Empty)
+                                    throw new UnexpectedPacketException();
+
+                                TeleportRecord record = _teleportRecords.Dequeue();
+                                if (record.Payload != packet.Payload)
+                                    throw new UnexpectedValueException("Payload");
                             }
                             break;
                         case ServerboundPlayingPacket.ClientSettingsPacketId:
                             {
                                 ClientSettingsPacket packet = ClientSettingsPacket.Read(buffer);
-                                Player.ClientsideSettings settings = new(packet.RenderDistance);
-                                controls.Enqueue(new ClientSettingsControl(settings));
+
+                                throw new NotImplementedException();
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerPacketId:
                             {
                                 PlayerPacket packet = PlayerPacket.Read(buffer);
-                                controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
+
+                                if (!_teleportRecords.Empty)
+                                {
+                                    Console.WriteLine("Ignore any controls...");
+                                    controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
+                                }
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerPositionPacketId:
                             {
                                 PlayerPositionPacket packet = PlayerPositionPacket.Read(buffer);
-                                controls.Enqueue(new PlayerPositionControl(packet.X, packet.Y, packet.Z));
-                                controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
+
+                                if (!_teleportRecords.Empty)
+                                {
+                                    Console.WriteLine("Ignore any controls...");
+                                    controls.Enqueue(new PlayerPositionControl(packet.X, packet.Y, packet.Z));
+                                    controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
+
+                                    // TODO: load/unload chunks...
+                                }
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerPosAndLookPacketId:
                             {
                                 PlayerPosAndLookPacket packet = PlayerPosAndLookPacket.Read(buffer);
-                                controls.Enqueue(new PlayerPositionControl(packet.X, packet.Y, packet.Z));
-                                controls.Enqueue(new PlayerLookControl(packet.Yaw, packet.Pitch));
-                                controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
+
+                                if (!_teleportRecords.Empty)
+                                {
+                                    Console.WriteLine("Ignore any controls...");
+                                    controls.Enqueue(new PlayerPositionControl(packet.X, packet.Y, packet.Z));
+                                    controls.Enqueue(new PlayerLookControl(packet.Yaw, packet.Pitch));
+                                    controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
+
+                                    // TODO: load/unload chunks...
+                                }
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerLookPacketId:
                             {
                                 PlayerLookPacket packet = PlayerLookPacket.Read(buffer);
-                                controls.Enqueue(new PlayerLookControl(packet.Yaw, packet.Pitch));
-                                controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
+
+                                if (!_teleportRecords.Empty)
+                                {
+                                    Console.WriteLine("Ignore any controls...");
+                                    controls.Enqueue(new PlayerLookControl(packet.Yaw, packet.Pitch));
+                                    controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
+                                }
                             }
                             break;
                     }
@@ -1524,8 +1488,20 @@ namespace Protocol
                         throw new BufferOverflowException();
                 }
             }
-            catch (TryAgainException) { }
+            catch (TryAgainException) 
+            {
+                if (!_teleportRecords.Empty)
+                {
+                    int count = _teleportRecords.Count;
+                    for (int i = 0; i < count; ++i)
+                    {
+                        TeleportRecord record = _teleportRecords.Dequeue();
+                        record.Update();
+                        _teleportRecords.Enqueue(record);
+                    }
+                }
 
+            }
 
         }
 
@@ -1533,23 +1509,29 @@ namespace Protocol
         /// TODO: Add description.
         /// </summary>
         /// <param name="packet">TODO: Add description.</param>
-        public void Send(Queue<Report> reports)
+        public void Send()
         {
             Debug.Assert(!_disposed);
-            Debug.Assert(_step >= SetupSteps.StartPlaying);
 
             using Buffer buffer = new();
 
-            while (!reports.Empty)
+            while (!_reports.Empty)
             {
-                Report r = reports.Dequeue();
+                Report r = _reports.Dequeue();
+                
+                if (r is TeleportReport teleportReport)
+                {
+                    TeleportRecord record = new(teleportReport.Payload);
+                    _teleportRecords.Enqueue(record);
+                }
+
                 r.Write(buffer);
                 _client.Send(buffer);
 
                 Debug.Assert(buffer.Empty);
             }
 
-            Debug.Assert(reports.Empty);
+            Debug.Assert(_reports.Empty);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -1559,8 +1541,8 @@ namespace Protocol
             if (disposing == true)
             {
                 // managed objects
-                /*Username.Dispose();*/  // TODO
                 _client.Dispose();
+                _reports.Dispose();
             }
 
             // unmanaged objects
@@ -1602,144 +1584,269 @@ namespace Protocol
 
     }*/
 
-    public sealed class TeleportRecord
+    
+
+    public class ConnectionListener
     {
-        private const int MaxTicks = 20;  // 1 seconds
-
-        public readonly int Payload;
-        private int _ticks = 0;
-
-        public TeleportRecord()
+        private enum SetupSteps
         {
-            Payload = new Random().Next();
+            JoinGame = 0,
+            ClientSettings,
+            PluginMessage,
+            StartPlay,
         }
 
-        public void Update()
+        private readonly ConcurrentQueue<
+            (Client, Guid, string, int, Connection.ClientsideSettings?, SetupSteps)
+            > _clients = new();
+
+        internal void Add(Client client, Guid userId, string username)
         {
-            Debug.Assert(_ticks >= 0);
-
-            if (++_ticks > MaxTicks)
-            {
-                throw new TeleportConfirmTimeoutException();
-            }
-
+            _clients.Enqueue((client, userId, username, -1, null, SetupSteps.JoinGame));
         }
 
-    }
-
-    public sealed class TeleportManager : IDisposable
-    {
-        private bool _disposed = false;
-
-        private readonly Table<int, Queue<TeleportRecord>> _teleportRecordsTable = new();
-
-        ~TeleportManager() => Dispose(false);
-
-        public void Init(int playerId)
+        public void Accept(
+            NumList idList,
+            Table<int, Connection> connectionTable, Queue<Connection> connections, 
+            Table<int, Player> playerTable, Queue<Player> players,
+            Table<int, Queue<Control>> controlsTable,
+            Table<int, Queue<Report>> reportsTable,
+            Table<Chunk.Position, Chunk> _chunks,  // TODO: readonly
+            Entity.Position posInitial, Entity.Look lookInitial)
         {
-            Debug.Assert(!_disposed);
+            if (_clients.Empty) return;
 
-            Debug.Assert(!_teleportRecordsTable.Contains(playerId));
-            _teleportRecordsTable.Insert(playerId, new());
-        }
+            bool start, close;
 
-        public void Close(int playerId)
-        {
-            Debug.Assert(!_disposed);
-
-            Debug.Assert(_teleportRecordsTable.Contains(playerId));
-            Queue<TeleportRecord> records = _teleportRecordsTable.Extract(playerId);
-            records.Flush();  // TODO: Handle flush and release garbage.
-            records.Close();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="playerId"></param>
-        /// <returns>Teleport Payload</returns>
-        public int Teleport(int playerId)
-        {
-            Debug.Assert(!_disposed);
-
-            TeleportRecord record = new();
-
-            Debug.Assert(_teleportRecordsTable.Contains(playerId));
-            _teleportRecordsTable.Lookup(playerId).Enqueue(record);
-
-            return record.Payload;
-        }
-
-        public void Confirm(int playerId, int payload)
-        {
-            Debug.Assert(!_disposed);
-
-            Debug.Assert(_teleportRecordsTable.Contains(playerId));
-            Queue<TeleportRecord> records = _teleportRecordsTable.Lookup(playerId);
-
-            if (records.Empty)
-                throw new UnexpectedPacketException();
-
-            var record = records.Dequeue();
-            if (record.Payload != payload)
-                throw new UnexpectedValueException("Payload");
-
-        }
-
-        public void Update(int playerId)
-        {
-            Debug.Assert(!_disposed);
-
-            Debug.Assert(_teleportRecordsTable.Contains(playerId));
-            Queue<TeleportRecord> records = _teleportRecordsTable.Lookup(playerId);
-            if (records.Empty) return;
-
-            int count = records.Count;
+            int count = _clients.Count;
             for (int i = 0; i < count; ++i)
             {
-                var record = records.Dequeue();
-                record.Update();
-                records.Enqueue(record);
+                using Buffer buffer = new();
+
+                (Client client, 
+                    Guid userId, 
+                    string username, 
+                    int entityId,
+                    Connection.ClientsideSettings? settings,
+                    SetupSteps step) = 
+                    _clients.Dequeue();
+                start = close = false;
+
+                try
+                {
+                    if (step == SetupSteps.JoinGame)
+                    {
+                        /*Console.WriteLine("JoinGame!");*/
+
+                        Debug.Assert(settings == null);
+                        Debug.Assert(entityId == -1);
+
+                        entityId = idList.Alloc();
+
+                        JoinGamePacket packet = new(entityId, 1, 0, 0, "default", false);  // TODO
+                        packet.Write(buffer);
+                        client.Send(buffer);
+
+                        step = SetupSteps.ClientSettings;
+                    }
+
+                    if (step == SetupSteps.ClientSettings)
+                    {
+                        /*Console.WriteLine("ClientSettings!");*/
+
+                        Debug.Assert(settings == null);
+                        Debug.Assert(entityId >= 0);
+
+                        client.Recv(buffer);
+
+                        int packetId = buffer.ReadInt(true);
+                        if (ServerboundPlayingPacket.ClientSettingsPacketId != packetId)
+                            throw new UnexpectedPacketException();
+
+                        ClientSettingsPacket packet = ClientSettingsPacket.Read(buffer);
+
+                        if (buffer.Size > 0)
+                            throw new BufferOverflowException();
+
+                        settings = new(packet.RenderDistance);
+    
+                        step = SetupSteps.PluginMessage;
+                    }
+
+                    if (step == SetupSteps.PluginMessage)
+                    {
+                        /*Console.WriteLine("PluginMessage!");*/
+
+                        Debug.Assert(settings != null);
+                        Debug.Assert(entityId >= 0);
+
+                        client.Recv(buffer);
+
+                        int packetId = buffer.ReadInt(true);
+                        if (0x09 != packetId)
+                            throw new UnexpectedPacketException();
+
+                        buffer.Flush();
+
+                        if (buffer.Size > 0)
+                            throw new BufferOverflowException();
+
+                        step = SetupSteps.StartPlay;
+                    }
+
+                    Debug.Assert(!start);
+                    Debug.Assert(!close);
+
+                    start = true;
+                }
+                catch (TryAgainException)
+                {
+                    Debug.Assert(!start);
+                    Debug.Assert(!close);
+
+                    /*Console.WriteLine("TryAgainException!");*/
+                }
+                catch (UnexpectedClientBehaviorExecption)
+                {
+                    Debug.Assert(!start);
+                    Debug.Assert(!close);
+
+                    buffer.Flush();
+
+                    close = true;
+
+                    // TODO: Send why disconnected...
+
+                    /*Console.WriteLine("UnexpectedBehaviorExecption!");*/
+                }
+                catch (DisconnectedClientException)
+                {
+                    Debug.Assert(!start);
+                    Debug.Assert(!close);
+
+                    buffer.Flush();
+
+                    close = true;
+
+                    /*Console.WriteLine("DisconnectedException!");*/
+                }
+
+                if (!start)
+                {
+                    if (!close)
+                    {
+                        Debug.Assert(step >= SetupSteps.JoinGame ? entityId >= 0 : true);
+                        Debug.Assert(step >= SetupSteps.PluginMessage ? settings != null: true);
+
+                        _clients.Enqueue((
+                            client, 
+                            userId, username, 
+                            entityId, 
+                            settings,
+                            step));
+                    }
+                    else
+                    {
+                        if (step >= SetupSteps.JoinGame)
+                            idList.Dealloc(entityId);
+
+                        client.Close();
+                    }
+
+                    continue;
+                }
+
+                Debug.Assert(step == SetupSteps.StartPlay);
+                Debug.Assert(!close);
+                /*Console.WriteLine("Start Game!");*/
+
+                int id = idList.Alloc();
+
+                Debug.Assert(settings != null);
+                Player player = new(id, posInitial, lookInitial, false);
+
+                Queue<Report> reports = new();
+                (Chunk.Position, Chunk.Position) loadedChunkGrid;
+
+                {
+                    SetPlayerAbilitiesReport report = new(true, true, true, true, 1, 0);
+                    reports.Enqueue(report);
+                }
+
+                {
+                    Report? report = null;
+
+                    // load chunks
+                    Chunk.Position c = Chunk.Position.Convert(posInitial);
+                    int d = settings.renderDistance;
+                    (Chunk.Position pMax, Chunk.Position pMin) = Chunk.Position.GenerateGridAround(c, d);
+                    for (int z = pMin.z; z <= pMax.z; ++z)
+                    {
+                        for (int x = pMin.x; x <= pMax.x; ++x)
+                        {
+                            Chunk.Position p = new(x, z);
+
+                            if (_chunks.Contains(p))
+                            {
+                                Chunk chunk = _chunks.Lookup(p);
+                                report = new LoadChunkReport(chunk);
+                            }
+                            else
+                                report = new LoadEmptyChunkReport(p);
+
+                            Debug.Assert(report != null);
+                            reports.Enqueue(report);
+                        }
+                    }
+
+                    loadedChunkGrid = (pMax, pMin);
+
+                }
+
+                {
+                    // teleport
+                    AbsoluteTeleportReport report = new(player.pos, player.look);
+                    reports.Enqueue(report);
+                }
+
+
+                Connection conn = new(
+                    id,
+                    client,
+                    userId, username,
+                    settings, 
+                    reports,
+                    loadedChunkGrid);
+
+                connectionTable.Insert(id, conn);
+                connections.Enqueue(conn);
+
+                // TODO: when player is exists in the world, the below code was not needed.
+                playerTable.Insert(id, player);
+                players.Enqueue(player);
+
+                controlsTable.Insert(id, new());
+                reportsTable.Insert(id, reports);
+
             }
 
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (_disposed) return;
-
-            // Assertion.
-
-            if (disposing == true)
-            {
-                // Release managed resources.
-                _teleportRecordsTable.Dispose();
-            }
-
-            // Release unmanaged resources.
-
-            _disposed = true;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
     }
 
-
-    public class Listener
+    public class GlobalListener
     {
         private static readonly TimeSpan _PendingTimeout = TimeSpan.FromSeconds(1);
 
-        public Listener() { }
+        private readonly ConnectionListener _connListener;
+
+        public GlobalListener(ConnectionListener connListener)
+        {
+            _connListener = connListener;
+        }
 
         private int HandleVisitors(
-            Queue<Client> visitors, Queue<int> levelQueue,
-            NumList idList, 
-            ConcurrentQueue<(Connection, Player.ClientsideSettings?)> newConnections)
+            Queue<Client> visitors, Queue<int> levelQueue)
         {
             /*Console.Write(".");*/
 
@@ -1847,6 +1954,8 @@ namespace Protocol
 
                         // TODO: Check username is empty or invalid.
 
+                        Console.Write("Start http request!");
+
                         // TODO: Use own http client in common library.
                         using HttpClient httpClient = new();
                         string url = string.Format("https://api.mojang.com/users/profiles/minecraft/{0}", inPacket.Username);
@@ -1869,6 +1978,8 @@ namespace Protocol
                         /*Console.WriteLine($"userId: {userId}");
                         Console.WriteLine($"username: {username}");*/
 
+                        Console.Write("Finish http request!");
+
                         // TODO: Handle to throw exception
                         Debug.Assert(inPacket.Username == username);
 
@@ -1877,9 +1988,7 @@ namespace Protocol
                         client.Send(buffer);
 
                         // TODO: Must dealloc id when connection is disposed.
-                        int id = idList.Alloc();
-                        Connection conn = new(id, client, userId, username);
-                        newConnections.Enqueue((conn, null));
+                        _connListener.Add(client, userId, username);
 
                         success = true;
                     }
@@ -1939,20 +2048,18 @@ namespace Protocol
                     {
                         client.Close();
                     }
-                }
-                else
-                    Debug.Assert(close == false);
 
+                    continue;
+                }
+                    
+                Debug.Assert(close == false);
 
             }
 
             return visitors.Count;
         }
 
-        public void StartRoutine(
-            ConsoleApplication app, ushort port,
-            NumList idList, 
-            ConcurrentQueue<(Connection, Player.ClientsideSettings?)> newConnections)
+        public void StartRoutine(ConsoleApplication app, ushort port)
         {
             using Socket socket = SocketMethods.Establish(port);
 
@@ -1969,13 +2076,12 @@ namespace Protocol
 
             while (app.Running)
             {
+                Console.Write(">");
+
                 try
                 {
                     if (!SocketMethods.IsBlocking(socket) &&
-                        HandleVisitors(
-                            visitors, levelQueue,
-                            idList, 
-                            newConnections) == 0)
+                        HandleVisitors(visitors, levelQueue) == 0)
                     {
                         SocketMethods.SetBlocking(socket, true);
                     }
