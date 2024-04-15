@@ -1436,9 +1436,10 @@ namespace Protocol
 
                                 if (!_teleportRecords.Empty)
                                 {
-                                    Console.WriteLine("Ignore any controls...");
                                     controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
                                 }
+                                else
+                                    Console.Write("Ignore Any Controls");
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerPositionPacketId:
@@ -1447,12 +1448,13 @@ namespace Protocol
 
                                 if (!_teleportRecords.Empty)
                                 {
-                                    Console.WriteLine("Ignore any controls...");
                                     controls.Enqueue(new PlayerPositionControl(packet.X, packet.Y, packet.Z));
                                     controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
 
                                     // TODO: load/unload chunks...
                                 }
+                                else
+                                    Console.Write("Ignore Any Controls");
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerPosAndLookPacketId:
@@ -1461,13 +1463,14 @@ namespace Protocol
 
                                 if (!_teleportRecords.Empty)
                                 {
-                                    Console.WriteLine("Ignore any controls...");
                                     controls.Enqueue(new PlayerPositionControl(packet.X, packet.Y, packet.Z));
                                     controls.Enqueue(new PlayerLookControl(packet.Yaw, packet.Pitch));
                                     controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
 
                                     // TODO: load/unload chunks...
                                 }
+                                else
+                                    Console.Write("Ignore Any Controls");
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerLookPacketId:
@@ -1476,10 +1479,11 @@ namespace Protocol
 
                                 if (!_teleportRecords.Empty)
                                 {
-                                    Console.WriteLine("Ignore any controls...");
                                     controls.Enqueue(new PlayerLookControl(packet.Yaw, packet.Pitch));
                                     controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
                                 }
+                                else
+                                    Console.Write("Ignore Any Controls");
                             }
                             break;
                     }
@@ -1517,15 +1521,15 @@ namespace Protocol
 
             while (!_reports.Empty)
             {
-                Report r = _reports.Dequeue();
+                Report report = _reports.Dequeue();
                 
-                if (r is TeleportReport teleportReport)
+                if (report is TeleportReport teleportReport)
                 {
                     TeleportRecord record = new(teleportReport.Payload);
                     _teleportRecords.Enqueue(record);
                 }
 
-                r.Write(buffer);
+                report.Write(buffer);
                 _client.Send(buffer);
 
                 Debug.Assert(buffer.Empty);
@@ -1756,9 +1760,11 @@ namespace Protocol
                     continue;
                 }
 
+
+
                 Debug.Assert(step == SetupSteps.StartPlay);
                 Debug.Assert(!close);
-                /*Console.WriteLine("Start Game!");*/
+                Console.Write("Start init connection!");
 
                 int id = idList.Alloc();
 
@@ -1827,6 +1833,8 @@ namespace Protocol
 
                 controlsTable.Insert(id, new());
                 reportsTable.Insert(id, reports);
+
+                Console.Write("Finish init connection!");
 
             }
 

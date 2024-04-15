@@ -138,6 +138,8 @@ namespace Application
         {
             if (_connections.Empty) return;
 
+            /*Console.Write("Start send data!");*/
+
             bool close;
             int count = _connections.Count;
             Debug.Assert(count > 0);
@@ -146,8 +148,6 @@ namespace Application
                 close = false;
 
                 Connection conn = _connections.Dequeue();
-
-                int id = conn.PlayerId;
 
                 try
                 {
@@ -170,6 +170,8 @@ namespace Application
                 _connections.Enqueue(conn);
 
             }
+
+            /*Console.Write("Finish send data!");*/
         }
 
         private void HandleUnexpectedConnections()
