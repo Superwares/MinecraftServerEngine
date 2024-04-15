@@ -17,7 +17,7 @@ namespace Application
 
         private readonly ConcurrentNumList _idList = new();
 
-        private readonly Queue<Connection> _connections = new();
+        private readonly Queue<(Connection, Player)> _connections = new();
         private readonly Queue<Connection> _abortedConnections = new();
         private readonly Queue<(Connection, string)> _unexpectedConnections = new();
 
@@ -43,11 +43,11 @@ namespace Application
             {
                 close = false;
 
-                Connection conn = _connections.Dequeue();
+                (Connection conn, Player player) = _connections.Dequeue();
 
                 try
                 {
-                    conn.Recv();
+                    conn.Recv(player);
                 }
                 catch (UnexpectedClientBehaviorExecption e)
                 {
@@ -68,10 +68,11 @@ namespace Application
 
                 if (close)
                 {
+                    player.connected = false;
                     continue;
                 }
 
-                _connections.Enqueue(conn);
+                _connections.Enqueue((conn, player));
             }
 
         }
@@ -102,6 +103,19 @@ namespace Application
 
         }
 
+        private void UpdateChunks()
+        {
+            if (_connections.Empty) return;
+
+            int count = _connections.Count;
+            for (int i = 0; i < count; ++i)
+            {
+                (Connection conn, Player player) = _connections.Dequeue();
+
+                conn.UpdateChunks(_chunks, player);
+            }
+        }
+
         private void SendData()
         {
             if (_connections.Empty) return;
@@ -115,7 +129,7 @@ namespace Application
             {
                 close = false;
 
-                Connection conn = _connections.Dequeue();
+                (Connection conn, Player player) = _connections.Dequeue();
 
                 try
                 {
@@ -123,7 +137,7 @@ namespace Application
                 }
                 catch (DisconnectedClientException)
                 {
-                    Debug.Assert(close == false);
+                    Debug.Assert(!close);
 
                     _abortedConnections.Enqueue(conn);
 
@@ -132,10 +146,11 @@ namespace Application
 
                 if (close)
                 {
+                    player.connected = false;
                     continue;
                 }
 
-                _connections.Enqueue(conn);
+                _connections.Enqueue((conn, player));
 
             }
 
@@ -199,6 +214,10 @@ namespace Application
             // Barrier
 
             HandlePlayers();
+
+            // Barrier
+
+            /*UpdateChunks();*/
 
             // Barrier
 

@@ -1345,9 +1345,7 @@ namespace Protocol
 
         private Client _client;
 
-        private readonly Player _player;
-
-        public int Id => _player.Id;
+        public readonly int Id;
 
         public readonly Guid UserId;
         public readonly string Username;
@@ -1363,16 +1361,16 @@ namespace Protocol
         private bool _disposed = false;
 
         internal Connection(
+            int id,
             Client client,
-            Player player,
             Guid userId, string username,
             ClientsideSettings settings,
             Queue<Report> reports,
             (Chunk.Position, Chunk.Position) loadedChunkGrid)
         {
-            _client = client;
+            Id = id;
 
-            _player = player;
+            _client = client;
 
             UserId = userId;
             Username = username;
@@ -1395,7 +1393,7 @@ namespace Protocol
         /// <returns>TODO: Add description.</returns>
         /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
-        public void Recv()
+        public void Recv(Player player)
         {
             Debug.Assert(!_disposed);
 
@@ -1503,20 +1501,20 @@ namespace Protocol
                 {
                     case PlayerOnGroundControl playerOnGroundControl:
                         {
-                            _player.onGround = playerOnGroundControl.OnGround;
+                            player.onGround = playerOnGroundControl.OnGround;
                         }
                         break;
                     case PlayerPositionControl playerPositionControl:
                         {
-                            _player.posPrev = _player.pos;
-                            _player.pos = playerPositionControl.Pos;
+                            player.posPrev = player.pos;
+                            player.pos = playerPositionControl.Pos;
 
                             // load/unload chunks
                         }
                         break;
                     case PlayerLookControl playerLookControl:
                         {
-                            _player.look = playerLookControl.Look;
+                            player.look = playerLookControl.Look;
                         }
                         break;
                 }
@@ -1565,6 +1563,12 @@ namespace Protocol
             }
 
             Debug.Assert(_reports.Empty);
+        }
+
+        // TODO: Make chunks to readonly using interface? in this function.
+        public void UpdateChunks(Table<Chunk.Position, Chunk> chunks, Player player)  
+        {
+            throw new NotImplementedException();
         }
 
         protected virtual void Dispose(bool disposing)
@@ -1640,7 +1644,7 @@ namespace Protocol
 
         public void Accept(
             NumList idList,
-            Queue<Connection> connections, Queue<Player> players,
+            Queue<(Connection, Player)> connections, Queue<Player> players,
             Table<int, Queue<Report>> reportsTable,
             Table<Chunk.Position, Chunk> _chunks,  // TODO: readonly
             Entity.Position posInitial, Entity.Look lookInitial)
@@ -1794,10 +1798,8 @@ namespace Protocol
                 Debug.Assert(!close);
                 Console.Write("Start init connection!");
 
-                int id = idList.Alloc();
-
                 Debug.Assert(settings != null);
-                Player player = new(id, posInitial, lookInitial, false);
+                Player player = new(entityId, posInitial, lookInitial, false);
 
                 Queue<Report> reports = new();
                 (Chunk.Position, Chunk.Position) loadedChunkGrid;
@@ -1845,19 +1847,19 @@ namespace Protocol
 
 
                 Connection conn = new(
+                    entityId,
                     client,
-                    player,
                     userId, username,
                     settings, 
                     reports,
                     loadedChunkGrid);
 
-                connections.Enqueue(conn);
+                connections.Enqueue((conn, player));
 
                 // TODO: when player is exists in the world, doesn't enqueue player.
                 players.Enqueue(player);
 
-                reportsTable.Insert(id, reports);
+                reportsTable.Insert(entityId, reports);
 
                 Console.Write("Finish init connection!");
 
