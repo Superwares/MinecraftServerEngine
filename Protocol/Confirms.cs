@@ -10,7 +10,7 @@ namespace Protocol
     {
     }
 
-    public class TeleportConfirm : Confirm
+    internal class TeleportConfirm : Confirm
     {
         public readonly int Payload;
 
@@ -21,13 +21,17 @@ namespace Protocol
 
     }
 
-    public class ClientSettingsConfirm : Confirm
+    internal class ClientSettingsConfirm : Confirm
     {
         public readonly Connection.ClientsideSettings Settings;
 
         internal ClientSettingsConfirm(
             Connection.ClientsideSettings settings)
         {
+            if (settings.renderDistance < Connection.ClientsideSettings.MinRenderDistance ||
+                settings.renderDistance > Connection.ClientsideSettings.MaxRenderDistance)
+                throw new UnexpectedValueException("RenderDistance");
+
             Settings = settings;
         }
     }

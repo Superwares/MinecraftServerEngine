@@ -1338,9 +1338,9 @@ namespace Protocol
     {
         public sealed class ClientsideSettings(byte renderDistance)
         {
-            public const byte MinRenderDistance = 2, MaxRenderDistance = 32;
+            public const int MinRenderDistance = 2, MaxRenderDistance = 32;
 
-            public byte renderDistance = renderDistance;
+            public int renderDistance = renderDistance;
         }
 
         private Client _client;
@@ -1568,7 +1568,71 @@ namespace Protocol
         // TODO: Make chunks to readonly using interface? in this function.
         public void UpdateChunks(Table<Chunk.Position, Chunk> chunks, Player player)  
         {
-            throw new NotImplementedException();
+            Console.WriteLine("UpdateChunks!");
+            Chunk.Position pChunkCenter = Chunk.Position.Convert(player.pos);
+            int d = Settings.renderDistance;
+            Debug.Assert(d >= ClientsideSettings.MinRenderDistance);
+            Debug.Assert(d <= ClientsideSettings.MaxRenderDistance);
+
+            (Chunk.Position pChunkMax, Chunk.Position pChunkMin) = 
+                Chunk.Position.GenerateGridAround(pChunkCenter, d);
+            Debug.Assert(pChunkMax.x > pChunkMin.x);
+            Debug.Assert(pChunkMax.z > pChunkMin.z);
+
+            (Chunk.Position pChunkPrevMax, Chunk.Position pChunkPrevMin) = _loadedChunkGrid;
+            Debug.Assert(pChunkPrevMax.x > pChunkPrevMin.x);
+            Debug.Assert(pChunkPrevMax.z > pChunkPrevMin.z);
+
+            if (pChunkMax.Equals(pChunkPrevMax) && pChunkMin.Equals(pChunkPrevMin)) 
+                return;
+
+            (Chunk.Position pChunkBetweenMax, Chunk.Position pChunkBetweenMin)
+                = Chunk.Position.GenerateGridBetween(pChunkMax, pChunkMin, pChunkPrevMax, pChunkPrevMin);
+            Debug.Assert(pChunkBetweenMax.x > pChunkBetweenMin.x);
+            Debug.Assert(pChunkBetweenMax.z > pChunkBetweenMin.z);
+
+            Report? report = null;
+
+            // Load Chunks
+            for (int z = pChunkMin.z; z <= pChunkMax.z; ++z)
+            {
+                for (int x = pChunkMin.x; x <= pChunkMax.x; ++x)
+                {
+                    if (x <= pChunkBetweenMax.x && x >= pChunkBetweenMin.x &&
+                        z <= pChunkBetweenMax.z && z >= pChunkBetweenMin.x)
+                        continue;
+
+                    Chunk.Position pChunkLoad = new(x, z);
+
+                    if (chunks.Contains(pChunkLoad))
+                    {
+                        Chunk chunk = chunks.Lookup(pChunkLoad);
+                        report = new LoadChunkReport(chunk);
+                    }
+                    else
+                        report = new LoadEmptyChunkReport(pChunkLoad);
+
+                    Debug.Assert(report != null);
+                    _reports.Enqueue(report);
+                }
+            }
+
+            // Unload Chunks
+            for (int z = pChunkPrevMin.z; z <= pChunkPrevMax.z; ++z)
+            {
+                for (int x = pChunkPrevMin.x; x <= pChunkPrevMax.x; ++x)
+                {
+                    if (x <= pChunkBetweenMax.x && x >= pChunkBetweenMin.x &&
+                        z <= pChunkBetweenMax.z && z >= pChunkBetweenMin.x)
+                        continue;
+
+                    Chunk.Position pChunkUnload = new(x, z);
+
+                    report = new UnloadChunkReport(pChunkUnload);
+                    _reports.Enqueue(report);
+                }
+            }
+
         }
 
         protected virtual void Dispose(bool disposing)

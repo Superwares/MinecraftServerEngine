@@ -113,6 +113,8 @@ namespace Application
                 (Connection conn, Player player) = _connections.Dequeue();
 
                 conn.UpdateChunks(_chunks, player);
+
+                _connections.Enqueue((conn, player));
             }
         }
 
@@ -217,7 +219,7 @@ namespace Application
 
             // Barrier
 
-            /*UpdateChunks();*/
+            UpdateChunks();
 
             // Barrier
 
