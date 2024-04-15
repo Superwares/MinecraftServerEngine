@@ -424,11 +424,13 @@ namespace Protocol
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static StartLoginPacket Read(Buffer buffer)
         {
+            // TODO: Check the conditions of variables. If not correct, throw exception.
             return new(buffer.ReadString());
         }
 
         public StartLoginPacket(string username) : base(StartLoginPacketId)
         {
+            // TODO: Assert variables.
             Username = username;
         }
 
@@ -446,11 +448,13 @@ namespace Protocol
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static EncryptionResponsePacket Read(Buffer buffer)
         {
+            // TODO: Check the conditions of variables. If not correct, throw exception.
             throw new NotImplementedException();
         }
 
         public EncryptionResponsePacket() : base(EncryptionResponsePacketId)
         {
+            // TODO: Assert variables.
             throw new NotImplementedException();
         }
 
@@ -473,6 +477,7 @@ namespace Protocol
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static LoadChunkPacket Read(Buffer buffer)
         {
+            // TODO: Check the conditions of variables. If not correct, throw exception.
             throw new NotImplementedException();
         }
 
@@ -481,6 +486,8 @@ namespace Protocol
             bool continuous, int mask, byte[] data)
             : base(LoadChunkPacketId)
         {
+            // TODO: Assert variables.
+
             XChunk = xChunk;
             ZChunk = zChunk;
             Continuous = continuous;
@@ -543,6 +550,7 @@ namespace Protocol
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static JoinGamePacket Read(Buffer buffer)
         {
+            // TODO: Check the conditions of variables. If not correct, throw exception.
             throw new NotImplementedException();
         }
 
@@ -554,6 +562,8 @@ namespace Protocol
             string levelType,
             bool reducedDebugInfo) : base(JoinGamePacketId)
         {
+            // TODO: Assert variables.
+
             _entityId = entityId;
             _gamemode = gamemode;
             _dimension = dimension;
@@ -587,6 +597,7 @@ namespace Protocol
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static SetPlayerAbilitiesPacket Read(Buffer buffer)
         {
+            // TODO: Check the conditions of variables. If not correct, throw exception.
             throw new NotImplementedException();
         }
 
@@ -594,6 +605,8 @@ namespace Protocol
             bool invulnerable, bool flying, bool allowFlying, bool creativeMode,
             float flyingSpeed, float fovModifier) : base(SetPlayerAbilitiesId)
         {
+            // TODO: Assert variables.
+
             byte flags = 0;
             if (invulnerable)
                 flags |= 0x01;
@@ -631,6 +644,7 @@ namespace Protocol
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static TeleportPacket Read(Buffer buffer)
         {
+            // TODO: Check the conditions of variables. If not correct, throw exception.
             throw new NotImplementedException();
         }
 
@@ -642,6 +656,8 @@ namespace Protocol
             int payload)
             : base(TeleportPacketId)
         {
+            
+
             X = x; Y = y; Z = z;
             Yaw = yaw; Pitch = pitch;
 
@@ -720,7 +736,7 @@ namespace Protocol
             return new(renderDistance);
         }
 
-        public ClientSettingsPacket(byte renderDistance)
+        private ClientSettingsPacket(byte renderDistance)
             : base(ClientSettingsPacketId)
         {
             RenderDistance = renderDistance;
@@ -736,6 +752,10 @@ namespace Protocol
     {
         public readonly bool OnGround;
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static PlayerPacket Read(Buffer buffer)
         {
             return new(buffer.ReadBool());
@@ -758,6 +778,10 @@ namespace Protocol
         public readonly double X, Y, Z;
         public readonly bool OnGround;
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static PlayerPositionPacket Read(Buffer buffer)
         {
             return new(
@@ -787,6 +811,10 @@ namespace Protocol
         public readonly float Yaw, Pitch;
         public readonly bool OnGround;
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static PlayerPosAndLookPacket Read(Buffer buffer)
         {
             return new(
@@ -795,7 +823,7 @@ namespace Protocol
                 buffer.ReadBool());
         }
 
-        public PlayerPosAndLookPacket(
+        private PlayerPosAndLookPacket(
             double x, double y, double z, 
             float yaw, float pitch,
             bool onGround)
@@ -818,6 +846,10 @@ namespace Protocol
         public readonly float Yaw, Pitch;
         public readonly bool OnGround;
 
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static PlayerLookPacket Read(Buffer buffer)
         {
             return new(
@@ -825,7 +857,7 @@ namespace Protocol
                 buffer.ReadBool());
         }
 
-        public PlayerLookPacket(
+        private PlayerLookPacket(
             float yaw, float pitch,
             bool onGround) 
             : base(PlayerLookPacketId)

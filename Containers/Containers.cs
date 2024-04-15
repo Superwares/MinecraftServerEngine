@@ -462,6 +462,8 @@ namespace Containers
                 return _count;
             }
         }
+        public bool Empty => (Count == 0);
+
 
         private bool _disposed = false;
 

@@ -11,69 +11,49 @@ namespace Protocol
         public ProtocolException(string message) : base(message) { }
     }
 
-    public abstract class UnexpectedBehaviorExecption : ProtocolException
+    public class UnexpectedClientBehaviorExecption : ProtocolException
     {
-        public UnexpectedBehaviorExecption(string message) : base(message) { }
+        public UnexpectedClientBehaviorExecption(string msg) : base(msg) { }
     }
 
-    public class DataReadTimeoutException : UnexpectedBehaviorExecption
+    internal class DataRecvTimeoutException : UnexpectedClientBehaviorExecption
     {
-        public DataReadTimeoutException() : base("A timeout occurred while attempting to read data.") { }
+        public DataRecvTimeoutException() : base("A timeout occurred while attempting to recv data.") { }
     }
 
-    public abstract class TeleportConfirmException : UnexpectedBehaviorExecption
+    internal class UnexpectedValueException : UnexpectedClientBehaviorExecption
     {
-        public TeleportConfirmException(string message) : base(message) { }  // TODO
+        public UnexpectedValueException(string name) : base($"Value {name} is out of range.") { }
     }
 
-    public class TeleportConfirmTimeoutException : TeleportConfirmException
-    {
-        public TeleportConfirmTimeoutException() : base("") { }  // TODO
-    }
-
-    public class UnknownTeleportConfirmException : TeleportConfirmException
-    {
-        public UnknownTeleportConfirmException() : base("") { }  // TODO
-    }
-    public class InvalidTeleportConfirmPayloadException : TeleportConfirmException
-    {
-        public InvalidTeleportConfirmPayloadException() : base("") { }  // TODO
-    }
-
-    public abstract class UnexpectedDataException : UnexpectedBehaviorExecption
-    {
-        public UnexpectedDataException(string message) : base(message) { }
-    }
-
-    public class UnexpectedPacketException : UnexpectedDataException
+    internal class UnexpectedPacketException : UnexpectedClientBehaviorExecption
     {
         public UnexpectedPacketException() : base("Encountered an unexpected packet.") { }
     }
 
-    public class InvalidEncodingException : UnexpectedDataException
+    internal class InvalidEncodingException : UnexpectedClientBehaviorExecption
     {
         public InvalidEncodingException() : base("Failed to decode the data due to invalid encoding.") { }
     }
 
-    public class BufferOverflowException : UnexpectedDataException
+    internal class BufferOverflowException : UnexpectedClientBehaviorExecption
     {
         public BufferOverflowException() : base("Unexpected buffer overflow occurred due to excessive data.") { }
     }
 
-    public class EmptyBufferException : UnexpectedDataException
+    internal class EmptyBufferException : UnexpectedClientBehaviorExecption
     {
         public EmptyBufferException() : base("Attempting to read from an empty buffer.") { }
     }
 
-    public class DisconnectedException : ProtocolException
+    internal class TeleportConfirmTimeoutException : UnexpectedClientBehaviorExecption
     {
-        public DisconnectedException() : base("The connection with the client has been terminated.") { }
+        public TeleportConfirmTimeoutException() : base("TODO: Add description.") { }
     }
 
-    // TODO: It needs the corrent name and message.
-    internal class PendingTimeoutException : ProtocolException
+    public class DisconnectedClientException : ProtocolException
     {
-        public PendingTimeoutException() : base("Connections are not pending.") { }
+        public DisconnectedClientException() : base("The connection with the client has been terminated.") { }
     }
 
     public class TryAgainException : ProtocolException

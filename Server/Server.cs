@@ -17,7 +17,6 @@ namespace Application
 
         private readonly ConcurrentNumList _idList = new();
 
-
         private readonly ConcurrentQueue<(Connection, Player.ClientsideSettings?)> 
             _newConnections = new();
         private readonly Queue<Connection> _abortedConnections = new();
@@ -28,7 +27,7 @@ namespace Application
         private readonly Queue<Player> _spawnedPlayers = new();
         private readonly Queue<Player> _players = new();
 
-        private readonly Table<int, Queue<TeleportRecord>> _teleportRecordsTable = new();
+        private readonly TeleportManager _teleportManager = new();
 
         private readonly Table<int, Queue<Control>> _controlsTable = new();
         private readonly Table<int, Queue<Report>> _reportsTable = new();
@@ -52,12 +51,10 @@ namespace Application
                 close = false;
 
                 Connection conn = _connections.Dequeue();
-                int id = conn.Id;
+                int id = conn.PlayerId;
 
                 Queue<Control> controls = _controlsTable.Lookup(id);
                 using Queue<Confirm> confirms = new();
-
-                Queue<TeleportRecord> records = _teleportRecordsTable.Lookup(id);
 
                 try
                 {
@@ -65,17 +62,11 @@ namespace Application
 
                     while (!confirms.Empty)
                     {
+                        
                         Confirm _c = confirms.Dequeue();
                         if (_c is TeleportConfirm teleportConfirm)
                         {
-                            // TODO: Handle this logic in the Protocol library.
-                            if (records.Empty)
-                                throw new UnknownTeleportConfirmException();
-
-                            var record = records.Dequeue();
-                            if (record.Payload != teleportConfirm.Payload)
-                                throw new InvalidTeleportConfirmPayloadException();
-
+                            _teleportManager.Confirm(id, teleportConfirm.Payload);
                         }
                         else
                             throw new NotImplementedException();
@@ -83,8 +74,9 @@ namespace Application
 
                     Debug.Assert(confirms.Empty);
 
+                    _teleportManager.Update(id);
                 }
-                catch (UnexpectedBehaviorExecption)
+                catch (UnexpectedClientBehaviorExecption)
                 {
                     Debug.Assert(close == false);
 
@@ -92,7 +84,7 @@ namespace Application
 
                     close = true;
                 }
-                catch (DisconnectedException)
+                catch (DisconnectedClientException)
                 {
                     Debug.Assert(close == false);
 
@@ -149,7 +141,7 @@ namespace Application
 
                     /*Console.WriteLine("TryAgainException!");*/
                 }
-                catch (UnexpectedBehaviorExecption)
+                catch (UnexpectedClientBehaviorExecption)
                 {
                     Debug.Assert(!start);
                     Debug.Assert(!close);
@@ -160,7 +152,7 @@ namespace Application
 
                     /*Console.WriteLine("UnexpectedBehaviorExecption!");*/
                 }
-                catch (DisconnectedException)
+                catch (DisconnectedClientException)
                 {
                     Debug.Assert(!start);
                     Debug.Assert(!close);
@@ -188,16 +180,16 @@ namespace Application
 
                     _connections.Enqueue(conn);
 
-                    int id = conn.Id;
+                    int id = conn.PlayerId;
 
                     Debug.Assert(settings != null);
-                    Player player = new(id, new(0, 61, 0), settings);
+                    Player player = new(id, new(0, 61, 0), new(0, 0), false, settings);
                     Debug.Assert(player.connected == true);
 
                     _playerTable.Insert(id, player);
                     _spawnedPlayers.Enqueue(player);
 
-                    _teleportRecordsTable.Insert(id, new());
+                    _teleportManager.Init(id);
 
                     _controlsTable.Insert(id, new());
                     _reportsTable.Insert(id, new());
@@ -216,6 +208,7 @@ namespace Application
             for (int i = 0; i < count; ++i)
             {
                 Player player = _players.Dequeue();
+
                 if (!player.connected)
                 {
                     // TODO: Add logic to determine the player is appear or disappear when disconnected.
@@ -225,19 +218,20 @@ namespace Application
                 int id = player.Id;
 
                 Queue<Control> controls = _controlsTable.Lookup(id);
+                
                 while (!controls.Empty)
                 {
                     Control _c = controls.Dequeue();
 
                     if (_c is ClientSettingsControl clientSettingsControl)
                     {
-                        player.Settings.renderDistance = clientSettingsControl.RenderDistance;
+                        player.Settings.renderDistance = clientSettingsControl.settings.renderDistance;
                     }
                     else if (_c is PlayerOnGroundControl playerOnGroundControl)
                     {
                         player.onGround = playerOnGroundControl.OnGround;
                     }
-                    else if (_c is PlayerMovementControl playerMovementControl)
+                    else if (_c is PlayerPositionControl playerMovementControl)
                     {
                         player.posPrev = player.pos;
                         player.posChunkPrev = player.posChunk;
@@ -257,7 +251,9 @@ namespace Application
                 }
 
                 // TODO: load/unload chunks.
-                throw new NotImplementedException();
+
+                _players.Enqueue(player);
+
             }
 
         }
@@ -288,36 +284,34 @@ namespace Application
                     // load chunks
                     Chunk.Position c = player.posChunk;
                     int d = player.Settings.renderDistance;
-                    Chunk.Position[] P = Chunk.Position.GenerateGridAroundCenter(c, d);
-                    foreach (var p in P)
+                    (Chunk.Position pMax, Chunk.Position pMin) = Chunk.Position.GenerateGridAround(c, d);
+                    for (int z = pMin.z; z <= pMax.z; ++z)
                     {
-                        if (_chunks.Contains(p))
+                        for (int x = pMin.x; x <= pMax.x; ++x)
                         {
-                            Chunk chunk = _chunks.Lookup(p);
-                            report = new LoadChunkReport(chunk);
-                        }
-                        else
-                            report = new LoadEmptyChunkReport(p);
+                            Chunk.Position p = new(x, z);
 
-                        Debug.Assert(report != null);
-                        reports.Enqueue(report);
+                            if (_chunks.Contains(p))
+                            {
+                                Chunk chunk = _chunks.Lookup(p);
+                                report = new LoadChunkReport(chunk);
+                            }
+                            else
+                                report = new LoadEmptyChunkReport(p);
+
+                            Debug.Assert(report != null);
+                            reports.Enqueue(report);
+                        }
                     }
+
                 }
 
                 {
                     // teleport
-                    TeleportRecord record = new();
+                    int payload = _teleportManager.Teleport(id);
 
-                    // enqueue set player position and look packet
-                    AbsoluteTeleportReport report = new(
-                        player.pos.X, player.pos.Y, player.pos.Z,
-                        0, 0,  // TODO: Set yaw and pitch.
-                        record.Payload);
+                    AbsoluteTeleportReport report = new(player.pos, player.look, payload);
                     reports.Enqueue(report);
-
-                    Debug.Assert(_teleportRecordsTable.Contains(id));
-
-                    _teleportRecordsTable.Lookup(id).Enqueue(record);
                 }
 
                 _players.Enqueue(player);
@@ -343,7 +337,7 @@ namespace Application
 
                 Connection conn = _connections.Dequeue();
 
-                int id = conn.Id;
+                int id = conn.PlayerId;
 
                 Queue<Report> reports = _reportsTable.Lookup(id);
 
@@ -351,7 +345,7 @@ namespace Application
                 {
                     conn.Send(reports);
                 }
-                catch (DisconnectedException)
+                catch (DisconnectedClientException)
                 {
                     Debug.Assert(close == false);
 
@@ -384,19 +378,17 @@ namespace Application
             {
                 Connection conn = _abortedConnections.Dequeue();
 
-                int id = conn.Id;
+                int id = conn.PlayerId;
 
-                Queue<TeleportRecord> teleportRecords = _teleportRecordsTable.Extract(id);
+                _teleportManager.Close(id);
 
                 Queue<Control> controls = _controlsTable.Extract(id);
                 Queue<Report> reports = _reportsTable.Extract(id);
 
-                // TODO: Handle flush and release garbage.
-                teleportRecords.Flush();
+                // TODO: Handle flush and release garbage.                
                 controls.Flush();
                 reports.Flush();
 
-                teleportRecords.Close();
                 controls.Close();
                 reports.Close();
 
@@ -493,7 +485,7 @@ namespace Application
                     _spawnedPlayers.Dispose();
                     _players.Dispose();
 
-                    _teleportRecordsTable.Dispose();
+                    _teleportManager.Dispose();
 
                     _controlsTable.Dispose();
                     _reportsTable.Dispose();

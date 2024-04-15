@@ -56,16 +56,17 @@ namespace Protocol
         /// </summary>
         /// <param name="socket">TODO: Add description.</param>
         /// <param name="span">TODO: Add description.</param>
-        /// <exception cref="PendingTimeoutException">TODO: Why it's thrown.</exception>
-        public static void Poll(Socket socket, TimeSpan span)  // TODO: Use own TimeSpan in common library.
+        public static bool Poll(Socket socket, TimeSpan span)  // TODO: Use own TimeSpan in common library.
         {
             // TODO: check the socket is binding and listening.
 
             if (IsBlocking(socket) &&
                 socket.Poll(span, SelectMode.SelectRead) == false)
             {
-                throw new PendingTimeoutException();
+                return false;
             }
+
+            return true;
         }
 
         public static void SetBlocking(Socket socket, bool f)
@@ -86,7 +87,7 @@ namespace Protocol
         /// <param name="offset">TODO: Add description.</param>
         /// <param name="size">TODO: Add description.</param>
         /// <returns></returns>
-        /// <exception cref="DisconnectedException">TODO: Why it's thrown.</exception>
+        /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
         /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
         public static int RecvBytes(
             Socket socket, byte[] buffer, int offset, int size)
@@ -95,7 +96,7 @@ namespace Protocol
             {
                 int n = socket.Receive(buffer, offset, size, SocketFlags.None);
                 if (n == 0)
-                    throw new DisconnectedException();
+                    throw new DisconnectedClientException();
 
                 Debug.Assert(n <= size);
 
@@ -116,7 +117,7 @@ namespace Protocol
         /// </summary>
         /// <param name="socket">TODO: Add description..</param>
         /// <returns>TODO: Add description..</returns>
-        /// <exception cref="DisconnectedException">TODO: Why it's thrown.</exception>
+        /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
         /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
         public static byte RecvByte(Socket socket)
         {
@@ -133,7 +134,7 @@ namespace Protocol
         /// </summary>
         /// <param name="socket">TODO: Add description..</param>
         /// <param name="data">TODO: Add description..</param>
-        /// <exception cref="DisconnectedException">TODO: Why it's thrown.</exception>
+        /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
         public static void SendBytes(Socket socket, byte[] data)
         {
             try
@@ -145,7 +146,7 @@ namespace Protocol
             catch (SocketException e)
             {
                 if (e.SocketErrorCode == SocketError.ConnectionAborted)
-                    throw new DisconnectedException();
+                    throw new DisconnectedClientException();
 
                 throw;
             }
@@ -157,7 +158,7 @@ namespace Protocol
         /// </summary>
         /// <param name="socket">TODO: Add description.</param>
         /// <param name="v">TODO: Add description.</param>
-        /// <exception cref="DisconnectedException">TODO: Why it's thrown.</exception>
+        /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
         public static void SendByte(Socket socket, byte v)
         {
             SendBytes(socket, [v]);
@@ -227,7 +228,7 @@ namespace Protocol
         /// TODO: Add description.
         /// </summary>
         /// <returns>TODO: Add description.</returns>
-        /// <exception cref="UnexpectedBehaviorExecption">TODO: WHy it's thrown.</exception>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: WHy it's thrown.</exception>
         private byte ExtractByte()
         {
             Debug.Assert(_last >= _first);
@@ -242,7 +243,7 @@ namespace Protocol
         /// </summary>
         /// <param name="size">TODO: Add description.</param>
         /// <returns>TODO: Add description.</returns>
-        /// <exception cref="UnexpectedBehaviorExecption">TODO: WHy it's thrown.</exception>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: WHy it's thrown.</exception>
         private byte[] ExtractBytes(int size)
         {
             Debug.Assert(size >= 0);
@@ -315,7 +316,7 @@ namespace Protocol
         /// <summary>
         /// TODO: Add description.
         /// </summary>
-        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         public bool ReadBool()
         {
             byte data = ExtractByte();
@@ -326,7 +327,7 @@ namespace Protocol
         /// <summary>
         /// TODO: Add description.
         /// </summary>
-        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         public sbyte ReadSbyte()
         {
             return (sbyte)ExtractByte();
@@ -335,7 +336,7 @@ namespace Protocol
         /// <summary>
         /// TODO: Add description.
         /// </summary>
-        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         public byte ReadByte()
         {
             return (byte)ExtractByte();
@@ -344,7 +345,7 @@ namespace Protocol
         /// <summary>
         /// TODO: Add description.
         /// </summary>
-        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         public short ReadShort()
         {
             byte[] data = ExtractBytes(_SHORT_DATATYPE_SIZE);
@@ -358,7 +359,7 @@ namespace Protocol
         /// <summary>
         /// TODO: Add description.
         /// </summary>
-        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         public ushort ReadUshort()
         {
             byte[] data = ExtractBytes(_USHORT_DATATYPE_SIZE);
@@ -372,7 +373,7 @@ namespace Protocol
         /// <summary>
         /// TODO: Add description.
         /// </summary>
-        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         public int ReadInt()
         {
             byte[] data = ExtractBytes(_INT_DATATYPE_SIZE);
@@ -388,7 +389,7 @@ namespace Protocol
         /// <summary>
         /// TODO: Add description.
         /// </summary>
-        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         public long ReadLong()
         {
             byte[] data = ExtractBytes(_LONG_DATATYPE_SIZE);
@@ -408,7 +409,7 @@ namespace Protocol
         /// <summary>
         /// TODO: Add description.
         /// </summary>
-        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         public float ReadFloat()
         {
             byte[] data = ExtractBytes(_FLOAT_DATATYPE_SIZE);
@@ -420,7 +421,7 @@ namespace Protocol
         /// <summary>
         /// TODO: Add description.
         /// </summary>
-        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         public double ReadDouble()
         {
             byte[] data = ExtractBytes(_DOUBLE_DATATYPE_SIZE);
@@ -434,7 +435,7 @@ namespace Protocol
         /// </summary>
         /// <param name="decode">TODO: Add description.</param>
         /// <returns>TODO: Add description.</returns>
-        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         public int ReadInt(bool decode)
         {
             if (decode == false)
@@ -467,7 +468,7 @@ namespace Protocol
         /// </summary>
         /// <param name="decode">TODO: Add description.</param>
         /// <returns>TODO: Add description.</returns>
-        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         public long ReadLong(bool decode)
         {
             if (decode == false)
@@ -498,7 +499,7 @@ namespace Protocol
         /// <summary>
         /// TODO: Add description.
         /// </summary>
-        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         public string ReadString()
         {
             int size = ReadInt(true);
@@ -511,7 +512,7 @@ namespace Protocol
         /// <summary>
         /// TODO: Add description.
         /// </summary>
-        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         public Guid ReadGuid()
         {
             byte[] data = ExtractBytes(_GUID_DATATYPE_SIZE);
@@ -802,16 +803,16 @@ namespace Protocol
                     (pos.z >= 0) ? ((int)pos.z / Width) : (((int)pos.z / (Width + 1)) - 1));
             }
 
-            public static Position[] GenerateGridAroundCenter(Position c, int d)
+            public static (Position, Position) GenerateGridAround(Position center, int d)
             {
                 Debug.Assert(d >= 0);
                 if (d == 0)
-                    return [c];
+                    return (center, center);
 
-                int xMax = c.x + d, zMax = c.z + d,
-                    xMin = c.x - d, zMin = c.z - d;
+                int xMax = center.x + d, zMax = center.z + d,
+                    xMin = center.x - d, zMin = center.z - d;
 
-                int a = (2 * d) + 1;
+                /*int a = (2 * d) + 1;
                 int length = a * a;
                 Position[] positions = new Position[length];
 
@@ -823,9 +824,24 @@ namespace Protocol
                         positions[i++] = new(x, z);
                     }
                 }
-                Debug.Assert(i == length);
+                Debug.Assert(i == length);*/
 
-                return positions;
+                Debug.Assert(xMax > xMin);
+                Debug.Assert(zMax > zMin);
+                return (new(xMax, zMax), new(xMin, zMin));
+            }
+
+            public static (Position, Position) GenerateGridBetween(
+                Position max1, Position min1, Position max2, Position min2)
+            {
+                Position max3 = new(Math.Min(max1.x, max2.x), Math.Min(max1.z, max2.z)),
+                    min3 = new(Math.Max(min1.x, min2.x), Math.Max(min1.z, min2.z));
+                if (max3.x < min3.x)
+                    (max3.x, min3.x) = (min3.x, max3.x);
+                if (max3.z < min3.z)
+                    (max3.z, min3.z) = (min3.z, max3.z);
+
+                return (max3, min3);
             }
 
             public bool Equals(Position other)
@@ -1008,6 +1024,9 @@ namespace Protocol
 
         public struct Look
         {
+            public const float MaxYaw = 180, MinYaw = -180;
+            public const float MaxPitch = 90, MinPitch = -90;
+
             public float yaw, pitch;
 
             public Look(float yaw, float pitch)
@@ -1048,9 +1067,11 @@ namespace Protocol
 
     public class Player : LivingEntity
     {
-        public sealed class ClientsideSettings(int renderDistance)
+        public sealed class ClientsideSettings(byte renderDistance)
         {
-            public int renderDistance = renderDistance;
+            public const byte MinRenderDistance = 2, MaxRenderDistance = 32;
+
+            public byte renderDistance = renderDistance;
         }
 
         public readonly ClientsideSettings Settings;
@@ -1117,8 +1138,8 @@ namespace Protocol
         /// TODO: Add description.
         /// </summary>
         /// <returns>TODO: Add description.</returns>
-        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
-        /// <exception cref="DisconnectedException">TODO: Why it's thrown.</exception>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
         /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
         private int RecvSize()
         {
@@ -1162,7 +1183,7 @@ namespace Protocol
         /// TODO: Add description.
         /// </summary>
         /// <param name="size">TODO: Add description.</param>
-        /// <exception cref="DisconnectedException">TODO: Why it's thrown.</exception>
+        /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
         private void SendSize(int size)
         {
             Debug.Assert(!_disposed);
@@ -1193,8 +1214,8 @@ namespace Protocol
         /// TODO: Add description.
         /// </summary>
         /// <param name="buffer">TODO: Add description.</param>
-        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
-        /// <exception cref="DisconnectedException">TODO: Why it's thrown.</exception>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
         /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
         public void Recv(Buffer buffer)
         {
@@ -1249,7 +1270,10 @@ namespace Protocol
             {
                 /*Console.WriteLine($"count: {_count}");*/
                 if (_TimeoutCount <= _count++)
-                    throw new DataReadTimeoutException();
+                {
+                    
+                    throw new DataRecvTimeoutException();
+                }
                 
                 throw;
             }
@@ -1260,7 +1284,7 @@ namespace Protocol
         /// TODO: Add description.
         /// </summary>
         /// <param name="buffer">TODO: Add description.</param>
-        /// <exception cref="DisconnectedException">TODO: Why it's thrown.</exception>
+        /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
         public void Send(Buffer buffer)
         {
             Debug.Assert(!_disposed);
@@ -1309,7 +1333,7 @@ namespace Protocol
             StartPlaying,
         }
 
-        public readonly int Id;
+        public readonly int PlayerId;
 
         private Client _client;
 
@@ -1325,7 +1349,7 @@ namespace Protocol
             Client client,
             Guid userId, string username)
         {
-            Id = id;
+            PlayerId = id;
 
             _client = client;
 
@@ -1342,8 +1366,8 @@ namespace Protocol
         /// TODO: Add description.
         /// </summary>
         /// <param name="settings">TODO: Add description.</param>
-        /// <exception cref="UnexpectedBehaviorExecption"></exception>
-        /// <exception cref="DisconnectedException"></exception>
+        /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
+        /// <exception cref="DisconnectedClientException"></exception>
         /// <exception cref="TryAgainException"></exception>
         public void HandleSetupProcess(ref Player.ClientsideSettings? settings)
         {
@@ -1356,7 +1380,7 @@ namespace Protocol
 
                     Debug.Assert(settings == null);
 
-                    JoinGamePacket packet = new(Id, 1, 0, 0, "default", false);  // TODO
+                    JoinGamePacket packet = new(PlayerId, 1, 0, 0, "default", false);  // TODO
                     packet.Write(buffer);
                     _client.Send(buffer);
 
@@ -1409,13 +1433,13 @@ namespace Protocol
                 Debug.Assert(settings != null);
 
             }
-            catch (UnexpectedDataException)
+            catch (UnexpectedClientBehaviorExecption)
             {
                 buffer.Flush();
 
                 throw;
             }
-            catch (DisconnectedException)
+            catch (DisconnectedClientException)
             {
                 buffer.Flush();
 
@@ -1428,8 +1452,8 @@ namespace Protocol
         /// TODO: Add description.
         /// </summary>
         /// <returns>TODO: Add description.</returns>
-        /// <exception cref="UnexpectedBehaviorExecption">TODO: Why it's thrown.</exception>
-        /// <exception cref="DisconnectedException">TODO: Why it's thrown.</exception>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
         public void Recv(Queue<Control> controls, Queue<Confirm> confirms)
         {
             Debug.Assert(!_disposed);
@@ -1462,7 +1486,8 @@ namespace Protocol
                         case ServerboundPlayingPacket.ClientSettingsPacketId:
                             {
                                 ClientSettingsPacket packet = ClientSettingsPacket.Read(buffer);
-                                controls.Enqueue(new ClientSettingsControl(packet.RenderDistance));
+                                Player.ClientsideSettings settings = new(packet.RenderDistance);
+                                controls.Enqueue(new ClientSettingsControl(settings));
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerPacketId:
@@ -1474,14 +1499,14 @@ namespace Protocol
                         case ServerboundPlayingPacket.PlayerPositionPacketId:
                             {
                                 PlayerPositionPacket packet = PlayerPositionPacket.Read(buffer);
-                                controls.Enqueue(new PlayerMovementControl(packet.X, packet.Y, packet.Z));
+                                controls.Enqueue(new PlayerPositionControl(packet.X, packet.Y, packet.Z));
                                 controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerPosAndLookPacketId:
                             {
                                 PlayerPosAndLookPacket packet = PlayerPosAndLookPacket.Read(buffer);
-                                controls.Enqueue(new PlayerMovementControl(packet.X, packet.Y, packet.Z));
+                                controls.Enqueue(new PlayerPositionControl(packet.X, packet.Y, packet.Z));
                                 controls.Enqueue(new PlayerLookControl(packet.Yaw, packet.Pitch));
                                 controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
                             }
@@ -1577,9 +1602,9 @@ namespace Protocol
 
     }*/
 
-    public class TeleportRecord
+    public sealed class TeleportRecord
     {
-        public static readonly int MaxTicks = 20;  // 1 seconds
+        private const int MaxTicks = 20;  // 1 seconds
 
         public readonly int Payload;
         private int _ticks = 0;
@@ -1598,6 +1623,108 @@ namespace Protocol
                 throw new TeleportConfirmTimeoutException();
             }
 
+        }
+
+    }
+
+    public sealed class TeleportManager : IDisposable
+    {
+        private bool _disposed = false;
+
+        private readonly Table<int, Queue<TeleportRecord>> _teleportRecordsTable = new();
+
+        ~TeleportManager() => Dispose(false);
+
+        public void Init(int playerId)
+        {
+            Debug.Assert(!_disposed);
+
+            Debug.Assert(!_teleportRecordsTable.Contains(playerId));
+            _teleportRecordsTable.Insert(playerId, new());
+        }
+
+        public void Close(int playerId)
+        {
+            Debug.Assert(!_disposed);
+
+            Debug.Assert(_teleportRecordsTable.Contains(playerId));
+            Queue<TeleportRecord> records = _teleportRecordsTable.Extract(playerId);
+            records.Flush();  // TODO: Handle flush and release garbage.
+            records.Close();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="playerId"></param>
+        /// <returns>Teleport Payload</returns>
+        public int Teleport(int playerId)
+        {
+            Debug.Assert(!_disposed);
+
+            TeleportRecord record = new();
+
+            Debug.Assert(_teleportRecordsTable.Contains(playerId));
+            _teleportRecordsTable.Lookup(playerId).Enqueue(record);
+
+            return record.Payload;
+        }
+
+        public void Confirm(int playerId, int payload)
+        {
+            Debug.Assert(!_disposed);
+
+            Debug.Assert(_teleportRecordsTable.Contains(playerId));
+            Queue<TeleportRecord> records = _teleportRecordsTable.Lookup(playerId);
+
+            if (records.Empty)
+                throw new UnexpectedPacketException();
+
+            var record = records.Dequeue();
+            if (record.Payload != payload)
+                throw new UnexpectedValueException("Payload");
+
+        }
+
+        public void Update(int playerId)
+        {
+            Debug.Assert(!_disposed);
+
+            Debug.Assert(_teleportRecordsTable.Contains(playerId));
+            Queue<TeleportRecord> records = _teleportRecordsTable.Lookup(playerId);
+            if (records.Empty) return;
+
+            int count = records.Count;
+            for (int i = 0; i < count; ++i)
+            {
+                var record = records.Dequeue();
+                record.Update();
+                records.Enqueue(record);
+            }
+
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            // Assertion.
+
+            if (disposing == true)
+            {
+                // Release managed resources.
+                _teleportRecordsTable.Dispose();
+            }
+
+            // Release unmanaged resources.
+
+            _disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
     }
@@ -1770,7 +1897,7 @@ namespace Protocol
 
                     /*Console.Write($"TryAgain!");*/
                 }
-                catch (UnexpectedBehaviorExecption)
+                catch (UnexpectedClientBehaviorExecption)
                 {
                     Debug.Assert(success == false);
                     Debug.Assert(close == false);
@@ -1786,7 +1913,7 @@ namespace Protocol
                     }
 
                 }
-                catch (DisconnectedException)
+                catch (DisconnectedClientException)
                 {
                     Debug.Assert(success == false);
                     Debug.Assert(close == false);
@@ -1853,22 +1980,19 @@ namespace Protocol
                         SocketMethods.SetBlocking(socket, true);
                     }
 
-                    SocketMethods.Poll(socket, _PendingTimeout);
+                    if (SocketMethods.Poll(socket, _PendingTimeout))
+                    {
+                        Client client = Client.Accept(socket);
+                        visitors.Enqueue(client);
+                        levelQueue.Enqueue(0);
 
-                    Client client = Client.Accept(socket);
-                    visitors.Enqueue(client);
-                    levelQueue.Enqueue(0);
-
-                    SocketMethods.SetBlocking(socket, false);
-
+                        SocketMethods.SetBlocking(socket, false);
+                    }
                 }
                 catch (TryAgainException)
                 {
+                    /*Console.WriteLine("TryAgainException!");*/
                     continue;
-                }
-                catch (PendingTimeoutException)
-                {
-                    /*Console.WriteLine("!");*/
                 }
 
             }

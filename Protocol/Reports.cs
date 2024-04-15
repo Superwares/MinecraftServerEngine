@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Protocol.Entity;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Protocol
@@ -30,7 +32,7 @@ namespace Protocol
 
         internal override void Write(Buffer buffer)
         {
-            LoadChunkPacket packet = new(p.X, p.Z, true, _Mask, _Data);
+            LoadChunkPacket packet = new(p.x, p.z, true, _Mask, _Data);
             packet.Write(buffer);
         }
 
@@ -48,7 +50,7 @@ namespace Protocol
         internal override void Write(Buffer buffer)
         {
             (int mask, byte[] data) = Chunk.Write();
-            LoadChunkPacket packet = new(p.X, p.Z, true, mask, data);
+            LoadChunkPacket packet = new(p.x, p.z, true, mask, data);
             packet.Write(buffer);
         }
 
@@ -65,7 +67,7 @@ namespace Protocol
 
         internal override void Write(Buffer buffer)
         {
-            UnloadChunkPacket packet = new(p.X, p.Z);
+            UnloadChunkPacket packet = new(p.x, p.z);
             packet.Write(buffer);
         }
     }
@@ -83,7 +85,7 @@ namespace Protocol
         {
             foreach (Chunk.Position p in P)
             {
-                UnloadChunkPacket packet = new(p.X, p.Z);
+                UnloadChunkPacket packet = new(p.x, p.z);
                 packet.Write(buffer);
             }
         }
@@ -98,7 +100,10 @@ namespace Protocol
             bool invulnerable, bool flying, bool allowFlying, bool creativeMode,
             float flyingSpeed, float fovModifier)
         {
-            Invulnerable = invulnerable; Flying = flying; AllowFlying = allowFlying; CreativeMode = creativeMode;
+            Invulnerable = invulnerable; 
+            Flying = flying; 
+            AllowFlying = allowFlying; 
+            CreativeMode = creativeMode;
             FlyingSpeed = flyingSpeed; FovModifier = fovModifier;
         }
 
@@ -114,25 +119,29 @@ namespace Protocol
 
     public class AbsoluteTeleportReport : Report
     {
-        public readonly double X, Y, Z;
-        public readonly float Yaw, Pitch;
+        public readonly Entity.Position Pos;
+        public readonly Entity.Look Look;
         public readonly int Payload;
 
         public AbsoluteTeleportReport(
-            double x, double y, double z, 
-            float yaw, float pitch,
+            Entity.Position pos, Entity.Look look,
             int payload)
         {
-            X = x; Y = y; Z = z;
-            Yaw = yaw; Pitch = pitch;
+            Debug.Assert(
+                look.yaw >= Entity.Look.MinYaw &&
+                look.yaw <= Entity.Look.MaxYaw &&
+                look.pitch >= Entity.Look.MinPitch &&
+                look.pitch <= Entity.Look.MaxPitch);
+
+            Pos = pos; Look = look;
             Payload = payload;
         }
 
         internal override void Write(Buffer buffer)
         {
             TeleportPacket packet = new(
-                X, Y, Z, 
-                Yaw, Pitch, 
+                Pos.x, Pos.y, Pos.z,
+                Look.yaw, Look.pitch,
                 false, false, false, false, false, 
                 Payload);
             packet.Write(buffer);
@@ -142,25 +151,29 @@ namespace Protocol
 
     public class RelativeTeleportReport : Report
     {
-        public readonly double X, Y, Z;
-        public readonly float Yaw, Pitch;
+        public readonly Entity.Position Pos;
+        public readonly Entity.Look Look;
         public readonly int Payload;
 
         public RelativeTeleportReport(
-            double x, double y, double z,
-            float yaw, float pitch,
+            Entity.Position pos, Entity.Look look,
             int payload)
         {
-            X = x; Y = y; Z = z;
-            Yaw = yaw; Pitch = pitch;
+            Debug.Assert(
+                look.yaw >= Entity.Look.MinYaw &&
+                look.yaw <= Entity.Look.MaxYaw &&
+                look.pitch >= Entity.Look.MinPitch &&
+                look.pitch <= Entity.Look.MaxPitch);
+
+            Pos = pos; Look = look;
             Payload = payload;
         }
 
         internal override void Write(Buffer buffer)
         {
             TeleportPacket packet = new(
-                X, Y, Z, 
-                Yaw, Pitch, 
+                Pos.x, Pos.y, Pos.z,
+                Look.yaw, Look.pitch,
                 true, true, true, true, true, 
                 Payload);
             packet.Write(buffer);

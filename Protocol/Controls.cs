@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,11 +13,15 @@ namespace Protocol
 
     public class ClientSettingsControl : Control
     {
-        public readonly byte RenderDistance;
+        public readonly Player.ClientsideSettings settings;
 
-        internal ClientSettingsControl(byte renderDistance)
+        internal ClientSettingsControl(Player.ClientsideSettings settings)
         {
-            RenderDistance = renderDistance;
+            if (settings.renderDistance < Player.ClientsideSettings.MinRenderDistance ||
+                settings.renderDistance > Player.ClientsideSettings.MaxRenderDistance)
+                throw new UnexpectedValueException("VideoSettings.RenderDistance");
+
+            this.settings = settings;
         }
 
     }
@@ -32,11 +37,11 @@ namespace Protocol
 
     }
 
-    public class PlayerMovementControl : Control
+    public class PlayerPositionControl : Control
     {
         public readonly Entity.Position Pos;
 
-        public PlayerMovementControl(double x, double y, double z)
+        public PlayerPositionControl(double x, double y, double z)
         {
             Pos = new(x, y, z);
         }
@@ -49,6 +54,14 @@ namespace Protocol
 
         public PlayerLookControl(float yaw, float pitch)
         {
+            if (yaw < Entity.Look.MinYaw ||
+                yaw > Entity.Look.MaxYaw)
+                throw new UnexpectedValueException("Entity.Yaw");
+            if (pitch < Entity.Look.MinPitch ||
+                pitch > Entity.Look.MaxPitch)
+                throw new UnexpectedValueException("Entity.Pitch");
+
+
             Look = new(yaw, pitch);
         }
 
