@@ -31,7 +31,7 @@ namespace Application
 
         ~Server() => Dispose(false);
 
-        private void RecvData(ulong currentTicks)
+        private void RecvData(ulong serverTicks)
         {
             if (_connections.Empty) return;
 
@@ -47,7 +47,7 @@ namespace Application
 
                 try
                 {
-                    conn.Recv(player);
+                    conn.Recv(player, serverTicks);
                 }
                 catch (UnexpectedClientBehaviorExecption e)
                 {
@@ -205,13 +205,13 @@ namespace Application
         }
 
         private void StartGameRoutine(
-            ulong currentTicks,
+            ulong serverTicks,
             ConnectionListener connListener)
         {
             Console.Write(".");
-            /*Console.Write($"{currentTicks}");*/
+            /*Console.Write($"{ticks}");*/
 
-            RecvData(currentTicks);
+            RecvData(serverTicks);
 
             // Barrier
 
@@ -253,9 +253,9 @@ namespace Application
 
         private void StartCoreRoutine(ConnectionListener connListener)
         {
-            ulong interval, total, start, end, elapsed, currentTicks;
+            ulong interval, total, start, end, elapsed, serverTicks;
 
-            currentTicks = 0;
+            serverTicks = 0;
             interval = total = (ulong)TimeSpan.FromMilliseconds(50).TotalMicroseconds;
             start = GetCurrentTime();
 
@@ -265,7 +265,7 @@ namespace Application
                 {
                     total -= interval;
 
-                    StartGameRoutine(currentTicks++, connListener);
+                    StartGameRoutine(serverTicks++, connListener);
                 }
 
                 end = GetCurrentTime();

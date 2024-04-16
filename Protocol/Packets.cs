@@ -116,6 +116,7 @@ namespace Protocol
     {
         public const int LoadChunkPacketId = 0x20;
         public const int UnloadChunkPacketId = 0x1D;
+        public const int KeepaliveRequestPacketId = 0x1F;
         public const int JoinGamePacketId = 0x23;
         public const int SetPlayerAbilitiesId = 0x2C;
         public const int TeleportPacketId = 0x2F;
@@ -128,6 +129,7 @@ namespace Protocol
     {
         public const int ConfirmTeleportPacketId = 0x00;
         public const int ClientSettingsPacketId = 0x04;
+        public const int KeepaliveResponsePacketId = 0x0B;
         public const int PlayerPacketId = 0x0C;
         public const int PlayerPositionPacketId = 0x0D;
         public const int PlayerPosAndLookPacketId = 0x0E;
@@ -535,6 +537,26 @@ namespace Protocol
 
     }
 
+    internal class KeepaliveRequestPacket : ClientboundPlayingPacket
+    {
+        public readonly long Payload;
+
+        internal static KeepaliveRequestPacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public KeepaliveRequestPacket(long payload) : base(KeepaliveRequestPacketId)
+        {
+            Payload = payload;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteLong(Payload);
+        }
+    }
+
     internal class JoinGamePacket : ClientboundPlayingPacket
     {
         private readonly int _entityId;
@@ -746,6 +768,31 @@ namespace Protocol
         {
             throw new NotImplementedException();
         }
+    }
+
+    internal class KeepaliveResponsePacket : ServerboundPlayingPacket
+    {
+        public readonly long Payload;
+
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
+        internal static KeepaliveResponsePacket Read(Buffer buffer)
+        {
+            return new(buffer.ReadLong());
+        }
+
+        private KeepaliveResponsePacket(long payload) : base(KeepaliveResponsePacketId)
+        {
+            Payload = payload;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
     }
 
     internal class PlayerPacket : ServerboundPlayingPacket

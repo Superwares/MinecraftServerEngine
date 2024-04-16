@@ -91,12 +91,29 @@ namespace Protocol
         }
     }
 
-    public class SetPlayerAbilitiesReport : Report
+    internal class KeepaliveReport : Report
+    {
+        public readonly long Payload;
+
+        public KeepaliveReport()
+        {
+            Payload = new Random().NextInt64();
+        }
+
+        internal override void Write(Buffer buffer)
+        {
+            KeepaliveRequestPacket packet = new(Payload);
+            packet.Write(buffer);
+        }
+
+    }
+
+    public class PlayerAbilitiesReport : Report
     {
         public readonly bool Invulnerable, Flying, AllowFlying, CreativeMode;
         public readonly float FlyingSpeed, FovModifier;
 
-        public SetPlayerAbilitiesReport(
+        public PlayerAbilitiesReport(
             bool invulnerable, bool flying, bool allowFlying, bool creativeMode,
             float flyingSpeed, float fovModifier)
         {

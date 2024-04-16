@@ -36,4 +36,15 @@ namespace Protocol
         }
     }
 
+    internal class KeepaliveConfirm : Confirm
+    {
+        public readonly long Payload;
+
+        internal KeepaliveConfirm(long payload)
+        {
+            Payload = payload;
+        }
+
+    }
+
 }

@@ -1311,10 +1311,10 @@ namespace Protocol
 
     public sealed class TeleportRecord
     {
-        private const int MaxTicks = 20;  // 1 seconds
+        private const ulong TimeLimit = 20;  // 1 seconds, 20 ticks
 
         public readonly int Payload;
-        private int _ticks = 0;
+        private ulong _ticks = 0;
 
         public TeleportRecord(int payload)
         {
@@ -1325,7 +1325,7 @@ namespace Protocol
         {
             Debug.Assert(_ticks >= 0);
 
-            if (++_ticks > MaxTicks)
+            if (++_ticks > TimeLimit)
             {
                 throw new TeleportConfirmTimeoutException();
             }
@@ -1334,8 +1334,42 @@ namespace Protocol
 
     }
 
-    public class Connection : IDisposable
+    
+
+    public sealed class Connection : IDisposable
     {
+        private sealed class KeepaliveChecker
+        {
+            private const ulong TimeLimit = 10000 / 50;  // 10 seconds, 200 ticks
+
+            public long payload;
+            private bool _confirmed = true;
+
+            public KeepaliveChecker() { }
+
+            public void Confirm()
+            {
+                _confirmed = true;
+            }
+
+            public void Update(ulong serverTicks, Queue<Report> reports)
+            {
+                Debug.Assert(serverTicks % TimeLimit >= 0);
+                if (serverTicks % TimeLimit > 0)
+                    return;
+
+                if (!_confirmed)
+                    throw new KeepaliveTimeoutException();
+
+                _confirmed = false;
+                KeepaliveReport report = new();
+                payload = report.Payload;
+                reports.Enqueue(report);
+
+            }
+
+        }
+
         public sealed class ClientsideSettings(byte renderDistance)
         {
             public const int MinRenderDistance = 2, MaxRenderDistance = 32;
@@ -1357,6 +1391,8 @@ namespace Protocol
         private (Chunk.Position, Chunk.Position) _loadedChunkGrid;
 
         Queue<TeleportRecord> _teleportRecords = new();
+
+        private readonly KeepaliveChecker keepaliveChecker = new();
 
         private bool _disposed = false;
 
@@ -1393,7 +1429,7 @@ namespace Protocol
         /// <returns>TODO: Add description.</returns>
         /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
-        public void Recv(Player player)
+        public void Recv(Player player, ulong serverTicks)
         {
             Debug.Assert(!_disposed);
 
@@ -1423,7 +1459,13 @@ namespace Protocol
                         case ServerboundPlayingPacket.ClientSettingsPacketId:
                             {
                                 ClientSettingsPacket packet = ClientSettingsPacket.Read(buffer);
-                                throw new NotImplementedException();
+                                confirms.Enqueue(new ClientSettingsConfirm(new ClientsideSettings(packet.RenderDistance)));
+                            }
+                            break;
+                        case ServerboundPlayingPacket.KeepaliveResponsePacketId:
+                            {
+                                KeepaliveResponsePacket packet = KeepaliveResponsePacket.Read(buffer);
+                                confirms.Enqueue(new KeepaliveConfirm(packet.Payload));
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerPacketId:
@@ -1484,6 +1526,9 @@ namespace Protocol
                     case ClientSettingsConfirm:
                         throw new NotImplementedException();
                         break;
+                    case KeepaliveConfirm:
+                        keepaliveChecker.Confirm();
+                        break;
                 }
             }
 
@@ -1534,6 +1579,8 @@ namespace Protocol
                     _teleportRecords.Enqueue(record);
                 }
             }
+
+            keepaliveChecker.Update(serverTicks, _reports);
 
         }
 
@@ -1637,7 +1684,7 @@ namespace Protocol
 
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (_disposed) return;
 
@@ -1646,6 +1693,9 @@ namespace Protocol
                 // managed objects
                 _client.Dispose();
                 _reports.Dispose();
+
+                _teleportRecords.Flush();  // TODO: Release resources corrently for no garbage.
+                _teleportRecords.Dispose();
             }
 
             // unmanaged objects
@@ -1871,7 +1921,7 @@ namespace Protocol
                 (Chunk.Position, Chunk.Position) loadedChunkGrid;
 
                 {
-                    SetPlayerAbilitiesReport report = new(true, true, true, true, 1, 0);
+                    PlayerAbilitiesReport report = new(true, true, true, true, 1, 0);
                     reports.Enqueue(report);
                 }
 

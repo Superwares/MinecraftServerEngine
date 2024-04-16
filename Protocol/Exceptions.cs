@@ -51,6 +51,11 @@ namespace Protocol
         public TeleportConfirmTimeoutException() : base("TODO: Add description.") { }
     }
 
+    internal class KeepaliveTimeoutException : UnexpectedClientBehaviorExecption
+    {
+        public KeepaliveTimeoutException() : base("TODO: Add description.") { }
+    }
+
     public class DisconnectedClientException : ProtocolException
     {
         public DisconnectedClientException() : base("The connection with the client has been terminated.") { }
