@@ -6,14 +6,12 @@ using System.Net.Http;
 using System.Net.Sockets;  // TODO: Use custom socket object in common library.
 using System.Text;
 using System.Text.Json;
-using System.Threading;
 using Applications;
 using Containers;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace Protocol
 {
-    
-
     internal static class SocketMethods
     {
         public static Socket Establish(ushort port)
@@ -164,7 +162,6 @@ namespace Protocol
         {
             SendBytes(socket, [v]);
         }
-        
 
     }
 
@@ -699,31 +696,36 @@ namespace Protocol
 
     }
 
-  
+    public sealed class BoundingBox
+    {
+        private readonly float _width, _height;
+        private float Width => _width;
+        private float Height => _height;
+
+        public BoundingBox(float width, float height)
+        {
+            _width = width; _height = height;
+        }
+
+    }
 
     public abstract class Block
     {
-        public enum Ids : ushort
-        {
-            Air = 0,
-            Stone,
-            GrassBlock,
-            Dirt,
-        }
+        private readonly int _id;
+        public int Id => _id;
 
-        private readonly Ids _id;  // 9 bits
-        public Ids Id => _id;
+        private readonly int _metadate;
+        public int Metadata => _metadate;
 
-        public Block(Ids id)
+        public Block(int id, int metadata)
         {
             _id = id;
+            _metadate = metadata;
         }
-
-        protected abstract byte GetMetadata();
 
         public ulong GetGlobalPaletteID()
         {
-            byte metadata = GetMetadata();
+            byte metadata = (byte)_metadate;
             Debug.Assert((metadata & 0b_11110000) == 0);  // metadata is 4 bits
 
             ushort id = (ushort)_id;
@@ -731,80 +733,59 @@ namespace Protocol
             return (ulong)(id << 4 | metadata);  // 13 bits
         }
 
-
     }
 
     public class Air : Block
     {
-
-        public Air() : base(Ids.Air) { }
-
-        protected override byte GetMetadata()
+        public Air() : base(0, 0) 
         {
-            return 0;
         }
+
     }
 
     public class Stone : Block
     {
-        public enum Types : byte
+        public Stone() : base(1, 0) 
         {
-            Normal = 0,
-            Granite,
-            PolishedGranite,
-            Diorite,
-            PolishedDiorite,
-            Andesite,
-            PolishedAndesite,
-        }
-
-        private readonly Types _type;  // 4 bits
-        public Types Type => _type;
-
-        public Stone(Types type) : base(Ids.Stone)
-        {
-            _type = type;
-        }
-
-        protected override byte GetMetadata()
-        {
-            return (byte)_type;
         }
 
     }
 
-    public class GrassBlock : Block
+    public class Granite : Block
     {
-        public GrassBlock() : base(Ids.GrassBlock) { }
-
-        protected override byte GetMetadata()
+        public Granite() : base(1, 1) 
         {
-            return 0;
         }
+
+    }
+
+    public class PolishedGranite : Block
+    {
+        public PolishedGranite() : base(1, 2) { }
     }
 
     public class Chunk
     {
-        public static readonly int Width = 16;
-        public static readonly int Height = 16 * 16;
+        public const int Width = 16;
+        public const int Height = 16 * 16;
 
-        public struct Position : IEquatable<Position>
+        public struct Vector : IEquatable<Vector>
         {
             public int x, z;
 
-            public Position(int x, int z)
+            public Vector(int x, int z)
             {
                 this.x = x; this.z = z;
             }
 
-            public static Position Convert(Entity.Position pos)
+            public static Vector Convert(Entity.Vector pos)
             {
                 return new(
                     (pos.x >= 0) ? ((int)pos.x / Width) : (((int)pos.x / (Width + 1)) - 1),
                     (pos.z >= 0) ? ((int)pos.z / Width) : (((int)pos.z / (Width + 1)) - 1));
             }
-
-            public static (Position, Position) GenerateGridAround(Position center, int d)
+            
+            public static (Vector, Vector) GenerateGridAround(Vector center, int d)
             {
                 Debug.Assert(d >= 0);
                 if (d == 0)
@@ -832,10 +813,10 @@ namespace Protocol
                 return (new(xMax, zMax), new(xMin, zMin));
             }
 
-            public static (Position, Position) GenerateGridBetween(
-                Position max1, Position min1, Position max2, Position min2)
+            public static (Vector, Vector) GenerateGridBetween(
+                Vector max1, Vector min1, Vector max2, Vector min2)
             {
-                Position max3 = new(Math.Min(max1.x, max2.x), Math.Min(max1.z, max2.z)),
+                Vector max3 = new(Math.Min(max1.x, max2.x), Math.Min(max1.z, max2.z)),
                     min3 = new(Math.Max(min1.x, min2.x), Math.Max(min1.z, min2.z));
                 if (max3.x < min3.x)
                     (max3.x, min3.x) = (min3.x, max3.x);
@@ -845,7 +826,7 @@ namespace Protocol
                 return (max3, min3);
             }
 
-            public bool Equals(Position other)
+            public bool Equals(Vector other)
             {
                 return (x == other.x) && (z == other.z);
             }
@@ -991,102 +972,229 @@ namespace Protocol
             return (mask, buffer.ReadData());
         }
 
-        public readonly Position p;
+        public readonly Vector p;
 
-        public Chunk(Position p)
+        public Chunk(Vector p)
         {
             this.p = p;
         }
 
     }
 
-    public abstract class Entity
+    public sealed class Player
     {
-        public struct Position : IEquatable<Position>
+        public struct Vector : IEquatable<Vector>
         {
             public double x, y, z;
 
-            public Position(double x, double y, double z)
+            public Vector(double x, double y, double z)
             {
                 this.x = x; this.y = y; this.z = z;
             }
 
-            public static Position Convert(Chunk.Position p)
-            {
-                throw new NotImplementedException();
-            }
-
-            public bool Equals(Position other)
+            public bool Equals(Vector other)
             {
                 return (x == other.x) && (y == other.y) && (z == other.z);
-
             }
+
         }
 
-        public struct Look
+        public struct Angles : IEquatable<Angles>
         {
             public const float MaxYaw = 180, MinYaw = -180;
             public const float MaxPitch = 90, MinPitch = -90;
 
             public float yaw, pitch;
 
-            public Look(float yaw, float pitch)
+            public Angles(float yaw, float pitch)
             {
                 this.yaw = yaw;
                 this.pitch = pitch;
             }
 
+            public bool Equals(Angles other)
+            {
+                throw new NotImplementedException();
+            }
+
         }
 
+        internal abstract class Action
+        {
+
+        }
+
+        internal class StandingAction : Action
+        {
+
+        }
+
+        // A transform represents the position, rotation, and scale of an object within the game world. 
+        internal class TransformationAction : Action
+        {
+            public readonly Vector PosPrev, Pos;
+            public readonly Angles Look;
+            public readonly bool OnGround;
+
+            public TransformationAction(
+                Vector posPrev, Vector pos, Angles look, bool onGround)
+            {
+                PosPrev = posPrev; Pos = pos;
+                Look = look;
+                OnGround = onGround;
+            }
+
+        }
+
+        internal class MovementAction : Action
+        {
+            public readonly Vector PosPrev, Pos;
+            public readonly bool OnGround;
+
+            public MovementAction(Vector posPrev, Vector pos, bool onGround)
+            {
+                PosPrev = posPrev; Pos = pos;
+                OnGround = onGround;
+            }
+
+        }
+
+        internal class RotationAction : Action
+        {
+            public readonly Angles Look;
+            public readonly bool OnGround;
+
+            public RotationAction(Angles look, bool onGround)
+            {
+                Look = look;
+                OnGround = onGround;
+            }
+
+        }
+
+        internal class TeleportationAction : Action
+        {
+            public readonly Vector Pos;
+            public readonly Angles Look;
+
+            public TeleportationAction(Vector pos, Angles look)
+            {
+                Pos = pos;
+                Look = look;
+            }
+
+        }
+
+        public bool isConnected = true;
 
         public readonly int Id;
 
-        public Position posPrev, pos;
-        public Look look;
-        public bool onGround;
+        private Vector _posPrev, _pos;
+        private Angles _look;
+        private bool _onGround;
 
-        internal Entity(int id, Position pos, Look look, bool onGround)
+        private readonly Queue<Action> _actions;
+
+        internal IReadOnlyQueue<Action> Actions => _actions;
+
+        public Player(int id, Vector pos, Angles look, bool onGround) { }
+
+        public void Stand(bool onGround)
         {
-            Id = id;
-            this.pos = posPrev = pos;
-            this.look = look;
-            this.onGround = onGround;
+            _onGround = onGround;
+
+            _actions.Enqueue(new StandingAction());
+        }
+
+        public void Stand()
+        {
+            _actions.Enqueue(new StandingAction());
+        }
+
+        public void Transform(Vector pos, Angles look, bool onGround)
+        {
+            _posPrev = _pos;
+            _pos = pos;
+            _look = look;
+            _onGround = onGround;
+
+            _actions.Enqueue(new TransformationAction(_posPrev, _pos, look, onGround);
+        }
+
+        public void Move(Vector pos, bool onGround)
+        {
+            _posPrev = _pos;
+            _pos = pos;
+            _onGround = onGround;
+
+            _actions.Enqueue(new MovementAction(_posPrev, _pos, onGround));
+        }
+
+        public void Rotate(Angles look, bool onGround)
+        {
+            _look = look;
+            _onGround = onGround;
+
+            _actions.Enqueue(new RotationAction(look, onGround));
+        }
+
+        public void Teleport(Vector pos, Angles look)
+        {
+            _posPrev = _pos;
+            _pos = pos;
+            _look = look;
+
+            _actions.Enqueue(new TeleportationAction(pos, look));
         }
 
     }
 
-    public abstract class LivingEntity : Entity
+    /*public sealed class PlayerSearchTable
     {
-        /*private int _health;*/
+        private readonly Table<Chunk.Vector, Player[]> _chunkToPlayers = new();
 
-        public LivingEntity(int id, Position pos, Look look, bool onGround) 
-            : base(id, pos, look, onGround) { }
+        public PlayerSearchTable() { }
 
-    }
+        public void Init(Player player)
+        {
+            Chunk.Vector pChunk = Chunk.Vector.Convert(player.pos);
+            
+            if (!_chunkToPlayers.Contains(pChunk))
+                _chunkToPlayers.Insert()
+        }
 
-    public class Player : LivingEntity
-    {
-        public bool connected = true;
+        public void Close(Player player)
+        {
+            int id = player.Id;
 
-        public Player(
-            int id, Position pos, Look look, bool onGround) 
-            : base(id, pos, look, onGround) { }
+            throw new NotImplementedException();
+        }
 
-    }
+        public void Update(Player player)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Player[] Search(Chunk.Vector p)
+        {
+            return _chunkToPlayers.Lookup(p);
+        }
+
+
+    }*/
 
     internal sealed class Client : IDisposable
     {
-        private static readonly int _TimeoutCount = 100;
+        private bool _isDisposed = false;
 
-        private static readonly byte _SEGMENT_BITS = 0x7F;
-        private static readonly byte _CONTINUE_BIT = 0x80;
+        private const int _TimeoutLimit = 100;
+        private int _tryAgainCount = 0;
 
-        private bool _disposed = false;
+        private const byte _SegmentBits = 0x7F;
+        private const byte _ContinueBit = 0x80;
 
         private int _x = 0, _y = 0;
         private byte[]? _data = null;
-
-        private int _count = 0;
 
         private Socket _socket;
 
@@ -1129,7 +1237,7 @@ namespace Protocol
         /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
         private int RecvSize()
         {
-            Debug.Assert(!_disposed);
+            Debug.Assert(!_isDisposed);
 
             Debug.Assert(SocketMethods.IsBlocking(_socket) == false);
 
@@ -1142,8 +1250,8 @@ namespace Protocol
                 {
                     byte v = SocketMethods.RecvByte(_socket);
 
-                    uvalue |= (uint)(v & _SEGMENT_BITS) << position;
-                    if ((v & _CONTINUE_BIT) == 0)
+                    uvalue |= (uint)(v & _SegmentBits) << position;
+                    if ((v & _ContinueBit) == 0)
                         break;
 
                     position += 7;
@@ -1172,20 +1280,20 @@ namespace Protocol
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
         private void SendSize(int size)
         {
-            Debug.Assert(!_disposed);
+            Debug.Assert(!_isDisposed);
 
             uint uvalue = (uint)size;
 
             while (true)
             {
-                if ((uvalue & ~_SEGMENT_BITS) == 0)
+                if ((uvalue & ~_SegmentBits) == 0)
                 {
                     SocketMethods.SendByte(_socket, (byte)uvalue);
                     break;
                 }
 
                 SocketMethods.SendByte(
-                    _socket, (byte)((uvalue & _SEGMENT_BITS) | _CONTINUE_BIT));
+                    _socket, (byte)((uvalue & _SegmentBits) | _ContinueBit));
                 uvalue >>= 7;
             }
 
@@ -1205,7 +1313,7 @@ namespace Protocol
         /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
         public void Recv(Buffer buffer)
         {
-            Debug.Assert(!_disposed);
+            Debug.Assert(!_isDisposed);
 
             Debug.Assert(SocketMethods.IsBlocking(_socket) == false);
 
@@ -1250,14 +1358,13 @@ namespace Protocol
                 _y = 0;
                 _data = null;
 
-                _count = 0;
+                _tryAgainCount = 0;
             }
             catch (TryAgainException)
             {
                 /*Console.WriteLine($"count: {_count}");*/
-                if (_TimeoutCount <= _count++)
+                if (_TimeoutLimit < _tryAgainCount++)
                 {
-                    
                     throw new DataRecvTimeoutException();
                 }
                 
@@ -1273,7 +1380,7 @@ namespace Protocol
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
         public void Send(Buffer buffer)
         {
-            Debug.Assert(!_disposed);
+            Debug.Assert(!_isDisposed);
 
             byte[] data = buffer.ReadData();
             SendSize(data.Length);
@@ -1282,7 +1389,7 @@ namespace Protocol
 
         private void Dispose(bool disposing)
         {
-            if (_disposed) return;
+            if (_isDisposed) return;
 
             if (disposing == true)
             {
@@ -1293,7 +1400,7 @@ namespace Protocol
 
             // Release unmanaged resources.
 
-            _disposed = true;
+            _isDisposed = true;
         }
 
         public void Dispose()
@@ -1309,61 +1416,68 @@ namespace Protocol
 
     }
 
-    public sealed class TeleportRecord
+    public sealed class Connection : IDisposable
     {
-        private const ulong TimeLimit = 20;  // 1 seconds, 20 ticks
-
-        public readonly int Payload;
-        private ulong _ticks = 0;
-
-        public TeleportRecord(int payload)
+        private sealed class TeleportationRecord
         {
-            Payload = payload;
-        }
+            private const ulong TickLimit = 20;  // 1 seconds, 20 ticks
 
-        public void Update()
-        {
-            Debug.Assert(_ticks >= 0);
+            public readonly int _payload;
+            private ulong _ticks = 0;
 
-            if (++_ticks > TimeLimit)
+            public TeleportationRecord(int payload)
             {
-                throw new TeleportConfirmTimeoutException();
+                _payload = payload;
+            }
+
+            public void Confirm(int payload)
+            {
+                if (payload != _payload)
+                    throw new UnexpectedValueException("TeleportationPayload");
+            }
+
+            public void Update()
+            {
+                Debug.Assert(_ticks >= 0);
+
+                if (_ticks++ > TickLimit)
+                {
+                    throw new TeleportConfirmTimeoutException();
+                }
+
             }
 
         }
 
-    }
-
-    
-
-    public sealed class Connection : IDisposable
-    {
-        private sealed class KeepaliveChecker
+        private sealed class KeepaliveObserver
         {
-            private const ulong TimeLimit = 10000 / 50;  // 10 seconds, 200 ticks
+            private const ulong TickLimit = 10000 / 50;  // 10 seconds, 200 ticks
 
-            public long payload;
-            private bool _confirmed = true;
+            private long _payload;
+            private bool _isConfirmed = true;
 
-            public KeepaliveChecker() { }
+            public KeepaliveObserver() { }
 
-            public void Confirm()
+            public void Confirm(long payload)
             {
-                _confirmed = true;
+                if (_payload != payload)
+                    throw new UnexpectedValueException("KeepalivePayload");
+
+                _isConfirmed = true;
             }
 
             public void Update(ulong serverTicks, Queue<Report> reports)
             {
-                Debug.Assert(serverTicks % TimeLimit >= 0);
-                if (serverTicks % TimeLimit > 0)
+                Debug.Assert(serverTicks % TickLimit >= 0);
+                if (serverTicks % TickLimit > 0)
                     return;
 
-                if (!_confirmed)
+                if (!_isConfirmed)
                     throw new KeepaliveTimeoutException();
 
-                _confirmed = false;
+                _isConfirmed = false;
                 KeepaliveReport report = new();
-                payload = report.Payload;
+                _payload = report.Payload;
                 reports.Enqueue(report);
 
             }
@@ -1388,13 +1502,15 @@ namespace Protocol
 
         Queue<Report> _reports;
 
-        private (Chunk.Position, Chunk.Position) _loadedChunkGrid;
+        private (Chunk.Vector, Chunk.Vector) _loadedChunkGrid;
 
-        Queue<TeleportRecord> _teleportRecords = new();
+        private Set<int> _spawnedPlayers = new();
 
-        private readonly KeepaliveChecker keepaliveChecker = new();
+        private readonly Queue<TeleportationRecord> _teleportationRecords = new();
 
-        private bool _disposed = false;
+        private readonly KeepaliveObserver keepaliveChecker = new();
+
+        private bool _isDisposed = false;
 
         internal Connection(
             int id,
@@ -1402,7 +1518,7 @@ namespace Protocol
             Guid userId, string username,
             ClientsideSettings settings,
             Queue<Report> reports,
-            (Chunk.Position, Chunk.Position) loadedChunkGrid)
+            (Chunk.Vector, Chunk.Vector) loadedChunkGrid)
         {
             Id = id;
 
@@ -1429,13 +1545,13 @@ namespace Protocol
         /// <returns>TODO: Add description.</returns>
         /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
-        public void Recv(Player player, ulong serverTicks)
+        public void Control(
+            Player player, ulong serverTicks, SearchTable<Player.Action> searchTable)
         {
-            Debug.Assert(!_disposed);
+            Debug.Assert(!_isDisposed);
 
-            using Queue<Control> controls = new();
-            using Queue<Confirm> confirms = new();
-            
+            bool move = false;
+
             try
             {
                 Buffer buffer = new();
@@ -1453,47 +1569,95 @@ namespace Protocol
                         case ServerboundPlayingPacket.ConfirmTeleportPacketId:
                             {
                                 ConfirmTeleportPacket packet = ConfirmTeleportPacket.Read(buffer);
-                                confirms.Enqueue(new TeleportConfirm(packet.Payload));
+
+                                if (_teleportationRecords.Empty)
+                                    throw new UnexpectedPacketException();
+
+                                TeleportationRecord record = _teleportationRecords.Dequeue();
+                                record.Confirm(packet.Payload);
                             }
                             break;
                         case ServerboundPlayingPacket.ClientSettingsPacketId:
                             {
                                 ClientSettingsPacket packet = ClientSettingsPacket.Read(buffer);
-                                confirms.Enqueue(new ClientSettingsConfirm(new ClientsideSettings(packet.RenderDistance)));
+
+                                throw new NotImplementedException();
                             }
                             break;
                         case ServerboundPlayingPacket.KeepaliveResponsePacketId:
                             {
                                 KeepaliveResponsePacket packet = KeepaliveResponsePacket.Read(buffer);
-                                confirms.Enqueue(new KeepaliveConfirm(packet.Payload));
+
+                                keepaliveChecker.Confirm(packet.Payload);
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerPacketId:
                             {
                                 PlayerPacket packet = PlayerPacket.Read(buffer);
-                                controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
+
+                                if (!_teleportationRecords.Empty)
+                                {
+                                    Console.Write("Ignore Any Controls");
+                                    break;
+                                }
+
+                                player.Stand(packet.OnGround);
+
+                                move = true;
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerPositionPacketId:
                             {
                                 PlayerPositionPacket packet = PlayerPositionPacket.Read(buffer);
-                                controls.Enqueue(new PlayerPositionControl(packet.X, packet.Y, packet.Z));
-                                controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
+
+                                if (!_teleportationRecords.Empty)
+                                {
+                                    Console.Write("Ignore Any Controls");
+                                    break;
+                                }
+
+                                Player.Vector p = new(packet.X, packet.Y, packet.Z);
+                                player.Move(p, packet.OnGround);
+
+                                searchTable.Update(player.Id, p);
+
+                                move = true;
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerPosAndLookPacketId:
                             {
                                 PlayerPosAndLookPacket packet = PlayerPosAndLookPacket.Read(buffer);
-                                controls.Enqueue(new PlayerPositionControl(packet.X, packet.Y, packet.Z));
-                                controls.Enqueue(new PlayerLookControl(packet.Yaw, packet.Pitch));
-                                controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
+
+                                if (!_teleportationRecords.Empty)
+                                {
+                                    Console.Write("Ignore Any Controls");
+                                    break;
+                                }
+
+                                Player.Vector p = new(packet.X, packet.Y, packet.Z);
+                                player.Transform(
+                                    p, 
+                                    new(packet.Yaw, packet.Pitch), 
+                                    packet.OnGround);
+
+                                searchTable.Update(player.Id, p);
+
+                                move = true;
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerLookPacketId:
                             {
                                 PlayerLookPacket packet = PlayerLookPacket.Read(buffer);
-                                controls.Enqueue(new PlayerLookControl(packet.Yaw, packet.Pitch));
-                                controls.Enqueue(new PlayerOnGroundControl(packet.OnGround));
+
+                                if (!_teleportationRecords.Empty)
+                                {
+                                    Console.Write("Ignore Any Controls");
+                                    break;
+                                }
+
+                                player.Rotate(new(packet.Yaw, packet.Pitch), packet.OnGround);
+
+                                move = true;
                             }
                             break;
                     }
@@ -1507,82 +1671,17 @@ namespace Protocol
 
             }
 
-            while (!confirms.Empty)
-            {
-                Confirm _confirm = confirms.Dequeue();
-            
-                switch (_confirm)
-                {
-                    case TeleportConfirm teleportConfirm:
-                        {
-                            if (_teleportRecords.Empty)
-                                throw new UnexpectedPacketException();
+            if (!move)
+                player.Stand();
 
-                            TeleportRecord record = _teleportRecords.Dequeue();
-                            if (record.Payload != teleportConfirm.Payload)
-                                throw new UnexpectedValueException("TeleportPayload");
-                        }
-                        break;
-                    case ClientSettingsConfirm:
-                        throw new NotImplementedException();
-                        break;
-                    case KeepaliveConfirm:
-                        keepaliveChecker.Confirm();
-                        break;
-                }
-            }
-
-            while (!controls.Empty)
-            {
-                if (!_teleportRecords.Empty)
-                {
-                    Console.Write("Ignore Any Controls");
-                    controls.Flush();
-                    break;
-                }
-
-                Control _control = controls.Dequeue();
-
-                switch (_control)
-                {
-                    case PlayerOnGroundControl playerOnGroundControl:
-                        {
-                            player.onGround = playerOnGroundControl.OnGround;
-                        }
-                        break;
-                    case PlayerPositionControl playerPositionControl:
-                        {
-                            // TODO: Check validation. (유효성 검사)
-
-                            player.posPrev = player.pos;
-                            player.pos = playerPositionControl.Pos;
-
-                            // load/unload chunks
-                        }
-                        break;
-                    case PlayerLookControl playerLookControl:
-                        {
-                            player.look = playerLookControl.Look;
-                        }
-                        break;
-                }
-
-            }
-
-            if (!_teleportRecords.Empty)
-            {
-                int count = _teleportRecords.Count;
-                for (int i = 0; i < count; ++i)
-                {
-                    TeleportRecord record = _teleportRecords.Dequeue();
-                    record.Update();
-                    _teleportRecords.Enqueue(record);
-                }
-            }
+            foreach (TeleportationRecord record in _teleportationRecords.GetValues())
+                record.Update();
 
             keepaliveChecker.Update(serverTicks, _reports);
 
         }
+
+        
 
         /// <summary>
         /// TODO: Add description.
@@ -1590,51 +1689,59 @@ namespace Protocol
         /// <param name="packet">TODO: Add description.</param>
         public void Send()
         {
-            Debug.Assert(!_disposed);
+            Debug.Assert(!_isDisposed);
 
             using Buffer buffer = new();
 
-            while (!_reports.Empty)
+            try
             {
-                Report report = _reports.Dequeue();
-                
-                if (report is TeleportReport teleportReport)
+                while (!_reports.Empty)
                 {
-                    TeleportRecord record = new(teleportReport.Payload);
-                    _teleportRecords.Enqueue(record);
+                    Report report = _reports.Dequeue();
+
+                    if (report is TeleportReport teleportReport)
+                    {
+                        TeleportationRecord record = new(teleportReport.Payload);
+                        _teleportationRecords.Enqueue(record);
+                    }
+
+                    report.Write(buffer);
+                    _client.Send(buffer);
+
+                    Debug.Assert(buffer.Empty);
                 }
-
-                report.Write(buffer);
-                _client.Send(buffer);
-
-                Debug.Assert(buffer.Empty);
+            }
+            finally
+            {
+                // TODO: Dealloc memory immediately for optimization.
+                _reports.Flush();
             }
 
             Debug.Assert(_reports.Empty);
         }
 
         // TODO: Make chunks to readonly using interface? in this function.
-        public void UpdateChunks(Table<Chunk.Position, Chunk> chunks, Player player)  
+        public void UpdateChunks(Table<Chunk.Vector, Chunk> chunks, Player player)  
         {
-            Chunk.Position pChunkCenter = Chunk.Position.Convert(player.pos);
+            Chunk.Vector pChunkCenter = Chunk.Vector.Convert(player._pos);
             int d = Settings.renderDistance;
             Debug.Assert(d >= ClientsideSettings.MinRenderDistance);
             Debug.Assert(d <= ClientsideSettings.MaxRenderDistance);
 
-            (Chunk.Position pChunkMax, Chunk.Position pChunkMin) = 
-                Chunk.Position.GenerateGridAround(pChunkCenter, d);
+            (Chunk.Vector pChunkMax, Chunk.Vector pChunkMin) = 
+                Chunk.Vector.GenerateGridAround(pChunkCenter, d);
             Debug.Assert(pChunkMax.x > pChunkMin.x);
             Debug.Assert(pChunkMax.z > pChunkMin.z);
 
-            (Chunk.Position pChunkPrevMax, Chunk.Position pChunkPrevMin) = _loadedChunkGrid;
+            (Chunk.Vector pChunkPrevMax, Chunk.Vector pChunkPrevMin) = _loadedChunkGrid;
             Debug.Assert(pChunkPrevMax.x > pChunkPrevMin.x);
             Debug.Assert(pChunkPrevMax.z > pChunkPrevMin.z);
 
             if (pChunkMax.Equals(pChunkPrevMax) && pChunkMin.Equals(pChunkPrevMin)) 
                 return;
 
-            (Chunk.Position pChunkBetweenMax, Chunk.Position pChunkBetweenMin)
-                = Chunk.Position.GenerateGridBetween(pChunkMax, pChunkMin, pChunkPrevMax, pChunkPrevMin);
+            (Chunk.Vector pChunkBetweenMax, Chunk.Vector pChunkBetweenMin)
+                = Chunk.Vector.GenerateGridBetween(pChunkMax, pChunkMin, pChunkPrevMax, pChunkPrevMin);
             Debug.Assert(pChunkBetweenMax.x > pChunkBetweenMin.x);
             Debug.Assert(pChunkBetweenMax.z > pChunkBetweenMin.z);
 
@@ -1649,7 +1756,7 @@ namespace Protocol
                         z <= pChunkBetweenMax.z && z >= pChunkBetweenMin.z)
                         continue;
 
-                    Chunk.Position pChunkLoad = new(x, z);
+                    Chunk.Vector pChunkLoad = new(x, z);
 
                     if (chunks.Contains(pChunkLoad))
                     {
@@ -1673,7 +1780,7 @@ namespace Protocol
                         z <= pChunkBetweenMax.z && z >= pChunkBetweenMin.z)
                         continue;
 
-                    Chunk.Position pChunkUnload = new(x, z);
+                    Chunk.Vector pChunkUnload = new(x, z);
 
                     report = new UnloadChunkReport(pChunkUnload);
                     _reports.Enqueue(report);
@@ -1684,9 +1791,14 @@ namespace Protocol
 
         }
 
+        public void RenderPlayer(Player player, PlayerSearchTable playerSearchTable)
+        {
+            
+        }
+
         private void Dispose(bool disposing)
         {
-            if (_disposed) return;
+            if (_isDisposed) return;
 
             if (disposing == true)
             {
@@ -1694,13 +1806,13 @@ namespace Protocol
                 _client.Dispose();
                 _reports.Dispose();
 
-                _teleportRecords.Flush();  // TODO: Release resources corrently for no garbage.
-                _teleportRecords.Dispose();
+                _teleportationRecords.Flush();  // TODO: Release resources corrently for no garbage.
+                _teleportationRecords.Dispose();
             }
 
             // unmanaged objects
 
-            _disposed = true;
+            _isDisposed = true;
         }
 
         public void Dispose()
@@ -1745,7 +1857,7 @@ namespace Protocol
         {
             JoinGame = 0,
             ClientSettings,
-            PluginMessage,
+            PluginMessage, 
             StartPlay,
         }
 
@@ -1762,8 +1874,8 @@ namespace Protocol
             NumList idList,
             Queue<(Connection, Player)> connections, Queue<Player> players,
             Table<int, Queue<Report>> reportsTable,
-            Table<Chunk.Position, Chunk> _chunks,  // TODO: readonly
-            Entity.Position posInitial, Entity.Look lookInitial)
+            Table<Chunk.Vector, Chunk> _chunks,  // TODO: readonly
+            
         {
             if (_clients.Empty) return;
 
@@ -1918,7 +2030,7 @@ namespace Protocol
                 Player player = new(entityId, posInitial, lookInitial, false);
 
                 Queue<Report> reports = new();
-                (Chunk.Position, Chunk.Position) loadedChunkGrid;
+                (Chunk.Vector, Chunk.Vector) loadedChunkGrid;
 
                 {
                     PlayerAbilitiesReport report = new(true, true, true, true, 1, 0);
@@ -1929,14 +2041,14 @@ namespace Protocol
                     Report? report = null;
 
                     // load chunks
-                    Chunk.Position c = Chunk.Position.Convert(posInitial);
+                    Chunk.Vector c = Chunk.Vector.Convert(posInitial);
                     int d = settings.renderDistance;
-                    (Chunk.Position pMax, Chunk.Position pMin) = Chunk.Position.GenerateGridAround(c, d);
+                    (Chunk.Vector pMax, Chunk.Vector pMin) = Chunk.Vector.GenerateGridAround(c, d);
                     for (int z = pMin.z; z <= pMax.z; ++z)
                     {
                         for (int x = pMin.x; x <= pMax.x; ++x)
                         {
-                            Chunk.Position p = new(x, z);
+                            Chunk.Vector p = new(x, z);
 
                             if (_chunks.Contains(p))
                             {
@@ -1957,7 +2069,7 @@ namespace Protocol
 
                 {
                     // teleport
-                    AbsoluteTeleportReport report = new(player.pos, player.look);
+                    AbsoluteTeleportReport report = new(player._pos, player._look);
                     reports.Enqueue(report);
                 }
 
@@ -1982,6 +2094,7 @@ namespace Protocol
             }
 
         }
+            Entity.Vector posInitial, Entity.Look lookInitial)
 
     }
 

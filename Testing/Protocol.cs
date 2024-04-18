@@ -10,7 +10,7 @@ namespace Protocol
         public void TestGenerateGridAroundCenter()
         {
 
-            Chunk.Position[] C = [
+            Chunk.Vector[] C = [
                 new(0, 0),
                 new(100, 100),
                 new(2, 5),
@@ -20,7 +20,7 @@ namespace Protocol
                 10,
                 0,
                 ];
-            (Chunk.Position, Chunk.Position)[] pairsExpected = [
+            (Chunk.Vector, Chunk.Vector)[] pairsExpected = [
                 (new(5, 5), new(-5, -5)),
                 (new(110, 110), new(-90, -90)),
                 (new(2, 5), new(2, 5)),
@@ -32,11 +32,11 @@ namespace Protocol
 
             for (int i = 0; i < length; ++i)
             {
-                Chunk.Position c = C[i];
+                Chunk.Vector c = C[i];
                 int d = D[i];
-                (Chunk.Position pMaxExpected, Chunk.Position pMinExpected) = pairsExpected[i];
+                (Chunk.Vector pMaxExpected, Chunk.Vector pMinExpected) = pairsExpected[i];
 
-                (Chunk.Position pMax, Chunk.Position pMin) = Chunk.Position.GenerateGridAround(c, d);
+                (Chunk.Vector pMax, Chunk.Vector pMin) = Chunk.Vector.GenerateGridAround(c, d);
 
                 Assert.That(pMax, Is.EqualTo(pMaxExpected));
                 Assert.That(pMin, Is.EqualTo(pMinExpected));

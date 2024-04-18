@@ -1285,7 +1285,7 @@ public abstract class EntityHuman extends EntityLiving {
     }
 
     public void a(boolean flag, boolean flag1, boolean flag2) {
-        this.setSize(0.6F, 1.8F);
+        this.setSize(0.6F, 1.8F);  // hitbox, Collision box
         IBlockData iblockdata = this.world.getType(this.bedPosition);
 
         if (this.bedPosition != null && iblockdata.getBlock() == Blocks.BED) {

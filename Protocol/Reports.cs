@@ -17,7 +17,7 @@ namespace Protocol
 
     internal class LoadChunkReport : Report
     {
-        public readonly Chunk.Position p;
+        public readonly Chunk.Vector p;
         private readonly int _Mask;
         private readonly byte[] _Data;
 
@@ -40,9 +40,9 @@ namespace Protocol
 
     internal class LoadEmptyChunkReport : Report
     {
-        public readonly Chunk.Position p;
+        public readonly Chunk.Vector p;
 
-        public LoadEmptyChunkReport(Chunk.Position p)
+        public LoadEmptyChunkReport(Chunk.Vector p)
         {
             this.p = p;
         }
@@ -58,9 +58,9 @@ namespace Protocol
 
     internal class UnloadChunkReport : Report
     {
-        public readonly Chunk.Position p;
+        public readonly Chunk.Vector p;
 
-        public UnloadChunkReport(Chunk.Position p)
+        public UnloadChunkReport(Chunk.Vector p)
         {
             this.p = p;
         }
@@ -74,16 +74,16 @@ namespace Protocol
 
     internal class UnloadChunksReport : Report
     {
-        public readonly Chunk.Position[] P;
+        public readonly Chunk.Vector[] P;
 
-        public UnloadChunksReport(Chunk.Position[] P)
+        public UnloadChunksReport(Chunk.Vector[] P)
         {
             this.P = P;
         }
 
         internal override void Write(Buffer buffer)
         {
-            foreach (Chunk.Position p in P)
+            foreach (Chunk.Vector p in P)
             {
                 UnloadChunkPacket packet = new(p.x, p.z);
                 packet.Write(buffer);
@@ -136,12 +136,12 @@ namespace Protocol
 
     public abstract class TeleportReport : Report
     {
-        public readonly Entity.Position Pos;
+        public readonly Entity.Vector Pos;
         public readonly Entity.Look Look;
         public readonly int Payload;
 
         public TeleportReport(
-            Entity.Position pos, Entity.Look look)
+            Entity.Vector pos, Entity.Look look)
         {
             Debug.Assert(
                 look.yaw >= Entity.Look.MinYaw &&
@@ -158,7 +158,7 @@ namespace Protocol
 
     public class AbsoluteTeleportReport : TeleportReport
     {
-        public AbsoluteTeleportReport(Entity.Position pos, Entity.Look look) 
+        public AbsoluteTeleportReport(Entity.Vector pos, Entity.Look look) 
             : base(pos, look) { }
 
         internal override void Write(Buffer buffer)
@@ -175,7 +175,7 @@ namespace Protocol
 
     public class RelativeTeleportReport : TeleportReport
     {
-        public RelativeTeleportReport(Entity.Position pos, Entity.Look look) 
+        public RelativeTeleportReport(Entity.Vector pos, Entity.Look look) 
             : base(pos, look) { }
 
         internal override void Write(Buffer buffer)

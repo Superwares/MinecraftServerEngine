@@ -3,8 +3,6 @@ using Containers;
 using Protocol;
 using System;
 using System.Diagnostics;
-using System.Numerics;
-using System.Security.AccessControl;
 using System.Threading;
 
 namespace Application
@@ -13,62 +11,61 @@ namespace Application
 
     public sealed class Server : ConsoleApplication
     {
-        private bool _disposed = false;
+        private bool _isDisposed = false;
 
         private readonly ConcurrentNumList _idList = new();
 
         private readonly Queue<(Connection, Player)> _connections = new();
-        private readonly Queue<Connection> _abortedConnections = new();
-        private readonly Queue<(Connection, string)> _unexpectedConnections = new();
+        private readonly Queue<(Connection, string?)> _disconnections = new();
 
         private readonly Queue<Player> _players = new();
 
         private readonly Table<int, Queue<Report>> _reportsTable = new();
 
-        private readonly Table<Chunk.Position, Chunk> _chunks = new();
+        private readonly Table<Chunk.Vector, Chunk> _chunks = new();
+        
 
         private Server() { }
 
         ~Server() => Dispose(false);
 
-        private void RecvData(ulong serverTicks)
+        private void HandleConnectionControls(ulong serverTicks)
         {
             if (_connections.Empty) return;
 
             bool close;
 
+            string? msg;
             int count = _connections.Count;
             Debug.Assert(count > 0);
             for (int i = 0; i < count; ++i)
             {
+                msg = null;
                 close = false;
 
                 (Connection conn, Player player) = _connections.Dequeue();
 
                 try
                 {
-                    conn.Recv(player, serverTicks);
+                    conn.Control(player, serverTicks, playerSearchTable);
                 }
                 catch (UnexpectedClientBehaviorExecption e)
                 {
-                    Debug.Assert(close == false);
-
-                    _unexpectedConnections.Enqueue((conn, e.Message));
-
+                    Debug.Assert(!close);
                     close = true;
+
+                    msg = e.Message;
                 }
                 catch (DisconnectedClientException)
                 {
-                    Debug.Assert(close == false);
-
-                    _abortedConnections.Enqueue(conn);
-
+                    Debug.Assert(!close);
                     close = true;
                 }
 
                 if (close)
                 {
-                    player.connected = false;
+                    player.isConnected = false;
+                    _disconnections.Enqueue((conn, msg));
                     continue;
                 }
 
@@ -76,7 +73,7 @@ namespace Application
             }
 
         }
-        
+
         private void HandlePlayers()
         {
             if (_players.Empty) return;
@@ -88,7 +85,7 @@ namespace Application
                 Player player = _players.Dequeue();
                 int id = player.Id;
 
-                if (!player.connected)
+                if (!player.isConnected)
                 {
                     // TODO: Release resources of player object.
 
@@ -118,6 +115,22 @@ namespace Application
             }
         }
 
+        private void RenderPlayers()
+        {
+            if (_connections.Empty) return;
+
+            int count = _connections.Count;
+            for (int i = 0; i < count; ++i)
+            {
+                (Connection conn, Player player) = _connections.Dequeue();
+
+                conn.RenderPlayer(player, playerSearchTable);
+
+                _connections.Enqueue((conn, player));
+            }
+
+        }
+
         private void SendData()
         {
             if (_connections.Empty) return;
@@ -140,15 +153,13 @@ namespace Application
                 catch (DisconnectedClientException)
                 {
                     Debug.Assert(!close);
-
-                    _abortedConnections.Enqueue(conn);
-
                     close = true;
                 }
 
                 if (close)
                 {
-                    player.connected = false;
+                    player.isConnected = false;
+                    _disconnections.Enqueue((conn, null));
                     continue;
                 }
 
@@ -159,48 +170,32 @@ namespace Application
             /*Console.Write("Finish send data!");*/
         }
 
-        private void HandleUnexpectedConnections()
+        private void HandleDisconnections()
         {
-            if (_unexpectedConnections.Empty) return;
+            if (_disconnections.Empty) return;
 
-            int count = _unexpectedConnections.Count;
+            int count = _disconnections.Count;
             Debug.Assert(count > 0);
             for (int i = 0; i < count; ++i)
             {
-                (Connection conn, string msg) = _unexpectedConnections.Dequeue();
+                (Connection conn, string? msg) = _disconnections.Dequeue();
 
                 int id = conn.Id;
 
-                Queue<Report> reports = _reportsTable.Extract(id);
+                if (msg != null)
+                {
+                    // TODO: Send message why disconnected.
+                }
 
-                // TODO: Send message why disconnected.
+                conn.Close();
 
-                // TODO: Handle flush and release garbage.
-                reports.Flush();
-
-                reports.Close();
-            }
-        }
-
-        private void HandleAbortedConnections()
-        {
-            if (_abortedConnections.Empty) return;
-
-            int count = _abortedConnections.Count;
-            Debug.Assert(count > 0);
-            for (int i = 0; i < count; ++i)
-            {
-                Connection conn = _abortedConnections.Dequeue();
-
-                int id = conn.Id;
 
                 Queue<Report> reports = _reportsTable.Extract(id);
 
                 // TODO: Handle flush and release garbage.
-                reports.Flush();
+                Debug.Assert(reports.Empty);
 
                 reports.Close();
-
             }
         }
 
@@ -211,7 +206,7 @@ namespace Application
             Console.Write(".");
             /*Console.Write($"{ticks}");*/
 
-            RecvData(serverTicks);
+            HandleConnectionControls(serverTicks);
 
             // Barrier
 
@@ -224,11 +219,16 @@ namespace Application
             // Barrier
 
             connListener.Accept(
-                _idList, 
-                _connections, _players, 
-                _reportsTable, 
-                _chunks, 
+                _idList,
+                _connections, _players,
+                _reportsTable,
+                _chunks,
                 new(0, 60, 0), new(0, 0));
+
+
+            // Barrier
+
+            RenderPlayers();
 
             // Barrier
 
@@ -236,11 +236,7 @@ namespace Application
 
             // Barrier
 
-            HandleUnexpectedConnections();
-
-            // Barrier
-
-            HandleAbortedConnections();
+            HandleDisconnections();
 
             // Barrier
 
@@ -286,7 +282,7 @@ namespace Application
 
         protected override void Dispose(bool disposing)
         {
-            if (!_disposed)
+            if (!_isDisposed)
             {
                 if (disposing == true)
                 {
@@ -294,8 +290,7 @@ namespace Application
                     _idList.Dispose();
 
                     _connections.Dispose();
-                    _abortedConnections.Dispose();
-                    _unexpectedConnections.Dispose();
+                    _disconnections.Dispose();
 
                     _players.Dispose();
 
@@ -306,7 +301,7 @@ namespace Application
 
                 // Release unmanaged resources.
 
-                _disposed = true;
+                _isDisposed = true;
             }
 
             base.Dispose(disposing);
@@ -330,9 +325,8 @@ namespace Application
 
             while (app.Running)
             {
-
                 // Handle Barriers
-                Thread.Sleep(1000);
+                Thread.Sleep(int.MaxValue);
             }
 
 

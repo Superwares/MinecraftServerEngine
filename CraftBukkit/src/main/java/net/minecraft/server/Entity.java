@@ -241,6 +241,7 @@ public abstract class Entity implements ICommandListener {
 
     public void b(boolean flag) {}
 
+    // set hitbox, Collision box
     public void setSize(float f, float f1) {
         if (f != this.width || f1 != this.length) {
             float f2 = this.width;

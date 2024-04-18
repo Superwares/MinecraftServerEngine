@@ -24,7 +24,7 @@ namespace Protocol
 
     public class PlayerPositionControl : Control
     {
-        public readonly Entity.Position Pos;
+        public readonly Entity.Vector Pos;
 
         public PlayerPositionControl(double x, double y, double z)
         {
