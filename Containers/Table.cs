@@ -7,7 +7,21 @@ using System.Threading.Tasks;
 
 namespace Containers
 {
-    public class Table<K, V> : IDisposable where K : struct, IEquatable<K>
+
+    public interface IReadOnlyTable<K, V>
+        where K : struct, IEquatable<K>
+    {
+        public V Lookup(K key);
+        public bool Contains(K key);
+
+        public System.Collections.Generic.IEnumerable<(K, V)> GetElements();
+        public System.Collections.Generic.IEnumerable<K> GetKeys();
+        public System.Collections.Generic.IEnumerable<V> GetValues();
+
+    }
+
+    public class Table<K, V> : IDisposable, IReadOnlyTable<K, V>
+        where K : struct, IEquatable<K>
     {
         private bool _isDisposed = false;
 
@@ -97,7 +111,7 @@ namespace Containers
 
         }
 
-        public void Insert(K key, V value)
+        public virtual void Insert(K key, V value)
         {
             Debug.Assert(!_isDisposed);
 
@@ -146,7 +160,7 @@ namespace Containers
                 (originIndex == targetIndex);
         }
 
-        public V Extract(K key)
+        public virtual V Extract(K key)
         {
             Debug.Assert(!_isDisposed);
 
@@ -223,7 +237,7 @@ namespace Containers
             return value;
         }
 
-        public V Lookup(K key)
+        public virtual V Lookup(K key)
         {
             Debug.Assert(!_isDisposed);
 
@@ -257,7 +271,7 @@ namespace Containers
             return value;
         }
 
-        public bool Contains(K key)
+        public virtual bool Contains(K key)
         {
             Debug.Assert(!_isDisposed);
 
@@ -284,6 +298,114 @@ namespace Containers
             }
 
             return false;
+        }
+
+        public virtual V[] Flush()
+        {
+            Debug.Assert(!_isDisposed);
+
+            Debug.Assert(_flags.Length >= _MinLength);
+            Debug.Assert(_keys.Length >= _MinLength);
+            Debug.Assert(_values.Length >= _MinLength);
+            Debug.Assert(_length >= _MinLength);
+            Debug.Assert(_count >= 0);
+
+            if (_count == 0)
+                return [];
+
+            var values = new V[_count];
+
+            int i = 0;
+            for (int j = 0; j < _length; ++j)
+            {
+                if (!_flags[j]) continue;
+
+                values[i++] = _values[j];
+
+                if (i == _count) break;
+            }
+
+            _flags = new bool[_MinLength];
+            _keys = new K[_MinLength];
+            _values = new V[_MinLength];
+            _length = _MinLength;
+            _count = 0;
+
+            return values;
+        }
+
+        public virtual System.Collections.Generic.IEnumerable<(K, V)> GetElements()
+        {
+            Debug.Assert(!_isDisposed);
+
+            Debug.Assert(_flags.Length >= _MinLength);
+            Debug.Assert(_keys.Length >= _MinLength);
+            Debug.Assert(_values.Length >= _MinLength);
+            Debug.Assert(_length >= _MinLength);
+            Debug.Assert(_count >= 0);
+
+            if (_count == 0)
+                yield break;
+
+            int i = 0;
+            for (int j = 0; j < _length; ++j)
+            {
+                if (!_flags[j]) continue;
+
+                yield return (_keys[j], _values[j]);
+
+                if (++i == _count) break;
+            }
+        }
+
+        public virtual System.Collections.Generic.IEnumerable<K> GetKeys()
+        {
+            Debug.Assert(!_isDisposed);
+
+            Debug.Assert(_flags.Length >= _MinLength);
+            Debug.Assert(_keys.Length >= _MinLength);
+            Debug.Assert(_values.Length >= _MinLength);
+            Debug.Assert(_length >= _MinLength);
+            Debug.Assert(_count >= 0);
+
+            if (_count == 0)
+                yield break;
+
+            int i = 0;
+            for (int j = 0; j < _length; ++j)
+            {
+                if (!_flags[j]) continue;
+
+                yield return _keys[j];
+
+                if (++i == _count) break;
+            }
+
+        }
+
+        public virtual System.Collections.Generic.IEnumerable<V> GetValues()
+        {
+            Debug.Assert(!_isDisposed);
+
+            Debug.Assert(_flags.Length >= _MinLength);
+            Debug.Assert(_keys.Length >= _MinLength);
+            Debug.Assert(_values.Length >= _MinLength);
+            Debug.Assert(_length >= _MinLength);
+            Debug.Assert(_count >= 0);
+
+            if (_count == 0)
+                yield break;
+
+            int i = 0;
+            for (int j = 0; j < _length; ++j)
+            {
+                if (!_flags[j]) continue;
+
+                yield return _values[j];
+
+                if (++i == _count) break;
+            }
+
         }
 
         protected virtual void Dispose(bool disposing)

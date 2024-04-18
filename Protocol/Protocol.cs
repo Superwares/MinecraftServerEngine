@@ -8,7 +8,6 @@ using System.Text;
 using System.Text.Json;
 using Applications;
 using Containers;
-using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace Protocol
 {
@@ -161,6 +160,239 @@ namespace Protocol
         public static void SendByte(Socket socket, byte v)
         {
             SendBytes(socket, [v]);
+        }
+
+    }
+
+    internal sealed class Client : IDisposable
+    {
+        private bool _isDisposed = false;
+
+        private const int _TimeoutLimit = 100;
+        private int _tryAgainCount = 0;
+
+        private const byte _SegmentBits = 0x7F;
+        private const byte _ContinueBit = 0x80;
+
+        private int _x = 0, _y = 0;
+        private byte[]? _data = null;
+
+        private Socket _socket;
+
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <param name="socket">TODO: Add description.</param>
+        /// <returns>TODO: Add description.</returns>
+        /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
+        internal static Client Accept(Socket socket)
+        {
+            //TODO: Check the socket is Binding and listening correctly.
+
+            Socket newSocket = SocketMethods.Accept(socket);
+            SocketMethods.SetBlocking(newSocket, false);
+
+            /*Console.WriteLine($"socket: {socket.LocalEndPoint}");*/
+
+
+            return new(newSocket);
+        }
+
+        private Client(Socket socket)
+        {
+            Debug.Assert(SocketMethods.IsBlocking(socket) == false);
+            _socket = socket;
+        }
+
+        ~Client()
+        {
+            Dispose(false);
+        }
+
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <returns>TODO: Add description.</returns>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
+        /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
+        private int RecvSize()
+        {
+            Debug.Assert(!_isDisposed);
+
+            Debug.Assert(SocketMethods.IsBlocking(_socket) == false);
+
+            uint uvalue = (uint)_x;
+            int position = _y;
+
+            try
+            {
+                while (true)
+                {
+                    byte v = SocketMethods.RecvByte(_socket);
+
+                    uvalue |= (uint)(v & _SegmentBits) << position;
+                    if ((v & _ContinueBit) == 0)
+                        break;
+
+                    position += 7;
+
+                    if (position >= 32)
+                        throw new InvalidEncodingException();
+
+                    Debug.Assert(position > 0);
+                }
+
+            }
+            finally
+            {
+                _x = (int)uvalue;
+                _y = position;
+                Debug.Assert(_data == null);
+            }
+
+            return (int)uvalue;
+        }
+
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <param name="size">TODO: Add description.</param>
+        /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
+        private void SendSize(int size)
+        {
+            Debug.Assert(!_isDisposed);
+
+            uint uvalue = (uint)size;
+
+            while (true)
+            {
+                if ((uvalue & ~_SegmentBits) == 0)
+                {
+                    SocketMethods.SendByte(_socket, (byte)uvalue);
+                    break;
+                }
+
+                SocketMethods.SendByte(
+                    _socket, (byte)((uvalue & _SegmentBits) | _ContinueBit));
+                uvalue >>= 7;
+            }
+
+        }
+
+        /*public void A()
+        {
+            SocketMethods.SetBlocking(_socket, true);
+        }*/
+
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <param name="buffer">TODO: Add description.</param>
+        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
+        /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
+        /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
+        public void Recv(Buffer buffer)
+        {
+            Debug.Assert(!_isDisposed);
+
+            Debug.Assert(SocketMethods.IsBlocking(_socket) == false);
+
+            try
+            {
+                if (_data == null)
+                {
+                    int size = RecvSize();
+                    _x = size;
+                    _y = 0;
+
+                    if (size == 0) return;
+
+                    Debug.Assert(_data == null);
+                    _data = new byte[size];
+                    Debug.Assert(size > 0);
+                }
+
+                int availSize = _x, offset = _y;
+
+                do
+                {
+                    try
+                    {
+                        int n = SocketMethods.RecvBytes(_socket, _data, offset, availSize);
+                        Debug.Assert(n <= availSize);
+
+                        availSize -= n;
+                        offset += n;
+                    }
+                    finally
+                    {
+                        _x = availSize;
+                        _y = offset;
+                    }
+
+                } while (availSize > 0);
+
+                buffer.WriteData(_data);
+
+                _x = 0;
+                _y = 0;
+                _data = null;
+
+                _tryAgainCount = 0;
+            }
+            catch (TryAgainException)
+            {
+                /*Console.WriteLine($"count: {_count}");*/
+                if (_TimeoutLimit < _tryAgainCount++)
+                {
+                    throw new DataRecvTimeoutException();
+                }
+
+                throw;
+            }
+
+        }
+
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <param name="buffer">TODO: Add description.</param>
+        /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
+        public void Send(Buffer buffer)
+        {
+            Debug.Assert(!_isDisposed);
+
+            byte[] data = buffer.ReadData();
+            SendSize(data.Length);
+            SocketMethods.SendBytes(_socket, data);
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (_isDisposed) return;
+
+            if (disposing == true)
+            {
+                // Release managed resources.
+                _socket.Dispose();
+                _data = null;
+            }
+
+            // Release unmanaged resources.
+
+            _isDisposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        public void Close()
+        {
+            Dispose();
         }
 
     }
@@ -778,18 +1010,32 @@ namespace Protocol
                 this.x = x; this.z = z;
             }
 
-            public static Vector Convert(Entity.Vector pos)
+            public static Vector Convert(Player.Vector pos)
             {
                 return new(
                     (pos.x >= 0) ? ((int)pos.x / Width) : (((int)pos.x / (Width + 1)) - 1),
                     (pos.z >= 0) ? ((int)pos.z / Width) : (((int)pos.z / (Width + 1)) - 1));
             }
             
-            public static (Vector, Vector) GenerateGridAround(Vector center, int d)
+            public static bool IsEmptyGrid((Vector, Vector) grid)
+            {
+                return grid.Equals(EmptyGrid);
+            }
+
+            public bool Equals(Vector other)
+            {
+                return (x == other.x) && (z == other.z);
+            }
+
+        }
+
+        public class Grid : IEquatable<Grid>
+        {
+            public static Grid GenerateAround(Vector center, int d)
             {
                 Debug.Assert(d >= 0);
                 if (d == 0)
-                    return (center, center);
+                    return new(center, center);
 
                 int xMax = center.x + d, zMax = center.z + d,
                     xMin = center.x - d, zMin = center.z - d;
@@ -810,25 +1056,48 @@ namespace Protocol
 
                 Debug.Assert(xMax > xMin);
                 Debug.Assert(zMax > zMin);
-                return (new(xMax, zMax), new(xMin, zMin));
+                return new(new(xMax, zMax), new(xMin, zMin));
             }
 
-            public static (Vector, Vector) GenerateGridBetween(
-                Vector max1, Vector min1, Vector max2, Vector min2)
+            public static Grid GenerateBetween(Grid grid1, Grid grid2)
             {
-                Vector max3 = new(Math.Min(max1.x, max2.x), Math.Min(max1.z, max2.z)),
-                    min3 = new(Math.Max(min1.x, min2.x), Math.Max(min1.z, min2.z));
+                Vector max3 = new(Math.Min(grid1._max.x, grid2._max.x), Math.Min(grid1._max.z, grid2._max.z)),
+                    min3 = new(Math.Max(grid1._min.x, grid2._min.x), Math.Max(grid1._min.z, grid2._min.z));
                 if (max3.x < min3.x)
                     (max3.x, min3.x) = (min3.x, max3.x);
                 if (max3.z < min3.z)
                     (max3.z, min3.z) = (min3.z, max3.z);
 
-                return (max3, min3);
+                return new(max3, min3);
             }
 
-            public bool Equals(Vector other)
+            private readonly Vector _max, _min;
+
+            Grid(Vector max, Vector min)
             {
-                return (x == other.x) && (z == other.z);
+                _max = max; _min = min;
+            }
+
+            public bool Contains(Vector p)
+            {
+                return (p.x <= _max.x && p.x >= _min.x && p.z <= _max.z && p.z >= _min.z);
+            }
+            
+            public System.Collections.Generic.IEnumerable<Vector> GetVectors()
+            {
+                for (int z = _min.z; z <= _max.z; ++z)
+                {
+                    for (int x = _min.x; x <= _max.x; ++x)
+                    {
+                        yield return new(x, z);
+                    }
+                }
+
+            }
+
+            public bool Equals(Grid other)
+            {
+                return (other._max.Equals(_max) && other._min.Equals(_min));
             }
 
         }
@@ -1084,13 +1353,16 @@ namespace Protocol
             }
 
         }
-
+        
         public bool isConnected = true;
 
         public readonly int Id;
 
-        private Vector _posPrev, _pos;
-        private Angles _look;
+        public readonly Guid UniqueId;
+
+        public Vector posPrev, pos;
+
+        public Angles look;
         private bool _onGround;
 
         private readonly Queue<Action> _actions;
@@ -1113,26 +1385,26 @@ namespace Protocol
 
         public void Transform(Vector pos, Angles look, bool onGround)
         {
-            _posPrev = _pos;
-            _pos = pos;
-            _look = look;
+            posPrev = this.pos;
+            this.pos = pos;
+            this.look = look;
             _onGround = onGround;
 
-            _actions.Enqueue(new TransformationAction(_posPrev, _pos, look, onGround);
+            _actions.Enqueue(new TransformationAction(posPrev, this.pos, look, onGround);
         }
 
         public void Move(Vector pos, bool onGround)
         {
-            _posPrev = _pos;
-            _pos = pos;
+            posPrev = this.pos;
+            this.pos = pos;
             _onGround = onGround;
 
-            _actions.Enqueue(new MovementAction(_posPrev, _pos, onGround));
+            _actions.Enqueue(new MovementAction(posPrev, this.pos, onGround));
         }
 
         public void Rotate(Angles look, bool onGround)
         {
-            _look = look;
+            this.look = look;
             _onGround = onGround;
 
             _actions.Enqueue(new RotationAction(look, onGround));
@@ -1140,9 +1412,9 @@ namespace Protocol
 
         public void Teleport(Vector pos, Angles look)
         {
-            _posPrev = _pos;
-            _pos = pos;
-            _look = look;
+            posPrev = this.pos;
+            this.pos = pos;
+            this.look = look;
 
             _actions.Enqueue(new TeleportationAction(pos, look));
         }
@@ -1183,238 +1455,7 @@ namespace Protocol
 
     }*/
 
-    internal sealed class Client : IDisposable
-    {
-        private bool _isDisposed = false;
-
-        private const int _TimeoutLimit = 100;
-        private int _tryAgainCount = 0;
-
-        private const byte _SegmentBits = 0x7F;
-        private const byte _ContinueBit = 0x80;
-
-        private int _x = 0, _y = 0;
-        private byte[]? _data = null;
-
-        private Socket _socket;
-
-        /// <summary>
-        /// TODO: Add description.
-        /// </summary>
-        /// <param name="socket">TODO: Add description.</param>
-        /// <returns>TODO: Add description.</returns>
-        /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
-        internal static Client Accept(Socket socket)
-        {
-            //TODO: Check the socket is Binding and listening correctly.
-
-            Socket newSocket = SocketMethods.Accept(socket);
-            SocketMethods.SetBlocking(newSocket, false);
-
-            /*Console.WriteLine($"socket: {socket.LocalEndPoint}");*/
-
-
-            return new(newSocket);
-        }
-
-        private Client(Socket socket)
-        {
-            Debug.Assert(SocketMethods.IsBlocking(socket) == false);
-            _socket = socket;
-        }
-
-        ~Client()
-        {
-            Dispose(false);
-        }
-
-        /// <summary>
-        /// TODO: Add description.
-        /// </summary>
-        /// <returns>TODO: Add description.</returns>
-        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
-        /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
-        /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
-        private int RecvSize()
-        {
-            Debug.Assert(!_isDisposed);
-
-            Debug.Assert(SocketMethods.IsBlocking(_socket) == false);
-
-            uint uvalue = (uint)_x;
-            int position = _y;
-
-            try
-            {
-                while (true)
-                {
-                    byte v = SocketMethods.RecvByte(_socket);
-
-                    uvalue |= (uint)(v & _SegmentBits) << position;
-                    if ((v & _ContinueBit) == 0)
-                        break;
-
-                    position += 7;
-
-                    if (position >= 32)
-                        throw new InvalidEncodingException();
-
-                    Debug.Assert(position > 0);
-                }
-
-            }
-            finally
-            {
-                _x = (int)uvalue;
-                _y = position;
-                Debug.Assert(_data == null);
-            }
-
-            return (int)uvalue;
-        }
-
-        /// <summary>
-        /// TODO: Add description.
-        /// </summary>
-        /// <param name="size">TODO: Add description.</param>
-        /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
-        private void SendSize(int size)
-        {
-            Debug.Assert(!_isDisposed);
-
-            uint uvalue = (uint)size;
-
-            while (true)
-            {
-                if ((uvalue & ~_SegmentBits) == 0)
-                {
-                    SocketMethods.SendByte(_socket, (byte)uvalue);
-                    break;
-                }
-
-                SocketMethods.SendByte(
-                    _socket, (byte)((uvalue & _SegmentBits) | _ContinueBit));
-                uvalue >>= 7;
-            }
-
-        }
-
-        /*public void A()
-        {
-            SocketMethods.SetBlocking(_socket, true);
-        }*/
-
-        /// <summary>
-        /// TODO: Add description.
-        /// </summary>
-        /// <param name="buffer">TODO: Add description.</param>
-        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
-        /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
-        /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
-        public void Recv(Buffer buffer)
-        {
-            Debug.Assert(!_isDisposed);
-
-            Debug.Assert(SocketMethods.IsBlocking(_socket) == false);
-
-            try
-            {
-                if (_data == null)
-                {
-                    int size = RecvSize();
-                    _x = size;
-                    _y = 0;
-
-                    if (size == 0) return;
-
-                    Debug.Assert(_data == null);
-                    _data = new byte[size];
-                    Debug.Assert(size > 0);
-                }
-
-                int availSize = _x, offset = _y;
-
-                do
-                {
-                    try
-                    {
-                        int n = SocketMethods.RecvBytes(_socket, _data, offset, availSize);
-                        Debug.Assert(n <= availSize);
-
-                        availSize -= n;
-                        offset += n;
-                    }
-                    finally
-                    {
-                        _x = availSize;
-                        _y = offset;
-                    }
-
-                } while (availSize > 0);
-
-                buffer.WriteData(_data);
-
-                _x = 0;
-                _y = 0;
-                _data = null;
-
-                _tryAgainCount = 0;
-            }
-            catch (TryAgainException)
-            {
-                /*Console.WriteLine($"count: {_count}");*/
-                if (_TimeoutLimit < _tryAgainCount++)
-                {
-                    throw new DataRecvTimeoutException();
-                }
-                
-                throw;
-            }
-
-        }
-
-        /// <summary>
-        /// TODO: Add description.
-        /// </summary>
-        /// <param name="buffer">TODO: Add description.</param>
-        /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
-        public void Send(Buffer buffer)
-        {
-            Debug.Assert(!_isDisposed);
-
-            byte[] data = buffer.ReadData();
-            SendSize(data.Length);
-            SocketMethods.SendBytes(_socket, data);
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (_isDisposed) return;
-
-            if (disposing == true)
-            {
-                // Release managed resources.
-                _socket.Dispose();
-                _data = null;
-            }
-
-            // Release unmanaged resources.
-
-            _isDisposed = true;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        public void Close()
-        {
-            Dispose();
-        }
-
-    }
+    
 
     public sealed class Connection : IDisposable
     {
@@ -1489,6 +1530,7 @@ namespace Protocol
             public const int MinRenderDistance = 2, MaxRenderDistance = 32;
 
             public int renderDistance = renderDistance;
+
         }
 
         private Client _client;
@@ -1500,11 +1542,9 @@ namespace Protocol
 
         public readonly ClientsideSettings Settings;
 
-        Queue<Report> _reports;
+        private Chunk.Grid? _loadedChunkGrid = null;
 
-        private (Chunk.Vector, Chunk.Vector) _loadedChunkGrid;
-
-        private Set<int> _spawnedPlayers = new();
+        private Set<int> _renderedPlayerIds = new();
 
         private readonly Queue<TeleportationRecord> _teleportationRecords = new();
 
@@ -1516,9 +1556,7 @@ namespace Protocol
             int id,
             Client client,
             Guid userId, string username,
-            ClientsideSettings settings,
-            Queue<Report> reports,
-            (Chunk.Vector, Chunk.Vector) loadedChunkGrid)
+            ClientsideSettings settings)
         {
             Id = id;
 
@@ -1528,10 +1566,6 @@ namespace Protocol
             Username = username;
 
             Settings = settings;
-
-            _reports = reports;
-
-            _loadedChunkGrid = loadedChunkGrid;
         }
 
         ~Connection()
@@ -1681,13 +1715,218 @@ namespace Protocol
 
         }
 
-        
+        // TODO: Make chunks to readonly using interface? in this function.
+        public void RenterChunks(Table<Chunk.Vector, Chunk> chunks, Player player)  
+        {
+            Debug.Assert(!_isDisposed);
+
+            Chunk.Vector pChunkCenter = player.PosChunk;
+            int d = Settings.renderDistance;
+            Debug.Assert(d >= ClientsideSettings.MinRenderDistance);
+            Debug.Assert(d <= ClientsideSettings.MaxRenderDistance);
+
+            (Chunk.Vector pChunkMax, Chunk.Vector pChunkMin) = 
+                Chunk.Vector.GenerateGridAround(pChunkCenter, d);
+            Debug.Assert(pChunkMax.x > pChunkMin.x);
+            Debug.Assert(pChunkMax.z > pChunkMin.z);
+
+            if (_renderedChunkGrid.)
+            {
+                return;
+            }
+
+            (Chunk.Vector pChunkPrevMax, Chunk.Vector pChunkPrevMin) = _renderedChunkGrid;
+            Debug.Assert(pChunkPrevMax.x > pChunkPrevMin.x);
+            Debug.Assert(pChunkPrevMax.z > pChunkPrevMin.z);
+
+            if (pChunkMax.Equals(pChunkPrevMax) && pChunkMin.Equals(pChunkPrevMin)) 
+                return;
+
+            (Chunk.Vector pChunkBetweenMax, Chunk.Vector pChunkBetweenMin)
+                = Chunk.Vector.GenerateGridBetween(pChunkMax, pChunkMin, pChunkPrevMax, pChunkPrevMin);
+            Debug.Assert(pChunkBetweenMax.x > pChunkBetweenMin.x);
+            Debug.Assert(pChunkBetweenMax.z > pChunkBetweenMin.z);
+
+            using Buffer buffer = new();
+            
+            // Load Chunks
+            for (int z = pChunkMin.z; z <= pChunkMax.z; ++z)
+            {
+                for (int x = pChunkMin.x; x <= pChunkMax.x; ++x)
+                {
+                    if (x <= pChunkBetweenMax.x && x >= pChunkBetweenMin.x &&
+                        z <= pChunkBetweenMax.z && z >= pChunkBetweenMin.z)
+                        continue;
+
+                    Chunk.Vector pChunkLoad = new(x, z);
+
+                    if (chunks.Contains(pChunkLoad))
+                    {
+                        Chunk chunk = chunks.Lookup(pChunkLoad);
+                        (int mask, byte[] data) = Chunk.Write(chunk);
+
+                        LoadChunkPacket packet = new(pChunkLoad.x, pChunkLoad.z, true, mask, data);
+                        packet.Write(buffer);
+                        _client.Send(buffer);
+                    }
+                    else
+                    {
+                        (int mask, byte[] data) = Chunk.Write();
+
+                        LoadChunkPacket packet = new(pChunkLoad.x, pChunkLoad.z, true, mask, data);
+                        packet.Write(buffer);
+                        _client.Send(buffer);
+
+                    }
+                }
+            }
+
+            Debug.Assert(buffer.Empty);
+
+            // Unload Chunks
+            for (int z = pChunkPrevMin.z; z <= pChunkPrevMax.z; ++z)
+            {
+                for (int x = pChunkPrevMin.x; x <= pChunkPrevMax.x; ++x)
+                {
+                    if (x <= pChunkBetweenMax.x && x >= pChunkBetweenMin.x &&
+                        z <= pChunkBetweenMax.z && z >= pChunkBetweenMin.z)
+                        continue;
+
+
+                    UnloadChunkPacket packet = new(x, z);
+                    packet.Write(buffer);
+                    _client.Send(buffer);
+                }
+            }
+
+            Debug.Assert(buffer.Empty);
+
+            _renderedChunkGrid = (pChunkMax, pChunkMin);
+
+        }
+
+        public void RenderEntities(Player ownPlayer, PlayerSearchTable playerSearchTable)
+        {
+            Debug.Assert(!_isDisposed);
+
+            using Buffer buffer = new();
+
+            Queue<Player> newPlayers = new();
+            Queue<Player> players = new();
+
+            Set<int> renderedPlayerIds = new();
+
+            Debug.Assert(_loadedChunkGrid != null);
+            foreach (Chunk.Vector pChunk in _loadedChunkGrid.GetVectors())
+            {
+                IReadOnlyTable<Player> playersinChunk = playerSearchTable.Search(pChunk);
+                foreach (Player player in playersinChunk.GetValues())
+                {
+                    int id = player.Id;
+                    bool contains = _renderedPlayerIds.Contains(id);
+                    if (contains) 
+                        players.Enqueue(player);
+                    else
+                        newPlayers.Enqueue(player);
+
+                    _renderedPlayerIds.Extract(id);
+                }
+            }
+
+            while (!newPlayers.Empty)
+            {
+                Player player = newPlayers.Dequeue();
+
+                {
+                    SpawnPlayerPacket packet = new(
+                            player.Id, 
+                            player.UniqueId, 
+                            player.pos.x, player.pos.y, player.pos.z,
+                            0, 0);
+                    packet.Write(buffer);
+                    _client.Send(buffer);
+                }
+
+                renderedPlayerIds.Insert(player.Id);
+            }
+
+            while (!players.Empty)
+            {
+                Player player = newPlayers.Dequeue();
+
+                foreach (Player.Action action in player.Actions.GetValues())
+                {
+                    if (player.Id == ownPlayer.Id)
+                    {
+                        switch (action)
+                        {
+                            default:
+                                throw new NotImplementedException();
+                            case Player.StandingAction:
+                                // skip
+                                break;
+                            case Player.TransformationAction:
+                                // skip
+                                break;
+                            case Player.MovementAction:
+                                // skip
+                                break;
+                            case Player.RotationAction:
+                                // skip
+                                break;
+                            case Player.TeleportationAction:
+                                TeleportPacket packet = new();
+                                packet.Write(buffer);
+                                _client.Send(buffer);
+                                break;
+
+                        }
+                    }
+                    else
+                    {
+                        switch (action)
+                        {
+                            default:
+                                throw new NotImplementedException();
+                            case Player.StandingAction:
+                                write packet
+                                break;
+                            case Player.TransformationAction:
+                                write packet
+                                break;
+                            case Player.MovementAction:
+                                write packet
+                                break;
+                            case Player.RotationAction:
+                                write packet
+                                break;
+                            case Player.TeleportationAction:
+                                despawn and spawn entity
+                                break;
+                        }
+                    }
+                    
+                }
+
+                renderedPlayerIds.Insert(player.Id);
+            }
+
+            {
+                int[] _despawnedPlayerIds = _renderedPlayerIds.Flush();
+                DespawnEntitiesPacket packet = new(_despawnedPlayerIds);
+                packet.Write(buffer);
+                _client.Send(buffer);
+            }
+
+            _renderedPlayerIds = renderedPlayerIds;
+
+        }
 
         /// <summary>
         /// TODO: Add description.
         /// </summary>
         /// <param name="packet">TODO: Add description.</param>
-        public void Send()
+        public void SendData()
         {
             Debug.Assert(!_isDisposed);
 
@@ -1718,82 +1957,6 @@ namespace Protocol
             }
 
             Debug.Assert(_reports.Empty);
-        }
-
-        // TODO: Make chunks to readonly using interface? in this function.
-        public void UpdateChunks(Table<Chunk.Vector, Chunk> chunks, Player player)  
-        {
-            Chunk.Vector pChunkCenter = Chunk.Vector.Convert(player._pos);
-            int d = Settings.renderDistance;
-            Debug.Assert(d >= ClientsideSettings.MinRenderDistance);
-            Debug.Assert(d <= ClientsideSettings.MaxRenderDistance);
-
-            (Chunk.Vector pChunkMax, Chunk.Vector pChunkMin) = 
-                Chunk.Vector.GenerateGridAround(pChunkCenter, d);
-            Debug.Assert(pChunkMax.x > pChunkMin.x);
-            Debug.Assert(pChunkMax.z > pChunkMin.z);
-
-            (Chunk.Vector pChunkPrevMax, Chunk.Vector pChunkPrevMin) = _loadedChunkGrid;
-            Debug.Assert(pChunkPrevMax.x > pChunkPrevMin.x);
-            Debug.Assert(pChunkPrevMax.z > pChunkPrevMin.z);
-
-            if (pChunkMax.Equals(pChunkPrevMax) && pChunkMin.Equals(pChunkPrevMin)) 
-                return;
-
-            (Chunk.Vector pChunkBetweenMax, Chunk.Vector pChunkBetweenMin)
-                = Chunk.Vector.GenerateGridBetween(pChunkMax, pChunkMin, pChunkPrevMax, pChunkPrevMin);
-            Debug.Assert(pChunkBetweenMax.x > pChunkBetweenMin.x);
-            Debug.Assert(pChunkBetweenMax.z > pChunkBetweenMin.z);
-
-            Report? report = null;
-
-            // Load Chunks
-            for (int z = pChunkMin.z; z <= pChunkMax.z; ++z)
-            {
-                for (int x = pChunkMin.x; x <= pChunkMax.x; ++x)
-                {
-                    if (x <= pChunkBetweenMax.x && x >= pChunkBetweenMin.x &&
-                        z <= pChunkBetweenMax.z && z >= pChunkBetweenMin.z)
-                        continue;
-
-                    Chunk.Vector pChunkLoad = new(x, z);
-
-                    if (chunks.Contains(pChunkLoad))
-                    {
-                        Chunk chunk = chunks.Lookup(pChunkLoad);
-                        report = new LoadChunkReport(chunk);
-                    }
-                    else
-                        report = new LoadEmptyChunkReport(pChunkLoad);
-
-                    Debug.Assert(report != null);
-                    _reports.Enqueue(report);
-                }
-            }
-
-            // Unload Chunks
-            for (int z = pChunkPrevMin.z; z <= pChunkPrevMax.z; ++z)
-            {
-                for (int x = pChunkPrevMin.x; x <= pChunkPrevMax.x; ++x)
-                {
-                    if (x <= pChunkBetweenMax.x && x >= pChunkBetweenMin.x &&
-                        z <= pChunkBetweenMax.z && z >= pChunkBetweenMin.z)
-                        continue;
-
-                    Chunk.Vector pChunkUnload = new(x, z);
-
-                    report = new UnloadChunkReport(pChunkUnload);
-                    _reports.Enqueue(report);
-                }
-            }
-
-            _loadedChunkGrid = (pChunkMax, pChunkMin);
-
-        }
-
-        public void RenderPlayer(Player player, PlayerSearchTable playerSearchTable)
-        {
-            
         }
 
         private void Dispose(bool disposing)
@@ -2020,8 +2183,6 @@ namespace Protocol
                     continue;
                 }
 
-
-
                 Debug.Assert(step == SetupSteps.StartPlay);
                 Debug.Assert(!close);
                 Console.Write("Start init connection!");
@@ -2032,7 +2193,7 @@ namespace Protocol
                 Queue<Report> reports = new();
                 (Chunk.Vector, Chunk.Vector) loadedChunkGrid;
 
-                {
+               /* {
                     PlayerAbilitiesReport report = new(true, true, true, true, 1, 0);
                     reports.Enqueue(report);
                 }
@@ -2071,7 +2232,7 @@ namespace Protocol
                     // teleport
                     AbsoluteTeleportReport report = new(player._pos, player._look);
                     reports.Enqueue(report);
-                }
+                }*/
 
 
                 Connection conn = new(

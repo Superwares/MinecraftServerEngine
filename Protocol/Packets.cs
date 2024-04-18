@@ -114,12 +114,14 @@ namespace Protocol
 
     internal abstract class ClientboundPlayingPacket(int id) : PlayingPacket(id)
     {
+        public const int SpawnPlayerPacketId = 0x05;
         public const int LoadChunkPacketId = 0x20;
         public const int UnloadChunkPacketId = 0x1D;
         public const int KeepaliveRequestPacketId = 0x1F;
         public const int JoinGamePacketId = 0x23;
         public const int SetPlayerAbilitiesId = 0x2C;
         public const int TeleportPacketId = 0x2F;
+        public const int DestroyEntitiesPacketId = 0x32;
 
         public override WhereBound BoundTo => WhereBound.Clientbound;
 
@@ -466,6 +468,41 @@ namespace Protocol
         }
     }
 
+    internal class SpawnPlayerPacket : ClientboundPlayingPacket
+    {
+        public readonly int EntityId;
+        public readonly Guid UniqueId;
+        public readonly double X, Y, Z;
+        public readonly byte Yaw, Pitch;
+
+        public static SpawnPlayerPacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public SpawnPlayerPacket(
+            int entityId, 
+            Guid uniqueId, 
+            double x, double y, double z, 
+            byte yaw, byte pitch) : base(SpawnPlayerPacketId)
+        {
+            EntityId = entityId; 
+            UniqueId = uniqueId;
+            X = x; Y = y; Z = z;
+            Yaw = yaw; Pitch = pitch;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteInt(EntityId, true);
+            buffer.WriteGuid(UniqueId);
+            buffer.WriteDouble(X); buffer.WriteDouble(Y); buffer.WriteDouble(Z);
+            buffer.WriteByte(Yaw); buffer.WriteByte(Pitch);
+            buffer.WriteByte(0xff);  // no metadata.
+        }
+
+    }
+
     internal class LoadChunkPacket : ClientboundPlayingPacket
     {
         public readonly int XChunk, ZChunk;
@@ -709,6 +746,29 @@ namespace Protocol
             buffer.WriteByte(_flags);
             buffer.WriteInt(Payload, true);
 
+        }
+
+    }
+
+    internal class DestroyEntitiesPacket : ClientboundPlayingPacket
+    {
+        public readonly int[] EntityIds;
+
+        internal static DestroyEntitiesPacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public DestroyEntitiesPacket(int[] entityIds) : base(DestroyEntitiesPacketId)
+        {
+            EntityIds = entityIds;  // TODO: Copy
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteInt(EntityIds.Length, true);
+            foreach (int id in EntityIds)
+                buffer.WriteInt(id, true);
         }
 
     }

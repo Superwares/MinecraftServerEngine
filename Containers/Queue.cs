@@ -1,17 +1,11 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace Containers
 {
     public interface IReadOnlyQueue<T>
     {
-        public IEnumerable<T> GetValues();
+        public System.Collections.Generic.IEnumerable<T> GetValues();
     }
 
     public class Queue<T> : IDisposable, IReadOnlyQueue<T>
@@ -129,7 +123,7 @@ namespace Containers
             return values;
         }
 
-        public virtual IEnumerable<T> GetValues()
+        public virtual System.Collections.Generic.IEnumerable<T> GetValues()
         {
             Debug.Assert(!_isDisposed);
 
@@ -223,7 +217,7 @@ namespace Containers
             }
         }
 
-        public override IEnumerable<T> GetValues()
+        public override System.Collections.Generic.IEnumerable<T> GetValues()
         {
             Debug.Assert(!_isDisposed);
 
