@@ -1511,7 +1511,7 @@ namespace Protocol
             {
                 Debug.Assert(serverTicks % TickLimit >= 0);
                 if (serverTicks % TickLimit > 0)
-                    return;
+                    return false;
 
                 if (!_isConfirmed)
                     throw new KeepaliveTimeoutException();
@@ -1542,13 +1542,15 @@ namespace Protocol
 
         public readonly ClientsideSettings Settings;
 
-        private Chunk.Grid? _loadedChunkGrid = null;
+        private Chunk.Grid? _renderedChunkGrid = null;
 
         private Set<int> _renderedPlayerIds = new();
 
         private readonly Queue<TeleportationRecord> _teleportationRecords = new();
 
         private readonly KeepaliveObserver keepaliveChecker = new();
+
+        private readonly Queue<Report> _reports = new();
 
         private bool _isDisposed = false;
 
@@ -1580,7 +1582,7 @@ namespace Protocol
         /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
         public void Control(
-            Player player, ulong serverTicks, SearchTable<Player.Action> searchTable)
+            Player player, ulong serverTicks, PlayerSearchTable playerSearchTable)
         {
             Debug.Assert(!_isDisposed);
 
@@ -1653,7 +1655,7 @@ namespace Protocol
                                 Player.Vector p = new(packet.X, packet.Y, packet.Z);
                                 player.Move(p, packet.OnGround);
 
-                                searchTable.Update(player.Id, p);
+                                playerSearchTable.Update(player.Id, p);
 
                                 move = true;
                             }
@@ -1674,7 +1676,7 @@ namespace Protocol
                                     new(packet.Yaw, packet.Pitch), 
                                     packet.OnGround);
 
-                                searchTable.Update(player.Id, p);
+                                playerSearchTable.Update(player.Id, p);
 
                                 move = true;
                             }
@@ -1720,88 +1722,69 @@ namespace Protocol
         {
             Debug.Assert(!_isDisposed);
 
-            Chunk.Vector pChunkCenter = player.PosChunk;
+            Chunk.Vector pChunkCenter = Chunk.Vector.Convert(player.pos);
             int d = Settings.renderDistance;
             Debug.Assert(d >= ClientsideSettings.MinRenderDistance);
             Debug.Assert(d <= ClientsideSettings.MaxRenderDistance);
 
-            (Chunk.Vector pChunkMax, Chunk.Vector pChunkMin) = 
-                Chunk.Vector.GenerateGridAround(pChunkCenter, d);
-            Debug.Assert(pChunkMax.x > pChunkMin.x);
-            Debug.Assert(pChunkMax.z > pChunkMin.z);
+            Chunk.Grid grid = Chunk.Grid.GenerateAround(pChunkCenter, d);
 
-            if (_renderedChunkGrid.)
+            if (_renderedChunkGrid == null)
             {
-                return;
-            }
+                Report? report = null;
 
-            (Chunk.Vector pChunkPrevMax, Chunk.Vector pChunkPrevMin) = _renderedChunkGrid;
-            Debug.Assert(pChunkPrevMax.x > pChunkPrevMin.x);
-            Debug.Assert(pChunkPrevMax.z > pChunkPrevMin.z);
-
-            if (pChunkMax.Equals(pChunkPrevMax) && pChunkMin.Equals(pChunkPrevMin)) 
-                return;
-
-            (Chunk.Vector pChunkBetweenMax, Chunk.Vector pChunkBetweenMin)
-                = Chunk.Vector.GenerateGridBetween(pChunkMax, pChunkMin, pChunkPrevMax, pChunkPrevMin);
-            Debug.Assert(pChunkBetweenMax.x > pChunkBetweenMin.x);
-            Debug.Assert(pChunkBetweenMax.z > pChunkBetweenMin.z);
-
-            using Buffer buffer = new();
-            
-            // Load Chunks
-            for (int z = pChunkMin.z; z <= pChunkMax.z; ++z)
-            {
-                for (int x = pChunkMin.x; x <= pChunkMax.x; ++x)
+                foreach (Chunk.Vector pChunk in grid.GetVectors())
                 {
-                    if (x <= pChunkBetweenMax.x && x >= pChunkBetweenMin.x &&
-                        z <= pChunkBetweenMax.z && z >= pChunkBetweenMin.z)
-                        continue;
-
-                    Chunk.Vector pChunkLoad = new(x, z);
-
-                    if (chunks.Contains(pChunkLoad))
+                    if (chunks.Contains(pChunk))
                     {
-                        Chunk chunk = chunks.Lookup(pChunkLoad);
-                        (int mask, byte[] data) = Chunk.Write(chunk);
-
-                        LoadChunkPacket packet = new(pChunkLoad.x, pChunkLoad.z, true, mask, data);
-                        packet.Write(buffer);
-                        _client.Send(buffer);
+                        Chunk chunk = chunks.Lookup(pChunk);
+                        report = new LoadChunkReport(chunk);
                     }
                     else
                     {
-                        (int mask, byte[] data) = Chunk.Write();
-
-                        LoadChunkPacket packet = new(pChunkLoad.x, pChunkLoad.z, true, mask, data);
-                        packet.Write(buffer);
-                        _client.Send(buffer);
-
+                        report = new LoadEmptyChunkReport(pChunk);
                     }
+
+                    Debug.Assert(report != null);
+                    _reports.Enqueue(report);
                 }
+
+                return;
             }
 
-            Debug.Assert(buffer.Empty);
+            Debug.Assert(_renderedChunkGrid != null);
+            Chunk.Grid gridPrev = _renderedChunkGrid;
 
-            // Unload Chunks
-            for (int z = pChunkPrevMin.z; z <= pChunkPrevMax.z; ++z)
+            if (gridPrev.Equals(grid))
+                return;
+
+            Chunk.Grid gridBetween = Chunk.Grid.GenerateBetween(grid, gridPrev);
+
+            foreach (Chunk.Vector pChunk in grid.GetVectors())
             {
-                for (int x = pChunkPrevMin.x; x <= pChunkPrevMax.x; ++x)
+                if (gridBetween.Contains(pChunk))
+                    continue;
+
+                if (chunks.Contains(pChunk))
                 {
-                    if (x <= pChunkBetweenMax.x && x >= pChunkBetweenMin.x &&
-                        z <= pChunkBetweenMax.z && z >= pChunkBetweenMin.z)
-                        continue;
-
-
-                    UnloadChunkPacket packet = new(x, z);
-                    packet.Write(buffer);
-                    _client.Send(buffer);
+                    Chunk chunk = chunks.Lookup(pChunk);
+                    _reports.Enqueue(new LoadChunkReport(chunk));
+                }
+                else
+                {
+                    _reports.Enqueue(new LoadEmptyChunkReport(pChunk));
                 }
             }
+            
+            foreach (Chunk.Vector pChunk in gridPrev.GetVectors())
+            {
+                if (gridBetween.Contains(pChunk))
+                    continue;
 
-            Debug.Assert(buffer.Empty);
+                _reports.Enqueue(new UnloadChunkReport(pChunk));
+            }
 
-            _renderedChunkGrid = (pChunkMax, pChunkMin);
+            _renderedChunkGrid = grid;
 
         }
 
