@@ -119,6 +119,10 @@ namespace Protocol
         public const int UnloadChunkPacketId = 0x1D;
         public const int KeepaliveRequestPacketId = 0x1F;
         public const int JoinGamePacketId = 0x23;
+        public const int EntityPacketId = 0x25;
+        public const int EntityRelativeMovePacketId = 0x26;
+        public const int EntityLookAndRelativeMovePacketId = 0x27;
+        public const int EntityLookPacketId = 0x28;
         public const int SetPlayerAbilitiesId = 0x2C;
         public const int TeleportPacketId = 0x2F;
         public const int DestroyEntitiesPacketId = 0x32;
@@ -631,7 +635,6 @@ namespace Protocol
             _reducedDebugInfo = reducedDebugInfo;
 
         }
-
         protected override void WriteData(Buffer buffer)
         {
             buffer.WriteInt(_entityId);
@@ -642,6 +645,121 @@ namespace Protocol
             buffer.WriteString(_levelType);
             buffer.WriteBool(_reducedDebugInfo);
         }
+    }
+
+    internal class EntityPacket : ClientboundPlayingPacket
+    {
+        public readonly int EntityId;
+
+        internal static EntityPacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public EntityPacket(int entityId) : base(EntityPacketId)
+        {
+            EntityId = entityId;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteInt(EntityId, true);
+        }
+
+    }
+
+    internal class EntityRelativeMovePacket : ClientboundPlayingPacket
+    {
+        public readonly int EntityId;
+        public readonly short DeltaX, DeltaY, DeltaZ;
+        public readonly bool OnGround;
+
+        internal static EntityRelativeMovePacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public EntityRelativeMovePacket(
+            int entityId,
+            short dx, short dy, short dz,
+            bool onGround) : base(EntityRelativeMovePacketId)
+        {
+            EntityId = entityId;
+            DeltaX = dx; DeltaY = dy; DeltaZ = dz;
+            OnGround = onGround;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteInt(EntityId, true);
+            buffer.WriteShort(DeltaX); buffer.WriteShort(DeltaY); buffer.WriteShort(DeltaZ);
+            buffer.WriteBool(OnGround);
+        }
+
+    }
+
+    internal class EntityLookAndRelativeMovePacket : ClientboundPlayingPacket
+    {
+        public readonly int EntityId;
+        public readonly short DeltaX, DeltaY, DeltaZ;
+        public readonly byte Yaw, Pitch;
+        public readonly bool OnGround;
+
+        internal static EntityLookAndRelativeMovePacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public EntityLookAndRelativeMovePacket(
+            int entityId,
+            short dx, short dy, short dz,
+            byte yaw, byte pitch,
+            bool onGround) : base(EntityLookAndRelativeMovePacketId)
+        {
+            EntityId = entityId;
+            DeltaX = dx; DeltaY = dy; DeltaZ = dz;
+            Yaw = yaw; Pitch = pitch;
+            OnGround = onGround;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteInt(EntityId, true);
+            buffer.WriteShort(DeltaX); buffer.WriteShort(DeltaY); buffer.WriteShort(DeltaZ);
+            buffer.WriteByte(Yaw); buffer.WriteByte(Pitch);
+            buffer.WriteBool(OnGround);
+        }
+
+    }
+
+    internal class EntityLookPacket : ClientboundPlayingPacket
+    {
+        public readonly int EntityId;
+        public readonly byte Yaw, Pitch;
+        public readonly bool OnGround;
+
+        internal static EntityLookPacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public EntityLookPacket(
+            int entityId,
+            byte yaw, byte pitch,
+            bool onGround) : base(EntityLookPacketId)
+        {
+            EntityId = entityId;
+            Yaw = yaw; Pitch = pitch;
+            OnGround = onGround;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteInt(EntityId, true);
+            buffer.WriteByte(Yaw); buffer.WriteByte(Pitch);
+            buffer.WriteBool(OnGround);
+        }
+
     }
 
     internal class SetPlayerAbilitiesPacket : ClientboundPlayingPacket

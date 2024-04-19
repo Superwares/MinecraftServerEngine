@@ -89,6 +89,7 @@ namespace Application
                 {
                     // TODO: Release resources of player object.
 
+                    TODO: close player in player search table
                     _idList.Dealloc(id);
                     /*Console.WriteLine("Disconnected!");*/
                     continue;
@@ -189,7 +190,6 @@ namespace Application
 
                 conn.Close();
 
-
                 Queue<Report> reports = _reportsTable.Extract(id);
 
                 // TODO: Handle flush and release garbage.
@@ -206,29 +206,35 @@ namespace Application
             Console.Write(".");
             /*Console.Write($"{ticks}");*/
 
-            HandleConnectionControls(serverTicks);
-
-            // Barrier
-
-            HandlePlayers();
-
-            // Barrier
-
-            UpdateChunks();
-
-            // Barrier
-
             connListener.Accept(
                 _idList,
                 _connections, _players,
-                _reportsTable,
                 _chunks,
                 new(0, 60, 0), new(0, 0));
 
+            // Barrier
+
+            Physics();
 
             // Barrier
 
-            RenderPlayers();
+            HandleEntityRoutines();  // reset actions...
+
+            // Barrier
+
+            HandleConnectionControls(serverTicks);
+
+            //
+
+            UpdateEntityMovements();
+
+            // Barrier
+
+            RenderChunks();
+
+            // Barrier
+
+            RenderEntities();
 
             // Barrier
 

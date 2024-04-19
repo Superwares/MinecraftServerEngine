@@ -239,7 +239,7 @@ namespace Containers
             return false;
         }
 
-        public virtual void Flush()
+        public virtual K[] Flush()
         {
             Debug.Assert(!_isDisposed);
 
@@ -249,14 +249,26 @@ namespace Containers
             Debug.Assert(_count >= 0);
 
             if (_count == 0)
-                return;
+                return [];
+
+            var keys = new K[_count];
+
+            int i = 0;
+            for (int j = 0; j < _length; ++j)
+            {
+                if (!_flags[j]) continue;
+
+                keys[i++] = _keys[j];
+
+                if (i == _count) break;
+            }
 
             _flags = new bool[_MinLength];
             _keys = new K[_MinLength];
             _length = _MinLength;
             _count = 0;
 
-            return;
+            return keys;
         }
 
         public virtual System.Collections.Generic.IEnumerable<K> GetKeys()

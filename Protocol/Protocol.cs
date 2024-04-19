@@ -8,6 +8,8 @@ using System.Text;
 using System.Text.Json;
 using Applications;
 using Containers;
+using DocumentFormat.OpenXml.Vml.Office;
+using DocumentFormat.OpenXml.Vml.Spreadsheet;
 
 namespace Protocol
 {
@@ -1369,7 +1371,10 @@ namespace Protocol
 
         internal IReadOnlyQueue<Action> Actions => _actions;
 
-        public Player(int id, Vector pos, Angles look, bool onGround) { }
+        public Player(int id, Vector pos, Angles look, bool onGround)
+        {
+            Teleport(pos, look);
+        }
 
         public void Stand(bool onGround)
         {
@@ -1390,7 +1395,7 @@ namespace Protocol
             this.look = look;
             _onGround = onGround;
 
-            _actions.Enqueue(new TransformationAction(posPrev, this.pos, look, onGround);
+            _actions.Enqueue(new TransformationAction(posPrev, pos, look, onGround));
         }
 
         public void Move(Vector pos, bool onGround)
@@ -1507,7 +1512,7 @@ namespace Protocol
                 _isConfirmed = true;
             }
 
-            public void Update(ulong serverTicks, Queue<Report> reports)
+            public void Update(ulong serverTicks, Queue<ClientboundPlayingPacket> outPackets)
             {
                 Debug.Assert(serverTicks % TickLimit >= 0);
                 if (serverTicks % TickLimit > 0)
@@ -1517,9 +1522,8 @@ namespace Protocol
                     throw new KeepaliveTimeoutException();
 
                 _isConfirmed = false;
-                KeepaliveReport report = new();
-                _payload = report.Payload;
-                reports.Enqueue(report);
+                _payload = new Random().NextInt64();
+                outPackets.Enqueue(new KeepaliveRequestPacket(_payload));
 
             }
 
@@ -1550,7 +1554,7 @@ namespace Protocol
 
         private readonly KeepaliveObserver keepaliveChecker = new();
 
-        private readonly Queue<Report> _reports = new();
+        private readonly Queue<ClientboundPlayingPacket> _outPackets = new();
 
         private bool _isDisposed = false;
 
@@ -1568,6 +1572,9 @@ namespace Protocol
             Username = username;
 
             Settings = settings;
+
+            _outPackets.Enqueue(new SetPlayerAbilitiesPacket(
+                true, true, true, true, 1, 0));
         }
 
         ~Connection()
@@ -1713,7 +1720,7 @@ namespace Protocol
             foreach (TeleportationRecord record in _teleportationRecords.GetValues())
                 record.Update();
 
-            keepaliveChecker.Update(serverTicks, _reports);
+            keepaliveChecker.Update(serverTicks, _outPackets);
 
         }
 
@@ -1731,22 +1738,22 @@ namespace Protocol
 
             if (_renderedChunkGrid == null)
             {
-                Report? report = null;
+                int mask; byte[] data;
 
                 foreach (Chunk.Vector pChunk in grid.GetVectors())
                 {
                     if (chunks.Contains(pChunk))
                     {
                         Chunk chunk = chunks.Lookup(pChunk);
-                        report = new LoadChunkReport(chunk);
+                        (mask, data) = Chunk.Write(chunk);
                     }
                     else
                     {
-                        report = new LoadEmptyChunkReport(pChunk);
+                        (mask, data) = Chunk.Write();
                     }
 
-                    Debug.Assert(report != null);
-                    _reports.Enqueue(report);
+                    
+                    _outPackets.Enqueue(new LoadChunkPacket(pChunk.x, pChunk.z, true, mask, data));
                 }
 
                 return;
@@ -1765,15 +1772,19 @@ namespace Protocol
                 if (gridBetween.Contains(pChunk))
                     continue;
 
+                int mask; byte[] data;
+
                 if (chunks.Contains(pChunk))
                 {
                     Chunk chunk = chunks.Lookup(pChunk);
-                    _reports.Enqueue(new LoadChunkReport(chunk));
+                    (mask, data) = Chunk.Write(chunk);
                 }
                 else
                 {
-                    _reports.Enqueue(new LoadEmptyChunkReport(pChunk));
+                    (mask, data) = Chunk.Write();
                 }
+
+                _outPackets.Enqueue(new LoadChunkPacket(pChunk.x, pChunk.z, true, mask, data));
             }
             
             foreach (Chunk.Vector pChunk in gridPrev.GetVectors())
@@ -1781,7 +1792,7 @@ namespace Protocol
                 if (gridBetween.Contains(pChunk))
                     continue;
 
-                _reports.Enqueue(new UnloadChunkReport(pChunk));
+                _outPackets.Enqueue(new UnloadChunkPacket(pChunk.x, pChunk.z));
             }
 
             _renderedChunkGrid = grid;
@@ -1794,115 +1805,129 @@ namespace Protocol
 
             using Buffer buffer = new();
 
-            Queue<Player> newPlayers = new();
-            Queue<Player> players = new();
+            using Queue<Player> newPlayers = new();
+            using Queue<Player> players = new();
 
+            using Set<int> prevRenderedPlayerIds = _renderedPlayerIds;
             Set<int> renderedPlayerIds = new();
 
-            Debug.Assert(_loadedChunkGrid != null);
-            foreach (Chunk.Vector pChunk in _loadedChunkGrid.GetVectors())
+            Debug.Assert(_renderedChunkGrid != null);
+            foreach (Chunk.Vector pChunk in _renderedChunkGrid.GetVectors())
             {
-                IReadOnlyTable<Player> playersinChunk = playerSearchTable.Search(pChunk);
-                foreach (Player player in playersinChunk.GetValues())
+                IReadOnlyTable<int, Player> playersInChunk = playerSearchTable.Search(pChunk);
+                foreach (Player player in playersInChunk.GetValues())
                 {
                     int id = player.Id;
-                    bool contains = _renderedPlayerIds.Contains(id);
-                    if (contains) 
+                    if (prevRenderedPlayerIds.Contains(id))
+                    {
+                        prevRenderedPlayerIds.Extract(id);
                         players.Enqueue(player);
+                    }
                     else
                         newPlayers.Enqueue(player);
 
-                    _renderedPlayerIds.Extract(id);
-                }
+                    renderedPlayerIds.Insert(id);
+                }    
             }
 
-            while (!newPlayers.Empty)
+            foreach (Player player in newPlayers.GetValues())
             {
-                Player player = newPlayers.Dequeue();
-
-                {
-                    SpawnPlayerPacket packet = new(
-                            player.Id, 
-                            player.UniqueId, 
-                            player.pos.x, player.pos.y, player.pos.z,
-                            0, 0);
-                    packet.Write(buffer);
-                    _client.Send(buffer);
-                }
-
-                renderedPlayerIds.Insert(player.Id);
+                _outPackets.Enqueue(new SpawnPlayerPacket(
+                    player.Id, 
+                    player.UniqueId, 
+                    player.pos.x, player.pos.y, player.pos.z, 
+                    0, 0));
             }
 
-            while (!players.Empty)
+            foreach (Player player in players.GetValues())
             {
-                Player player = newPlayers.Dequeue();
+                if (player.Id == ownPlayer.Id) continue;
 
                 foreach (Player.Action action in player.Actions.GetValues())
                 {
-                    if (player.Id == ownPlayer.Id)
+                    switch (action)
                     {
-                        switch (action)
-                        {
-                            default:
-                                throw new NotImplementedException();
-                            case Player.StandingAction:
-                                // skip
-                                break;
-                            case Player.TransformationAction:
-                                // skip
-                                break;
-                            case Player.MovementAction:
-                                // skip
-                                break;
-                            case Player.RotationAction:
-                                // skip
-                                break;
-                            case Player.TeleportationAction:
-                                TeleportPacket packet = new();
-                                packet.Write(buffer);
-                                _client.Send(buffer);
-                                break;
+                        default:
+                            throw new NotImplementedException();
+                        case Player.StandingAction:
+                            _outPackets.Enqueue(new EntityPacket(player.Id));
+                            break;
+                        case Player.TransformationAction transformAction:
+                            // TODO: Check range
+                            _outPackets.Enqueue(new EntityLookAndRelativeMovePacket(
+                                player.Id,
+                                (short)((transformAction.Pos.x - transformAction.PosPrev.x) * 32 * 128),
+                                (short)((transformAction.Pos.y - transformAction.PosPrev.y) * 32 * 128),
+                                (short)((transformAction.Pos.z - transformAction.PosPrev.z) * 32 * 128),
+                                0, 0,
+                                transformAction.OnGround));
+                            break;
+                        case Player.MovementAction movementAction:
+                            _outPackets.Enqueue(new EntityRelativeMovePacket(
+                                player.Id,
+                                (short)((movementAction.Pos.x - movementAction.PosPrev.x) * 32 * 128),
+                                (short)((movementAction.Pos.y - movementAction.PosPrev.y) * 32 * 128),
+                                (short)((movementAction.Pos.z - movementAction.PosPrev.z) * 32 * 128),
+                                movementAction.OnGround));
+                            break;
+                        case Player.RotationAction rotationAction:
+                            _outPackets.Enqueue(new EntityLookPacket(
+                                player.Id,
+                                0, 0,
+                                rotationAction.OnGround));
+                            break;
+                        case Player.TeleportationAction:
+                            _outPackets.Enqueue(new DestroyEntitiesPacket([player.Id]));
+                            _outPackets.Enqueue(new SpawnPlayerPacket(
+                                player.Id,
+                                player.UniqueId,
+                                player.pos.x, player.pos.y, player.pos.z,
+                                0, 0));
+                            break;
 
-                        }
                     }
-                    else
-                    {
-                        switch (action)
-                        {
-                            default:
-                                throw new NotImplementedException();
-                            case Player.StandingAction:
-                                write packet
-                                break;
-                            case Player.TransformationAction:
-                                write packet
-                                break;
-                            case Player.MovementAction:
-                                write packet
-                                break;
-                            case Player.RotationAction:
-                                write packet
-                                break;
-                            case Player.TeleportationAction:
-                                despawn and spawn entity
-                                break;
-                        }
-                    }
-                    
                 }
+            }
 
-                renderedPlayerIds.Insert(player.Id);
+            foreach (Player.Action action in ownPlayer.Actions.GetValues())
+            {
+                switch (action)
+                {
+                    default:
+                        throw new NotImplementedException();
+                    case Player.StandingAction:
+                        // skip
+                        break;
+                    case Player.TransformationAction:
+                        // skip
+                        break;
+                    case Player.MovementAction:
+                        // skip
+                        break;
+                    case Player.RotationAction:
+                        // skip
+                        break;
+                    case Player.TeleportationAction teleportationAction:
+                        int payload = new Random().Next();
+
+                        TeleportationRecord record = new(payload);
+                        _teleportationRecords.Enqueue(record);
+
+                        _outPackets.Enqueue(new TeleportPacket(
+                            teleportationAction.Pos.x, teleportationAction.Pos.y, teleportationAction.Pos.z,
+                            teleportationAction.Look.yaw, teleportationAction.Look.pitch,
+                            false, false, false, false, false,
+                            payload));
+                        break;
+                }
             }
 
             {
                 int[] _despawnedPlayerIds = _renderedPlayerIds.Flush();
-                DespawnEntitiesPacket packet = new(_despawnedPlayerIds);
-                packet.Write(buffer);
-                _client.Send(buffer);
+                _outPackets.Enqueue(new DestroyEntitiesPacket(_despawnedPlayerIds));
             }
 
             _renderedPlayerIds = renderedPlayerIds;
-
         }
 
         /// <summary>
@@ -1917,17 +1942,11 @@ namespace Protocol
 
             try
             {
-                while (!_reports.Empty)
+                while (!_outPackets.Empty)
                 {
-                    Report report = _reports.Dequeue();
+                    ClientboundPlayingPacket packet = _outPackets.Dequeue();
 
-                    if (report is TeleportReport teleportReport)
-                    {
-                        TeleportationRecord record = new(teleportReport.Payload);
-                        _teleportationRecords.Enqueue(record);
-                    }
-
-                    report.Write(buffer);
+                    packet.Write(buffer);
                     _client.Send(buffer);
 
                     Debug.Assert(buffer.Empty);
@@ -1936,10 +1955,10 @@ namespace Protocol
             finally
             {
                 // TODO: Dealloc memory immediately for optimization.
-                _reports.Flush();
+                _outPackets.Flush();
             }
 
-            Debug.Assert(_reports.Empty);
+            Debug.Assert(_outPackets.Empty);
         }
 
         private void Dispose(bool disposing)
@@ -2019,9 +2038,8 @@ namespace Protocol
         public void Accept(
             NumList idList,
             Queue<(Connection, Player)> connections, Queue<Player> players,
-            Table<int, Queue<Report>> reportsTable,
-            Table<Chunk.Vector, Chunk> _chunks,  // TODO: readonly
-            
+            Table<Chunk.Vector, Chunk> chunks,  // TODO: readonly
+            Player.Vector posInit, Player.Angles lookInit)
         {
             if (_clients.Empty) return;
 
@@ -2171,74 +2189,26 @@ namespace Protocol
                 Console.Write("Start init connection!");
 
                 Debug.Assert(settings != null);
-                Player player = new(entityId, posInitial, lookInitial, false);
+                Player player = new(entityId, posInit, lookInit, false);
 
-                Queue<Report> reports = new();
-                (Chunk.Vector, Chunk.Vector) loadedChunkGrid;
-
-               /* {
-                    PlayerAbilitiesReport report = new(true, true, true, true, 1, 0);
-                    reports.Enqueue(report);
-                }
-
-                {
-                    Report? report = null;
-
-                    // load chunks
-                    Chunk.Vector c = Chunk.Vector.Convert(posInitial);
-                    int d = settings.renderDistance;
-                    (Chunk.Vector pMax, Chunk.Vector pMin) = Chunk.Vector.GenerateGridAround(c, d);
-                    for (int z = pMin.z; z <= pMax.z; ++z)
-                    {
-                        for (int x = pMin.x; x <= pMax.x; ++x)
-                        {
-                            Chunk.Vector p = new(x, z);
-
-                            if (_chunks.Contains(p))
-                            {
-                                Chunk chunk = _chunks.Lookup(p);
-                                report = new LoadChunkReport(chunk);
-                            }
-                            else
-                                report = new LoadEmptyChunkReport(p);
-
-                            Debug.Assert(report != null);
-                            reports.Enqueue(report);
-                        }
-                    }
-
-                    loadedChunkGrid = (pMax, pMin);
-
-                }
-
-                {
-                    // teleport
-                    AbsoluteTeleportReport report = new(player._pos, player._look);
-                    reports.Enqueue(report);
-                }*/
-
+                TODO: Add player to PlayerSearchTable
 
                 Connection conn = new(
                     entityId,
                     client,
                     userId, username,
-                    settings, 
-                    reports,
-                    loadedChunkGrid);
+                    settings);
 
                 connections.Enqueue((conn, player));
 
                 // TODO: when player is exists in the world, doesn't enqueue player.
                 players.Enqueue(player);
 
-                reportsTable.Insert(entityId, reports);
-
                 Console.Write("Finish init connection!");
 
             }
 
         }
-            Entity.Vector posInitial, Entity.Look lookInitial)
 
     }
 

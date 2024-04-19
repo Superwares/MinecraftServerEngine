@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static Protocol.Entity;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Protocol
 {
@@ -15,13 +9,18 @@ namespace Protocol
 
     }
 
-    internal class LoadChunkReport : Report
+    internal class PlayerSpawningReport : Report
+    {
+
+    }
+
+    internal class ChunkLoadingReport : Report
     {
         public readonly Chunk.Vector p;
         private readonly int _Mask;
         private readonly byte[] _Data;
 
-        public LoadChunkReport(Chunk c)
+        public ChunkLoadingReport(Chunk c)
         {
             (int mask, byte[] data) = Chunk.Write(c);
 
@@ -38,11 +37,11 @@ namespace Protocol
 
     }
 
-    internal class LoadEmptyChunkReport : Report
+    internal class EmptyChunkLoadingReport : Report
     {
         public readonly Chunk.Vector p;
 
-        public LoadEmptyChunkReport(Chunk.Vector p)
+        public EmptyChunkLoadingReport(Chunk.Vector p)
         {
             this.p = p;
         }
@@ -56,11 +55,11 @@ namespace Protocol
 
     }
 
-    internal class UnloadChunkReport : Report
+    internal class ChunkUnloadingReport : Report
     {
         public readonly Chunk.Vector p;
 
-        public UnloadChunkReport(Chunk.Vector p)
+        public ChunkUnloadingReport(Chunk.Vector p)
         {
             this.p = p;
         }
@@ -72,11 +71,11 @@ namespace Protocol
         }
     }
 
-    internal class UnloadChunksReport : Report
+    internal class ChunksUnloadingReport : Report
     {
         public readonly Chunk.Vector[] P;
 
-        public UnloadChunksReport(Chunk.Vector[] P)
+        public ChunksUnloadingReport(Chunk.Vector[] P)
         {
             this.P = P;
         }
@@ -136,18 +135,18 @@ namespace Protocol
 
     public abstract class TeleportReport : Report
     {
-        public readonly Entity.Vector Pos;
-        public readonly Entity.Look Look;
+        public readonly Player.Vector Pos;
+        public readonly Player.Angles Look;
         public readonly int Payload;
 
         public TeleportReport(
-            Entity.Vector pos, Entity.Look look)
+            Player.Vector pos, Player.Angles look)
         {
             Debug.Assert(
-                look.yaw >= Entity.Look.MinYaw &&
-                look.yaw <= Entity.Look.MaxYaw &&
-                look.pitch >= Entity.Look.MinPitch &&
-                look.pitch <= Entity.Look.MaxPitch);
+                look.yaw >= Player.Angles.MinYaw &&
+                look.yaw <= Player.Angles.MaxYaw &&
+                look.pitch >= Player.Angles.MinPitch &&
+                look.pitch <= Player.Angles.MaxPitch);
 
             Pos = pos; Look = look;
             Payload = new Random().Next();  // TODO: Make own random generator in common library.
@@ -158,7 +157,7 @@ namespace Protocol
 
     public class AbsoluteTeleportReport : TeleportReport
     {
-        public AbsoluteTeleportReport(Entity.Vector pos, Entity.Look look) 
+        public AbsoluteTeleportReport(Player.Vector pos, Player.Angles look) 
             : base(pos, look) { }
 
         internal override void Write(Buffer buffer)
@@ -175,7 +174,7 @@ namespace Protocol
 
     public class RelativeTeleportReport : TeleportReport
     {
-        public RelativeTeleportReport(Entity.Vector pos, Entity.Look look) 
+        public RelativeTeleportReport(Player.Vector pos, Player.Angles look) 
             : base(pos, look) { }
 
         internal override void Write(Buffer buffer)
