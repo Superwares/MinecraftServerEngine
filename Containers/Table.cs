@@ -49,7 +49,7 @@ namespace Containers
             Debug.Assert(!_isDisposed);
 
             /*Debug.Assert(key != null);*/
-            return key.GetHashCode() * _C;
+            return Math.Abs(key.GetHashCode() * _C);
         }
 
         private void Resize(int newLength)
@@ -60,7 +60,7 @@ namespace Containers
             Debug.Assert(_keys.Length >= _MinLength);
             Debug.Assert(_values.Length >= _MinLength);
             Debug.Assert(_length >= _MinLength);
-            Debug.Assert(_count > 0);
+            Debug.Assert(_count >= 0);
 
             bool[] oldFlags = _flags;
             K[] oldKeys = _keys;

@@ -1019,11 +1019,6 @@ namespace Protocol
                     (pos.z >= 0) ? ((int)pos.z / Width) : (((int)pos.z / (Width + 1)) - 1));
             }
             
-            public static bool IsEmptyGrid((Vector, Vector) grid)
-            {
-                return grid.Equals(EmptyGrid);
-            }
-
             public bool Equals(Vector other)
             {
                 return (x == other.x) && (z == other.z);
@@ -1099,6 +1094,7 @@ namespace Protocol
 
             public bool Equals(Grid other)
             {
+                Debug.Assert(other != null);
                 return (other._max.Equals(_max) && other._min.Equals(_min));
             }
 
@@ -1367,13 +1363,18 @@ namespace Protocol
         public Angles look;
         private bool _onGround;
 
-        private readonly Queue<Action> _actions;
+        private readonly Queue<Action> _actions = new();
 
         internal IReadOnlyQueue<Action> Actions => _actions;
 
         public Player(int id, Vector pos, Angles look, bool onGround)
         {
             Teleport(pos, look);
+        }
+
+        public void Reset()
+        {
+            _actions.Flush();  // TODO: release resources for no garbage.
         }
 
         public void Stand(bool onGround)
@@ -1426,41 +1427,69 @@ namespace Protocol
 
     }
 
-    /*public sealed class PlayerSearchTable
+    // TODO: Make disposable object
+    public sealed class PlayerSearchTable
     {
-        private readonly Table<Chunk.Vector, Player[]> _chunkToPlayers = new();
+        private readonly Table<Chunk.Vector, Table<int, Player>> _chunkToPlayers = new();
 
         public PlayerSearchTable() { }
 
         public void Init(Player player)
         {
             Chunk.Vector pChunk = Chunk.Vector.Convert(player.pos);
-            
+
             if (!_chunkToPlayers.Contains(pChunk))
-                _chunkToPlayers.Insert()
+                _chunkToPlayers.Insert(pChunk, new());
+
+            _chunkToPlayers.Lookup(pChunk).Insert(player.Id, player);
         }
 
         public void Close(Player player)
         {
-            int id = player.Id;
+            Chunk.Vector pChunk = Chunk.Vector.Convert(player.pos);
 
-            throw new NotImplementedException();
+            Table<int, Player> players = _chunkToPlayers.Lookup(pChunk);
+            players.Extract(player.Id);
+
+            if (players.Empty)
+                _chunkToPlayers.Extract(pChunk);
         }
 
         public void Update(Player player)
         {
-            throw new NotImplementedException();
+            Chunk.Vector pChunk = Chunk.Vector.Convert(player.pos);
+            Chunk.Vector pChunkPrev = Chunk.Vector.Convert(player.posPrev);
+            if (pChunk.Equals(pChunkPrev)) return;
+
+            {
+                Table<int, Player> players = _chunkToPlayers.Lookup(pChunkPrev);
+                players.Extract(player.Id);
+                if (players.Empty)
+                    _chunkToPlayers.Extract(pChunkPrev);
+            }
+
+            {
+                if (!_chunkToPlayers.Contains(pChunk))
+                    _chunkToPlayers.Insert(pChunk, new());
+
+                _chunkToPlayers.Lookup(pChunk).Insert(player.Id, player);
+            }
         }
 
-        public Player[] Search(Chunk.Vector p)
+        public bool Contains(Chunk.Vector p)
+        {
+            return _chunkToPlayers.Contains(p);
+        }
+
+        public IReadOnlyTable<int, Player> Search(Chunk.Vector p)
         {
             return _chunkToPlayers.Lookup(p);
         }
 
 
-    }*/
+    }
 
-    
+
 
     public sealed class Connection : IDisposable
     {
@@ -1516,7 +1545,7 @@ namespace Protocol
             {
                 Debug.Assert(serverTicks % TickLimit >= 0);
                 if (serverTicks % TickLimit > 0)
-                    return false;
+                    return;
 
                 if (!_isConfirmed)
                     throw new KeepaliveTimeoutException();
@@ -1537,7 +1566,7 @@ namespace Protocol
 
         }
 
-        private Client _client;
+        private Client _client;  // dispoasble
 
         public readonly int Id;
 
@@ -1548,13 +1577,13 @@ namespace Protocol
 
         private Chunk.Grid? _renderedChunkGrid = null;
 
-        private Set<int> _renderedPlayerIds = new();
+        private Set<int> _renderedPlayerIds = new();  // dispoasble
 
-        private readonly Queue<TeleportationRecord> _teleportationRecords = new();
+        private readonly Queue<TeleportationRecord> _teleportationRecords = new();  // dispoasble
 
         private readonly KeepaliveObserver keepaliveChecker = new();
 
-        private readonly Queue<ClientboundPlayingPacket> _outPackets = new();
+        private readonly Queue<ClientboundPlayingPacket> _outPackets = new();  // dispoasble
 
         private bool _isDisposed = false;
 
@@ -1662,7 +1691,7 @@ namespace Protocol
                                 Player.Vector p = new(packet.X, packet.Y, packet.Z);
                                 player.Move(p, packet.OnGround);
 
-                                playerSearchTable.Update(player.Id, p);
+                                playerSearchTable.Update(player);
 
                                 move = true;
                             }
@@ -1683,7 +1712,7 @@ namespace Protocol
                                     new(packet.Yaw, packet.Pitch), 
                                     packet.OnGround);
 
-                                playerSearchTable.Update(player.Id, p);
+                                playerSearchTable.Update(player);
 
                                 move = true;
                             }
@@ -1756,6 +1785,7 @@ namespace Protocol
                     _outPackets.Enqueue(new LoadChunkPacket(pChunk.x, pChunk.z, true, mask, data));
                 }
 
+                _renderedChunkGrid = grid;
                 return;
             }
 
@@ -1803,8 +1833,6 @@ namespace Protocol
         {
             Debug.Assert(!_isDisposed);
 
-            using Buffer buffer = new();
-
             using Queue<Player> newPlayers = new();
             using Queue<Player> players = new();
 
@@ -1814,24 +1842,30 @@ namespace Protocol
             Debug.Assert(_renderedChunkGrid != null);
             foreach (Chunk.Vector pChunk in _renderedChunkGrid.GetVectors())
             {
+                if (!playerSearchTable.Contains(pChunk))
+                    continue;
+
                 IReadOnlyTable<int, Player> playersInChunk = playerSearchTable.Search(pChunk);
                 foreach (Player player in playersInChunk.GetValues())
                 {
-                    int id = player.Id;
-                    if (prevRenderedPlayerIds.Contains(id))
+                    if (player.Id == ownPlayer.Id) continue;
+
+                    if (prevRenderedPlayerIds.Contains(player.Id))
                     {
-                        prevRenderedPlayerIds.Extract(id);
+                        prevRenderedPlayerIds.Extract(player.Id);
                         players.Enqueue(player);
                     }
                     else
                         newPlayers.Enqueue(player);
 
-                    renderedPlayerIds.Insert(id);
+                    renderedPlayerIds.Insert(player.Id);
                 }    
             }
 
             foreach (Player player in newPlayers.GetValues())
             {
+                Debug.Assert(player.Id != ownPlayer.Id);
+
                 _outPackets.Enqueue(new SpawnPlayerPacket(
                     player.Id, 
                     player.UniqueId, 
@@ -1841,7 +1875,7 @@ namespace Protocol
 
             foreach (Player player in players.GetValues())
             {
-                if (player.Id == ownPlayer.Id) continue;
+                Debug.Assert(player.Id != ownPlayer.Id);
 
                 foreach (Player.Action action in player.Actions.GetValues())
                 {
@@ -1922,10 +1956,13 @@ namespace Protocol
                 }
             }
 
+            if (!prevRenderedPlayerIds.Empty)
             {
-                int[] _despawnedPlayerIds = _renderedPlayerIds.Flush();
-                _outPackets.Enqueue(new DestroyEntitiesPacket(_despawnedPlayerIds));
+                int[] despawnedPlayerIds = prevRenderedPlayerIds.Flush();
+                _outPackets.Enqueue(new DestroyEntitiesPacket(despawnedPlayerIds));
             }
+
+            newPlayers.Flush(); players.Flush();
 
             _renderedPlayerIds = renderedPlayerIds;
         }
@@ -1937,6 +1974,8 @@ namespace Protocol
         public void SendData()
         {
             Debug.Assert(!_isDisposed);
+
+            if (_outPackets.Empty) return;
 
             using Buffer buffer = new();
 
@@ -1969,10 +2008,11 @@ namespace Protocol
             {
                 // managed objects
                 _client.Dispose();
-                _reports.Dispose();
 
+                _renderedPlayerIds.Dispose();
                 _teleportationRecords.Flush();  // TODO: Release resources corrently for no garbage.
                 _teleportationRecords.Dispose();
+                _outPackets.Dispose();
             }
 
             // unmanaged objects
@@ -2038,6 +2078,7 @@ namespace Protocol
         public void Accept(
             NumList idList,
             Queue<(Connection, Player)> connections, Queue<Player> players,
+            PlayerSearchTable playerSearchTable,
             Table<Chunk.Vector, Chunk> chunks,  // TODO: readonly
             Player.Vector posInit, Player.Angles lookInit)
         {
@@ -2191,8 +2232,7 @@ namespace Protocol
                 Debug.Assert(settings != null);
                 Player player = new(entityId, posInit, lookInit, false);
 
-                TODO: Add player to PlayerSearchTable
-
+                playerSearchTable.Init(player);
                 Connection conn = new(
                     entityId,
                     client,

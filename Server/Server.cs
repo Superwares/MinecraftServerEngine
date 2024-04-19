@@ -13,17 +13,16 @@ namespace Application
     {
         private bool _isDisposed = false;
 
-        private readonly ConcurrentNumList _idList = new();
+        private readonly ConcurrentNumList _idList = new();  // Disposable
 
-        private readonly Queue<(Connection, Player)> _connections = new();
-        private readonly Queue<(Connection, string?)> _disconnections = new();
+        private readonly Queue<(Connection, Player)> _connections = new();  // Disposable
+        private readonly Queue<(Connection, string?)> _disconnections = new();  // Disposable
 
-        private readonly Queue<Player> _players = new();
+        private readonly PlayerSearchTable _playerSearchTable = new();  // Disposable
+        private readonly Queue<Player> _players = new();  // Disposable
 
-        private readonly Table<int, Queue<Report>> _reportsTable = new();
+        private readonly Table<Chunk.Vector, Chunk> _chunks = new();  // Disposable
 
-        private readonly Table<Chunk.Vector, Chunk> _chunks = new();
-        
 
         private Server() { }
 
@@ -47,7 +46,7 @@ namespace Application
 
                 try
                 {
-                    conn.Control(player, serverTicks, playerSearchTable);
+                    conn.Control(player, serverTicks, _playerSearchTable);
                 }
                 catch (UnexpectedClientBehaviorExecption e)
                 {
@@ -74,7 +73,7 @@ namespace Application
 
         }
 
-        private void HandlePlayers()
+        private void HandleEntityRoutines()
         {
             if (_players.Empty) return;
 
@@ -83,14 +82,13 @@ namespace Application
             for (int i = 0; i < count; ++i)
             {
                 Player player = _players.Dequeue();
-                int id = player.Id;
 
                 if (!player.isConnected)
                 {
                     // TODO: Release resources of player object.
 
-                    TODO: close player in player search table
-                    _idList.Dealloc(id);
+                    _playerSearchTable.Close(player);
+                    _idList.Dealloc(player.Id);
                     /*Console.WriteLine("Disconnected!");*/
                     continue;
 
@@ -101,7 +99,7 @@ namespace Application
 
         }
 
-        private void UpdateChunks()
+        private void Render()
         {
             if (_connections.Empty) return;
 
@@ -111,25 +109,10 @@ namespace Application
                 (Connection conn, Player player) = _connections.Dequeue();
 
                 conn.RenterChunks(_chunks, player);
+                conn.RenderEntities(player, _playerSearchTable);
 
                 _connections.Enqueue((conn, player));
             }
-        }
-
-        private void RenderPlayers()
-        {
-            if (_connections.Empty) return;
-
-            int count = _connections.Count;
-            for (int i = 0; i < count; ++i)
-            {
-                (Connection conn, Player player) = _connections.Dequeue();
-
-                conn.RenderPlayer(player, playerSearchTable);
-
-                _connections.Enqueue((conn, player));
-            }
-
         }
 
         private void SendData()
@@ -190,12 +173,17 @@ namespace Application
 
                 conn.Close();
 
-                Queue<Report> reports = _reportsTable.Extract(id);
-
                 // TODO: Handle flush and release garbage.
-                Debug.Assert(reports.Empty);
+            }
+        }
 
-                reports.Close();
+        private void Reset()
+        {
+            if (_players.Empty) return;
+
+            foreach (Player player in _players.GetValues())
+            {
+                player.Reset();
             }
         }
 
@@ -209,12 +197,13 @@ namespace Application
             connListener.Accept(
                 _idList,
                 _connections, _players,
+                _playerSearchTable,
                 _chunks,
                 new(0, 60, 0), new(0, 0));
 
             // Barrier
 
-            Physics();
+            /*Physics();*/
 
             // Barrier
 
@@ -226,15 +215,11 @@ namespace Application
 
             //
 
-            UpdateEntityMovements();
+            /*UpdateEntityMovements();*/
 
             // Barrier
 
-            RenderChunks();
-
-            // Barrier
-
-            RenderEntities();
+            Render();
 
             // Barrier
 
@@ -243,6 +228,10 @@ namespace Application
             // Barrier
 
             HandleDisconnections();
+
+            // Barrier
+
+            Reset();
 
             // Barrier
 
@@ -298,9 +287,8 @@ namespace Application
                     _connections.Dispose();
                     _disconnections.Dispose();
 
+                    // _playerSearchTable.Dispose();
                     _players.Dispose();
-
-                    _reportsTable.Dispose();
 
                     _chunks.Dispose();
                 }

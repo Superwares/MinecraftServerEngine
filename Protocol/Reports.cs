@@ -9,11 +9,6 @@ namespace Protocol
 
     }
 
-    internal class PlayerSpawningReport : Report
-    {
-
-    }
-
     internal class ChunkLoadingReport : Report
     {
         public readonly Chunk.Vector p;
