@@ -40,7 +40,10 @@ namespace Containers
         }
         public bool Empty => (Count == 0);
 
-        public Table() { }
+        public Table() 
+        { 
+            
+        }
 
         ~Table() => Dispose(false);
 
@@ -119,11 +122,11 @@ namespace Containers
             for (int i = 0; i < _length; ++i)
             {
                 int index = (hash + i) % _length;
-                K currentKey = _keys[index];
 
                 if (_flags[index])
                 {
-                    if (key.Equals(currentKey))
+                    /*Console.WriteLine($"_keys[index]: {_keys[index]}, _key: {key} ");*/
+                    if (_keys[index].Equals(key))
                         throw new DuplicateKeyException();
 
                     continue;

@@ -16,13 +16,11 @@ namespace Application
         private readonly ConcurrentNumList _idList = new();  // Disposable
 
         private readonly Queue<(Connection, Player)> _connections = new();  // Disposable
-        private readonly Queue<(Connection, string?)> _disconnections = new();  // Disposable
 
         private readonly PlayerSearchTable _playerSearchTable = new();  // Disposable
         private readonly Queue<Player> _players = new();  // Disposable
 
         private readonly Table<Chunk.Vector, Chunk> _chunks = new();  // Disposable
-
 
         private Server() { }
 
@@ -48,25 +46,15 @@ namespace Application
                 {
                     conn.Control(player, serverTicks, _playerSearchTable);
                 }
-                catch (UnexpectedClientBehaviorExecption e)
-                {
-                    Debug.Assert(!close);
-                    close = true;
-
-                    msg = e.Message;
-                }
                 catch (DisconnectedClientException)
                 {
+                    conn.Close();
+
                     Debug.Assert(!close);
                     close = true;
                 }
 
-                if (close)
-                {
-                    player.isConnected = false;
-                    _disconnections.Enqueue((conn, msg));
-                    continue;
-                }
+                if (close) continue;
 
                 _connections.Enqueue((conn, player));
             }
@@ -132,49 +120,23 @@ namespace Application
 
                 try
                 {
-                    conn.SendData();
+                    conn.SendData(player);
                 }
                 catch (DisconnectedClientException)
                 {
+                    conn.Close();
+
                     Debug.Assert(!close);
                     close = true;
                 }
 
-                if (close)
-                {
-                    player.isConnected = false;
-                    _disconnections.Enqueue((conn, null));
-                    continue;
-                }
+                if (close) continue;
 
                 _connections.Enqueue((conn, player));
 
             }
 
             /*Console.Write("Finish send data!");*/
-        }
-
-        private void HandleDisconnections()
-        {
-            if (_disconnections.Empty) return;
-
-            int count = _disconnections.Count;
-            Debug.Assert(count > 0);
-            for (int i = 0; i < count; ++i)
-            {
-                (Connection conn, string? msg) = _disconnections.Dequeue();
-
-                int id = conn.Id;
-
-                if (msg != null)
-                {
-                    // TODO: Send message why disconnected.
-                }
-
-                conn.Close();
-
-                // TODO: Handle flush and release garbage.
-            }
         }
 
         private void Reset()
@@ -227,10 +189,6 @@ namespace Application
 
             // Barrier
 
-            HandleDisconnections();
-
-            // Barrier
-
             Reset();
 
             // Barrier
@@ -279,15 +237,15 @@ namespace Application
         {
             if (!_isDisposed)
             {
+
                 if (disposing == true)
                 {
                     // Release managed resources.
                     _idList.Dispose();
 
                     _connections.Dispose();
-                    _disconnections.Dispose();
 
-                    // _playerSearchTable.Dispose();
+                    _playerSearchTable.Dispose();
                     _players.Dispose();
 
                     _chunks.Dispose();
@@ -320,9 +278,8 @@ namespace Application
             while (app.Running)
             {
                 // Handle Barriers
-                Thread.Sleep(int.MaxValue);
+                Thread.Sleep(1000);
             }
-
 
         }
 

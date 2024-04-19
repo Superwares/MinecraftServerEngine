@@ -21,46 +21,45 @@ namespace Applications
 
         private readonly object _SharedObject = new();
 
-        private bool _closed = false;
-        public bool Closed => _closed;
-        public bool Running => !_closed;
+        private bool _running = true;
+        public bool Running => _running;
 
-        
         private readonly Queue<Thread> _threads = new();
-
 
         private bool _disposed = false;
 
-        private void Close()
+        private void Cancel()
         {
             Debug.Assert(!_disposed);
 
-            _closed = true;
-
-            while (_threads.Count > 0)
-            {
-                Thread t = _threads.Dequeue();
-                t.Join();
-            }
-
-            /*Thread.Sleep(1000 * 5);*/
-
-            Console.WriteLine("Close!");
             lock (_SharedObject)
-                Monitor.Pulse(_SharedObject);
+            {
+                _running = false;
+
+                while (_threads.Count > 0)
+                {
+                    Thread t = _threads.Dequeue();
+                    t.Join();
+                }
+
+                Monitor.Wait(_SharedObject);
+            }
         }
 
         public ConsoleApplication()
         {
-            Console.CancelKeyPress += (sender, e) => Close();
+            Console.CancelKeyPress += (sender, e) => Cancel();
         }
 
-        ~ConsoleApplication() => Dispose(false);
+        ~ConsoleApplication()
+        {
+            Debug.Assert(false);
+        }
 
         protected void Run(StartRoutine startRoutine)
         {
             Debug.Assert(!_disposed);
-            Debug.Assert(Closed == false);
+            Debug.Assert(_running);
 
             Thread thread = new(new ThreadStart(startRoutine));
             thread.Start();
@@ -70,10 +69,10 @@ namespace Applications
 
         protected virtual void Dispose(bool disposing)
         {
-            Debug.Assert(Closed == true);
-
-            lock (_SharedObject)
-                Monitor.Wait(_SharedObject);
+            Debug.Assert(!_running);
+            
+            lock (_SharedObject) 
+                Monitor.Pulse(_SharedObject);
 
             if (_disposed) return;
 
@@ -89,13 +88,18 @@ namespace Applications
             // Release unmanaged resources.
 
             _disposed = true;
+
+            Console.WriteLine("Close!");
         }
 
         public void Dispose()
         {
+            Console.WriteLine("Dispose!");
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+
+        /*public void Close() => Dispose();*/
 
     }
 
