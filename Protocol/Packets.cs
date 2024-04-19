@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Protocol
 {
@@ -124,6 +120,9 @@ namespace Protocol
         public const int EntityLookAndRelativeMovePacketId = 0x27;
         public const int EntityLookPacketId = 0x28;
         public const int SetPlayerAbilitiesId = 0x2C;
+        public const int AddPlayerListItemPacketId = 0x2E;
+        public const int UpdatePlayerListItemLatencyPacketId = 0x2E;
+        public const int RemovePlayerListItemPacketId = 0x2E;
         public const int TeleportPacketId = 0x2F;
         public const int DestroyEntitiesPacketId = 0x32;
 
@@ -808,6 +807,65 @@ namespace Protocol
 
     }
     
+    internal class AddPlayerListItemPacket : ClientboundPlayingPacket
+    {
+        public readonly Guid UniqueId;
+        public readonly string Username;
+
+        internal static AddPlayerListItemPacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public AddPlayerListItemPacket(Guid uniqueId, string username)
+            : base(AddPlayerListItemPacketId)
+        {
+            UniqueId = uniqueId;
+            Username = username;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteInt(0, true);
+            buffer.WriteInt(1, true);
+            buffer.WriteGuid(UniqueId);
+            buffer.WriteString(Username);
+            buffer.WriteInt(0, true);  
+            buffer.WriteInt(0, true);  // gamemode
+            buffer.WriteInt(-1, true);  // latency
+            buffer.WriteBool(false);
+        }
+
+    }
+
+   /* internal class UpdatePlayerListItemLatencyPacket : ClientboundPlayingPacket
+    {
+
+    }*/
+
+    internal class RemovePlayerListItemPacket : ClientboundPlayingPacket
+    {
+        public readonly Guid UniqueId;
+
+        internal static RemovePlayerListItemPacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public RemovePlayerListItemPacket(Guid uniqueId)
+            : base(RemovePlayerListItemPacketId)
+        {
+            UniqueId = uniqueId;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteInt(4, true);
+            buffer.WriteInt(1, true);
+            buffer.WriteGuid(UniqueId);
+        }
+    }
+
     internal class TeleportPacket : ClientboundPlayingPacket
     {
         public readonly double X, Y, Z;

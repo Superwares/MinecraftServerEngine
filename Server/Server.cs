@@ -17,6 +17,7 @@ namespace Application
 
         private readonly Queue<(Connection, Player)> _connections = new();  // Disposable
 
+        private readonly PlayerList _playerList = new();  // Disposable
         private readonly PlayerSearchTable _playerSearchTable = new();  // Disposable
         private readonly Queue<Player> _players = new();  // Disposable
 
@@ -75,7 +76,8 @@ namespace Application
                 {
                     // TODO: Release resources of player object.
 
-                    _playerSearchTable.Close(player);
+                    _playerList.Remove(player.UniqueId);
+                    _playerSearchTable.Close(player.Id);
                     _idList.Dealloc(player.Id);
                     /*Console.WriteLine("Disconnected!");*/
                     continue;
@@ -96,6 +98,7 @@ namespace Application
             {
                 (Connection conn, Player player) = _connections.Dequeue();
 
+                conn.UpdatePlayerList(_playerList);
                 conn.RenterChunks(_chunks, player);
                 conn.RenderEntities(player, _playerSearchTable);
 
@@ -143,6 +146,8 @@ namespace Application
         {
             if (_players.Empty) return;
 
+            _playerList.Reset();
+
             foreach (Player player in _players.GetValues())
             {
                 player.Reset();
@@ -160,6 +165,7 @@ namespace Application
                 _idList,
                 _connections, _players,
                 _playerSearchTable,
+                _playerList,
                 _chunks,
                 new(0, 60, 0), new(0, 0));
 
@@ -245,6 +251,7 @@ namespace Application
 
                     _connections.Dispose();
 
+                    _playerList.Dispose();
                     _playerSearchTable.Dispose();
                     _players.Dispose();
 

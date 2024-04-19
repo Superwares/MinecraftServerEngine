@@ -1,16 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Net;
-using System.Net.Http;
 using System.Net.Sockets;  // TODO: Use custom socket object in common library.
+using System.Numerics;
 using System.Text;
-using System.Text.Json;
 using Applications;
 using Containers;
-using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Vml.Office;
-using DocumentFormat.OpenXml.Vml.Spreadsheet;
 
 namespace Protocol
 {
@@ -1432,12 +1427,123 @@ namespace Protocol
 
     }
 
+    public sealed class PlayerList : IDisposable
+    {
+        private class Item
+        {
+            public readonly Guid UniqueId;
+            public readonly string Username;
+            /*public int latency;*/
+
+            public Item(Guid uniqueId, string username)
+            {
+                UniqueId = uniqueId;
+                Username = username;
+            }
+
+        }
+
+        private bool _isDisposed = false;
+
+        private readonly Table<Guid, Item> _addedItems = new();
+        private readonly Queue<Item> _removedItems = new();
+        private readonly Table<Guid, Item> _items = new();
+
+        ~PlayerList() => Dispose();
+
+        public void Reset()
+        {
+            foreach (Item item in _addedItems.GetValues())
+            {
+                _items.Insert(item.UniqueId, item);
+            }
+
+            _addedItems.Flush();
+            _removedItems.Flush();  // TODO: Release explicitely resources for no garbage.
+
+            Debug.Assert(_addedItems.Empty);
+            Debug.Assert(_removedItems.Empty);
+        }
+
+        public bool Contains(Guid uniqueId)
+        {
+            if (_addedItems.Contains(uniqueId))
+                return true;
+            if (_items.Contains(uniqueId))
+                return true;
+
+            return false;
+        }
+
+        public void Add(Guid uniqueId, string username)
+        {
+            Debug.Assert(!Contains(uniqueId));
+
+            Item item = new(uniqueId, username);
+            _addedItems.Insert(uniqueId, item);
+        }
+
+        public void Remove(Guid uniqueId)
+        {
+            Debug.Assert(Contains(uniqueId));
+
+            Item item = _items.Extract(uniqueId);
+            _removedItems.Enqueue(item);
+        }
+
+        public System.Collections.Generic.IEnumerable<(Guid, string)> GetPlayers()
+        {
+            foreach (Item item in _items.GetValues())
+            {
+                yield return (item.UniqueId, item.Username);
+            }
+        }
+
+        public System.Collections.Generic.IEnumerable<(Guid, string)> GetAddedPlayers()
+        {
+            foreach (Item item in _addedItems.GetValues())
+            {
+                yield return (item.UniqueId, item.Username);
+            }
+        }
+
+        public System.Collections.Generic.IEnumerable<(Guid, string)> GetRemovedPlayers()
+        {
+            foreach (Item item in _removedItems.GetValues())
+            {
+                yield return (item.UniqueId, item.Username);
+            }
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (_isDisposed) return;
+
+            if (disposing == true)
+            {
+                // Release managed resources.
+            }
+
+            // Release unmanaged resources.
+
+            _isDisposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+    }
+
     public sealed class PlayerSearchTable : IDisposable
     {
         private bool _isDisposed = false;
 
         private readonly Table<Chunk.Vector, Table<int, Player>> 
             _chunkToPlayers = new();  // Disposable
+        private readonly Table<int, Chunk.Vector> _cache = new();
 
         public PlayerSearchTable() { }
 
@@ -1453,42 +1559,47 @@ namespace Protocol
                 _chunkToPlayers.Insert(pChunk, new());
 
             _chunkToPlayers.Lookup(pChunk).Insert(player.Id, player);
+            Debug.Assert(!_cache.Contains(player.Id));
+            _cache.Insert(player.Id, pChunk);
         }
 
-        public void Close(Player player)
+        public void Close(int playerId)
+        {
+            Debug.Assert(!_isDisposed);
+
+            Debug.Assert(_cache.Contains(playerId));
+            Chunk.Vector pChunkPrev = _cache.Extract(playerId);
+
+            Table<int, Player> players = _chunkToPlayers.Lookup(pChunkPrev);
+            players.Extract(playerId);
+
+            if (players.Empty)
+                _chunkToPlayers.Extract(pChunkPrev);
+        }
+
+        public void Update(Player player)
         {
             Debug.Assert(!_isDisposed);
 
             Chunk.Vector pChunk = Chunk.Vector.Convert(player.pos);
+            Debug.Assert(_cache.Contains(player.Id));
+            Chunk.Vector pChunkPrev = _cache.Extract(player.Id);
 
-            Table<int, Player> players = _chunkToPlayers.Lookup(pChunk);
-            players.Extract(player.Id);
-
-            if (players.Empty)
-                _chunkToPlayers.Extract(pChunk);
-        }
-
-        public void Update(Player player, Player.Vector posNew)
-        {
-            Debug.Assert(!_isDisposed);
-
-            Chunk.Vector pChunk = Chunk.Vector.Convert(posNew);
-            Chunk.Vector pChunkPrev = Chunk.Vector.Convert(player.pos);
-            if (pChunk.Equals(pChunkPrev)) return;
-
+            if (!pChunk.Equals(pChunkPrev))
             {
                 Table<int, Player> players = _chunkToPlayers.Lookup(pChunkPrev);
                 players.Extract(player.Id);
+
                 if (players.Empty)
                     _chunkToPlayers.Extract(pChunkPrev);
-            }
 
-            {
                 if (!_chunkToPlayers.Contains(pChunk))
                     _chunkToPlayers.Insert(pChunk, new());
 
                 _chunkToPlayers.Lookup(pChunk).Insert(player.Id, player);
             }
+
+            _cache.Insert(player.Id, pChunk);
         }
 
         public bool Contains(Chunk.Vector p)
@@ -1630,7 +1741,8 @@ namespace Protocol
             int id,
             Client client,
             Guid userId, string username,
-            ClientsideSettings settings)
+            ClientsideSettings settings,
+            PlayerList playerList)
         {
             Id = id;
 
@@ -1642,7 +1754,12 @@ namespace Protocol
             Settings = settings;
 
             _outPackets.Enqueue(new SetPlayerAbilitiesPacket(
-                true, true, true, true, 1, 0));
+                true, true, true, true, 0.1f, 0));
+
+            foreach ((Guid otherUniqueId, string otherUsername) in playerList.GetPlayers())
+            {
+                _outPackets.Enqueue(new AddPlayerListItemPacket(otherUniqueId, otherUsername));
+            }
         }
 
         ~Connection()
@@ -1729,7 +1846,7 @@ namespace Protocol
                                 Player.Vector pos = new(packet.X, packet.Y, packet.Z);
 
                                 player.Move(pos, packet.OnGround);
-                                playerSearchTable.Update(player, pos);
+                                playerSearchTable.Update(player);
                                 move = true;
                             }
                             break;
@@ -1747,7 +1864,7 @@ namespace Protocol
                                 Player.Angles look = new(packet.Yaw, packet.Pitch);
 
                                 player.Transform(pos, look, packet.OnGround);
-                                playerSearchTable.Update(player, pos);
+                                playerSearchTable.Update(player);
                                 move = true;
 
                             }
@@ -1779,7 +1896,6 @@ namespace Protocol
                 player.isConnected = false;
                 // TODO: send disconnected message to client.
 
-
                 throw new DisconnectedClientException();
             }
             catch (DisconnectedClientException)
@@ -1800,6 +1916,18 @@ namespace Protocol
 
             keepaliveChecker.Update(serverTicks, _outPackets);
 
+        }
+
+        public void UpdatePlayerList(PlayerList playerList)
+        {
+            foreach ((Guid uniqueId, string username) in playerList.GetAddedPlayers())
+            {
+                _outPackets.Enqueue(new AddPlayerListItemPacket(uniqueId, username));
+            }
+            foreach ((Guid uniqueId, string username) in playerList.GetRemovedPlayers())
+            {
+                _outPackets.Enqueue(new RemovePlayerListItemPacket(uniqueId));
+            }
         }
 
         // TODO: Make chunks to readonly using interface? in this function.
@@ -1948,7 +2076,7 @@ namespace Protocol
                                 transformAction.OnGround));
                             break;
                         case Player.MovementAction movementAction:
-                            Console.Write("Move!");
+                            /*Console.Write("Move!");*/
                             // TODO: Check range
                             _outPackets.Enqueue(new EntityRelativeMovePacket(
                                 player.Id,
@@ -2142,6 +2270,7 @@ namespace Protocol
             NumList idList,
             Queue<(Connection, Player)> connections, Queue<Player> players,
             PlayerSearchTable playerSearchTable,
+            PlayerList playerList,
             Table<Chunk.Vector, Chunk> chunks,  // TODO: readonly
             Player.Vector posInit, Player.Angles lookInit)
         {
@@ -2297,13 +2426,15 @@ namespace Protocol
                     entityId, 
                     userId, 
                     posInit, lookInit, false);
+                playerList.Add(userId, username);
 
                 playerSearchTable.Init(player);
                 Connection conn = new(
                     entityId,
                     client,
                     userId, username,
-                    settings);
+                    settings,
+                    playerList);
 
                 connections.Enqueue((conn, player));
 
