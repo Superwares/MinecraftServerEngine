@@ -2372,13 +2372,13 @@ namespace Protocol
 
                         // TODO: Check username is empty or invalid.
 
-                        Console.Write("Start http request!");
+                        /*Console.Write("Start http request!");
 
                         // TODO: Use own http client in common library.
                         using HttpClient httpClient = new();
                         string url = string.Format("https://api.mojang.com/users/profiles/minecraft/{0}", inPacket.Username);
-                        /*Console.WriteLine(inPacket.Username);
-                        Console.WriteLine($"url: {url}");*/
+                        *//*Console.WriteLine(inPacket.Username);
+                        Console.WriteLine($"url: {url}");*//*
                         using HttpRequestMessage request = new(HttpMethod.Get, url);
 
                         // TODO: handle HttpRequestException
@@ -2393,13 +2393,16 @@ namespace Protocol
 
                         Guid userId = Guid.Parse(dictionary["id"]);
                         string username = dictionary["name"];  // TODO: check username is valid
-                        /*Console.WriteLine($"userId: {userId}");
-                        Console.WriteLine($"username: {username}");*/
-
-                        Console.Write("Finish http request!");
+                        *//*Console.WriteLine($"userId: {userId}");
+                        Console.WriteLine($"username: {username}");*//*
 
                         // TODO: Handle to throw exception
                         Debug.Assert(inPacket.Username == username);
+
+                        Console.Write("Finish http request!");*/
+
+                        Guid userId = Guid.NewGuid();
+                        string username = inPacket.Username;
 
                         LoginSuccessPacket outPacket1 = new(userId, username);
                         outPacket1.Write(buffer);
