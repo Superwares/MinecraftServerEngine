@@ -1282,7 +1282,7 @@ namespace Protocol
 
             public bool Equals(Angles other)
             {
-                throw new NotImplementedException();
+                return (other.yaw == yaw) && (other.pitch == pitch);
             }
 
         }
@@ -1359,8 +1359,7 @@ namespace Protocol
 
         public readonly Guid UniqueId;
 
-        public Vector posPrev, pos;
-
+        public Vector pos;
         public Angles look;
         private bool _onGround;
 
@@ -1368,12 +1367,17 @@ namespace Protocol
 
         internal IReadOnlyQueue<Action> Actions => _actions;
 
-        public Player(int id, Vector pos, Angles look, bool onGround)
+        public Player(
+            int id,
+            Guid uniqueId,
+            Vector pos, Angles look, bool onGround)
         {
             Id = id;
-            _onGround = onGround;
+            UniqueId = uniqueId;
 
             Teleport(pos, look);
+            _onGround = onGround;
+
         }
 
         public void Reset()
@@ -1395,21 +1399,19 @@ namespace Protocol
 
         public void Transform(Vector pos, Angles look, bool onGround)
         {
-            posPrev = this.pos;
+            _actions.Enqueue(new TransformationAction(this.pos, pos, look, onGround));
+            
             this.pos = pos;
             this.look = look;
             _onGround = onGround;
-
-            _actions.Enqueue(new TransformationAction(posPrev, pos, look, onGround));
         }
 
         public void Move(Vector pos, bool onGround)
         {
-            posPrev = this.pos;
+            _actions.Enqueue(new MovementAction(this.pos, pos, onGround));
+
             this.pos = pos;
             _onGround = onGround;
-
-            _actions.Enqueue(new MovementAction(posPrev, this.pos, onGround));
         }
 
         public void Rotate(Angles look, bool onGround)
@@ -1422,7 +1424,6 @@ namespace Protocol
 
         public void Teleport(Vector pos, Angles look)
         {
-            posPrev = this.pos;
             this.pos = pos;
             this.look = look;
 
@@ -1467,12 +1468,12 @@ namespace Protocol
                 _chunkToPlayers.Extract(pChunk);
         }
 
-        public void Update(Player player)
+        public void Update(Player player, Player.Vector posNew)
         {
             Debug.Assert(!_isDisposed);
 
-            Chunk.Vector pChunk = Chunk.Vector.Convert(player.pos);
-            Chunk.Vector pChunkPrev = Chunk.Vector.Convert(player.posPrev);
+            Chunk.Vector pChunk = Chunk.Vector.Convert(posNew);
+            Chunk.Vector pChunkPrev = Chunk.Vector.Convert(player.pos);
             if (pChunk.Equals(pChunkPrev)) return;
 
             {
@@ -1528,8 +1529,6 @@ namespace Protocol
         }
 
     }
-
-
 
     public sealed class Connection : IDisposable
     {
@@ -1714,7 +1713,6 @@ namespace Protocol
                                 }
 
                                 player.Stand(packet.OnGround);
-
                                 move = true;
                             }
                             break;
@@ -1728,11 +1726,10 @@ namespace Protocol
                                     break;
                                 }
 
-                                Player.Vector p = new(packet.X, packet.Y, packet.Z);
-                                player.Move(p, packet.OnGround);
+                                Player.Vector pos = new(packet.X, packet.Y, packet.Z);
 
-                                playerSearchTable.Update(player);
-
+                                player.Move(pos, packet.OnGround);
+                                playerSearchTable.Update(player, pos);
                                 move = true;
                             }
                             break;
@@ -1746,15 +1743,13 @@ namespace Protocol
                                     break;
                                 }
 
-                                Player.Vector p = new(packet.X, packet.Y, packet.Z);
-                                player.Transform(
-                                    p,
-                                    new(packet.Yaw, packet.Pitch),
-                                    packet.OnGround);
+                                Player.Vector pos = new(packet.X, packet.Y, packet.Z);
+                                Player.Angles look = new(packet.Yaw, packet.Pitch);
 
-                                playerSearchTable.Update(player);
-
+                                player.Transform(pos, look, packet.OnGround);
+                                playerSearchTable.Update(player, pos);
                                 move = true;
+
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerLookPacketId:
@@ -1767,8 +1762,9 @@ namespace Protocol
                                     break;
                                 }
 
-                                player.Rotate(new(packet.Yaw, packet.Pitch), packet.OnGround);
+                                Player.Angles look = new(packet.Yaw, packet.Pitch);
 
+                                player.Rotate(look, packet.OnGround);
                                 move = true;
                             }
                             break;
@@ -1952,8 +1948,8 @@ namespace Protocol
                                 transformAction.OnGround));
                             break;
                         case Player.MovementAction movementAction:
-                            Console.WriteLine("Move!");
-
+                            Console.Write("Move!");
+                            // TODO: Check range
                             _outPackets.Enqueue(new EntityRelativeMovePacket(
                                 player.Id,
                                 (short)((movementAction.Pos.x - movementAction.PosPrev.x) * 32 * 128),
@@ -2297,7 +2293,10 @@ namespace Protocol
                 /*Console.Write($"Start init connection!: entityId: {entityId} ");*/
 
                 Debug.Assert(settings != null);
-                Player player = new(entityId, posInit, lookInit, false);
+                Player player = new(
+                    entityId, 
+                    userId, 
+                    posInit, lookInit, false);
 
                 playerSearchTable.Init(player);
                 Connection conn = new(

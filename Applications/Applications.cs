@@ -94,7 +94,7 @@ namespace Applications
 
         public void Dispose()
         {
-            Console.WriteLine("Dispose!");
+            /*Console.WriteLine("Dispose!");*/
             Dispose(true);
             GC.SuppressFinalize(this);
         }
