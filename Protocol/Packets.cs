@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Diagnostics;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 
 namespace Protocol
 {
@@ -133,6 +134,7 @@ namespace Protocol
         public const int TeleportPacketId = 0x2F;
         public const int DestroyEntitiesPacketId = 0x32;
         public const int EntityMetadataPacketId = 0x3C;
+        public const int EntityTeleportPacketId = 0x4C;
 
         public override WhereBound BoundTo => WhereBound.Clientbound;
 
@@ -982,6 +984,40 @@ namespace Protocol
         {
             buffer.WriteInt(EntityId, true);
             buffer.WriteData(Data);
+        }
+
+    }
+
+    internal class EntityTeleportPacket : ClientboundPlayingPacket
+    {
+        public readonly int EntityId;
+        public readonly double X, Y, Z;
+        public readonly float Yaw, Pitch;
+        public readonly bool OnGround;
+
+        internal static EntityTeleportPacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public EntityTeleportPacket(
+            int entityId, 
+            double x, double y, double z, 
+            float yaw, float pitch,
+            bool onGround) : base(EntityTeleportPacketId)
+        {
+            EntityId = entityId;
+            X = x; Y = y; Z = z;
+            Yaw = yaw; Pitch = pitch;
+            OnGround = onGround;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteInt(EntityId, true);
+            buffer.WriteDouble(X); buffer.WriteDouble(Y); buffer.WriteDouble(Z);
+            buffer.WriteFloat(Yaw); buffer.WriteFloat(Pitch);
+            buffer.WriteBool(OnGround);
         }
 
     }

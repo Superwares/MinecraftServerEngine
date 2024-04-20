@@ -843,7 +843,7 @@ namespace Protocol
 
         public Vector pos;
         public Angles look;
-        private bool _onGround;
+        internal bool _onGround;
 
         internal bool _sneaking = false, _sprinting = false;
 
@@ -1656,25 +1656,13 @@ namespace Protocol
                                 rotationAction.OnGround));
                             anyMove = true;
                             break;
-                        case Player.TeleportationAction:
+                        case Player.TeleportationAction teleportationAction:
                             {
-                                byte flags = 0x00;
-
-                                if (player._sneaking)
-                                    flags |= 0x02;
-                                if (player._sprinting)
-                                    flags |= 0x08;
-
-                                using EntityMetadata metadata = new();
-                                metadata.AddByte(0, flags);
-
-                                _outPackets.Enqueue(new DestroyEntitiesPacket([player.Id]));
-                                _outPackets.Enqueue(new SpawnNamedEntityPacket(
+                                _outPackets.Enqueue(new EntityTeleportPacket(
                                     player.Id,
-                                    player.UniqueId,
-                                    player.pos.x, player.pos.y, player.pos.z,
-                                    0, 0,
-                                    metadata.WriteData()));
+                                    teleportationAction.Pos.x, teleportationAction.Pos.y, teleportationAction.Pos.z,
+                                    teleportationAction.Look.yaw, teleportationAction.Look.pitch,
+                                    player._onGround));
                             }
                             break;
                         case Player.SneakingAction:
