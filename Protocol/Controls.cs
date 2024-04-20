@@ -1,9 +1,5 @@
-﻿/*using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Protocol
 {
@@ -11,45 +7,86 @@ namespace Protocol
     {
     }
 
-    public class PlayerOnGroundControl : Control
+    public class StandingControl : Control
     {
         public readonly bool OnGround;
 
-        public PlayerOnGroundControl(bool onGround)
+        internal StandingControl(bool onGround)
         {
             OnGround = onGround;
         }
 
     }
 
-    public class PlayerPositionControl : Control
+    public class TransformationControl : Control
     {
-        public readonly Entity.Vector Pos;
+        public readonly Player.Vector Pos;
+        public readonly Player.Angles Look;
+        public readonly bool OnGround;
 
-        public PlayerPositionControl(double x, double y, double z)
+        internal TransformationControl(
+            double x, double y, double z,
+            float yaw, float pitch, 
+            bool onGround)
+        {
+            if (pitch < Player.Angles.MinPitch ||
+                pitch > Player.Angles.MaxPitch)
+                throw new UnexpectedValueException($"Entity.Pitch {pitch}");
+
+            Pos = new(x, y, z);
+            Look = new(yaw, pitch);
+            OnGround = onGround;
+        }
+    }
+
+    public class MovementControl : Control
+    {
+        public readonly Player.Vector Pos;
+        public readonly bool OnGround;
+
+        internal MovementControl(double x, double y, double z, bool onGround)
         {
             Pos = new(x, y, z);
+            OnGround = onGround;
         }
 
     }
 
-    public class PlayerLookControl : Control
+    public class RotationControl : Control
     {
-        public readonly Entity.Look Look;
+        public readonly Player.Angles Look;
+        public readonly bool OnGround;
 
-        public PlayerLookControl(float yaw, float pitch)
+        internal RotationControl(float yaw, float pitch, bool onGround)
         {
-            if (yaw < Entity.Look.MinYaw ||
-                yaw > Entity.Look.MaxYaw)
-                throw new UnexpectedValueException("Entity.Yaw");
-            if (pitch < Entity.Look.MinPitch ||
-                pitch > Entity.Look.MaxPitch)
-                throw new UnexpectedValueException("Entity.Pitch");
-
+            if (pitch < Player.Angles.MinPitch ||
+                pitch > Player.Angles.MaxPitch)
+                throw new UnexpectedValueException($"Entity.Pitch {pitch}");
 
             Look = new(yaw, pitch);
+            OnGround = onGround;
         }
 
     }
+
+    public class SneakingControl : Control
+    {
+        internal SneakingControl() { }
+    }
+
+    public class UnsneakingControl : Control
+    {
+        internal UnsneakingControl() { }
+    }
+
+    public class SprintingControl : Control
+    {
+        internal SprintingControl() { }
+    }
+
+    public class UnsprintingControl : Control
+    {
+        internal UnsprintingControl() { }
+    }
+
 }
-*/

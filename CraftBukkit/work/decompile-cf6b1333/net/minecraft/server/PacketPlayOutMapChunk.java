@@ -22,7 +22,7 @@ public class PacketPlayOutMapChunk implements Packet<PacketListenerPlayOut> {
     public PacketPlayOutMapChunk(Chunk chunk, int i) {
         this.a = chunk.locX;
         this.b = chunk.locZ;
-        this.f = i == '\uffff';
+        this.f = i == '\uffff';  // 0b1111_1111_1111_1111
         boolean flag = chunk.getWorld().worldProvider.m();
 
         this.d = new byte[this.a(chunk, flag, i)];

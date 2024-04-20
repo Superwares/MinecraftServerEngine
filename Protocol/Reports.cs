@@ -96,7 +96,7 @@ namespace Protocol
 
         internal override void Write(Buffer buffer)
         {
-            KeepaliveRequestPacket packet = new(Payload);
+            RequestKeepAlivePacket packet = new(Payload);
             packet.Write(buffer);
         }
 
@@ -138,8 +138,6 @@ namespace Protocol
             Player.Vector pos, Player.Angles look)
         {
             Debug.Assert(
-                look.yaw >= Player.Angles.MinYaw &&
-                look.yaw <= Player.Angles.MaxYaw &&
                 look.pitch >= Player.Angles.MinPitch &&
                 look.pitch <= Player.Angles.MaxPitch);
 

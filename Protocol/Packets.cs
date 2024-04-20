@@ -1,8 +1,15 @@
-﻿using System;
+﻿using Containers;
+using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Office.CustomUI;
+using System;
+using System.Collections;
 using System.Diagnostics;
+using System.Net.Sockets;
 
 namespace Protocol
 {
+
+    
     internal abstract class Packet
     {
         protected const string _MinecraftVersion = "1.12.2";
@@ -110,10 +117,10 @@ namespace Protocol
 
     internal abstract class ClientboundPlayingPacket(int id) : PlayingPacket(id)
     {
-        public const int SpawnPlayerPacketId = 0x05;
-        public const int LoadChunkPacketId = 0x20;
+        public const int SpawnNamedEntityPacketId = 0x05;
         public const int UnloadChunkPacketId = 0x1D;
-        public const int KeepaliveRequestPacketId = 0x1F;
+        public const int RequestKeepAlivePacketId = 0x1F;
+        public const int LoadChunkPacketId = 0x20;
         public const int JoinGamePacketId = 0x23;
         public const int EntityPacketId = 0x25;
         public const int EntityRelativeMovePacketId = 0x26;
@@ -125,6 +132,7 @@ namespace Protocol
         public const int RemovePlayerListItemPacketId = 0x2E;
         public const int TeleportPacketId = 0x2F;
         public const int DestroyEntitiesPacketId = 0x32;
+        public const int EntityMetadataPacketId = 0x3C;
 
         public override WhereBound BoundTo => WhereBound.Clientbound;
 
@@ -132,13 +140,14 @@ namespace Protocol
 
     internal abstract class ServerboundPlayingPacket(int id) : PlayingPacket(id)
     {
-        public const int ConfirmTeleportPacketId = 0x00;
-        public const int ClientSettingsPacketId = 0x04;
-        public const int KeepaliveResponsePacketId = 0x0B;
+        public const int ConfirmTeleportationPacketId = 0x00;
+        public const int SetClientSettingsPacketId = 0x04;
+        public const int ResponseKeepAlivePacketId = 0x0B;
         public const int PlayerPacketId = 0x0C;
         public const int PlayerPositionPacketId = 0x0D;
         public const int PlayerPosAndLookPacketId = 0x0E;
         public const int PlayerLookPacketId = 0x0F;
+        public const int EntityActionPacketId = 0x15;
 
         public override WhereBound BoundTo => WhereBound.Serverbound;
 
@@ -471,28 +480,31 @@ namespace Protocol
         }
     }
 
-    internal class SpawnPlayerPacket : ClientboundPlayingPacket
+    internal class SpawnNamedEntityPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly Guid UniqueId;
         public readonly double X, Y, Z;
         public readonly byte Yaw, Pitch;
+        public readonly byte[] Data;
 
-        public static SpawnPlayerPacket Read(Buffer buffer)
+        public static SpawnNamedEntityPacket Read(Buffer buffer)
         {
             throw new NotImplementedException();
         }
 
-        public SpawnPlayerPacket(
+        public SpawnNamedEntityPacket(
             int entityId, 
             Guid uniqueId, 
             double x, double y, double z, 
-            byte yaw, byte pitch) : base(SpawnPlayerPacketId)
+            byte yaw, byte pitch,
+            byte[] data) : base(SpawnNamedEntityPacketId)
         {
             EntityId = entityId; 
             UniqueId = uniqueId;
             X = x; Y = y; Z = z;
             Yaw = yaw; Pitch = pitch;
+            Data = data;
         }
 
         protected override void WriteData(Buffer buffer)
@@ -501,9 +513,56 @@ namespace Protocol
             buffer.WriteGuid(UniqueId);
             buffer.WriteDouble(X); buffer.WriteDouble(Y); buffer.WriteDouble(Z);
             buffer.WriteByte(Yaw); buffer.WriteByte(Pitch);
-            buffer.WriteByte(0xff);  // no metadata.
+            buffer.WriteData(Data);
         }
 
+    }
+
+    internal class UnloadChunkPacket : ClientboundPlayingPacket
+    {
+        public readonly int XChunk, ZChunk;
+
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
+        internal static UnloadChunkPacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public UnloadChunkPacket(int xChunk, int zChunk) : base(UnloadChunkPacketId)
+        {
+            XChunk = xChunk;
+            ZChunk = zChunk;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteInt(XChunk);
+            buffer.WriteInt(ZChunk);
+        }
+
+    }
+
+    internal class RequestKeepAlivePacket : ClientboundPlayingPacket
+    {
+        public readonly long Payload;
+
+        internal static RequestKeepAlivePacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public RequestKeepAlivePacket(long payload) : base(RequestKeepAlivePacketId)
+        {
+            Payload = payload;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteLong(Payload);
+        }
     }
 
     internal class LoadChunkPacket : ClientboundPlayingPacket
@@ -548,53 +607,6 @@ namespace Protocol
             buffer.WriteInt(0, true);  // TODO: Block entities
         }
 
-    }
-
-    internal class UnloadChunkPacket : ClientboundPlayingPacket
-    {
-        public readonly int XChunk, ZChunk;
-
-        /// <summary>
-        /// TODO: Add description.
-        /// </summary>
-        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static UnloadChunkPacket Read(Buffer buffer)
-        {
-            throw new NotImplementedException();
-        }
-
-        public UnloadChunkPacket(int xChunk, int zChunk) : base(UnloadChunkPacketId)
-        {
-            XChunk = xChunk;
-            ZChunk = zChunk;
-        }
-
-        protected override void WriteData(Buffer buffer)
-        {
-            buffer.WriteInt(XChunk);
-            buffer.WriteInt(ZChunk);
-        }
-
-    }
-
-    internal class KeepaliveRequestPacket : ClientboundPlayingPacket
-    {
-        public readonly long Payload;
-
-        internal static KeepaliveRequestPacket Read(Buffer buffer)
-        {
-            throw new NotImplementedException();
-        }
-
-        public KeepaliveRequestPacket(long payload) : base(KeepaliveRequestPacketId)
-        {
-            Payload = payload;
-        }
-
-        protected override void WriteData(Buffer buffer)
-        {
-            buffer.WriteLong(Payload);
-        }
     }
 
     internal class JoinGamePacket : ClientboundPlayingPacket
@@ -667,18 +679,18 @@ namespace Protocol
 
     }
 
-    internal class EntityRelativeMovePacket : ClientboundPlayingPacket
+    internal class EntityRelMovePacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly short DeltaX, DeltaY, DeltaZ;
         public readonly bool OnGround;
 
-        internal static EntityRelativeMovePacket Read(Buffer buffer)
+        internal static EntityRelMovePacket Read(Buffer buffer)
         {
             throw new NotImplementedException();
         }
 
-        public EntityRelativeMovePacket(
+        public EntityRelMovePacket(
             int entityId,
             short dx, short dy, short dz,
             bool onGround) : base(EntityRelativeMovePacketId)
@@ -697,19 +709,19 @@ namespace Protocol
 
     }
 
-    internal class EntityLookAndRelativeMovePacket : ClientboundPlayingPacket
+    internal class EntityLookAndRelMovePacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly short DeltaX, DeltaY, DeltaZ;
         public readonly byte Yaw, Pitch;
         public readonly bool OnGround;
 
-        internal static EntityLookAndRelativeMovePacket Read(Buffer buffer)
+        internal static EntityLookAndRelMovePacket Read(Buffer buffer)
         {
             throw new NotImplementedException();
         }
 
-        public EntityLookAndRelativeMovePacket(
+        public EntityLookAndRelMovePacket(
             int entityId,
             short dx, short dy, short dz,
             byte yaw, byte pitch,
@@ -949,7 +961,32 @@ namespace Protocol
 
     }
 
-    internal class ConfirmTeleportPacket : ServerboundPlayingPacket
+    internal class EntityMetadataPacket : ClientboundPlayingPacket
+    {
+        public readonly int EntityId;
+        public readonly byte[] Data;
+
+        internal static EntityMetadataPacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public EntityMetadataPacket(
+            int entityId, byte[] data) : base(EntityMetadataPacketId)
+        {
+            EntityId = entityId;
+            Data = data;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteInt(EntityId, true);
+            buffer.WriteData(Data);
+        }
+
+    }
+
+    internal class ConfirmTeleportationPacket : ServerboundPlayingPacket
     {
         public readonly int Payload;
 
@@ -957,12 +994,12 @@ namespace Protocol
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static ConfirmTeleportPacket Read(Buffer buffer)
+        internal static ConfirmTeleportationPacket Read(Buffer buffer)
         {
             return new(buffer.ReadInt(true));
         }
 
-        public ConfirmTeleportPacket(int payload) : base(ConfirmTeleportPacketId)
+        public ConfirmTeleportationPacket(int payload) : base(ConfirmTeleportationPacketId)
         {
             Payload = payload;
         }
@@ -974,7 +1011,7 @@ namespace Protocol
 
     }
 
-    internal class ClientSettingsPacket : ServerboundPlayingPacket
+    internal class SetClientSettingsPacket : ServerboundPlayingPacket
     {
         public readonly byte RenderDistance;
 
@@ -982,7 +1019,7 @@ namespace Protocol
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static ClientSettingsPacket Read(Buffer buffer)
+        internal static SetClientSettingsPacket Read(Buffer buffer)
         {
             buffer.ReadString();  // TODO
             byte renderDistance = buffer.ReadByte(); 
@@ -994,8 +1031,8 @@ namespace Protocol
             return new(renderDistance);
         }
 
-        private ClientSettingsPacket(byte renderDistance)
-            : base(ClientSettingsPacketId)
+        private SetClientSettingsPacket(byte renderDistance)
+            : base(SetClientSettingsPacketId)
         {
             RenderDistance = renderDistance;
         }
@@ -1006,7 +1043,7 @@ namespace Protocol
         }
     }
 
-    internal class KeepaliveResponsePacket : ServerboundPlayingPacket
+    internal class ResponseKeepAlivePacket : ServerboundPlayingPacket
     {
         public readonly long Payload;
 
@@ -1014,12 +1051,12 @@ namespace Protocol
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static KeepaliveResponsePacket Read(Buffer buffer)
+        internal static ResponseKeepAlivePacket Read(Buffer buffer)
         {
             return new(buffer.ReadLong());
         }
 
-        private KeepaliveResponsePacket(long payload) : base(KeepaliveResponsePacketId)
+        private ResponseKeepAlivePacket(long payload) : base(ResponseKeepAlivePacketId)
         {
             Payload = payload;
         }
@@ -1073,8 +1110,7 @@ namespace Protocol
         }
 
         public PlayerPositionPacket(
-            double x, double y, double z,
-            bool onGround)
+            double x, double y, double z, bool onGround)
             : base(PlayerPositionPacketId)
         {
             X = x; Y = y; Z = z;
@@ -1153,6 +1189,32 @@ namespace Protocol
         {
             throw new NotImplementedException();
         }
+    }
+
+    internal class EntityActionPacket : ServerboundPlayingPacket
+    {
+        public readonly int EntityId;
+        public readonly int ActionId;
+        public readonly int JumpBoost;
+
+        internal static EntityActionPacket Read(Buffer buffer)
+        {
+            return new(buffer.ReadInt(true), buffer.ReadInt(true), buffer.ReadInt(true));
+        }
+
+        private EntityActionPacket(int entityId, int actionId, int jumpBoost) 
+            : base(EntityActionPacketId)
+        {
+            EntityId = entityId;
+            ActionId = actionId;
+            JumpBoost = jumpBoost;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
     }
 
 }

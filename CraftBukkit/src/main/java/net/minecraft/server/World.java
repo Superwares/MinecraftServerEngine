@@ -1535,6 +1535,9 @@ public abstract class World implements IBlockAccess {
             if (entity.isPassenger()) {
                 entity.aE();
             } else {
+                if (entity instanceof  EntityPig)
+                    System.out.println(entity.motX + ", " + entity.motY + ", " + entity.motZ);
+
                 entity.B_();
                 entity.postTick(); // CraftBukkit
             }

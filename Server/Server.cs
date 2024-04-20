@@ -31,31 +31,64 @@ namespace Application
         {
             if (_connections.Empty) return;
 
-            bool close;
-
-            string? msg;
-            int count = _connections.Count;
-            Debug.Assert(count > 0);
-            for (int i = 0; i < count; ++i)
+            for (int i = 0; i < _connections.Count; ++i)
             {
-                msg = null;
-                close = false;
-
                 (Connection conn, Player player) = _connections.Dequeue();
+
+                using Queue<Control> controls = new();
 
                 try
                 {
-                    conn.Control(player, serverTicks, _playerSearchTable);
+                    conn.Control(serverTicks, player, controls);
                 }
                 catch (DisconnectedClientException)
                 {
+                    controls.Flush();
                     conn.Close();
 
-                    Debug.Assert(!close);
-                    close = true;
+                    continue;
                 }
 
-                if (close) continue;
+                while (!controls.Empty)
+                {
+                    Control control = controls.Dequeue();
+
+                    switch (control)
+                    {
+                        default:
+                            throw new NotImplementedException();
+                        case StandingControl standingControl:
+                            player.Stand(standingControl.OnGround);
+                            break;
+                        case TransformationControl transformationControl:
+                            player.Transform(
+                                transformationControl.Pos, transformationControl.Look,
+                                transformationControl.OnGround);
+                            _playerSearchTable.Update(player.Id, transformationControl.Pos);
+                            break;
+                        case MovementControl movementControl:
+                            player.Move(movementControl.Pos, movementControl.OnGround);
+                            _playerSearchTable.Update(player.Id, movementControl.Pos);
+                            break;
+                        case RotationControl rotationControl:
+                            player.Rotate(rotationControl.Look, rotationControl.OnGround);
+                            break;
+                        case SneakingControl:
+                            player.Sneak();
+                            break;
+                        case UnsneakingControl:
+                            player.Unsneak();
+                            break;
+                        case SprintingControl:
+                            player.Sprint();
+                            break;
+                        case UnsprintingControl:
+                            player.Unsprint();
+                            break;
+                    }
+                }
+
+                Debug.Assert(controls.Empty);
 
                 _connections.Enqueue((conn, player));
             }
@@ -99,7 +132,7 @@ namespace Application
                 (Connection conn, Player player) = _connections.Dequeue();
 
                 conn.UpdatePlayerList(_playerList);
-                conn.RenterChunks(_chunks, player);
+                conn.RenderChunks(_chunks, player);
                 conn.RenderEntities(player, _playerSearchTable);
 
                 _connections.Enqueue((conn, player));
@@ -112,28 +145,22 @@ namespace Application
 
             /*Console.Write("Start send data!");*/
 
-            bool close;
-            int count = _connections.Count;
-            Debug.Assert(count > 0);
-            for (int i = 0; i < count; ++i)
+            for (int i = 0; i < _connections.Count; ++i)
             {
-                close = false;
 
                 (Connection conn, Player player) = _connections.Dequeue();
 
                 try
                 {
-                    conn.SendData(player);
+                    conn.SendData();
                 }
                 catch (DisconnectedClientException)
                 {
                     conn.Close();
+                    player.isConnected = false;
 
-                    Debug.Assert(!close);
-                    close = true;
+                    continue;
                 }
-
-                if (close) continue;
 
                 _connections.Enqueue((conn, player));
 
@@ -144,14 +171,10 @@ namespace Application
 
         private void Reset()
         {
-            if (_players.Empty) return;
-
             _playerList.Reset();
-
+            
             foreach (Player player in _players.GetValues())
-            {
                 player.Reset();
-            }
         }
 
         private void StartGameRoutine(
@@ -175,13 +198,13 @@ namespace Application
 
             // Barrier
 
-            HandleEntityRoutines();  // reset actions...
+            HandleEntityRoutines();
 
             // Barrier
 
             HandleConnectionControls(serverTicks);
 
-            //
+            // Barrier
 
             /*UpdateEntityMovements();*/
 

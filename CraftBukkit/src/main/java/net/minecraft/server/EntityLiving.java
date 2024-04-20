@@ -2200,6 +2200,7 @@ public abstract class EntityLiving extends Entity {
     }
 
     protected void C(Entity entity) {
+
         entity.collide(this);
     }
 

@@ -1323,6 +1323,7 @@ public abstract class Entity implements ICommandListener {
 
     public void collide(Entity entity) {
 
+
         if (!this.x(entity)) {
             if (!entity.noclip && !this.noclip) {
                 double d0 = entity.locX - this.locX;
@@ -1359,6 +1360,8 @@ public abstract class Entity implements ICommandListener {
     }
 
     public void f(double d0, double d1, double d2) {
+
+
         this.motX += d0;
         this.motY += d1;
         this.motZ += d2;

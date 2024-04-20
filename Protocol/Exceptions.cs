@@ -46,9 +46,9 @@ namespace Protocol
         public EmptyBufferException() : base("Attempting to read from an empty buffer.") { }
     }
 
-    internal class TeleportConfirmTimeoutException : UnexpectedClientBehaviorExecption
+    internal class TeleportationConfirmTimeoutException : UnexpectedClientBehaviorExecption
     {
-        public TeleportConfirmTimeoutException() : base("TODO: Add description.") { }
+        public TeleportationConfirmTimeoutException() : base("TODO: Add description.") { }
     }
 
     internal class KeepaliveTimeoutException : UnexpectedClientBehaviorExecption
