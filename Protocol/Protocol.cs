@@ -3,9 +3,10 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;  // TODO: Use custom socket object in common library.
 using System.Numerics;
-using System.Text;
 using Applications;
 using Containers;
+using DocumentFormat.OpenXml.Vml.Office;
+using Protocol;
 
 namespace Protocol
 {
@@ -483,7 +484,7 @@ namespace Protocol
                     (pos.x >= 0) ? ((int)pos.x / Width) : (((int)pos.x / (Width + 1)) - 1),
                     (pos.z >= 0) ? ((int)pos.z / Width) : (((int)pos.z / (Width + 1)) - 1));
             }
-            
+
             public bool Equals(Vector other)
             {
                 return (x == other.x) && (z == other.z);
@@ -544,7 +545,7 @@ namespace Protocol
             {
                 return (p.x <= _max.x && p.x >= _min.x && p.z <= _max.z && p.z >= _min.z);
             }
-            
+
             public System.Collections.Generic.IEnumerable<Vector> GetVectors()
             {
                 for (int z = _min.z; z <= _max.z; ++z)
@@ -574,7 +575,7 @@ namespace Protocol
             // (0, 0, 0) to (16, 16, 16)
             private Block?[] _blocks = new Block?[BlockTotalCount];
 
-            public static void Write(Buffer buffer, Section section)
+            internal static void Write(Buffer buffer, Section section)
             {
                 int blockBitCount = 13;
                 buffer.WriteByte((byte)blockBitCount);
@@ -713,8 +714,104 @@ namespace Protocol
 
     }
 
-    public sealed class Player
+    /*public class ChunkTable
     {
+        
+
+        private readonly Table<Chunk.Vector, Chunk> _chunks = new();
+        private readonly Table<int, Chunk.Vector[]> _entityToChunks = new();
+
+        public void Init(IReadOnlyEntity entity)
+        {
+            Debug.Assert(!_isDisposed);
+
+            Chunk.Vector pChunk = Chunk.Vector.Convert(player.pos);
+
+            if (!_chunkToPlayers.Contains(pChunk))
+                _chunkToPlayers.Insert(pChunk, new());
+
+            _chunkToPlayers.Lookup(pChunk).Insert(player.Id, player);
+            Debug.Assert(!_cache.Contains(player.Id));
+            _cache.Insert(player.Id, pChunk);
+        }
+
+        public void Close(int entityId)
+        {
+            Debug.Assert(!_isDisposed);
+
+            Debug.Assert(_cache.Contains(playerId));
+            Chunk.Vector pChunkPrev = _cache.Extract(playerId);
+
+            Table<int, Player> players = _chunkToPlayers.Lookup(pChunkPrev);
+            players.Extract(playerId);
+
+            if (players.Empty)
+                _chunkToPlayers.Extract(pChunkPrev);
+        }
+
+        public void Update(int entityId, Player.Vector pos)
+        {
+            Debug.Assert(!_isDisposed);
+
+            Chunk.Vector pChunk = Chunk.Vector.Convert(pos);
+            Debug.Assert(_cache.Contains(playerId));
+            Chunk.Vector pChunkPrev = _cache.Extract(playerId);
+
+            if (!pChunk.Equals(pChunkPrev))
+            {
+                Table<int, Player> players = _chunkToPlayers.Lookup(pChunkPrev);
+                Player player = players.Extract(playerId);
+
+                if (players.Empty)
+                    _chunkToPlayers.Extract(pChunkPrev);
+
+                if (!_chunkToPlayers.Contains(pChunk))
+                    _chunkToPlayers.Insert(pChunk, new());
+
+                _chunkToPlayers.Lookup(pChunk).Insert(playerId, player);
+            }
+
+            _cache.Insert(playerId, pChunk);
+        }
+
+        public bool Contains(Chunk.Vector p)
+        {
+            Debug.Assert(!_isDisposed);
+
+            return _chunkToPlayers.Contains(p);
+        }
+
+        public IReadOnlyTable<int, Player> Search(Chunk.Vector pos)
+        {
+            Debug.Assert(!_isDisposed);
+
+            return _chunkToPlayers.Lookup(pos);
+        }
+
+    }*/
+
+    
+    internal interface IRenderOnlyEntity
+    {
+        public int Id { get; }
+        public Guid UniqueId { get; }
+
+        public Entity.Vector Position { get; }
+        public Entity.Angles Look { get; }
+
+        public bool IsSneaking { get; }
+        public bool IsSprinting { get; }
+
+        void AddRenderer(Queue<ClientboundPlayingPacket> outPackets);
+
+        void Spawn(Queue<ClientboundPlayingPacket> outPackets);
+
+    }
+
+    public abstract class Entity : IRenderOnlyEntity, IDisposable
+    {
+        private bool _disposed = false;
+
         public struct Vector : IEquatable<Vector>
         {
             public double x, y, z;
@@ -733,6 +830,7 @@ namespace Protocol
 
         public struct Angles : IEquatable<Angles>
         {
+            public const float MaxYaw = 180, MinYaw = -180;
             public const float MaxPitch = 90, MinPitch = -90;
 
             public float yaw, pitch;
@@ -750,201 +848,567 @@ namespace Protocol
 
         }
 
-        internal abstract class Action
-        {
+        internal readonly Queue<Queue<ClientboundPlayingPacket>> _renderers = new();
 
-        }
+        private readonly IUpdateOnlyEntityIdList _EntityIdList;
+        private readonly IUpdateOnlyEntityRenderingTable _EntitySearchTable;
 
-        internal class StandingAction : Action
-        {
+        private readonly int _Id;
+        public int Id => _Id;
 
-        }
+        private readonly Guid _UniqueId;
+        public Guid UniqueId => _UniqueId;
 
-        // A transform represents the position, rotation, and scale of an object within the game world. 
-        internal class TransformationAction : Action
-        {
-            public readonly Vector PosPrev, Pos;
-            public readonly Angles Look;
-            public readonly bool OnGround;
+        protected Vector _pos;
+        protected Angles _look;
+        public Vector Position => _pos;
+        public Angles Look => _look;
 
-            public TransformationAction(
-                Vector posPrev, Vector pos, Angles look, bool onGround)
-            {
-                PosPrev = posPrev; Pos = pos;
-                Look = look;
-                OnGround = onGround;
-            }
+        protected bool _onGround;
 
-        }
+        protected bool _sneaking, _sprinting;
+        public bool IsSneaking => _sneaking;
+        public bool IsSprinting => _sprinting;
 
-        internal class MovementAction : Action
-        {
-            public readonly Vector PosPrev, Pos;
-            public readonly bool OnGround;
+        protected bool _teleported;
+        protected Vector _posTeleport;
+        protected Angles _lookTeleport;
 
-            public MovementAction(Vector posPrev, Vector pos, bool onGround)
-            {
-                PosPrev = posPrev; Pos = pos;
-                OnGround = onGround;
-            }
-
-        }
-
-        internal class RotationAction : Action
-        {
-            public readonly Angles Look;
-            public readonly bool OnGround;
-
-            public RotationAction(Angles look, bool onGround)
-            {
-                Look = look;
-                OnGround = onGround;
-            }
-
-        }
-
-        internal class TeleportationAction : Action
-        {
-            public readonly Vector Pos;
-            public readonly Angles Look;
-
-            public TeleportationAction(Vector pos, Angles look)
-            {
-                Pos = pos;
-                Look = look;
-            }
-
-        }
-
-        internal class SneakingAction : Action
-        {
-            public SneakingAction() { }
-        }
-
-        internal class UnsneakingAction : Action
-        {
-            public UnsneakingAction() { }
-        }
-
-        internal class SprintingAction : Action
-        {
-            public SprintingAction() { }
-        }
-        internal class UnsprintingAction : Action
-        {
-            public UnsprintingAction() { }
-        }
-
-        public bool isConnected = true;
-
-        public readonly int Id;
-
-        public readonly Guid UniqueId;
-
-        public Vector pos;
-        public Angles look;
-        internal bool _onGround;
-
-        internal bool _sneaking = false, _sprinting = false;
-
-        private readonly Queue<Action> _actions = new();
-
-        internal IReadOnlyQueue<Action> Actions => _actions;
-
-        public Player(
-            int id,
+        internal Entity(
+            IUpdateOnlyEntityIdList entityIdList,
+            IUpdateOnlyEntityRenderingTable entitySearchTable,
             Guid uniqueId,
-            Vector pos, Angles look, bool onGround)
-        {
-            Id = id;
-            UniqueId = uniqueId;
+            Vector pos, Angles look)
+            : this(
+                  entityIdList, entitySearchTable,
+                  entityIdList.Alloc(),
+                  uniqueId,
+                  pos, look)
+        { }
 
-            Teleport(pos, look);
-            _onGround = onGround;
+        internal Entity(
+            IUpdateOnlyEntityIdList entityIdList,
+            IUpdateOnlyEntityRenderingTable entitySearchTable,
+            int id, 
+            Guid uniqueId, 
+            Vector pos, Angles look)
+        {
+            _EntityIdList = entityIdList;
+            _EntitySearchTable = entitySearchTable;
+
+            _Id = id;
+
+            _UniqueId = uniqueId;
+            _pos = pos;
+            _look = look;
+            _onGround = false;
+
+            _sneaking = _sprinting = false;
+
+            _teleported = false;
+            _posTeleport = new(0, 0, 0);
+            _lookTeleport = new(0, 0);
+
+            _EntitySearchTable.Init(this);
+        }
+
+        ~Entity()
+        {
+            Debug.Assert(false);
+        }
+
+        void IRenderOnlyEntity.AddRenderer(Queue<ClientboundPlayingPacket> outPackets)
+        {
+            _renderers.Enqueue(outPackets);
+        }
+
+        private protected void Render(ClientboundPlayingPacket packet)
+        {
+            foreach (var outPackets in _renderers.GetValues())
+                outPackets.Enqueue(packet);
 
         }
 
-        public void Reset()
+        private protected abstract void Spawn(Queue<ClientboundPlayingPacket> outPackets);
+
+        void IRenderOnlyEntity.Spawn(Queue<ClientboundPlayingPacket> outPackets)
         {
-            // reset velocity...
-            _actions.Flush();  // TODO: release resources for no garbage.
+            Spawn(outPackets);
         }
 
-        public void Stand(bool onGround)
+        public virtual void Reset()
         {
-            _onGround = onGround;
+            Debug.Assert(!_disposed);
 
-            _actions.Enqueue(new StandingAction());
+            _teleported = false;
+
+            _renderers.Flush();  // TODO: Release resources for no garbage.
+
+            // reset forces
         }
 
-        public void Stand()
+        public virtual void Move()
         {
-            _actions.Enqueue(new StandingAction());
-        }
+            Debug.Assert(!_disposed);
 
-        public void Transform(Vector pos, Angles look, bool onGround)
-        {
-            _actions.Enqueue(new TransformationAction(this.pos, pos, look, onGround));
-            
-            this.pos = pos;
-            this.look = look;
-            _onGround = onGround;
-        }
+            // update position with velocity, accelaration and forces(gravity, damping).
 
-        public void Move(Vector pos, bool onGround)
-        {
-            _actions.Enqueue(new MovementAction(this.pos, pos, onGround));
+            _EntitySearchTable.Update(Id, _pos);
 
-            this.pos = pos;
-            _onGround = onGround;
-        }
+            if (!_teleported) return;
 
-        public void Rotate(Angles look, bool onGround)
-        {
-            this.look = look;
-            _onGround = onGround;
+            _pos = _posTeleport;
+            _look = _lookTeleport;
+            // update position data in chunk
 
-            _actions.Enqueue(new RotationAction(look, onGround));
+            Render(new EntityTeleportPacket(
+                Id,
+                _pos.x, _pos.y, _pos.z,
+                _look.yaw, _look.pitch,
+                _onGround));
+
+            _EntitySearchTable.Update(Id, _pos);
         }
 
         public void Teleport(Vector pos, Angles look)
         {
-            this.pos = pos;
-            this.look = look;
+            _teleported = true;
+            _posTeleport = pos;
+            _lookTeleport = look;
+        }
 
-            _actions.Enqueue(new TeleportationAction(pos, look));
+        public void Stand(bool f)
+        {
+            Debug.Assert(!_disposed);
+
+            _onGround = f;
+
+            // TODO: send render data
+        }
+
+        public void Rotate(Angles look)
+        {
+            Debug.Assert(!_disposed);
+
+            _look = look;
+
+            // TODO: send render data
         }
 
         public void Sneak()
         {
+            Debug.Assert(!_disposed);
+
             Debug.Assert(!_sneaking);
             _sneaking = true;
-            _actions.Enqueue(new SneakingAction());
+
+            byte flags = 0x00;
+
+            if (_sneaking)
+                flags |= 0x02;
+            if (_sprinting)
+                flags |= 0x08;
+
+            using EntityMetadata metadata = new();
+            metadata.AddByte(0, flags);
+
+            Render(new EntityMetadataPacket(Id, metadata.WriteData()));
         }
+
         public void Unsneak()
         {
+            Debug.Assert(!_disposed);
+
             Debug.Assert(_sneaking);
             _sneaking = false;
-            _actions.Enqueue(new UnsneakingAction());
+
+            byte flags = 0x00;
+
+            if (_sneaking)
+                flags |= 0x02;
+            if (_sprinting)
+                flags |= 0x08;
+
+            using EntityMetadata metadata = new();
+            metadata.AddByte(0, flags);
+
+            Render(new EntityMetadataPacket(Id, metadata.WriteData()));
         }
 
         public void Sprint()
         {
+            Debug.Assert(!_disposed);
+
             Debug.Assert(!_sprinting);
             _sprinting = true;
-            _actions.Enqueue(new SprintingAction());
+
+            byte flags = 0x00;
+
+            if (_sneaking)
+                flags |= 0x02;
+            if (_sprinting)
+                flags |= 0x08;
+
+            using EntityMetadata metadata = new();
+            metadata.AddByte(0, flags);
+
+            Render(new EntityMetadataPacket(Id, metadata.WriteData()));
         }
 
         public void Unsprint()
         {
+            Debug.Assert(!_disposed);
+
             Debug.Assert(_sprinting);
             _sprinting = false;
-            _actions.Enqueue(new UnsprintingAction());
+
+            byte flags = 0x00;
+
+            if (_sneaking)
+                flags |= 0x02;
+            if (_sprinting)
+                flags |= 0x08;
+
+            using EntityMetadata metadata = new();
+            metadata.AddByte(0, flags);
+
+            Render(new EntityMetadataPacket(Id, metadata.WriteData()));
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            Debug.Assert(_renderers.Empty);
+
+            if (disposing == true)
+            {
+                // Release managed resources.
+                _renderers.Dispose();
+            }
+
+            // Release unmanaged resources.
+
+            _disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        public virtual void Close()
+        {
+            _EntityIdList.Dealloc(Id);
+            _EntitySearchTable.Close(Id);
+            _renderers.Flush();  // TODO: Release resources for no garbage.
+            Dispose();
+        }
+    }
+
+    public abstract class LivingEntity : Entity
+    {
+        private bool _disposed = false;
+
+        internal LivingEntity(
+            IUpdateOnlyEntityIdList entityIdList,
+            IUpdateOnlyEntityRenderingTable entitySearchTable, 
+            int id, 
+            Guid uniqueId, 
+            Vector pos, Angles look) 
+            : base(entityIdList, entitySearchTable, id, uniqueId, pos, look) 
+        { }
+
+        ~LivingEntity()
+        {
+            Debug.Assert(false);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                // Assertion.
+
+                if (disposing == true)
+                {
+                    // Release managed resources.
+                }
+
+                // Release unmanaged resources.
+
+                _disposed = true;
+            }
+
+            base.Dispose(disposing);
         }
 
     }
 
-    public sealed class PlayerList : IDisposable
+    public sealed class Player : LivingEntity
+    {
+        private bool _disposed = false;
+
+        private readonly IUpdateOnlyPlayerList _playerList;
+
+        public readonly string Username;
+
+        private Queue<ClientboundPlayingPacket>? _selfOutPackets;
+        private bool _connected;
+        public bool IsConnected => _connected;
+
+        private bool _controled;
+        private Vector _posControl;
+
+        internal Player(
+            IUpdateOnlyEntityIdList entityIdList,
+            IUpdateOnlyEntityRenderingTable entitySearchTable,
+            int id,
+            Guid uniqueId,
+            Vector pos, Angles look,
+            IUpdateOnlyPlayerList playerList,
+            string username) 
+            : base(entityIdList, entitySearchTable, id, uniqueId, pos, look)
+        {
+            _controled = false;
+            _posControl = new(0, 0, 0);
+
+            _playerList = playerList;
+            Username = username;
+
+            playerList.Add(UniqueId, Username);
+
+            _connected = false;
+            _selfOutPackets = null;
+
+            Teleport(pos, look);
+        }
+
+        ~Player()
+        {
+            Debug.Assert(false);
+        }
+
+        internal void Connect(Queue<ClientboundPlayingPacket>? selfOutPackets)
+        {
+            Debug.Assert(!_disposed);
+
+            Debug.Assert(!_connected);
+            _connected = true;
+            _selfOutPackets = selfOutPackets;
+        }
+
+        public void Disconnect()
+        {
+            Debug.Assert(!_disposed);
+
+            Debug.Assert(_connected);
+            _connected = false;
+            _selfOutPackets = null;
+        }
+
+        private void RenderSelf(ClientboundPlayingPacket packet)
+        {
+            Debug.Assert(!_disposed);
+
+            Debug.Assert(_selfOutPackets != null);
+            _selfOutPackets.Enqueue(packet);
+        }
+
+        private protected override void Spawn(Queue<ClientboundPlayingPacket> outPackets)
+        {
+            byte flags = 0x00;
+
+            if (IsSneaking)
+                flags |= 0x02;
+            if (IsSprinting)
+                flags |= 0x08;
+
+            using EntityMetadata metadata = new();
+            metadata.AddByte(0, flags);
+
+            outPackets.Enqueue(new SpawnNamedEntityPacket(
+                Id,
+                UniqueId,
+                Position.x, Position.y, Position.z,
+                0, 0,  // TODO: Convert yaw and pitch to angles of minecraft protocol.
+                metadata.WriteData()));
+
+        }
+
+        public override void Reset()
+        {
+            Debug.Assert(!_disposed);
+
+            base.Reset();
+
+            _controled = false;
+        }
+
+        public void Control(Vector pos)
+        {
+            Debug.Assert(!_disposed);
+
+            _controled = true;
+            _posControl = pos;
+            
+            // TODO: send render data;
+        }
+
+        public override void Move()
+        {
+            Debug.Assert(!_disposed);
+
+            if (_controled)
+            {
+                Vector posPrev = _pos;
+                _pos = _posControl;
+
+                Render(new EntityLookAndRelMovePacket(
+                    Id,
+                    (short)((_pos.x - posPrev.x) * 32 * 128),
+                    (short)((_pos.y - posPrev.y) * 32 * 128),
+                    (short)((_pos.z - posPrev.z) * 32 * 128),
+                    0, 0,
+                    _onGround));
+            }
+
+            base.Move();
+
+            if (!_connected) return;
+
+            if (_teleported)
+            {
+                int payload = new Random().Next();
+                RenderSelf(new TeleportPacket(
+                    _pos.x, _pos.y, _pos.z,
+                    _look.yaw, _look.pitch,
+                    false, false, false, false, false,
+                    payload));
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                // Assertion.
+                Debug.Assert(!_connected);
+
+                if (disposing == true)
+                {
+                    // Release managed resources.
+                    _selfOutPackets = null;
+                }
+
+                // Release unmanaged resources.
+
+                _disposed = true;
+            }
+
+            base.Dispose(disposing);
+        }
+
+        public override void Close()
+        {
+            _playerList.Remove(UniqueId);
+
+            base.Close();
+        }
+
+    }
+
+    internal interface IUpdateOnlyEntityIdList
+    {
+        int Alloc();
+        void Dealloc(int id);
+
+    }
+
+    public sealed class EntityIdList : IUpdateOnlyEntityIdList, IDisposable
+    {
+        private bool _disposed = false;
+
+        private readonly NumList _numList = new();
+        private readonly Queue<int> _deallocedIds = new();
+
+        ~EntityIdList() => Dispose(false);
+
+        internal int Alloc()
+        {
+            Debug.Assert(!_disposed);
+
+            return _numList.Alloc();
+
+        }
+        int IUpdateOnlyEntityIdList.Alloc()
+        {
+            return Alloc();
+        }
+
+        internal void Dealloc(int id)
+        {
+            Debug.Assert(!_disposed);
+
+            _deallocedIds.Enqueue(id);
+        }
+
+        void IUpdateOnlyEntityIdList.Dealloc(int id)
+        {
+            /*Console.Write("Dealloc!");*/
+            Dealloc(id);
+        }
+
+        public void Reset()
+        {
+            Debug.Assert(!_disposed);
+
+            /*Console.Write("Reset!");*/
+
+            while (!_deallocedIds.Empty)
+            {
+                int id = _deallocedIds.Dequeue();
+                _numList.Dealloc(id);
+            }
+
+            Debug.Assert(_deallocedIds.Empty);
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            Debug.Assert(_numList.Empty);
+            Debug.Assert(_deallocedIds.Empty);
+
+            if (disposing == true)
+            {
+                // Release managed resources.
+                _numList.Dispose();
+                _deallocedIds.Dispose();
+            }
+
+            // Release unmanaged resources.
+
+            _disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+    }
+
+    internal interface IUpdateOnlyPlayerList
+    {
+        void Add(Guid uniqueId, string username);
+        void Remove(Guid uniqueId);
+    }
+
+    public sealed class PlayerList : IUpdateOnlyPlayerList, IDisposable
     {
         private class Item
         {
@@ -992,7 +1456,7 @@ namespace Protocol
             return false;
         }
 
-        public void Add(Guid uniqueId, string username)
+        void IUpdateOnlyPlayerList.Add(Guid uniqueId, string username)
         {
             Debug.Assert(!Contains(uniqueId));
 
@@ -1000,7 +1464,7 @@ namespace Protocol
             _addedItems.Insert(uniqueId, item);
         }
 
-        public void Remove(Guid uniqueId)
+        void IUpdateOnlyPlayerList.Remove(Guid uniqueId)
         {
             Debug.Assert(Contains(uniqueId));
 
@@ -1054,95 +1518,101 @@ namespace Protocol
 
     }
 
-    public sealed class PlayerSearchTable : IDisposable
+    internal interface IUpdateOnlyEntityRenderingTable
+    {
+        void Init(IRenderOnlyEntity entity);
+        void Close(int id);
+        void Update(int id, Entity.Vector pos);
+
+    }
+
+    public sealed class EntityRenderingTable : IUpdateOnlyEntityRenderingTable, IDisposable
     {
         private bool _isDisposed = false;
 
-        private readonly Table<Chunk.Vector, Table<int, Player>> 
-            _chunkToPlayers = new();  // Disposable
-        private readonly Table<int, Chunk.Vector> _cache = new();
+        private readonly Table<Chunk.Vector, Table<int, IRenderOnlyEntity>> 
+            _chunkToEntities = new();  // Disposable
+        private readonly Table<int, Chunk.Vector> _entityToChunk = new();
 
-        public PlayerSearchTable() { }
+        public EntityRenderingTable() { }
 
-        ~PlayerSearchTable() => Dispose(false);
+        ~EntityRenderingTable() => Dispose(false);
 
-        public void Init(Player player)
+        void IUpdateOnlyEntityRenderingTable.Init(IRenderOnlyEntity entity)
         {
             Debug.Assert(!_isDisposed);
 
-            Chunk.Vector pChunk = Chunk.Vector.Convert(player.pos);
+            Chunk.Vector pChunk = Chunk.Vector.Convert(entity.Position);
 
-            if (!_chunkToPlayers.Contains(pChunk))
-                _chunkToPlayers.Insert(pChunk, new());
+            if (!_chunkToEntities.Contains(pChunk))
+                _chunkToEntities.Insert(pChunk, new());
 
-            _chunkToPlayers.Lookup(pChunk).Insert(player.Id, player);
-            Debug.Assert(!_cache.Contains(player.Id));
-            _cache.Insert(player.Id, pChunk);
+            _chunkToEntities.Lookup(pChunk).Insert(entity.Id, entity);
+            Debug.Assert(!_entityToChunk.Contains(entity.Id));
+            _entityToChunk.Insert(entity.Id, pChunk);
         }
 
-        public void Close(int playerId)
+        void IUpdateOnlyEntityRenderingTable.Close(int id)
         {
             Debug.Assert(!_isDisposed);
 
-            Debug.Assert(_cache.Contains(playerId));
-            Chunk.Vector pChunkPrev = _cache.Extract(playerId);
+            Debug.Assert(_entityToChunk.Contains(id));
+            Chunk.Vector pChunkPrev = _entityToChunk.Extract(id);
 
-            Table<int, Player> players = _chunkToPlayers.Lookup(pChunkPrev);
-            players.Extract(playerId);
+            Table<int, IRenderOnlyEntity> entities = _chunkToEntities.Lookup(pChunkPrev);
+            entities.Extract(id);
 
-            if (players.Empty)
-                _chunkToPlayers.Extract(pChunkPrev);
+            if (entities.Empty)
+                _chunkToEntities.Extract(pChunkPrev);
         }
 
-        public void Update(int playerId, Player.Vector pos)
+        void IUpdateOnlyEntityRenderingTable.Update(int id, Player.Vector p)
         {
             Debug.Assert(!_isDisposed);
 
-            Chunk.Vector pChunk = Chunk.Vector.Convert(pos);
-            Debug.Assert(_cache.Contains(playerId));
-            Chunk.Vector pChunkPrev = _cache.Extract(playerId);
+            Chunk.Vector pChunk = Chunk.Vector.Convert(p);
+            Debug.Assert(_entityToChunk.Contains(id));
+            Chunk.Vector pChunkPrev = _entityToChunk.Extract(id);
 
             if (!pChunk.Equals(pChunkPrev))
             {
-                Table<int, Player> players = _chunkToPlayers.Lookup(pChunkPrev);
-                Player player = players.Extract(playerId);
+                Table<int, IRenderOnlyEntity> entities = _chunkToEntities.Lookup(pChunkPrev);
+                IRenderOnlyEntity entity = entities.Extract(id);
 
-                if (players.Empty)
-                    _chunkToPlayers.Extract(pChunkPrev);
+                if (entities.Empty)
+                    _chunkToEntities.Extract(pChunkPrev);
 
-                if (!_chunkToPlayers.Contains(pChunk))
-                    _chunkToPlayers.Insert(pChunk, new());
+                if (!_chunkToEntities.Contains(pChunk))
+                    _chunkToEntities.Insert(pChunk, new());
 
-                _chunkToPlayers.Lookup(pChunk).Insert(playerId, player);
+                _chunkToEntities.Lookup(pChunk).Insert(id, entity);
             }
 
-            _cache.Insert(playerId, pChunk);
+            _entityToChunk.Insert(id, pChunk);
         }
 
-        public bool Contains(Chunk.Vector p)
+        internal bool Contains(Chunk.Vector p)
         {
             Debug.Assert(!_isDisposed);
 
-            return _chunkToPlayers.Contains(p);
+            return _chunkToEntities.Contains(p);
         }
 
-        public IReadOnlyTable<int, Player> Search(Chunk.Vector pos)
+        internal IReadOnlyTable<int, IRenderOnlyEntity> Search(Chunk.Vector pos)
         {
             Debug.Assert(!_isDisposed);
 
-            return _chunkToPlayers.Lookup(pos);
+            return _chunkToEntities.Lookup(pos);
         }
 
         private void Dispose(bool disposing)
         {
             if (_isDisposed) return;
 
-            Debug.Assert(_chunkToPlayers.Empty);
-
             if (disposing == true)
             {
                 // Release managed resources.
-                _chunkToPlayers.Dispose();
+                _chunkToEntities.Dispose();
             }
 
             // Release unmanaged resources.
@@ -1208,7 +1678,9 @@ namespace Protocol
                 _isConfirmed = true;
             }
 
-            public void Update(ulong serverTicks, Queue<ClientboundPlayingPacket> outPackets)
+            public void Update(
+                ulong serverTicks, 
+                Queue<ClientboundPlayingPacket> outPackets)
             {
                 Debug.Assert(serverTicks % TickLimit >= 0);
                 if (serverTicks % TickLimit > 0)
@@ -1220,7 +1692,6 @@ namespace Protocol
                 _isConfirmed = false;
                 _payload = new Random().NextInt64();
                 outPackets.Enqueue(new RequestKeepAlivePacket(_payload));
-
             }
 
         }
@@ -1244,12 +1715,13 @@ namespace Protocol
 
         private Chunk.Grid? _renderedChunkGrid = null;
 
-        private Set<int> _renderedPlayerIds = new();  // Disposable
+        private Set<int> _renderedEntityIds = new();  // Disposable
 
         private readonly Queue<TeleportationRecord> _teleportationRecords = new();  // dispoasble
 
         private readonly KeepaliveObserver keepaliveChecker = new();
 
+        private readonly Queue<LoadChunkPacket> _loadChunkPackets = new();  // dispoasble
         private readonly Queue<ClientboundPlayingPacket> _outPackets = new();  // dispoasble
 
         private bool _isDisposed = false;
@@ -1259,7 +1731,8 @@ namespace Protocol
             Client client,
             Guid userId, string username,
             ClientsideSettings settings,
-            PlayerList playerList)
+            PlayerList playerList,
+            Player player)
         {
             Id = id;
 
@@ -1277,6 +1750,8 @@ namespace Protocol
             {
                 _outPackets.Enqueue(new AddPlayerListItemPacket(otherUniqueId, otherUsername));
             }
+
+            player.Connect(_outPackets);
         }
 
         ~Connection()
@@ -1288,10 +1763,8 @@ namespace Protocol
         /// TODO: Add description.
         /// </summary>
         /// <returns>TODO: Add description.</returns>
-        /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
-        public void Control(
-            ulong serverTicks, Player player, Queue<Control> controls)
+        public void Control(ulong serverTicks, Player player)
         {
             Debug.Assert(!_isDisposed);
 
@@ -1344,7 +1817,7 @@ namespace Protocol
                                     break;
                                 }
 
-                                controls.Enqueue(new StandingControl(packet.OnGround));
+                                player.Stand(packet.OnGround);
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerPositionPacketId:
@@ -1357,8 +1830,7 @@ namespace Protocol
                                     break;
                                 }
 
-                                controls.Enqueue(new MovementControl(
-                                    packet.X, packet.Y, packet.Z, packet.OnGround));
+                                player.Control(new(packet.X, packet.Y, packet.Z));
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerPosAndLookPacketId:
@@ -1371,11 +1843,9 @@ namespace Protocol
                                     break;
                                 }
 
-                                controls.Enqueue(new TransformationControl(
-                                    packet.X, packet.Y, packet.Z, 
-                                    packet.Yaw, packet.Pitch, 
-                                    packet.OnGround));
-
+                                player.Control(new(packet.X, packet.Y, packet.Z));
+                                player.Rotate(new(packet.Yaw, packet.Pitch));
+                                player.Stand(packet.OnGround);
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerLookPacketId:
@@ -1388,47 +1858,51 @@ namespace Protocol
                                     break;
                                 }
 
-                                controls.Enqueue(new RotationControl(
-                                    packet.Yaw, packet.Pitch, packet.OnGround));
+                                player.Rotate(new(packet.Yaw, packet.Pitch));
+                                player.Stand(packet.OnGround);
                             }
                             break;
                         case ServerboundPlayingPacket.EntityActionPacketId:
                             {
                                 EntityActionPacket packet = EntityActionPacket.Read(buffer);
 
-                                if (packet.EntityId != player.Id)
-                                    throw new UnexpectedValueException("EntityAction.EntityId");
+                                if (!_teleportationRecords.Empty)
+                                {
+                                    Console.Write("Ignore Any Controls");
+                                    break;
+                                }
 
                                 switch (packet.ActionId)
                                 {
                                     default:
                                         throw new UnexpectedValueException("EntityAction.ActoinId");
                                     case 0:
-                                        if (player._sneaking)
+                                        if (player.IsSneaking)
                                             throw new UnexpectedValueException("Entity.Sneaking");
                                         /*Console.Write("Seanking!");*/
-                                        controls.Enqueue(new SneakingControl());
+                                        player.Sneak();
                                         break;
                                     case 1:
-                                        if (!player._sneaking)
+                                        if (!player.IsSneaking)
                                             throw new UnexpectedValueException("Entity.Sneaking");
                                         /*Console.Write("Unseanking!");*/
-                                        controls.Enqueue(new UnsneakingControl());
+                                        player.Unsneak();
                                         break;
                                     case 3:
-                                        if (player._sprinting)
+                                        if (player.IsSprinting)
                                             throw new UnexpectedValueException("Entity.Sprinting");
-                                        controls.Enqueue(new SprintingControl());
+                                        player.Sprint();
                                         break;
                                     case 4:
-                                        if (!player._sprinting)
+                                        if (!player.IsSprinting)
                                             throw new UnexpectedValueException("Entity.Sprinting");
-                                        controls.Enqueue(new UnsprintingControl());
+                                        player.Unsprint();
                                         break;
                                 }
 
                                 if (packet.JumpBoost > 0)
                                     throw new UnexpectedValueException("EntityAction.JumpBoost");
+
                             }
                             break;
                     }
@@ -1440,16 +1914,15 @@ namespace Protocol
             catch (UnexpectedClientBehaviorExecption e)
             {
                 // TODO: send disconnected message to client.
-                player.isConnected = false;
 
-                Console.WriteLine(e.Message);
+                /*Console.WriteLine(e.Message);*/
+                player.Disconnect();
 
                 throw new DisconnectedClientException();
             }
             catch (DisconnectedClientException)
             {
-                player.isConnected = false;
-
+                player.Disconnect();
                 throw;
             }
             catch (TryAgainException)
@@ -1461,7 +1934,6 @@ namespace Protocol
                 record.Update();
 
             keepaliveChecker.Update(serverTicks, _outPackets);
-
         }
 
         public void UpdatePlayerList(PlayerList playerList)
@@ -1481,7 +1953,7 @@ namespace Protocol
         {
             Debug.Assert(!_isDisposed);
 
-            Chunk.Vector pChunkCenter = Chunk.Vector.Convert(player.pos);
+            Chunk.Vector pChunkCenter = Chunk.Vector.Convert(player.Position);
             int d = Settings.renderDistance;
             Debug.Assert(d >= ClientsideSettings.MinRenderDistance);
             Debug.Assert(d <= ClientsideSettings.MaxRenderDistance);
@@ -1505,7 +1977,8 @@ namespace Protocol
                     }
 
 
-                    _outPackets.Enqueue(new LoadChunkPacket(pChunk.x, pChunk.z, true, mask, data));
+                    _loadChunkPackets.Enqueue(new LoadChunkPacket(
+                        pChunk.x, pChunk.z, true, mask, data));
                 }
 
                 _renderedChunkGrid = grid;
@@ -1537,7 +2010,8 @@ namespace Protocol
                     (mask, data) = Chunk.Write();
                 }
 
-                _outPackets.Enqueue(new LoadChunkPacket(pChunk.x, pChunk.z, true, mask, data));
+                _loadChunkPackets.Enqueue(new LoadChunkPacket(
+                    pChunk.x, pChunk.z, true, mask, data));
             }
 
             foreach (Chunk.Vector pChunk in gridPrev.GetVectors())
@@ -1552,218 +2026,75 @@ namespace Protocol
 
         }
 
-        public void RenderEntities(Player ownPlayer, PlayerSearchTable playerSearchTable)
+        public void RenderEntities(Player ownPlayer, EntityRenderingTable entitySearchTable)
         {
             Debug.Assert(!_isDisposed);
 
-            using Queue<Player> newPlayers = new();
-            using Queue<Player> players = new();
+            using Queue<IRenderOnlyEntity> newEntities = new();
+            using Queue<IRenderOnlyEntity> entities = new();
 
-            using Set<int> prevRenderedPlayerIds = _renderedPlayerIds;
-            Set<int> renderedPlayerIds = new();
+            using Set<int> prevRenderedEntityIds = _renderedEntityIds;
+            Set<int> renderedEntityIds = new();
 
             Debug.Assert(_renderedChunkGrid != null);
             foreach (Chunk.Vector pChunk in _renderedChunkGrid.GetVectors())
             {
-                if (!playerSearchTable.Contains(pChunk))
+                if (!entitySearchTable.Contains(pChunk))
                     continue;
 
-                IReadOnlyTable<int, Player> playersInChunk = playerSearchTable.Search(pChunk);
-                foreach (Player player in playersInChunk.GetValues())
+                IReadOnlyTable<int, IRenderOnlyEntity> entitiesInChunk = entitySearchTable.Search(pChunk);
+                foreach (IRenderOnlyEntity entity in entitiesInChunk.GetValues())
                 {
-                    if (player.Id == ownPlayer.Id) continue;
+                    if (entity.Id == ownPlayer.Id) continue;
 
-                    if (prevRenderedPlayerIds.Contains(player.Id))
+                    if (prevRenderedEntityIds.Contains(entity.Id))
                     {
-                        prevRenderedPlayerIds.Extract(player.Id);
-                        players.Enqueue(player);
+                        prevRenderedEntityIds.Extract(entity.Id);
+                        entities.Enqueue(entity);
                     }
                     else
-                        newPlayers.Enqueue(player);
+                        newEntities.Enqueue(entity);
 
-                    renderedPlayerIds.Insert(player.Id);
+                    renderedEntityIds.Insert(entity.Id);
                 }
             }
 
-            foreach (Player player in newPlayers.GetValues())
+            while (!newEntities.Empty)
             {
-                Debug.Assert(player.Id != ownPlayer.Id);
+                IRenderOnlyEntity entity = newEntities.Dequeue();
+                Debug.Assert(entity.Id != ownPlayer.Id);
 
-                /*Console.Write("NewPlayer!");*/
+                entity.Spawn(_outPackets);
 
-                byte flags = 0x00;
-
-                if (player._sneaking)
-                    flags |= 0x02;
-                if (player._sprinting)
-                    flags |= 0x08;
-
-                using EntityMetadata metadata = new();
-                metadata.AddByte(0, flags);
-
-                _outPackets.Enqueue(new SpawnNamedEntityPacket(
-                    player.Id,
-                    player.UniqueId,
-                    player.pos.x, player.pos.y, player.pos.z,
-                    0, 0, 
-                    metadata.WriteData()));
+                entity.AddRenderer(_outPackets);
+                
             }
 
-            foreach (Player player in players.GetValues())
+            while (!entities.Empty)
             {
-                bool formChange = false;
-                bool anyMove = false;
+                IRenderOnlyEntity entity = entities.Dequeue();
+                Debug.Assert(entity.Id != ownPlayer.Id);
 
-                Debug.Assert(player.Id != ownPlayer.Id);
-
-                foreach (Player.Action action in player.Actions.GetValues())
-                {
-
-                    switch (action)
-                    {
-                        default:
-                            throw new NotImplementedException();
-                        case Player.StandingAction:
-                            _outPackets.Enqueue(new EntityPacket(player.Id));
-                            anyMove = true;
-                            break;
-                        case Player.TransformationAction transformAction:
-                            // TODO: Check range
-                            _outPackets.Enqueue(new EntityLookAndRelMovePacket(
-                                player.Id,
-                                (short)((transformAction.Pos.x - transformAction.PosPrev.x) * 32 * 128),
-                                (short)((transformAction.Pos.y - transformAction.PosPrev.y) * 32 * 128),
-                                (short)((transformAction.Pos.z - transformAction.PosPrev.z) * 32 * 128),
-                                0, 0,
-                                transformAction.OnGround));
-                            anyMove = true;
-                            break;
-                        case Player.MovementAction movementAction:
-                            /*Console.Write("Move!");*/
-                            // TODO: Check range
-                            _outPackets.Enqueue(new EntityRelMovePacket(
-                                player.Id,
-                                (short)((movementAction.Pos.x - movementAction.PosPrev.x) * 32 * 128),
-                                (short)((movementAction.Pos.y - movementAction.PosPrev.y) * 32 * 128),
-                                (short)((movementAction.Pos.z - movementAction.PosPrev.z) * 32 * 128),
-                                movementAction.OnGround));
-                            anyMove = true;
-                            break;
-                        case Player.RotationAction rotationAction:
-                            _outPackets.Enqueue(new EntityLookPacket(
-                                player.Id,
-                                0, 0,
-                                rotationAction.OnGround));
-                            anyMove = true;
-                            break;
-                        case Player.TeleportationAction teleportationAction:
-                            {
-                                _outPackets.Enqueue(new EntityTeleportPacket(
-                                    player.Id,
-                                    teleportationAction.Pos.x, teleportationAction.Pos.y, teleportationAction.Pos.z,
-                                    teleportationAction.Look.yaw, teleportationAction.Look.pitch,
-                                    player._onGround));
-                            }
-                            break;
-                        case Player.SneakingAction:
-                            formChange = true;
-                            break;
-                        case Player.UnsneakingAction:
-                            formChange = true;
-                            break;
-                        case Player.SprintingAction:
-                            formChange = true;
-                            break;
-                        case Player.UnsprintingAction:
-                            formChange = true;
-                            break;
-
-                    }
-                }
-
-                if (!anyMove)
-                    _outPackets.Enqueue(new EntityPacket(player.Id));
-
-                if (formChange)
-                {
-                    byte flags = 0x00;
-
-                    if (player._sneaking)
-                        flags |= 0x02;
-                    if (player._sprinting)
-                        flags |= 0x08;
-
-                    using EntityMetadata metadata = new();
-                    metadata.AddByte(0, flags);
-
-                    _outPackets.Enqueue(new EntityMetadataPacket(
-                        player.Id, metadata.WriteData()));
-                }
-
+                entity.AddRenderer(_outPackets);
             }
 
-            foreach (Player.Action action in ownPlayer.Actions.GetValues())
+            if (!prevRenderedEntityIds.Empty)
             {
-                switch (action)
-                {
-                    default:
-                        throw new NotImplementedException();
-                    case Player.StandingAction:
-                        // skip
-                        break;
-                    case Player.TransformationAction:
-                        // skip
-                        break;
-                    case Player.MovementAction:
-                        // skip
-                        break;
-                    case Player.RotationAction:
-                        // skip
-                        break;
-                    case Player.TeleportationAction teleportationAction:
-                        int payload = new Random().Next();
-
-                        TeleportationRecord record = new(payload);
-                        _teleportationRecords.Enqueue(record);
-
-                        _outPackets.Enqueue(new TeleportPacket(
-                            teleportationAction.Pos.x, teleportationAction.Pos.y, teleportationAction.Pos.z,
-                            teleportationAction.Look.yaw, teleportationAction.Look.pitch,
-                            false, false, false, false, false,
-                            payload));
-                        break;
-                    case Player.SneakingAction:
-                        // skip
-                        break;
-                    case Player.UnsneakingAction:
-                        // skip
-                        break;
-                    case Player.SprintingAction:
-                        // skip
-                        break;
-                    case Player.UnsprintingAction:
-                        // skip
-                        break;
-
-                }
-            }
-
-            if (!prevRenderedPlayerIds.Empty)
-            {
-                int[] despawnedPlayerIds = prevRenderedPlayerIds.Flush();
+                int[] despawnedPlayerIds = prevRenderedEntityIds.Flush();
                 _outPackets.Enqueue(new DestroyEntitiesPacket(despawnedPlayerIds));
             }
 
-            newPlayers.Flush(); players.Flush();
+            Debug.Assert(newEntities.Empty);
+            Debug.Assert(entities.Empty);
 
-            _renderedPlayerIds = renderedPlayerIds;
+            _renderedEntityIds = renderedEntityIds;
         }
 
         /// <summary>
         /// TODO: Add description.
         /// </summary>
-        /// <param name="packet">TODO: Add description.</param>
-        public void SendData()
+        /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
+        public void SendData(Player player)
         {
             Debug.Assert(!_isDisposed);
 
@@ -1773,9 +2104,25 @@ namespace Protocol
 
             try
             {
+                while (!_loadChunkPackets.Empty)
+                {
+                    LoadChunkPacket packet = _loadChunkPackets.Dequeue();
+
+                    packet.Write(buffer);
+                    _client.Send(buffer);
+
+                    Debug.Assert(buffer.Empty);
+                }
+
                 while (!_outPackets.Empty)
                 {
                     ClientboundPlayingPacket packet = _outPackets.Dequeue();
+
+                    if (packet is TeleportPacket teleportPacket)
+                    {
+                        TeleportationRecord report = new(teleportPacket.Payload);
+                        _teleportationRecords.Enqueue(report);
+                    }
 
                     packet.Write(buffer);
                     _client.Send(buffer);
@@ -1785,6 +2132,7 @@ namespace Protocol
             }
             catch (DisconnectedClientException)
             {
+                player.Disconnect();
                 buffer.Flush();
 
                 throw;
@@ -1793,25 +2141,23 @@ namespace Protocol
             Debug.Assert(_outPackets.Empty);
         }
 
-        public void Flush()
-        {
-            _renderedPlayerIds.Flush();
-            _teleportationRecords.Flush();
-            _outPackets.Flush();
-        }
-
         private void Dispose(bool disposing)
         {
             if (_isDisposed) return;
+
+            Debug.Assert(_renderedEntityIds.Empty);
+            Debug.Assert(_teleportationRecords.Empty);
+            Debug.Assert(_loadChunkPackets.Empty);
+            Debug.Assert(_outPackets.Empty);
 
             if (disposing == true)
             {
                 // managed objects
                 _client.Dispose();
 
-                _renderedPlayerIds.Dispose();
-                _teleportationRecords.Flush();  // TODO: Release resources corrently for no garbage.
+                _renderedEntityIds.Dispose();
                 _teleportationRecords.Dispose();
+                _loadChunkPackets.Dispose();
                 _outPackets.Dispose();
             }
 
@@ -1828,34 +2174,16 @@ namespace Protocol
 
         public void Close()
         {
-            Flush();
+            // TODO: Release resources corrently for no garbage.
+            _renderedEntityIds.Flush();
+            _teleportationRecords.Flush();
+            _loadChunkPackets.Flush();
+            _outPackets.Flush();
+
             Dispose();
         }
 
     }
-
-    /*public sealed class PlayerList
-    {
-        private readonly NumList _idList;
-
-        public PlayerList(NumList idList)
-        {
-            _idList = idList;
-        }
-
-        public int Alloc(Guid userId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Dealloc(int id)
-        {
-            throw new NotImplementedException();
-        }
-
-    }*/
-
-    
 
     public class ConnectionListener
     {
@@ -1877,12 +2205,11 @@ namespace Protocol
         }
 
         public void Accept(
-            NumList idList,
-            Queue<(Connection, Player)> connections, Queue<Player> players,
-            PlayerSearchTable playerSearchTable,
+            EntityIdList entityIdList,
+            Queue<(Connection, Player)> connections, Queue<Entity> entities,
+            EntityRenderingTable entityRenderingTable,
             PlayerList playerList,
-            Table<Chunk.Vector, Chunk> chunks,  // TODO: readonly
-            Player.Vector posInit, Player.Angles lookInit)
+            Entity.Vector posInit, Entity.Angles lookInit)
         {
             if (_clients.Empty) return;
 
@@ -1894,7 +2221,7 @@ namespace Protocol
                 using Buffer buffer = new();
 
                 (Client client, 
-                    Guid userId, 
+                    Guid uniqueId, 
                     string username, 
                     int entityId,
                     Connection.ClientsideSettings? settings,
@@ -1912,7 +2239,7 @@ namespace Protocol
                         Debug.Assert(entityId == -1);
 
                         // TODO: If already player exists, use id of that player object, not new alloc id.
-                        entityId = idList.Alloc();
+                        entityId = entityIdList.Alloc();
 
                         JoinGamePacket packet = new(entityId, 1, 0, 0, "default", false);  // TODO
                         packet.Write(buffer);
@@ -2011,7 +2338,7 @@ namespace Protocol
 
                         _clients.Enqueue((
                             client, 
-                            userId, username, 
+                            uniqueId, username, 
                             entityId, 
                             settings,
                             step));
@@ -2019,7 +2346,7 @@ namespace Protocol
                     else
                     {
                         if (step >= SetupSteps.JoinGame)
-                            idList.Dealloc(entityId);
+                            entityIdList.Dealloc(entityId);
 
                         client.Close();
                     }
@@ -2031,25 +2358,26 @@ namespace Protocol
                 Debug.Assert(!close);
                 /*Console.Write($"Start init connection!: entityId: {entityId} ");*/
 
-                Debug.Assert(settings != null);
                 Player player = new(
+                    entityIdList,
+                    entityRenderingTable,
                     entityId, 
-                    userId, 
-                    posInit, lookInit, false);
-                playerList.Add(userId, username);
+                    uniqueId, 
+                    posInit, lookInit, 
+                    playerList,
+                    username);
 
-                playerSearchTable.Init(player);
+                Debug.Assert(settings != null);
                 Connection conn = new(
                     entityId,
                     client,
-                    userId, username,
+                    uniqueId, username,
                     settings,
-                    playerList);
+                    playerList,
+                    player);
 
                 connections.Enqueue((conn, player));
-
-                // TODO: when player is exists in the world, doesn't enqueue player.
-                players.Enqueue(player);
+                entities.Enqueue(player);
 
                 /*Console.Write("Finish init connection!");*/
 

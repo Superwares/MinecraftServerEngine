@@ -1212,7 +1212,7 @@ namespace Protocol
                 buffer.ReadBool());
         }
 
-        private PlayerLookPacket(
+        public PlayerLookPacket(
             float yaw, float pitch,
             bool onGround) 
             : base(PlayerLookPacketId)

@@ -23,6 +23,10 @@ namespace Containers
 
         private Node _first;
 
+        private int _count = 0;
+        public int Count => _count;
+        public bool Empty => (_count == 0);
+
         public NumList()
         {
             _first = new(_MinNum, _MaxNum);
@@ -53,6 +57,8 @@ namespace Containers
                 Debug.Assert(next != null);
                 _first = next;
             }
+
+            _count++;
 
             return num;
         }
@@ -130,12 +136,15 @@ namespace Containers
                 }
             }
 
+            _count--;
+
         }
 
         protected virtual void Dispose(bool disposing)
         {
             if (_isDisposed == true) return;
 
+            Debug.Assert(_count == 0);
             Debug.Assert(_first != null);
             Debug.Assert(_first.next == null);
             Debug.Assert(_first.from == _MinNum);

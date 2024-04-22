@@ -130,16 +130,16 @@ namespace Protocol
 
     public abstract class TeleportReport : Report
     {
-        public readonly Player.Vector Pos;
-        public readonly Player.Angles Look;
+        public readonly Entity.Vector Pos;
+        public readonly Entity.Angles Look;
         public readonly int Payload;
 
         public TeleportReport(
-            Player.Vector pos, Player.Angles look)
+            Entity.Vector pos, Entity.Angles look)
         {
             Debug.Assert(
-                look.pitch >= Player.Angles.MinPitch &&
-                look.pitch <= Player.Angles.MaxPitch);
+                look.pitch >= Entity.Angles.MinPitch &&
+                look.pitch <= Entity.Angles.MaxPitch);
 
             Pos = pos; Look = look;
             Payload = new Random().Next();  // TODO: Make own random generator in common library.
@@ -150,7 +150,7 @@ namespace Protocol
 
     public class AbsoluteTeleportReport : TeleportReport
     {
-        public AbsoluteTeleportReport(Player.Vector pos, Player.Angles look) 
+        public AbsoluteTeleportReport(Entity.Vector pos, Entity.Angles look) 
             : base(pos, look) { }
 
         internal override void Write(Buffer buffer)
@@ -167,7 +167,7 @@ namespace Protocol
 
     public class RelativeTeleportReport : TeleportReport
     {
-        public RelativeTeleportReport(Player.Vector pos, Player.Angles look) 
+        public RelativeTeleportReport(Entity.Vector pos, Player.Angles look) 
             : base(pos, look) { }
 
         internal override void Write(Buffer buffer)

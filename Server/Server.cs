@@ -13,13 +13,14 @@ namespace Application
     {
         private bool _isDisposed = false;
 
-        private readonly ConcurrentNumList _idList = new();  // Disposable
+        private readonly EntityIdList _entityIdList = new();  // Disposable
 
         private readonly Queue<(Connection, Player)> _connections = new();  // Disposable
 
         private readonly PlayerList _playerList = new();  // Disposable
-        private readonly PlayerSearchTable _playerSearchTable = new();  // Disposable
-        private readonly Queue<Player> _players = new();  // Disposable
+
+        private readonly EntityRenderingTable _entityRenderingTable = new();  // Disposable
+        private readonly Queue<Entity> _entities = new();  // Disposable
 
         private readonly Table<Chunk.Vector, Chunk> _chunks = new();  // Disposable
 
@@ -27,7 +28,38 @@ namespace Application
 
         ~Server() => Dispose(false);
 
-        private void HandleConnectionControls(ulong serverTicks)
+        private void HandleEntities()
+        {
+            if (_entities.Empty) return;
+
+            for (int i = 0; i < _entities.Count; ++i)
+            {
+                Entity entity = _entities.Dequeue();
+
+                if (entity is Player player)
+                {
+                    if (!player.IsConnected)
+                    {
+                        // TODO: Release resources of player object.
+
+                        /*Console.WriteLine("Disconnected!");*/
+                        entity.Close();
+                        continue;
+                    }
+
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+
+
+                _entities.Enqueue(entity);
+            }
+
+        }
+
+        private void ControlPlayers(ulong serverTicks)
         {
             if (_connections.Empty) return;
 
@@ -35,105 +67,60 @@ namespace Application
             {
                 (Connection conn, Player player) = _connections.Dequeue();
 
-                using Queue<Control> controls = new();
-
                 try
                 {
-                    conn.Control(serverTicks, player, controls);
+                    conn.Control(serverTicks, player);
                 }
                 catch (DisconnectedClientException)
                 {
-                    controls.Flush();
                     conn.Close();
 
                     continue;
                 }
-
-                while (!controls.Empty)
-                {
-                    Control control = controls.Dequeue();
-
-                    switch (control)
-                    {
-                        default:
-                            throw new NotImplementedException();
-                        case StandingControl standingControl:
-                            player.Stand(standingControl.OnGround);
-                            break;
-                        case TransformationControl transformationControl:
-                            player.Transform(
-                                transformationControl.Pos, transformationControl.Look,
-                                transformationControl.OnGround);
-                            _playerSearchTable.Update(player.Id, transformationControl.Pos);
-                            break;
-                        case MovementControl movementControl:
-                            player.Move(movementControl.Pos, movementControl.OnGround);
-                            _playerSearchTable.Update(player.Id, movementControl.Pos);
-                            break;
-                        case RotationControl rotationControl:
-                            player.Rotate(rotationControl.Look, rotationControl.OnGround);
-                            break;
-                        case SneakingControl:
-                            player.Sneak();
-                            break;
-                        case UnsneakingControl:
-                            player.Unsneak();
-                            break;
-                        case SprintingControl:
-                            player.Sprint();
-                            break;
-                        case UnsprintingControl:
-                            player.Unsprint();
-                            break;
-                    }
-                }
-
-                Debug.Assert(controls.Empty);
-
+                
                 _connections.Enqueue((conn, player));
             }
 
         }
 
-        private void HandleEntityRoutines()
+        private void MoveEntities()
         {
-            if (_players.Empty) return;
+            if (_entities.Empty) return;
 
-            int count = _players.Count;
-            Debug.Assert(count > 0);
-            for (int i = 0; i < count; ++i)
+            for (int i = 0; i < _entities.Count; ++i)
             {
-                Player player = _players.Dequeue();
+                Entity entity = _entities.Dequeue();
 
-                if (!player.isConnected)
-                {
-                    // TODO: Release resources of player object.
+                entity.Move();
 
-                    _playerList.Remove(player.UniqueId);
-                    _playerSearchTable.Close(player.Id);
-                    _idList.Dealloc(player.Id);
-                    /*Console.WriteLine("Disconnected!");*/
-                    continue;
-
-                }
-
-                _players.Enqueue(player);
+                _entities.Enqueue(entity);
             }
-
         }
 
         private void Render()
         {
-            if (_connections.Empty) return;
-
-            int count = _connections.Count;
-            for (int i = 0; i < count; ++i)
+            for (int i = 0; i < _connections.Count; ++i)
             {
                 (Connection conn, Player player) = _connections.Dequeue();
 
                 conn.UpdatePlayerList(_playerList);
                 conn.RenderChunks(_chunks, player);
-                conn.RenderEntities(player, _playerSearchTable);
+
+                _connections.Enqueue((conn, player));
+            }
+
+            _entityIdList.Reset();
+            _playerList.Reset();
+
+            // reset entities
+            foreach (Entity entity in _entities.GetValues())
+                entity.Reset();
+
+            for (int i = 0; i < _connections.Count; ++i)
+            {
+                (Connection conn, Player player) = _connections.Dequeue();
+
+                conn.RenderEntities(player, _entityRenderingTable);
 
                 _connections.Enqueue((conn, player));
             }
@@ -152,12 +139,11 @@ namespace Application
 
                 try
                 {
-                    conn.SendData();
+                    conn.SendData(player);
                 }
                 catch (DisconnectedClientException)
                 {
                     conn.Close();
-                    player.isConnected = false;
 
                     continue;
                 }
@@ -169,44 +155,35 @@ namespace Application
             /*Console.Write("Finish send data!");*/
         }
 
-        private void Reset()
-        {
-            _playerList.Reset();
-            
-            foreach (Player player in _players.GetValues())
-                player.Reset();
-        }
+        
 
         private void StartGameRoutine(
-            ulong serverTicks,
-            ConnectionListener connListener)
+            ulong serverTicks, ConnectionListener connListener)
         {
             Console.Write(".");
-            /*Console.Write($"{ticks}");*/
-
-            connListener.Accept(
-                _idList,
-                _connections, _players,
-                _playerSearchTable,
-                _playerList,
-                _chunks,
-                new(0, 60, 0), new(0, 0));
-
-            // Barrier
 
             /*Physics();*/
 
             // Barrier
 
-            HandleEntityRoutines();
+            HandleEntities();
 
             // Barrier
 
-            HandleConnectionControls(serverTicks);
+            ControlPlayers(serverTicks);
 
             // Barrier
 
-            /*UpdateEntityMovements();*/
+            connListener.Accept(
+                _entityIdList,
+                _connections, _entities,
+                _entityRenderingTable,
+                _playerList,
+                new(0, 60, 0), new(0, 0));
+
+            // Barrier
+
+            MoveEntities();
 
             // Barrier
 
@@ -215,10 +192,6 @@ namespace Application
             // Barrier
 
             SendData();
-
-            // Barrier
-
-            Reset();
 
             // Barrier
 
@@ -270,13 +243,14 @@ namespace Application
                 if (disposing == true)
                 {
                     // Release managed resources.
-                    _idList.Dispose();
+                    _entityIdList.Dispose();
 
                     _connections.Dispose();
 
                     _playerList.Dispose();
-                    _playerSearchTable.Dispose();
-                    _players.Dispose();
+
+                    _entityRenderingTable.Dispose();
+                    _entities.Dispose();
 
                     _chunks.Dispose();
                 }
