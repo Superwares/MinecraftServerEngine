@@ -768,6 +768,7 @@ namespace Protocol
 
         protected override void WriteData(Buffer buffer)
         {
+            
             buffer.WriteInt(EntityId, true);
             buffer.WriteByte(Yaw); buffer.WriteByte(Pitch);
             buffer.WriteBool(OnGround);
