@@ -1,11 +1,5 @@
-﻿using Containers;
-using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Office.CustomUI;
-using System;
-using System.Collections;
+﻿using System;
 using System.Diagnostics;
-using System.Net.Sockets;
-using System.Runtime.CompilerServices;
 
 namespace Protocol
 {
@@ -133,6 +127,7 @@ namespace Protocol
         public const int RemovePlayerListItemPacketId = 0x2E;
         public const int TeleportPacketId = 0x2F;
         public const int DestroyEntitiesPacketId = 0x32;
+        public const int EntityHeadLookPacketId = 0x36;
         public const int EntityMetadataPacketId = 0x3C;
         public const int EntityTeleportPacketId = 0x4C;
 
@@ -960,6 +955,31 @@ namespace Protocol
             buffer.WriteInt(EntityIds.Length, true);
             foreach (int id in EntityIds)
                 buffer.WriteInt(id, true);
+        }
+
+    }
+
+    internal class EntityHeadLookPacket : ClientboundPlayingPacket
+    {
+        public readonly int EntityId;
+        public readonly byte Yaw;
+
+        internal static EntityHeadLookPacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public EntityHeadLookPacket(
+            int entityId, byte yaw) : base(EntityHeadLookPacketId)
+        {
+            EntityId = entityId;
+            Yaw = yaw;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteInt(EntityId, true);
+            buffer.WriteByte(Yaw);
         }
 
     }

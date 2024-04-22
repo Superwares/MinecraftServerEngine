@@ -217,9 +217,12 @@ namespace Protocol
                     (short)((_pos.Z - _posPrev.Z) * 32 * 128),
                     x, y, 
                     _onGround));
+                Render(new EntityHeadLookPacket(Id, x));
             }
             else if (moved)
             {
+                Debug.Assert(!_rotated);
+
                 Render(new EntityRelMovePacket(
                     Id,
                     (short)((_pos.X - _posPrev.X) * 32 * 128),
@@ -229,8 +232,11 @@ namespace Protocol
             }
             else if (_rotated)
             {
+                Debug.Assert(!moved);
+
                 (byte x, byte y) = _look.ConvertToProtocolFormat();
                 Render(new EntityLookPacket(Id, x, y, _onGround));
+                Render(new EntityHeadLookPacket(Id, x));
             }
             else
             {
