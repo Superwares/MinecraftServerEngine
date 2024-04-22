@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Diagnostics;
 
 namespace Protocol
@@ -138,8 +138,8 @@ namespace Protocol
             Entity.Vector pos, Entity.Angles look)
         {
             Debug.Assert(
-                look.pitch >= Entity.Angles.MinPitch &&
-                look.pitch <= Entity.Angles.MaxPitch);
+                look._pitch >= Entity.Angles.MinPitch &&
+                look._pitch <= Entity.Angles.MaxPitch);
 
             Pos = pos; Look = look;
             Payload = new Random().Next();  // TODO: Make own random generator in common library.
@@ -156,8 +156,8 @@ namespace Protocol
         internal override void Write(Buffer buffer)
         {
             TeleportPacket packet = new(
-                Pos.x, Pos.y, Pos.z,
-                Look.yaw, Look.pitch,
+                Pos._x, Pos._y, Pos._z,
+                Look._yaw, Look._pitch,
                 false, false, false, false, false, 
                 Payload);
             packet.Write(buffer);
@@ -173,8 +173,8 @@ namespace Protocol
         internal override void Write(Buffer buffer)
         {
             TeleportPacket packet = new(
-                Pos.x, Pos.y, Pos.z,
-                Look.yaw, Look.pitch,
+                Pos._x, Pos._y, Pos._z,
+                Look._yaw, Look._pitch,
                 true, true, true, true, true, 
                 Payload);
             packet.Write(buffer);
@@ -183,3 +183,4 @@ namespace Protocol
     }
 
 }
+*/

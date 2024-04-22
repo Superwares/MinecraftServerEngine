@@ -3,6 +3,7 @@ using Containers;
 using Protocol;
 using System;
 using System.Diagnostics;
+using System.Numerics;
 using System.Threading;
 
 namespace Application
@@ -16,6 +17,7 @@ namespace Application
         private readonly EntityIdList _entityIdList = new();  // Disposable
 
         private readonly Queue<(Connection, Player)> _connections = new();  // Disposable
+        private readonly Queue<Connection> _disconnections = new();  // Disposable
 
         private readonly PlayerList _playerList = new();  // Disposable
 
@@ -73,7 +75,7 @@ namespace Application
                 }
                 catch (DisconnectedClientException)
                 {
-                    conn.Close();
+                    _disconnections.Enqueue(conn);
 
                     continue;
                 }
@@ -143,7 +145,7 @@ namespace Application
                 }
                 catch (DisconnectedClientException)
                 {
-                    conn.Close();
+                    _disconnections.Enqueue(conn);
 
                     continue;
                 }
@@ -155,6 +157,20 @@ namespace Application
             /*Console.Write("Finish send data!");*/
         }
 
+        private void HandleDisconnections()
+        {
+
+            if (_disconnections.Empty) return;
+
+
+            for (int i = 0; i < _disconnections.Count; ++i)
+            {
+                Connection conn = _disconnections.Dequeue();
+
+                conn.Close();
+            }
+
+        }
         
 
         private void StartGameRoutine(
@@ -192,6 +208,10 @@ namespace Application
             // Barrier
 
             SendData();
+
+            // Barrier
+
+            HandleDisconnections();
 
             // Barrier
 

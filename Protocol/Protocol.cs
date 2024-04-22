@@ -5,7 +5,9 @@ using System.Net.Sockets;  // TODO: Use custom socket object in common library.
 using System.Numerics;
 using Applications;
 using Containers;
+using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Vml.Office;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Protocol;
 
 namespace Protocol
@@ -481,8 +483,8 @@ namespace Protocol
             public static Vector Convert(Player.Vector pos)
             {
                 return new(
-                    (pos.x >= 0) ? ((int)pos.x / Width) : (((int)pos.x / (Width + 1)) - 1),
-                    (pos.z >= 0) ? ((int)pos.z / Width) : (((int)pos.z / (Width + 1)) - 1));
+                    (pos.X >= 0) ? ((int)pos.X / Width) : (((int)pos.X / (Width + 1)) - 1),
+                    (pos.Z >= 0) ? ((int)pos.Z / Width) : (((int)pos.Z / (Width + 1)) - 1));
             }
 
             public bool Equals(Vector other)
@@ -814,36 +816,71 @@ namespace Protocol
 
         public struct Vector : IEquatable<Vector>
         {
-            public double x, y, z;
+            private double _x, _y, _z;
+            public double X => _x;
+            public double Y => _y;
+            public double Z => _z;
 
             public Vector(double x, double y, double z)
             {
-                this.x = x; this.y = y; this.z = z;
+                _x = x; _y = y; _z = z;
+            }
+
+            internal void Set(double x, double y, double z)
+            {
+                _x = x; _y = y; _z = z;
             }
 
             public bool Equals(Vector other)
             {
-                return (x == other.x) && (y == other.y) && (z == other.z);
+                return (_x == other._x) && (_y == other._y) && (_z == other._z);
             }
 
         }
 
         public struct Angles : IEquatable<Angles>
         {
-            public const float MaxYaw = 180, MinYaw = -180;
-            public const float MaxPitch = 90, MinPitch = -90;
+            internal const float MaxYaw = 180, MinYaw = -180;
+            internal const float MaxPitch = 90, MinPitch = -90;
 
-            public float yaw, pitch;
+            private static float Frem(float angle)
+            {
+                float y = 360.0f;
+                return angle - (y * (float)Math.Floor(angle / y));
+            }
+
+            private float _yaw, _pitch;
+            public float Yaw => _yaw;
+            public float Pitch => _pitch;
 
             public Angles(float yaw, float pitch)
             {
-                this.yaw = yaw;
-                this.pitch = pitch;
+                // TODO: map yaw from 180 to -180.
+                Debug.Assert(pitch >= MinPitch);
+                Debug.Assert(pitch <= MaxPitch);
+
+                _yaw = Frem(yaw);
+                _pitch = pitch;
+            }
+
+            internal (byte, byte) ConvertToProtocolFormat()
+            {
+                Debug.Assert(_pitch >= MinPitch);
+                Debug.Assert(_pitch <= MaxPitch);
+
+                _yaw = Frem(_yaw);
+                float x = _yaw;
+                float y = Frem(_pitch);
+
+                return (
+                    (byte)((byte.MaxValue * x) / 360),
+                    (byte)((byte.MaxValue * y) / 360));
+
             }
 
             public bool Equals(Angles other)
             {
-                return (other.yaw == yaw) && (other.pitch == pitch);
+                return (other._yaw == _yaw) && (other._pitch == _pitch);
             }
 
         }
@@ -953,6 +990,9 @@ namespace Protocol
 
             // update position with velocity, accelaration and forces(gravity, damping).
 
+            // TODO: Send render data.
+            // If entity don't move, must do Render(new EntityPacket(Id)). 
+
             _EntitySearchTable.Update(Id, _pos);
 
             if (!_teleported) return;
@@ -963,8 +1003,8 @@ namespace Protocol
 
             Render(new EntityTeleportPacket(
                 Id,
-                _pos.x, _pos.y, _pos.z,
-                _look.yaw, _look.pitch,
+                _pos.X, _pos.Y, _pos.Z,
+                _look.Yaw, _look.Pitch,
                 _onGround));
 
             _EntitySearchTable.Update(Id, _pos);
@@ -983,7 +1023,7 @@ namespace Protocol
 
             _onGround = f;
 
-            // TODO: send render data
+            Render(new EntityPacket(Id));
         }
 
         public void Rotate(Angles look)
@@ -992,7 +1032,24 @@ namespace Protocol
 
             _look = look;
 
-            // TODO: send render data
+            (byte x, byte y) = _look.ConvertToProtocolFormat();
+            /*Console.Write($"x: {x}, y: {y} ");*/
+            Render(new EntityLookPacket(Id, 100, 240, _onGround));
+        }
+
+        private void RanderFormChanging()
+        {
+            byte flags = 0x00;
+
+            if (_sneaking)
+                flags |= 0x02;
+            if (_sprinting)
+                flags |= 0x08;
+
+            using EntityMetadata metadata = new();
+            metadata.AddByte(0, flags);
+
+            Render(new EntityMetadataPacket(Id, metadata.WriteData()));
         }
 
         public void Sneak()
@@ -1002,17 +1059,7 @@ namespace Protocol
             Debug.Assert(!_sneaking);
             _sneaking = true;
 
-            byte flags = 0x00;
-
-            if (_sneaking)
-                flags |= 0x02;
-            if (_sprinting)
-                flags |= 0x08;
-
-            using EntityMetadata metadata = new();
-            metadata.AddByte(0, flags);
-
-            Render(new EntityMetadataPacket(Id, metadata.WriteData()));
+            RanderFormChanging();
         }
 
         public void Unsneak()
@@ -1022,17 +1069,7 @@ namespace Protocol
             Debug.Assert(_sneaking);
             _sneaking = false;
 
-            byte flags = 0x00;
-
-            if (_sneaking)
-                flags |= 0x02;
-            if (_sprinting)
-                flags |= 0x08;
-
-            using EntityMetadata metadata = new();
-            metadata.AddByte(0, flags);
-
-            Render(new EntityMetadataPacket(Id, metadata.WriteData()));
+            RanderFormChanging();
         }
 
         public void Sprint()
@@ -1042,17 +1079,7 @@ namespace Protocol
             Debug.Assert(!_sprinting);
             _sprinting = true;
 
-            byte flags = 0x00;
-
-            if (_sneaking)
-                flags |= 0x02;
-            if (_sprinting)
-                flags |= 0x08;
-
-            using EntityMetadata metadata = new();
-            metadata.AddByte(0, flags);
-
-            Render(new EntityMetadataPacket(Id, metadata.WriteData()));
+            RanderFormChanging();
         }
 
         public void Unsprint()
@@ -1062,17 +1089,7 @@ namespace Protocol
             Debug.Assert(_sprinting);
             _sprinting = false;
 
-            byte flags = 0x00;
-
-            if (_sneaking)
-                flags |= 0x02;
-            if (_sprinting)
-                flags |= 0x08;
-
-            using EntityMetadata metadata = new();
-            metadata.AddByte(0, flags);
-
-            Render(new EntityMetadataPacket(Id, metadata.WriteData()));
+            RanderFormChanging();
         }
 
         protected virtual void Dispose(bool disposing)
@@ -1218,6 +1235,8 @@ namespace Protocol
 
         private protected override void Spawn(Queue<ClientboundPlayingPacket> outPackets)
         {
+            Console.WriteLine("Spawn!");
+
             byte flags = 0x00;
 
             if (IsSneaking)
@@ -1228,11 +1247,12 @@ namespace Protocol
             using EntityMetadata metadata = new();
             metadata.AddByte(0, flags);
 
+            (byte x, byte y) = _look.ConvertToProtocolFormat();
             outPackets.Enqueue(new SpawnNamedEntityPacket(
                 Id,
                 UniqueId,
-                Position.x, Position.y, Position.z,
-                0, 0,  // TODO: Convert yaw and pitch to angles of minecraft protocol.
+                Position.X, Position.Y, Position.Z,
+                x, y,  // TODO: Convert yaw and pitch to angles of minecraft protocol.
                 metadata.WriteData()));
 
         }
@@ -1265,12 +1285,11 @@ namespace Protocol
                 Vector posPrev = _pos;
                 _pos = _posControl;
 
-                Render(new EntityLookAndRelMovePacket(
+                Render(new EntityRelMovePacket(
                     Id,
-                    (short)((_pos.x - posPrev.x) * 32 * 128),
-                    (short)((_pos.y - posPrev.y) * 32 * 128),
-                    (short)((_pos.z - posPrev.z) * 32 * 128),
-                    0, 0,
+                    (short)((_pos.X - posPrev.X) * 32 * 128),
+                    (short)((_pos.Y - posPrev.Y) * 32 * 128),
+                    (short)((_pos.Z - posPrev.Z) * 32 * 128),
                     _onGround));
             }
 
@@ -1282,8 +1301,8 @@ namespace Protocol
             {
                 int payload = new Random().Next();
                 RenderSelf(new TeleportPacket(
-                    _pos.x, _pos.y, _pos.z,
-                    _look.yaw, _look.pitch,
+                    _pos.X, _pos.Y, _pos.Z,
+                    _look.Yaw, _look.Pitch,
                     false, false, false, false, false,
                     payload));
             }
@@ -1566,7 +1585,7 @@ namespace Protocol
                 _chunkToEntities.Extract(pChunkPrev);
         }
 
-        void IUpdateOnlyEntityRenderingTable.Update(int id, Player.Vector p)
+        void IUpdateOnlyEntityRenderingTable.Update(int id, Entity.Vector p)
         {
             Debug.Assert(!_isDisposed);
 
@@ -1831,6 +1850,7 @@ namespace Protocol
                                 }
 
                                 player.Control(new(packet.X, packet.Y, packet.Z));
+                                player.Stand(packet.OnGround);
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerPosAndLookPacketId:
@@ -1981,45 +2001,44 @@ namespace Protocol
                         pChunk.x, pChunk.z, true, mask, data));
                 }
 
-                _renderedChunkGrid = grid;
-                return;
             }
-
-            Debug.Assert(_renderedChunkGrid != null);
-            Chunk.Grid gridPrev = _renderedChunkGrid;
-
-            if (gridPrev.Equals(grid))
-                return;
-
-            Chunk.Grid gridBetween = Chunk.Grid.GenerateBetween(grid, gridPrev);
-
-            foreach (Chunk.Vector pChunk in grid.GetVectors())
+            else
             {
-                if (gridBetween.Contains(pChunk))
-                    continue;
+                Chunk.Grid gridPrev = _renderedChunkGrid;
 
-                int mask; byte[] data;
+                if (gridPrev.Equals(grid))
+                    return;
 
-                if (chunks.Contains(pChunk))
+                Chunk.Grid gridBetween = Chunk.Grid.GenerateBetween(grid, gridPrev);
+
+                foreach (Chunk.Vector pChunk in grid.GetVectors())
                 {
-                    Chunk chunk = chunks.Lookup(pChunk);
-                    (mask, data) = Chunk.Write(chunk);
+                    if (gridBetween.Contains(pChunk))
+                        continue;
+
+                    int mask; byte[] data;
+
+                    if (chunks.Contains(pChunk))
+                    {
+                        Chunk chunk = chunks.Lookup(pChunk);
+                        (mask, data) = Chunk.Write(chunk);
+                    }
+                    else
+                    {
+                        (mask, data) = Chunk.Write();
+                    }
+
+                    _loadChunkPackets.Enqueue(new LoadChunkPacket(
+                        pChunk.x, pChunk.z, true, mask, data));
                 }
-                else
+
+                foreach (Chunk.Vector pChunk in gridPrev.GetVectors())
                 {
-                    (mask, data) = Chunk.Write();
+                    if (gridBetween.Contains(pChunk))
+                        continue;
+
+                    _outPackets.Enqueue(new UnloadChunkPacket(pChunk.x, pChunk.z));
                 }
-
-                _loadChunkPackets.Enqueue(new LoadChunkPacket(
-                    pChunk.x, pChunk.z, true, mask, data));
-            }
-
-            foreach (Chunk.Vector pChunk in gridPrev.GetVectors())
-            {
-                if (gridBetween.Contains(pChunk))
-                    continue;
-
-                _outPackets.Enqueue(new UnloadChunkPacket(pChunk.x, pChunk.z));
             }
 
             _renderedChunkGrid = grid;
@@ -2042,7 +2061,9 @@ namespace Protocol
                 if (!entitySearchTable.Contains(pChunk))
                     continue;
 
-                IReadOnlyTable<int, IRenderOnlyEntity> entitiesInChunk = entitySearchTable.Search(pChunk);
+                IReadOnlyTable<int, IRenderOnlyEntity> entitiesInChunk = 
+                    entitySearchTable.Search(pChunk);
+
                 foreach (IRenderOnlyEntity entity in entitiesInChunk.GetValues())
                 {
                     if (entity.Id == ownPlayer.Id) continue;
@@ -2081,6 +2102,7 @@ namespace Protocol
             if (!prevRenderedEntityIds.Empty)
             {
                 int[] despawnedPlayerIds = prevRenderedEntityIds.Flush();
+
                 _outPackets.Enqueue(new DestroyEntitiesPacket(despawnedPlayerIds));
             }
 
