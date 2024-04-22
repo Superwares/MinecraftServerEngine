@@ -6,6 +6,9 @@ namespace Containers
 
     public interface IReadOnlyTable<K, V> where K : struct, IEquatable<K>
     {
+        public int Count { get; }
+        public bool Empty { get; }
+
         public V Lookup(K key);
         public bool Contains(K key);
 
