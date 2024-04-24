@@ -26,6 +26,12 @@ For instance, the exception NotImplementedException should not be handled intern
 
 Reduce using try/catch for optimization.
 
+#### UnexpectedValueException
+```
+throw new UnexpectedValueException($"ClickWindowPacket.ModeNumber {packet.ModeNumber}");
+```
+위처럼 패킷.변수이름 {값} 의 형태로 해당 예외를 사용한다.
+
 ### Containers
 All containers must be implemented as IDisposable interface, and have empty data if the container is disposed.
 

@@ -1,10 +1,194 @@
 ﻿using System;
 using System.Diagnostics;
+using Containers;
 
 namespace Protocol
 {
 
-    
+    internal class SlotData
+    {
+        public readonly short Id;
+        public readonly byte Count;
+        
+        public static SlotData Read(byte[] data)
+        {
+            using Buffer buffer = new();
+            buffer.WriteData(data);
+
+            short id = buffer.ReadShort();
+            if (id == -1)
+                return new();
+
+            byte count = buffer.ReadByte();
+            short damage = buffer.ReadShort();
+            Debug.Assert(damage == 0);
+            byte nbt = buffer.ReadByte();
+            Debug.Assert(nbt == 0x00);
+            return new(id, count);
+        }
+
+        public SlotData(short id, byte count)
+        {
+            Id = id;
+            Count = count;
+        }
+
+        public SlotData()
+        {
+            Id = -1;
+        }
+
+        public byte[] WriteData()
+        {
+            using Buffer buffer = new();
+
+            if (Id == -1)
+            {
+                buffer.WriteShort(-1);
+                return buffer.ReadData();
+            }
+
+            buffer.WriteShort(Id);
+            buffer.WriteByte(Count);
+            buffer.WriteShort(0);
+            buffer.WriteByte(0x00);  // no NBT
+
+            return buffer.ReadData();
+        }
+
+    }
+
+    internal class EntityMetadata : IDisposable
+    {
+        private abstract class Item(byte index)
+        {
+            public readonly byte Index = index;
+
+            public void Write(Buffer buffer)
+            {
+                buffer.WriteByte(Index);
+                WriteData(buffer);
+            }
+
+            public abstract void WriteData(Buffer buffer);
+        }
+
+        private class ByteItem(byte index, byte value) : Item(index)
+        {
+            private readonly byte _value = value;
+
+            public override void WriteData(Buffer buffer)
+            {
+                buffer.WriteInt(0, true);
+                buffer.WriteByte(_value);
+            }
+
+        }
+
+        private class IntItem(byte index, int value) : Item(index)
+        {
+            private readonly int _value = value;
+
+            public override void WriteData(Buffer buffer)
+            {
+                buffer.WriteInt(1, true);
+                buffer.WriteInt(_value, true);
+            }
+
+        }
+
+        private class FloatItem(byte index, float value) : Item(index)
+        {
+            private readonly float _value = value;
+
+            public override void WriteData(Buffer buffer)
+            {
+                buffer.WriteInt(2, true);
+                buffer.WriteFloat(_value);
+            }
+
+        }
+
+        private class StringItem(byte index, string value) : Item(index)
+        {
+            private readonly string _value = value;
+
+            public override void WriteData(Buffer buffer)
+            {
+                buffer.WriteInt(3, true);
+                buffer.WriteString(_value);
+            }
+        }
+
+        private bool _isDisposed = false;
+
+        private readonly Queue<Item> _items = new();
+
+        ~EntityMetadata()
+        {
+            Debug.Assert(false);
+        }
+
+        public void AddByte(byte index, byte value)
+        {
+            _items.Enqueue(new ByteItem(index, value));
+        }
+
+        public void AddInt(byte index, int value)
+        {
+            _items.Enqueue(new IntItem(index, value));
+        }
+
+        public void AddFloat(byte index, float value)
+        {
+            _items.Enqueue(new FloatItem(index, value));
+        }
+
+        public void AddString(byte index, string value)
+        {
+            _items.Enqueue(new StringItem(index, value));
+        }
+
+        public byte[] WriteData()
+        {
+            using Buffer buffer = new();
+
+            while (!_items.Empty)
+            {
+                Item item = _items.Dequeue();
+                item.Write(buffer);
+            }
+
+            buffer.WriteByte(0xff);
+
+            return buffer.ReadData();
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (_isDisposed) return;
+
+            if (disposing == true)
+            {
+                // Release managed resources.
+                _items.Dispose();
+            }
+
+            // Release unmanaged resources.
+
+            _isDisposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        public void Close() => Dispose();
+
+    }
+
     internal abstract class Packet
     {
         protected const string _MinecraftVersion = "1.12.2";
@@ -113,6 +297,10 @@ namespace Protocol
     internal abstract class ClientboundPlayingPacket(int id) : PlayingPacket(id)
     {
         public const int SpawnNamedEntityPacketId = 0x05;
+        public const int ClientboundConfirmTransactionPacketId = 0x11;
+        public const int OpenWindowPacketId = 0x13;
+        public const int SetWindowItemsPacketId = 0x14;
+        public const int SetSlotPacketId = 0x16;
         public const int UnloadChunkPacketId = 0x1D;
         public const int RequestKeepAlivePacketId = 0x1F;
         public const int LoadChunkPacketId = 0x20;
@@ -139,6 +327,8 @@ namespace Protocol
     {
         public const int ConfirmTeleportationPacketId = 0x00;
         public const int SetClientSettingsPacketId = 0x04;
+        public const int ServerboundConfirmTransactionPacketId = 0x05;
+        public const int ClickWindowPacketId = 0x07;
         public const int ResponseKeepAlivePacketId = 0x0B;
         public const int PlayerPacketId = 0x0C;
         public const int PlayerPositionPacketId = 0x0D;
@@ -511,6 +701,136 @@ namespace Protocol
             buffer.WriteDouble(X); buffer.WriteDouble(Y); buffer.WriteDouble(Z);
             buffer.WriteByte(Yaw); buffer.WriteByte(Pitch);
             buffer.WriteData(Data);
+        }
+
+    }
+
+    internal class ClientboundConfirmTransactionPacket : ClientboundPlayingPacket
+    {
+        public readonly sbyte WindowId;
+        public readonly short ActionNumber;
+        public readonly bool Accepted;
+        private int v1;
+        private bool v2;
+
+        public static ClientboundConfirmTransactionPacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ClientboundConfirmTransactionPacket(
+            sbyte windowId, short actionNumber, bool accepted)
+            : base(ClientboundConfirmTransactionPacketId)
+        {
+            WindowId = windowId;
+            ActionNumber = actionNumber;
+            Accepted = accepted;
+        }
+
+        public ClientboundConfirmTransactionPacket(int id, int v1, bool v2) : base(id)
+        {
+            this.v1 = v1;
+            this.v2 = v2;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteSbyte(WindowId);
+            buffer.WriteShort(ActionNumber);
+            buffer.WriteBool(Accepted);
+        }
+
+    }
+
+    internal class OpenWindowPacket : ClientboundPlayingPacket
+    {
+        public readonly byte WindowId;
+        public readonly string WindowType;
+        public readonly string WindowTitle;
+        public readonly byte SlotCount;
+        
+        public static OpenWindowPacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public OpenWindowPacket(
+            byte windowId, string windowType, string windowTitle, byte slotCount) 
+            : base(OpenWindowPacketId)
+        {
+            
+            WindowId = windowId;
+            WindowType = windowType;
+            WindowTitle = windowTitle;
+            SlotCount = slotCount;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            Debug.Assert(WindowId > 0);
+            buffer.WriteByte(WindowId);
+            buffer.WriteString(WindowType);
+            buffer.WriteString("{\"text\":\"foo\"}");
+            buffer.WriteByte(SlotCount);
+        }
+
+    }
+
+    internal class SetWindowItemsPacket : ClientboundPlayingPacket
+    {
+        public readonly byte WindowId;
+        public readonly SlotData[] Arr;
+
+        public static SetWindowItemsPacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public SetWindowItemsPacket(byte windowId, SlotData[] arr)
+            : base(SetWindowItemsPacketId)
+        {
+            WindowId = windowId;
+            Arr = arr;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteByte(WindowId);
+
+            Debug.Assert(Arr.Length >= short.MinValue);
+            Debug.Assert(Arr.Length <= short.MaxValue);
+            buffer.WriteShort((short)Arr.Length);
+
+            foreach (SlotData slotData in Arr)
+                buffer.WriteData(slotData.WriteData());
+        }
+
+    }
+
+    internal class SetSlotPacket : ClientboundPlayingPacket
+    {
+        public readonly sbyte WindowId;
+        public readonly short SlotNumber;
+        public readonly SlotData Data;
+
+        public static SetSlotPacket Read(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public SetSlotPacket(sbyte windowId, short slotNumber, SlotData data) 
+            : base(SetSlotPacketId)
+        {
+            WindowId = windowId;
+            SlotNumber = slotNumber;
+            Data = data;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteSbyte(WindowId);
+            buffer.WriteShort(SlotNumber);
+            buffer.WriteData(Data.WriteData());
         }
 
     }
@@ -1098,6 +1418,70 @@ namespace Protocol
         {
             throw new NotImplementedException();
         }
+    }
+
+    internal class ServerboundConfirmTransactionPacket : ServerboundPlayingPacket
+    {
+        public readonly sbyte WindowId;
+        public readonly short ActionNumber;
+        public readonly bool Accepted;
+
+        internal static ServerboundConfirmTransactionPacket Read(Buffer buffer)
+        {
+            return new(buffer.ReadSbyte(), buffer.ReadShort(), buffer.ReadBool());
+        }
+
+        private ServerboundConfirmTransactionPacket(
+            sbyte windowId, short actionNumber, bool accepted)
+            : base(ServerboundConfirmTransactionPacketId)
+        {
+            WindowId = windowId;
+            ActionNumber = actionNumber;
+            Accepted = accepted;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+    }
+
+    internal class ClickWindowPacket : ServerboundPlayingPacket
+    {
+        public readonly byte WindowId;
+        public readonly short SlotNumber;
+        public readonly sbyte ButtonNumber;
+        public readonly short ActionNumber;
+        public readonly int ModeNumber;
+        public readonly byte[] Data;
+
+        internal static ClickWindowPacket Read(Buffer buffer)
+        {
+            return new(
+                buffer.ReadByte(),
+                buffer.ReadShort(), buffer.ReadSbyte(), buffer.ReadShort(), buffer.ReadInt(true),
+                buffer.ReadData());
+        }
+
+        private ClickWindowPacket(
+            byte windowId,
+            short slotNumber, sbyte buttonNumber, short actionNumber, int modeNumber,
+            byte[] data) : base(ClickWindowPacketId)
+        {
+            WindowId = windowId;
+            SlotNumber = slotNumber;
+            ButtonNumber = buttonNumber;
+            ActionNumber = actionNumber;
+            ModeNumber = modeNumber;
+            Data = data;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
     }
 
     internal class ResponseKeepAlivePacket : ServerboundPlayingPacket

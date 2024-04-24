@@ -2,13 +2,8 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;  // TODO: Use custom socket object in common library.
-using System.Numerics;
 using Applications;
 using Containers;
-using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Vml.Office;
-using DocumentFormat.OpenXml.Wordprocessing;
-using Protocol;
 
 namespace Protocol
 {
@@ -605,6 +600,9 @@ namespace Protocol
                             if (block == null)
                                 block = new Air();
 
+                            if (y == 10)
+                                block = new Stone();
+
                             ulong id = block.GetGlobalPaletteID();
                             Debug.Assert((id >> blockBitCount) == 0);
 
@@ -707,12 +705,38 @@ namespace Protocol
             return (mask, buffer.ReadData());
         }
 
+        internal static (int, byte[]) Write2()
+        {
+            Buffer buffer = new();
+
+            int mask = 0;
+            Debug.Assert(SectionTotalCount == 16);
+
+            Section section = new();
+
+            mask |= (1 << 3);  // TODO;
+            Section.Write(buffer, section);
+
+            // TODO: biomes
+            for (int z = 0; z < Width; ++z)
+            {
+                for (int x = 0; x < Width; ++x)
+                {
+                    buffer.WriteByte(127);  // Void Biome
+                }
+            }
+
+            return (mask, buffer.ReadData());
+        }
+
         public readonly Vector p;
 
         public Chunk(Vector p)
         {
             this.p = p;
         }
+
+
 
     }
 
@@ -879,6 +903,7 @@ namespace Protocol
     {
         void Add(Guid uniqueId, string username);
         void Remove(Guid uniqueId);
+
     }
 
     public sealed class PlayerList : IUpdateOnlyPlayerList, IDisposable
@@ -1101,6 +1126,396 @@ namespace Protocol
 
     }
 
+    internal sealed class WindowHelper : IDisposable
+    {
+        private bool _disposed = false;
+
+        /**
+         * -1: Window is closed.
+         *  0: Window is opened with only self inventory.
+         * >0: Window is opened with self and other inventory.
+         */
+        private int _windowId = -1;
+
+        private PlayerInventory _inventorySelf;
+        private Inventory? _inventoryOther = null;
+
+        private Item? _itemCursor = null;
+
+        public WindowHelper(PlayerInventory inventorySelf)
+        {
+            _inventorySelf = inventorySelf;
+        }
+
+        ~WindowHelper() => Debug.Assert(false);
+
+        public int GetWindowId()
+        {
+            Debug.Assert(!_disposed);
+
+            Debug.Assert(_windowId >= 0);
+            Debug.Assert(_windowId > 0 ?
+                _inventoryOther != null : _inventoryOther == null);
+
+            return _windowId;
+        }
+
+        public bool IsWindowOpened()
+        {
+            Debug.Assert(!_disposed);
+
+            Debug.Assert(_windowId > 0 ?
+                _inventoryOther != null : _inventoryOther == null);
+
+            return _windowId >= 0;
+        }
+
+        public void OpenWindow(
+            int idConn, Queue<ClientboundPlayingPacket> outPackets, 
+            Inventory inventoryOther)
+        {
+            Debug.Assert(!_disposed);
+
+            Debug.Assert(_windowId == -1);
+            Debug.Assert(_inventoryOther == null);
+
+            int i = 0;
+            int offset;
+
+            _windowId = (new Random().Next() % 100) + 1;  // TODO
+
+            switch (inventoryOther)
+            {
+                default:
+                    throw new NotImplementedException();
+                case PlayerInventory playerInventory:
+                    {
+                        offset = 36;
+
+                        int n = offset + 36;
+
+                        Debug.Assert(_windowId >= byte.MinValue);
+                        Debug.Assert(_windowId <= byte.MaxValue);
+                        Debug.Assert(n >= byte.MinValue);
+                        Debug.Assert(n <= byte.MaxValue);
+                        outPackets.Enqueue(new OpenWindowPacket(
+                            (byte)_windowId, "minecraft:chest", "", (byte)n));
+            
+                        OtherPlayerInventoryRenderer renderer = new(_windowId, outPackets);
+                        foreach (Item? item in playerInventory.Init(idConn, renderer))
+                        {
+                            SlotData slotData;
+                            if (item == null)
+                            {
+                                slotData = new();
+                            }
+                            else
+                            {
+                                Debug.Assert(item.Id >= short.MinValue);
+                                Debug.Assert(item.Id <= short.MaxValue);
+                                Debug.Assert(item.Count >= byte.MinValue);
+                                Debug.Assert(item.Count <= byte.MaxValue);
+                                slotData = new((short)item.Id, (byte)item.Count);
+                            }
+
+                            Debug.Assert(_windowId >= sbyte.MinValue);
+                            Debug.Assert(_windowId <= sbyte.MaxValue);
+                            Debug.Assert(i >= short.MinValue);
+                            Debug.Assert(i <= short.MaxValue);
+                            outPackets.Enqueue(new SetSlotPacket(
+                                (sbyte)_windowId, (short)i++, slotData));
+                        }
+
+                    }
+                    break;
+                case ChestInventory chestInventory:
+                    {
+                        offset = 27;
+
+                        int n = offset + 36;
+
+                        Debug.Assert(_windowId >= byte.MinValue);
+                        Debug.Assert(_windowId <= byte.MaxValue);
+                        Debug.Assert(n >= byte.MinValue);
+                        Debug.Assert(n <= byte.MaxValue);
+                        outPackets.Enqueue(new OpenWindowPacket(
+                            (byte)_windowId, "minecraft:chest", "", (byte)n));
+
+                        ChestInventoryRenderer renderer = new(_windowId, outPackets);
+                        foreach (Item? item in chestInventory.Init(idConn, renderer))
+                        {
+                            SlotData slotData;
+                            if (item == null)
+                            {
+                                slotData = new();
+                            }
+                            else
+                            {
+                                Debug.Assert(item.Id >= short.MinValue);
+                                Debug.Assert(item.Id <= short.MaxValue);
+                                Debug.Assert(item.Count >= byte.MinValue);
+                                Debug.Assert(item.Count <= byte.MaxValue);
+                                slotData = new((short)item.Id, (byte)item.Count);
+                            }
+
+                            Debug.Assert(_windowId >= sbyte.MinValue);
+                            Debug.Assert(_windowId <= sbyte.MaxValue);
+                            Debug.Assert(i >= short.MinValue);
+                            Debug.Assert(i <= short.MaxValue);
+                            outPackets.Enqueue(new SetSlotPacket(
+                                (sbyte)_windowId, (short)i++, slotData));
+                        }
+
+                    }
+                    break;
+            }
+
+            _inventoryOther = inventoryOther;
+
+            Debug.Assert(offset > 0);
+            Debug.Assert(i == offset);
+            {
+                SelfPlayerInventoryRenderer renderer = new(_windowId, outPackets, offset);
+                foreach (Item? item in _inventorySelf.Init(idConn, renderer))
+                {
+                    SlotData slotData;
+                    if (item == null)
+                    {
+                        slotData = new();
+                    }
+                    else
+                    {
+                        Debug.Assert(item.Id >= short.MinValue);
+                        Debug.Assert(item.Id <= short.MaxValue);
+                        Debug.Assert(item.Count >= byte.MinValue);
+                        Debug.Assert(item.Count <= byte.MaxValue);
+                        slotData = new((short)item.Id, (byte)item.Count);
+                    }
+
+                    Debug.Assert(_windowId >= sbyte.MinValue);
+                    Debug.Assert(_windowId <= sbyte.MaxValue);
+                    Debug.Assert(i >= short.MinValue);
+                    Debug.Assert(i <= short.MaxValue);
+                    outPackets.Enqueue(new SetSlotPacket(
+                        (sbyte)_windowId, (short)i++, slotData));
+                }
+            }
+
+        }
+
+        public void OpenWindow(
+            int idConn, Queue<ClientboundPlayingPacket> outPackets)
+        {
+            Debug.Assert(!_disposed);
+
+            Debug.Assert(_windowId == -1);
+            Debug.Assert(_inventoryOther == null);
+
+            _windowId = 0;
+            Debug.Assert(_windowId >= byte.MinValue);
+            Debug.Assert(_windowId <= byte.MaxValue);
+
+            int i = 0;
+
+            CompleteSelfPlayerInventoryRenderer renderer = new(_windowId, outPackets);
+            foreach (Item? item in _inventorySelf.Init(idConn, renderer))
+            {
+                SlotData slotData;
+                if (item == null)
+                {
+                    slotData = new();
+                }
+                else
+                {
+                    Debug.Assert(item.Id >= short.MinValue);
+                    Debug.Assert(item.Id <= short.MaxValue);
+                    Debug.Assert(item.Count >= byte.MinValue);
+                    Debug.Assert(item.Count <= byte.MaxValue);
+                    slotData = new((short)item.Id, (byte)item.Count);
+                }
+
+                Debug.Assert(_windowId >= sbyte.MinValue);
+                Debug.Assert(_windowId <= sbyte.MaxValue);
+                Debug.Assert(i >= short.MinValue);
+                Debug.Assert(i <= short.MaxValue);
+                outPackets.Enqueue(new SetSlotPacket(
+                    (sbyte)_windowId, (short)i++, slotData));
+            }
+
+        }
+
+        public void CloseWindow(int idConn)
+        {
+            Debug.Assert(!_disposed);
+
+            Debug.Assert(_windowId >= 0);
+            Debug.Assert(_windowId == 0 ? 
+                _inventoryOther == null : _inventoryOther != null);
+
+            if (_windowId > 0)
+            {
+                Debug.Assert(_inventoryOther != null):
+                _inventoryOther.RemoveRenderer(idConn);
+            }
+
+            _inventorySelf.RemoveRenderer(idConn);
+
+            /*if (_itemCursor != null)
+            {
+                // TODO: Drop item if _iremCursor is not null.
+                _itemCursor = null;
+            }*/
+
+            Debug.Assert(_itemCursor == null);
+        }
+        public void ClickLeftMouseButton(
+            int index,
+            Item? itemSlot,
+            Queue<ClientboundPlayingPacket> outPackets)
+        {
+            Debug.Assert(!_disposed);
+
+            Debug.Assert(_windowId >= 0);
+
+            if (_windowId == 0)
+            {
+                Debug.Assert(_inventoryOther == null);
+                if (index == 0)
+                {
+                    bool contains = _inventorySelf.ContainsInCraftingOutput();
+                    Item? itemTake = contains ? _inventorySelf.TakeFromCraftingOutput() : null;
+                    bool different;
+                    if (itemSlot != null && itemTake != null)
+                    {
+                        different = itemSlot.Equals(itemTake);
+                    }
+                    else if (itemSlot == null && itemTake == null)
+                    {
+                        different = true;
+                    }
+                    else
+                    {
+                        different = false;
+                    }
+
+                    if (different)
+                        throw new UnexpectedValueException($"ClickWindowPacket.Data");
+
+                    if (contains && _itemCursor == null)
+                    {
+                        _itemCursor = itemTake;
+
+                        Debug.Assert(_itemCursor != null);
+                    }
+
+                }
+                else if (index > 0 && index <= 4)
+                {
+                    throw new NotImplementedException();
+                }
+                else if (index > 4 && index <= 8)
+                {
+                    throw new NotImplementedException();
+                }
+                else if (index > 8 && index <= 44)
+                {
+                    int indexNormalized = index - 9;
+                    bool contains = _inventorySelf.ContainsInMain(indexNormalized);
+                    Item? itemTaked = contains ? _inventorySelf.TakeFromMain(indexNormalized) : null;
+                    bool different;
+                    if (itemSlot != null && itemTaked != null)
+                        different = itemSlot.Equals(itemTaked);
+                    else if (itemSlot == null && itemTaked == null)
+                        different = true;
+                    else
+                        different = false;
+
+                    if (different)
+                        throw new UnexpectedValueException($"ClickWindowPacket.Data");
+
+                    if (contains && _itemCursor != null)
+                    {
+                        Debug.Assert(itemTaked != null);
+
+                        _inventorySelf.PutIntoMain(indexNormalized, _itemCursor);
+                        _itemCursor = itemTaked;
+
+                    }
+                    else if (contains)
+                    {
+                        Debug.Assert(itemTaked != null);
+
+                        _itemCursor = itemTaked;
+
+                    }
+                    else if (_itemCursor != null)
+                    {
+                        Debug.Assert(itemTaked == null);
+
+                        _inventorySelf.PutIntoMain(indexNormalized, _itemCursor);
+                        _itemCursor = null;
+
+                    }
+                    else
+                    {
+                        // Nothing
+                    }
+
+                }
+                else if (index == 45)
+                {
+                    throw new NotImplementedException();
+                }
+                else
+                    throw new UnexpectedValueException($"ClickWindowPacket.SlotNumber {index}");
+            }
+            else
+            {
+                Debug.Assert(_windowId > 0);
+
+                throw new NotImplementedException();
+
+            }
+
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            // Assertion.
+            /*Debug.Assert(_opened = false);
+            Debug.Assert(_idWindow == -1);
+            Debug.Assert(_otherInventory == null);*/
+
+            if (disposing == true)
+            {
+                // Release managed resources.
+                
+            }
+
+            // Release unmanaged resources.
+            
+
+            _disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        public void Close(int id)
+        {
+            /*if (_opened)
+                CloseWindow(id, _idWindow);*/
+
+            Dispose();
+        }
+
+    }
+
     public sealed class Connection : IDisposable
     {
         private sealed class TeleportationRecord
@@ -1197,6 +1612,8 @@ namespace Protocol
         private readonly Queue<LoadChunkPacket> _loadChunkPackets = new();  // dispoasble
         private readonly Queue<ClientboundPlayingPacket> _outPackets = new();  // dispoasble
 
+        private readonly WindowHelper _windowHelper;  // disposable
+
         private bool _isDisposed = false;
 
         internal Connection(
@@ -1217,7 +1634,7 @@ namespace Protocol
             Settings = settings;
 
             _outPackets.Enqueue(new SetPlayerAbilitiesPacket(
-                true, true, true, true, 0.1f, 0));
+                true, false, true, true, 0.1f, 0));
 
             foreach ((Guid otherUniqueId, string otherUsername) in playerList.GetPlayers())
             {
@@ -1225,6 +1642,14 @@ namespace Protocol
             }
 
             player.Connect(_outPackets);
+
+            _windowHelper = new(player.Inventory);
+            _windowHelper.OpenWindow(Id, _outPackets);
+
+            /*{
+                SlotData slotData = new(280, 64);
+                _outPackets.Enqueue(new SetSlotPacket(0, 27, slotData.WriteData()));
+            }*/
         }
 
         ~Connection()
@@ -1241,6 +1666,15 @@ namespace Protocol
         {
             Debug.Assert(!_isDisposed);
 
+            /*if (serverTicks == 100)
+            {
+                _outPackets.Enqueue(new OpenWindowPacket(1, "minecraft:chest", "WindowTitle!", 27));
+                SlotData slotData = new(426, 64);
+                _outPackets.Enqueue(new SetSlotPacket(1, 9, slotData.WriteData()));
+                *//*_outPackets.Enqueue(new SetSlotPacket(0, 13, slotData.WriteData()));*//*
+                _outPackets.Enqueue(new SetSlotPacket(-1, 100, slotData.WriteData()));
+            }*/
+
             try
             {
                 Buffer buffer = new();
@@ -1254,7 +1688,9 @@ namespace Protocol
                     {
                         default:
                             Console.WriteLine($"packetId: 0x{packetId:X}");
-                            throw new NotImplementedException();
+                            /*throw new NotImplementedException();*/
+                            buffer.Flush();
+                            break;
                         case ServerboundPlayingPacket.ConfirmTeleportationPacketId:
                             {
                                 ConfirmTeleportationPacket packet = ConfirmTeleportationPacket.Read(buffer);
@@ -1271,6 +1707,88 @@ namespace Protocol
                                 SetClientSettingsPacket packet = SetClientSettingsPacket.Read(buffer);
 
                                 throw new NotImplementedException();
+                            }
+                            break;
+                        case ServerboundPlayingPacket.ServerboundConfirmTransactionPacketId:
+                            {
+                                ServerboundConfirmTransactionPacket packet = 
+                                    ServerboundConfirmTransactionPacket.Read(buffer);
+
+                                Console.WriteLine(
+                                    $"WindowId: {packet.WindowId}, " +
+                                    $"ActionNumber: {packet.ActionNumber}, " +
+                                    $"Accepted: {packet.Accepted}, ");
+                            }
+                            break;
+                        case ServerboundPlayingPacket.ClickWindowPacketId:
+                            {
+                                ClickWindowPacket packet = ClickWindowPacket.Read(buffer);
+
+                                {
+                                    SlotData slotData = SlotData.Read(packet.Data);
+
+                                    Console.WriteLine();
+                                    Console.WriteLine(
+                                        $"WindowId: {packet.WindowId}, " +
+                                        $"SlotNumber: {packet.SlotNumber}, " +
+                                        $"ButtonNumber: {packet.ButtonNumber}, " +
+                                        $"ActionNumber: {packet.ActionNumber}, " +
+                                        $"ModeNumber: {packet.ModeNumber}, " +
+                                        $"SlotData.Id: {slotData.Id}, " +
+                                        $"SlotData.Count: {slotData.Count}, ");
+                                }
+
+                                if (packet.WindowId < 0)
+                                    throw new UnexpectedValueException($"ClickWindowPacket.WindowId {packet.WindowId}");
+
+                                Debug.Assert(packet.WindowId >= 0);
+
+                                if (!_windowHelper.IsWindowOpened())
+                                    throw new UnexpectedValueException($"ClickWindowPacket.WindowId {packet.WindowId}");
+
+                                /*switch (packet.ModeNumber)
+                                {
+                                    default:
+                                        throw new UnexpectedValueException($"ClickWindowPacket.ModeNumber {packet.ModeNumber}");
+                                    case 0:
+                                        _windowHelper.ClickLeftMouseButton(packet.SlotNumber);
+                                        break;
+                                }*/
+
+                                _outPackets.Enqueue(new ClientboundConfirmTransactionPacket(
+                                        (sbyte)packet.WindowId, packet.ActionNumber, true));
+
+                                /*{
+                                    SlotData slotData = new(280, 1, 0);
+                                    _outPackets.Enqueue(new SetSlotPacket(0, 27, slotData.WriteData()));
+                                }
+                                {
+                                    SlotData slotData = new();
+                                    _outPackets.Enqueue(new SetSlotPacket(-1, 27, slotData.WriteData()));
+                                }*/
+                            }
+                            break;
+                        case ServerboundPlayingPacket.ServerboundCloseWindowPacketId:
+                            {
+                                ServerboundCloseWindowPacket packet =
+                                    ServerboundCloseWindowPacket.Read(buffer);
+
+                                if (packet.WindowId < 0)
+                                    throw new UnexpectedValueException($"ClickWindowPacket.WindowId {packet.WindowId}");
+
+                                if (!_windowHelper.IsWindowOpened())
+                                    throw new UnexpectedPacketException();
+
+                                if (_windowHelper.GetWindowId() != packet.WindowId)
+                                    throw new UnexpectedValueException($"ServerboundCloseWIndowPacket.WindowId {packet.WindowId}");
+
+                                if (_windowHelper.GetWindowId() > 0)
+                                {
+                                    _windowHelper.CloseWindow();
+
+                                    _windowHelper.OpenWindow(Id, _outPackets);
+                                }
+
                             }
                             break;
                         case ServerboundPlayingPacket.ResponseKeepAlivePacketId:
@@ -1389,7 +1907,7 @@ namespace Protocol
             {
                 // TODO: send disconnected message to client.
 
-                /*Console.WriteLine(e.Message);*/
+                Console.WriteLine(e.Message);
                 player.Disconnect();
 
                 throw new DisconnectedClientException();
@@ -1440,7 +1958,7 @@ namespace Protocol
 
                 foreach (Chunk.Vector pChunk in grid.GetVectors())
                 {
-                    if (chunks.Contains(pChunk))
+                    /*if (chunks.Contains(pChunk))
                     {
                         Chunk chunk = chunks.Lookup(pChunk);
                         (mask, data) = Chunk.Write(chunk);
@@ -1448,8 +1966,8 @@ namespace Protocol
                     else
                     {
                         (mask, data) = Chunk.Write();
-                    }
-
+                    }*/
+                    (mask, data) = Chunk.Write2();
 
                     _loadChunkPackets.Enqueue(new LoadChunkPacket(
                         pChunk.x, pChunk.z, true, mask, data));
@@ -1472,7 +1990,7 @@ namespace Protocol
 
                     int mask; byte[] data;
 
-                    if (chunks.Contains(pChunk))
+                    /*if (chunks.Contains(pChunk))
                     {
                         Chunk chunk = chunks.Lookup(pChunk);
                         (mask, data) = Chunk.Write(chunk);
@@ -1480,7 +1998,9 @@ namespace Protocol
                     else
                     {
                         (mask, data) = Chunk.Write();
-                    }
+                    }*/
+
+                    (mask, data) = Chunk.Write2();
 
                     _loadChunkPackets.Enqueue(new LoadChunkPacket(
                         pChunk.x, pChunk.z, true, mask, data));
@@ -1720,7 +2240,7 @@ namespace Protocol
                         // TODO: If already player exists, use id of that player object, not new alloc id.
                         entityId = entityIdList.Alloc();
 
-                        JoinGamePacket packet = new(entityId, 1, 0, 0, "default", false);  // TODO
+                        JoinGamePacket packet = new(entityId, 0, 0, 0, "default", false);  // TODO
                         packet.Write(buffer);
                         client.Send(buffer);
 
