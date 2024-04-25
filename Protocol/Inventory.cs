@@ -7,12 +7,15 @@ namespace Protocol
 {
     internal abstract class Inventory : IDisposable
     {
+        internal readonly object _SharedObject = new();
+
         private bool _disposed = false;
 
         protected readonly Table<int, InventoryRenderer> _renderers = new();
 
         public readonly int Count;
-        private readonly Item?[] _items;
+        protected readonly Item?[] _items;
+        public System.Collections.Generic.IEnumerable<Item?> Items => _items;
 
         public Inventory(int count)
         {
@@ -24,12 +27,9 @@ namespace Protocol
 
         ~Inventory() => Debug.Assert(false);
         
-        protected System.Collections.Generic.IEnumerable<Item?>
-             _Init(int idConn, InventoryRenderer renderer)
+        protected void AddRenderer(int idConn, InventoryRenderer renderer)
         {
             _renderers.Insert(idConn, renderer);
-
-            return _items;
         }
 
         public void RemoveRenderer(int idConn)
@@ -111,55 +111,54 @@ namespace Protocol
 
     internal sealed class PlayerInventory : Inventory
     {
-        public const int TotalCount = 46;
-
         private bool _disposed = false;
 
-        public PlayerInventory() : base(TotalCount) { }
+        public PlayerInventory() : base(46) { }
 
         ~PlayerInventory() => Debug.Assert(false);
 
-        internal System.Collections.Generic.IEnumerable<Item?> 
-            Init(int idConn, PlayerInventoryRenderer renderer)
+        internal void AddRenderer(int idConn, PlayerInventoryRenderer renderer)
         {
-            return _Init(idConn, renderer);
+            base.AddRenderer(idConn, renderer);
         }
 
-        public Item? TakeFromCraftingOutput()
+        internal Item? OffhandItem => _items[45];
+        
+        internal Item? TakeFromCraftingOutput()
         {
             return Take(0);
         }
 
-        public Item? TakeFromMain(int index)
+        internal Item? TakeFromMain(int index)
         {
             Debug.Assert(index >= 0 && index < 27);
             return Take(index + 9);
         }
         
-        public Item? PutIntoMain(int index, Item item)
+        internal Item? PutIntoMain(int index, Item item)
         {
             Debug.Assert(index >= 0 && index < 27);
             return Put(index + 9, item);
         }
 
-        public Item? TakeFromHotbar(int index)
+        internal Item? TakeFromHotbar(int index)
         {
             Debug.Assert(index >= 0 && index < 9);
             return Take(index + 36);
         }
 
-        public Item? PutIntoHotbar(int index, Item item)
+        internal Item? PutIntoHotbar(int index, Item item)
         {
             Debug.Assert(index >= 0 && index < 9);
             return Put(index + 36, item);
         }
 
-        public Item? TakeFromOffhand(int index)
+        internal Item? TakeFromOffhand(int index)
         {
             throw new NotImplementedException();
         }
 
-        public Item? PutIntoOffhand(int index, Item item)
+        internal Item? PutIntoOffhand(int index, Item item)
         {
             throw new NotImplementedException();
         }
@@ -193,10 +192,9 @@ namespace Protocol
 
         ~ChestInventory() => Debug.Assert(false);
 
-        internal System.Collections.Generic.IEnumerable<Item?>
-            Init(int idConn, ChestInventoryRenderer renderer)
+        internal void AddRenderer(int idConn, ChestInventoryRenderer renderer)
         {
-            return _Init(idConn, renderer);
+            base.AddRenderer(idConn, renderer);
         }
 
         protected override void Dispose(bool disposing)

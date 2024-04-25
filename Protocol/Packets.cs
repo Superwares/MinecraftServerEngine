@@ -329,6 +329,7 @@ namespace Protocol
         public const int SetClientSettingsPacketId = 0x04;
         public const int ServerboundConfirmTransactionPacketId = 0x05;
         public const int ClickWindowPacketId = 0x07;
+        public const int ServerboundCloseWindowPacketId = 0x08;
         public const int ResponseKeepAlivePacketId = 0x0B;
         public const int PlayerPacketId = 0x0C;
         public const int PlayerPositionPacketId = 0x0D;
@@ -1475,6 +1476,28 @@ namespace Protocol
             ActionNumber = actionNumber;
             ModeNumber = modeNumber;
             Data = data;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+    }
+
+    internal class ServerboundCloseWindowPacket : ServerboundPlayingPacket
+    {
+        public readonly byte WindowId;
+
+        internal static ServerboundCloseWindowPacket Read(Buffer buffer)
+        {
+            return new(buffer.ReadByte());
+        }
+
+        private ServerboundCloseWindowPacket(byte windowId) 
+            : base(ServerboundCloseWindowPacketId)
+        {
+            WindowId = windowId;
         }
 
         protected override void WriteData(Buffer buffer)

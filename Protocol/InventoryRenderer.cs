@@ -7,6 +7,8 @@ namespace Protocol
 {
     internal abstract class InventoryRenderer
     {
+        public abstract int SlotCount { get; }
+
         protected readonly int _WindowId;
         private readonly Queue<ClientboundPlayingPacket> _outPackets;
 
@@ -38,6 +40,8 @@ namespace Protocol
 
     internal sealed class CompleteSelfPlayerInventoryRenderer : PlayerInventoryRenderer
     {
+        public override int SlotCount => 46;
+
         public CompleteSelfPlayerInventoryRenderer(
             int windowId, Queue<ClientboundPlayingPacket> outPackets) 
             : base(windowId, outPackets) { }
@@ -70,6 +74,8 @@ namespace Protocol
 
         public override void Set(int index, Item item)
         {
+            Debug.Assert(_WindowId == 0);
+
             Debug.Assert(index >= 0);
             Debug.Assert(index < 46);
 
@@ -89,6 +95,8 @@ namespace Protocol
 
         public override void Empty(int index)
         {
+            Debug.Assert(_WindowId == 0);
+
             SlotData slotData = new();
 
             Debug.Assert(_WindowId >= sbyte.MinValue);
@@ -102,6 +110,8 @@ namespace Protocol
 
     internal sealed class SelfPlayerInventoryRenderer : PlayerInventoryRenderer
     {
+        public override int SlotCount => 36;
+
         private readonly int _offset;
 
         public SelfPlayerInventoryRenderer(
@@ -140,6 +150,8 @@ namespace Protocol
 
         public override void Set(int index, Item item)
         {
+            Debug.Assert(_WindowId > 0);
+
             if (index >= 0 && index <= 8)
                 return;
             if (index == 45)
@@ -166,6 +178,8 @@ namespace Protocol
 
         public override void Empty(int index)
         {
+            Debug.Assert(_WindowId > 0);
+
             if (index >= 0 && index <= 8)
                 return;
             if (index == 45)
@@ -189,12 +203,16 @@ namespace Protocol
 
     internal sealed class OtherPlayerInventoryRenderer : PlayerInventoryRenderer
     {
+        public override int SlotCount => 36;
+
         public OtherPlayerInventoryRenderer(
             int windowId, Queue<ClientboundPlayingPacket> outPackets)
             : base(windowId, outPackets) { }
 
         public override void Set(int index, Item item)
         {
+            Debug.Assert(_WindowId > 0);
+
             if (index >= 0 && index <= 8)
                 return;
             if (index == 45)
@@ -221,6 +239,8 @@ namespace Protocol
 
         public override void Empty(int index)
         {
+            Debug.Assert(_WindowId > 0);
+
             if (index >= 0 && index <= 8)
                 return;
             if (index == 45)
@@ -244,12 +264,16 @@ namespace Protocol
 
     internal sealed class ChestInventoryRenderer : InventoryRenderer
     {
+        public override int SlotCount => 27;
+
         public ChestInventoryRenderer(
             int windowId, Queue<ClientboundPlayingPacket> outPackets)
             : base(windowId, outPackets) { }
 
         public override void Set(int index, Item item)
         {
+            Debug.Assert(_WindowId > 0);
+
             Debug.Assert(index >= 0 && index < 27);
 
             int indexNormalized = index;
@@ -270,6 +294,8 @@ namespace Protocol
 
         public override void Empty(int index)
         {
+            Debug.Assert(_WindowId > 0);
+
             Debug.Assert(index >= 0 && index < 27);
 
             int indexNormalized = index;

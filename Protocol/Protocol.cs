@@ -1142,8 +1142,42 @@ namespace Protocol
 
         private Item? _itemCursor = null;
 
-        public WindowHelper(PlayerInventory inventorySelf)
+        public WindowHelper(
+            int idConn, Queue<ClientboundPlayingPacket> outPackets, 
+            PlayerInventory inventorySelf)
         {
+            _windowId = 0;
+
+            CompleteSelfPlayerInventoryRenderer renderer = new(_windowId, outPackets);
+
+            int i = 0, n = renderer.SlotCount;
+            var arr = new SlotData[n];
+            lock (inventorySelf._SharedObject)
+            {
+                inventorySelf.AddRenderer(idConn, renderer);
+
+                foreach (Item? item in inventorySelf.Items)
+                {
+                    if (item == null)
+                    {
+                        arr[i++] = new();
+                        continue;
+                    }
+
+                    Debug.Assert(item.Id >= short.MinValue);
+                    Debug.Assert(item.Id <= short.MaxValue);
+                    Debug.Assert(item.Count >= byte.MinValue);
+                    Debug.Assert(item.Count <= byte.MaxValue);
+                    arr[i++] = new((short)item.Id, (byte)item.Count);
+                }
+
+                Debug.Assert(_windowId >= byte.MinValue);
+                Debug.Assert(_windowId <= byte.MaxValue);
+                outPackets.Enqueue(new SetWindowItemsPacket((byte)_windowId, arr));
+
+                Debug.Assert(i == n);
+            }
+
             _inventorySelf = inventorySelf;
         }
 
@@ -1170,114 +1204,148 @@ namespace Protocol
             return _windowId >= 0;
         }
 
-        public void OpenWindow(
+        public void ReopenWindowWithOtherInventory(
             int idConn, Queue<ClientboundPlayingPacket> outPackets, 
             Inventory inventoryOther)
         {
             Debug.Assert(!_disposed);
 
-            Debug.Assert(_windowId == -1);
+            Debug.Assert(_windowId == 0);
             Debug.Assert(_inventoryOther == null);
 
-            int i = 0;
-            int offset;
+            int n;
+            string windowType;
 
             _windowId = (new Random().Next() % 100) + 1;  // TODO
+
+            InventoryRenderer rendererOther;
 
             switch (inventoryOther)
             {
                 default:
                     throw new NotImplementedException();
-                case PlayerInventory playerInventory:
-                    {
-                        offset = 36;
-
-                        int n = offset + 36;
-
-                        Debug.Assert(_windowId >= byte.MinValue);
-                        Debug.Assert(_windowId <= byte.MaxValue);
-                        Debug.Assert(n >= byte.MinValue);
-                        Debug.Assert(n <= byte.MaxValue);
-                        outPackets.Enqueue(new OpenWindowPacket(
-                            (byte)_windowId, "minecraft:chest", "", (byte)n));
-            
-                        OtherPlayerInventoryRenderer renderer = new(_windowId, outPackets);
-                        foreach (Item? item in playerInventory.Init(idConn, renderer))
-                        {
-                            SlotData slotData;
-                            if (item == null)
-                            {
-                                slotData = new();
-                            }
-                            else
-                            {
-                                Debug.Assert(item.Id >= short.MinValue);
-                                Debug.Assert(item.Id <= short.MaxValue);
-                                Debug.Assert(item.Count >= byte.MinValue);
-                                Debug.Assert(item.Count <= byte.MaxValue);
-                                slotData = new((short)item.Id, (byte)item.Count);
-                            }
-
-                            Debug.Assert(_windowId >= sbyte.MinValue);
-                            Debug.Assert(_windowId <= sbyte.MaxValue);
-                            Debug.Assert(i >= short.MinValue);
-                            Debug.Assert(i <= short.MaxValue);
-                            outPackets.Enqueue(new SetSlotPacket(
-                                (sbyte)_windowId, (short)i++, slotData));
-                        }
-
-                    }
+                case PlayerInventory:
+                    windowType = "minecraft:chest";
+                    rendererOther = new OtherPlayerInventoryRenderer(_windowId, outPackets);
                     break;
-                case ChestInventory chestInventory:
-                    {
-                        offset = 27;
-
-                        int n = offset + 36;
-
-                        Debug.Assert(_windowId >= byte.MinValue);
-                        Debug.Assert(_windowId <= byte.MaxValue);
-                        Debug.Assert(n >= byte.MinValue);
-                        Debug.Assert(n <= byte.MaxValue);
-                        outPackets.Enqueue(new OpenWindowPacket(
-                            (byte)_windowId, "minecraft:chest", "", (byte)n));
-
-                        ChestInventoryRenderer renderer = new(_windowId, outPackets);
-                        foreach (Item? item in chestInventory.Init(idConn, renderer))
-                        {
-                            SlotData slotData;
-                            if (item == null)
-                            {
-                                slotData = new();
-                            }
-                            else
-                            {
-                                Debug.Assert(item.Id >= short.MinValue);
-                                Debug.Assert(item.Id <= short.MaxValue);
-                                Debug.Assert(item.Count >= byte.MinValue);
-                                Debug.Assert(item.Count <= byte.MaxValue);
-                                slotData = new((short)item.Id, (byte)item.Count);
-                            }
-
-                            Debug.Assert(_windowId >= sbyte.MinValue);
-                            Debug.Assert(_windowId <= sbyte.MaxValue);
-                            Debug.Assert(i >= short.MinValue);
-                            Debug.Assert(i <= short.MaxValue);
-                            outPackets.Enqueue(new SetSlotPacket(
-                                (sbyte)_windowId, (short)i++, slotData));
-                        }
-
-                    }
+                case ChestInventory:
+                    windowType = "minecraft:chest";
+                    rendererOther = new ChestInventoryRenderer(_windowId, outPackets);
                     break;
             }
 
-            _inventoryOther = inventoryOther;
+            n = rendererOther.SlotCount;
+            Debug.Assert(n % 9 == 0);
+            SelfPlayerInventoryRenderer rendererSelf = new(_windowId, outPackets, n);
 
-            Debug.Assert(offset > 0);
-            Debug.Assert(i == offset);
+            int totalSlotCount = rendererSelf.SlotCount + rendererOther.SlotCount;
+
+            lock (_inventorySelf._SharedObject)
             {
-                SelfPlayerInventoryRenderer renderer = new(_windowId, outPackets, offset);
-                foreach (Item? item in _inventorySelf.Init(idConn, renderer))
+                Debug.Assert(_windowId >= byte.MinValue);
+                Debug.Assert(_windowId <= byte.MaxValue);
+                Debug.Assert(totalSlotCount >= byte.MinValue);
+                Debug.Assert(totalSlotCount <= byte.MaxValue);
+                outPackets.Enqueue(new OpenWindowPacket(
+                    (byte)_windowId, windowType, "", (byte)totalSlotCount));
+
+                _inventorySelf.RemoveRenderer(idConn);
+                _inventorySelf.AddRenderer(idConn, rendererSelf);
+
+            }
+            
+            lock (inventoryOther._SharedObject)
+            {
+                int i = 0;
+                var arr = new SlotData[n];
+                switch (inventoryOther)
                 {
+                    default:
+                        throw new NotImplementedException();
+                    case PlayerInventory playerInventory:
+                        playerInventory.AddRenderer(idConn, (PlayerInventoryRenderer)rendererOther);
+                        Debug.Assert(rendererOther is PlayerInventoryRenderer);
+                        break;
+                    case ChestInventory chestInventory:
+                        chestInventory.AddRenderer(idConn, (ChestInventoryRenderer)rendererOther);
+                        Debug.Assert(rendererOther is ChestInventoryRenderer);
+                        break;
+                }
+
+                foreach (Item? item in inventoryOther.Items)
+                {
+                    if (item == null)
+                    {
+                        arr[i++] = new();
+                        continue;
+                    }
+
+                    Debug.Assert(item.Id >= short.MinValue);
+                    Debug.Assert(item.Id <= short.MaxValue);
+                    Debug.Assert(item.Count >= byte.MinValue);
+                    Debug.Assert(item.Count <= byte.MaxValue);
+                    arr[i++] = new((short)item.Id, (byte)item.Count);
+                }
+
+                Debug.Assert(_windowId >= byte.MinValue);
+                Debug.Assert(_windowId <= byte.MaxValue);
+                outPackets.Enqueue(new SetWindowItemsPacket((byte)_windowId, arr));
+
+                Debug.Assert(i == n);
+
+            }
+
+            _inventoryOther = inventoryOther;
+        }
+
+        public void ResetWindow(
+            int idConn, Queue<ClientboundPlayingPacket> outPackets)
+        {
+            Debug.Assert(!_disposed);
+
+            Debug.Assert(_windowId > 0);
+            Debug.Assert(_inventoryOther != null);
+
+            _windowId = 0;
+
+            lock (_inventoryOther._SharedObject)
+            {
+                _inventoryOther.RemoveRenderer(idConn);
+            }
+
+            CompleteSelfPlayerInventoryRenderer renderer = new(_windowId, outPackets);
+
+            /*int i = 0, n = 9;
+            var arr = new SlotData[n];*/
+            lock (_inventorySelf._SharedObject)
+            {
+                _inventorySelf.RemoveRenderer(idConn);
+                _inventorySelf.AddRenderer(idConn, renderer);
+
+                /*foreach (Item? item in _inventorySelf.Items)
+                {
+                    if (item == null)
+                    {
+                        arr[i++] = new();
+                        continue;
+                    }
+
+                    Debug.Assert(item.Id >= short.MinValue);
+                    Debug.Assert(item.Id <= short.MaxValue);
+                    Debug.Assert(item.Count >= byte.MinValue);
+                    Debug.Assert(item.Count <= byte.MaxValue);
+                    arr[i++] = new((short)item.Id, (byte)item.Count);
+
+                    if (i == n)
+                        break;
+                }*/
+
+                /*Debug.Assert(_windowId >= byte.MinValue);
+                Debug.Assert(_windowId <= byte.MaxValue);
+                outPackets.Enqueue(new SetWindowItemsPacket((byte)_windowId, arr));*/
+
+                {
+                    Item? item = _inventorySelf.OffhandItem;
                     SlotData slotData;
                     if (item == null)
                     {
@@ -1291,74 +1359,9 @@ namespace Protocol
                         Debug.Assert(item.Count <= byte.MaxValue);
                         slotData = new((short)item.Id, (byte)item.Count);
                     }
-
-                    Debug.Assert(_windowId >= sbyte.MinValue);
-                    Debug.Assert(_windowId <= sbyte.MaxValue);
-                    Debug.Assert(i >= short.MinValue);
-                    Debug.Assert(i <= short.MaxValue);
-                    outPackets.Enqueue(new SetSlotPacket(
-                        (sbyte)_windowId, (short)i++, slotData));
+                    outPackets.Enqueue(new SetSlotPacket((sbyte)_windowId, 45, slotData));
                 }
             }
-
-        }
-
-        public void OpenWindow(
-            int idConn, Queue<ClientboundPlayingPacket> outPackets)
-        {
-            Debug.Assert(!_disposed);
-
-            Debug.Assert(_windowId == -1);
-            Debug.Assert(_inventoryOther == null);
-
-            _windowId = 0;
-            Debug.Assert(_windowId >= byte.MinValue);
-            Debug.Assert(_windowId <= byte.MaxValue);
-
-            int i = 0;
-
-            CompleteSelfPlayerInventoryRenderer renderer = new(_windowId, outPackets);
-            foreach (Item? item in _inventorySelf.Init(idConn, renderer))
-            {
-                SlotData slotData;
-                if (item == null)
-                {
-                    slotData = new();
-                }
-                else
-                {
-                    Debug.Assert(item.Id >= short.MinValue);
-                    Debug.Assert(item.Id <= short.MaxValue);
-                    Debug.Assert(item.Count >= byte.MinValue);
-                    Debug.Assert(item.Count <= byte.MaxValue);
-                    slotData = new((short)item.Id, (byte)item.Count);
-                }
-
-                Debug.Assert(_windowId >= sbyte.MinValue);
-                Debug.Assert(_windowId <= sbyte.MaxValue);
-                Debug.Assert(i >= short.MinValue);
-                Debug.Assert(i <= short.MaxValue);
-                outPackets.Enqueue(new SetSlotPacket(
-                    (sbyte)_windowId, (short)i++, slotData));
-            }
-
-        }
-
-        public void CloseWindow(int idConn)
-        {
-            Debug.Assert(!_disposed);
-
-            Debug.Assert(_windowId >= 0);
-            Debug.Assert(_windowId == 0 ? 
-                _inventoryOther == null : _inventoryOther != null);
-
-            if (_windowId > 0)
-            {
-                Debug.Assert(_inventoryOther != null):
-                _inventoryOther.RemoveRenderer(idConn);
-            }
-
-            _inventorySelf.RemoveRenderer(idConn);
 
             /*if (_itemCursor != null)
             {
@@ -1368,7 +1371,8 @@ namespace Protocol
 
             Debug.Assert(_itemCursor == null);
         }
-        public void ClickLeftMouseButton(
+
+        /*public void ClickLeftMouseButton(
             int index,
             Item? itemSlot,
             Queue<ClientboundPlayingPacket> outPackets)
@@ -1477,7 +1481,7 @@ namespace Protocol
 
             }
 
-        }
+        }*/
 
         private void Dispose(bool disposing)
         {
@@ -1643,8 +1647,7 @@ namespace Protocol
 
             player.Connect(_outPackets);
 
-            _windowHelper = new(player.Inventory);
-            _windowHelper.OpenWindow(Id, _outPackets);
+            _windowHelper = new(Id, _outPackets, new PlayerInventory());
 
             /*{
                 SlotData slotData = new(280, 64);
@@ -1668,11 +1671,11 @@ namespace Protocol
 
             /*if (serverTicks == 100)
             {
-                _outPackets.Enqueue(new OpenWindowPacket(1, "minecraft:chest", "WindowTitle!", 27));
                 SlotData slotData = new(426, 64);
-                _outPackets.Enqueue(new SetSlotPacket(1, 9, slotData.WriteData()));
-                *//*_outPackets.Enqueue(new SetSlotPacket(0, 13, slotData.WriteData()));*//*
-                _outPackets.Enqueue(new SetSlotPacket(-1, 100, slotData.WriteData()));
+
+                _outPackets.Enqueue(new OpenWindowPacket(1, "minecraft:chest", "WindowTitle!", 27));
+                _outPackets.Enqueue(new SetSlotPacket(1, 30, slotData));
+                
             }*/
 
             try
@@ -1776,17 +1779,19 @@ namespace Protocol
                                 if (packet.WindowId < 0)
                                     throw new UnexpectedValueException($"ClickWindowPacket.WindowId {packet.WindowId}");
 
-                                if (!_windowHelper.IsWindowOpened())
-                                    throw new UnexpectedPacketException();
-
                                 if (_windowHelper.GetWindowId() != packet.WindowId)
                                     throw new UnexpectedValueException($"ServerboundCloseWIndowPacket.WindowId {packet.WindowId}");
 
+                                
+
                                 if (_windowHelper.GetWindowId() > 0)
                                 {
-                                    _windowHelper.CloseWindow();
-
-                                    _windowHelper.OpenWindow(Id, _outPackets);
+                                    _windowHelper.ResetWindow(Id, _outPackets);
+                                }
+                                else
+                                {
+                                    // TODO: if window closed that has zero id and
+                                    // a item in cursor slot is not empty, the item must be droped.
                                 }
 
                             }
