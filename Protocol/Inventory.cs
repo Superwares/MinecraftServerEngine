@@ -15,7 +15,14 @@ namespace Protocol
 
         public readonly int Count;
         protected readonly Item?[] _items;
-        public System.Collections.Generic.IEnumerable<Item?> Items => _items;
+        public System.Collections.Generic.IEnumerable<Item?> Items
+        {
+            get
+            {
+                Debug.Assert(!_disposed);
+                return _items;
+            }
+        }
 
         public Inventory(int count)
         {
@@ -113,7 +120,20 @@ namespace Protocol
     {
         private bool _disposed = false;
 
-        public PlayerInventory() : base(46) { }
+        public System.Collections.Generic.IEnumerable<Item?> PrimaryItems
+        {
+            get
+            {
+                Debug.Assert(!_disposed);
+                for (int i = 9; i < 45; ++i)
+                    yield return _items[i];
+            }
+        }
+
+        public PlayerInventory() : base(46)
+        {
+            /*_items[10] = new Stick(30);*/
+        }
 
         ~PlayerInventory() => Debug.Assert(false);
 

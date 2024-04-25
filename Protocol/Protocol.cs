@@ -1238,16 +1238,14 @@ namespace Protocol
             Debug.Assert(n % 9 == 0);
             SelfPlayerInventoryRenderer rendererSelf = new(_windowId, outPackets, n);
 
-            int totalSlotCount = rendererSelf.SlotCount + rendererOther.SlotCount;
-
             lock (_inventorySelf._SharedObject)
             {
                 Debug.Assert(_windowId >= byte.MinValue);
                 Debug.Assert(_windowId <= byte.MaxValue);
-                Debug.Assert(totalSlotCount >= byte.MinValue);
-                Debug.Assert(totalSlotCount <= byte.MaxValue);
+                Debug.Assert(n >= byte.MinValue);
+                Debug.Assert(n <= byte.MaxValue);
                 outPackets.Enqueue(new OpenWindowPacket(
-                    (byte)_windowId, windowType, "", (byte)totalSlotCount));
+                    (byte)_windowId, windowType, "", (byte)n));
 
                 _inventorySelf.RemoveRenderer(idConn);
                 _inventorySelf.AddRenderer(idConn, rendererSelf);
@@ -1265,26 +1263,43 @@ namespace Protocol
                     case PlayerInventory playerInventory:
                         playerInventory.AddRenderer(idConn, (PlayerInventoryRenderer)rendererOther);
                         Debug.Assert(rendererOther is PlayerInventoryRenderer);
+
+                        foreach (Item? item in playerInventory.PrimaryItems)
+                        {
+                            if (item == null)
+                            {
+                                arr[i++] = new();
+                                continue;
+                            }
+
+                            Debug.Assert(item.Id >= short.MinValue);
+                            Debug.Assert(item.Id <= short.MaxValue);
+                            Debug.Assert(item.Count >= byte.MinValue);
+                            Debug.Assert(item.Count <= byte.MaxValue);
+                            arr[i++] = new((short)item.Id, (byte)item.Count);
+                        }
+
                         break;
                     case ChestInventory chestInventory:
                         chestInventory.AddRenderer(idConn, (ChestInventoryRenderer)rendererOther);
                         Debug.Assert(rendererOther is ChestInventoryRenderer);
+
+                        foreach(Item? item in chestInventory.Items)
+                        {
+                            if (item == null)
+                            {
+                                arr[i++] = new();
+                                continue;
+                            }
+
+                            Debug.Assert(item.Id >= short.MinValue);
+                            Debug.Assert(item.Id <= short.MaxValue);
+                            Debug.Assert(item.Count >= byte.MinValue);
+                            Debug.Assert(item.Count <= byte.MaxValue);
+                            arr[i++] = new((short)item.Id, (byte)item.Count);
+                        }
+
                         break;
-                }
-
-                foreach (Item? item in inventoryOther.Items)
-                {
-                    if (item == null)
-                    {
-                        arr[i++] = new();
-                        continue;
-                    }
-
-                    Debug.Assert(item.Id >= short.MinValue);
-                    Debug.Assert(item.Id <= short.MaxValue);
-                    Debug.Assert(item.Count >= byte.MinValue);
-                    Debug.Assert(item.Count <= byte.MaxValue);
-                    arr[i++] = new((short)item.Id, (byte)item.Count);
                 }
 
                 Debug.Assert(_windowId >= byte.MinValue);
@@ -1678,6 +1693,11 @@ namespace Protocol
                 
             }*/
 
+            /*if (serverTicks == 100)
+            {
+                _windowHelper.ReopenWindowWithOtherInventory(Id, _outPackets, new PlayerInventory());
+            }*/
+
             try
             {
                 Buffer buffer = new();
@@ -1748,6 +1768,8 @@ namespace Protocol
 
                                 if (!_windowHelper.IsWindowOpened())
                                     throw new UnexpectedValueException($"ClickWindowPacket.WindowId {packet.WindowId}");
+
+
 
                                 /*switch (packet.ModeNumber)
                                 {
