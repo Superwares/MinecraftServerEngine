@@ -1126,415 +1126,6 @@ namespace Protocol
 
     }
 
-    internal sealed class WindowHelper : IDisposable
-    {
-        private bool _disposed = false;
-
-        /**
-         * -1: Window is closed.
-         *  0: Window is opened with only self inventory.
-         * >0: Window is opened with self and other inventory.
-         */
-        private int _windowId = -1;
-
-        private PlayerInventory _inventorySelf;
-        private Inventory? _inventoryOther = null;
-
-        private Item? _itemCursor = null;
-
-        public WindowHelper(
-            int idConn, Queue<ClientboundPlayingPacket> outPackets, 
-            PlayerInventory inventorySelf)
-        {
-            _windowId = 0;
-
-            CompleteSelfPlayerInventoryRenderer renderer = new(_windowId, outPackets);
-
-            int i = 0, n = renderer.SlotCount;
-            var arr = new SlotData[n];
-            lock (inventorySelf._SharedObject)
-            {
-                inventorySelf.AddRenderer(idConn, renderer);
-
-                foreach (Item? item in inventorySelf.Items)
-                {
-                    if (item == null)
-                    {
-                        arr[i++] = new();
-                        continue;
-                    }
-
-                    Debug.Assert(item.Id >= short.MinValue);
-                    Debug.Assert(item.Id <= short.MaxValue);
-                    Debug.Assert(item.Count >= byte.MinValue);
-                    Debug.Assert(item.Count <= byte.MaxValue);
-                    arr[i++] = new((short)item.Id, (byte)item.Count);
-                }
-
-                Debug.Assert(_windowId >= byte.MinValue);
-                Debug.Assert(_windowId <= byte.MaxValue);
-                outPackets.Enqueue(new SetWindowItemsPacket((byte)_windowId, arr));
-
-                Debug.Assert(i == n);
-            }
-
-            _inventorySelf = inventorySelf;
-        }
-
-        ~WindowHelper() => Debug.Assert(false);
-
-        public int GetWindowId()
-        {
-            Debug.Assert(!_disposed);
-
-            Debug.Assert(_windowId >= 0);
-            Debug.Assert(_windowId > 0 ?
-                _inventoryOther != null : _inventoryOther == null);
-
-            return _windowId;
-        }
-
-        public bool IsWindowOpened()
-        {
-            Debug.Assert(!_disposed);
-
-            Debug.Assert(_windowId > 0 ?
-                _inventoryOther != null : _inventoryOther == null);
-
-            return _windowId >= 0;
-        }
-
-        public void ReopenWindowWithOtherInventory(
-            int idConn, Queue<ClientboundPlayingPacket> outPackets, 
-            Inventory inventoryOther)
-        {
-            Debug.Assert(!_disposed);
-
-            Debug.Assert(_windowId == 0);
-            Debug.Assert(_inventoryOther == null);
-
-            int n;
-            string windowType;
-
-            _windowId = (new Random().Next() % 100) + 1;  // TODO
-
-            InventoryRenderer rendererOther;
-
-            switch (inventoryOther)
-            {
-                default:
-                    throw new NotImplementedException();
-                case PlayerInventory:
-                    windowType = "minecraft:chest";
-                    rendererOther = new OtherPlayerInventoryRenderer(_windowId, outPackets);
-                    break;
-                case ChestInventory:
-                    windowType = "minecraft:chest";
-                    rendererOther = new ChestInventoryRenderer(_windowId, outPackets);
-                    break;
-            }
-
-            n = rendererOther.SlotCount;
-            Debug.Assert(n % 9 == 0);
-            SelfPlayerInventoryRenderer rendererSelf = new(_windowId, outPackets, n);
-
-            lock (_inventorySelf._SharedObject)
-            {
-                Debug.Assert(_windowId >= byte.MinValue);
-                Debug.Assert(_windowId <= byte.MaxValue);
-                Debug.Assert(n >= byte.MinValue);
-                Debug.Assert(n <= byte.MaxValue);
-                outPackets.Enqueue(new OpenWindowPacket(
-                    (byte)_windowId, windowType, "", (byte)n));
-
-                _inventorySelf.RemoveRenderer(idConn);
-                _inventorySelf.AddRenderer(idConn, rendererSelf);
-
-            }
-            
-            lock (inventoryOther._SharedObject)
-            {
-                int i = 0;
-                var arr = new SlotData[n];
-                switch (inventoryOther)
-                {
-                    default:
-                        throw new NotImplementedException();
-                    case PlayerInventory playerInventory:
-                        playerInventory.AddRenderer(idConn, (PlayerInventoryRenderer)rendererOther);
-                        Debug.Assert(rendererOther is PlayerInventoryRenderer);
-
-                        foreach (Item? item in playerInventory.PrimaryItems)
-                        {
-                            if (item == null)
-                            {
-                                arr[i++] = new();
-                                continue;
-                            }
-
-                            Debug.Assert(item.Id >= short.MinValue);
-                            Debug.Assert(item.Id <= short.MaxValue);
-                            Debug.Assert(item.Count >= byte.MinValue);
-                            Debug.Assert(item.Count <= byte.MaxValue);
-                            arr[i++] = new((short)item.Id, (byte)item.Count);
-                        }
-
-                        break;
-                    case ChestInventory chestInventory:
-                        chestInventory.AddRenderer(idConn, (ChestInventoryRenderer)rendererOther);
-                        Debug.Assert(rendererOther is ChestInventoryRenderer);
-
-                        foreach(Item? item in chestInventory.Items)
-                        {
-                            if (item == null)
-                            {
-                                arr[i++] = new();
-                                continue;
-                            }
-
-                            Debug.Assert(item.Id >= short.MinValue);
-                            Debug.Assert(item.Id <= short.MaxValue);
-                            Debug.Assert(item.Count >= byte.MinValue);
-                            Debug.Assert(item.Count <= byte.MaxValue);
-                            arr[i++] = new((short)item.Id, (byte)item.Count);
-                        }
-
-                        break;
-                }
-
-                Debug.Assert(_windowId >= byte.MinValue);
-                Debug.Assert(_windowId <= byte.MaxValue);
-                outPackets.Enqueue(new SetWindowItemsPacket((byte)_windowId, arr));
-
-                Debug.Assert(i == n);
-
-            }
-
-            _inventoryOther = inventoryOther;
-        }
-
-        public void ResetWindow(
-            int idConn, Queue<ClientboundPlayingPacket> outPackets)
-        {
-            Debug.Assert(!_disposed);
-
-            Debug.Assert(_windowId > 0);
-            Debug.Assert(_inventoryOther != null);
-
-            _windowId = 0;
-
-            lock (_inventoryOther._SharedObject)
-            {
-                _inventoryOther.RemoveRenderer(idConn);
-            }
-
-            CompleteSelfPlayerInventoryRenderer renderer = new(_windowId, outPackets);
-
-            /*int i = 0, n = 9;
-            var arr = new SlotData[n];*/
-            lock (_inventorySelf._SharedObject)
-            {
-                _inventorySelf.RemoveRenderer(idConn);
-                _inventorySelf.AddRenderer(idConn, renderer);
-
-                /*foreach (Item? item in _inventorySelf.Items)
-                {
-                    if (item == null)
-                    {
-                        arr[i++] = new();
-                        continue;
-                    }
-
-                    Debug.Assert(item.Id >= short.MinValue);
-                    Debug.Assert(item.Id <= short.MaxValue);
-                    Debug.Assert(item.Count >= byte.MinValue);
-                    Debug.Assert(item.Count <= byte.MaxValue);
-                    arr[i++] = new((short)item.Id, (byte)item.Count);
-
-                    if (i == n)
-                        break;
-                }*/
-
-                /*Debug.Assert(_windowId >= byte.MinValue);
-                Debug.Assert(_windowId <= byte.MaxValue);
-                outPackets.Enqueue(new SetWindowItemsPacket((byte)_windowId, arr));*/
-
-                {
-                    Item? item = _inventorySelf.OffhandItem;
-                    SlotData slotData;
-                    if (item == null)
-                    {
-                        slotData = new();
-                    }
-                    else
-                    {
-                        Debug.Assert(item.Id >= short.MinValue);
-                        Debug.Assert(item.Id <= short.MaxValue);
-                        Debug.Assert(item.Count >= byte.MinValue);
-                        Debug.Assert(item.Count <= byte.MaxValue);
-                        slotData = new((short)item.Id, (byte)item.Count);
-                    }
-                    outPackets.Enqueue(new SetSlotPacket((sbyte)_windowId, 45, slotData));
-                }
-            }
-
-            /*if (_itemCursor != null)
-            {
-                // TODO: Drop item if _iremCursor is not null.
-                _itemCursor = null;
-            }*/
-
-            Debug.Assert(_itemCursor == null);
-        }
-
-        /*public void ClickLeftMouseButton(
-            int index,
-            Item? itemSlot,
-            Queue<ClientboundPlayingPacket> outPackets)
-        {
-            Debug.Assert(!_disposed);
-
-            Debug.Assert(_windowId >= 0);
-
-            if (_windowId == 0)
-            {
-                Debug.Assert(_inventoryOther == null);
-                if (index == 0)
-                {
-                    bool contains = _inventorySelf.ContainsInCraftingOutput();
-                    Item? itemTake = contains ? _inventorySelf.TakeFromCraftingOutput() : null;
-                    bool different;
-                    if (itemSlot != null && itemTake != null)
-                    {
-                        different = itemSlot.Equals(itemTake);
-                    }
-                    else if (itemSlot == null && itemTake == null)
-                    {
-                        different = true;
-                    }
-                    else
-                    {
-                        different = false;
-                    }
-
-                    if (different)
-                        throw new UnexpectedValueException($"ClickWindowPacket.Data");
-
-                    if (contains && _itemCursor == null)
-                    {
-                        _itemCursor = itemTake;
-
-                        Debug.Assert(_itemCursor != null);
-                    }
-
-                }
-                else if (index > 0 && index <= 4)
-                {
-                    throw new NotImplementedException();
-                }
-                else if (index > 4 && index <= 8)
-                {
-                    throw new NotImplementedException();
-                }
-                else if (index > 8 && index <= 44)
-                {
-                    int indexNormalized = index - 9;
-                    bool contains = _inventorySelf.ContainsInMain(indexNormalized);
-                    Item? itemTaked = contains ? _inventorySelf.TakeFromMain(indexNormalized) : null;
-                    bool different;
-                    if (itemSlot != null && itemTaked != null)
-                        different = itemSlot.Equals(itemTaked);
-                    else if (itemSlot == null && itemTaked == null)
-                        different = true;
-                    else
-                        different = false;
-
-                    if (different)
-                        throw new UnexpectedValueException($"ClickWindowPacket.Data");
-
-                    if (contains && _itemCursor != null)
-                    {
-                        Debug.Assert(itemTaked != null);
-
-                        _inventorySelf.PutIntoMain(indexNormalized, _itemCursor);
-                        _itemCursor = itemTaked;
-
-                    }
-                    else if (contains)
-                    {
-                        Debug.Assert(itemTaked != null);
-
-                        _itemCursor = itemTaked;
-
-                    }
-                    else if (_itemCursor != null)
-                    {
-                        Debug.Assert(itemTaked == null);
-
-                        _inventorySelf.PutIntoMain(indexNormalized, _itemCursor);
-                        _itemCursor = null;
-
-                    }
-                    else
-                    {
-                        // Nothing
-                    }
-
-                }
-                else if (index == 45)
-                {
-                    throw new NotImplementedException();
-                }
-                else
-                    throw new UnexpectedValueException($"ClickWindowPacket.SlotNumber {index}");
-            }
-            else
-            {
-                Debug.Assert(_windowId > 0);
-
-                throw new NotImplementedException();
-
-            }
-
-        }*/
-
-        private void Dispose(bool disposing)
-        {
-            if (_disposed) return;
-
-            // Assertion.
-            /*Debug.Assert(_opened = false);
-            Debug.Assert(_idWindow == -1);
-            Debug.Assert(_otherInventory == null);*/
-
-            if (disposing == true)
-            {
-                // Release managed resources.
-                
-            }
-
-            // Release unmanaged resources.
-            
-
-            _disposed = true;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        public void Close(int id)
-        {
-            /*if (_opened)
-                CloseWindow(id, _idWindow);*/
-
-            Dispose();
-        }
-
-    }
-
     public sealed class Connection : IDisposable
     {
         private sealed class TeleportationRecord
@@ -1631,7 +1222,7 @@ namespace Protocol
         private readonly Queue<LoadChunkPacket> _loadChunkPackets = new();  // dispoasble
         private readonly Queue<ClientboundPlayingPacket> _outPackets = new();  // dispoasble
 
-        private readonly WindowHelper _windowHelper;  // disposable
+        private readonly Window _windowHelper;  // disposable
 
         private bool _isDisposed = false;
 
@@ -1662,7 +1253,7 @@ namespace Protocol
 
             player.Connect(_outPackets);
 
-            _windowHelper = new(Id, _outPackets, new PlayerInventory());
+            _windowHelper = new(_outPackets, new PlayerInventory());
 
             /*{
                 SlotData slotData = new(280, 64);
@@ -1748,8 +1339,6 @@ namespace Protocol
                                 ClickWindowPacket packet = ClickWindowPacket.Read(buffer);
 
                                 {
-                                    SlotData slotData = SlotData.Read(packet.Data);
-
                                     Console.WriteLine();
                                     Console.WriteLine(
                                         $"WindowId: {packet.WindowId}, " +
@@ -1757,28 +1346,17 @@ namespace Protocol
                                         $"ButtonNumber: {packet.ButtonNumber}, " +
                                         $"ActionNumber: {packet.ActionNumber}, " +
                                         $"ModeNumber: {packet.ModeNumber}, " +
-                                        $"SlotData.Id: {slotData.Id}, " +
-                                        $"SlotData.Count: {slotData.Count}, ");
+                                        $"SlotData.Id: {packet.Data.Id}, " +
+                                        $"SlotData.Count: {packet.Data.Count}, ");
                                 }
 
-                                if (packet.WindowId < 0)
-                                    throw new UnexpectedValueException($"ClickWindowPacket.WindowId {packet.WindowId}");
-
-                                Debug.Assert(packet.WindowId >= 0);
-
-                                if (!_windowHelper.IsWindowOpened())
-                                    throw new UnexpectedValueException($"ClickWindowPacket.WindowId {packet.WindowId}");
-
-
-
-                                /*switch (packet.ModeNumber)
-                                {
-                                    default:
-                                        throw new UnexpectedValueException($"ClickWindowPacket.ModeNumber {packet.ModeNumber}");
-                                    case 0:
-                                        _windowHelper.ClickLeftMouseButton(packet.SlotNumber);
-                                        break;
-                                }*/
+                                _windowHelper.Handle(
+                                    packet.WindowId, 
+                                    packet.ModeNumber, 
+                                    packet.ButtonNumber, 
+                                    packet.SlotNumber, 
+                                    packet.Data,
+                                    _outPackets);
 
                                 _outPackets.Enqueue(new ClientboundConfirmTransactionPacket(
                                         (sbyte)packet.WindowId, packet.ActionNumber, true));
@@ -1804,18 +1382,7 @@ namespace Protocol
                                 if (_windowHelper.GetWindowId() != packet.WindowId)
                                     throw new UnexpectedValueException($"ServerboundCloseWIndowPacket.WindowId {packet.WindowId}");
 
-                                
-
-                                if (_windowHelper.GetWindowId() > 0)
-                                {
-                                    _windowHelper.ResetWindow(Id, _outPackets);
-                                }
-                                else
-                                {
-                                    // TODO: if window closed that has zero id and
-                                    // a item in cursor slot is not empty, the item must be droped.
-                                }
-
+                                _windowHelper.ResetWindow(Id, _outPackets);
                             }
                             break;
                         case ServerboundPlayingPacket.ResponseKeepAlivePacketId:

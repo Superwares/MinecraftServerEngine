@@ -12,7 +12,7 @@ namespace Protocol
         private readonly int _id;
         public int Id => _id;
 
-        private readonly int _count;
+        private int _count;
         public int Count
         {
             get
@@ -30,6 +30,74 @@ namespace Protocol
             Debug.Assert(count >= MinCount);
             _id = id;
             _count = count;
+        }
+
+        public int Stack(int count)
+        {
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
+            System.Diagnostics.Debug.Assert(count >= MinCount);
+            System.Diagnostics.Debug.Assert(count <= MaxCount);
+
+            int rest;
+            _count += count;
+
+            if (_count > MaxCount)
+            {
+                rest = _count - MaxCount;
+                _count = MaxCount;
+            }
+            else
+            {
+                rest = 0;
+            }
+
+            return count - rest;
+        }
+
+        public void Waste(int count)
+        {
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
+
+            System.Diagnostics.Debug.Assert(_count > count);
+            _count -= count;
+        }
+
+        private Item Clone(int count)
+        {
+            System.Diagnostics.Debug.Assert(_count > MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
+
+            switch (_id)
+            {
+                default:
+                    throw new NotImplementedException();
+                case 280:
+                    return new Stick(count);
+            }
+        }
+
+        public Item DivideHalf()
+        {
+            System.Diagnostics.Debug.Assert(_count > MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
+
+            Debug.Assert((_count % 2) <= 1);
+            int count = (_count / 2) + (_count % 2);
+            _count /= 2;
+
+            return Clone(count);
+
+        }
+
+        public Item DivideOne()
+        {
+            System.Diagnostics.Debug.Assert(_count > MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
+
+            _count--;
+            return Clone(1);
         }
 
         public bool Equals(Item other)

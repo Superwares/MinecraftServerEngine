@@ -1455,7 +1455,7 @@ namespace Protocol
         public readonly sbyte ButtonNumber;
         public readonly short ActionNumber;
         public readonly int ModeNumber;
-        public readonly byte[] Data;
+        public readonly SlotData Data;
 
         internal static ClickWindowPacket Read(Buffer buffer)
         {
@@ -1475,7 +1475,7 @@ namespace Protocol
             ButtonNumber = buttonNumber;
             ActionNumber = actionNumber;
             ModeNumber = modeNumber;
-            Data = data;
+            Data = SlotData.Read(data);
         }
 
         protected override void WriteData(Buffer buffer)
