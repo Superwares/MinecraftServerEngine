@@ -5,24 +5,7 @@ using Containers;
 
 namespace Protocol
 {
-    internal interface IRenderOnlyEntity
-    {
-        public int Id { get; }
-        public Guid UniqueId { get; }
-
-        public Entity.Vector Position { get; }
-        public Entity.Angles Look { get; }
-
-        public bool IsSneaking { get; }
-        public bool IsSprinting { get; }
-
-        void AddRenderer(Queue<ClientboundPlayingPacket> outPackets);
-
-        void Spawn(Queue<ClientboundPlayingPacket> outPackets);
-
-    }
-
-    public abstract class Entity : IRenderOnlyEntity, IDisposable
+    public abstract class Entity : IDisposable
     {
         private bool _disposed = false;
 
@@ -99,9 +82,6 @@ namespace Protocol
 
         internal readonly Queue<Queue<ClientboundPlayingPacket>> _renderers = new();
 
-        private readonly IUpdateOnlyEntityIdList _EntityIdList;
-        private readonly IUpdateOnlyEntityRenderingTable _EntitySearchTable;
-
         private readonly int _Id;
         public int Id => _Id;
 
@@ -162,14 +142,17 @@ namespace Protocol
             _EntitySearchTable.Init(this);
         }
 
-        ~Entity()
+        ~Entity() => Debug.Assert(false);
+
+        internal void AddRenderer(int id, Queue<ClientboundPlayingPacket> outPackets)
         {
-            Debug.Assert(false);
+            // TODO spawn
+            _renderers.Enqueue(outPackets);
         }
 
-        void IRenderOnlyEntity.AddRenderer(Queue<ClientboundPlayingPacket> outPackets)
+        internal void RemoveRenderer(int id)
         {
-            _renderers.Enqueue(outPackets);
+            // extract renderer and despawn to that renderer
         }
 
         private protected void Render(ClientboundPlayingPacket packet)
@@ -193,12 +176,22 @@ namespace Protocol
             _rotated = false;
             _teleported = false;
 
-            _renderers.Flush();  // TODO: Release resources for no garbage.
-
             // reset forces
         }
 
-        public virtual void Move()
+        public virtual void IsDead()
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void StartRoutine(World world)
+        {
+            throw new System.NotImplementedException();
+
+            // must entity is alive when call this method.
+        }
+
+        public virtual void Move(World world)
         {
             Debug.Assert(!_disposed);
 
@@ -259,7 +252,7 @@ namespace Protocol
                     _onGround));
             }
 
-            _EntitySearchTable.Update(Id, _pos);
+            world.Update(_Id, _pos);
         }
 
         public void Teleport(Vector pos, Angles look)
@@ -368,7 +361,7 @@ namespace Protocol
             GC.SuppressFinalize(this);
         }
 
-        public virtual void Close()
+        public virtual void Close(EntityIdList idList, World world)
         {
             _EntityIdList.Dealloc(Id);
             _EntitySearchTable.Close(Id);

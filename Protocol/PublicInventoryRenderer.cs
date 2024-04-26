@@ -6,12 +6,17 @@ namespace Protocol
 {
     internal sealed class PublicInventoryRenderer
     {
+        public readonly int Id;
+
         private readonly int _WindowId;
         private readonly Queue<ClientboundPlayingPacket> _outPackets;
 
         public PublicInventoryRenderer(
+            int id, 
             int windowId, Queue<ClientboundPlayingPacket> outPackets)
         {
+            Id = id;
+
             _WindowId = windowId;
             _outPackets = outPackets;
         }
@@ -51,6 +56,13 @@ namespace Protocol
             Debug.Assert(index <= short.MaxValue);
             Enqueue(new SetSlotPacket(
                 (sbyte)_WindowId, (short)index, slotData));
+        }
+
+        public void Close()
+        {
+            Debug.Assert(_WindowId >= byte.MinValue);
+            Debug.Assert(_WindowId <= byte.MaxValue);
+            Enqueue(new CloseWindowPacket((byte)_WindowId);
         }
 
     }

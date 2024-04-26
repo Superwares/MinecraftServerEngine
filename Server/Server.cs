@@ -14,17 +14,19 @@ namespace Application
     {
         private bool _isDisposed = false;
 
-        private readonly EntityIdList _entityIdList = new();  // Disposable
-
-        private readonly Queue<(Connection, Player)> _connections = new();  // Disposable
+        private readonly Queue<(Connection, World, Player)> _connections = new();  // Disposable
         private readonly Queue<Connection> _disconnections = new();  // Disposable
 
         private readonly PlayerList _playerList = new();  // Disposable
 
-        private readonly EntityRenderingTable _entityRenderingTable = new();  // Disposable
-        private readonly Queue<Entity> _entities = new();  // Disposable
+        private readonly Queue<(Entity, World)> _entities = new();  // Disposable
+        private readonly Queue<Entity> _despawnedEntities = new();  // Disposable
 
-        private readonly Table<Chunk.Vector, Chunk> _chunks = new();  // Disposable
+        private readonly Table<System.Guid, int> _userIdToWorldId = new();
+
+        private readonly Table<int, World> _worldTale;
+        private readonly Queue<World> _worlds;
+
 
         private Server() { }
 
@@ -36,25 +38,15 @@ namespace Application
 
             for (int i = 0; i < _entities.Count; ++i)
             {
-                Entity entity = _entities.Dequeue();
+                (Entity entity, World world) = _entities.Dequeue();
 
-                if (entity is Player player)
+                if (world.DetermineDespawningEntity(entity))
                 {
-                    if (!player.IsConnected)
-                    {
-                        // TODO: Release resources of player object.
-
-                        /*Console.WriteLine("Disconnected!");*/
-                        entity.Close();
-                        continue;
-                    }
-
-                }
-                else
-                {
-                    throw new NotImplementedException();
+                    _despawnedEntities.Enqueue(entity);
+                    continue;
                 }
 
+                entity.Handle(world);
 
                 _entities.Enqueue(entity);
             }
@@ -67,11 +59,11 @@ namespace Application
 
             for (int i = 0; i < _connections.Count; ++i)
             {
-                (Connection conn, Player player) = _connections.Dequeue();
+                (Connection conn, World world, Player player) = _connections.Dequeue();
 
                 try
                 {
-                    conn.Control(serverTicks, player);
+                    conn.Control(serverTicks, world, player);
                 }
                 catch (DisconnectedClientException)
                 {
@@ -80,7 +72,7 @@ namespace Application
                     continue;
                 }
                 
-                _connections.Enqueue((conn, player));
+                _connections.Enqueue((conn, world, player));
             }
 
         }
@@ -91,11 +83,11 @@ namespace Application
 
             for (int i = 0; i < _entities.Count; ++i)
             {
-                Entity entity = _entities.Dequeue();
+                (Entity entity, World world) = _entities.Dequeue();
 
-                entity.Move();
+                entity.Move(world);
 
-                _entities.Enqueue(entity);
+                _entities.Enqueue((entity, world));
             }
         }
 
@@ -103,28 +95,13 @@ namespace Application
         {
             for (int i = 0; i < _connections.Count; ++i)
             {
-                (Connection conn, Player player) = _connections.Dequeue();
+                (Connection conn, World world, Player player) = _connections.Dequeue();
 
                 conn.UpdatePlayerList(_playerList);
-                conn.RenderChunks(_chunks, player);
 
-                _connections.Enqueue((conn, player));
-            }
+                conn.Render(world, player);
 
-            _entityIdList.Reset();
-            _playerList.Reset();
-
-            // reset entities
-            foreach (Entity entity in _entities.GetValues())
-                entity.Reset();
-
-            for (int i = 0; i < _connections.Count; ++i)
-            {
-                (Connection conn, Player player) = _connections.Dequeue();
-
-                conn.RenderEntities(player, _entityRenderingTable);
-
-                _connections.Enqueue((conn, player));
+                _connections.Enqueue((conn, world, player));
             }
         }
 
@@ -137,7 +114,7 @@ namespace Application
             for (int i = 0; i < _connections.Count; ++i)
             {
 
-                (Connection conn, Player player) = _connections.Dequeue();
+                (Connection conn, World world, Player player) = _connections.Dequeue();
 
                 try
                 {
@@ -150,18 +127,26 @@ namespace Application
                     continue;
                 }
 
-                _connections.Enqueue((conn, player));
+                _connections.Enqueue((conn, world, player));
 
             }
 
             /*Console.Write("Finish send data!");*/
         }
 
-        private void HandleDisconnections()
+        private void Reset()
         {
 
-            if (_disconnections.Empty) return;
+            foreach (Entity entity in _entities.GetValues())
+                entity.Reset();
 
+            foreach (World world in worlds)
+                world.Reset();
+
+            foreach (Entity entity in _despawnedEntities)
+                throw new NotImplementedException();
+
+            _playerList.Reset();
 
             for (int i = 0; i < _disconnections.Count; ++i)
             {
@@ -178,7 +163,17 @@ namespace Application
         {
             Console.Write(".");
 
-            /*Physics();*/
+            connListener.Accept(
+                _entityIdList,
+                _connections, _entities,
+                _userIdToWorldId,
+                _worldTablse,
+                _playerList,
+                new(0, 60, 0), new(0, 0));
+
+            // Barrier
+
+            HandleWorlds();
 
             // Barrier
 
@@ -187,15 +182,6 @@ namespace Application
             // Barrier
 
             ControlPlayers(serverTicks);
-
-            // Barrier
-
-            connListener.Accept(
-                _entityIdList,
-                _connections, _entities,
-                _entityRenderingTable,
-                _playerList,
-                new(0, 60, 0), new(0, 0));
 
             // Barrier
 
@@ -211,7 +197,7 @@ namespace Application
 
             // Barrier
 
-            HandleDisconnections();
+            Reset();
 
             // Barrier
 

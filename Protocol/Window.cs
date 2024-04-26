@@ -135,9 +135,6 @@ namespace Protocol
         {
             Debug.Assert(!_disposed);
 
-            Debug.Assert(_windowId > 0);
-            Debug.Assert(_inventoryOther != null);
-
             if (_windowId == 0)
             {
                 // TODO: if window closed that has zero id and
@@ -145,6 +142,9 @@ namespace Protocol
                 Debug.Assert(_itemCursor == null);
                 return;
             }
+
+            Debug.Assert(_inventoryOther != null);
+            Debug.Assert(_windowId > 0);
 
             _windowId = 0;
 
@@ -328,9 +328,6 @@ namespace Protocol
             if (_disposed) return;
 
             // Assertion.
-            /*Debug.Assert(_opened = false);
-            Debug.Assert(_idWindow == -1);
-            Debug.Assert(_otherInventory == null);*/
 
             if (disposing == true)
             {
@@ -339,6 +336,7 @@ namespace Protocol
             }
 
             // Release unmanaged resources.
+            _inventoryOther.RemoveRenderer()
 
 
             _disposed = true;

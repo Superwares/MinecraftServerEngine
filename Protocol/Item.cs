@@ -64,21 +64,7 @@ namespace Protocol
             _count -= count;
         }
 
-        private Item Clone(int count)
-        {
-            System.Diagnostics.Debug.Assert(_count > MinCount);
-            System.Diagnostics.Debug.Assert(_count <= MaxCount);
-
-            switch (_id)
-            {
-                default:
-                    throw new NotImplementedException();
-                case 280:
-                    return new Stick(count);
-            }
-        }
-
-        public Item DivideHalf()
+        public int TakeHalf()
         {
             System.Diagnostics.Debug.Assert(_count > MinCount);
             System.Diagnostics.Debug.Assert(_count <= MaxCount);
@@ -87,17 +73,17 @@ namespace Protocol
             int count = (_count / 2) + (_count % 2);
             _count /= 2;
 
-            return Clone(count);
+            return count;
 
         }
 
-        public Item DivideOne()
+        public int TakeOne()
         {
             System.Diagnostics.Debug.Assert(_count > MinCount);
             System.Diagnostics.Debug.Assert(_count <= MaxCount);
 
             _count--;
-            return Clone(1);
+            return 1;
         }
 
         public bool Equals(Item other)

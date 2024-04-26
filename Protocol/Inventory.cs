@@ -1,6 +1,8 @@
 ﻿
 using Containers;
+using System;
 using System.Diagnostics;
+using System.Xml.Serialization;
 
 namespace Protocol
 {
@@ -28,6 +30,17 @@ namespace Protocol
         }
 
         ~Inventory() => System.Diagnostics.Debug.Assert(false);
+
+        private Item CloneItem(Item item, int count)
+        {
+            switch (item.Id)
+            {
+                default:
+                    throw new NotImplementedException();
+                case 280:
+                    return new Stick(count);
+            }
+        }
 
         public virtual void ClickLeftMouseButton(int index, ref Item? itemCursor)
         {
@@ -116,7 +129,9 @@ namespace Protocol
                 }
                 else
                 {
-                    itemCursor = itemTaked.DivideHalf();
+                    int count = itemTaked.TakeHalf();
+                    Debug.Assert(count > 0);
+                    itemCursor = CloneItem(itemTaked, count);
                 }
 
             }
@@ -133,7 +148,9 @@ namespace Protocol
                 else
                 {
                     Debug.Assert(itemCursor != null);
-                    _items[index] = itemCursor.DivideOne();
+                    int count = itemCursor.TakeOne();
+                    Debug.Assert(count > 0);
+                    _items[index] = CloneItem(itemCursor, count);
                 }
                 
             }
@@ -220,6 +237,8 @@ namespace Protocol
 
         ~PlayerInventory() => System.Diagnostics.Debug.Assert(false);
 
+        
+
         public override void ClickLeftMouseButton(int index, ref Item? itemCursor)
         {
             if (index == 0)
@@ -237,6 +256,26 @@ namespace Protocol
             else
             {
                 base.ClickLeftMouseButton(index, ref itemCursor);
+            }
+        }
+
+        public override void ClickRightMouseButton(int index, ref Item? itemCursor)
+        {
+            if (index == 0)
+            {
+                // Nothing
+            }
+            else if (index > 0 && index <= 4)
+            {
+                throw new System.NotImplementedException();
+            }
+            else if (index > 4 && index <= 8)
+            {
+                throw new System.NotImplementedException();
+            }
+            else
+            {
+                base.ClickRightMouseButton(index, ref itemCursor);
             }
         }
 
@@ -270,7 +309,8 @@ namespace Protocol
 
         internal readonly object _SharedObject = new();
 
-        protected readonly Table<int, PublicInventoryRenderer> _renderers = new();
+        private readonly NumList _numList = new();  // Disposable
+        protected readonly Table<int, PublicInventoryRenderer> _renderers = new();  // Disposable
 
         public PublicInventory(int count) : base(count) { }
 
@@ -362,10 +402,14 @@ namespace Protocol
             if (!_disposed)
             {
                 // Assertion.
+                Debug.Assert(_numList.Empty);
+                Debug.Assert(_renderers.Empty);
 
                 if (disposing == true)
                 {
                     // Release managed resources.
+                    _numList.Dispose();
+                    _renderers.Dispose();
                 }
 
                 // Release unmanaged resources.
@@ -374,6 +418,19 @@ namespace Protocol
             }
 
             base.Dispose(disposing);
+        }
+
+        public void Close()
+        {
+            lock (_SharedObject)
+            {
+                foreach (PublicInventoryRenderer renderer in _renderers.Flush())
+                {
+                    _numList.Dealloc(renderer.Id);
+
+                    renderer.Close();
+                }
+            }
         }
 
     }

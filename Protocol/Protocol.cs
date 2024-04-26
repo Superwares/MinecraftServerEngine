@@ -393,352 +393,7 @@ namespace Protocol
 
     }
 
-    public sealed class BoundingBox
-    {
-        private readonly float _width, _height;
-        private float Width => _width;
-        private float Height => _height;
-
-        public BoundingBox(float width, float height)
-        {
-            _width = width; _height = height;
-        }
-
-    }
-
-    public abstract class Block
-    {
-        private readonly int _id;
-        public int Id => _id;
-
-        private readonly int _metadate;
-        public int Metadata => _metadate;
-
-        public Block(int id, int metadata)
-        {
-            _id = id;
-            _metadate = metadata;
-        }
-
-        public ulong GetGlobalPaletteID()
-        {
-            byte metadata = (byte)_metadate;
-            Debug.Assert((metadata & 0b_11110000) == 0);  // metadata is 4 bits
-
-            ushort id = (ushort)_id;
-            Debug.Assert((id & 0b_11111110_00000000) == 0);  // id is 9 bits
-            return (ulong)(id << 4 | metadata);  // 13 bits
-        }
-
-    }
-
-    public class Air : Block
-    {
-        public Air() : base(0, 0) 
-        {
-        }
-
-    }
-
-    public class Stone : Block
-    {
-        public Stone() : base(1, 0) 
-        {
-        }
-
-    }
-
-    public class Granite : Block
-    {
-        public Granite() : base(1, 1) 
-        {
-        }
-
-    }
-
-    public class PolishedGranite : Block
-    {
-        public PolishedGranite() : base(1, 2) { }
-    }
-
-    public class Chunk
-    {
-        public const int Width = 16;
-        public const int Height = 16 * 16;
-
-        public struct Vector : IEquatable<Vector>
-        {
-            public int x, z;
-
-            public Vector(int x, int z)
-            {
-                this.x = x; this.z = z;
-            }
-
-            public static Vector Convert(Player.Vector pos)
-            {
-                return new(
-                    (pos.X >= 0) ? ((int)pos.X / Width) : (((int)pos.X / (Width + 1)) - 1),
-                    (pos.Z >= 0) ? ((int)pos.Z / Width) : (((int)pos.Z / (Width + 1)) - 1));
-            }
-
-            public bool Equals(Vector other)
-            {
-                return (x == other.x) && (z == other.z);
-            }
-
-        }
-
-        public class Grid : IEquatable<Grid>
-        {
-            public static Grid GenerateAround(Vector center, int d)
-            {
-                Debug.Assert(d >= 0);
-                if (d == 0)
-                    return new(center, center);
-
-                int xMax = center.x + d, zMax = center.z + d,
-                    xMin = center.x - d, zMin = center.z - d;
-
-                /*int a = (2 * d) + 1;
-                int length = a * a;
-                Position[] positions = new Position[length];
-
-                int i = 0;
-                for (int z = zMin; z <= zMax; ++z)
-                {
-                    for (int x = xMin; x <= xMax; ++x)
-                    {
-                        positions[i++] = new(x, z);
-                    }
-                }
-                Debug.Assert(i == length);*/
-
-                Debug.Assert(xMax > xMin);
-                Debug.Assert(zMax > zMin);
-                return new(new(xMax, zMax), new(xMin, zMin));
-            }
-
-            public static Grid GenerateBetween(Grid grid1, Grid grid2)
-            {
-                Vector max3 = new(Math.Min(grid1._max.x, grid2._max.x), Math.Min(grid1._max.z, grid2._max.z)),
-                    min3 = new(Math.Max(grid1._min.x, grid2._min.x), Math.Max(grid1._min.z, grid2._min.z));
-                if (max3.x < min3.x)
-                    (max3.x, min3.x) = (min3.x, max3.x);
-                if (max3.z < min3.z)
-                    (max3.z, min3.z) = (min3.z, max3.z);
-
-                return new(max3, min3);
-            }
-
-            private readonly Vector _max, _min;
-
-            Grid(Vector max, Vector min)
-            {
-                _max = max; _min = min;
-            }
-
-            public bool Contains(Vector p)
-            {
-                return (p.x <= _max.x && p.x >= _min.x && p.z <= _max.z && p.z >= _min.z);
-            }
-
-            public System.Collections.Generic.IEnumerable<Vector> GetVectors()
-            {
-                for (int z = _min.z; z <= _max.z; ++z)
-                {
-                    for (int x = _min.x; x <= _max.x; ++x)
-                    {
-                        yield return new(x, z);
-                    }
-                }
-
-            }
-
-            public bool Equals(Grid other)
-            {
-                Debug.Assert(other != null);
-                return (other._max.Equals(_max) && other._min.Equals(_min));
-            }
-
-        }
-
-        private class Section
-        {
-            public static readonly int Width = Chunk.Width;
-            public static readonly int Height = Chunk.Height / Width;
-
-            public static readonly int BlockTotalCount = Width * Width * Height;
-            // (0, 0, 0) to (16, 16, 16)
-            private Block?[] _blocks = new Block?[BlockTotalCount];
-
-            internal static void Write(Buffer buffer, Section section)
-            {
-                int blockBitCount = 13;
-                buffer.WriteByte((byte)blockBitCount);
-                buffer.WriteInt(0, true);  // Write pallete as globally
-
-                int blockBitTotalCount = (BlockTotalCount) * blockBitCount,
-                    ulongBitCount = (sizeof(ulong) * 8);  // TODO: Make as constants
-                int dataLength = blockBitTotalCount / ulongBitCount;
-                Debug.Assert(blockBitTotalCount % ulongBitCount == 0);
-                ulong[] data = new ulong[dataLength];
-
-                for (int y = 0; y < Height; ++y)
-                {
-                    for (int z = 0; z < Width; ++z)
-                    {
-                        for (int x = 0; x < Width; ++x)
-                        {
-                            int i = (((y * Height) + z) * Width) + x;
-
-                            int start = (i * blockBitCount) / ulongBitCount,
-                                offset = (i * blockBitCount) % ulongBitCount,
-                                end = (((i + 1) * blockBitCount) - 1) / ulongBitCount;
-
-                            Block? block = section._blocks[i];
-                            if (block == null)
-                                block = new Air();
-
-                            if (y == 10)
-                                block = new Stone();
-
-                            ulong id = block.GetGlobalPaletteID();
-                            Debug.Assert((id >> blockBitCount) == 0);
-
-                            data[start] |= (id << offset);
-
-                            if (start != end)
-                            {
-                                data[end] = (id >> (ulongBitCount - offset));
-                            }
-
-                        }
-                    }
-                }
-
-                Debug.Assert(unchecked((long)ulong.MaxValue) == -1);
-                buffer.WriteInt(dataLength, true);
-                for (int i = 0; i < dataLength; ++i)
-                {
-                    buffer.WriteLong((long)data[i]);  // TODO
-                }
-
-                // TODO
-                for (int y = 0; y < Height; ++y)
-                {
-                    for (int z = 0; z < Width; ++z)
-                    {
-                        for (int x = 0; x < Width; x += 2)
-                        {
-                            buffer.WriteByte(byte.MaxValue / 2);
-
-                        }
-                    }
-                }
-
-                // TODO
-                for (int y = 0; y < Height; ++y)
-                {
-                    for (int z = 0; z < Width; ++z)
-                    {
-                        for (int x = 0; x < Width; x += 2)
-                        {
-                            buffer.WriteByte(byte.MaxValue / 2);
-
-                        }
-                    }
-                }
-
-
-            }
-
-        }
-
-        public static readonly int SectionTotalCount = Height / Section.Height;
-        // bottom to top
-        private Section?[] _sections = new Section?[SectionTotalCount];
-
-        internal static (int, byte[]) Write(Chunk chunk)
-        {
-            Buffer buffer = new();
-
-            int mask = 0;
-            Debug.Assert(SectionTotalCount == 16);
-            for (int i = 0; i < SectionTotalCount; ++i)
-            {
-                Section? section = chunk._sections[i];
-                if (section == null) continue;
-
-                mask |= (1 << i);  // TODO;
-                Section.Write(buffer, section);
-            }
-
-            // TODO
-            for (int z = 0; z < Width; ++z)
-            {
-                for (int x = 0; x < Width; ++x)
-                {
-                    buffer.WriteByte(127);  // Void Biome
-                }
-            }
-
-            return (mask, buffer.ReadData());
-        }
-
-        internal static (int, byte[]) Write()
-        {
-            Buffer buffer = new();
-
-            int mask = 0;
-            Debug.Assert(SectionTotalCount == 16);
-
-            // TODO: biomes
-            for (int z = 0; z < Width; ++z)
-            {
-                for (int x = 0; x < Width; ++x)
-                {
-                    buffer.WriteByte(127);  // Void Biome
-                }
-            }
-
-            return (mask, buffer.ReadData());
-        }
-
-        internal static (int, byte[]) Write2()
-        {
-            Buffer buffer = new();
-
-            int mask = 0;
-            Debug.Assert(SectionTotalCount == 16);
-
-            Section section = new();
-
-            mask |= (1 << 3);  // TODO;
-            Section.Write(buffer, section);
-
-            // TODO: biomes
-            for (int z = 0; z < Width; ++z)
-            {
-                for (int x = 0; x < Width; ++x)
-                {
-                    buffer.WriteByte(127);  // Void Biome
-                }
-            }
-
-            return (mask, buffer.ReadData());
-        }
-
-        public readonly Vector p;
-
-        public Chunk(Vector p)
-        {
-            this.p = p;
-        }
-
-
-
-    }
+    
 
     /*public class ChunkTable
     {
@@ -816,14 +471,7 @@ namespace Protocol
 
     }*/
 
-    internal interface IUpdateOnlyEntityIdList
-    {
-        int Alloc();
-        void Dealloc(int id);
-
-    }
-
-    public sealed class EntityIdList : IUpdateOnlyEntityIdList, IDisposable
+    public sealed class EntityIdList : IDisposable
     {
         private bool _disposed = false;
 
@@ -1222,7 +870,7 @@ namespace Protocol
         private readonly Queue<LoadChunkPacket> _loadChunkPackets = new();  // dispoasble
         private readonly Queue<ClientboundPlayingPacket> _outPackets = new();  // dispoasble
 
-        private readonly Window _windowHelper;  // disposable
+        private readonly Window _window;  // disposable
 
         private bool _isDisposed = false;
 
@@ -1253,7 +901,7 @@ namespace Protocol
 
             player.Connect(_outPackets);
 
-            _windowHelper = new(_outPackets, new PlayerInventory());
+            _window = new(_outPackets, new PlayerInventory());
 
             /*{
                 SlotData slotData = new(280, 64);
@@ -1350,7 +998,7 @@ namespace Protocol
                                         $"SlotData.Count: {packet.Data.Count}, ");
                                 }
 
-                                _windowHelper.Handle(
+                                _window.Handle(
                                     packet.WindowId, 
                                     packet.ModeNumber, 
                                     packet.ButtonNumber, 
@@ -1379,10 +1027,10 @@ namespace Protocol
                                 if (packet.WindowId < 0)
                                     throw new UnexpectedValueException($"ClickWindowPacket.WindowId {packet.WindowId}");
 
-                                if (_windowHelper.GetWindowId() != packet.WindowId)
+                                if (_window.GetWindowId() != packet.WindowId)
                                     throw new UnexpectedValueException($"ServerboundCloseWIndowPacket.WindowId {packet.WindowId}");
 
-                                _windowHelper.ResetWindow(Id, _outPackets);
+                                _window.ResetWindow(Id, _outPackets);
                             }
                             break;
                         case ServerboundPlayingPacket.ResponseKeepAlivePacketId:
@@ -1544,7 +1192,7 @@ namespace Protocol
             Debug.Assert(d >= ClientsideSettings.MinRenderDistance);
             Debug.Assert(d <= ClientsideSettings.MaxRenderDistance);
 
-            Chunk.Grid grid = Chunk.Grid.GenerateAround(pChunkCenter, d);
+            Chunk.Grid grid = Chunk.Grid.Generate(pChunkCenter, d);
 
             if (_renderedChunkGrid == null)
             {
@@ -1564,7 +1212,7 @@ namespace Protocol
                     (mask, data) = Chunk.Write2();
 
                     _loadChunkPackets.Enqueue(new LoadChunkPacket(
-                        pChunk.x, pChunk.z, true, mask, data));
+                        pChunk._x, pChunk._z, true, mask, data));
                 }
 
             }
@@ -1575,7 +1223,7 @@ namespace Protocol
                 if (gridPrev.Equals(grid))
                     return;
 
-                Chunk.Grid gridBetween = Chunk.Grid.GenerateBetween(grid, gridPrev);
+                Chunk.Grid gridBetween = Chunk.Grid.Generate(grid, gridPrev);
 
                 foreach (Chunk.Vector pChunk in grid.GetVectors())
                 {
@@ -1597,7 +1245,7 @@ namespace Protocol
                     (mask, data) = Chunk.Write2();
 
                     _loadChunkPackets.Enqueue(new LoadChunkPacket(
-                        pChunk.x, pChunk.z, true, mask, data));
+                        pChunk._x, pChunk._z, true, mask, data));
                 }
 
                 foreach (Chunk.Vector pChunk in gridPrev.GetVectors())
@@ -1605,7 +1253,7 @@ namespace Protocol
                     if (gridBetween.Contains(pChunk))
                         continue;
 
-                    _outPackets.Enqueue(new UnloadChunkPacket(pChunk.x, pChunk.z));
+                    _outPackets.Enqueue(new UnloadChunkPacket(pChunk._x, pChunk._z));
                 }
             }
 
@@ -1752,6 +1400,8 @@ namespace Protocol
                 _teleportationRecords.Dispose();
                 _loadChunkPackets.Dispose();
                 _outPackets.Dispose();
+
+                _window.Dispose();
             }
 
             // unmanaged objects
