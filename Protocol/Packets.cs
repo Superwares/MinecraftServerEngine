@@ -313,7 +313,7 @@ namespace Protocol
         public const int AddPlayerListItemPacketId = 0x2E;
         public const int UpdatePlayerListItemLatencyPacketId = 0x2E;
         public const int RemovePlayerListItemPacketId = 0x2E;
-        public const int TeleportPacketId = 0x2F;
+        public const int TeleportSelfPlayerPacketId = 0x2F;
         public const int DestroyEntitiesPacketId = 0x32;
         public const int EntityHeadLookPacketId = 0x36;
         public const int EntityMetadataPacketId = 0x3C;
@@ -325,7 +325,7 @@ namespace Protocol
 
     internal abstract class ServerboundPlayingPacket(int id) : PlayingPacket(id)
     {
-        public const int ConfirmTeleportationPacketId = 0x00;
+        public const int ConfirmSelfPlayerTeleportationPacketId = 0x00;
         public const int SetClientSettingsPacketId = 0x04;
         public const int ServerboundConfirmTransactionPacketId = 0x05;
         public const int ClickWindowPacketId = 0x07;
@@ -1142,17 +1142,20 @@ namespace Protocol
     {
         public readonly Guid UniqueId;
         public readonly string Username;
+        public readonly int Laytency;
 
         internal static AddPlayerListItemPacket Read(Buffer buffer)
         {
             throw new NotImplementedException();
         }
 
-        public AddPlayerListItemPacket(Guid uniqueId, string username)
+        public AddPlayerListItemPacket(
+            Guid uniqueId, string username, int laytency)
             : base(AddPlayerListItemPacketId)
         {
             UniqueId = uniqueId;
             Username = username;
+            Laytency = laytency;
         }
 
         protected override void WriteData(Buffer buffer)
@@ -1163,7 +1166,7 @@ namespace Protocol
             buffer.WriteString(Username);
             buffer.WriteInt(0, true);  
             buffer.WriteInt(0, true);  // gamemode
-            buffer.WriteInt(-1, true);  // latency
+            buffer.WriteInt(Laytency, true);  // latency
             buffer.WriteBool(false);
         }
 
@@ -1197,7 +1200,7 @@ namespace Protocol
         }
     }
 
-    internal class TeleportPacket : ClientboundPlayingPacket
+    internal class TeleportSelfPlayerPacket : ClientboundPlayingPacket
     {
         public readonly double X, Y, Z;
         public readonly float Yaw, Pitch;
@@ -1208,19 +1211,19 @@ namespace Protocol
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static TeleportPacket Read(Buffer buffer)
+        internal static TeleportSelfPlayerPacket Read(Buffer buffer)
         {
             // TODO: Check the conditions of variables. If not correct, throw exception.
             throw new NotImplementedException();
         }
 
-        public TeleportPacket(
+        public TeleportSelfPlayerPacket(
             double x, double y, double z, 
             float yaw, float pitch, 
             bool relativeX, bool relativeY, bool relativeZ,
             bool relativeYaw, bool relativePitch,
             int payload)
-            : base(TeleportPacketId)
+            : base(TeleportSelfPlayerPacketId)
         {
             
 
@@ -1364,7 +1367,7 @@ namespace Protocol
 
     }
 
-    internal class ConfirmTeleportationPacket : ServerboundPlayingPacket
+    internal class ConfirmSelfPlayerTeleportationPacket : ServerboundPlayingPacket
     {
         public readonly int Payload;
 
@@ -1372,12 +1375,13 @@ namespace Protocol
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static ConfirmTeleportationPacket Read(Buffer buffer)
+        internal static ConfirmSelfPlayerTeleportationPacket Read(Buffer buffer)
         {
             return new(buffer.ReadInt(true));
         }
 
-        public ConfirmTeleportationPacket(int payload) : base(ConfirmTeleportationPacketId)
+        public ConfirmSelfPlayerTeleportationPacket(int payload) 
+            : base(ConfirmSelfPlayerTeleportationPacketId)
         {
             Payload = payload;
         }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Protocol
 {
-    public abstract class Confirm
+    /*public abstract class Confirm
     {
     }
 
@@ -45,6 +45,6 @@ namespace Protocol
             Payload = payload;
         }
 
-    }
+    }*/
 
 }

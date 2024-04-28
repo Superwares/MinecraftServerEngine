@@ -7,7 +7,6 @@ namespace Protocol
 {
     public abstract class Entity : IDisposable
     {
-        private bool _disposed = false;
 
         public struct Vector : IEquatable<Vector>
         {
@@ -80,21 +79,23 @@ namespace Protocol
 
         }
 
-        internal readonly Queue<Queue<ClientboundPlayingPacket>> _renderers = new();
+        private bool _disposed = false;
 
-        private readonly int _Id;
-        public int Id => _Id;
+        private int _id;
+        private readonly NumList _EntityIdList;
+        public int Id => _id;
 
-        private readonly Guid _UniqueId;
-        public Guid UniqueId => _UniqueId;
+        public System.Guid UniqueId;
 
         protected Vector _pos, _posPrev;
+        public Vector Position => _pos;
+
         private bool _rotated = false;
         protected Angles _look;
-        public Vector Position => _pos;
         public Angles Look => _look;
 
         protected bool _onGround;
+        public bool IsOnGround => _onGround;
 
         protected bool _sneaking, _sprinting;
         public bool IsSneaking => _sneaking;
@@ -104,31 +105,17 @@ namespace Protocol
         protected Vector _posTeleport;
         protected Angles _lookTeleport;
 
-        internal Entity(
-            IUpdateOnlyEntityIdList entityIdList,
-            IUpdateOnlyEntityRenderingTable entitySearchTable,
-            Guid uniqueId,
-            Vector pos, Angles look)
-            : this(
-                  entityIdList, entitySearchTable,
-                  entityIdList.Alloc(),
-                  uniqueId,
-                  pos, look)
-        { }
+        internal readonly EntityRenderer _Renderer = new();  // Disposable
 
         internal Entity(
-            IUpdateOnlyEntityIdList entityIdList,
-            IUpdateOnlyEntityRenderingTable entitySearchTable,
-            int id,
+            NumList entityIdList,
             Guid uniqueId,
             Vector pos, Angles look)
         {
+            _id = entityIdList.Alloc();
             _EntityIdList = entityIdList;
-            _EntitySearchTable = entitySearchTable;
 
-            _Id = id;
-
-            _UniqueId = uniqueId;
+            UniqueId = uniqueId;
             _pos = pos;
             _look = look;
             _onGround = false;
@@ -136,37 +123,11 @@ namespace Protocol
             _sneaking = _sprinting = false;
 
             _teleported = false;
-            _posTeleport = new(0, 0, 0);
-            _lookTeleport = new(0, 0);
-
-            _EntitySearchTable.Init(this);
+            /*_posTeleport = new(0, 0, 0);
+            _lookTeleport = new(0, 0);*/
         }
 
-        ~Entity() => Debug.Assert(false);
-
-        internal void AddRenderer(int id, Queue<ClientboundPlayingPacket> outPackets)
-        {
-            // TODO spawn
-            _renderers.Enqueue(outPackets);
-        }
-
-        internal void RemoveRenderer(int id)
-        {
-            // extract renderer and despawn to that renderer
-        }
-
-        private protected void Render(ClientboundPlayingPacket packet)
-        {
-            foreach (var outPackets in _renderers.GetValues())
-                outPackets.Enqueue(packet);
-        }
-
-        private protected abstract void Spawn(Queue<ClientboundPlayingPacket> outPackets);
-
-        void IRenderOnlyEntity.Spawn(Queue<ClientboundPlayingPacket> outPackets)
-        {
-            Spawn(outPackets);
-        }
+        ~Entity() => System.Diagnostics.Debug.Assert(false);
 
         public virtual void Reset()
         {
@@ -179,16 +140,13 @@ namespace Protocol
             // reset forces
         }
 
-        public virtual void IsDead()
+        public virtual bool IsDead()
         {
             throw new NotImplementedException();
         }
 
-        public virtual void StartRoutine(World world)
+        public virtual void StartRoutine(long serverTicks, World world)
         {
-            throw new System.NotImplementedException();
-
-            // must entity is alive when call this method.
         }
 
         public virtual void Move(World world)
@@ -203,20 +161,20 @@ namespace Protocol
             if (moved && _rotated)
             {
                 (byte x, byte y) = _look.ConvertToProtocolFormat();
-                Render(new EntityLookAndRelMovePacket(
+                _Renderer.Render(new EntityLookAndRelMovePacket(
                     Id,
                     (short)((_pos.X - _posPrev.X) * 32 * 128),
                     (short)((_pos.Y - _posPrev.Y) * 32 * 128),
                     (short)((_pos.Z - _posPrev.Z) * 32 * 128),
                     x, y, 
                     _onGround));
-                Render(new EntityHeadLookPacket(Id, x));
+                _Renderer.Render(new EntityHeadLookPacket(Id, x));
             }
             else if (moved)
             {
                 Debug.Assert(!_rotated);
 
-                Render(new EntityRelMovePacket(
+                _Renderer.Render(new EntityRelMovePacket(
                     Id,
                     (short)((_pos.X - _posPrev.X) * 32 * 128),
                     (short)((_pos.Y - _posPrev.Y) * 32 * 128),
@@ -228,15 +186,15 @@ namespace Protocol
                 Debug.Assert(!moved);
 
                 (byte x, byte y) = _look.ConvertToProtocolFormat();
-                Render(new EntityLookPacket(Id, x, y, _onGround));
-                Render(new EntityHeadLookPacket(Id, x));
+                _Renderer.Render(new EntityLookPacket(Id, x, y, _onGround));
+                _Renderer.Render(new EntityHeadLookPacket(Id, x));
             }
             else
             {
                 Debug.Assert(!moved);
                 Debug.Assert(!_rotated);
 
-                Render(new EntityPacket(Id));
+                _Renderer.Render(new EntityPacket(Id));
             }
 
             if (_teleported)
@@ -245,14 +203,14 @@ namespace Protocol
                 _look = _lookTeleport;
                 // update position data in chunk
 
-                Render(new EntityTeleportPacket(
+                _Renderer.Render(new EntityTeleportPacket(
                     Id,
                     _pos.X, _pos.Y, _pos.Z,
                     _look.Yaw, _look.Pitch,
                     _onGround));
             }
 
-            world.Update(_Id, _pos);
+            world.UpdateEntityRendering(this);
         }
 
         public void Teleport(Vector pos, Angles look)
@@ -268,7 +226,7 @@ namespace Protocol
 
             _onGround = f;
 
-            Render(new EntityPacket(Id));
+            _Renderer.Render(new EntityPacket(Id));
         }
 
         public void Rotate(Angles look)
@@ -295,7 +253,7 @@ namespace Protocol
             using EntityMetadata metadata = new();
             metadata.AddByte(0, flags);
 
-            Render(new EntityMetadataPacket(Id, metadata.WriteData()));
+            _Renderer.Render(new EntityMetadataPacket(Id, metadata.WriteData()));
         }
 
         public void Sneak()
@@ -338,16 +296,20 @@ namespace Protocol
             RanderFormChanging();
         }
 
+        internal virtual void Flush()
+        {
+            _EntityIdList.Dealloc(Id);
+            _Renderer.Flush();
+        }
+
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed) return;
 
-            Debug.Assert(_renderers.Empty);
-
             if (disposing == true)
             {
                 // Release managed resources.
-                _renderers.Dispose();
+                _Renderer.Dispose();
             }
 
             // Release unmanaged resources.
@@ -361,13 +323,7 @@ namespace Protocol
             GC.SuppressFinalize(this);
         }
 
-        public virtual void Close(EntityIdList idList, World world)
-        {
-            _EntityIdList.Dealloc(Id);
-            _EntitySearchTable.Close(Id);
-            _renderers.Flush();  // TODO: Release resources for no garbage.
-            Dispose();
-        }
+        public void Close() => Dispose();
     }
 
     public abstract class LivingEntity : Entity
@@ -375,18 +331,12 @@ namespace Protocol
         private bool _disposed = false;
 
         internal LivingEntity(
-            IUpdateOnlyEntityIdList entityIdList,
-            IUpdateOnlyEntityRenderingTable entitySearchTable,
-            int id,
+            NumList entityIdList,
             Guid uniqueId,
-            Vector pos, Angles look)
-            : base(entityIdList, entitySearchTable, id, uniqueId, pos, look)
+            Vector pos, Angles look) : base(entityIdList, uniqueId, pos, look)
         { }
 
-        ~LivingEntity()
-        {
-            Debug.Assert(false);
-        }
+        ~LivingEntity() => System.Diagnostics.Debug.Assert(false);
 
         protected override void Dispose(bool disposing)
         {
@@ -413,96 +363,68 @@ namespace Protocol
     {
         private bool _disposed = false;
 
-        private readonly IUpdateOnlyPlayerList _playerList;
-
         public readonly string Username;
 
-        private Queue<ClientboundPlayingPacket>? _selfOutPackets;
-        private bool _connected;
-        public bool IsConnected => _connected;
+
+        private Connection? _conn = null;
+        public bool IsConnected => _conn != null;
 
         private bool _controled;
         private Vector _posControl;
 
+        private readonly PlayerList _PlayerList;
+
         internal Player(
-            IUpdateOnlyEntityIdList entityIdList,
-            IUpdateOnlyEntityRenderingTable entitySearchTable,
-            int id,
+            NumList entityIdList,
             Guid uniqueId,
             Vector pos, Angles look,
-            IUpdateOnlyPlayerList playerList,
-            string username)
-            : base(entityIdList, entitySearchTable, id, uniqueId, pos, look)
+            string username,
+            PlayerList playerList) : base(entityIdList, uniqueId, pos, look)
         {
             _controled = false;
-            _posControl = new(0, 0, 0);
+            /*_posControl = new(0, 0, 0);*/
 
-            _playerList = playerList;
             Username = username;
 
-            playerList.Add(UniqueId, Username);
-
-            _connected = false;
-            _selfOutPackets = null;
-
-            Teleport(pos, look);
+            _PlayerList = playerList;
         }
 
-        ~Player()
-        {
-            Debug.Assert(false);
-        }
+        ~Player() => System.Diagnostics.Debug.Assert(false);
 
-        internal void Connect(Queue<ClientboundPlayingPacket> selfOutPackets)
+        internal void Connect(Connection conn)
         {
             Debug.Assert(!_disposed);
 
-            Debug.Assert(!_connected);
-            _connected = true;
-            _selfOutPackets = selfOutPackets;
+            Debug.Assert(!IsConnected);
+            _conn = conn;
+
+            conn.Render(new SetPlayerAbilitiesPacket(
+                true, false, true, true, 0.1f, 0));
+
+            int payload = new System.Random().Next();
+            conn.Render(new TeleportSelfPlayerPacket(
+                _pos.X, _pos.Y, _pos.Z,
+                _look.Yaw, _look.Pitch,
+                false, false, false, false, false,
+                payload));
+
+            _PlayerList.Connect(UniqueId, conn.Renderer);
         }
 
-        public void Disconnect()
+        internal void Disconnect()
         {
             Debug.Assert(!_disposed);
 
-            Debug.Assert(_connected);
-            _connected = false;
-            _selfOutPackets = null;
+            Debug.Assert(IsConnected);
+
+            Debug.Assert(_conn != null);
+            _conn.Flush();
+            _conn.Close();
+            _conn = null;
+
+            _PlayerList.Disconnect(UniqueId);
         }
-
-        private void RenderSelf(ClientboundPlayingPacket packet)
-        {
-            Debug.Assert(!_disposed);
-
-            Debug.Assert(_selfOutPackets != null);
-            _selfOutPackets.Enqueue(packet);
-        }
-
-        private protected override void Spawn(Queue<ClientboundPlayingPacket> outPackets)
-        {
-            /*Console.WriteLine("Spawn!");*/
-
-            byte flags = 0x00;
-
-            if (IsSneaking)
-                flags |= 0x02;
-            if (IsSprinting)
-                flags |= 0x08;
-
-            using EntityMetadata metadata = new();
-            metadata.AddByte(0, flags);
-
-            (byte x, byte y) = _look.ConvertToProtocolFormat();
-            outPackets.Enqueue(new SpawnNamedEntityPacket(
-                Id,
-                UniqueId,
-                Position.X, Position.Y, Position.Z,
-                x, y,  // TODO: Convert yaw and pitch to angles of minecraft protocol.
-                metadata.WriteData()));
-
-        }
-
+        
         public override void Reset()
         {
             Debug.Assert(!_disposed);
@@ -512,7 +434,7 @@ namespace Protocol
             _controled = false;
         }
 
-        public void Control(Vector pos)
+        internal void Control(Vector pos)
         {
             Debug.Assert(!_disposed);
 
@@ -522,32 +444,53 @@ namespace Protocol
             // TODO: send render data;
         }
 
-        public override void Move()
+        public override void StartRoutine(long serverTicks, World world)
+        {
+            if (IsConnected)
+            {
+                Debug.Assert(_conn != null);
+                _conn.RenderChunks(world, Position);
+                _conn.RenderEntities(world, Id);
+
+                try
+                {
+                    _conn.SendData(this);
+                    _conn.Control(serverTicks, world, _PlayerList, this);
+                }
+                catch (DisconnectedClientException)
+                {
+                    Disconnect();
+
+                    throw new NotImplementedException();
+                }
+
+            }
+            else
+            {
+
+            }
+
+            /*base.StartRoutine(world);*/
+        }
+
+        public override void Move(World world)
         {
             Debug.Assert(!_disposed);
 
             if (_controled)
             {
                 _pos = _posControl;
-
-                /*(byte x, byte y) = _look.ConvertToProtocolFormat();
-                Render(new EntityLookAndRelMovePacket(
-                    Id,
-                    (short)((_pos.X - posPrev.X) * 32 * 128),
-                    (short)((_pos.Y - posPrev.Y) * 32 * 128),
-                    (short)((_pos.Z - posPrev.Z) * 32 * 128),
-                    x, y,
-                    _onGround));*/
             }
 
-            base.Move();
+            base.Move(world);
 
-            if (!_connected) return;
+            if (!IsConnected) return;
 
             if (_teleported)
             {
                 int payload = new Random().Next();
-                RenderSelf(new TeleportPacket(
+                System.Diagnostics.Debug.Assert(_conn != null);
+                _conn.Render(new TeleportSelfPlayerPacket(
                     _pos.X, _pos.Y, _pos.Z,
                     _look.Yaw, _look.Pitch,
                     false, false, false, false, false,
@@ -555,17 +498,24 @@ namespace Protocol
             }
         }
 
+        internal override void Flush()
+        {
+            base.Flush();
+
+            _PlayerList.ClosePlayer(UniqueId);
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (!_disposed)
             {
                 // Assertion.
-                Debug.Assert(!_connected);
+                Debug.Assert(_conn == null);  // Must be disconnected when Dispose();
 
                 if (disposing == true)
                 {
                     // Release managed resources.
-                    _selfOutPackets = null;
+                    
                 }
 
                 // Release unmanaged resources.
@@ -576,12 +526,6 @@ namespace Protocol
             base.Dispose(disposing);
         }
 
-        public override void Close()
-        {
-            _playerList.Remove(UniqueId);
-
-            base.Close();
-        }
 
     }
 

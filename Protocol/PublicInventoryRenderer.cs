@@ -1,69 +1,129 @@
 ﻿
+using System;
 using System.Diagnostics;
 using Containers;
 
 namespace Protocol
 {
-    internal sealed class PublicInventoryRenderer
+    internal sealed class PublicInventoryRenderer : System.IDisposable
     {
-        public readonly int Id;
+        private bool _disposed = false;
 
-        private readonly int _WindowId;
-        private readonly Queue<ClientboundPlayingPacket> _outPackets;
+        private readonly 
+            Table<int, (int, Queue<ClientboundPlayingPacket>)> _Table = new();  // Disposable
 
-        public PublicInventoryRenderer(
-            int id, 
+        public PublicInventoryRenderer() { }
+
+        ~PublicInventoryRenderer() => System.Diagnostics.Debug.Assert(false);
+
+        public void Add(
+            int id,
             int windowId, Queue<ClientboundPlayingPacket> outPackets)
         {
-            Id = id;
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            _WindowId = windowId;
-            _outPackets = outPackets;
+            System.Diagnostics.Debug.Assert(!_Table.Contains(id));
+            _Table.Insert(id, (windowId, outPackets));
         }
 
-        private void Enqueue(ClientboundPlayingPacket packet)
+        public (int, Queue<ClientboundPlayingPacket>) Remove(int id)
         {
-            _outPackets.Enqueue(packet);
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            return _Table.Extract(id);
         }
 
-        public void Set(int index, Item item)
+        public void RenderToSet(int index, Item item)
         {
-            Debug.Assert(_WindowId > 0);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            Debug.Assert(item.Id >= short.MinValue);
-            Debug.Assert(item.Id <= short.MaxValue);
-            Debug.Assert(item.Count >= byte.MinValue);
-            Debug.Assert(item.Count <= byte.MaxValue);
-            SlotData slotData = new((short)item.Id, (byte)item.Count);
+            foreach ((int windowId, var outPackets) in _Table.GetValues())
+            {
+                Debug.Assert(windowId > 0);
 
-            Debug.Assert(_WindowId >= sbyte.MinValue);
-            Debug.Assert(_WindowId <= sbyte.MaxValue);
-            Debug.Assert(index >= short.MinValue);
-            Debug.Assert(index <= short.MaxValue);
-            Enqueue(new SetSlotPacket(
-                (sbyte)_WindowId, (short)index, slotData));
+                Debug.Assert(item.Id >= short.MinValue);
+                Debug.Assert(item.Id <= short.MaxValue);
+                Debug.Assert(item.Count >= byte.MinValue);
+                Debug.Assert(item.Count <= byte.MaxValue);
+                SlotData slotData = new((short)item.Id, (byte)item.Count);
+
+                Debug.Assert(windowId >= sbyte.MinValue);
+                Debug.Assert(windowId <= sbyte.MaxValue);
+                Debug.Assert(index >= short.MinValue);
+                Debug.Assert(index <= short.MaxValue);
+                outPackets.Enqueue(new SetSlotPacket(
+                    (sbyte)windowId, (short)index, slotData));
+            }
         }
 
-        public void Empty(int index)
+        public void RenderToEmpty(int index)
         {
-            Debug.Assert(_WindowId > 0);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            SlotData slotData = new();
+            foreach ((int windowId, var outPackets) in _Table.GetValues())
+            {
+                Debug.Assert(windowId > 0);
 
-            Debug.Assert(_WindowId >= sbyte.MinValue);
-            Debug.Assert(_WindowId <= sbyte.MaxValue);
-            Debug.Assert(index >= short.MinValue);
-            Debug.Assert(index <= short.MaxValue);
-            Enqueue(new SetSlotPacket(
-                (sbyte)_WindowId, (short)index, slotData));
+                SlotData slotData = new();
+
+                Debug.Assert(windowId >= sbyte.MinValue);
+                Debug.Assert(windowId <= sbyte.MaxValue);
+                Debug.Assert(index >= short.MinValue);
+                Debug.Assert(index <= short.MaxValue);
+                outPackets.Enqueue(new SetSlotPacket(
+                    (sbyte)windowId, (short)index, slotData));
+            }
         }
 
-        public void Close()
+        public int[] Flush()
         {
-            Debug.Assert(_WindowId >= byte.MinValue);
-            Debug.Assert(_WindowId <= byte.MaxValue);
-            Enqueue(new CloseWindowPacket((byte)_WindowId);
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            // TODO: Release Resources for no garbage.
+            var arr = _Table.Flush();
+
+            int[] ids = new int[arr.Length];
+
+            for (int i = 0; i < arr.Length; ++i)
+            {
+                (int id, (int windowId, var outPackets)) = arr[i];
+
+                Debug.Assert(windowId > 0);
+
+                Debug.Assert(windowId >= byte.MinValue);
+                Debug.Assert(windowId <= byte.MaxValue);
+                outPackets.Enqueue(new ClientboundCloseWindowPacket((byte)windowId));
+
+                ids[i] = id;
+            }
+
+            return ids;
         }
+
+        private void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            System.Diagnostics.Debug.Assert(_Table.Empty);
+
+            if (disposing == true)
+            {
+                // Release managed resources.
+                _Table.Dispose();
+            }
+
+            // Release unmanaged resources.
+
+            _disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            System.GC.SuppressFinalize(this);
+        }
+
+        public void Close() => Dispose();
 
     }
 

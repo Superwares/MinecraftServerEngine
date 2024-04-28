@@ -22,19 +22,12 @@ namespace Protocol
 
             public Vector(int x, int z)
             {
-                this._x = x; this._z = z;
+                _x = x; _z = z;
             }
 
-            public void Swap()
+            public readonly bool Equals(Vector other)
             {
-                int temp = _x;
-                _x = _z;
-                _z = temp;
-            }
-
-            public bool Equals(Vector other)
-            {
-                return (_x == other._x) && (_z == other._z);
+                return (_x == other.X) && (_z == other.Z);
             }
 
         }
@@ -43,7 +36,7 @@ namespace Protocol
         {
             public static Grid Generate(Vector c, int d)
             {
-                Debug.Assert(d >= 0);
+                System.Diagnostics.Debug.Assert(d >= 0);
                 if (d == 0)
                     return new(c, c);
 
@@ -62,10 +55,10 @@ namespace Protocol
                         positions[i++] = new(x, z);
                     }
                 }
-                Debug.Assert(i == length);*/
+                System.Diagnostics.Debug.Assert(i == length);*/
 
-                Debug.Assert(xMax > xMin);
-                Debug.Assert(zMax > zMin);
+                System.Diagnostics.Debug.Assert(xMax > xMin);
+                System.Diagnostics.Debug.Assert(zMax > zMin);
                 return new(new(xMax, zMax), new(xMin, zMin));
             }
 
@@ -124,18 +117,17 @@ namespace Protocol
             public System.Collections.Generic.IEnumerable<Vector> GetVectors()
             {
                 for (int z = _min.Z; z <= _max.Z; ++z)
-                {
                     for (int x = _min.X; x <= _max.X; ++x)
-                    {
                         yield return new(x, z);
-                    }
-                }
 
             }
 
-            public bool Equals(Grid other)
+            public bool Equals(Grid? other)
             {
-                Debug.Assert(other != null);
+                if (other == null)
+                    return false;
+
+                System.Diagnostics.Debug.Assert(other != null);
                 return (other._max.Equals(_max) && other._min.Equals(_min));
             }
 
@@ -159,7 +151,7 @@ namespace Protocol
                 int blockBitTotalCount = (BlockTotalCount) * blockBitCount,
                     ulongBitCount = (sizeof(ulong) * 8);  // TODO: Make as constants
                 int dataLength = blockBitTotalCount / ulongBitCount;
-                Debug.Assert(blockBitTotalCount % ulongBitCount == 0);
+                System.Diagnostics.Debug.Assert(blockBitTotalCount % ulongBitCount == 0);
                 ulong[] data = new ulong[dataLength];
 
                 for (int y = 0; y < Height; ++y)
@@ -182,7 +174,7 @@ namespace Protocol
                                 block = new Stone();
 
                             ulong id = block.GetGlobalPaletteID();
-                            Debug.Assert((id >> blockBitCount) == 0);
+                            System.Diagnostics.Debug.Assert((id >> blockBitCount) == 0);
 
                             data[start] |= (id << offset);
 
@@ -195,7 +187,7 @@ namespace Protocol
                     }
                 }
 
-                Debug.Assert(unchecked((long)ulong.MaxValue) == -1);
+                System.Diagnostics.Debug.Assert(unchecked((long)ulong.MaxValue) == -1);
                 buffer.WriteInt(dataLength, true);
                 for (int i = 0; i < dataLength; ++i)
                 {
@@ -242,7 +234,7 @@ namespace Protocol
             Buffer buffer = new();
 
             int mask = 0;
-            Debug.Assert(SectionTotalCount == 16);
+            System.Diagnostics.Debug.Assert(SectionTotalCount == 16);
             for (int i = 0; i < SectionTotalCount; ++i)
             {
                 Section? section = chunk._sections[i];
@@ -269,7 +261,7 @@ namespace Protocol
             Buffer buffer = new();
 
             int mask = 0;
-            Debug.Assert(SectionTotalCount == 16);
+            System.Diagnostics.Debug.Assert(SectionTotalCount == 16);
 
             // TODO: biomes
             for (int z = 0; z < Width; ++z)
@@ -288,7 +280,7 @@ namespace Protocol
             Buffer buffer = new();
 
             int mask = 0;
-            Debug.Assert(SectionTotalCount == 16);
+            System.Diagnostics.Debug.Assert(SectionTotalCount == 16);
 
             Section section = new();
 
@@ -313,8 +305,6 @@ namespace Protocol
         {
             this.p = p;
         }
-
-
 
     }
 }

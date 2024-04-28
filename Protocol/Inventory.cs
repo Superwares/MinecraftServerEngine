@@ -6,7 +6,7 @@ using System.Xml.Serialization;
 
 namespace Protocol
 {
-    internal abstract class Inventory : System.IDisposable
+    public abstract class Inventory : System.IDisposable
     {
         private bool _disposed = false;
 
@@ -42,122 +42,14 @@ namespace Protocol
             }
         }
 
-        public virtual void ClickLeftMouseButton(int index, ref Item? itemCursor)
+        public virtual Item? TakeItem()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Item? itemTaked = _items[index];
-            if (itemTaked != null && itemCursor != null)
-            {
-                if (itemTaked.Id == itemCursor.Id)
-                {
-                    int count = itemTaked.Stack(itemCursor.Count);
-                    if (count == itemCursor.Count)
-                    {
-                        itemCursor = null;
-                    }
-                    else
-                    {
-                        Debug.Assert(count < itemCursor.Count);
-                        itemCursor.Waste(count);
-                    }
-                }
-                else
-                {
-                    Item temp = itemCursor;
-                    itemCursor = _items[index];
-                    _items[index] = temp;
-                }
-            }
-            else if (itemTaked != null)
-            {
-                System.Diagnostics.Debug.Assert(itemCursor == null);
-
-                itemCursor = itemTaked;
-                _items[index] = null;
-            }
-            else if (itemCursor != null)
-            {
-                System.Diagnostics.Debug.Assert(itemTaked == null);
-
-                _items[index] = itemCursor;
-                itemCursor = null;
-            }
-            else
-            {
-                // Nothing.
-            }
+            throw new System.NotImplementedException();
         }
 
-        public virtual void ClickRightMouseButton(int index, ref Item? itemCursor)
+        public virtual Item? PutItem()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Item? itemTaked = _items[index];
-            if (itemTaked != null && itemCursor != null)
-            {
-                if (itemTaked.Id == itemCursor.Id)
-                {
-                    int count = itemTaked.Stack(1);
-
-                    System.Diagnostics.Debug.Assert(itemCursor.Count >= count);
-                    if (itemCursor.Count == count)
-                    {
-                        itemCursor = null;
-                    }
-                    else
-                    {
-                        Debug.Assert(count < itemCursor.Count);
-                        itemCursor.Waste(count);
-                    }
-                }
-                else
-                {
-                    Item temp = itemCursor;
-                    itemCursor = _items[index];
-                    _items[index] = temp;
-                }
-            }
-            else if (itemTaked != null)
-            {
-                System.Diagnostics.Debug.Assert(itemCursor == null);
-
-                if (itemTaked.Count == 1)
-                {
-                    _items[index] = null;
-                    itemCursor = itemTaked;
-                }
-                else
-                {
-                    int count = itemTaked.TakeHalf();
-                    Debug.Assert(count > 0);
-                    itemCursor = CloneItem(itemTaked, count);
-                }
-
-            }
-            else if (itemCursor != null)
-            {
-                System.Diagnostics.Debug.Assert(itemTaked == null);
-
-                System.Diagnostics.Debug.Assert(itemCursor.Count >= itemCursor.MinCount);
-                if (itemCursor.Count == 1)
-                {
-                    _items[index] = itemCursor;
-                    itemCursor = null;
-                }
-                else
-                {
-                    Debug.Assert(itemCursor != null);
-                    int count = itemCursor.TakeOne();
-                    Debug.Assert(count > 0);
-                    _items[index] = CloneItem(itemCursor, count);
-                }
-                
-            }
-            else
-            {
-                // Nothing.
-            }
+            throw new System.NotImplementedException();
         }
 
         public void Print()
@@ -206,7 +98,7 @@ namespace Protocol
 
     }
 
-    internal sealed class PlayerInventory : Inventory
+    internal sealed class SelfInventory : Inventory
     {
         private bool _disposed = false;
 
@@ -229,54 +121,21 @@ namespace Protocol
             }
         }
 
-        public PlayerInventory() : base(46)
+        public SelfInventory() : base(46)
         {
             _items[10] = new Stick(64);
             _items[11] = new Stick(64);
         }
 
-        ~PlayerInventory() => System.Diagnostics.Debug.Assert(false);
+        ~SelfInventory() => System.Diagnostics.Debug.Assert(false);
 
-        
-
-        public override void ClickLeftMouseButton(int index, ref Item? itemCursor)
+        public void DistributeItem(int[] indexes, Item item)
         {
-            if (index == 0)
-            {
-                // Nothing
-            }
-            else if (index > 0 && index <= 4)
-            {
-                throw new System.NotImplementedException();
-            }
-            else if (index >4 && index <= 8)
-            {
-                throw new System.NotImplementedException();
-            }
-            else
-            {
-                base.ClickLeftMouseButton(index, ref itemCursor);
-            }
+            throw new System.NotImplementedException();
         }
-
-        public override void ClickRightMouseButton(int index, ref Item? itemCursor)
+        public void CollectItems()
         {
-            if (index == 0)
-            {
-                // Nothing
-            }
-            else if (index > 0 && index <= 4)
-            {
-                throw new System.NotImplementedException();
-            }
-            else if (index > 4 && index <= 8)
-            {
-                throw new System.NotImplementedException();
-            }
-            else
-            {
-                base.ClickRightMouseButton(index, ref itemCursor);
-            }
+            throw new System.NotImplementedException();
         }
 
         protected override void Dispose(bool disposing)
@@ -300,101 +159,109 @@ namespace Protocol
 
     }
 
-    internal abstract class PublicInventory : Inventory
+    public abstract class PublicInventory : Inventory
     {
         private bool _disposed = false;
 
-        public abstract string WindowType { get; }
+        internal abstract string WindowType { get; }
         /*public abstract string WindowTitle { get; }*/
 
-        internal readonly object _SharedObject = new();
+        private readonly object _SharedObject = new();
 
-        private readonly NumList _numList = new();  // Disposable
-        protected readonly Table<int, PublicInventoryRenderer> _renderers = new();  // Disposable
+        private readonly NumList _IdList = new();  // Disposable
+        private readonly PublicInventoryRenderer _Renderer = new();  // Disposable
 
         public PublicInventory(int count) : base(count) { }
 
         ~PublicInventory() => System.Diagnostics.Debug.Assert(false);
 
-        public void AddRenderer(
-            int idConn,
-            int windowId, Queue<ClientboundPlayingPacket> outPackets)
+        internal int Open(int windowId, Queue<ClientboundPlayingPacket> outPackets)
         {
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            PublicInventoryRenderer renderer = new(windowId, outPackets);
-            _renderers.Insert(idConn, renderer);
-        }
-
-        public void RemoveRenderer(int idConn)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            _renderers.Extract(idConn);
-        }
-
-        private void RenderToSet(int index, Item item)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            // TODO: Check locking.
-
-            if (_renderers.Count <= 1)
-                return;
-
-            foreach (var renderer in _renderers.GetValues())
-                renderer.Set(index, item);
-        }
-
-        private void RenderToEmpty(int index)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            // TODO: Check locking.
-
-            if (_renderers.Count <= 1)
-                return;
-
-            foreach (var renderer in _renderers.GetValues())
-                renderer.Empty(index);
-        }
-
-        public override void ClickLeftMouseButton(int index, ref Item? itemCursor)
-        {
             lock (_SharedObject)
             {
-                base.ClickLeftMouseButton(index, ref itemCursor);
+                int id = _IdList.Alloc();
 
-                Item? itemTaked = _items[index];
-                if (itemTaked != null)
+                _Renderer.Add(id, windowId, outPackets);
+
+                Debug.Assert(windowId >= byte.MinValue);
+                Debug.Assert(windowId <= byte.MaxValue);
+                Debug.Assert(Count >= byte.MinValue);
+                Debug.Assert(Count <= byte.MaxValue);
+                outPackets.Enqueue(new OpenWindowPacket(
+                    (byte)windowId, WindowType, "", (byte)Count));
+
+                int i = 0;
+                var arr = new SlotData[Count];
+
+                foreach (Item? item in Items)
                 {
-                    RenderToSet(index, itemTaked);
-                }
-                else
-                {
-                    RenderToEmpty(index);
+                    if (item == null)
+                    {
+                        arr[i++] = new();
+                        continue;
+                    }
+
+                    Debug.Assert(item.Id >= short.MinValue);
+                    Debug.Assert(item.Id <= short.MaxValue);
+                    Debug.Assert(item.Count >= byte.MinValue);
+                    Debug.Assert(item.Count <= byte.MaxValue);
+                    arr[i++] = new((short)item.Id, (byte)item.Count);
                 }
 
+                Debug.Assert(windowId >= byte.MinValue);
+                Debug.Assert(windowId <= byte.MaxValue);
+                outPackets.Enqueue(new SetWindowItemsPacket((byte)windowId, arr));
+
+                Debug.Assert(i == Count);
+
+                return id;
+            }
+
+        }
+
+        internal void Close(int id, int _windowId)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            lock (_SharedObject)
+            {
+                (int windowId, Queue<ClientboundPlayingPacket> outPackets) = _Renderer.Remove(id);
+                System.Diagnostics.Debug.Assert(_windowId == windowId);
+
+                /*if (force)
+                {
+                    Debug.Assert(windowId >= byte.MinValue);
+                    Debug.Assert(windowId <= byte.MaxValue);
+                    outPackets.Enqueue(new CloseWindowPacket((byte)windowId));
+                }*/
             }
         }
 
-        public override void ClickRightMouseButton(int index, ref Item? itemCursor)
+        internal virtual void DistributeItem(
+            int[] indexes, Item item, SelfInventory privateInventory)
         {
-            lock (_SharedObject)
-            {
-                base.ClickRightMouseButton(index, ref itemCursor);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-                Item? itemTaked = _items[index];
-                if (itemTaked != null)
-                {
-                    RenderToSet(index, itemTaked);
-                }
-                else
-                {
-                    RenderToEmpty(index);
-                }
+            throw new System.NotImplementedException();
+        }
 
-            }
+        public virtual void CollectItems()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            throw new System.NotImplementedException();
+        }
+
+        public void Flush()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            int[] ids = _Renderer.Flush();
+            for (int i = 0; i < ids.Length; ++i)
+                _IdList.Dealloc(ids[i]);
         }
 
         protected override void Dispose(bool disposing)
@@ -402,14 +269,13 @@ namespace Protocol
             if (!_disposed)
             {
                 // Assertion.
-                Debug.Assert(_numList.Empty);
-                Debug.Assert(_renderers.Empty);
+                System.Diagnostics.Debug.Assert(_IdList.Empty);
 
                 if (disposing == true)
                 {
                     // Release managed resources.
-                    _numList.Dispose();
-                    _renderers.Dispose();
+                    _IdList.Dispose();
+                    _Renderer.Dispose();
                 }
 
                 // Release unmanaged resources.
@@ -420,26 +286,15 @@ namespace Protocol
             base.Dispose(disposing);
         }
 
-        public void Close()
-        {
-            lock (_SharedObject)
-            {
-                foreach (PublicInventoryRenderer renderer in _renderers.Flush())
-                {
-                    _numList.Dealloc(renderer.Id);
-
-                    renderer.Close();
-                }
-            }
-        }
+        public void Close() => Dispose();
 
     }
 
-    internal sealed class ChestInventory : PublicInventory
+    public sealed class ChestInventory : PublicInventory
     {
         private bool _disposed = false;
 
-        public override string WindowType => "minecraft:chest";
+        internal override string WindowType => "minecraft:chest";
 
         public ChestInventory() : base(27) { }
 

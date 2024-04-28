@@ -300,7 +300,7 @@ namespace Containers
             return false;
         }
 
-        public virtual V[] Flush()
+        public virtual (K, V)[] Flush()
         {
             Debug.Assert(!_isDisposed);
 
@@ -313,14 +313,14 @@ namespace Containers
             if (_count == 0)
                 return [];
 
-            var values = new V[_count];
+            var elements = new (K, V)[_count];
 
             int i = 0;
             for (int j = 0; j < _length; ++j)
             {
                 if (!_flags[j]) continue;
 
-                values[i++] = _values[j];
+                elements[i++] = (_keys[j], _values[j]);
 
                 if (i == _count) break;
             }
@@ -331,8 +331,34 @@ namespace Containers
             _length = _MinLength;
             _count = 0;
 
-            return values;
+            return elements;
         }
+
+        public virtual System.Collections.Generic.IEnumerable<(K, V)> GetElements()
+        {
+            Debug.Assert(!_isDisposed);
+
+            Debug.Assert(_flags.Length >= _MinLength);
+            Debug.Assert(_keys.Length >= _MinLength);
+            Debug.Assert(_values.Length >= _MinLength);
+            Debug.Assert(_length >= _MinLength);
+            Debug.Assert(_count >= 0);
+
+            if (_count == 0)
+                yield break;
+
+            int i = 0;
+            for (int j = 0; j < _length; ++j)
+            {
+                if (!_flags[j]) continue;
+
+                yield return (_keys[j], _values[j]);
+
+                if (++i == _count) break;
+            }
+
+        }
+
 
         public virtual System.Collections.Generic.IEnumerable<K> GetKeys()
         {
