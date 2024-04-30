@@ -396,21 +396,6 @@ namespace Protocol
 
             System.Diagnostics.Debug.Assert(_selfRenderer == null);
             _selfRenderer = selfRenderer;
-
-            /*Debug.Assert(!IsConnected);
-            _conn = new(client, renderDistance, _selfInventory);
-
-            _conn.Render(new SetPlayerAbilitiesPacket(
-                true, false, true, true, 0.1f, 0));
-
-            int payload = new System.Random().Next();
-            _conn.Render(new TeleportSelfPlayerPacket(
-                _pos.X, _pos.Y, _pos.Z,
-                _look.Yaw, _look.Pitch,
-                false, false, false, false, false,
-                payload));
-
-            playerList.Connect(UniqueId, _conn.Renderer);*/
         }
 
         internal void Disconnect()
@@ -422,13 +407,6 @@ namespace Protocol
 
             System.Diagnostics.Debug.Assert(_selfRenderer != null);
             _selfRenderer = null;
-
-            /*Debug.Assert(_conn != null);
-            _conn.Flush();
-            _conn.Close();
-            _conn = null;
-
-            world.DisconnectPlayer(UniqueId);*/
         }
         
         public override void Reset()

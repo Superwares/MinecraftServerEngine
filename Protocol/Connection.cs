@@ -1,12 +1,15 @@
 ﻿
 using Containers;
+using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Xml;
 
 namespace Protocol
 {
     public sealed class Connection : System.IDisposable
     {
+
         private sealed class TeleportationRecord
         {
             private const ulong TickLimit = 20;  // 1 seconds, 20 ticks
@@ -40,8 +43,11 @@ namespace Protocol
 
         private Client _client;  // dispoasble
 
+        private bool _init = false;
+        private int _initStep = 0;
+
         private const int _MinRenderDistance = 2, _MaxRenderDistance = 32;
-        private int _renderDistance;
+        private int _renderDistance = -1;
 
         private Chunk.Grid? _renderedChunkGrid = null;
         private Table<int, EntityRenderer>? _renderers = null;  // Disposable
@@ -56,15 +62,15 @@ namespace Protocol
 
         private bool _disposed = false;
 
-        internal Connection(
-            Client client, int renderDistance,
-            SelfInventory selfInventory)
+        internal Connection(Client client)
         {
             _client = client;
 
-            _renderDistance = renderDistance;
+            /*_renderDistance = renderDistance;
 
-            _window = new(_outPackets, selfInventory);
+            _window = new(_outPackets, selfInventory);*/
+
+            System.Diagnostics.Debug.Assert(!_init);
 
             /*{
                 SlotData slotData = new(280, 64);
@@ -73,31 +79,344 @@ namespace Protocol
         }
 
         ~Connection() => System.Diagnostics.Debug.Assert(false);
-
-        public void Render(ClientboundPlayingPacket packet)
-        {
-            _outPackets.Enqueue(packet);
-        }
-
-        internal void OpenPublicInvenrory(PublicInventory inventory)
-        {
-            System.Diagnostics.Debug.Assert(false);
-        }
-
-        internal void ClosePublicInvenrory()
-        {
-            System.Diagnostics.Debug.Assert(false);
-        }
-
+        
         /// <summary>
         /// TODO: Add description.
         /// </summary>
         /// <returns>TODO: Add description.</returns>
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
-        public void Control(
+        public void InitOrControl(
             long serverTicks, World world, Player player)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            using Buffer buffer = new();
+
+            if (!_init)
+            {
+                try
+                {
+                    if (_initStep == 0)
+                    {
+                        /*Console.WriteLine("JoinGame!");*/
+
+                        {
+                            int payload = new Random().Next();
+                            _outPackets.Enqueue(new TeleportSelfPlayerPacket(
+                                player.Position.X, player.Position.Y, player.Position.Z,
+                                player.Look.Yaw, player.Look.Pitch,
+                                false, false, false, false, false,
+                                payload));
+                        }
+
+                        {
+                            _outPackets.Enqueue(new SetPlayerAbilitiesPacket(
+                                false, false, false, false, 0, 0));
+                        }
+
+                        player.Connect(_outPackets);
+
+                        Debug.Assert(_renderDistance == -1);
+
+                        // TODO: If already player exists, use id of that player object, not new alloc id.
+                        JoinGamePacket packet = new(player.Id, 0, 0, 0, "default", true);  // TODO
+                        packet.Write(buffer);
+                        _client.Send(buffer);
+
+                        _initStep++;
+                    }
+
+                    if (_initStep == 1)
+                    {
+                        /*Console.WriteLine("ClientSettings!");*/
+
+                        Debug.Assert(_renderDistance == -1);
+
+                        _client.Recv(buffer);
+
+                        int packetId = buffer.ReadInt(true);
+                        if (ServerboundPlayingPacket.SetClientSettingsPacketId != packetId)
+                            throw new UnexpectedPacketException();
+
+                        SetClientSettingsPacket packet = SetClientSettingsPacket.Read(buffer);
+
+                        if (buffer.Size > 0)
+                            throw new BufferOverflowException();
+
+                        _renderDistance = packet.RenderDistance;
+                        if (_renderDistance < _MinRenderDistance ||
+                            _renderDistance > _MaxRenderDistance)
+                            throw new UnexpectedValueException("invalid render distance");  // TODO
+
+                        _initStep++;
+                    }
+
+                    if (_initStep == 2)
+                    {
+                        /*Console.WriteLine("PluginMessage!");*/
+
+                        Debug.Assert(_renderDistance >= _MinRenderDistance);
+                        Debug.Assert(_renderDistance <= _MaxRenderDistance);
+
+                        _client.Recv(buffer);
+
+                        int packetId = buffer.ReadInt(true);
+                        if (0x09 != packetId)
+                            throw new UnexpectedPacketException();
+
+                        buffer.Flush();
+
+                        if (buffer.Size > 0)
+                            throw new BufferOverflowException();
+
+                        _initStep++;
+                    }
+
+                    System.Diagnostics.Debug.Assert(_initStep == 3);
+                    _init = true;
+
+                }
+                catch (TryAgainException)
+                {
+                    /*Console.WriteLine("TryAgainException!");*/
+                }
+                catch (UnexpectedClientBehaviorExecption)
+                {
+                    /*Console.WriteLine("UnexpectedBehaviorExecption!");*/
+
+                    buffer.Flush();
+
+                    // TODO: Send why disconnected...
+
+                    throw new DisconnectedClientException();
+                }
+                catch (DisconnectedClientException)
+                {
+                    /*Console.WriteLine("DisconnectedException!");*/
+
+                    buffer.Flush();
+
+                    throw;
+                }
+
+            }
+            else
+            {
+                try
+                {
+                    while (true)
+                    {
+                        _client.Recv(buffer);
+
+                        int packetId = buffer.ReadInt(true);
+                        switch (packetId)
+                        {
+                            default:
+                                System.Console.WriteLine($"packetId: 0x{packetId:X}");
+                                /*throw new NotImplementedException();*/
+                                buffer.Flush();
+                                break;
+                            case ServerboundPlayingPacket.ConfirmSelfPlayerTeleportationPacketId:
+                                {
+                                    ConfirmSelfPlayerTeleportationPacket packet = ConfirmSelfPlayerTeleportationPacket.Read(buffer);
+
+                                    if (_teleportationRecords.Empty)
+                                        throw new UnexpectedPacketException();
+
+                                    TeleportationRecord record = _teleportationRecords.Dequeue();
+                                    record.Confirm(packet.Payload);
+                                }
+                                break;
+                            case ServerboundPlayingPacket.SetClientSettingsPacketId:
+                                {
+                                    SetClientSettingsPacket packet = SetClientSettingsPacket.Read(buffer);
+
+                                    throw new System.NotImplementedException();
+                                }
+                                break;
+                            case ServerboundPlayingPacket.ServerboundConfirmTransactionPacketId:
+                                {
+                                    ServerboundConfirmTransactionPacket packet =
+                                        ServerboundConfirmTransactionPacket.Read(buffer);
+
+                                    System.Console.WriteLine(
+                                        $"WindowId: {packet.WindowId}, " +
+                                        $"ActionNumber: {packet.ActionNumber}, " +
+                                        $"Accepted: {packet.Accepted}, ");
+
+                                    throw new System.NotImplementedException();
+                                }
+                                break;
+                            case ServerboundPlayingPacket.ClickWindowPacketId:
+                                {
+                                    ClickWindowPacket packet = ClickWindowPacket.Read(buffer);
+
+                                    {
+                                        System.Console.WriteLine();
+                                        System.Console.WriteLine(
+                                            $"WindowId: {packet.WindowId}, " +
+                                            $"SlotNumber: {packet.SlotNumber}, " +
+                                            $"ButtonNumber: {packet.ButtonNumber}, " +
+                                            $"ActionNumber: {packet.ActionNumber}, " +
+                                            $"ModeNumber: {packet.ModeNumber}, " +
+                                            $"SlotData.Id: {packet.Data.Id}, " +
+                                            $"SlotData.Count: {packet.Data.Count}, ");
+                                    }
+
+                                    _window.Handle(
+                                        player._selfInventory,
+                                        packet.WindowId,
+                                        packet.ModeNumber,
+                                        packet.ButtonNumber,
+                                        packet.SlotNumber,
+                                        _outPackets);
+
+                                    _outPackets.Enqueue(new ClientboundConfirmTransactionPacket(
+                                            (sbyte)packet.WindowId, packet.ActionNumber, true));
+
+                                    /*{
+                                        SlotData slotData = new(280, 1, 0);
+                                        _outPackets.Enqueue(new SetSlotPacket(0, 27, slotData.WriteData()));
+                                    }
+                                    {
+                                        SlotData slotData = new();
+                                        _outPackets.Enqueue(new SetSlotPacket(-1, 27, slotData.WriteData()));
+                                    }*/
+                                }
+                                break;
+                            case ServerboundPlayingPacket.ServerboundCloseWindowPacketId:
+                                {
+                                    ServerboundCloseWindowPacket packet =
+                                        ServerboundCloseWindowPacket.Read(buffer);
+
+                                    if (packet.WindowId < 0)
+                                        throw new UnexpectedValueException($"ClickWindowPacket.WindowId {packet.WindowId}");
+
+                                    _window.ResetWindow(packet.WindowId, _outPackets);
+                                }
+                                break;
+                            case ServerboundPlayingPacket.ResponseKeepAlivePacketId:
+                                {
+                                    ResponseKeepAlivePacket packet = ResponseKeepAlivePacket.Read(buffer);
+
+                                    // TODO: Check payload with cache. If not corrent, throw unexpected client behavior exception.
+                                    world.KeepAliveConnectedPlayer(serverTicks, player.UniqueId);
+                                }
+                                break;
+                            case ServerboundPlayingPacket.PlayerPacketId:
+                                {
+                                    PlayerPacket packet = PlayerPacket.Read(buffer);
+
+                                    if (!_teleportationRecords.Empty)
+                                        throw new System.NotImplementedException();
+
+                                    player.Stand(packet.OnGround);
+                                }
+                                break;
+                            case ServerboundPlayingPacket.PlayerPositionPacketId:
+                                {
+                                    PlayerPositionPacket packet = PlayerPositionPacket.Read(buffer);
+
+                                    if (!_teleportationRecords.Empty)
+                                        throw new System.NotImplementedException();
+
+                                    player.Control(new(packet.X, packet.Y, packet.Z));
+                                    player.Stand(packet.OnGround);
+                                }
+                                break;
+                            case ServerboundPlayingPacket.PlayerPosAndLookPacketId:
+                                {
+                                    PlayerPosAndLookPacket packet = PlayerPosAndLookPacket.Read(buffer);
+
+                                    if (!_teleportationRecords.Empty)
+                                        throw new System.NotImplementedException();
+
+                                    player.Control(new(packet.X, packet.Y, packet.Z));
+                                    player.Rotate(new(packet.Yaw, packet.Pitch));
+                                    player.Stand(packet.OnGround);
+                                }
+                                break;
+                            case ServerboundPlayingPacket.PlayerLookPacketId:
+                                {
+                                    PlayerLookPacket packet = PlayerLookPacket.Read(buffer);
+
+                                    if (!_teleportationRecords.Empty)
+                                        throw new System.NotImplementedException();
+
+                                    player.Rotate(new(packet.Yaw, packet.Pitch));
+                                    player.Stand(packet.OnGround);
+                                }
+                                break;
+                            case ServerboundPlayingPacket.EntityActionPacketId:
+                                {
+                                    EntityActionPacket packet = EntityActionPacket.Read(buffer);
+
+                                    if (!_teleportationRecords.Empty)
+                                        throw new System.NotImplementedException();
+
+                                    switch (packet.ActionId)
+                                    {
+                                        default:
+                                            throw new UnexpectedValueException("EntityAction.ActoinId");
+                                        case 0:
+                                            if (player.IsSneaking)
+                                                throw new UnexpectedValueException("Entity.Sneaking");
+                                            /*System.Console.Write("Seanking!");*/
+                                            player.Sneak();
+                                            break;
+                                        case 1:
+                                            if (!player.IsSneaking)
+                                                throw new UnexpectedValueException("Entity.Sneaking");
+                                            /*System.Console.Write("Unseanking!");*/
+                                            player.Unsneak();
+                                            break;
+                                        case 3:
+                                            if (player.IsSprinting)
+                                                throw new UnexpectedValueException("Entity.Sprinting");
+                                            player.Sprint();
+                                            break;
+                                        case 4:
+                                            if (!player.IsSprinting)
+                                                throw new UnexpectedValueException("Entity.Sprinting");
+                                            player.Unsprint();
+                                            break;
+                                    }
+
+                                    if (packet.JumpBoost > 0)
+                                        throw new UnexpectedValueException("EntityAction.JumpBoost");
+
+                                }
+                                break;
+                        }
+
+                        if (!buffer.Empty)
+                            throw new BufferOverflowException();
+                    }
+                }
+                catch (UnexpectedClientBehaviorExecption e)
+                {
+                    // TODO: send disconnected message to client.
+
+                    System.Console.WriteLine(e.Message);
+
+                    player.Disconnect();
+
+                    throw new DisconnectedClientException();
+                }
+                catch (DisconnectedClientException)
+                {
+                    player.Disconnect();
+
+                    throw;
+                }
+                catch (TryAgainException)
+                {
+
+                }
+
+                foreach (TeleportationRecord record in _teleportationRecords.GetValues())
+                    record.Update();
+            }
 
             /*if (serverTicks == 100)
             {
@@ -113,218 +432,7 @@ namespace Protocol
                 _windowHelper.ReopenWindowWithOtherInventory(Id, _outPackets, new PlayerInventory());
             }*/
 
-            try
-            {
-                Buffer buffer = new();
-
-                while (true)
-                {
-                    _client.Recv(buffer);
-
-                    int packetId = buffer.ReadInt(true);
-                    switch (packetId)
-                    {
-                        default:
-                            System.Console.WriteLine($"packetId: 0x{packetId:X}");
-                            /*throw new NotImplementedException();*/
-                            buffer.Flush();
-                            break;
-                        case ServerboundPlayingPacket.ConfirmSelfPlayerTeleportationPacketId:
-                            {
-                                ConfirmSelfPlayerTeleportationPacket packet = ConfirmSelfPlayerTeleportationPacket.Read(buffer);
-
-                                if (_teleportationRecords.Empty)
-                                    throw new UnexpectedPacketException();
-
-                                TeleportationRecord record = _teleportationRecords.Dequeue();
-                                record.Confirm(packet.Payload);
-                            }
-                            break;
-                        case ServerboundPlayingPacket.SetClientSettingsPacketId:
-                            {
-                                SetClientSettingsPacket packet = SetClientSettingsPacket.Read(buffer);
-
-                                throw new System.NotImplementedException();
-                            }
-                            break;
-                        case ServerboundPlayingPacket.ServerboundConfirmTransactionPacketId:
-                            {
-                                ServerboundConfirmTransactionPacket packet =
-                                    ServerboundConfirmTransactionPacket.Read(buffer);
-
-                                System.Console.WriteLine(
-                                    $"WindowId: {packet.WindowId}, " +
-                                    $"ActionNumber: {packet.ActionNumber}, " +
-                                    $"Accepted: {packet.Accepted}, ");
-
-                                throw new System.NotImplementedException();
-                            }
-                            break;
-                        case ServerboundPlayingPacket.ClickWindowPacketId:
-                            {
-                                ClickWindowPacket packet = ClickWindowPacket.Read(buffer);
-
-                                {
-                                    System.Console.WriteLine();
-                                    System.Console.WriteLine(
-                                        $"WindowId: {packet.WindowId}, " +
-                                        $"SlotNumber: {packet.SlotNumber}, " +
-                                        $"ButtonNumber: {packet.ButtonNumber}, " +
-                                        $"ActionNumber: {packet.ActionNumber}, " +
-                                        $"ModeNumber: {packet.ModeNumber}, " +
-                                        $"SlotData.Id: {packet.Data.Id}, " +
-                                        $"SlotData.Count: {packet.Data.Count}, ");
-                                }
-
-                                _window.Handle(
-                                    player._selfInventory,
-                                    packet.WindowId,
-                                    packet.ModeNumber,
-                                    packet.ButtonNumber,
-                                    packet.SlotNumber,
-                                    _outPackets);
-
-                                _outPackets.Enqueue(new ClientboundConfirmTransactionPacket(
-                                        (sbyte)packet.WindowId, packet.ActionNumber, true));
-
-                                /*{
-                                    SlotData slotData = new(280, 1, 0);
-                                    _outPackets.Enqueue(new SetSlotPacket(0, 27, slotData.WriteData()));
-                                }
-                                {
-                                    SlotData slotData = new();
-                                    _outPackets.Enqueue(new SetSlotPacket(-1, 27, slotData.WriteData()));
-                                }*/
-                            }
-                            break;
-                        case ServerboundPlayingPacket.ServerboundCloseWindowPacketId:
-                            {
-                                ServerboundCloseWindowPacket packet =
-                                    ServerboundCloseWindowPacket.Read(buffer);
-
-                                if (packet.WindowId < 0)
-                                    throw new UnexpectedValueException($"ClickWindowPacket.WindowId {packet.WindowId}");
-
-                                _window.ResetWindow(packet.WindowId, _outPackets);
-                            }
-                            break;
-                        case ServerboundPlayingPacket.ResponseKeepAlivePacketId:
-                            {
-                                ResponseKeepAlivePacket packet = ResponseKeepAlivePacket.Read(buffer);
-
-                                // TODO: Check payload with cache. If not corrent, throw unexpected client behavior exception.
-                                world.KeepAliveConnectedPlayer(serverTicks, player.UniqueId);
-                            }
-                            break;
-                        case ServerboundPlayingPacket.PlayerPacketId:
-                            {
-                                PlayerPacket packet = PlayerPacket.Read(buffer);
-
-                                if (!_teleportationRecords.Empty)
-                                    throw new System.NotImplementedException();
-
-                                player.Stand(packet.OnGround);
-                            }
-                            break;
-                        case ServerboundPlayingPacket.PlayerPositionPacketId:
-                            {
-                                PlayerPositionPacket packet = PlayerPositionPacket.Read(buffer);
-
-                                if (!_teleportationRecords.Empty)
-                                    throw new System.NotImplementedException();
-
-                                player.Control(new(packet.X, packet.Y, packet.Z));
-                                player.Stand(packet.OnGround);
-                            }
-                            break;
-                        case ServerboundPlayingPacket.PlayerPosAndLookPacketId:
-                            {
-                                PlayerPosAndLookPacket packet = PlayerPosAndLookPacket.Read(buffer);
-
-                                if (!_teleportationRecords.Empty)
-                                    throw new System.NotImplementedException();
-
-                                player.Control(new(packet.X, packet.Y, packet.Z));
-                                player.Rotate(new(packet.Yaw, packet.Pitch));
-                                player.Stand(packet.OnGround);
-                            }
-                            break;
-                        case ServerboundPlayingPacket.PlayerLookPacketId:
-                            {
-                                PlayerLookPacket packet = PlayerLookPacket.Read(buffer);
-
-                                if (!_teleportationRecords.Empty)
-                                    throw new System.NotImplementedException();
-
-                                player.Rotate(new(packet.Yaw, packet.Pitch));
-                                player.Stand(packet.OnGround);
-                            }
-                            break;
-                        case ServerboundPlayingPacket.EntityActionPacketId:
-                            {
-                                EntityActionPacket packet = EntityActionPacket.Read(buffer);
-
-                                if (!_teleportationRecords.Empty)
-                                    throw new System.NotImplementedException();
-
-                                switch (packet.ActionId)
-                                {
-                                    default:
-                                        throw new UnexpectedValueException("EntityAction.ActoinId");
-                                    case 0:
-                                        if (player.IsSneaking)
-                                            throw new UnexpectedValueException("Entity.Sneaking");
-                                        /*System.Console.Write("Seanking!");*/
-                                        player.Sneak();
-                                        break;
-                                    case 1:
-                                        if (!player.IsSneaking)
-                                            throw new UnexpectedValueException("Entity.Sneaking");
-                                        /*System.Console.Write("Unseanking!");*/
-                                        player.Unsneak();
-                                        break;
-                                    case 3:
-                                        if (player.IsSprinting)
-                                            throw new UnexpectedValueException("Entity.Sprinting");
-                                        player.Sprint();
-                                        break;
-                                    case 4:
-                                        if (!player.IsSprinting)
-                                            throw new UnexpectedValueException("Entity.Sprinting");
-                                        player.Unsprint();
-                                        break;
-                                }
-
-                                if (packet.JumpBoost > 0)
-                                    throw new UnexpectedValueException("EntityAction.JumpBoost");
-
-                            }
-                            break;
-                    }
-
-                    if (!buffer.Empty)
-                        throw new BufferOverflowException();
-                }
-            }
-            catch (UnexpectedClientBehaviorExecption e)
-            {
-                // TODO: send disconnected message to client.
-
-                System.Console.WriteLine(e.Message);
-
-                throw new DisconnectedClientException();
-            }
-            catch (DisconnectedClientException)
-            {
-                throw;
-            }
-            catch (TryAgainException)
-            {
-
-            }
-
-            foreach (TeleportationRecord record in _teleportationRecords.GetValues())
-                record.Update();
+            
         }
 
         // TODO: Make chunks to readonly using interface? in this function.
@@ -518,6 +626,9 @@ namespace Protocol
         public void Render(World world, Player player)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (!_init)
+                return;
 
             RenderChunks(world, player.Position);
             RenderEntities(world, player.Id);

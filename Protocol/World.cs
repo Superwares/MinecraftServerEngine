@@ -37,9 +37,26 @@ namespace Protocol
 
         ~World() => System.Diagnostics.Debug.Assert(false);
 
-        internal virtual void SpawnOrConnectPlayer(
-            Client client, int renderDistance,
-            string username, System.Guid uniqueId)
+        internal virtual bool CanSpawnOrConnectPlayer(System.Guid uniqueId)
+        {
+            /*if (!_isPlayerDespawnedOnDisconnection)
+            {
+                return true;
+            }*/
+
+            foreach (Entity entity in _EntityDespawningPool.GetValues())
+            {
+                if (entity.UniqueId == uniqueId)
+                {
+                    System.Diagnostics.Debug.Assert(entity is Player);
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        internal virtual Player SpawnOrConnectPlayer(string username, System.Guid uniqueId)
         {
             int id = _EntityIdList.Alloc();
             Player player = new(
@@ -49,10 +66,9 @@ namespace Protocol
                 username);
             _PlayerList.InitPlayer(player.UniqueId, player.Username);
 
-            player.Connect();
-
             _EntitySpawningPool.Enqueue(player);
 
+            return player;
         }
 
         public void DespawnEntities()

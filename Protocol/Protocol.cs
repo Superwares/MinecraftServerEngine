@@ -396,200 +396,28 @@ namespace Protocol
 
     public class ConnectionListener
     {
-        private enum SetupSteps
-        {
-            JoinGame = 0,
-            ClientSettings,
-            PluginMessage, 
-            StartPlay,
-        }
-
-        private readonly ConcurrentQueue<
-            (Client, Guid, string, int, Connection.ClientsideSettings?, SetupSteps)
-            > _clients = new();
+        private readonly ConcurrentQueue<(Client, Guid, string)> _clients = new();
 
         internal void Add(Client client, Guid userId, string username)
         {
-            _clients.Enqueue((client, userId, username, -1, null, SetupSteps.JoinGame));
+            _clients.Enqueue((client, userId, username));
         }
 
-        public void Accept(
-            EntityIdList entityIdList,
-            Queue<(Connection, Player)> connections, Queue<Entity> entities,
-            EntityRenderingTable entityRenderingTable,
-            PlayerList playerList,
-            Entity.Vector posInit, Entity.Angles lookInit)
+        public void Accept(World world, Queue<(Connection, Player)> connections)
         {
-            if (_clients.Empty) return;
-
-            bool start, close;
-
-            int count = _clients.Count;
-            for (int i = 0; i < count; ++i)
+            for (int i = 0; i < _clients.Count; ++i)
             {
-                using Buffer buffer = new();
+                (Client client, System.Guid uniqueId, string username) = _clients.Dequeue();
 
-                (Client client, 
-                    Guid uniqueId, 
-                    string username, 
-                    int entityId,
-                    Connection.ClientsideSettings? settings,
-                    SetupSteps step) = 
-                    _clients.Dequeue();
-                start = close = false;
-
-                try
+                if (!world.CanSpawnOrConnectPlayer(uniqueId))
                 {
-                    if (step == SetupSteps.JoinGame)
-                    {
-                        /*Console.WriteLine("JoinGame!");*/
-
-                        Debug.Assert(settings == null);
-                        Debug.Assert(entityId == -1);
-
-                        // TODO: If already player exists, use id of that player object, not new alloc id.
-                        entityId = entityIdList.Alloc();
-
-                        JoinGamePacket packet = new(entityId, 0, 0, 0, "default", false);  // TODO
-                        packet.Write(buffer);
-                        client.Send(buffer);
-
-                        step = SetupSteps.ClientSettings;
-                    }
-
-                    if (step == SetupSteps.ClientSettings)
-                    {
-                        /*Console.WriteLine("ClientSettings!");*/
-
-                        Debug.Assert(settings == null);
-                        Debug.Assert(entityId >= 0);
-
-                        client.Recv(buffer);
-
-                        int packetId = buffer.ReadInt(true);
-                        if (ServerboundPlayingPacket.SetClientSettingsPacketId != packetId)
-                            throw new UnexpectedPacketException();
-
-                        SetClientSettingsPacket packet = SetClientSettingsPacket.Read(buffer);
-
-                        if (buffer.Size > 0)
-                            throw new BufferOverflowException();
-
-                        settings = new(packet.RenderDistance);
-    
-                        step = SetupSteps.PluginMessage;
-                    }
-
-                    if (step == SetupSteps.PluginMessage)
-                    {
-                        /*Console.WriteLine("PluginMessage!");*/
-
-                        Debug.Assert(settings != null);
-                        Debug.Assert(entityId >= 0);
-
-                        client.Recv(buffer);
-
-                        int packetId = buffer.ReadInt(true);
-                        if (0x09 != packetId)
-                            throw new UnexpectedPacketException();
-
-                        buffer.Flush();
-
-                        if (buffer.Size > 0)
-                            throw new BufferOverflowException();
-
-                        step = SetupSteps.StartPlay;
-                    }
-
-                    Debug.Assert(!start);
-                    Debug.Assert(!close);
-
-                    start = true;
-                }
-                catch (TryAgainException)
-                {
-                    Debug.Assert(!start);
-                    Debug.Assert(!close);
-
-                    /*Console.WriteLine("TryAgainException!");*/
-                }
-                catch (UnexpectedClientBehaviorExecption)
-                {
-                    Debug.Assert(!start);
-                    Debug.Assert(!close);
-
-                    buffer.Flush();
-
-                    close = true;
-
-                    // TODO: Send why disconnected...
-
-                    /*Console.WriteLine("UnexpectedBehaviorExecption!");*/
-                }
-                catch (DisconnectedClientException)
-                {
-                    Debug.Assert(!start);
-                    Debug.Assert(!close);
-
-                    buffer.Flush();
-
-                    close = true;
-
-                    /*Console.WriteLine("DisconnectedException!");*/
-                }
-
-                if (!start)
-                {
-                    if (!close)
-                    {
-                        Debug.Assert(step >= SetupSteps.JoinGame ? entityId >= 0 : true);
-                        Debug.Assert(step >= SetupSteps.PluginMessage ? settings != null: true);
-
-                        _clients.Enqueue((
-                            client, 
-                            uniqueId, username, 
-                            entityId, 
-                            settings,
-                            step));
-                    }
-                    else
-                    {
-                        if (step >= SetupSteps.JoinGame)
-                            entityIdList.Dealloc(entityId);
-
-                        client.Close();
-                    }
-
+                    _clients.Enqueue((client, uniqueId, username));
                     continue;
                 }
 
-                Debug.Assert(step == SetupSteps.StartPlay);
-                Debug.Assert(!close);
-                /*Console.Write($"Start init connection!: entityId: {entityId} ");*/
-
-                Player player = new(
-                    entityIdList,
-                    entityRenderingTable,
-                    entityId, 
-                    uniqueId, 
-                    posInit, lookInit, 
-                    playerList,
-                    username);
-
-                Debug.Assert(settings != null);
-                Connection conn = new(
-                    entityId,
-                    client,
-                    uniqueId, username,
-                    settings,
-                    playerList,
-                    player);
-
+                Player player = world.SpawnOrConnectPlayer(username, uniqueId);
+                Connection conn = new(client);
                 connections.Enqueue((conn, player));
-                entities.Enqueue(player);
-
-                /*Console.Write("Finish init connection!");*/
-
             }
 
         }

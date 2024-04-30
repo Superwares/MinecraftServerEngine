@@ -28,7 +28,16 @@ namespace Application
             {
                 (Connection conn, Player player) = _Connections.Dequeue();
 
-                conn.Control(serverTicks, _World, player);
+                try
+                {
+                    conn.InitOrControl(serverTicks, _World, player);
+                }
+                catch (DisconnectedClientException)
+                {
+                    conn.Flush();
+                    conn.Close();
+                    continue;
+                }
 
                 _Connections.Enqueue((conn, player));
             }
@@ -64,7 +73,16 @@ namespace Application
             {
                 (Connection conn, Player player) = _Connections.Dequeue();
 
-                conn.Control(serverTicks, _World, player);
+                try
+                {
+                    conn.Render(_World, player);
+                }
+                catch (DisconnectedClientException)
+                {
+                    conn.Flush();
+                    conn.Close();
+                    continue;
+                }
 
                 _Connections.Enqueue((conn, player));
             }
@@ -74,11 +92,14 @@ namespace Application
         {
             for (int i = 0; i < _Entities.Count; ++i)
             {
-                (World world, Entity entity) = _Entities.Dequeue();
+                Entity entity = _Entities.Dequeue();
 
-                world.StartEntitRoutine(serverTicks, entity);
+                if (_World.StartEntitRoutine(serverTicks, entity))
+                {
+                    continue;
+                }
 
-                _Entities.Enqueue((world, entity));
+                _Entities.Enqueue(entity);
             }
         }
         
@@ -111,15 +132,15 @@ namespace Application
 
             // Barrier
 
-            StartEntityRoutines(serverTicks);
-
-            // Barrier
-
             _World.StartRoutine(serverTicks);
 
             // Barrier
 
-            connListener.Accept(_World);
+            StartEntityRoutines(serverTicks);
+
+            // Barrier
+
+            connListener.Accept(_World, _Connections);
 
             // Barrier
 
