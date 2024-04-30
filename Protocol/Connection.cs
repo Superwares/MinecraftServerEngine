@@ -65,13 +65,6 @@ namespace Protocol
         internal Connection(Client client)
         {
             _Client = client;
-
-            System.Diagnostics.Debug.Assert(!_init);
-
-            /*{
-                SlotData slotData = new(280, 64);
-                _outPackets.Enqueue(new SetSlotPacket(0, 27, slotData.WriteData()));
-            }*/
         }
 
         ~Connection() => System.Diagnostics.Debug.Assert(false);
@@ -81,7 +74,7 @@ namespace Protocol
         /// </summary>
         /// <returns>TODO: Add description.</returns>
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
-        public void InitOrControl(
+        public void Control(
             long serverTicks, World world, Player player)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -310,7 +303,11 @@ namespace Protocol
                                     if (!_teleportationRecords.Empty)
                                         throw new System.NotImplementedException();
 
-                                    player.Control(new(packet.X, packet.Y, packet.Z));
+                                    if (_teleportationRecords.Empty)
+                                    {
+                                        player.Control(new(packet.X, packet.Y, packet.Z));
+                                    }
+
                                     player.Stand(packet.OnGround);
                                 }
                                 break;
@@ -318,10 +315,11 @@ namespace Protocol
                                 {
                                     PlayerPosAndLookPacket packet = PlayerPosAndLookPacket.Read(buffer);
 
-                                    if (!_teleportationRecords.Empty)
-                                        throw new System.NotImplementedException();
+                                    if (_teleportationRecords.Empty)
+                                    {
+                                        player.Control(new(packet.X, packet.Y, packet.Z));
+                                    }
 
-                                    player.Control(new(packet.X, packet.Y, packet.Z));
                                     player.Rotate(new(packet.Yaw, packet.Pitch));
                                     player.Stand(packet.OnGround);
                                 }
@@ -329,9 +327,6 @@ namespace Protocol
                             case ServerboundPlayingPacket.PlayerLookPacketId:
                                 {
                                     PlayerLookPacket packet = PlayerLookPacket.Read(buffer);
-
-                                    if (!_teleportationRecords.Empty)
-                                        throw new System.NotImplementedException();
 
                                     player.Rotate(new(packet.Yaw, packet.Pitch));
                                     player.Stand(packet.OnGround);
@@ -423,21 +418,6 @@ namespace Protocol
                 foreach (TeleportationRecord record in _teleportationRecords.GetValues())
                     record.Update();
             }
-
-            /*if (serverTicks == 100)
-            {
-                SlotData slotData = new(426, 64);
-
-                _outPackets.Enqueue(new OpenWindowPacket(1, "minecraft:chest", "WindowTitle!", 27));
-                _outPackets.Enqueue(new SetSlotPacket(1, 30, slotData));
-                
-            }*/
-
-            /*if (serverTicks == 100)
-            {
-                _windowHelper.ReopenWindowWithOtherInventory(Id, _outPackets, new PlayerInventory());
-            }*/
-
             
         }
 

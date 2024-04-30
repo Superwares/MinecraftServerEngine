@@ -37,30 +37,30 @@ namespace Protocol
         internal void PlayerListConnect(
             System.Guid uniqueId, Queue<ClientboundPlayingPacket> renderer)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             _PlayerList.Connect(uniqueId, renderer);
         }
 
         internal void PlayerListDisconnect(System.Guid uniqueId)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             _PlayerList.Disconnect(uniqueId);
         }
 
         internal void PlayerListKeepAlive(long serverTicks, System.Guid uniqueId)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             _PlayerList.KeepAlive(serverTicks, uniqueId);
         }
 
-        protected internal virtual bool CanJoinWorld()
-        {
-            return true;
-        }
+        protected internal abstract bool CanJoinWorld();
 
         protected internal virtual bool CanSpawnOrConnectPlayer(System.Guid uniqueId)
         {
-            /*if (!_isPlayerDespawnedOnDisconnection)
-            {
-                return true;
-            }*/
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             foreach (Entity entity in _EntityDespawningPool.GetValues())
             {
@@ -76,6 +76,8 @@ namespace Protocol
 
         internal virtual Player SpawnOrConnectPlayer(string username, System.Guid uniqueId)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             int id = _EntityIdList.Alloc();
             Player player = new(
                 id,
@@ -92,6 +94,8 @@ namespace Protocol
 
         public void DespawnEntities()
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             while (!_EntityDespawningPool.Empty)
             {
                 Entity entity = _EntityDespawningPool.Dequeue();
@@ -111,6 +115,8 @@ namespace Protocol
 
         public void MoveEntity(Entity entity)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             entity.Move();
 
             UpdateEntityRendering(entity);
@@ -118,6 +124,8 @@ namespace Protocol
 
         public void SpawnEntities(Queue<Entity> entities)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             while (!_EntitySpawningPool.Empty)
             {
                 Entity entity = _EntitySpawningPool.Dequeue();
@@ -130,6 +138,8 @@ namespace Protocol
 
         public bool StartEntitRoutine(long serverTicks, Entity entity)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             entity.StartRoutine(serverTicks, this);
 
             if (entity is Player player)
@@ -158,11 +168,22 @@ namespace Protocol
             return false;
         }
 
-        protected virtual void StartPlayerRoutine(long serverTicks, Player player) { }
-
-        public virtual void StartRoutine(long serverTicks) 
+        protected virtual void StartPlayerRoutine(long serverTicks, Player player) 
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+        }
+
+        protected virtual void StartSubRoutine(long serverTicks)
+        { 
+        System.Diagnostics.Debug.Assert(!_disposed);}
+
+        public void StartRoutine(long serverTicks) 
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             _PlayerList.StartRoutine(serverTicks);
+
+            StartSubRoutine(serverTicks);
         }
 
         private void InitEntityRendering(Entity entity)
@@ -288,9 +309,26 @@ namespace Protocol
 
             // Assertion.
 
+            System.Diagnostics.Debug.Assert(_EntityIdList.Empty);
+
+            System.Diagnostics.Debug.Assert(_Chunks.Empty);
+
+            System.Diagnostics.Debug.Assert(_EntitySpawningPool.Empty);
+            System.Diagnostics.Debug.Assert(_EntityDespawningPool.Empty);
+
             if (disposing == true)
             {
                 // Release managed resources.
+                _PlayerList.Dispose();
+
+                _EntityIdList.Dispose();
+
+                _Chunks.Dispose();
+
+                _EntitySpawningPool.Dispose();
+                _EntityDespawningPool.Dispose();
+
+
             }
 
             // Release unmanaged resources.

@@ -26,7 +26,7 @@ namespace Application
 
         ~Server() => Dispose(false);
 
-        private void InitOrControl(long serverTicks)
+        private void Control(long serverTicks)
         {
             for (int i = 0; i < _Connections.Count; ++i)
             {
@@ -34,7 +34,7 @@ namespace Application
 
                 try
                 {
-                    conn.InitOrControl(serverTicks, _World, player);
+                    conn.Control(serverTicks, _World, player);
                 }
                 catch (DisconnectedClientException)
                 {
@@ -112,7 +112,7 @@ namespace Application
         {
             Console.Write(".");
 
-            InitOrControl(serverTicks);
+            Control(serverTicks);
 
             // Barrier
 
@@ -221,11 +221,11 @@ namespace Application
 
             using Server app = new();
 
-            ConnectionListener connListener = new();
+            using ConnectionListener connListener = new();
 
             app.Run(() => app.StartCoreRoutine(connListener));
 
-            GlobalListener listener = new(connListener);
+            ClientListener listener = new(connListener);
             app.Run(() => 
                 listener.StartRoutine(app, port));
 

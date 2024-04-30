@@ -1189,10 +1189,32 @@ namespace Protocol
 
     }
 
-   /* internal class UpdatePlayerListItemLatencyPacket : ClientboundPlayingPacket
+    internal class UpdatePlayerListItemLatencyPacket : ClientboundPlayingPacket
     {
+        public readonly Guid UniqueId;
+        public readonly int Laytency;
 
-    }*/
+        internal static UpdatePlayerListItemLatencyPacket Read(Buffer buffer)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public UpdatePlayerListItemLatencyPacket(System.Guid uniqueId, int laytency) 
+            : base(UpdatePlayerListItemLatencyPacketId)
+        {
+            UniqueId = uniqueId;
+            Laytency = laytency;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteInt(2, true);
+            buffer.WriteInt(1, true);
+            buffer.WriteGuid(UniqueId);
+            buffer.WriteInt(Laytency, true);
+        }
+
+    }
 
     internal class RemovePlayerListItemPacket : ClientboundPlayingPacket
     {

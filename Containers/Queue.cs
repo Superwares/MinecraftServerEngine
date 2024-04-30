@@ -38,10 +38,7 @@ namespace Containers
 
         public Queue() { }
 
-        ~Queue()
-        {
-            Dispose(false);
-        }
+        ~Queue() => System.Diagnostics.Debug.Assert(false);
 
         public virtual void Enqueue(T value)
         {

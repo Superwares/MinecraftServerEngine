@@ -12,7 +12,7 @@ namespace Server
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            return base.CanJoinWorld();
+            return true;
         }
 
         protected override void StartPlayerRoutine(long serverTicks, Player player)
@@ -22,9 +22,11 @@ namespace Server
             // If player is dead, spawn to the spanwpoint of their team.
         }
 
-        public override void StartRoutine(long serverTicks)
+        protected override void StartSubRoutine(long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            base.StartRoutine(serverTicks);
         }
 
         protected override void Dispose(bool disposing)

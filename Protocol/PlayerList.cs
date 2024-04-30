@@ -104,9 +104,9 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(!_disposed);
 
             int laytencyInMilliseconds = item.laytencyInTicks * 50;
-            /*foreach (var outPackets in _renderers.GetValues())
+            foreach (var outPackets in _renderers.GetValues())
                 outPackets.Enqueue(new UpdatePlayerListItemLatencyPacket(
-                    item.UniqueId, laytencyInMilliseconds));*/
+                    item.UniqueId, laytencyInMilliseconds));
         }
 
         private bool IsDisconnected(System.Guid uniqueId)
@@ -182,6 +182,8 @@ namespace Protocol
         internal void StartRoutine(long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (serverTicks % 20 != 0) return;
 
             foreach (Item item in _items.GetValues())
             {

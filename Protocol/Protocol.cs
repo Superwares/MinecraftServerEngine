@@ -1,20 +1,17 @@
-﻿using System;
-using System.Diagnostics;
-using System.Net;
-using System.Net.Sockets;  // TODO: Use custom socket object in common library.
-using System.Xml;
-using Applications;
+﻿using Applications;
 using Containers;
 
 namespace Protocol
 {
     internal static class SocketMethods
     {
-        public static Socket Establish(ushort port)
+        public static System.Net.Sockets.Socket Establish(ushort port)
         {
-            Socket socket = new(SocketType.Stream, ProtocolType.Tcp);
+            System.Net.Sockets.Socket socket = new(
+                System.Net.Sockets.SocketType.Stream, 
+                System.Net.Sockets.ProtocolType.Tcp);
 
-            IPEndPoint localEndPoint = new(IPAddress.Any, port);
+            System.Net.IPEndPoint localEndPoint = new(System.Net.IPAddress.Any, port);
             socket.Bind(localEndPoint);
             socket.Listen();
 
@@ -27,23 +24,23 @@ namespace Protocol
         /// <param name="socket">TODO: Add description.</param>
         /// <returns>TODO: Add description.</returns>
         /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
-        public static Socket Accept(Socket socket)
+        public static System.Net.Sockets.Socket Accept(System.Net.Sockets.Socket socket)
         {
             try
             {
-                Socket newSocket = socket.Accept();
+                System.Net.Sockets.Socket newSocket = socket.Accept();
 
                 return newSocket;
             }
-            catch (SocketException e)
+            catch (System.Net.Sockets.SocketException e)
             {
-                if (e.SocketErrorCode == SocketError.WouldBlock)
+                if (e.SocketErrorCode == System.Net.Sockets.SocketError.WouldBlock)
                     throw new TryAgainException();
 
                 throw;
             }
 
-            throw new NotImplementedException();
+            throw new System.NotImplementedException();
         }
 
         /// <summary>
@@ -51,12 +48,12 @@ namespace Protocol
         /// </summary>
         /// <param name="socket">TODO: Add description.</param>
         /// <param name="span">TODO: Add description.</param>
-        public static bool Poll(Socket socket, TimeSpan span)  // TODO: Use own TimeSpan in common library.
+        public static bool Poll(System.Net.Sockets.Socket socket, System.TimeSpan span)  // TODO: Use own System.TimeSpan in common library.
         {
             // TODO: check the socket is binding and listening.
 
             if (IsBlocking(socket) &&
-                socket.Poll(span, SelectMode.SelectRead) == false)
+                socket.Poll(span, System.Net.Sockets.SelectMode.SelectRead) == false)
             {
                 return false;
             }
@@ -64,12 +61,14 @@ namespace Protocol
             return true;
         }
 
-        public static void SetBlocking(Socket socket, bool f)
+        public static void SetBlocking(
+            System.Net.Sockets.Socket socket, bool f)
         {
             socket.Blocking = f;
         }
 
-        public static bool IsBlocking(Socket socket)
+        public static bool IsBlocking(
+            System.Net.Sockets.Socket socket)
         {
             return socket.Blocking;
         }
@@ -85,21 +84,22 @@ namespace Protocol
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
         /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
         public static int RecvBytes(
-            Socket socket, byte[] buffer, int offset, int size)
+            System.Net.Sockets.Socket socket, 
+            byte[] buffer, int offset, int size)
         {
             try
             {
-                int n = socket.Receive(buffer, offset, size, SocketFlags.None);
+                int n = socket.Receive(buffer, offset, size, System.Net.Sockets.SocketFlags.None);
                 if (n == 0)
                     throw new DisconnectedClientException();
 
-                Debug.Assert(n <= size);
+                System.Diagnostics.Debug.Assert(n <= size);
 
                 return n;
             }
-            catch (SocketException e)
+            catch (System.Net.Sockets.SocketException e)
             {
-                if (e.SocketErrorCode == SocketError.WouldBlock)
+                if (e.SocketErrorCode == System.Net.Sockets.SocketError.WouldBlock)
                     throw new TryAgainException();
 
                 throw;
@@ -114,12 +114,12 @@ namespace Protocol
         /// <returns>TODO: Add description..</returns>
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
         /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
-        public static byte RecvByte(Socket socket)
+        public static byte RecvByte(System.Net.Sockets.Socket socket)
         {
             byte[] buffer = new byte[1];
 
             int n = RecvBytes(socket, buffer, 0, 1);
-            Debug.Assert(n == 1);
+            System.Diagnostics.Debug.Assert(n == 1);
 
             return buffer[0];
         }
@@ -130,17 +130,17 @@ namespace Protocol
         /// <param name="socket">TODO: Add description..</param>
         /// <param name="data">TODO: Add description..</param>
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
-        public static void SendBytes(Socket socket, byte[] data)
+        public static void SendBytes(System.Net.Sockets.Socket socket, byte[] data)
         {
             try
             {
-                Debug.Assert(data != null);
+                System.Diagnostics.Debug.Assert(data != null);
                 int n = socket.Send(data);
-                Debug.Assert(n == data.Length);
+                System.Diagnostics.Debug.Assert(n == data.Length);
             }
-            catch (SocketException e)
+            catch (System.Net.Sockets.SocketException e)
             {
-                if (e.SocketErrorCode == SocketError.ConnectionAborted)
+                if (e.SocketErrorCode == System.Net.Sockets.SocketError.ConnectionAborted)
                     throw new DisconnectedClientException();
 
                 throw;
@@ -154,14 +154,14 @@ namespace Protocol
         /// <param name="socket">TODO: Add description.</param>
         /// <param name="v">TODO: Add description.</param>
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
-        public static void SendByte(Socket socket, byte v)
+        public static void SendByte(System.Net.Sockets.Socket socket, byte v)
         {
             SendBytes(socket, [v]);
         }
 
     }
 
-    internal sealed class Client : IDisposable
+    internal sealed class Client : System.IDisposable
     {
         private bool _isDisposed = false;
 
@@ -174,7 +174,7 @@ namespace Protocol
         private int _x = 0, _y = 0;
         private byte[]? _data = null;
 
-        private Socket _socket;
+        private System.Net.Sockets.Socket _socket;
 
         /// <summary>
         /// TODO: Add description.
@@ -182,11 +182,11 @@ namespace Protocol
         /// <param name="socket">TODO: Add description.</param>
         /// <returns>TODO: Add description.</returns>
         /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
-        internal static Client Accept(Socket socket)
+        internal static Client Accept(System.Net.Sockets.Socket socket)
         {
             //TODO: Check the socket is Binding and listening correctly.
 
-            Socket newSocket = SocketMethods.Accept(socket);
+            System.Net.Sockets.Socket newSocket = SocketMethods.Accept(socket);
             SocketMethods.SetBlocking(newSocket, false);
 
             /*Console.WriteLine($"socket: {socket.LocalEndPoint}");*/
@@ -195,16 +195,13 @@ namespace Protocol
             return new(newSocket);
         }
 
-        private Client(Socket socket)
+        private Client(System.Net.Sockets.Socket socket)
         {
-            Debug.Assert(SocketMethods.IsBlocking(socket) == false);
+            System.Diagnostics.Debug.Assert(SocketMethods.IsBlocking(socket) == false);
             _socket = socket;
         }
 
-        ~Client()
-        {
-            Dispose(false);
-        }
+        ~Client() => System.Diagnostics.Debug.Assert(false);
 
         /// <summary>
         /// TODO: Add description.
@@ -215,9 +212,9 @@ namespace Protocol
         /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
         private int RecvSize()
         {
-            Debug.Assert(!_isDisposed);
+            System.Diagnostics.Debug.Assert(!_isDisposed);
 
-            Debug.Assert(SocketMethods.IsBlocking(_socket) == false);
+            System.Diagnostics.Debug.Assert(SocketMethods.IsBlocking(_socket) == false);
 
             uint uvalue = (uint)_x;
             int position = _y;
@@ -237,7 +234,7 @@ namespace Protocol
                     if (position >= 32)
                         throw new InvalidEncodingException();
 
-                    Debug.Assert(position > 0);
+                    System.Diagnostics.Debug.Assert(position > 0);
                 }
 
             }
@@ -245,7 +242,7 @@ namespace Protocol
             {
                 _x = (int)uvalue;
                 _y = position;
-                Debug.Assert(_data == null);
+                System.Diagnostics.Debug.Assert(_data == null);
             }
 
             return (int)uvalue;
@@ -258,7 +255,7 @@ namespace Protocol
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
         private void SendSize(int size)
         {
-            Debug.Assert(!_isDisposed);
+            System.Diagnostics.Debug.Assert(!_isDisposed);
 
             uint uvalue = (uint)size;
 
@@ -291,9 +288,9 @@ namespace Protocol
         /// <exception cref="TryAgainException">TODO: Why it's thrown.</exception>
         public void Recv(Buffer buffer)
         {
-            Debug.Assert(!_isDisposed);
+            System.Diagnostics.Debug.Assert(!_isDisposed);
 
-            Debug.Assert(SocketMethods.IsBlocking(_socket) == false);
+            System.Diagnostics.Debug.Assert(SocketMethods.IsBlocking(_socket) == false);
 
             try
             {
@@ -305,9 +302,9 @@ namespace Protocol
 
                     if (size == 0) return;
 
-                    Debug.Assert(_data == null);
+                    System.Diagnostics.Debug.Assert(_data == null);
                     _data = new byte[size];
-                    Debug.Assert(size > 0);
+                    System.Diagnostics.Debug.Assert(size > 0);
                 }
 
                 int availSize = _x, offset = _y;
@@ -317,7 +314,7 @@ namespace Protocol
                     try
                     {
                         int n = SocketMethods.RecvBytes(_socket, _data, offset, availSize);
-                        Debug.Assert(n <= availSize);
+                        System.Diagnostics.Debug.Assert(n <= availSize);
 
                         availSize -= n;
                         offset += n;
@@ -358,7 +355,7 @@ namespace Protocol
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
         public void Send(Buffer buffer)
         {
-            Debug.Assert(!_isDisposed);
+            System.Diagnostics.Debug.Assert(!_isDisposed);
 
             byte[] data = buffer.ReadData();
             SendSize(data.Length);
@@ -384,7 +381,7 @@ namespace Protocol
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
+            System.GC.SuppressFinalize(this);
         }
 
         public void Close()
@@ -394,11 +391,15 @@ namespace Protocol
 
     }
 
-    public class ConnectionListener
+    public sealed class ConnectionListener : System.IDisposable
     {
-        private readonly ConcurrentQueue<(Client, Guid, string)> _clients = new();
+        private bool _disposed = false;
 
-        internal void Add(Client client, Guid userId, string username)
+        private readonly ConcurrentQueue<(Client, System.Guid, string)> _clients = new();
+
+        ~ConnectionListener() => System.Diagnostics.Debug.Assert(false);
+
+        internal void Add(Client client, System.Guid userId, string username)
         {
             _clients.Enqueue((client, userId, username));
         }
@@ -428,25 +429,49 @@ namespace Protocol
 
         }
 
+        private void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            // Assertion.
+
+            if (disposing == true)
+            {
+                // Release managed resources.
+            }
+
+            // Release unmanaged resources.
+
+            _disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            System.GC.SuppressFinalize(this);
+        }
+
     }
 
-    public class GlobalListener
+    public sealed class ClientListener
     {
-        private static readonly TimeSpan _PendingTimeout = TimeSpan.FromSeconds(1);
+        private static readonly System.TimeSpan _PendingTimeout = System.TimeSpan.FromSeconds(1);
 
         private readonly ConnectionListener _connListener;
 
-        public GlobalListener(ConnectionListener connListener)
+        public ClientListener(ConnectionListener connListener)
         {
             _connListener = connListener;
         }
+
+        ~ClientListener() => System.Diagnostics.Debug.Assert(false);
 
         private int HandleVisitors(Queue<Client> visitors, Queue<int> levelQueue)
         {
             /*Console.Write(".");*/
 
             int count = visitors.Count;
-            Debug.Assert(count == levelQueue.Count);
+            System.Diagnostics.Debug.Assert(count == levelQueue.Count);
             if (count == 0) return 0;
 
             bool close, success;
@@ -460,7 +485,7 @@ namespace Protocol
 
                 /*Console.WriteLine($"count: {count}, level: {level}");*/
 
-                Debug.Assert(level >= 0);
+                System.Diagnostics.Debug.Assert(level >= 0);
                 using Buffer buffer = new();
 
                 try
@@ -549,13 +574,13 @@ namespace Protocol
 
                         // TODO: Check username is empty or invalid.
 
-                        Console.Write("Start http request!");
+                        System.Console.Write("Start http request!");
 
                         // TODO: Use own http client in common library.
                         using System.Net.Http.HttpClient httpClient = new();
                         string url = string.Format("https://api.mojang.com/users/profiles/minecraft/{0}", inPacket.Username);
-                        Console.WriteLine(inPacket.Username);
-                        Console.WriteLine($"url: {url}");
+                        System.Console.WriteLine(inPacket.Username);
+                        System.Console.WriteLine($"url: {url}");
                         using System.Net.Http.HttpRequestMessage request = new(System.Net.Http.HttpMethod.Get, url);
 
                         // TODO: handle HttpRequestException
@@ -566,17 +591,17 @@ namespace Protocol
                         string str = reader.ReadToEnd();
                         System.Collections.Generic.Dictionary<string, string>? dictionary =
                             System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, string>>(str);
-                        Debug.Assert(dictionary != null);
+                        System.Diagnostics.Debug.Assert(dictionary != null);
 
-                        Guid userId = Guid.Parse(dictionary["id"]);
+                        System.Guid userId = System.Guid.Parse(dictionary["id"]);
                         string username = dictionary["name"];  // TODO: check username is valid
-                        Console.WriteLine($"userId: {userId}");
-                        Console.WriteLine($"username: {username}");
+                        System.Console.WriteLine($"userId: {userId}");
+                        System.Console.WriteLine($"username: {username}");
 
                         // TODO: Handle to throw exception
-                        Debug.Assert(inPacket.Username == username);
+                        System.Diagnostics.Debug.Assert(inPacket.Username == username);
 
-                        Console.Write("Finish http request!");
+                        System.Console.Write("Finish http request!");
 
                         LoginSuccessPacket outPacket1 = new(userId, username);
                         outPacket1.Write(buffer);
@@ -589,22 +614,22 @@ namespace Protocol
                     }
 
 
-                    Debug.Assert(buffer.Size == 0);
+                    System.Diagnostics.Debug.Assert(buffer.Size == 0);
 
                     if (!success) close = true;
 
                 }
                 catch (TryAgainException)
                 {
-                    Debug.Assert(success == false);
-                    Debug.Assert(close == false);
+                    System.Diagnostics.Debug.Assert(success == false);
+                    System.Diagnostics.Debug.Assert(close == false);
 
                     /*Console.Write($"TryAgain!");*/
                 }
                 catch (UnexpectedClientBehaviorExecption)
                 {
-                    Debug.Assert(success == false);
-                    Debug.Assert(close == false);
+                    System.Diagnostics.Debug.Assert(success == false);
+                    System.Diagnostics.Debug.Assert(close == false);
 
                     close = true;
 
@@ -612,15 +637,15 @@ namespace Protocol
 
                     if (level >= 3)  // >= Start Login level
                     {
-                        Debug.Assert(false);
+                        System.Diagnostics.Debug.Assert(false);
                         // TODO: Handle send Disconnect packet with reason.
                     }
 
                 }
                 catch (DisconnectedClientException)
                 {
-                    Debug.Assert(success == false);
-                    Debug.Assert(close == false);
+                    System.Diagnostics.Debug.Assert(success == false);
+                    System.Diagnostics.Debug.Assert(close == false);
                     close = true;
 
                     /*Console.Write("~");*/
@@ -630,7 +655,7 @@ namespace Protocol
                     /*Console.Write($"EndofFileException");*/
                 }
 
-                Debug.Assert(buffer.Empty);
+                System.Diagnostics.Debug.Assert(buffer.Empty);
 
                 if (!success)
                 {
@@ -647,7 +672,7 @@ namespace Protocol
                     continue;
                 }
                     
-                Debug.Assert(close == false);
+                System.Diagnostics.Debug.Assert(close == false);
 
             }
 
@@ -656,7 +681,7 @@ namespace Protocol
 
         public void StartRoutine(ConsoleApplication app, ushort port)
         {
-            using Socket socket = SocketMethods.Establish(port);
+            using System.Net.Sockets.Socket socket = SocketMethods.Establish(port);
 
             using Queue<Client> visitors = new();
             /*
@@ -671,7 +696,7 @@ namespace Protocol
 
             while (app.Running)
             {
-                Console.Write(">");
+                System.Console.Write(">");
 
                 try
                 {
