@@ -102,6 +102,8 @@ namespace Protocol
     {
         private bool _disposed = false;
 
+        public int PrimarySlotCount = 36;
+
         public System.Collections.Generic.IEnumerable<Item?> PrimaryItems
         {
             get
@@ -121,11 +123,7 @@ namespace Protocol
             }
         }
 
-        public SelfInventory() : base(46)
-        {
-            _items[10] = new Stick(64);
-            _items[11] = new Stick(64);
-        }
+        public SelfInventory() : base(46) { }
 
         ~SelfInventory() => System.Diagnostics.Debug.Assert(false);
 
@@ -133,6 +131,7 @@ namespace Protocol
         {
             throw new System.NotImplementedException();
         }
+
         public void CollectItems()
         {
             throw new System.NotImplementedException();
@@ -175,16 +174,15 @@ namespace Protocol
 
         ~PublicInventory() => System.Diagnostics.Debug.Assert(false);
 
-        internal int Open(int windowId, Queue<ClientboundPlayingPacket> outPackets)
+        internal int Open(
+            int windowId, Queue<ClientboundPlayingPacket> outPackets,
+            SelfInventory selfInventory)
         {
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
             lock (_SharedObject)
             {
-                int id = _IdList.Alloc();
-
-                _Renderer.Add(id, windowId, outPackets);
 
                 Debug.Assert(windowId >= byte.MinValue);
                 Debug.Assert(windowId <= byte.MaxValue);
@@ -193,10 +191,27 @@ namespace Protocol
                 outPackets.Enqueue(new OpenWindowPacket(
                     (byte)windowId, WindowType, "", (byte)Count));
 
+                int count = selfInventory.PrimarySlotCount + Count;
+
                 int i = 0;
-                var arr = new SlotData[Count];
+                var arr = new SlotData[count];
 
                 foreach (Item? item in Items)
+                {
+                    if (item == null)
+                    {
+                        arr[i++] = new();
+                        continue;
+                    }
+
+                    Debug.Assert(item.Id >= short.MinValue);
+                    Debug.Assert(item.Id <= short.MaxValue);
+                    Debug.Assert(item.Count >= byte.MinValue);
+                    Debug.Assert(item.Count <= byte.MaxValue);
+                    arr[i++] = new((short)item.Id, (byte)item.Count);
+                }
+
+                foreach (Item? item in selfInventory.PrimaryItems)
                 {
                     if (item == null)
                     {
@@ -215,7 +230,10 @@ namespace Protocol
                 Debug.Assert(windowId <= byte.MaxValue);
                 outPackets.Enqueue(new SetWindowItemsPacket((byte)windowId, arr));
 
-                Debug.Assert(i == Count);
+                Debug.Assert(i == count);
+
+                int id = _IdList.Alloc();
+                _Renderer.Add(id, windowId, outPackets);
 
                 return id;
             }
@@ -230,13 +248,6 @@ namespace Protocol
             {
                 (int windowId, Queue<ClientboundPlayingPacket> outPackets) = _Renderer.Remove(id);
                 System.Diagnostics.Debug.Assert(_windowId == windowId);
-
-                /*if (force)
-                {
-                    Debug.Assert(windowId >= byte.MinValue);
-                    Debug.Assert(windowId <= byte.MaxValue);
-                    outPackets.Enqueue(new CloseWindowPacket((byte)windowId));
-                }*/
             }
         }
 
@@ -259,9 +270,14 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            int[] ids = _Renderer.Flush();
-            for (int i = 0; i < ids.Length; ++i)
-                _IdList.Dealloc(ids[i]);
+            lock (_SharedObject)
+            {
+                int[] ids = _Renderer.Flush();
+                for (int i = 0; i < ids.Length; ++i)
+                {
+                    _IdList.Dealloc(ids[i]);
+                }
+            }
         }
 
         protected override void Dispose(bool disposing)

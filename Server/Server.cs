@@ -12,203 +12,86 @@ namespace Application
     {
         private bool _isDisposed = false;
 
-        private readonly WorldManager _worldManager;
-        private readonly Queue<World> _worlds;
+        private readonly World _World;
 
-        private readonly Queue<(World, Entity)> _entities = new();  // Disposable
+        private readonly Queue<(Connection, Player)> _Connections = new();
+
+        private readonly Queue<Entity> _Entities = new();  // Disposable
 
         private Server() { }
 
         ~Server() => Dispose(false);
 
-        /*private void HandleEntities()
+        private void Control(long serverTicks)
         {
-            if (_entities.Empty) return;
-
-            for (int i = 0; i < _entities.Count; ++i)
+            for (int i = 0; i < _Connections.Count; ++i)
             {
-                (Entity entity, World world) = _entities.Dequeue();
+                (Connection conn, Player player) = _Connections.Dequeue();
 
-                if (world.DetermineAndDespawnEntity(entity))
-                {
-                    _despawnedEntities.Enqueue(entity);
-                    continue;
-                }
+                conn.Control(serverTicks, _World, player);
 
-                entity.Handle(world);
-
-                _entities.Enqueue(entity);
-            }
-
-        }
-
-        private void ControlPlayers(long serverTicks)
-        {
-            if (_connections.Empty) return;
-
-            for (int i = 0; i < _connections.Count; ++i)
-            {
-                (Connection conn, World world, Player player) = _connections.Dequeue();
-
-                try
-                {
-                    conn.Control(serverTicks, world, player);
-                }
-                catch (DisconnectedClientException)
-                {
-                    _disconnections.Enqueue(conn);
-
-                    continue;
-                }
-                
-                _connections.Enqueue((conn, world, player));
-            }
-
-        }*/
-
-        private void DespawnEntities()
-        {
-            for (int i = 0; i < _entities.Count; ++i)
-            {
-                (World world, Entity entity) = _entities.Dequeue();
-
-                if (world.DetermineAndDespawnEntity(entity))
-                    continue;
-
-                _entities.Enqueue((world, entity));
+                _Connections.Enqueue((conn, player));
             }
         }
 
         private void MoveEntities()
         {
-            for (int i = 0; i < _entities.Count; ++i)
+            for (int i = 0; i < _Entities.Count; ++i)
             {
-                (World world, Entity entity) = _entities.Dequeue();
+                Entity entity = _Entities.Dequeue();
 
-                entity.Move(world);
+                _World.MoveEntity(entity);
 
-                _entities.Enqueue((world, entity));
+                _Entities.Enqueue(entity);
             }
         }
 
-        private void SpawnEntities()
+        private void Reset()
         {
-            for (int i = 0; i < _worlds.Count; ++i)
+            for (int i = 0; i < _Entities.Count; ++i)
             {
-                World world = _worlds.Dequeue();
+                Entity entity = _Entities.Dequeue();
 
-                using Queue<Entity> entities = world.SpawnEntities();
-                while (!entities.Empty)
-                {
-                    Entity entity = entities.Dequeue();
+                entity.Reset();
 
-                    _entities.Enqueue((world, entity));
-                }
-                System.Diagnostics.Debug.Assert(entities.Empty);
+                _Entities.Enqueue(entity);
+            }
+        }
 
-                _worlds.Enqueue(world);
+        private void Render(long serverTicks)
+        {
+            for (int i = 0; i < _Connections.Count; ++i)
+            {
+                (Connection conn, Player player) = _Connections.Dequeue();
+
+                conn.Control(serverTicks, _World, player);
+
+                _Connections.Enqueue((conn, player));
             }
         }
 
         private void StartEntityRoutines(long serverTicks)
         {
-            for (int i = 0; i < _entities.Count; ++i)
+            for (int i = 0; i < _Entities.Count; ++i)
             {
-                (World world, Entity entity) = _entities.Dequeue();
+                (World world, Entity entity) = _Entities.Dequeue();
 
-                entity.StartRoutine(serverTicks, world);
+                world.StartEntitRoutine(serverTicks, entity);
 
-                _entities.Enqueue((world, entity));
+                _Entities.Enqueue((world, entity));
             }
         }
-
-        private void StartWorldRoutines(long serverTicks)
-        {
-            for (int i = 0; i < _worlds.Count; ++i)
-            {
-                World world = _worlds.Dequeue();
-
-                world.StartRoutine(serverTicks);
-
-                _worlds.Enqueue(world);
-            }
-        }
-
-        /*private void Render()
-        {
-            for (int i = 0; i < _connections.Count; ++i)
-            {
-                (Connection conn, World world, Player player) = _connections.Dequeue();
-
-                conn.UpdatePlayerList(_playerList);
-
-                conn.Render(world, player);
-
-                _connections.Enqueue((conn, world, player));
-            }
-        }*/
-
-        /*private void SendData()
-        {
-            if (_connections.Empty) return;
-
-            *//*Console.Write("Start send data!");*//*
-
-            for (int i = 0; i < _connections.Count; ++i)
-            {
-
-                (Connection conn, World world, Player player) = _connections.Dequeue();
-
-                try
-                {
-                    conn.SendData(player);
-                }
-                catch (DisconnectedClientException)
-                {
-                    _disconnections.Enqueue(conn);
-
-                    continue;
-                }
-
-                _connections.Enqueue((conn, world, player));
-
-            }
-
-            *//*Console.Write("Finish send data!");*//*
-        }*/
-
-        private void Reset()
-        {
-            for (int i = 0; i < _entities.Count; ++i)
-            {
-                (World world, Entity entity) = _entities.Dequeue();
-
-                entity.Reset();
-
-                _entities.Enqueue((world, entity));
-            }
-
-            for (int i = 0; i < _worlds.Count; ++i)
-            {
-                World world = _worlds.Dequeue();
-
-                world.Reset();
-
-                _worlds.Enqueue(world);
-            }
-
-        }
-
+        
         private void StartGameRoutine(
             long serverTicks, ConnectionListener connListener)
         {
             Console.Write(".");
 
-            connListener.Accept(_worldManager);
+            Control(serverTicks);
 
             // Barrier
 
-            DespawnEntities();
+            _World.DespawnEntities();
 
             // Barrier
 
@@ -216,7 +99,15 @@ namespace Application
 
             // Barrier
 
-            SpawnEntities();
+            _World.SpawnEntities(_Entities);
+
+            // Barrier
+
+            Reset();
+
+            // Barrier
+
+            Render(serverTicks);
 
             // Barrier
 
@@ -224,11 +115,11 @@ namespace Application
 
             // Barrier
 
-            StartWorldRoutines(serverTicks);
+            _World.StartRoutine(serverTicks);
 
             // Barrier
 
-            Reset();
+            connListener.Accept(_World);
 
             // Barrier
 

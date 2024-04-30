@@ -5,7 +5,7 @@ using System.Xml;
 
 namespace Protocol
 {
-    internal sealed class Connection : System.IDisposable
+    public sealed class Connection : System.IDisposable
     {
         private sealed class TeleportationRecord
         {
@@ -57,14 +57,14 @@ namespace Protocol
         private bool _disposed = false;
 
         internal Connection(
-            Client client,
-            int renderDistance)
+            Client client, int renderDistance,
+            SelfInventory selfInventory)
         {
             _client = client;
 
             _renderDistance = renderDistance;
 
-            _window = new(_outPackets, new SelfInventory());
+            _window = new(_outPackets, selfInventory);
 
             /*{
                 SlotData slotData = new(280, 64);
@@ -95,7 +95,7 @@ namespace Protocol
         /// <returns>TODO: Add description.</returns>
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
         public void Control(
-            long serverTicks, World world, PlayerList playerList, Player player)
+            long serverTicks, World world, Player player)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -156,6 +156,8 @@ namespace Protocol
                                     $"WindowId: {packet.WindowId}, " +
                                     $"ActionNumber: {packet.ActionNumber}, " +
                                     $"Accepted: {packet.Accepted}, ");
+
+                                throw new System.NotImplementedException();
                             }
                             break;
                         case ServerboundPlayingPacket.ClickWindowPacketId:
@@ -174,10 +176,8 @@ namespace Protocol
                                         $"SlotData.Count: {packet.Data.Count}, ");
                                 }
 
-                                if (_window.GetWindowId() != packet.WindowId)
-                                    throw new System.NotImplementedException();
-
                                 _window.Handle(
+                                    player._selfInventory,
                                     packet.WindowId,
                                     packet.ModeNumber,
                                     packet.ButtonNumber,
@@ -205,10 +205,7 @@ namespace Protocol
                                 if (packet.WindowId < 0)
                                     throw new UnexpectedValueException($"ClickWindowPacket.WindowId {packet.WindowId}");
 
-                                if (_window.GetWindowId() != packet.WindowId)
-                                    throw new System.NotImplementedException();
-
-                                _window.ResetWindow(_outPackets);
+                                _window.ResetWindow(packet.WindowId, _outPackets);
                             }
                             break;
                         case ServerboundPlayingPacket.ResponseKeepAlivePacketId:
@@ -216,7 +213,7 @@ namespace Protocol
                                 ResponseKeepAlivePacket packet = ResponseKeepAlivePacket.Read(buffer);
 
                                 // TODO: Check payload with cache. If not corrent, throw unexpected client behavior exception.
-                                playerList.KeepAlive(serverTicks, player.UniqueId);
+                                world.KeepAliveConnectedPlayer(serverTicks, player.UniqueId);
                             }
                             break;
                         case ServerboundPlayingPacket.PlayerPacketId:
@@ -331,7 +328,7 @@ namespace Protocol
         }
 
         // TODO: Make chunks to readonly using interface? in this function.
-        internal void RenderChunks(World world, Entity.Vector pos)
+        private void RenderChunks(World world, Entity.Vector pos)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -409,7 +406,7 @@ namespace Protocol
             _renderedChunkGrid = grid;
         }
 
-        internal void RenderEntities(World world, int selfEntityId)
+        private void RenderEntities(World world, int selfEntityId)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -518,9 +515,12 @@ namespace Protocol
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
-        public void SendData(Player player)
+        public void Render(World world, Player player)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            RenderChunks(world, player.Position);
+            RenderEntities(world, player.Id);
 
             if (_outPackets.Empty) return;
 
@@ -549,7 +549,7 @@ namespace Protocol
                     }
                     else if (packet is ClientboundCloseWindowPacket)
                     {
-                        _window.ResetWindowForcibly(_outPackets);
+                        _window.ResetWindowForcibly(player._selfInventory, _outPackets);
                     }
                     else if (packet is RequestKeepAlivePacket)
                     {

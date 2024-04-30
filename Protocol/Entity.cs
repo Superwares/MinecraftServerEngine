@@ -82,7 +82,6 @@ namespace Protocol
         private bool _disposed = false;
 
         private int _id;
-        private readonly NumList _EntityIdList;
         public int Id => _id;
 
         public System.Guid UniqueId;
@@ -108,12 +107,11 @@ namespace Protocol
         internal readonly EntityRenderer _Renderer = new();  // Disposable
 
         internal Entity(
-            NumList entityIdList,
+            int id,
             Guid uniqueId,
             Vector pos, Angles look)
         {
-            _id = entityIdList.Alloc();
-            _EntityIdList = entityIdList;
+            _id = id;
 
             UniqueId = uniqueId;
             _pos = pos;
@@ -145,11 +143,12 @@ namespace Protocol
             throw new NotImplementedException();
         }
 
-        public virtual void StartRoutine(long serverTicks, World world)
+        protected internal virtual void StartRoutine(long serverTicks, World world)
         {
+
         }
 
-        public virtual void Move(World world)
+        protected internal virtual void Move()
         {
             Debug.Assert(!_disposed);
 
@@ -209,8 +208,6 @@ namespace Protocol
                     _look.Yaw, _look.Pitch,
                     _onGround));
             }
-
-            world.UpdateEntityRendering(this);
         }
 
         public void Teleport(Vector pos, Angles look)
@@ -298,7 +295,6 @@ namespace Protocol
 
         internal virtual void Flush()
         {
-            _EntityIdList.Dealloc(Id);
             _Renderer.Flush();
         }
 
@@ -331,9 +327,9 @@ namespace Protocol
         private bool _disposed = false;
 
         internal LivingEntity(
-            NumList entityIdList,
+            int id,
             Guid uniqueId,
-            Vector pos, Angles look) : base(entityIdList, uniqueId, pos, look)
+            Vector pos, Angles look) : base(id, uniqueId, pos, look)
         { }
 
         ~LivingEntity() => System.Diagnostics.Debug.Assert(false);
@@ -365,50 +361,56 @@ namespace Protocol
 
         public readonly string Username;
 
+        internal readonly SelfInventory _selfInventory;
 
-        private Connection? _conn = null;
-        public bool IsConnected => _conn != null;
+        private bool _connected = false;
+        public bool IsConnected => _connected;
+
+        private Queue<ClientboundPlayingPacket>? _selfRenderer = null;
 
         private bool _controled;
         private Vector _posControl;
 
-        private readonly PlayerList _PlayerList;
-
         internal Player(
-            NumList entityIdList,
+            int id,
             Guid uniqueId,
             Vector pos, Angles look,
-            string username,
-            PlayerList playerList) : base(entityIdList, uniqueId, pos, look)
+            string username) : base(id, uniqueId, pos, look)
         {
             _controled = false;
             /*_posControl = new(0, 0, 0);*/
 
             Username = username;
 
-            _PlayerList = playerList;
+            _selfInventory = new();
         }
 
         ~Player() => System.Diagnostics.Debug.Assert(false);
 
-        internal void Connect(Connection conn)
+        internal void Connect(Queue<ClientboundPlayingPacket> selfRenderer)
         {
             Debug.Assert(!_disposed);
 
             Debug.Assert(!IsConnected);
-            _conn = conn;
+            _connected = true;
 
-            conn.Render(new SetPlayerAbilitiesPacket(
+            System.Diagnostics.Debug.Assert(_selfRenderer == null);
+            _selfRenderer = selfRenderer;
+
+            /*Debug.Assert(!IsConnected);
+            _conn = new(client, renderDistance, _selfInventory);
+
+            _conn.Render(new SetPlayerAbilitiesPacket(
                 true, false, true, true, 0.1f, 0));
 
             int payload = new System.Random().Next();
-            conn.Render(new TeleportSelfPlayerPacket(
+            _conn.Render(new TeleportSelfPlayerPacket(
                 _pos.X, _pos.Y, _pos.Z,
                 _look.Yaw, _look.Pitch,
                 false, false, false, false, false,
                 payload));
 
-            _PlayerList.Connect(UniqueId, conn.Renderer);
+            playerList.Connect(UniqueId, _conn.Renderer);*/
         }
 
         internal void Disconnect()
@@ -416,13 +418,17 @@ namespace Protocol
             Debug.Assert(!_disposed);
 
             Debug.Assert(IsConnected);
+            _connected = false;
 
-            Debug.Assert(_conn != null);
+            System.Diagnostics.Debug.Assert(_selfRenderer != null);
+            _selfRenderer = null;
+
+            /*Debug.Assert(_conn != null);
             _conn.Flush();
             _conn.Close();
             _conn = null;
 
-            _PlayerList.Disconnect(UniqueId);
+            world.DisconnectPlayer(UniqueId);*/
         }
         
         public override void Reset()
@@ -444,25 +450,10 @@ namespace Protocol
             // TODO: send render data;
         }
 
-        public override void StartRoutine(long serverTicks, World world)
+        protected internal override void StartRoutine(long serverTicks, World world)
         {
             if (IsConnected)
             {
-                Debug.Assert(_conn != null);
-                _conn.RenderChunks(world, Position);
-                _conn.RenderEntities(world, Id);
-
-                try
-                {
-                    _conn.SendData(this);
-                    _conn.Control(serverTicks, world, _PlayerList, this);
-                }
-                catch (DisconnectedClientException)
-                {
-                    Disconnect();
-
-                    throw new NotImplementedException();
-                }
 
             }
             else
@@ -470,10 +461,10 @@ namespace Protocol
 
             }
 
-            /*base.StartRoutine(world);*/
+            base.StartRoutine(serverTicks, world);
         }
 
-        public override void Move(World world)
+        protected internal override void Move()
         {
             Debug.Assert(!_disposed);
 
@@ -482,15 +473,16 @@ namespace Protocol
                 _pos = _posControl;
             }
 
-            base.Move(world);
+            base.Move();
 
             if (!IsConnected) return;
 
             if (_teleported)
             {
                 int payload = new Random().Next();
-                System.Diagnostics.Debug.Assert(_conn != null);
-                _conn.Render(new TeleportSelfPlayerPacket(
+
+                System.Diagnostics.Debug.Assert(_selfRenderer != null);
+                _selfRenderer.Enqueue(new TeleportSelfPlayerPacket(
                     _pos.X, _pos.Y, _pos.Z,
                     _look.Yaw, _look.Pitch,
                     false, false, false, false, false,
@@ -502,7 +494,6 @@ namespace Protocol
         {
             base.Flush();
 
-            _PlayerList.ClosePlayer(UniqueId);
         }
 
         protected override void Dispose(bool disposing)

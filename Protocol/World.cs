@@ -8,9 +8,7 @@ namespace Protocol
     {
         private bool _disposed = false;
 
-        public readonly int Id;
-
-        private readonly PlayerList _PlayerList = new();  // Disposable
+        private readonly PlayerList _PlayerList = new();
 
         private readonly NumList _EntityIdList = new();  // Disposable
 
@@ -19,12 +17,14 @@ namespace Protocol
 
         private readonly Table<Chunk.Vector, Chunk> _Chunks = new();  // Disposable
 
+        private readonly Queue<Entity> _EntitySpawningPool = new();  // Disposable
+        private readonly Queue<Entity> _EntityDespawningPool = new();
+
         private readonly 
             Table<Chunk.Vector, Table<int, Entity>> _ChunkToEntities = new();  // Disposable
         private readonly Table<int, Chunk.Grid> _EntityToChunkGrid = new();  // Disposable
 
-        private readonly Queue<Entity> _EntityPool = new();  // Disposable
-        private readonly Queue<Entity> _DespawnedEntities = new();  // Disposable
+        private readonly bool _isPlayerDespawnedOnDisconnection = true;
 
         public World(
             int id,
@@ -37,58 +37,103 @@ namespace Protocol
 
         ~World() => System.Diagnostics.Debug.Assert(false);
 
-        public virtual bool DetermineAndDespawnEntity(Entity entity)
+        internal virtual void SpawnOrConnectPlayer(
+            Client client, int renderDistance,
+            string username, System.Guid uniqueId)
         {
-            CloseEntityRendering(entity);
-            entity.Flush();
-            entity.Close();
+            int id = _EntityIdList.Alloc();
+            Player player = new(
+                id,
+                uniqueId,
+                _PosSpawning, _LookSpawning,
+                username);
+            _PlayerList.InitPlayer(player.UniqueId, player.Username);
 
-            return true;
+            player.Connect();
+
+            _EntitySpawningPool.Enqueue(player);
+
         }
 
-        protected virtual bool CanConnectPlayer(System.Guid userId)
+        public void DespawnEntities()
         {
+            while (!_EntityDespawningPool.Empty)
+            {
+                Entity entity = _EntityDespawningPool.Dequeue();
+
+                _EntityIdList.Dealloc(entity.Id);
+
+                CloseEntityRendering(entity);
+                entity.Flush();
+                entity.Close();
+            }
+        }
+
+        public void MoveEntity(Entity entity)
+        {
+            entity.Move();
+
+            UpdateEntityRendering(entity);
+        }
+
+        public void SpawnEntities(Queue<Entity> entities)
+        {
+            while (!_EntitySpawningPool.Empty)
+            {
+                Entity entity = _EntitySpawningPool.Dequeue();
+
+                InitEntityRendering(entity);
+
+                entities.Enqueue(entity);
+            }
+        }
+
+        public bool StartEntitRoutine(long serverTicks, Entity entity)
+        {
+            entity.StartRoutine(serverTicks, this);
+
+            if (entity is Player player)
+            {
+                if (!player.IsConnected)
+                {
+                    if (_isPlayerDespawnedOnDisconnection)
+                    {
+                        _EntityDespawningPool.Enqueue(entity);
+                        return true;
+                    }
+                }
+
+                StartPlayerRoutine(serverTicks, player);
+            }
+            else
+            {
+                if (entity.IsDead())
+                {
+                    _EntityDespawningPool.Enqueue(entity);
+                    return true;
+                }
+            }
+
+
             return false;
         }
 
-        internal virtual void InitPlayer(
-            Connection connection, 
-            string username, System.Guid userId)
-        {
-            Player player = new(
-                _EntityIdList,
-                userId,
-                _PosSpawning, _LookSpawning,
-                username,
-                _PlayerList);
-            player.Connect(connection);
-            _EntityPool.Enqueue(player);
-
-        }
-
-        public Queue<Entity> SpawnEntities()
-        {
-            Queue<Entity> entities = new();
-
-            while (!_EntityPool.Empty)
-            {
-                Entity entity = _EntityPool.Dequeue();
-
-                if (entity is Player player)
-                {
-                    _PlayerList.InitPlayer(player.UniqueId, player.Username);
-                }
-
-                InitEntityRendering(entity);
-                entities.Enqueue(entity);
-            }
-
-            return entities;
-        }
+        protected virtual void StartPlayerRoutine(long serverTicks, Player player) 
+        { }
 
         public virtual void StartRoutine(long serverTicks)
         {
-            _PlayerList.StartRoutine(serverTicks);
+            /*while (!_EntityPool.Empty)
+            {
+                Entity entity = _EntityPool.Dequeue();
+
+                *//*_Entities.Insert(entity.Id, entity);*//*
+                InitEntityRendering(entity);
+
+                entities.Enqueue(entity);
+            }
+
+            _PlayerList.StartRoutine(serverTicks);*/
         }
 
         private void InitEntityRendering(Entity entity)
@@ -208,11 +253,11 @@ namespace Protocol
             throw new System.NotImplementedException();
         }
 
-        public virtual void Reset()
+        /*public virtual void Reset()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
             
-        }
+        }*/
 
         protected virtual void Dispose(bool disposing)
         {
@@ -236,108 +281,9 @@ namespace Protocol
             System.GC.SuppressFinalize(this);
         }
 
-    }
-
-    public sealed class TemporaryWorld : World
-    {
-        private bool _disposed = false;
-
-        public TemporaryWorld(
-            int id,
-            Entity.Vector posSpawning, Entity.Angles lookSpawning)
-            : base(id, posSpawning, lookSpawning) { }
-
-        ~TemporaryWorld() => System.Diagnostics.Debug.Assert(false);
-
-        protected override void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                // Assertion.
-
-                if (disposing == true)
-                {
-                    // Release managed resources.
-
-                }
-
-                // Release unmanaged resources.
-
-                _disposed = true;
-            }
-
-            base.Dispose(disposing);
-        }
+        public void Close() => Dispose();
 
     }
-
-
-    public sealed class PermanentWorld : World
-    {
-        private bool _disposed = false;
-
-        private readonly Table<System.Guid, Player> _disconnectedPlayers = new();
-
-        public PermanentWorld(
-            int id,
-            Entity.Vector posSpawning, Entity.Angles lookSpawning)
-            : base(id, posSpawning, lookSpawning) { }
-
-        ~PermanentWorld() => System.Diagnostics.Debug.Assert(false);
-
-        public override bool DetermineAndDespawnEntity(Entity entity)
-        {
-            if (entity is Player player)
-            {
-                if (!_disconnectedPlayers.Contains(player.UniqueId))
-                    _disconnectedPlayers.Insert(player.UniqueId, player);
-
-                return false;
-            }
-
-            return base.DetermineAndDespawnEntity(entity);
-        }
-
-        protected override bool CanConnectPlayer(System.Guid userId)
-        {
-            return _disconnectedPlayers.Contains(userId);
-        }
-
-        protected internal override Player AcquirePlayer(
-            string username, System.Guid userId)
-        {
-            bool contains = _disconnectedPlayers.Contains(userId);
-            if (contains)
-            {
-                Player player = _disconnectedPlayers.Extract(userId);
-                return player;
-            }
-
-            return base.AcquirePlayer(username, userId);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                // Assertion.
-
-                if (disposing == true)
-                {
-                    // Release managed resources.
-
-                }
-
-                // Release unmanaged resources.
-
-                _disposed = true;
-            }
-
-            base.Dispose(disposing);
-        }
-
-    }
-
 
 
 }
