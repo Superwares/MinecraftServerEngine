@@ -41,7 +41,9 @@ namespace Protocol
 
         }
 
-        private Client _client;  // dispoasble
+        private bool _disposed = false;
+
+        private readonly Client _Client;  // dispoasble
 
         private bool _init = false;
         private int _initStep = 0;
@@ -58,17 +60,11 @@ namespace Protocol
         private readonly Queue<ClientboundPlayingPacket> _outPackets = new();  // dispoasble
         internal Queue<ClientboundPlayingPacket> Renderer => _outPackets;
 
-        private readonly Window _window;  // disposable
-
-        private bool _disposed = false;
+        private Window? _window = null;  // disposable
 
         internal Connection(Client client)
         {
-            _client = client;
-
-            /*_renderDistance = renderDistance;
-
-            _window = new(_outPackets, selfInventory);*/
+            _Client = client;
 
             System.Diagnostics.Debug.Assert(!_init);
 
@@ -106,9 +102,9 @@ namespace Protocol
                         Debug.Assert(_renderDistance == -1);
 
                         // TODO: If already player exists, use id of that player object, not new alloc id.
-                        JoinGamePacket packet = new(player.Id, 0, 0, 0, "default", true);  // TODO
+                        JoinGamePacket packet = new(player.Id, 0, 0, 0, "default", false);  // TODO
                         packet.Write(buffer);
-                        _client.Send(buffer);
+                        _Client.Send(buffer);
 
                         _initStep++;
                     }
@@ -119,7 +115,7 @@ namespace Protocol
 
                         Debug.Assert(_renderDistance == -1);
 
-                        _client.Recv(buffer);
+                        _Client.Recv(buffer);
 
                         int packetId = buffer.ReadInt(true);
                         if (ServerboundPlayingPacket.SetClientSettingsPacketId != packetId)
@@ -145,7 +141,7 @@ namespace Protocol
                         Debug.Assert(_renderDistance >= _MinRenderDistance);
                         Debug.Assert(_renderDistance <= _MaxRenderDistance);
 
-                        _client.Recv(buffer);
+                        _Client.Recv(buffer);
 
                         int packetId = buffer.ReadInt(true);
                         if (0x09 != packetId)
@@ -162,6 +158,9 @@ namespace Protocol
                     System.Diagnostics.Debug.Assert(_initStep == 3);
                     _init = true;
 
+                    System.Diagnostics.Debug.Assert(_window == null);
+                    _window = new(_outPackets, player._selfInventory);
+
                 }
                 catch (TryAgainException)
                 {
@@ -172,6 +171,7 @@ namespace Protocol
                     /*Console.WriteLine("UnexpectedBehaviorExecption!");*/
 
                     buffer.Flush();
+                    player.Disconnect();
 
                     // TODO: Send why disconnected...
 
@@ -182,6 +182,7 @@ namespace Protocol
                     /*Console.WriteLine("DisconnectedException!");*/
 
                     buffer.Flush();
+                    player.Disconnect();
 
                     throw;
                 }
@@ -193,7 +194,7 @@ namespace Protocol
                 {
                     while (true)
                     {
-                        _client.Recv(buffer);
+                        _Client.Recv(buffer);
 
                         int packetId = buffer.ReadInt(true);
                         switch (packetId)
@@ -250,6 +251,7 @@ namespace Protocol
                                             $"SlotData.Count: {packet.Data.Count}, ");
                                     }
 
+                                    System.Diagnostics.Debug.Assert(_window != null);
                                     _window.Handle(
                                         player._selfInventory,
                                         packet.WindowId,
@@ -279,6 +281,7 @@ namespace Protocol
                                     if (packet.WindowId < 0)
                                         throw new UnexpectedValueException($"ClickWindowPacket.WindowId {packet.WindowId}");
 
+                                    System.Diagnostics.Debug.Assert(_window != null);
                                     _window.ResetWindow(packet.WindowId, _outPackets);
                                 }
                                 break;
@@ -346,31 +349,45 @@ namespace Protocol
                                         default:
                                             throw new UnexpectedValueException("EntityAction.ActoinId");
                                         case 0:
-                                            if (player.IsSneaking)
-                                                throw new UnexpectedValueException("Entity.Sneaking");
                                             /*System.Console.Write("Seanking!");*/
+                                            if (player.IsSneaking)
+                                            {
+                                                throw new UnexpectedValueException("Entity.Sneaking");
+                                            }
+
                                             player.Sneak();
                                             break;
                                         case 1:
-                                            if (!player.IsSneaking)
-                                                throw new UnexpectedValueException("Entity.Sneaking");
                                             /*System.Console.Write("Unseanking!");*/
+                                            if (!player.IsSneaking)
+                                            {
+                                                throw new UnexpectedValueException("Entity.Sneaking");
+                                            }
+
                                             player.Unsneak();
                                             break;
                                         case 3:
                                             if (player.IsSprinting)
+                                            {
                                                 throw new UnexpectedValueException("Entity.Sprinting");
+                                            }
+
                                             player.Sprint();
                                             break;
                                         case 4:
                                             if (!player.IsSprinting)
+                                            {
                                                 throw new UnexpectedValueException("Entity.Sprinting");
+                                            }
+
                                             player.Unsprint();
                                             break;
                                     }
 
                                     if (packet.JumpBoost > 0)
+                                    {
                                         throw new UnexpectedValueException("EntityAction.JumpBoost");
+                                    }
 
                                 }
                                 break;
@@ -520,6 +537,8 @@ namespace Protocol
 
                     foreach (Entity entity in world.GetEntities(pChunk))
                     {
+                        if (entity.Id == selfEntityId) continue;
+
                         EntityRenderer renderer = entity._Renderer;
 
                         newEntities.Enqueue(entity);
@@ -543,6 +562,8 @@ namespace Protocol
 
                     foreach (Entity entity in world.GetEntities(pChunk))
                     {
+                        if (entity.Id == selfEntityId) continue;
+
                         EntityRenderer renderer = entity._Renderer;
 
                         if (prevRenderers.Contains(entity.Id))
@@ -619,6 +640,8 @@ namespace Protocol
             if (!_init)
                 return;
 
+            System.Diagnostics.Debug.Assert(_renderDistance >= _MinRenderDistance);
+            System.Diagnostics.Debug.Assert(_renderDistance <= _MaxRenderDistance);
             RenderChunks(world, player.Position);
             RenderEntities(world, player.Id);
 
@@ -633,7 +656,7 @@ namespace Protocol
                     LoadChunkPacket packet = _loadChunkPackets.Dequeue();
 
                     packet.Write(buffer);
-                    _client.Send(buffer);
+                    _Client.Send(buffer);
 
                     System.Diagnostics.Debug.Assert(buffer.Empty);
                 }
@@ -649,6 +672,7 @@ namespace Protocol
                     }
                     else if (packet is ClientboundCloseWindowPacket)
                     {
+                        System.Diagnostics.Debug.Assert(_window != null);
                         _window.ResetWindowForcibly(player._selfInventory, _outPackets);
                     }
                     else if (packet is RequestKeepAlivePacket)
@@ -657,7 +681,7 @@ namespace Protocol
                     }
 
                     packet.Write(buffer);
-                    _client.Send(buffer);
+                    _Client.Send(buffer);
 
                     System.Diagnostics.Debug.Assert(buffer.Empty);
                 }
@@ -683,7 +707,11 @@ namespace Protocol
             _teleportationRecords.Flush();
             _loadChunkPackets.Flush();
             _outPackets.Flush();
-            _window.Flush();
+
+            if (_window != null)
+            {
+                _window.Flush();
+            }
         }
 
         private void Dispose(bool disposing)
@@ -699,15 +727,18 @@ namespace Protocol
             if (disposing == true)
             {
                 // managed objects
-                _client.Dispose();
+                _Client.Dispose();
 
                 _renderers.Dispose();
                 _teleportationRecords.Dispose();
                 _loadChunkPackets.Dispose();
                 _outPackets.Dispose();
-                _window.Dispose();
 
-                _window.Dispose();
+                if (_window != null)
+                {
+                    _window.Dispose();
+                }
+
             }
 
             // unmanaged objects

@@ -24,11 +24,10 @@ namespace Protocol
             Table<Chunk.Vector, Table<int, Entity>> _ChunkToEntities = new();  // Disposable
         private readonly Table<int, Chunk.Grid> _EntityToChunkGrid = new();  // Disposable
 
-        private readonly bool _isPlayerDespawnedOnDisconnection = true;
+        private readonly bool _canDespawnPlayerWhenDisconnection = true;
 
         public World(Entity.Vector posSpawning, Entity.Angles lookSpawning)
         {
-            Id = id;
             _PosSpawning = posSpawning; _LookSpawning = lookSpawning;
 
         }
@@ -83,6 +82,7 @@ namespace Protocol
                 uniqueId,
                 _PosSpawning, _LookSpawning,
                 username);
+
             _PlayerList.InitPlayer(player.UniqueId, player.Username);
 
             _EntitySpawningPool.Enqueue(player);
@@ -122,11 +122,6 @@ namespace Protocol
             {
                 Entity entity = _EntitySpawningPool.Dequeue();
 
-                if (entity is Player player)
-                {
-                    _PlayerList.InitPlayer(player.UniqueId, player.Username);
-                }
-
                 InitEntityRendering(entity);
 
                 entities.Enqueue(entity);
@@ -141,7 +136,7 @@ namespace Protocol
             {
                 if (!player.IsConnected)
                 {
-                    if (_isPlayerDespawnedOnDisconnection)
+                    if (_canDespawnPlayerWhenDisconnection)
                     {
                         _EntityDespawningPool.Enqueue(entity);
                         return true;

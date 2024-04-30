@@ -10,19 +10,21 @@ namespace Server
 
         protected override bool CanJoinWorld()
         {
-            System.Diagnostics.Debug.Assert(_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             return base.CanJoinWorld();
         }
 
         protected override void StartPlayerRoutine(long serverTicks, Player player)
         {
-            
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            // If player is dead, spawn to the spanwpoint of their team.
         }
 
         public override void StartRoutine(long serverTicks)
         {
-            
+            System.Diagnostics.Debug.Assert(!_disposed);
         }
 
         protected override void Dispose(bool disposing)

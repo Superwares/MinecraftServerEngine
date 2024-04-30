@@ -96,6 +96,8 @@ namespace Protocol
             System.GC.SuppressFinalize(this);
         }
 
+        public void Close() => Dispose();
+
     }
 
     internal sealed class SelfInventory : Inventory
@@ -301,8 +303,6 @@ namespace Protocol
 
             base.Dispose(disposing);
         }
-
-        public void Close() => Dispose();
 
     }
 

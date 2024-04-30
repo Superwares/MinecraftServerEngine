@@ -1,6 +1,7 @@
 ﻿using Applications;
 using Containers;
 using Protocol;
+using Server;
 using System;
 using System.Diagnostics;
 using System.Numerics;
@@ -18,7 +19,10 @@ namespace Application
 
         private readonly Queue<Entity> _Entities = new();  // Disposable
 
-        private Server() { }
+        private Server() 
+        {
+            _World = new SuperWorld();
+        }
 
         ~Server() => Dispose(false);
 
@@ -190,19 +194,15 @@ namespace Application
             if (!_isDisposed)
             {
 
+                System.Diagnostics.Debug.Assert(_Connections.Empty);
+                System.Diagnostics.Debug.Assert(_Entities.Empty);
+
                 if (disposing == true)
                 {
                     // Release managed resources.
-                    _entityIdList.Dispose();
-
-                    _connections.Dispose();
-
-                    _playerList.Dispose();
-
-                    _entityRenderingTable.Dispose();
-                    _entities.Dispose();
-
-                    _chunks.Dispose();
+                    _World.Dispose();
+                    _Connections.Dispose();
+                    _Entities.Dispose();
                 }
 
                 // Release unmanaged resources.

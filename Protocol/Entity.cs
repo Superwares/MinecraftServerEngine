@@ -499,12 +499,11 @@ namespace Protocol
             if (!_disposed)
             {
                 // Assertion.
-                Debug.Assert(_conn == null);  // Must be disconnected when Dispose();
 
                 if (disposing == true)
                 {
                     // Release managed resources.
-                    
+                    _selfInventory.Dispose();
                 }
 
                 // Release unmanaged resources.

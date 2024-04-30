@@ -125,6 +125,8 @@ namespace Protocol
             Item item = new(uniqueId, username);
             _items.Insert(uniqueId, item);
 
+            /*System.Console.WriteLine($"UniqueId: {uniqueId} in InitPlayer");*/
+
             RenderToAdd(item);
         }
 
@@ -144,6 +146,8 @@ namespace Protocol
             Queue<ClientboundPlayingPacket> renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            /*System.Console.WriteLine($"UniqueId: {uniqueId} in Connect");*/
 
             Debug.Assert(IsDisconnected(uniqueId));
             _renderers.Insert(uniqueId, renderer);

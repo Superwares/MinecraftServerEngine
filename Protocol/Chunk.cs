@@ -40,8 +40,8 @@ namespace Protocol
                 if (d == 0)
                     return new(c, c);
 
-                int xMax = c._x + d, zMax = c._z + d,
-                    xMin = c._x - d, zMin = c._z - d;
+                int xMax = c.X + d, zMax = c.Z + d,
+                    xMin = c.X - d, zMin = c.Z - d;
 
                 /*int a = (2 * d) + 1;
                 int length = a * a;
