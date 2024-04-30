@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System;
 using Containers;
+using System.Numerics;
 
 namespace Protocol
 {
@@ -80,6 +81,8 @@ namespace Protocol
         }
 
         private bool _disposed = false;
+
+        internal abstract BoundingBox GetBoundingBox();
 
         private int _id;
         public int Id => _id;
@@ -359,6 +362,8 @@ namespace Protocol
     {
         private bool _disposed = false;
 
+        internal override BoundingBox GetBoundingBox() => new(0.6f, 1.8f);
+
         public readonly string Username;
 
         internal readonly SelfInventory _selfInventory;
@@ -370,6 +375,7 @@ namespace Protocol
 
         private bool _controled;
         private Vector _posControl;
+
 
         internal Player(
             int id,
@@ -393,6 +399,20 @@ namespace Protocol
 
             Debug.Assert(!IsConnected);
             _connected = true;
+
+            {
+                int payload = new Random().Next();
+                selfRenderer.Enqueue(new TeleportSelfPlayerPacket(
+                Position.X, Position.Y, Position.Z,
+                Look.Yaw, Look.Pitch,
+                false, false, false, false, false,
+                    payload));
+            }
+
+            {
+                selfRenderer.Enqueue(new SetPlayerAbilitiesPacket(
+                    false, false, false, false, 0, 0));
+            }
 
             System.Diagnostics.Debug.Assert(_selfRenderer == null);
             _selfRenderer = selfRenderer;

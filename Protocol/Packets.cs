@@ -298,6 +298,7 @@ namespace Protocol
     {
         public const int SpawnNamedEntityPacketId = 0x05;
         public const int ClientboundConfirmTransactionPacketId = 0x11;
+        public const int ClientboundCloseWindowPacketId = 0x12;
         public const int OpenWindowPacketId = 0x13;
         public const int SetWindowItemsPacketId = 0x14;
         public const int SetSlotPacketId = 0x16;
@@ -728,17 +729,33 @@ namespace Protocol
             Accepted = accepted;
         }
 
-        public ClientboundConfirmTransactionPacket(int id, int v1, bool v2) : base(id)
-        {
-            this.v1 = v1;
-            this.v2 = v2;
-        }
-
         protected override void WriteData(Buffer buffer)
         {
             buffer.WriteSbyte(WindowId);
             buffer.WriteShort(ActionNumber);
             buffer.WriteBool(Accepted);
+        }
+
+    }
+
+    internal class ClientboundCloseWindowPacket : ClientboundPlayingPacket
+    {
+        public readonly byte WindowId;
+
+        public static ClientboundCloseWindowPacket Read(Buffer buffer)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public ClientboundCloseWindowPacket(byte windowId) 
+            : base(ClientboundCloseWindowPacketId)
+        {
+            WindowId = windowId;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteByte(WindowId);
         }
 
     }

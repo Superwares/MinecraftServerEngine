@@ -22,7 +22,7 @@ namespace Application
 
         ~Server() => Dispose(false);
 
-        private void Control(long serverTicks)
+        private void InitOrControl(long serverTicks)
         {
             for (int i = 0; i < _Connections.Count; ++i)
             {
@@ -108,7 +108,7 @@ namespace Application
         {
             Console.Write(".");
 
-            Control(serverTicks);
+            InitOrControl(serverTicks);
 
             // Barrier
 

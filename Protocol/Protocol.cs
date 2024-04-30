@@ -409,6 +409,12 @@ namespace Protocol
             {
                 (Client client, System.Guid uniqueId, string username) = _clients.Dequeue();
 
+                if (!world.CanJoinWorld())
+                {
+                    client.Close();
+                    continue;
+                }
+
                 if (!world.CanSpawnOrConnectPlayer(uniqueId))
                 {
                     _clients.Enqueue((client, uniqueId, username));
@@ -435,8 +441,7 @@ namespace Protocol
             _connListener = connListener;
         }
 
-        private int HandleVisitors(
-            Queue<Client> visitors, Queue<int> levelQueue)
+        private int HandleVisitors(Queue<Client> visitors, Queue<int> levelQueue)
         {
             /*Console.Write(".");*/
 
@@ -544,37 +549,34 @@ namespace Protocol
 
                         // TODO: Check username is empty or invalid.
 
-                        /*Console.Write("Start http request!");
+                        Console.Write("Start http request!");
 
                         // TODO: Use own http client in common library.
-                        using HttpClient httpClient = new();
+                        using System.Net.Http.HttpClient httpClient = new();
                         string url = string.Format("https://api.mojang.com/users/profiles/minecraft/{0}", inPacket.Username);
-                        *//*Console.WriteLine(inPacket.Username);
-                        Console.WriteLine($"url: {url}");*//*
-                        using HttpRequestMessage request = new(HttpMethod.Get, url);
+                        Console.WriteLine(inPacket.Username);
+                        Console.WriteLine($"url: {url}");
+                        using System.Net.Http.HttpRequestMessage request = new(System.Net.Http.HttpMethod.Get, url);
 
                         // TODO: handle HttpRequestException
-                        using HttpResponseMessage response = httpClient.Send(request);
+                        using System.Net.Http.HttpResponseMessage response = httpClient.Send(request);
 
-                        using Stream stream = response.Content.ReadAsStream();
-                        using StreamReader reader = new(stream);
+                        using System.IO.Stream stream = response.Content.ReadAsStream();
+                        using System.IO.StreamReader reader = new(stream);
                         string str = reader.ReadToEnd();
                         System.Collections.Generic.Dictionary<string, string>? dictionary =
-                            JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, string>>(str);
+                            System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, string>>(str);
                         Debug.Assert(dictionary != null);
 
                         Guid userId = Guid.Parse(dictionary["id"]);
                         string username = dictionary["name"];  // TODO: check username is valid
-                        *//*Console.WriteLine($"userId: {userId}");
-                        Console.WriteLine($"username: {username}");*//*
+                        Console.WriteLine($"userId: {userId}");
+                        Console.WriteLine($"username: {username}");
 
                         // TODO: Handle to throw exception
                         Debug.Assert(inPacket.Username == username);
 
-                        Console.Write("Finish http request!");*/
-
-                        Guid userId = Guid.NewGuid();
-                        string username = inPacket.Username;
+                        Console.Write("Finish http request!");
 
                         LoginSuccessPacket outPacket1 = new(userId, username);
                         outPacket1.Write(buffer);

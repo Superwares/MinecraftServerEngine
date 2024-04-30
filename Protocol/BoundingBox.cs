@@ -1,6 +1,6 @@
 ﻿namespace Protocol
 {
-    public sealed class BoundingBox
+    public struct BoundingBox
     {
         public readonly float Width, Height;
 

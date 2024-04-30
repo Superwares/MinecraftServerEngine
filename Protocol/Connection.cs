@@ -100,21 +100,8 @@ namespace Protocol
                     {
                         /*Console.WriteLine("JoinGame!");*/
 
-                        {
-                            int payload = new Random().Next();
-                            _outPackets.Enqueue(new TeleportSelfPlayerPacket(
-                                player.Position.X, player.Position.Y, player.Position.Z,
-                                player.Look.Yaw, player.Look.Pitch,
-                                false, false, false, false, false,
-                                payload));
-                        }
-
-                        {
-                            _outPackets.Enqueue(new SetPlayerAbilitiesPacket(
-                                false, false, false, false, 0, 0));
-                        }
-
                         player.Connect(_outPackets);
+                        world.PlayerListConnect(player.UniqueId, _outPackets);
 
                         Debug.Assert(_renderDistance == -1);
 
@@ -300,7 +287,7 @@ namespace Protocol
                                     ResponseKeepAlivePacket packet = ResponseKeepAlivePacket.Read(buffer);
 
                                     // TODO: Check payload with cache. If not corrent, throw unexpected client behavior exception.
-                                    world.KeepAliveConnectedPlayer(serverTicks, player.UniqueId);
+                                    world.PlayerListKeepAlive(serverTicks, player.UniqueId);
                                 }
                                 break;
                             case ServerboundPlayingPacket.PlayerPacketId:
@@ -400,12 +387,14 @@ namespace Protocol
                     System.Console.WriteLine(e.Message);
 
                     player.Disconnect();
+                    world.PlayerListDisconnect(player.UniqueId);
 
                     throw new DisconnectedClientException();
                 }
                 catch (DisconnectedClientException)
                 {
                     player.Disconnect();
+                    world.PlayerListDisconnect(player.UniqueId);
 
                     throw;
                 }
@@ -664,7 +653,7 @@ namespace Protocol
                     }
                     else if (packet is RequestKeepAlivePacket)
                     {
-                        // save payload and check when recived.
+                        // TODO: save payload and check when recived.
                     }
 
                     packet.Write(buffer);

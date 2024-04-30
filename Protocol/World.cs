@@ -26,9 +26,7 @@ namespace Protocol
 
         private readonly bool _isPlayerDespawnedOnDisconnection = true;
 
-        public World(
-            int id,
-            Entity.Vector posSpawning, Entity.Angles lookSpawning)
+        public World(Entity.Vector posSpawning, Entity.Angles lookSpawning)
         {
             Id = id;
             _PosSpawning = posSpawning; _LookSpawning = lookSpawning;
@@ -37,7 +35,28 @@ namespace Protocol
 
         ~World() => System.Diagnostics.Debug.Assert(false);
 
-        internal virtual bool CanSpawnOrConnectPlayer(System.Guid uniqueId)
+        internal void PlayerListConnect(
+            System.Guid uniqueId, Queue<ClientboundPlayingPacket> renderer)
+        {
+            _PlayerList.Connect(uniqueId, renderer);
+        }
+
+        internal void PlayerListDisconnect(System.Guid uniqueId)
+        {
+            _PlayerList.Disconnect(uniqueId);
+        }
+
+        internal void PlayerListKeepAlive(long serverTicks, System.Guid uniqueId)
+        {
+            _PlayerList.KeepAlive(serverTicks, uniqueId);
+        }
+
+        protected internal virtual bool CanJoinWorld()
+        {
+            return true;
+        }
+
+        protected internal virtual bool CanSpawnOrConnectPlayer(System.Guid uniqueId)
         {
             /*if (!_isPlayerDespawnedOnDisconnection)
             {
@@ -77,6 +96,11 @@ namespace Protocol
             {
                 Entity entity = _EntityDespawningPool.Dequeue();
 
+                if (entity is Player player)
+                {
+                    _PlayerList.ClosePlayer(player.UniqueId);
+                }
+
                 _EntityIdList.Dealloc(entity.Id);
 
                 CloseEntityRendering(entity);
@@ -97,6 +121,11 @@ namespace Protocol
             while (!_EntitySpawningPool.Empty)
             {
                 Entity entity = _EntitySpawningPool.Dequeue();
+
+                if (entity is Player player)
+                {
+                    _PlayerList.InitPlayer(player.UniqueId, player.Username);
+                }
 
                 InitEntityRendering(entity);
 
@@ -134,22 +163,11 @@ namespace Protocol
             return false;
         }
 
-        protected virtual void StartPlayerRoutine(long serverTicks, Player player) 
-        { }
+        protected virtual void StartPlayerRoutine(long serverTicks, Player player) { }
 
-        public virtual void StartRoutine(long serverTicks)
+        public virtual void StartRoutine(long serverTicks) 
         {
-            /*while (!_EntityPool.Empty)
-            {
-                Entity entity = _EntityPool.Dequeue();
-
-                *//*_Entities.Insert(entity.Id, entity);*//*
-                InitEntityRendering(entity);
-
-                entities.Enqueue(entity);
-            }
-
-            _PlayerList.StartRoutine(serverTicks);*/
+            _PlayerList.StartRoutine(serverTicks);
         }
 
         private void InitEntityRendering(Entity entity)
@@ -268,12 +286,6 @@ namespace Protocol
         {
             throw new System.NotImplementedException();
         }
-
-        /*public virtual void Reset()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-            
-        }*/
 
         protected virtual void Dispose(bool disposing)
         {
