@@ -34,7 +34,7 @@ namespace Protocol
 
         ~Inventory() => System.Diagnostics.Debug.Assert(false);
 
-        internal virtual (bool, Item?) TakeItem(int index, SlotData slotData)
+        internal virtual (bool, Item?) TakeAll(int index, SlotData slotData)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -65,7 +65,7 @@ namespace Protocol
             return (f, itemTaked);
         }
 
-        internal virtual (bool, Item?) PutItem(int index, Item item, SlotData slotData)
+        internal virtual (bool, Item?) PutAll(int index, Item item, SlotData slotData)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -197,34 +197,34 @@ namespace Protocol
 
         public SelfInventory() : base(46) 
         {
-            PutItem(15, new Item(Item.Types.Stone, 64), new(-1, 0));
-            PutItem(16, new Item(Item.Types.Stone, 1), new(-1, 0));
+            PutAll(15, new Item(Item.Types.Stone, 64), new(-1, 0));
+            PutAll(16, new Item(Item.Types.Stone, 1), new(-1, 0));
 
         }
 
         ~SelfInventory() => System.Diagnostics.Debug.Assert(false);
 
-        internal override (bool, Item?) TakeItem(int index, SlotData slotData)
+        internal override (bool, Item?) TakeAll(int index, SlotData slotData)
         {
             if (index == 0)
             {
-                return base.TakeItem(index, slotData);
+                return base.TakeAll(index, slotData);
             }
             else if (index > 0 && index <= 4)
             {
-                return base.TakeItem(index, slotData);
+                return base.TakeAll(index, slotData);
             }
             else if (index > 4 && index <= 8)
             {
-                return base.TakeItem(index, slotData);
+                return base.TakeAll(index, slotData);
             }
             else
             {
-                return base.TakeItem(index, slotData);
+                return base.TakeAll(index, slotData);
             }
         }
 
-        internal override (bool, Item?) PutItem(int index, Item itemCursor, SlotData slotData)
+        internal override (bool, Item?) PutAll(int index, Item itemCursor, SlotData slotData)
         {
             if (index == 0)
             {
@@ -254,7 +254,7 @@ namespace Protocol
             }
             else
             {
-                return base.PutItem(index, itemCursor, slotData);
+                return base.PutAll(index, itemCursor, slotData);
             }
         }
 
@@ -375,7 +375,7 @@ namespace Protocol
         }
 
 
-        internal override (bool, Item?) TakeItem(int index, SlotData slotData)
+        internal override (bool, Item?) TakeAll(int index, SlotData slotData)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -383,17 +383,17 @@ namespace Protocol
             {
                 _Renderer.RenderToEmpty(index);
 
-                return base.TakeItem(index, slotData);
+                return base.TakeAll(index, slotData);
             }
         }
 
-        internal override (bool, Item?) PutItem(int index, Item item, SlotData slotData)
+        internal override (bool, Item?) PutAll(int index, Item item, SlotData slotData)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             lock (_SharedObject)
             {
-                (bool f, Item? result) = base.PutItem(index, item, slotData);
+                (bool f, Item? result) = base.PutAll(index, item, slotData);
                 _Renderer.RenderToSet(index, item);
 
                 return (f, result);

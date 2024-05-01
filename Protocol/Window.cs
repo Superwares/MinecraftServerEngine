@@ -108,6 +108,8 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(_windowId >= 0);
+
             if (windowId != _windowId)
             {
                 if (_ambiguous)
@@ -146,6 +148,8 @@ namespace Protocol
             {
                 // TODO: Drop item if _iremCursor is not null.
                 _itemCursor = null;
+
+                outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));
             }*/
 
             System.Diagnostics.Debug.Assert(_itemCursor == null);
@@ -197,6 +201,42 @@ namespace Protocol
             {
                 // TODO: Drop item if _iremCursor is not null.
                 _itemCursor = null;
+
+                outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));
+            }*/
+
+            System.Diagnostics.Debug.Assert(_itemCursor == null);
+        }
+
+        public void CloseWindow()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_windowId >= 0);
+            if (_windowId == 0)
+            {
+
+            }
+            else if (_windowId > 0)
+            {
+                System.Diagnostics.Debug.Assert(_windowId > 0);
+                System.Diagnostics.Debug.Assert(_id >= 0);
+                System.Diagnostics.Debug.Assert(_publicInventory != null);
+
+                _publicInventory.Close(_id, _windowId);
+
+
+            }
+
+            _windowId = -1;
+            _id = -1;
+
+            _publicInventory = null;
+
+            /*if (_itemCursor != null)
+            {
+                // TODO: Drop item if _iremCursor is not null.
+                _itemCursor = null;
             }*/
 
             System.Diagnostics.Debug.Assert(_itemCursor == null);
@@ -216,11 +256,11 @@ namespace Protocol
 
             if (_itemCursor == null)
             {
-                (f, _itemCursor) = selfInventory.TakeItem(index, slotData);
+                (f, _itemCursor) = selfInventory.TakeAll(index, slotData);
             }
             else
             {
-                (f, _itemCursor) = selfInventory.PutItem(index, _itemCursor, slotData);
+                (f, _itemCursor) = selfInventory.PutAll(index, _itemCursor, slotData);
             }
 
             if (!f)
@@ -248,14 +288,14 @@ namespace Protocol
             {
                 if (index >= 0 && index < _publicInventory.TotalSlotCount)
                 {
-                    (f, _itemCursor) = _publicInventory.TakeItem(index, slotData);
+                    (f, _itemCursor) = _publicInventory.TakeAll(index, slotData);
                 }
                 else if (
                     index >= _publicInventory.TotalSlotCount &&
                     index < _publicInventory.TotalSlotCount + selfInventory.PrimarySlotCount)
                 {
                     int j = index + 9 - _publicInventory.TotalSlotCount;
-                    (f, _itemCursor) = selfInventory.TakeItem(j, slotData);
+                    (f, _itemCursor) = selfInventory.TakeAll(j, slotData);
                 }
                 else
                 {
@@ -266,14 +306,14 @@ namespace Protocol
             {
                 if (index >= 0 && index < _publicInventory.TotalSlotCount)
                 {
-                    (f, _itemCursor) = _publicInventory.PutItem(index, _itemCursor, slotData);
+                    (f, _itemCursor) = _publicInventory.PutAll(index, _itemCursor, slotData);
                 }
                 else if (
                     index >= _publicInventory.TotalSlotCount &&
                     index < _publicInventory.TotalSlotCount + selfInventory.PrimarySlotCount)
                 {
                     int j = index + 9 - _publicInventory.TotalSlotCount;
-                    (f, _itemCursor) = selfInventory.PutItem(j, _itemCursor, slotData);
+                    (f, _itemCursor) = selfInventory.PutAll(j, _itemCursor, slotData);
                 }
                 else
                 {
@@ -321,6 +361,42 @@ namespace Protocol
                 
             }
 
+        }
+
+        private void ClickRightMouseButton(
+            SelfInventory selfInventory, int index, SlotData slotData)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (index >= selfInventory.TotalSlotCount)
+            {
+                throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
+            }
+
+            bool f;
+
+            if (_itemCursor == null)
+            {
+                (f, _itemCursor) = selfInventory.TakeHalf(index, slotData);
+            }
+            else
+            {
+                (f, _itemCursor) = selfInventory.PutOne(index, _itemCursor, slotData);
+            }
+
+            if (!f)
+            {
+                /*SlotData slotDataInCursor = _itemCursor.ConventToPacketFormat();
+
+                outPackets.Enqueue(new SetSlotPacket(-1, 0, slotDataInCursor));*/
+
+                throw new UnexpectedValueException("ClickWindowPacket.SLOT_DATA");
+            }
+        }
+
+        private void ClickRightMouseButtonWithPublicInventory()
+        {
+            throw new System.NotImplementedException();
         }
 
         public void Handle(
@@ -372,7 +448,27 @@ namespace Protocol
                                     outPackets);
                             }
                             break;
+                        case 1:
+                            if (_windowId == 0)
+                            {
+                                ClickRightMouseButton();
+                            }
+                            else
+                            {
+                                ClickRightMouseButtonWithPublicInventory();
+                            }
+                            break;
                     }
+                    break;
+                case 6:
+                    // Drop item
+                    /*if (_itemCursor != null)
+                    {
+                        _itemCursor = null;
+                    }*/
+
+                    System.Diagnostics.Debug.Assert(_itemCursor == null);
+                    ResetWindowForcibly(selfInventory, outPackets, true);
                     break;
             }
 
@@ -389,40 +485,6 @@ namespace Protocol
 
         }
         
-        public void CloseWindow()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(_windowId >= 0);
-            if (_windowId == 0)
-            {
-
-            }
-            else if (_windowId > 0)
-            {
-                System.Diagnostics.Debug.Assert(_windowId > 0);
-                System.Diagnostics.Debug.Assert(_id >= 0);
-                System.Diagnostics.Debug.Assert(_publicInventory != null);
-
-                _publicInventory.Close(_id, _windowId);
-
-                
-            }
-
-            _windowId = -1;
-            _id = -1;
-
-            _publicInventory = null;
-
-            /*if (_itemCursor != null)
-            {
-                // TODO: Drop item if _iremCursor is not null.
-                _itemCursor = null;
-            }*/
-
-            System.Diagnostics.Debug.Assert(_itemCursor == null);
-        }
-
         private void Dispose(bool disposing)
         {
             if (_disposed) return;

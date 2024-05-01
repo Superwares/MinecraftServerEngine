@@ -197,7 +197,7 @@ namespace Protocol
                                 $"SlotData.Count: {packet.SLOT_DATA.Count}, ");
                         }
 
-                        /*System.Diagnostics.Debug.Assert(_window != null);
+                        System.Diagnostics.Debug.Assert(_window != null);
                         _window.Handle(
                             player._selfInventory,
                             packet.WINDOW_ID,
@@ -205,7 +205,7 @@ namespace Protocol
                             packet.BUTTON,
                             packet.SLOT,
                             packet.SLOT_DATA,
-                            _outPackets);*/
+                            _outPackets);
 
                         _outPackets.Enqueue(new ClientboundConfirmTransactionPacket(
                                 (sbyte)packet.WINDOW_ID, packet.ACTION, true));
