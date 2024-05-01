@@ -2,11 +2,16 @@
 
 namespace Server
 {
-    internal class SuperWorld : World
+    internal sealed class SuperWorld : World
     {
         private bool _disposed = false;
 
-        public SuperWorld() : base(new(0, 61, 0), new(0,0)) { }
+        private readonly ChestInventory _chestInventory;
+
+        public SuperWorld() : base(new(0, 61, 0), new(0,0)) 
+        {
+            _chestInventory = new ChestInventory();
+        }
 
         protected override bool CanJoinWorld()
         {
@@ -26,7 +31,6 @@ namespace Server
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            base.StartRoutine(serverTicks);
         }
 
         protected override void Dispose(bool disposing)

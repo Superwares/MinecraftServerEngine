@@ -10,7 +10,10 @@ namespace Protocol
     {
         private bool _disposed = false;
 
-        public readonly int Count;
+        public readonly int TotalSlotCount;
+
+        private int _count = 0;
+        public int Count => _count;
         protected readonly Item?[] _items;
         public System.Collections.Generic.IEnumerable<Item?> Items
         {
@@ -21,40 +24,106 @@ namespace Protocol
             }
         }
 
-        public Inventory(int count)
+        public Inventory(int totalCount)
         {
-            Count = count;
+            TotalSlotCount = totalCount;
 
-            _items = new Item?[count];
+            _items = new Item?[totalCount];
             System.Array.Fill(_items, null);
         }
 
         ~Inventory() => System.Diagnostics.Debug.Assert(false);
 
-        private Item CloneItem(Item item, int count)
+        internal virtual (bool, Item?) TakeItem(int index, SlotData slotData)
         {
-            switch (item.Id)
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_count >= 0);
+            System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
+            System.Diagnostics.Debug.Assert(index >= 0);
+            System.Diagnostics.Debug.Assert(index < TotalSlotCount);
+
+            bool f;
+
+            Item? itemTaked = _items[index];
+            _items[index] = null;
+
+            if (itemTaked != null)
             {
-                default:
-                    throw new NotImplementedException();
-                case 280:
-                    return new Stick(count);
+                _count--;
+
+                f = itemTaked.CompareWithPacketFormat(slotData);
             }
+            else
+            {
+                if (slotData.Id == -1)
+                    f = true;
+                else
+                    f = false;
+            }
+
+            return (f, itemTaked);
         }
 
-        public virtual Item? TakeItem()
+        internal virtual (bool, Item?) PutItem(int index, Item item, SlotData slotData)
         {
-            throw new System.NotImplementedException();
-        }
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-        public virtual Item? PutItem()
-        {
-            throw new System.NotImplementedException();
+            System.Diagnostics.Debug.Assert(_count >= 0);
+            System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
+            System.Diagnostics.Debug.Assert(index >= 0);
+            System.Diagnostics.Debug.Assert(index < TotalSlotCount);
+
+            bool f;
+
+            Item? itemTaked = _items[index];
+
+            if (itemTaked != null)
+            {
+                System.Diagnostics.Debug.Assert(!ReferenceEquals(itemTaked, item));
+
+                f = itemTaked.CompareWithPacketFormat(slotData);
+
+                _items[index] = item;
+
+                if (item.TYPE == itemTaked.TYPE)
+                {
+                    int spend = item.Stack(itemTaked.Count);
+
+                    if (spend == itemTaked.Count)
+                    {
+                        itemTaked = null;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.Assert(spend < item.Count);
+                        itemTaked.Spend(spend);
+                    }
+                }
+                else
+                {
+                    
+                }
+            }
+            else
+            {
+                _items[index] = item;
+
+                _count++;
+
+                if (slotData.Id == -1)
+                    f = true;
+                else
+                    f = false;
+            }
+            
+            return (f, itemTaked);
         }
 
         public void Print()
         {
-            for (int i = 0; i < Count; ++i)
+            System.Console.WriteLine($"Count: {_count}");
+            for (int i = 0; i < TotalSlotCount; ++i)
             {
                 if (i % 9 == 0)
                 {
@@ -68,7 +137,7 @@ namespace Protocol
                     continue;
                 }
 
-                System.Console.Write($"[{item.Id}, {item.Count}]");
+                System.Console.Write($"[{item.TYPE}, {item.Count}]");
             }
             System.Console.WriteLine();
         }
@@ -78,6 +147,7 @@ namespace Protocol
             if (_disposed) return;
 
             // Assertion.
+            Debug.Assert(_count == 0);
 
             if (disposing == true)
             {
@@ -125,9 +195,68 @@ namespace Protocol
             }
         }
 
-        public SelfInventory() : base(46) { }
+        public SelfInventory() : base(46) 
+        {
+            PutItem(15, new Item(Item.Types.Stone, 64), new(-1, 0));
+            PutItem(16, new Item(Item.Types.Stone, 1), new(-1, 0));
+
+        }
 
         ~SelfInventory() => System.Diagnostics.Debug.Assert(false);
+
+        internal override (bool, Item?) TakeItem(int index, SlotData slotData)
+        {
+            if (index == 0)
+            {
+                return base.TakeItem(index, slotData);
+            }
+            else if (index > 0 && index <= 4)
+            {
+                return base.TakeItem(index, slotData);
+            }
+            else if (index > 4 && index <= 8)
+            {
+                return base.TakeItem(index, slotData);
+            }
+            else
+            {
+                return base.TakeItem(index, slotData);
+            }
+        }
+
+        internal override (bool, Item?) PutItem(int index, Item itemCursor, SlotData slotData)
+        {
+            if (index == 0)
+            {
+                bool f;
+                Item? itemTaked = _items[index];
+                if (itemTaked != null)
+                {
+                    f = itemTaked.CompareWithPacketFormat(slotData);
+                }
+                else
+                {
+                    if (slotData.Id == -1)
+                        f = true;
+                    else
+                        f = false;
+                }
+
+                return (f, itemCursor);
+            }
+            else if (index > 0 && index <= 4)
+            {
+                throw new System.NotImplementedException();
+            }
+            else if (index > 4 && index <= 8)
+            {
+                throw new System.NotImplementedException();
+            }
+            else
+            {
+                return base.PutItem(index, itemCursor, slotData);
+            }
+        }
 
         public void DistributeItem(int[] indexes, Item item)
         {
@@ -188,12 +317,12 @@ namespace Protocol
 
                 Debug.Assert(windowId >= byte.MinValue);
                 Debug.Assert(windowId <= byte.MaxValue);
-                Debug.Assert(Count >= byte.MinValue);
-                Debug.Assert(Count <= byte.MaxValue);
+                Debug.Assert(TotalSlotCount >= byte.MinValue);
+                Debug.Assert(TotalSlotCount <= byte.MaxValue);
                 outPackets.Enqueue(new OpenWindowPacket(
-                    (byte)windowId, WindowType, "", (byte)Count));
+                    (byte)windowId, WindowType, "", (byte)TotalSlotCount));
 
-                int count = selfInventory.PrimarySlotCount + Count;
+                int count = selfInventory.PrimarySlotCount + TotalSlotCount;
 
                 int i = 0;
                 var arr = new SlotData[count];
@@ -206,11 +335,7 @@ namespace Protocol
                         continue;
                     }
 
-                    Debug.Assert(item.Id >= short.MinValue);
-                    Debug.Assert(item.Id <= short.MaxValue);
-                    Debug.Assert(item.Count >= byte.MinValue);
-                    Debug.Assert(item.Count <= byte.MaxValue);
-                    arr[i++] = new((short)item.Id, (byte)item.Count);
+                    arr[i++] = item.ConventToPacketFormat();
                 }
 
                 foreach (Item? item in selfInventory.PrimaryItems)
@@ -221,11 +346,7 @@ namespace Protocol
                         continue;
                     }
 
-                    Debug.Assert(item.Id >= short.MinValue);
-                    Debug.Assert(item.Id <= short.MaxValue);
-                    Debug.Assert(item.Count >= byte.MinValue);
-                    Debug.Assert(item.Count <= byte.MaxValue);
-                    arr[i++] = new((short)item.Id, (byte)item.Count);
+                    arr[i++] = item.ConventToPacketFormat();
                 }
 
                 Debug.Assert(windowId >= byte.MinValue);
@@ -248,8 +369,34 @@ namespace Protocol
 
             lock (_SharedObject)
             {
-                (int windowId, Queue<ClientboundPlayingPacket> outPackets) = _Renderer.Remove(id);
+                int windowId = _Renderer.Remove(id);
                 System.Diagnostics.Debug.Assert(_windowId == windowId);
+            }
+        }
+
+
+        internal override (bool, Item?) TakeItem(int index, SlotData slotData)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            lock (_SharedObject)
+            {
+                _Renderer.RenderToEmpty(index);
+
+                return base.TakeItem(index, slotData);
+            }
+        }
+
+        internal override (bool, Item?) PutItem(int index, Item item, SlotData slotData)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            lock (_SharedObject)
+            {
+                (bool f, Item? result) = base.PutItem(index, item, slotData);
+                _Renderer.RenderToSet(index, item);
+
+                return (f, result);
             }
         }
 
@@ -268,18 +415,19 @@ namespace Protocol
             throw new System.NotImplementedException();
         }
 
-        public void Flush()
+        public void CloseForcibly()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             lock (_SharedObject)
             {
-                int[] ids = _Renderer.Flush();
+                int[] ids = _Renderer.CloseForciblyAndFlush();
                 for (int i = 0; i < ids.Length; ++i)
                 {
                     _IdList.Dealloc(ids[i]);
                 }
             }
+
         }
 
         protected override void Dispose(bool disposing)

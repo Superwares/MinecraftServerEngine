@@ -21,11 +21,6 @@ namespace Protocol
                 _x = x; _y = y; _z = z;
             }
 
-            internal void Set(double x, double y, double z)
-            {
-                _x = x; _y = y; _z = z;
-            }
-
             public bool Equals(Vector other)
             {
                 return (_x == other._x) && (_y == other._y) && (_z == other._z);
@@ -37,12 +32,6 @@ namespace Protocol
         {
             internal const float MaxYaw = 180, MinYaw = -180;
             internal const float MaxPitch = 90, MinPitch = -90;
-
-            private static float Frem(float angle)
-            {
-                float y = 360.0f;
-                return angle - (y * (float)Math.Floor(angle / y));
-            }
 
             private float _yaw, _pitch;
             public float Yaw => _yaw;
@@ -58,7 +47,13 @@ namespace Protocol
                 _pitch = pitch;
             }
 
-            internal (byte, byte) ConvertToProtocolFormat()
+            private static float Frem(float angle)
+            {
+                float y = 360.0f;
+                return angle - (y * (float)Math.Floor(angle / y));
+            }
+
+            internal (byte, byte) ConvertToPacketFormat()
             {
                 Debug.Assert(_pitch >= MinPitch);
                 Debug.Assert(_pitch <= MaxPitch);
@@ -162,7 +157,7 @@ namespace Protocol
             // If not, use EntityTeleportPacket to render.
             if (moved && _rotated)
             {
-                (byte x, byte y) = _look.ConvertToProtocolFormat();
+                (byte x, byte y) = _look.ConvertToPacketFormat();
                 _Renderer.Render(new EntityLookAndRelMovePacket(
                     Id,
                     (short)((_pos.X - _posPrev.X) * 32 * 128),
@@ -187,7 +182,7 @@ namespace Protocol
             {
                 Debug.Assert(!moved);
 
-                (byte x, byte y) = _look.ConvertToProtocolFormat();
+                (byte x, byte y) = _look.ConvertToPacketFormat();
                 _Renderer.Render(new EntityLookPacket(Id, x, y, _onGround));
                 _Renderer.Render(new EntityHeadLookPacket(Id, x));
             }

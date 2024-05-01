@@ -1493,12 +1493,12 @@ namespace Protocol
 
     internal class ClickWindowPacket : ServerboundPlayingPacket
     {
-        public readonly byte WindowId;
-        public readonly short SlotNumber;
-        public readonly sbyte ButtonNumber;
-        public readonly short ActionNumber;
-        public readonly int ModeNumber;
-        public readonly SlotData Data;
+        public readonly byte WINDOW_ID;
+        public readonly short SLOT;
+        public readonly sbyte BUTTON;
+        public readonly short ACTION;
+        public readonly int MODE;
+        public readonly SlotData SLOT_DATA;
 
         internal static ClickWindowPacket Read(Buffer buffer)
         {
@@ -1513,12 +1513,12 @@ namespace Protocol
             short slotNumber, sbyte buttonNumber, short actionNumber, int modeNumber,
             byte[] data) : base(ClickWindowPacketId)
         {
-            WindowId = windowId;
-            SlotNumber = slotNumber;
-            ButtonNumber = buttonNumber;
-            ActionNumber = actionNumber;
-            ModeNumber = modeNumber;
-            Data = SlotData.Read(data);
+            WINDOW_ID = windowId;
+            SLOT = slotNumber;
+            BUTTON = buttonNumber;
+            ACTION = actionNumber;
+            MODE = modeNumber;
+            SLOT_DATA = SlotData.Read(data);
         }
 
         protected override void WriteData(Buffer buffer)

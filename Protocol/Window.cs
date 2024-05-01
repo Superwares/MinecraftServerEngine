@@ -1,10 +1,11 @@
-﻿using System;
-using System.Diagnostics;
+﻿
 using Containers;
+using System;
+using System.Reflection;
 
 namespace Protocol
 {
-    internal sealed class Window : IDisposable
+    internal sealed class Window : System.IDisposable
     {
         private bool _disposed = false;
 
@@ -32,7 +33,7 @@ namespace Protocol
             _windowId = 0;
 
             {
-                int i = 0, n = selfInventory.Count;
+                int i = 0, n = selfInventory.TotalSlotCount;
                 var arr = new SlotData[n];
 
                 foreach (Item? item in selfInventory.Items)
@@ -43,33 +44,29 @@ namespace Protocol
                         continue;
                     }
 
-                    Debug.Assert(item.Id >= short.MinValue);
-                    Debug.Assert(item.Id <= short.MaxValue);
-                    Debug.Assert(item.Count >= byte.MinValue);
-                    Debug.Assert(item.Count <= byte.MaxValue);
-                    arr[i++] = new((short)item.Id, (byte)item.Count);
+                    arr[i++] = item.ConventToPacketFormat();
                 }
 
-                Debug.Assert(_windowId >= byte.MinValue);
-                Debug.Assert(_windowId <= byte.MaxValue);
+                System.Diagnostics.Debug.Assert(_windowId >= byte.MinValue);
+                System.Diagnostics.Debug.Assert(_windowId <= byte.MaxValue);
                 outPackets.Enqueue(new SetWindowItemsPacket((byte)_windowId, arr));
 
-                Debug.Assert(_itemCursor == null);
+                System.Diagnostics.Debug.Assert(_itemCursor == null);
                 outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));
 
-                Debug.Assert(i == n);
+                System.Diagnostics.Debug.Assert(i == n);
             }
 
         }
 
-        ~Window() => Debug.Assert(false);
+        ~Window() => System.Diagnostics.Debug.Assert(false);
 
         /*public int GetWindowId()
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            Debug.Assert(_windowId >= 0);
-            Debug.Assert(_windowId > 0 ?
+            System.Diagnostics.Debug.Assert(_windowId >= 0);
+            System.Diagnostics.Debug.Assert(_windowId > 0 ?
                 _publicInventory != null : _publicInventory == null);
 
             return _windowId;
@@ -80,41 +77,41 @@ namespace Protocol
             SelfInventory selfInventory,
             PublicInventory publicInventory)
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             _ambiguous = true;
 
-            Debug.Assert(_windowId == 0);
+            System.Diagnostics.Debug.Assert(_windowId == 0);
             System.Diagnostics.Debug.Assert(_id == -1);
-            Debug.Assert(_publicInventory == null);
+            System.Diagnostics.Debug.Assert(_publicInventory == null);
 
-            _windowId = (new Random().Next() % 100) + 1;
+            _windowId = (new System.Random().Next() % 100) + 1;
 
             _id = publicInventory.Open(_windowId, outPackets, selfInventory);
+            if (_itemCursor != null)
+            {
+                outPackets.Enqueue(new SetSlotPacket(-1, 0, _itemCursor.ConventToPacketFormat()));
+            }
 
             _publicInventory = publicInventory;
-
-            /*if (_itemCursor != null)
-            {
-                // TODO: Drop item if _iremCursor is not null.
-                _itemCursor = null;
-            }*/
-
-            Debug.Assert(_itemCursor == null);
-            outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));
         }
 
         public void ResetWindow(
             int windowId, Queue<ClientboundPlayingPacket> outPackets)
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             if (windowId != _windowId)
             {
                 if (_ambiguous)
+                {
+                    _ambiguous = false;
                     return;
+                }
                 else
+                {
                     throw new UnexpectedValueException("ClickWindowPacket.WindowId");
+                }
             }
 
             _ambiguous = false;
@@ -122,14 +119,14 @@ namespace Protocol
             if (_windowId == 0)
             {
                 System.Diagnostics.Debug.Assert(_id == -1);
-                Debug.Assert(_publicInventory == null);
+                System.Diagnostics.Debug.Assert(_publicInventory == null);
 
             }
             else
             {
-                Debug.Assert(_windowId > 0);
+                System.Diagnostics.Debug.Assert(_windowId > 0);
                 System.Diagnostics.Debug.Assert(_id >= 0);
-                Debug.Assert(_publicInventory != null);
+                System.Diagnostics.Debug.Assert(_publicInventory != null);
 
                 _publicInventory.Close(_id, _windowId);
 
@@ -144,8 +141,7 @@ namespace Protocol
                 _itemCursor = null;
             }*/
 
-            Debug.Assert(_itemCursor == null);
-            outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));
+            System.Diagnostics.Debug.Assert(_itemCursor == null);
         }
 
         internal void ResetWindowForcibly(
@@ -160,7 +156,7 @@ namespace Protocol
             _publicInventory = null;
 
             {
-                int count = selfInventory.Count;
+                int count = selfInventory.TotalSlotCount;
                 int i = 0;
                 var arr = new SlotData[count];
 
@@ -172,19 +168,15 @@ namespace Protocol
                         continue;
                     }
 
-                    Debug.Assert(item.Id >= short.MinValue);
-                    Debug.Assert(item.Id <= short.MaxValue);
-                    Debug.Assert(item.Count >= byte.MinValue);
-                    Debug.Assert(item.Count <= byte.MaxValue);
-                    arr[i++] = new((short)item.Id, (byte)item.Count);
+                    arr[i++] = item.ConventToPacketFormat();
                 }
 
-                Debug.Assert(_windowId == 0);
-                Debug.Assert(_windowId >= byte.MinValue);
-                Debug.Assert(_windowId <= byte.MaxValue);
+                System.Diagnostics.Debug.Assert(_windowId == 0);
+                System.Diagnostics.Debug.Assert(_windowId >= byte.MinValue);
+                System.Diagnostics.Debug.Assert(_windowId <= byte.MaxValue);
                 outPackets.Enqueue(new SetWindowItemsPacket((byte)_windowId, arr));
 
-                Debug.Assert(i == count);
+                System.Diagnostics.Debug.Assert(i == count);
             }
 
             /*if (_itemCursor != null)
@@ -193,18 +185,128 @@ namespace Protocol
                 _itemCursor = null;
             }*/
 
-            Debug.Assert(_itemCursor == null);
-            outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));
+            System.Diagnostics.Debug.Assert(_itemCursor == null);
         }
+
+        private void ClickLeftMouseButton(
+            SelfInventory selfInventory, int index, SlotData slotData)
+        {
+            if (index >= selfInventory.TotalSlotCount)
+            {
+                throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
+            }
+
+            bool f;
+
+            if (_itemCursor == null)
+            {
+                (f, _itemCursor) = selfInventory.TakeItem(index, slotData);
+            }
+            else
+            {
+                (f, _itemCursor) = selfInventory.PutItem(index, _itemCursor, slotData);
+            }
+
+            if (!f)
+            {
+                /*SlotData slotDataInCursor = _itemCursor.ConventToPacketFormat();
+
+                outPackets.Enqueue(new SetSlotPacket(-1, 0, slotDataInCursor));*/
+
+                throw new UnexpectedValueException("ClickWindowPacket.SLOT_DATA");
+            }
+        }
+
+        private void ClickLeftMouseButtonWithPublicInventory(
+            SelfInventory selfInventory, int index, SlotData slotData,
+            Queue<ClientboundPlayingPacket> outPackets)
+        {
+            System.Diagnostics.Debug.Assert(_windowId > 0);
+            System.Diagnostics.Debug.Assert(_publicInventory != null);
+
+            bool f;
+
+            if (_itemCursor == null)
+            {
+                if (index >= 0 && index < _publicInventory.TotalSlotCount)
+                {
+                    (f, _itemCursor) = _publicInventory.TakeItem(index, slotData);
+                }
+                else if (
+                    index >= _publicInventory.TotalSlotCount &&
+                    index < _publicInventory.TotalSlotCount + selfInventory.PrimarySlotCount)
+                {
+                    int j = index + 9 - _publicInventory.TotalSlotCount;
+                    (f, _itemCursor) = selfInventory.TakeItem(j, slotData);
+                }
+                else
+                {
+                    throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
+                }
+            }
+            else
+            {
+                if (index >= 0 && index < _publicInventory.TotalSlotCount)
+                {
+                    (f, _itemCursor) = _publicInventory.PutItem(index, _itemCursor, slotData);
+                }
+                else if (
+                    index >= _publicInventory.TotalSlotCount &&
+                    index < _publicInventory.TotalSlotCount + selfInventory.PrimarySlotCount)
+                {
+                    int j = index + 9 - _publicInventory.TotalSlotCount;
+                    (f, _itemCursor) = selfInventory.PutItem(j, _itemCursor, slotData);
+                }
+                else
+                {
+                    throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
+                }
+            }
+
+
+            if (!f)
+            {
+                if (_itemCursor == null)
+                {
+                    if (index >= 0 && index < _publicInventory.TotalSlotCount)
+                    {
+                        outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));
+                    }
+                    else if (
+                        index >= _publicInventory.TotalSlotCount &&
+                        index < _publicInventory.TotalSlotCount + selfInventory.PrimarySlotCount)
+                    {
+                        throw new UnexpectedValueException("ClickWindowPacket.SLOT_DATA");
+                    }
+                }
+                else
+                {
+                    if (index >= 0 && index < _publicInventory.TotalSlotCount)
+                    {
+                        outPackets.Enqueue(new SetSlotPacket(-1, 0, _itemCursor.ConventToPacketFormat()));
+                    }
+                    else if (
+                        index >= _publicInventory.TotalSlotCount &&
+                        index < _publicInventory.TotalSlotCount + selfInventory.PrimarySlotCount)
+                    {
+                        throw new UnexpectedValueException("ClickWindowPacket.SLOT_DATA");
+                    }
+                }
+                
+                
+            }
+
+        }
+
 
         public void Handle(
             SelfInventory selfInventory,
-            int windowId, int mode, int button, int index,
+            int windowId, int mode, int button, int index, SlotData slotData,
             Queue<ClientboundPlayingPacket> outPackets)
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            Debug.Assert(_windowId >= 0);
+            System.Diagnostics.Debug.Assert(_windowId >= 0);
 
             if (windowId != _windowId)
             {
@@ -220,19 +322,58 @@ namespace Protocol
 
             _ambiguous = false;
 
+            if (index < 0)
+            {
+                throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
+            }
 
+            switch (mode)
+            {
+                default:
+                    throw new UnexpectedValueException("ClickWindowPacket.ModeNumber");
+                case 0:
+                    switch (button)
+                    {
+                        default:
+                            throw new UnexpectedValueException("ClickWindowPacket.ButtonNumber");
+                        case 0:
+                            if (_windowId == 0)
+                            {
+                                ClickLeftMouseButton(selfInventory, index, slotData);
+                            }
+                            else
+                            {
+                                ClickLeftMouseButtonWithPublicInventory(
+                                    selfInventory, index, slotData,
+                                    outPackets);
+                            }
+                            break;
+                    }
+                    break;
+            }
+
+            if (_windowId == 0)
+            {
+                selfInventory.Print();
+            }
+            else
+            {
+                System.Diagnostics.Debug.Assert(_publicInventory != null);
+                _publicInventory.Print();
+                selfInventory.Print();
+            }
 
         }
         
         public void Flush()
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             if (_windowId > 0)
             {
-                Debug.Assert(_windowId > 0);
+                System.Diagnostics.Debug.Assert(_windowId > 0);
                 System.Diagnostics.Debug.Assert(_id >= 0);
-                Debug.Assert(_publicInventory != null);
+                System.Diagnostics.Debug.Assert(_publicInventory != null);
 
                 _publicInventory.Close(_id, _windowId);
 
@@ -247,7 +388,7 @@ namespace Protocol
                 _itemCursor = null;
             }*/
 
-            Debug.Assert(_itemCursor == null);
+            System.Diagnostics.Debug.Assert(_itemCursor == null);
         }
 
         private void Dispose(bool disposing)
@@ -270,7 +411,7 @@ namespace Protocol
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
+            System.GC.SuppressFinalize(this);
         }
 
         public void Close() => Dispose();

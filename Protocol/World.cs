@@ -34,6 +34,8 @@ namespace Protocol
 
         ~World() => System.Diagnostics.Debug.Assert(false);
 
+        internal PublicInventory _Inventory = new ChestInventory();
+
         internal void PlayerListConnect(
             System.Guid uniqueId, Queue<ClientboundPlayingPacket> renderer)
         {
@@ -111,6 +113,7 @@ namespace Protocol
                 entity.Flush();
                 entity.Close();
             }
+
         }
 
         public void MoveEntity(Entity entity)

@@ -1,7 +1,4 @@
-﻿
-using System;
-using System.Diagnostics;
-using Containers;
+﻿using Containers;
 
 namespace Protocol
 {
@@ -26,11 +23,13 @@ namespace Protocol
             _Table.Insert(id, (windowId, outPackets));
         }
 
-        public (int, Queue<ClientboundPlayingPacket>) Remove(int id)
+        public int Remove(int id)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            return _Table.Extract(id);
+            (int windowId, var _) = _Table.Extract(id);
+
+            return windowId;
         }
 
         public void RenderToSet(int index, Item item)
@@ -39,18 +38,14 @@ namespace Protocol
 
             foreach ((int windowId, var outPackets) in _Table.GetValues())
             {
-                Debug.Assert(windowId > 0);
+                System.Diagnostics.Debug.Assert(windowId > 0);
 
-                Debug.Assert(item.Id >= short.MinValue);
-                Debug.Assert(item.Id <= short.MaxValue);
-                Debug.Assert(item.Count >= byte.MinValue);
-                Debug.Assert(item.Count <= byte.MaxValue);
-                SlotData slotData = new((short)item.Id, (byte)item.Count);
+                SlotData slotData = item.ConventToPacketFormat();
 
-                Debug.Assert(windowId >= sbyte.MinValue);
-                Debug.Assert(windowId <= sbyte.MaxValue);
-                Debug.Assert(index >= short.MinValue);
-                Debug.Assert(index <= short.MaxValue);
+                System.Diagnostics.Debug.Assert(windowId >= sbyte.MinValue);
+                System.Diagnostics.Debug.Assert(windowId <= sbyte.MaxValue);
+                System.Diagnostics.Debug.Assert(index >= short.MinValue);
+                System.Diagnostics.Debug.Assert(index <= short.MaxValue);
                 outPackets.Enqueue(new SetSlotPacket(
                     (sbyte)windowId, (short)index, slotData));
             }
@@ -62,20 +57,20 @@ namespace Protocol
 
             foreach ((int windowId, var outPackets) in _Table.GetValues())
             {
-                Debug.Assert(windowId > 0);
+                System.Diagnostics.Debug.Assert(windowId > 0);
 
                 SlotData slotData = new();
 
-                Debug.Assert(windowId >= sbyte.MinValue);
-                Debug.Assert(windowId <= sbyte.MaxValue);
-                Debug.Assert(index >= short.MinValue);
-                Debug.Assert(index <= short.MaxValue);
+                System.Diagnostics.Debug.Assert(windowId >= sbyte.MinValue);
+                System.Diagnostics.Debug.Assert(windowId <= sbyte.MaxValue);
+                System.Diagnostics.Debug.Assert(index >= short.MinValue);
+                System.Diagnostics.Debug.Assert(index <= short.MaxValue);
                 outPackets.Enqueue(new SetSlotPacket(
                     (sbyte)windowId, (short)index, slotData));
             }
         }
 
-        public int[] Flush()
+        public int[] CloseForciblyAndFlush()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -88,10 +83,10 @@ namespace Protocol
             {
                 (int id, (int windowId, var outPackets)) = arr[i];
 
-                Debug.Assert(windowId > 0);
+                System.Diagnostics.Debug.Assert(windowId > 0);
 
-                Debug.Assert(windowId >= byte.MinValue);
-                Debug.Assert(windowId <= byte.MaxValue);
+                System.Diagnostics.Debug.Assert(windowId >= byte.MinValue);
+                System.Diagnostics.Debug.Assert(windowId <= byte.MaxValue);
                 outPackets.Enqueue(new ClientboundCloseWindowPacket((byte)windowId));
 
                 ids[i] = id;
