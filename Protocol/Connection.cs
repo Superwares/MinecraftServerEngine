@@ -197,7 +197,7 @@ namespace Protocol
                                 $"SlotData.Count: {packet.SLOT_DATA.Count}, ");
                         }
 
-                        System.Diagnostics.Debug.Assert(_window != null);
+                        /*System.Diagnostics.Debug.Assert(_window != null);
                         _window.Handle(
                             player._selfInventory,
                             packet.WINDOW_ID,
@@ -205,7 +205,7 @@ namespace Protocol
                             packet.BUTTON,
                             packet.SLOT,
                             packet.SLOT_DATA,
-                            _outPackets);
+                            _outPackets);*/
 
                         _outPackets.Enqueue(new ClientboundConfirmTransactionPacket(
                                 (sbyte)packet.WINDOW_ID, packet.ACTION, true));
@@ -227,6 +227,8 @@ namespace Protocol
 
                         if (packet.WindowId < 0)
                             throw new UnexpectedValueException($"ClickWindowPacket.WindowId");
+
+                        /*_outPackets.Enqueue(new SetSlotPacket(-1, 0, new(280, 10)));*/
 
                         System.Diagnostics.Debug.Assert(_window != null);
                         _window.ResetWindow(packet.WindowId, _outPackets);
@@ -352,15 +354,6 @@ namespace Protocol
 
             using Buffer buffer = new();
 
-            if (serverTicks == 100)  // 5 seconds
-            {
-                System.Diagnostics.Debug.Assert(_window != null);
-                _window.OpenWindowWithPublicInventory(
-                    _outPackets,
-                    player._selfInventory,
-                    world._Inventory);
-            }
-
             try
             {
                 try
@@ -371,6 +364,15 @@ namespace Protocol
                     }
                     else
                     {
+                        /*if (serverTicks == 100)  // 5 seconds
+                        {
+                            System.Diagnostics.Debug.Assert(_window != null);
+                            _window.OpenWindowWithPublicInventory(
+                                _outPackets,
+                                player._selfInventory,
+                                world._Inventory);
+                        }*/
+
                         while (true)
                         {
                             RecvDataAndHandle(buffer, serverTicks, world, player);
@@ -641,7 +643,7 @@ namespace Protocol
                     else if (packet is ClientboundCloseWindowPacket)
                     {
                         System.Diagnostics.Debug.Assert(_window != null);
-                        _window.ResetWindowForcibly(player._selfInventory, _outPackets);
+                        _window.ResetWindowForcibly(player._selfInventory, _outPackets, false);
                     }
                     else if (packet is RequestKeepAlivePacket)
                     {
@@ -678,7 +680,10 @@ namespace Protocol
 
             if (_window != null)
             {
-                _window.Flush();
+                if (_window.IsOpenedWithPublicInventory())
+                {
+                    _window.CloseWindow();
+                }
             }
         }
 

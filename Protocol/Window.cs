@@ -23,8 +23,8 @@ namespace Protocol
 
         private Item? _itemCursor = null;
 
-        private bool _startDrag = false;
-        private Queue<int> _dragedIndices = new();  // Disposable
+        /*private bool _startDrag = false;
+        private Queue<int> _dragedIndices = new();  // Disposable*/
 
         public Window(
             Queue<ClientboundPlayingPacket> outPackets,
@@ -71,6 +71,13 @@ namespace Protocol
 
             return _windowId;
         }*/
+
+        public bool IsOpenedWithPublicInventory()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            return _windowId > 0;
+        }
 
         public void OpenWindowWithPublicInventory(
             Queue<ClientboundPlayingPacket> outPackets,
@@ -145,9 +152,16 @@ namespace Protocol
         }
 
         internal void ResetWindowForcibly(
-            SelfInventory selfInventory, Queue<ClientboundPlayingPacket> outPackets)
+            SelfInventory selfInventory, Queue<ClientboundPlayingPacket> outPackets, bool f)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (f)
+            {
+                System.Diagnostics.Debug.Assert(_windowId >= byte.MinValue);
+                System.Diagnostics.Debug.Assert(_windowId <= byte.MaxValue);
+                outPackets.Enqueue(new ClientboundCloseWindowPacket((byte)_windowId));
+            }
 
             _ambiguous = true;
 
@@ -191,6 +205,8 @@ namespace Protocol
         private void ClickLeftMouseButton(
             SelfInventory selfInventory, int index, SlotData slotData)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             if (index >= selfInventory.TotalSlotCount)
             {
                 throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
@@ -221,6 +237,8 @@ namespace Protocol
             SelfInventory selfInventory, int index, SlotData slotData,
             Queue<ClientboundPlayingPacket> outPackets)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(_windowId > 0);
             System.Diagnostics.Debug.Assert(_publicInventory != null);
 
@@ -263,7 +281,6 @@ namespace Protocol
                 }
             }
 
-
             if (!f)
             {
                 if (_itemCursor == null)
@@ -278,6 +295,10 @@ namespace Protocol
                     {
                         throw new UnexpectedValueException("ClickWindowPacket.SLOT_DATA");
                     }
+                    else
+                    {
+                        throw new System.NotImplementedException();
+                    }
                 }
                 else
                 {
@@ -291,13 +312,16 @@ namespace Protocol
                     {
                         throw new UnexpectedValueException("ClickWindowPacket.SLOT_DATA");
                     }
+                    else
+                    {
+                        throw new System.NotImplementedException();
+                    }
                 }
                 
                 
             }
 
         }
-
 
         public void Handle(
             SelfInventory selfInventory,
@@ -365,11 +389,16 @@ namespace Protocol
 
         }
         
-        public void Flush()
+        public void CloseWindow()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (_windowId > 0)
+            System.Diagnostics.Debug.Assert(_windowId >= 0);
+            if (_windowId == 0)
+            {
+
+            }
+            else if (_windowId > 0)
             {
                 System.Diagnostics.Debug.Assert(_windowId > 0);
                 System.Diagnostics.Debug.Assert(_id >= 0);
@@ -377,10 +406,13 @@ namespace Protocol
 
                 _publicInventory.Close(_id, _windowId);
 
-                _windowId = 0;
-                _id = -1;
-                _publicInventory = null;
+                
             }
+
+            _windowId = -1;
+            _id = -1;
+
+            _publicInventory = null;
 
             /*if (_itemCursor != null)
             {
@@ -396,6 +428,10 @@ namespace Protocol
             if (_disposed) return;
 
             // Assertion.
+            System.Diagnostics.Debug.Assert(_windowId == -1);
+            System.Diagnostics.Debug.Assert(_id == -1);
+            System.Diagnostics.Debug.Assert(_publicInventory == null);
+            System.Diagnostics.Debug.Assert(_itemCursor == null);
 
             if (disposing == true)
             {
