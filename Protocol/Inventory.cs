@@ -56,10 +56,7 @@ namespace Protocol
             }
             else
             {
-                if (slotData.Id == -1)
-                    f = true;
-                else
-                    f = false;
+                f = slotData.Id == -1;
             }
 
             return (f, itemTaked);
@@ -111,13 +108,131 @@ namespace Protocol
 
                 _count++;
 
-                if (slotData.Id == -1)
-                    f = true;
-                else
-                    f = false;
+                f = slotData.Id == -1;
             }
             
             return (f, itemTaked);
+        }
+
+        internal virtual (bool, Item?) TakeHalf(int index, SlotData slotData)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_count >= 0);
+            System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
+            System.Diagnostics.Debug.Assert(index >= 0);
+            System.Diagnostics.Debug.Assert(index < TotalSlotCount);
+
+            bool f;
+
+            Item? itemTaked = _items[index];
+
+            if (itemTaked == null)
+            {
+                f = slotData.Id == -1;
+            }
+            else
+            {
+                f = itemTaked.CompareWithPacketFormat(slotData);
+
+                if (itemTaked.Count == 1)
+                {
+                    _items[index] = null;
+                    _count--;
+                }
+                else
+                {
+                    System.Diagnostics.Debug.Assert(itemTaked.Count > 1);
+
+                    itemTaked = itemTaked.DivideHalf();
+                    System.Diagnostics.Debug.Assert(itemTaked != null);
+                }
+            }
+
+            return (f, itemTaked);
+        }
+
+        internal virtual (bool, Item?) PutOne(int index, Item itemCursor, SlotData slotData)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_count >= 0);
+            System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
+            System.Diagnostics.Debug.Assert(index >= 0);
+            System.Diagnostics.Debug.Assert(index < TotalSlotCount);
+
+            bool f;
+
+            Item? itemTaked = _items[index];
+
+            if (itemTaked != null)
+            {
+                System.Diagnostics.Debug.Assert(!ReferenceEquals(itemTaked, itemCursor));
+
+                f = itemTaked.CompareWithPacketFormat(slotData);
+
+                _items[index] = itemCursor;
+
+                if (itemCursor.TYPE == itemTaked.TYPE)
+                {
+                    if (itemCursor.Count == 1)
+                    {
+                        int spend = itemTaked.Stack(1);
+                        if (spend == 1)
+                        {
+                            itemCursor.SetCount(itemTaked.Count);
+                            itemTaked = null;
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.Assert(spend == 0);
+
+                            int temp = itemCursor.Count;
+                            itemCursor.SetCount(itemTaked.Count);
+                            itemTaked.SetCount(temp);
+                        }
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.Assert(itemCursor.Count > 1);
+
+                        int spend = itemTaked.Stack(1);
+                        if (spend == 1)
+                        {
+                            itemCursor.Spend(1);
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.Assert(spend == 0);
+
+                        }
+
+                        int temp = itemCursor.Count;
+                        itemCursor.SetCount(itemTaked.Count);
+                        itemTaked.SetCount(temp);
+                    }
+
+                    /*int temp = itemCursor.Count;
+                    itemCursor.SetCount(itemTaked.Count);
+                    itemTaked.SetCount(temp);*/
+                }
+                else
+                {
+
+                }
+
+            }
+            else
+            {
+                _items[index] = itemCursor.DivideOne();
+
+                _count++;
+
+                f = slotData.Id == -1;
+
+            }
+
+            return (f, itemCursor);
         }
 
         public void Print()
@@ -182,6 +297,16 @@ namespace Protocol
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
                 for (int i = 9; i < 45; ++i)
+                    yield return _items[i];
+            }
+        }
+
+        public System.Collections.Generic.IEnumerable<Item?> NotPrimaryItems
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+                for (int i = 0; i < 9; ++i)
                     yield return _items[i];
             }
         }
@@ -311,6 +436,36 @@ namespace Protocol
         {
 
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            {
+                int n = 9;
+                var arr = new SlotData[n];
+
+                for (int i = 0; i < n; ++i)
+                {
+                    Item? item = _items[i];
+
+                    if (item == null)
+                    {
+                        arr[i++] = new();
+                        continue;
+                    }
+
+                    arr[i++] = item.ConventToPacketFormat();
+                }
+
+                outPackets.Enqueue(new SetWindowItemsPacket(0, arr));
+
+                Item? offHandItem = selfInventory.OffhandItem;
+                if (offHandItem == null)
+                {
+                    outPackets.Enqueue(new SetSlotPacket(0, 45, new()));
+                }
+                else
+                {
+                    outPackets.Enqueue(new SetSlotPacket(0, 45, offHandItem.ConventToPacketFormat()));
+                }
+            }
 
             lock (_SharedObject)
             {

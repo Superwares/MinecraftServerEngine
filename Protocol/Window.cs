@@ -408,13 +408,36 @@ namespace Protocol
 
             System.Diagnostics.Debug.Assert(_windowId >= 0);
 
-            if (windowId != _windowId)
+            if (_windowId == 0)
             {
-                if (_ambiguous)
+                if (windowId > 0)
                 {
-                    return;
+                    if (_ambiguous)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        throw new UnexpectedValueException("ClickWindowPacket.WindowId");
+                    }
                 }
-                else
+            }
+            else
+            {
+                System.Diagnostics.Debug.Assert(_windowId > 0);
+                if (windowId == 0)
+                {
+                    if (_ambiguous)
+                    {
+                        // Ignored...
+                        return;
+                    }
+                    else
+                    {
+                        throw new UnexpectedValueException("ClickWindowPacket.WindowId");
+                    }
+                }
+                else if (_windowId != windowId)
                 {
                     throw new UnexpectedValueException("ClickWindowPacket.WindowId");
                 }
@@ -451,7 +474,7 @@ namespace Protocol
                         case 1:
                             if (_windowId == 0)
                             {
-                                ClickRightMouseButton();
+                                ClickRightMouseButton(selfInventory, index, slotData);
                             }
                             else
                             {

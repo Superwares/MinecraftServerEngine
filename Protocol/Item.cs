@@ -197,9 +197,43 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(_count > 0);
         }
 
+        internal Item DivideHalf()
+        {
+            System.Diagnostics.Debug.Assert(_count >= MIN_COUNT);
+            System.Diagnostics.Debug.Assert(_count <= MAX_COUNT);
+
+            int count = (_count / 2) + (_count % 2);
+            _count = (_count / 2);
+            System.Diagnostics.Debug.Assert(_count % 2 == 0);
+
+            System.Diagnostics.Debug.Assert(count >= MIN_COUNT);
+            System.Diagnostics.Debug.Assert(count <= MAX_COUNT);
+            System.Diagnostics.Debug.Assert(_count >= MIN_COUNT);
+            System.Diagnostics.Debug.Assert(_count <= MAX_COUNT);
+
+            return new Item(_type, count);
+        }
+
+        internal Item DivideOne()
+        {
+            System.Diagnostics.Debug.Assert(_count >= MIN_COUNT);
+            System.Diagnostics.Debug.Assert(_count <= MAX_COUNT);
+
+            _count--;
+
+            System.Diagnostics.Debug.Assert(_count >= MIN_COUNT);
+
+            return new Item(_type, 1);
+        }
+
         internal void SetCount(int count)
         {
+            System.Diagnostics.Debug.Assert(_count >= MIN_COUNT);
+            System.Diagnostics.Debug.Assert(_count <= MAX_COUNT);
+            System.Diagnostics.Debug.Assert(count >= MIN_COUNT);
+            System.Diagnostics.Debug.Assert(count <= MAX_COUNT);
 
+            _count = count;
         }
 
         internal SlotData ConventToPacketFormat()
