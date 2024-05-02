@@ -203,8 +203,7 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(_count <= MAX_COUNT);
 
             int count = (_count / 2) + (_count % 2);
-            _count = (_count / 2);
-            System.Diagnostics.Debug.Assert(_count % 2 == 0);
+            _count /= 2;
 
             System.Diagnostics.Debug.Assert(count >= MIN_COUNT);
             System.Diagnostics.Debug.Assert(count <= MAX_COUNT);

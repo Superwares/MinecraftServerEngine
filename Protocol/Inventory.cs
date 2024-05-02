@@ -221,6 +221,7 @@ namespace Protocol
 
                 }
 
+                return (f, itemTaked);
             }
             else
             {
@@ -230,9 +231,10 @@ namespace Protocol
 
                 f = slotData.Id == -1;
 
+                return (f, itemCursor);
             }
 
-            return (f, itemCursor);
+            System.Diagnostics.Debug.Assert(false);
         }
 
         public void Print()
