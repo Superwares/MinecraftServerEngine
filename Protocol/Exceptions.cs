@@ -51,6 +51,11 @@ namespace Protocol
         public TeleportationConfirmTimeoutException() : base("TODO: Add description.") { }
     }
 
+    internal class ResponseKeepAliveTimeoutException : UnexpectedClientBehaviorExecption
+    {
+        public ResponseKeepAliveTimeoutException() : base("TODO: Add description.") { }
+    }
+
     internal class KeepaliveTimeoutException : UnexpectedClientBehaviorExecption
     {
         public KeepaliveTimeoutException() : base("TODO: Add description.") { }

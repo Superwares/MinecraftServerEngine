@@ -1,15 +1,12 @@
 ﻿
-using System.Diagnostics;
-using System;
 using Containers;
-using System.Numerics;
 
 namespace Protocol
 {
-    public abstract class Entity : IDisposable
+    public abstract class Entity : System.IDisposable
     {
 
-        public struct Vector : IEquatable<Vector>
+        public struct Vector : System.IEquatable<Vector>
         {
             private double _x, _y, _z;
             public double X => _x;
@@ -28,7 +25,7 @@ namespace Protocol
 
         }
 
-        public struct Angles : IEquatable<Angles>
+        public struct Angles : System.IEquatable<Angles>
         {
             internal const float MaxYaw = 180, MinYaw = -180;
             internal const float MaxPitch = 90, MinPitch = -90;
@@ -40,8 +37,8 @@ namespace Protocol
             public Angles(float yaw, float pitch)
             {
                 // TODO: map yaw from 180 to -180.
-                Debug.Assert(pitch >= MinPitch);
-                Debug.Assert(pitch <= MaxPitch);
+                System.Diagnostics.Debug.Assert(pitch >= MinPitch);
+                System.Diagnostics.Debug.Assert(pitch <= MaxPitch);
 
                 _yaw = Frem(yaw);
                 _pitch = pitch;
@@ -50,13 +47,13 @@ namespace Protocol
             private static float Frem(float angle)
             {
                 float y = 360.0f;
-                return angle - (y * (float)Math.Floor(angle / y));
+                return angle - (y * (float)System.Math.Floor(angle / y));
             }
 
             internal (byte, byte) ConvertToPacketFormat()
             {
-                Debug.Assert(_pitch >= MinPitch);
-                Debug.Assert(_pitch <= MaxPitch);
+                System.Diagnostics.Debug.Assert(_pitch >= MinPitch);
+                System.Diagnostics.Debug.Assert(_pitch <= MaxPitch);
 
                 _yaw = Frem(_yaw);
                 float x = _yaw;
@@ -65,7 +62,6 @@ namespace Protocol
                 return (
                     (byte)((byte.MaxValue * x) / 360),
                     (byte)((byte.MaxValue * y) / 360));
-
             }
 
             public bool Equals(Angles other)
@@ -106,7 +102,7 @@ namespace Protocol
 
         internal Entity(
             int id,
-            Guid uniqueId,
+            System.Guid uniqueId,
             Vector pos, Angles look)
         {
             _id = id;
@@ -127,7 +123,7 @@ namespace Protocol
 
         public virtual void Reset()
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             _posPrev = _pos;
             _rotated = false;
@@ -138,7 +134,7 @@ namespace Protocol
 
         public virtual bool IsDead()
         {
-            throw new NotImplementedException();
+            throw new System.NotImplementedException();
         }
 
         protected internal virtual void StartRoutine(long serverTicks, World world)
@@ -148,7 +144,7 @@ namespace Protocol
 
         protected internal virtual void Move()
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             // update position with velocity, accelaration and forces(gravity, damping).
 
@@ -169,7 +165,7 @@ namespace Protocol
             }
             else if (moved)
             {
-                Debug.Assert(!_rotated);
+                System.Diagnostics.Debug.Assert(!_rotated);
 
                 _Renderer.Render(new EntityRelMovePacket(
                     Id,
@@ -180,7 +176,7 @@ namespace Protocol
             }
             else if (_rotated)
             {
-                Debug.Assert(!moved);
+                System.Diagnostics.Debug.Assert(!moved);
 
                 (byte x, byte y) = _look.ConvertToPacketFormat();
                 _Renderer.Render(new EntityLookPacket(Id, x, y, _onGround));
@@ -188,8 +184,8 @@ namespace Protocol
             }
             else
             {
-                Debug.Assert(!moved);
-                Debug.Assert(!_rotated);
+                System.Diagnostics.Debug.Assert(!moved);
+                System.Diagnostics.Debug.Assert(!_rotated);
 
                 _Renderer.Render(new EntityPacket(Id));
             }
@@ -217,7 +213,7 @@ namespace Protocol
 
         public void Stand(bool f)
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             _onGround = f;
 
@@ -226,7 +222,7 @@ namespace Protocol
 
         public void Rotate(Angles look)
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             _rotated = true;
             _look = look;
@@ -253,9 +249,9 @@ namespace Protocol
 
         public void Sneak()
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            Debug.Assert(!_sneaking);
+            System.Diagnostics.Debug.Assert(!_sneaking);
             _sneaking = true;
 
             RanderFormChanging();
@@ -263,9 +259,9 @@ namespace Protocol
 
         public void Unsneak()
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            Debug.Assert(_sneaking);
+            System.Diagnostics.Debug.Assert(_sneaking);
             _sneaking = false;
 
             RanderFormChanging();
@@ -273,9 +269,9 @@ namespace Protocol
 
         public void Sprint()
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            Debug.Assert(!_sprinting);
+            System.Diagnostics.Debug.Assert(!_sprinting);
             _sprinting = true;
 
             RanderFormChanging();
@@ -283,9 +279,9 @@ namespace Protocol
 
         public void Unsprint()
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            Debug.Assert(_sprinting);
+            System.Diagnostics.Debug.Assert(_sprinting);
             _sprinting = false;
 
             RanderFormChanging();
@@ -314,7 +310,7 @@ namespace Protocol
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
+            System.GC.SuppressFinalize(this);
         }
 
         public void Close() => Dispose();
@@ -326,7 +322,7 @@ namespace Protocol
 
         internal LivingEntity(
             int id,
-            Guid uniqueId,
+            System.Guid uniqueId,
             Vector pos, Angles look) : base(id, uniqueId, pos, look)
         { }
 
@@ -374,7 +370,7 @@ namespace Protocol
 
         internal Player(
             int id,
-            Guid uniqueId,
+            System.Guid uniqueId,
             Vector pos, Angles look,
             string username) : base(id, uniqueId, pos, look)
         {
@@ -390,13 +386,13 @@ namespace Protocol
 
         internal void Connect(Queue<ClientboundPlayingPacket> selfRenderer)
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            Debug.Assert(!IsConnected);
+            System.Diagnostics.Debug.Assert(!IsConnected);
             _connected = true;
 
             {
-                int payload = new Random().Next();
+                int payload = new System.Random().Next();
                 selfRenderer.Enqueue(new TeleportSelfPlayerPacket(
                 Position.X, Position.Y, Position.Z,
                 Look.Yaw, Look.Pitch,
@@ -415,9 +411,9 @@ namespace Protocol
 
         internal void Disconnect()
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            Debug.Assert(IsConnected);
+            System.Diagnostics.Debug.Assert(IsConnected);
             _connected = false;
 
             System.Diagnostics.Debug.Assert(_selfRenderer != null);
@@ -426,7 +422,7 @@ namespace Protocol
         
         public override void Reset()
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             base.Reset();
 
@@ -435,7 +431,7 @@ namespace Protocol
 
         internal void Control(Vector pos)
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             _controled = true;
             _posControl = pos;
@@ -459,7 +455,7 @@ namespace Protocol
 
         protected internal override void Move()
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             if (_controled)
             {
@@ -472,7 +468,7 @@ namespace Protocol
 
             if (_teleported)
             {
-                int payload = new Random().Next();
+                int payload = new System.Random().Next();
 
                 System.Diagnostics.Debug.Assert(_selfRenderer != null);
                 _selfRenderer.Enqueue(new TeleportSelfPlayerPacket(

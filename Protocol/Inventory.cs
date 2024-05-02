@@ -1,8 +1,5 @@
 ﻿
 using Containers;
-using System;
-using System.Diagnostics;
-using System.Xml.Serialization;
 
 namespace Protocol
 {
@@ -62,7 +59,7 @@ namespace Protocol
             return (f, itemTaked);
         }
 
-        internal virtual (bool, Item?) PutAll(int index, Item item, SlotData slotData)
+        internal virtual (bool, Item?) PutAll(int index, Item itemCursor, SlotData slotData)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -77,15 +74,15 @@ namespace Protocol
 
             if (itemTaked != null)
             {
-                System.Diagnostics.Debug.Assert(!ReferenceEquals(itemTaked, item));
+                System.Diagnostics.Debug.Assert(!ReferenceEquals(itemTaked, itemCursor));
 
                 f = itemTaked.CompareWithPacketFormat(slotData);
 
-                _items[index] = item;
+                _items[index] = itemCursor;
 
-                if (item.TYPE == itemTaked.TYPE)
+                if (itemCursor.TYPE == itemTaked.TYPE)
                 {
-                    int spend = item.Stack(itemTaked.Count);
+                    int spend = itemCursor.Stack(itemTaked.Count);
 
                     if (spend == itemTaked.Count)
                     {
@@ -93,7 +90,7 @@ namespace Protocol
                     }
                     else
                     {
-                        System.Diagnostics.Debug.Assert(spend < item.Count);
+                        System.Diagnostics.Debug.Assert(spend < itemCursor.Count);
                         itemTaked.Spend(spend);
                     }
                 }
@@ -104,7 +101,7 @@ namespace Protocol
             }
             else
             {
-                _items[index] = item;
+                _items[index] = itemCursor;
 
                 _count++;
 
@@ -274,7 +271,7 @@ namespace Protocol
             if (_disposed) return;
 
             // Assertion.
-            Debug.Assert(_count == 0);
+            System.Diagnostics.Debug.Assert(_count == 0);
 
             if (disposing == true)
             {
@@ -336,6 +333,7 @@ namespace Protocol
         {
             PutAll(15, new Item(Item.Types.Stone, 64), new(-1, 0));
             PutAll(16, new Item(Item.Types.Stone, 1), new(-1, 0));
+            PutAll(17, new Item(Item.Types.Grass, 64), new(-1, 0));
 
         }
 
@@ -482,10 +480,10 @@ namespace Protocol
             lock (_SharedObject)
             {
 
-                Debug.Assert(windowId >= byte.MinValue);
-                Debug.Assert(windowId <= byte.MaxValue);
-                Debug.Assert(TotalSlotCount >= byte.MinValue);
-                Debug.Assert(TotalSlotCount <= byte.MaxValue);
+                System.Diagnostics.Debug.Assert(windowId >= byte.MinValue);
+                System.Diagnostics.Debug.Assert(windowId <= byte.MaxValue);
+                System.Diagnostics.Debug.Assert(TotalSlotCount >= byte.MinValue);
+                System.Diagnostics.Debug.Assert(TotalSlotCount <= byte.MaxValue);
                 outPackets.Enqueue(new OpenWindowPacket(
                     (byte)windowId, WindowType, "", (byte)TotalSlotCount));
 
@@ -516,11 +514,11 @@ namespace Protocol
                     arr[i++] = item.ConventToPacketFormat();
                 }
 
-                Debug.Assert(windowId >= byte.MinValue);
-                Debug.Assert(windowId <= byte.MaxValue);
+                System.Diagnostics.Debug.Assert(windowId >= byte.MinValue);
+                System.Diagnostics.Debug.Assert(windowId <= byte.MaxValue);
                 outPackets.Enqueue(new SetWindowItemsPacket((byte)windowId, arr));
 
-                Debug.Assert(i == count);
+                System.Diagnostics.Debug.Assert(i == count);
 
                 int id = _IdList.Alloc();
                 _Renderer.Add(id, windowId, outPackets);
@@ -540,7 +538,6 @@ namespace Protocol
                 System.Diagnostics.Debug.Assert(_windowId == windowId);
             }
         }
-
 
         internal override (bool, Item?) TakeAll(int index, SlotData slotData)
         {
@@ -565,8 +562,11 @@ namespace Protocol
             {
                 (bool f, Item? result) = base.PutAll(index, itemCursor, slotData);
 
-                System.Diagnostics.Debug.Assert(ReferenceEquals(_items[index], itemCursor));
-                _Renderer.RenderToSet(index, itemCursor);
+                {
+                    Item? item = _items[index];
+                    System.Diagnostics.Debug.Assert(item != null);
+                    _Renderer.RenderToSet(index, item);
+                }
 
                 return (f, result);
             }
@@ -580,14 +580,16 @@ namespace Protocol
             {
                 (bool f, Item? result) = base.TakeHalf(index, slotData);
 
-                Item? itemInSlot = _items[index];
-                if (itemInSlot == null)
                 {
-                    _Renderer.RenderToEmpty(index);
-                }
-                else
-                {
-                    _Renderer.RenderToSet(index, itemInSlot);
+                    Item? item = _items[index];
+                    if (item == null)
+                    {
+                        _Renderer.RenderToEmpty(index);
+                    }
+                    else
+                    {
+                        _Renderer.RenderToSet(index, item);
+                    }
                 }
 
                 return (f, result);
@@ -602,8 +604,11 @@ namespace Protocol
             {
                 (bool f, Item? result) = base.PutOne(index, itemCursor, slotData);
 
-                System.Diagnostics.Debug.Assert(ReferenceEquals(_items[index], itemCursor));
-                _Renderer.RenderToSet(index, itemCursor);
+                {
+                    Item? item = _items[index];
+                    System.Diagnostics.Debug.Assert(item != null);
+                    _Renderer.RenderToSet(index, item);
+                }
 
                 return (f, result);
             }

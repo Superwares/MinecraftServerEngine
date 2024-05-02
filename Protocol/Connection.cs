@@ -8,10 +8,10 @@ namespace Protocol
 
         private sealed class TeleportationRecord
         {
-            private const ulong TickLimit = 20;  // 1 seconds, 20 ticks
+            private const long TickLimit = 20;  // 1 seconds, 20 ticks
 
             public readonly int _payload;
-            private ulong _ticks = 0;
+            private long _ticks = 0;
 
             public TeleportationRecord(int payload)
             {
@@ -21,7 +21,7 @@ namespace Protocol
             public void Confirm(int payload)
             {
                 if (payload != _payload)
-                    throw new UnexpectedValueException("TeleportationPayload");
+                    throw new UnexpectedValueException("ConfirmSelfPlayerTeleportationPacket.Payload");
             }
 
             public void Update()
@@ -31,6 +31,37 @@ namespace Protocol
                 if (_ticks++ > TickLimit)
                 {
                     throw new TeleportationConfirmTimeoutException();
+                }
+
+            }
+
+        }
+
+        private sealed class KeepAliveRecord
+        {
+            private const long TickLimit = 20 * 30;  // 30 seconds, 20 * 30 ticks
+
+            public readonly long _payload;
+            private long _ticks = 0;
+
+            public KeepAliveRecord(long payload)
+            {
+                _payload = payload;
+            }
+
+            public void Confirm(long payload)
+            {
+                if (payload != _payload)
+                    throw new UnexpectedValueException("ResponseKeepAlivePacketId.Payload");
+            }
+
+            public void Update()
+            {
+                System.Diagnostics.Debug.Assert(_ticks >= 0);
+
+                if (_ticks++ > TickLimit)
+                {
+                    throw new ResponseKeepAliveTimeoutException();
                 }
 
             }
@@ -51,6 +82,7 @@ namespace Protocol
         private Table<int, EntityRenderer>? _renderers = null;  // Disposable
 
         private readonly Queue<TeleportationRecord> _teleportationRecords = new();  // dispoasble
+        private KeepAliveRecord? _keepAliveRecord = null;
 
         private readonly Queue<LoadChunkPacket> _loadChunkPackets = new();  // dispoasble
         private readonly Queue<ClientboundPlayingPacket> _outPackets = new();  // dispoasble
@@ -155,7 +187,9 @@ namespace Protocol
                         ConfirmSelfPlayerTeleportationPacket packet = ConfirmSelfPlayerTeleportationPacket.Read(buffer);
 
                         if (_teleportationRecords.Empty)
+                        {
                             throw new UnexpectedPacketException();
+                        }
 
                         TeleportationRecord record = _teleportationRecords.Dequeue();
                         record.Confirm(packet.Payload);
@@ -238,8 +272,16 @@ namespace Protocol
                     {
                         ResponseKeepAlivePacket packet = ResponseKeepAlivePacket.Read(buffer);
 
-                        // TODO: Check payload with cache. If not corrent, throw unexpected client behavior exception.
+                        if (_keepAliveRecord == null)
+                        {
+                            throw new UnexpectedPacketException();
+                        }
+
+                        _keepAliveRecord.Confirm(packet.Payload);
+                        _keepAliveRecord = null;
+
                         world.PlayerListKeepAlive(serverTicks, player.UniqueId);
+
                     }
                     break;
                 case ServerboundPlayingPacket.PlayerPacketId:
@@ -364,14 +406,14 @@ namespace Protocol
                     }
                     else
                     {
-                        if (serverTicks == 200)  // 10 seconds
+                        /*if (serverTicks == 200)  // 10 seconds
                         {
                             System.Diagnostics.Debug.Assert(_window != null);
                             _window.OpenWindowWithPublicInventory(
                                 _outPackets,
                                 player._selfInventory,
                                 world._Inventory);
-                        }
+                        }*/
 
                         while (true)
                         {
@@ -408,7 +450,13 @@ namespace Protocol
                 {
                     record.Update();
                 }
+
+                if (_keepAliveRecord != null)
+                {
+                    _keepAliveRecord.Update();
+                }
             }
+
         }
 
         // TODO: Make chunks to readonly using interface? in this function.
@@ -652,9 +700,11 @@ namespace Protocol
                         System.Diagnostics.Debug.Assert(_window != null);
                         _window.ResetWindowForcibly(player._selfInventory, _outPackets, false);
                     }
-                    else if (packet is RequestKeepAlivePacket)
+                    else if (packet is RequestKeepAlivePacket requestKeepAlivePacket)
                     {
                         // TODO: save payload and check when recived.
+                        System.Diagnostics.Debug.Assert(_keepAliveRecord == null);
+                        _keepAliveRecord = new(requestKeepAlivePacket.Payload);
                     }
 
                     packet.Write(buffer);
@@ -687,10 +737,7 @@ namespace Protocol
 
             if (_window != null)
             {
-                if (_window.IsOpenedWithPublicInventory())
-                {
-                    _window.CloseWindow();
-                }
+                _window.CloseWindow();
             }
         }
 

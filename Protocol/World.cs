@@ -18,7 +18,7 @@ namespace Protocol
         private readonly Table<Chunk.Vector, Chunk> _Chunks = new();  // Disposable
 
         private readonly Queue<Entity> _EntitySpawningPool = new();  // Disposable
-        private readonly Queue<Entity> _EntityDespawningPool = new();
+        private readonly Queue<Entity> _EntityDespawningPool = new();  // Disposable
 
         private readonly 
             Table<Chunk.Vector, Table<int, Entity>> _ChunkToEntities = new();  // Disposable
@@ -29,7 +29,6 @@ namespace Protocol
         public World(Entity.Vector posSpawning, Entity.Angles lookSpawning)
         {
             _PosSpawning = posSpawning; _LookSpawning = lookSpawning;
-
         }
 
         ~World() => System.Diagnostics.Debug.Assert(false);
@@ -319,6 +318,9 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(_EntitySpawningPool.Empty);
             System.Diagnostics.Debug.Assert(_EntityDespawningPool.Empty);
 
+            System.Diagnostics.Debug.Assert(_ChunkToEntities.Empty);
+            System.Diagnostics.Debug.Assert(_EntityToChunkGrid.Empty);
+
             if (disposing == true)
             {
                 // Release managed resources.
@@ -331,6 +333,8 @@ namespace Protocol
                 _EntitySpawningPool.Dispose();
                 _EntityDespawningPool.Dispose();
 
+                _ChunkToEntities.Dispose();
+                _EntityToChunkGrid.Dispose();
 
             }
 
