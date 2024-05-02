@@ -56,7 +56,7 @@ namespace Protocol
             }
             else
             {
-                f = slotData.Id == -1;
+                f = (slotData.Id == -1);
             }
 
             return (f, itemTaked);
@@ -108,7 +108,7 @@ namespace Protocol
 
                 _count++;
 
-                f = slotData.Id == -1;
+                f = (slotData.Id == -1);
             }
             
             return (f, itemTaked);
@@ -129,7 +129,7 @@ namespace Protocol
 
             if (itemTaked == null)
             {
-                f = slotData.Id == -1;
+                f = (slotData.Id == -1);
             }
             else
             {
@@ -225,16 +225,26 @@ namespace Protocol
             }
             else
             {
-                _items[index] = itemCursor.DivideOne();
+                _items[index] = itemCursor;
+
+                if (itemCursor.Count > 1)
+                {
+                    itemTaked = itemCursor.DivideExceptOne();
+                }
+                else
+                {
+                    System.Diagnostics.Debug.Assert(itemCursor.Count == 1);
+                    System.Diagnostics.Debug.Assert(itemTaked == null);
+                }
 
                 _count++;
 
-                f = slotData.Id == -1;
+                f = (slotData.Id == -1);
 
-                return (f, itemCursor);
+                
             }
 
-            System.Diagnostics.Debug.Assert(false);
+            return (f, itemTaked);
         }
 
         public void Print()
@@ -449,11 +459,11 @@ namespace Protocol
 
                     if (item == null)
                     {
-                        arr[i++] = new();
+                        arr[i] = new();
                         continue;
                     }
 
-                    arr[i++] = item.ConventToPacketFormat();
+                    arr[i] = item.ConventToPacketFormat();
                 }
 
                 outPackets.Enqueue(new SetWindowItemsPacket(0, arr));
@@ -538,20 +548,62 @@ namespace Protocol
 
             lock (_SharedObject)
             {
+                (bool f, Item? item) = base.TakeAll(index, slotData);
+
+                System.Diagnostics.Debug.Assert(_items[index] is null);
                 _Renderer.RenderToEmpty(index);
 
-                return base.TakeAll(index, slotData);
+                return (f, item);
             }
         }
 
-        internal override (bool, Item?) PutAll(int index, Item item, SlotData slotData)
+        internal override (bool, Item?) PutAll(int index, Item itemCursor, SlotData slotData)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             lock (_SharedObject)
             {
-                (bool f, Item? result) = base.PutAll(index, item, slotData);
-                _Renderer.RenderToSet(index, item);
+                (bool f, Item? result) = base.PutAll(index, itemCursor, slotData);
+
+                System.Diagnostics.Debug.Assert(ReferenceEquals(_items[index], itemCursor));
+                _Renderer.RenderToSet(index, itemCursor);
+
+                return (f, result);
+            }
+        }
+
+        internal override (bool, Item?) TakeHalf(int index, SlotData slotData)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            lock (_SharedObject)
+            {
+                (bool f, Item? result) = base.TakeHalf(index, slotData);
+
+                Item? itemInSlot = _items[index];
+                if (itemInSlot == null)
+                {
+                    _Renderer.RenderToEmpty(index);
+                }
+                else
+                {
+                    _Renderer.RenderToSet(index, itemInSlot);
+                }
+
+                return (f, result);
+            }
+        }
+
+        internal override (bool, Item?) PutOne(int index, Item itemCursor, SlotData slotData)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            lock (_SharedObject)
+            {
+                (bool f, Item? result) = base.PutOne(index, itemCursor, slotData);
+
+                System.Diagnostics.Debug.Assert(ReferenceEquals(_items[index], itemCursor));
+                _Renderer.RenderToSet(index, itemCursor);
 
                 return (f, result);
             }

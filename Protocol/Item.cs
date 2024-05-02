@@ -213,16 +213,18 @@ namespace Protocol
             return new Item(_type, count);
         }
 
-        internal Item DivideOne()
+        internal Item DivideExceptOne()
         {
             System.Diagnostics.Debug.Assert(_count >= MIN_COUNT);
             System.Diagnostics.Debug.Assert(_count <= MAX_COUNT);
 
-            _count--;
+            int count = _count - 1;
+            _count = 1;
 
+            System.Diagnostics.Debug.Assert(count >= MIN_COUNT);
             System.Diagnostics.Debug.Assert(_count >= MIN_COUNT);
 
-            return new Item(_type, 1);
+            return new Item(_type, count);
         }
 
         internal void SetCount(int count)

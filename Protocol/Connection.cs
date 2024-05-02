@@ -364,14 +364,14 @@ namespace Protocol
                     }
                     else
                     {
-                        /*if (serverTicks == 100)  // 5 seconds
+                        if (serverTicks == 200)  // 10 seconds
                         {
                             System.Diagnostics.Debug.Assert(_window != null);
                             _window.OpenWindowWithPublicInventory(
                                 _outPackets,
                                 player._selfInventory,
                                 world._Inventory);
-                        }*/
+                        }
 
                         while (true)
                         {
@@ -509,6 +509,8 @@ namespace Protocol
                     {
                         if (entity.Id == selfEntityId) continue;
 
+                        if (renderers.Contains(entity.Id)) continue;
+
                         EntityRenderer renderer = entity._Renderer;
 
                         newEntities.Enqueue(entity);
@@ -534,6 +536,8 @@ namespace Protocol
                     {
                         if (entity.Id == selfEntityId) continue;
 
+                        if (renderers.Contains(entity.Id)) continue;
+
                         EntityRenderer renderer = entity._Renderer;
 
                         if (prevRenderers.Contains(entity.Id))
@@ -548,16 +552,19 @@ namespace Protocol
                     }
                 }
 
-                int i = 0;
-                var despawnedEntityIds = new int[prevRenderers.Count];
-                foreach ((int entityId, EntityRenderer renderer) in prevRenderers.GetElements())
+                if (!prevRenderers.Empty)
                 {
-                    renderer.Remove(selfEntityId);
-                    despawnedEntityIds[i++] = entityId;
+                    int i = 0;
+                    var despawnedEntityIds = new int[prevRenderers.Count];
+                    foreach ((int entityId, EntityRenderer renderer) in prevRenderers.GetElements())
+                    {
+                        renderer.Remove(selfEntityId);
+                        despawnedEntityIds[i++] = entityId;
+                    }
+
+                    _outPackets.Enqueue(new DestroyEntitiesPacket(despawnedEntityIds));
                 }
-
-                _outPackets.Enqueue(new DestroyEntitiesPacket(despawnedEntityIds));
-
+                
             }
 
             while (!newEntities.Empty)

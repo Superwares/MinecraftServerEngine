@@ -820,7 +820,9 @@ namespace Protocol
             buffer.WriteShort((short)Arr.Length);
 
             foreach (SlotData slotData in Arr)
+            {
                 buffer.WriteData(slotData.WriteData());
+            }
         }
 
     }
