@@ -5,6 +5,13 @@ namespace Protocol
 {
     internal static class SocketMethods
     {
+        public static int GetLocalPort(System.Net.Sockets.Socket socket)
+        {
+            System.Net.IPEndPoint? localEndPoint = (System.Net.IPEndPoint?)socket.LocalEndPoint;
+            System.Diagnostics.Debug.Assert(localEndPoint != null);
+            return localEndPoint.Port;
+        }
+
         public static System.Net.Sockets.Socket Establish(ushort port)
         {
             System.Net.Sockets.Socket socket = new(
@@ -175,6 +182,8 @@ namespace Protocol
         private byte[]? _data = null;
 
         private System.Net.Sockets.Socket _socket;
+
+        public int LocalPort => SocketMethods.GetLocalPort(_socket);
 
         /// <summary>
         /// TODO: Add description.

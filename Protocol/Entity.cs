@@ -3,6 +3,115 @@ using Containers;
 
 namespace Protocol
 {
+    internal sealed class EntityRendererManager : System.IDisposable
+    {
+        private bool _disposed = false;
+
+        private readonly Table<int, EntityRenderer> _Renderers = new();
+
+        public EntityRendererManager() { }
+
+        ~EntityRendererManager() => System.Diagnostics.Debug.Assert(false);
+
+        internal bool ContainsRenderer(int connId)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+            return _Renderers.Contains(connId);
+        }
+
+        public void AddRenderer(int connId, EntityRenderer renderer)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(!_Renderers.Contains(connId));
+            _Renderers.Insert(connId, renderer);
+        }
+
+        public void RemoveRenderer(int connId)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_Renderers.Contains(connId));
+            _Renderers.Extract(connId);
+        }
+
+        public void MoveAndRotate(
+            int entityId,
+            Entity.Vector pos, Entity.Vector posPrev, Entity.Angles look, bool onGround)
+        {
+            foreach (var renderer in _Renderers.GetValues())
+            {
+                renderer.MoveAndRotate(entityId, pos, posPrev, look, onGround);
+            }
+        }
+
+        public void Move(int entityId, Entity.Vector pos, Entity.Vector posPrev, bool onGround)
+        {
+            foreach (var renderer in _Renderers.GetValues())
+            {
+                renderer.Move(entityId, pos, posPrev, onGround);
+            }
+        }
+
+        public void Rotate(int entityId, Entity.Angles look, bool onGround)
+        {
+            foreach (var renderer in _Renderers.GetValues())
+            {
+                renderer.Rotate(entityId, look, onGround);
+            }
+        }
+
+        public void Stand(int entityId)
+        {
+            foreach (var renderer in _Renderers.GetValues())
+            {
+                renderer.Stand(entityId);
+            }
+        }
+
+        public void ChangeForms(int entityId, bool sneaking, bool sprinting)
+        {
+            foreach (var renderer in _Renderers.GetValues())
+            {
+                renderer.ChangeForms(entityId, sneaking, sprinting);
+            }
+        }
+
+        public void Teleport(
+            int entityId, Entity.Vector pos, Entity.Angles look, bool onGround)
+        {
+            foreach (var renderer in _Renderers.GetValues())
+            {
+                renderer.Teleport(entityId, pos, look, onGround);
+            }
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            System.Diagnostics.Debug.Assert(_Renderers.Empty);
+
+            if (disposing == true)
+            {
+                // Release managed resources.
+                _Renderers.Dispose();
+            }
+
+            // Release unmanaged resources.
+
+            _disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            System.GC.SuppressFinalize(this);
+        }
+
+        public void Close() => Dispose();
+    }
+
     public abstract class Entity : System.IDisposable
     {
 
@@ -98,7 +207,7 @@ namespace Protocol
         protected Vector _posTeleport;
         protected Angles _lookTeleport;
 
-        internal readonly EntityRenderer _Renderer = new();  // Disposable
+        internal readonly EntityRendererManager _RendererManager = new();  // Disposable
 
         internal Entity(
             int id,
@@ -153,41 +262,26 @@ namespace Protocol
             // If not, use EntityTeleportPacket to render.
             if (moved && _rotated)
             {
-                (byte x, byte y) = _look.ConvertToPacketFormat();
-                _Renderer.Render(new EntityLookAndRelMovePacket(
-                    Id,
-                    (short)((_pos.X - _posPrev.X) * 32 * 128),
-                    (short)((_pos.Y - _posPrev.Y) * 32 * 128),
-                    (short)((_pos.Z - _posPrev.Z) * 32 * 128),
-                    x, y, 
-                    _onGround));
-                _Renderer.Render(new EntityHeadLookPacket(Id, x));
+                _RendererManager.MoveAndRotate(Id, _pos, _posPrev, _look, _onGround);
             }
             else if (moved)
             {
                 System.Diagnostics.Debug.Assert(!_rotated);
 
-                _Renderer.Render(new EntityRelMovePacket(
-                    Id,
-                    (short)((_pos.X - _posPrev.X) * 32 * 128),
-                    (short)((_pos.Y - _posPrev.Y) * 32 * 128),
-                    (short)((_pos.Z - _posPrev.Z) * 32 * 128),
-                    _onGround));
+                _RendererManager.Move(Id, _pos, _posPrev, _onGround);
             }
             else if (_rotated)
             {
                 System.Diagnostics.Debug.Assert(!moved);
 
-                (byte x, byte y) = _look.ConvertToPacketFormat();
-                _Renderer.Render(new EntityLookPacket(Id, x, y, _onGround));
-                _Renderer.Render(new EntityHeadLookPacket(Id, x));
+                _RendererManager.Rotate(Id, _look, _onGround);
             }
             else
             {
                 System.Diagnostics.Debug.Assert(!moved);
                 System.Diagnostics.Debug.Assert(!_rotated);
 
-                _Renderer.Render(new EntityPacket(Id));
+                _RendererManager.Stand(Id);
             }
 
             if (_teleported)
@@ -196,11 +290,7 @@ namespace Protocol
                 _look = _lookTeleport;
                 // update position data in chunk
 
-                _Renderer.Render(new EntityTeleportPacket(
-                    Id,
-                    _pos.X, _pos.Y, _pos.Z,
-                    _look.Yaw, _look.Pitch,
-                    _onGround));
+                _RendererManager.Teleport(Id, _pos, _look, _onGround);
             }
         }
 
@@ -216,8 +306,6 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(!_disposed);
 
             _onGround = f;
-
-            _Renderer.Render(new EntityPacket(Id));
         }
 
         public void Rotate(Angles look)
@@ -226,25 +314,11 @@ namespace Protocol
 
             _rotated = true;
             _look = look;
-
-            /*(byte x, byte y) = _look.ConvertToProtocolFormat();*/
-            /*Console.Write($"x: {x}, y: {y} ");*/
-            /*Render(new EntityLookPacket(Id, x, y, _onGround));*/
         }
 
         private void RanderFormChanging()
         {
-            byte flags = 0x00;
-
-            if (_sneaking)
-                flags |= 0x02;
-            if (_sprinting)
-                flags |= 0x08;
-
-            using EntityMetadata metadata = new();
-            metadata.AddByte(0, flags);
-
-            _Renderer.Render(new EntityMetadataPacket(Id, metadata.WriteData()));
+            _RendererManager.ChangeForms(Id, _sneaking, _sprinting);
         }
 
         public void Sneak()
@@ -286,12 +360,7 @@ namespace Protocol
 
             RanderFormChanging();
         }
-
-        internal virtual void Flush()
-        {
-            _Renderer.Flush();
-        }
-
+        
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed) return;
@@ -299,7 +368,7 @@ namespace Protocol
             if (disposing == true)
             {
                 // Release managed resources.
-                _Renderer.Dispose();
+                _RendererManager.Dispose();
             }
 
             // Release unmanaged resources.
@@ -477,12 +546,6 @@ namespace Protocol
                     false, false, false, false, false,
                     payload));
             }
-        }
-
-        internal override void Flush()
-        {
-            base.Flush();
-
         }
 
         protected override void Dispose(bool disposing)

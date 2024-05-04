@@ -122,6 +122,49 @@ namespace Protocol
 
             }
 
+            public System.Collections.Generic.IEnumerable<Vector> GetVectorsInSpiral()
+            {
+                int n = _max.X - _min.X;
+                System.Diagnostics.Debug.Assert(n == (_max.Z - _min.Z));  // Chest it's square.
+                System.Diagnostics.Debug.Assert(n % 2 == 0);  // Check it has center.
+
+                int k = n / 2;
+
+                int xCenter = _max.X - k, zCenter = _max.Z - k;
+                yield return new(xCenter, zCenter);
+
+                for (int i = 0; i < k; ++i)
+                {
+                    int j = i + 1;
+                    int x = xCenter + j, z = zCenter + j;
+                    int w = j * 2;
+
+                    for (int l = 0; l < w; ++l)
+                    {
+                        yield return new(--x, z);
+                    }
+
+                    for (int l = 0; l < w; ++l)
+                    {
+                        yield return new(x, --z);
+                    }
+
+                    for (int l = 0; l < w; ++l)
+                    {
+                        yield return new(++x, z);
+                    }
+
+                    for (int l = 0; l < w; ++l)
+                    {
+                        yield return new(x, ++z);
+                    }
+
+                    System.Diagnostics.Debug.Assert(x == xCenter + j);
+                    System.Diagnostics.Debug.Assert(z == zCenter + j);
+                }
+
+            }
+
             public bool Equals(Grid? other)
             {
                 if (other == null)

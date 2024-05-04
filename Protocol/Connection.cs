@@ -5,7 +5,6 @@ namespace Protocol
 {
     public sealed class Connection : System.IDisposable
     {
-
         private sealed class TeleportationRecord
         {
             private const long TickLimit = 20;  // 1 seconds, 20 ticks
@@ -70,29 +69,33 @@ namespace Protocol
 
         private bool _disposed = false;
 
-        private readonly Client _Client;  // dispoasble
+        private readonly int Id;
+
+        private readonly Client _CLIENT;  // dispoasble
 
         private bool _init = false;
         private int _initStep = 0;
 
-        private const int _MinRenderDistance = 2, _MaxRenderDistance = 32;
+        private const int _MIN_RENDER_DISTANCE = 2, _MAX_RENDER_DISTANCE = 32;
         private int _renderDistance = -1;
 
-        private Chunk.Grid? _renderedChunkGrid = null;
-        private Table<int, EntityRenderer>? _renderers = null;  // Disposable
+        private const int _MAX_LOAD_CHUNK_COUNT = 10;
+        private Set<Chunk.Vector> _loadedChunkPositions = new();  // Disposable
+        private Table<int, EntityRendererManager> _loadedEntityRendererManagers = new();  // Disposable
 
-        private readonly Queue<TeleportationRecord> _teleportationRecords = new();  // dispoasble
+        private readonly Queue<TeleportationRecord> _TELEPORTATION_RECORDS = new();  // dispoasble
         private KeepAliveRecord? _keepAliveRecord = null;
 
-        private readonly Queue<LoadChunkPacket> _loadChunkPackets = new();  // dispoasble
-        private readonly Queue<ClientboundPlayingPacket> _outPackets = new();  // dispoasble
-        internal Queue<ClientboundPlayingPacket> Renderer => _outPackets;
+        private readonly Queue<LoadChunkPacket> _LOAD_CHUNK_PACKETS = new();  // dispoasble
+        private readonly Queue<ClientboundPlayingPacket> _OUT_PACKETS = new();  // dispoasble
 
         private Window? _window = null;  // disposable
 
         internal Connection(Client client)
         {
-            _Client = client;
+            Id = client.LocalPort;
+
+            _CLIENT = client;
         }
 
         ~Connection() => System.Diagnostics.Debug.Assert(false);
@@ -103,15 +106,15 @@ namespace Protocol
             {
                 /*Console.WriteLine("JoinGame!");*/
 
-                player.Connect(_outPackets);
-                world.PlayerListConnect(player.UniqueId, _outPackets);
+                player.Connect(_OUT_PACKETS);
+                world.PlayerListConnect(player.UniqueId, _OUT_PACKETS);
 
                 System.Diagnostics.Debug.Assert(_renderDistance == -1);
 
                 // TODO: If already player exists, use id of that player object, not new alloc id.
                 JoinGamePacket packet = new(player.Id, 0, 0, 0, "default", false);  // TODO
                 packet.Write(buffer);
-                _Client.Send(buffer);
+                _CLIENT.Send(buffer);
 
                 _initStep++;
             }
@@ -122,7 +125,7 @@ namespace Protocol
 
                 System.Diagnostics.Debug.Assert(_renderDistance == -1);
 
-                _Client.Recv(buffer);
+                _CLIENT.Recv(buffer);
 
                 int packetId = buffer.ReadInt(true);
                 if (ServerboundPlayingPacket.SetClientSettingsPacketId != packetId)
@@ -134,8 +137,8 @@ namespace Protocol
                     throw new BufferOverflowException();
 
                 _renderDistance = packet.RenderDistance;
-                if (_renderDistance < _MinRenderDistance ||
-                    _renderDistance > _MaxRenderDistance)
+                if (_renderDistance < _MIN_RENDER_DISTANCE ||
+                    _renderDistance > _MAX_RENDER_DISTANCE)
                     throw new UnexpectedValueException("SetClientSettingsPacket.RenderDistance");
 
                 _initStep++;
@@ -145,10 +148,10 @@ namespace Protocol
             {
                 /*Console.WriteLine("PluginMessage!");*/
 
-                System.Diagnostics.Debug.Assert(_renderDistance >= _MinRenderDistance);
-                System.Diagnostics.Debug.Assert(_renderDistance <= _MaxRenderDistance);
+                System.Diagnostics.Debug.Assert(_renderDistance >= _MIN_RENDER_DISTANCE);
+                System.Diagnostics.Debug.Assert(_renderDistance <= _MAX_RENDER_DISTANCE);
 
-                _Client.Recv(buffer);
+                _CLIENT.Recv(buffer);
 
                 int packetId = buffer.ReadInt(true);
                 if (0x09 != packetId)
@@ -166,13 +169,13 @@ namespace Protocol
             _init = true;
 
             System.Diagnostics.Debug.Assert(_window == null);
-            _window = new(_outPackets, player._selfInventory);
+            _window = new(_OUT_PACKETS, player._selfInventory);
         }
 
         private void RecvDataAndHandle(
             Buffer buffer, long serverTicks, World world, Player player)
         {
-            _Client.Recv(buffer);
+            _CLIENT.Recv(buffer);
 
             int packetId = buffer.ReadInt(true);
             switch (packetId)
@@ -186,12 +189,14 @@ namespace Protocol
                     {
                         ConfirmSelfPlayerTeleportationPacket packet = ConfirmSelfPlayerTeleportationPacket.Read(buffer);
 
-                        if (_teleportationRecords.Empty)
+                        System.Console.Write("!!!!!!!!!");
+
+                        if (_TELEPORTATION_RECORDS.Empty)
                         {
                             throw new UnexpectedPacketException();
                         }
 
-                        TeleportationRecord record = _teleportationRecords.Dequeue();
+                        TeleportationRecord record = _TELEPORTATION_RECORDS.Dequeue();
                         record.Confirm(packet.Payload);
                     }
                     break;
@@ -239,9 +244,9 @@ namespace Protocol
                             packet.BUTTON,
                             packet.SLOT,
                             packet.SLOT_DATA,
-                            _outPackets);
+                            _OUT_PACKETS);
 
-                        _outPackets.Enqueue(new ClientboundConfirmTransactionPacket(
+                        _OUT_PACKETS.Enqueue(new ClientboundConfirmTransactionPacket(
                                 (sbyte)packet.WINDOW_ID, packet.ACTION, true));
 
                         /*{
@@ -260,12 +265,14 @@ namespace Protocol
                             ServerboundCloseWindowPacket.Read(buffer);
 
                         if (packet.WindowId < 0)
+                        {
                             throw new UnexpectedValueException($"ClickWindowPacket.WindowId");
+                        }
 
                         /*_outPackets.Enqueue(new SetSlotPacket(-1, 0, new(280, 10)));*/
 
                         System.Diagnostics.Debug.Assert(_window != null);
-                        _window.ResetWindow(packet.WindowId, _outPackets);
+                        _window.ResetWindow(packet.WindowId, _OUT_PACKETS);
                     }
                     break;
                 case ServerboundPlayingPacket.ResponseKeepAlivePacketId:
@@ -295,10 +302,10 @@ namespace Protocol
                     {
                         PlayerPositionPacket packet = PlayerPositionPacket.Read(buffer);
 
-                        if (!_teleportationRecords.Empty)
+                        if (!_TELEPORTATION_RECORDS.Empty)
                             throw new System.NotImplementedException();
 
-                        if (_teleportationRecords.Empty)
+                        if (_TELEPORTATION_RECORDS.Empty)
                         {
                             player.Control(new(packet.X, packet.Y, packet.Z));
                         }
@@ -310,7 +317,7 @@ namespace Protocol
                     {
                         PlayerPosAndLookPacket packet = PlayerPosAndLookPacket.Read(buffer);
 
-                        if (_teleportationRecords.Empty)
+                        if (_TELEPORTATION_RECORDS.Empty)
                         {
                             player.Control(new(packet.X, packet.Y, packet.Z));
                         }
@@ -406,14 +413,14 @@ namespace Protocol
                     }
                     else
                     {
-                        /*if (serverTicks == 200)  // 10 seconds
+                        if (serverTicks == 200)  // 10 seconds
                         {
                             System.Diagnostics.Debug.Assert(_window != null);
                             _window.OpenWindowWithPublicInventory(
-                                _outPackets,
+                                _OUT_PACKETS,
                                 player._selfInventory,
                                 world._Inventory);
-                        }*/
+                        }
 
                         while (true)
                         {
@@ -446,7 +453,7 @@ namespace Protocol
 
             if (_init)
             {
-                foreach (TeleportationRecord record in _teleportationRecords.GetValues())
+                foreach (TeleportationRecord record in _TELEPORTATION_RECORDS.GetValues())
                 {
                     record.Update();
                 }
@@ -459,199 +466,146 @@ namespace Protocol
 
         }
 
-        // TODO: Make chunks to readonly using interface? in this function.
-        private void RenderChunks(World world, Entity.Vector pos)
+        private void LoadWorld(World world, Player player)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Chunk.Vector pChunkCenter = Chunk.Vector.Convert(pos);
-            int d = _renderDistance;
-            System.Diagnostics.Debug.Assert(d >= _MinRenderDistance);
-            System.Diagnostics.Debug.Assert(d <= _MaxRenderDistance);
-
-            Chunk.Grid grid = Chunk.Grid.Generate(pChunkCenter, d);
-
-            if (_renderedChunkGrid == null)
-            {
-                int mask; byte[] data;
-
-                foreach (Chunk.Vector pChunk in grid.GetVectors())
-                {
-                    /*if (world.ContainsChunk(pChunk))
-                    {
-                        Chunk chunk = world.GetChunk(pChunk);
-                        (mask, data) = Chunk.Write(chunk);
-                    }
-                    else
-                    {
-                        (mask, data) = Chunk.Write();
-                    }*/
-                    (mask, data) = Chunk.Write2();
-
-                    _loadChunkPackets.Enqueue(new LoadChunkPacket(
-                        pChunk.X, pChunk.Z, true, mask, data));
-                }
-
-            }
-            else
-            {
-                Chunk.Grid gridPrev = _renderedChunkGrid;
-
-                if (gridPrev.Equals(grid))
-                    return;
-
-                Chunk.Grid gridBetween = Chunk.Grid.Generate(grid, gridPrev);
-
-                foreach (Chunk.Vector pChunk in grid.GetVectors())
-                {
-                    if (gridBetween.Contains(pChunk))
-                        continue;
-
-                    int mask; byte[] data;
-
-                    /*if (world.ContainsChunk(pChunk))
-                    {
-                        Chunk chunk = world.GetChunk(pChunk);
-                        (mask, data) = Chunk.Write(chunk);
-                    }
-                    else
-                    {
-                        (mask, data) = Chunk.Write();
-                    }*/
-
-                    (mask, data) = Chunk.Write2();
-
-                    _loadChunkPackets.Enqueue(new LoadChunkPacket(
-                        pChunk.X, pChunk.Z, true, mask, data));
-                }
-
-                foreach (Chunk.Vector pChunk in gridPrev.GetVectors())
-                {
-                    if (gridBetween.Contains(pChunk))
-                        continue;
-
-                    _outPackets.Enqueue(new UnloadChunkPacket(pChunk.X, pChunk.Z));
-                }
-
-            }
-
-            _renderedChunkGrid = grid;
-        }
-
-        private void RenderEntities(World world, int selfEntityId)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            using Set<Chunk.Vector> prevLoadedChunkPositions = _loadedChunkPositions;
+            Set<Chunk.Vector> loadedChunkPositions = new();
 
             using Queue<Entity> newEntities = new();
-            Table<int, EntityRenderer> renderers = new();
 
-            if (_renderers == null)
+            using Table<int, EntityRendererManager> prevRendererManagers = _loadedEntityRendererManagers;
+            Table<int, EntityRendererManager> rendererManagers = new();
+
             {
-                System.Diagnostics.Debug.Assert(_renderedChunkGrid != null);
-                foreach (Chunk.Vector pChunk in _renderedChunkGrid.GetVectors())
+                Chunk.Vector pCenter = Chunk.Vector.Convert(player.Position);
+                Chunk.Grid grid = Chunk.Grid.Generate(pCenter, _renderDistance);
+
+                int n = 0;
+
+                int mask; byte[] data;
+
+                foreach (Chunk.Vector p in grid.GetVectorsInSpiral())
                 {
-                    if (!world.ContainsEntities(pChunk))
-                        continue;
-
-                    foreach (Entity entity in world.GetEntities(pChunk))
+                    if (world.ContainsEntities(p))
                     {
-                        if (entity.Id == selfEntityId) continue;
-
-                        if (renderers.Contains(entity.Id)) continue;
-
-                        EntityRenderer renderer = entity._Renderer;
-
-                        newEntities.Enqueue(entity);
-                        renderer.Add(selfEntityId, _outPackets);
-
-                        renderers.Insert(entity.Id, renderer);
-                    }
-                }
-
-            }
-            else
-            {
-                System.Diagnostics.Debug.Assert(_renderers != null);
-                using Table<int, EntityRenderer> prevRenderers = _renderers;
-
-                System.Diagnostics.Debug.Assert(_renderedChunkGrid != null);
-                foreach (Chunk.Vector pChunk in _renderedChunkGrid.GetVectors())
-                {
-                    if (!world.ContainsEntities(pChunk))
-                        continue;
-
-                    foreach (Entity entity in world.GetEntities(pChunk))
-                    {
-                        if (entity.Id == selfEntityId) continue;
-
-                        if (renderers.Contains(entity.Id)) continue;
-
-                        EntityRenderer renderer = entity._Renderer;
-
-                        if (prevRenderers.Contains(entity.Id))
-                            prevRenderers.Extract(entity.Id);
-                        else
+                        foreach (Entity entity in world.GetEntities(p))
                         {
-                            newEntities.Enqueue(entity);
-                            renderer.Add(selfEntityId, _outPackets);
+                            if (entity.Id == player.Id) continue;
+
+                            if (rendererManagers.Contains(entity.Id)) continue;
+
+                            EntityRendererManager rendererManager = entity._RendererManager;
+
+                            if (prevRendererManagers.Contains(entity.Id))
+                            {
+                                prevRendererManagers.Extract(entity.Id);
+                            }
+                            else
+                            {
+                                newEntities.Enqueue(entity);
+                                var renderer = new EntityRenderer(Id, _OUT_PACKETS);
+                                rendererManager.AddRenderer(Id, renderer);
+                            }
+
+                            System.Diagnostics.Debug.Assert(rendererManager.ContainsRenderer(Id));
+                            rendererManagers.Insert(entity.Id, rendererManager);
                         }
-
-                        renderers.Insert(entity.Id, renderer);
                     }
-                }
 
-                if (!prevRenderers.Empty)
-                {
-                    int i = 0;
-                    var despawnedEntityIds = new int[prevRenderers.Count];
-                    foreach ((int entityId, EntityRenderer renderer) in prevRenderers.GetElements())
+
+                    loadedChunkPositions.Insert(p);
+
+                    if (prevLoadedChunkPositions.Contains(p))
                     {
-                        renderer.Remove(selfEntityId);
-                        despawnedEntityIds[i++] = entityId;
+                        prevLoadedChunkPositions.Extract(p);
                     }
+                    else
+                    {
+                        /*if (world.ContainsChunk(o))
+                            {
+                            Chunk chunk = world.GetChunk(p);
+                            (mask, data) = Chunk.Write(chunk);
+                        }
+                            else
+                        {
+                            (mask, data) = Chunk.Write();
+                        }*/
 
-                    _outPackets.Enqueue(new DestroyEntitiesPacket(despawnedEntityIds));
+                        (mask, data) = Chunk.Write2();
+                        _LOAD_CHUNK_PACKETS.Enqueue(new LoadChunkPacket(p.X, p.Z, true, mask, data));
+
+                        if (++n == _MAX_LOAD_CHUNK_COUNT)
+                        {
+                            break;
+                        }
+                    }
+                    
                 }
-                
+
+                System.Diagnostics.Debug.Assert(n <= _MAX_LOAD_CHUNK_COUNT);
+            }
+
+            if (!prevRendererManagers.Empty)
+            {
+                int i = 0;
+                var despawnedEntityIds = new int[prevRendererManagers.Count];
+                foreach ((int entityId, var rendererManager) in prevRendererManagers.GetElements())
+                {
+                    System.Diagnostics.Debug.Assert(rendererManager.ContainsRenderer(Id));
+                    rendererManager.RemoveRenderer(Id);
+                    despawnedEntityIds[i++] = entityId;
+                }
+
+                _OUT_PACKETS.Enqueue(new DestroyEntitiesPacket(despawnedEntityIds));
             }
 
             while (!newEntities.Empty)
             {
                 Entity entity = newEntities.Dequeue();
-                System.Diagnostics.Debug.Assert(entity.Id != selfEntityId);
+                System.Diagnostics.Debug.Assert(entity.Id != player.Id);
 
                 switch (entity)
                 {
                     default:
                         throw new System.NotImplementedException();
-                    case Player player:
+                    case Player spawnedPlayer:
                         {
                             byte flags = 0x00;
 
-                            if (player.IsSneaking)
+                            if (spawnedPlayer.IsSneaking)
                                 flags |= 0x02;
-                            if (player.IsSprinting)
+                            if (spawnedPlayer.IsSprinting)
                                 flags |= 0x08;
 
                             using EntityMetadata metadata = new();
                             metadata.AddByte(0, flags);
 
-                            (byte x, byte y) = player.Look.ConvertToPacketFormat();
-                            _outPackets.Enqueue(new SpawnNamedEntityPacket(
-                                player.Id,
-                                player.UniqueId,
-                                player.Position.X, player.Position.Y, player.Position.Z,
+                            (byte x, byte y) = spawnedPlayer.Look.ConvertToPacketFormat();
+                            _OUT_PACKETS.Enqueue(new SpawnNamedEntityPacket(
+                                spawnedPlayer.Id,
+                                spawnedPlayer.UniqueId,
+                                spawnedPlayer.Position.X, spawnedPlayer.Position.Y, spawnedPlayer.Position.Z,
                                 x, y,  // TODO: Convert yaw and pitch to angles of minecraft protocol.
                                 metadata.WriteData()));
                         }
                         break;
                 }
-
             }
 
-            System.Diagnostics.Debug.Assert(newEntities.Empty);
+            {
+                Chunk.Vector[] positions = prevLoadedChunkPositions.Flush();
+                for (int i = 0; i < positions.Length; ++i)
+                {
+                    Chunk.Vector p = positions[i];
+                    _OUT_PACKETS.Enqueue(new UnloadChunkPacket(p.X, p.Z));
+                }
+            }
+                System.Diagnostics.Debug.Assert(newEntities.Empty);
 
-            _renderers = renderers;
+                _loadedChunkPositions = loadedChunkPositions;
+            _loadedEntityRendererManagers = rendererManagers;
         }
 
         /// <summary>
@@ -665,40 +619,39 @@ namespace Protocol
             if (!_init)
                 return;
 
-            System.Diagnostics.Debug.Assert(_renderDistance >= _MinRenderDistance);
-            System.Diagnostics.Debug.Assert(_renderDistance <= _MaxRenderDistance);
-            RenderChunks(world, player.Position);
-            RenderEntities(world, player.Id);
+            System.Diagnostics.Debug.Assert(_renderDistance >= _MIN_RENDER_DISTANCE);
+            System.Diagnostics.Debug.Assert(_renderDistance <= _MAX_RENDER_DISTANCE);
+            LoadWorld(world, player);
 
-            if (_outPackets.Empty) return;
+            if (_OUT_PACKETS.Empty) return;
 
             using Buffer buffer = new();
 
             try
             {
-                while (!_loadChunkPackets.Empty)
+                while (!_LOAD_CHUNK_PACKETS.Empty)
                 {
-                    LoadChunkPacket packet = _loadChunkPackets.Dequeue();
+                    LoadChunkPacket packet = _LOAD_CHUNK_PACKETS.Dequeue();
 
                     packet.Write(buffer);
-                    _Client.Send(buffer);
+                    _CLIENT.Send(buffer);
 
                     System.Diagnostics.Debug.Assert(buffer.Empty);
                 }
 
-                while (!_outPackets.Empty)
+                while (!_OUT_PACKETS.Empty)
                 {
-                    ClientboundPlayingPacket packet = _outPackets.Dequeue();
+                    ClientboundPlayingPacket packet = _OUT_PACKETS.Dequeue();
 
                     if (packet is TeleportSelfPlayerPacket teleportPacket)
                     {
                         TeleportationRecord report = new(teleportPacket.Payload);
-                        _teleportationRecords.Enqueue(report);
+                        _TELEPORTATION_RECORDS.Enqueue(report);
                     }
                     else if (packet is ClientboundCloseWindowPacket)
                     {
                         System.Diagnostics.Debug.Assert(_window != null);
-                        _window.ResetWindowForcibly(player._selfInventory, _outPackets, false);
+                        _window.ResetWindowForcibly(player._selfInventory, _OUT_PACKETS, false);
                     }
                     else if (packet is RequestKeepAlivePacket requestKeepAlivePacket)
                     {
@@ -708,7 +661,7 @@ namespace Protocol
                     }
 
                     packet.Write(buffer);
-                    _Client.Send(buffer);
+                    _CLIENT.Send(buffer);
 
                     System.Diagnostics.Debug.Assert(buffer.Empty);
                 }
@@ -721,7 +674,7 @@ namespace Protocol
                 throw;
             }
 
-            System.Diagnostics.Debug.Assert(_outPackets.Empty);
+            System.Diagnostics.Debug.Assert(_OUT_PACKETS.Empty);
         }
 
         public void Flush()
@@ -729,11 +682,13 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // TODO: Release resources corrently for no garbage.
-            System.Diagnostics.Debug.Assert(_renderers != null);
-            _renderers.Flush();
-            _teleportationRecords.Flush();
-            _loadChunkPackets.Flush();
-            _outPackets.Flush();
+            _loadedChunkPositions.Flush();
+            _loadedEntityRendererManagers.Flush();
+
+            _TELEPORTATION_RECORDS.Flush();
+
+            _LOAD_CHUNK_PACKETS.Flush();
+            _OUT_PACKETS.Flush();
 
             if (_window != null)
             {
@@ -745,21 +700,27 @@ namespace Protocol
         {
             if (_disposed) return;
 
-            System.Diagnostics.Debug.Assert(_renderers != null);
-            System.Diagnostics.Debug.Assert(_renderers.Empty);
-            System.Diagnostics.Debug.Assert(_teleportationRecords.Empty);
-            System.Diagnostics.Debug.Assert(_loadChunkPackets.Empty);
-            System.Diagnostics.Debug.Assert(_outPackets.Empty);
+            // Assertion
+            System.Diagnostics.Debug.Assert(_loadedChunkPositions.Empty);
+            System.Diagnostics.Debug.Assert(_loadedEntityRendererManagers.Empty);
+
+            System.Diagnostics.Debug.Assert(_TELEPORTATION_RECORDS.Empty);
+
+            System.Diagnostics.Debug.Assert(_LOAD_CHUNK_PACKETS.Empty);
+            System.Diagnostics.Debug.Assert(_OUT_PACKETS.Empty);
 
             if (disposing == true)
             {
                 // managed objects
-                _Client.Dispose();
+                _CLIENT.Dispose();
 
-                _renderers.Dispose();
-                _teleportationRecords.Dispose();
-                _loadChunkPackets.Dispose();
-                _outPackets.Dispose();
+                _loadedChunkPositions.Dispose();
+                _loadedEntityRendererManagers.Dispose();
+
+                _TELEPORTATION_RECORDS.Dispose();
+
+                _LOAD_CHUNK_PACKETS.Dispose();
+                _OUT_PACKETS.Dispose();
 
                 if (_window != null)
                 {
