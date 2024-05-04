@@ -1,5 +1,7 @@
 ﻿
 using Containers;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Threading.Tasks;
 
 namespace Protocol
 {
@@ -80,7 +82,7 @@ namespace Protocol
         private int _renderDistance = -1;
 
         private const int _MAX_LOAD_CHUNK_COUNT = 5;
-        private Set<Chunk.Vector> _loadedChunkPositions = new();  // Disposable
+        private readonly Set<Chunk.Vector> _loadedChunkPositions = new();  // Disposable
         private Table<int, EntityRendererManager> _loadedEntityRendererManagers = new();  // Disposable
 
         private readonly Queue<TeleportationRecord> _TELEPORTATION_RECORDS = new();  // dispoasble
@@ -468,23 +470,36 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            using Set<Chunk.Vector> prevLoadedChunkPositions = _loadedChunkPositions;
-            Set<Chunk.Vector> loadedChunkPositions = new();
-
             using Queue<Entity> newEntities = new();
 
             using Table<int, EntityRendererManager> prevRendererManagers = _loadedEntityRendererManagers;
             Table<int, EntityRendererManager> rendererManagers = new();
 
+            using Queue<Chunk.Vector> oldPositions = new();
+
+            Chunk.Vector pCenter = Chunk.Vector.Convert(player.Position);
+            Chunk.Grid grid = Chunk.Grid.Generate(pCenter, _renderDistance);
+
+            foreach (Chunk.Vector p in _loadedChunkPositions.GetKeys())
             {
-                Chunk.Vector pCenter = Chunk.Vector.Convert(player.Position);
-                Chunk.Grid grid = Chunk.Grid.Generate(pCenter, _renderDistance);
+                if (grid.Contains(p))
+                {
 
-                int n = 0;
+                }
+                else
+                {
+                    oldPositions.Enqueue(p);
 
-                int mask; byte[] data;
+                }
+                
 
-                foreach (Chunk.Vector p in grid.GetVectorsInSpiral())
+            }
+
+            int n = 0;
+            int mask; byte[] data;
+            foreach (Chunk.Vector p in grid.GetVectorsInSpiral())
+            {
+                if (_loadedChunkPositions.Contains(p))
                 {
                     if (world.ContainsEntities(p))
                     {
@@ -512,37 +527,30 @@ namespace Protocol
                         }
                     }
 
-
-                    loadedChunkPositions.Insert(p);
-
-                    if (prevLoadedChunkPositions.Contains(p))
-                    {
-                        prevLoadedChunkPositions.Extract(p);
-                    }
-                    else
-                    {
-                        /*if (world.ContainsChunk(o))
-                            {
-                            Chunk chunk = world.GetChunk(p);
-                            (mask, data) = Chunk.Write(chunk);
-                        }
-                            else
-                        {
-                            (mask, data) = Chunk.Write();
-                        }*/
-
-                        (mask, data) = Chunk.Write2();
-                        _LOAD_CHUNK_PACKETS.Enqueue(new LoadChunkPacket(p.X, p.Z, true, mask, data));
-
-                        if (++n == _MAX_LOAD_CHUNK_COUNT)
-                        {
-                            break;
-                        }
-                    }
-                    
+                    continue;
                 }
 
-                System.Diagnostics.Debug.Assert(n <= _MAX_LOAD_CHUNK_COUNT);
+                if (n++ >= _MAX_LOAD_CHUNK_COUNT)
+                {
+                    continue;
+                }
+
+                _loadedChunkPositions.Insert(p);
+
+                /*if (world.ContainsChunk(o))
+                            {
+                    Chunk chunk = world.GetChunk(p);
+                    (mask, data) = Chunk.Write(chunk);
+                }
+                else
+                {
+                    (mask, data) = Chunk.Write();
+                }*/
+                (mask, data) = Chunk.Write2();
+
+                _LOAD_CHUNK_PACKETS.Enqueue(new LoadChunkPacket(p.X, p.Z, true, mask, data));
+
+                
             }
 
             if (!prevRendererManagers.Empty)
@@ -592,17 +600,15 @@ namespace Protocol
                 }
             }
 
+            while (!oldPositions.Empty)
             {
-                Chunk.Vector[] positions = prevLoadedChunkPositions.Flush();
-                for (int i = 0; i < positions.Length; ++i)
-                {
-                    Chunk.Vector p = positions[i];
-                    _OUT_PACKETS.Enqueue(new UnloadChunkPacket(p.X, p.Z));
-                }
+                Chunk.Vector p = oldPositions.Dequeue();
+                _loadedChunkPositions.Extract(p);
+                _OUT_PACKETS.Enqueue(new UnloadChunkPacket(p.X, p.Z));
             }
-            System.Diagnostics.Debug.Assert(newEntities.Empty);
 
-            _loadedChunkPositions = loadedChunkPositions;
+
+
             _loadedEntityRendererManagers = rendererManagers;
         }
 
