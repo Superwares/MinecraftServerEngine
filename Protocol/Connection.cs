@@ -1,7 +1,5 @@
 ﻿
 using Containers;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Threading.Tasks;
 
 namespace Protocol
 {
@@ -75,8 +73,8 @@ namespace Protocol
 
         private readonly Client _CLIENT;  // dispoasble
 
-        private bool _init = false;
-        private int _initStep = 0;
+        private int _initLevel = 0;
+        private bool IsInit => _initLevel >= 3;
 
         private const int _MIN_RENDER_DISTANCE = 2, _MAX_RENDER_DISTANCE = 32;
         private int _renderDistance = -1;
@@ -104,7 +102,7 @@ namespace Protocol
         
         private void StartInitProcess(Buffer buffer, World world, Player player)
         {
-            if (_initStep == 0)
+            if (_initLevel == 0)
             {
                 /*Console.WriteLine("JoinGame!");*/
 
@@ -118,10 +116,10 @@ namespace Protocol
                 packet.Write(buffer);
                 _CLIENT.Send(buffer);
 
-                _initStep++;
+                _initLevel++;
             }
 
-            if (_initStep == 1)
+            if (_initLevel == 1)
             {
                 /*Console.WriteLine("ClientSettings!");*/
 
@@ -143,10 +141,10 @@ namespace Protocol
                     _renderDistance > _MAX_RENDER_DISTANCE)
                     throw new UnexpectedValueException("SetClientSettingsPacket.RenderDistance");
 
-                _initStep++;
+                _initLevel++;
             }
 
-            if (_initStep == 2)
+            if (_initLevel == 2)
             {
                 /*Console.WriteLine("PluginMessage!");*/
 
@@ -164,11 +162,10 @@ namespace Protocol
                 if (buffer.Size > 0)
                     throw new BufferOverflowException();
 
-                _initStep++;
+                _initLevel++;
             }
 
-            System.Diagnostics.Debug.Assert(_initStep == 3);
-            _init = true;
+            System.Diagnostics.Debug.Assert(IsInit);
 
             System.Diagnostics.Debug.Assert(_window == null);
             _window = new(_OUT_PACKETS, player._selfInventory);
@@ -401,32 +398,27 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            if (!IsInit)
+                return;
+
+            /*if (serverTicks == 200)  // 10 seconds
+            {
+                System.Diagnostics.Debug.Assert(_window != null);
+                _window.OpenWindowWithPublicInventory(
+                    _OUT_PACKETS,
+                    player._selfInventory,
+                    world._Inventory);
+            }*/
+
             using Buffer buffer = new();
 
             try
             {
                 try
                 {
-                    if (!_init)
+                    while (true)
                     {
-                        StartInitProcess(buffer, world, player);
-                    }
-                    else
-                    {
-                        /*if (serverTicks == 200)  // 10 seconds
-                        {
-                            System.Diagnostics.Debug.Assert(_window != null);
-                            _window.OpenWindowWithPublicInventory(
-                                _OUT_PACKETS,
-                                player._selfInventory,
-                                world._Inventory);
-                        }*/
-
-                        while (true)
-                        {
-                            RecvDataAndHandle(buffer, serverTicks, world, player);
-                        }
-
+                        RecvDataAndHandle(buffer, serverTicks, world, player);
                     }
                 }
                 catch (UnexpectedClientBehaviorExecption e)
@@ -451,19 +443,15 @@ namespace Protocol
                 throw;
             }
 
-            if (_init)
+            foreach (TeleportationRecord record in _TELEPORTATION_RECORDS.GetValues())
             {
-                foreach (TeleportationRecord record in _TELEPORTATION_RECORDS.GetValues())
-                {
-                    record.Update();
-                }
-
-                if (_keepAliveRecord != null)
-                {
-                    _keepAliveRecord.Update();
-                }
+                record.Update();
             }
 
+            if (_keepAliveRecord != null)
+            {
+                _keepAliveRecord.Update();
+            }
         }
 
         private void LoadWorld(World world, Player player)
@@ -478,6 +466,9 @@ namespace Protocol
             using Queue<Chunk.Vector> oldPositions = new();
 
             Chunk.Vector pCenter = Chunk.Vector.Convert(player.Position);
+
+            System.Diagnostics.Debug.Assert(_renderDistance >= _MIN_RENDER_DISTANCE);
+            System.Diagnostics.Debug.Assert(_renderDistance <= _MAX_RENDER_DISTANCE);
             Chunk.Grid grid = Chunk.Grid.Generate(pCenter, _renderDistance);
 
             foreach (Chunk.Vector p in _loadedChunkPositions.GetKeys())
@@ -620,16 +611,42 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (!_init)
-                return;
-
-            System.Diagnostics.Debug.Assert(_renderDistance >= _MIN_RENDER_DISTANCE);
-            System.Diagnostics.Debug.Assert(_renderDistance <= _MAX_RENDER_DISTANCE);
-            LoadWorld(world, player);
-
-            if (_OUT_PACKETS.Empty) return;
-
             using Buffer buffer = new();
+
+            if (!IsInit)
+            {
+                try
+                {
+                    try
+                    {
+                        StartInitProcess(buffer, world, player);
+                    }
+                    catch (UnexpectedClientBehaviorExecption e)
+                    {
+                        // TODO: send disconnected message to client.
+
+                        System.Console.WriteLine(e.Message);
+
+                        throw new DisconnectedClientException();
+                    }
+                }
+                catch (TryAgainException)
+                {
+                    return;
+                }
+                catch (DisconnectedClientException)
+                {
+                    buffer.Flush();
+                    player.Disconnect();
+                    world.PlayerListDisconnect(player.UniqueId);
+
+                    throw;
+                }
+
+                System.Diagnostics.Debug.Assert(IsInit);
+            }
+            
+            LoadWorld(world, player);
 
             try
             {

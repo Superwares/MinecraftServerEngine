@@ -88,8 +88,6 @@ namespace Protocol
                 _POS_SPAWNING, _LOOK_SPAWNING,
                 username);
 
-            _PLAYER_LIST.InitPlayer(player.UniqueId, player.Username);
-
             _ENTITY_SPAWNING_POOL.Enqueue(player);
 
             return player;
@@ -102,6 +100,11 @@ namespace Protocol
             while (!_ENTITY_DESPAWNING_POOL.Empty)
             {
                 Entity entity = _ENTITY_DESPAWNING_POOL.Dequeue();
+
+                if (entity is Player player)
+                {
+                    _PLAYER_LIST.ClosePlayer(player.UniqueId);
+                }
 
                 CloseEntityRendering(entity);
 
@@ -127,6 +130,11 @@ namespace Protocol
             {
                 Entity entity = _ENTITY_SPAWNING_POOL.Dequeue();
 
+                if (entity is Player player)
+                {
+                    _PLAYER_LIST.InitPlayer(player.UniqueId, player.Username);
+                }
+
                 InitEntityRendering(entity);
 
                 entities.Enqueue(entity);
@@ -138,11 +146,6 @@ namespace Protocol
             while (!_DESPAWNED_ENTITIES.Empty)
             {
                 Entity entity = _DESPAWNED_ENTITIES.Dequeue();
-
-                if (entity is Player player)
-                {
-                    _PLAYER_LIST.ClosePlayer(player.UniqueId);
-                }
 
                 _ENTITY_ID_LIST.Dealloc(entity.Id);
                 entity.Close();
