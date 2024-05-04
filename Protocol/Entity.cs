@@ -435,8 +435,6 @@ namespace Protocol
 
         private bool _controled;
         private Vector _posControl;
-
-
         internal Player(
             int id,
             System.Guid uniqueId,

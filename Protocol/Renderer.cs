@@ -2,20 +2,6 @@
 
 namespace Protocol
 {
-    internal sealed class Monitor
-    {
-        private bool _connected = true;
-        public bool IsConnected => _connected;
-
-        public Monitor() { }
-
-        public void Disconnect()
-        {
-            _connected = false;
-        }
-
-    }
-
     internal abstract class Renderer
     {
         private readonly int _ConnId;
@@ -32,8 +18,6 @@ namespace Protocol
         {
             _OutPackets.Enqueue(packet);
         }
-
-
 
     }
 

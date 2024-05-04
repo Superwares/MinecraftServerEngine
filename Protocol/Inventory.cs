@@ -331,9 +331,9 @@ namespace Protocol
 
         public SelfInventory() : base(46) 
         {
-            PutAll(15, new Item(Item.Types.Stone, 64), new(-1, 0));
+         /*   PutAll(15, new Item(Item.Types.Stone, 64), new(-1, 0));
             PutAll(16, new Item(Item.Types.Stone, 1), new(-1, 0));
-            PutAll(17, new Item(Item.Types.Grass, 64), new(-1, 0));
+            PutAll(17, new Item(Item.Types.Grass, 64), new(-1, 0));*/
 
         }
 

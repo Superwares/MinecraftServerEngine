@@ -48,7 +48,7 @@ namespace Containers
             
         }
 
-        ~Table() => Dispose(false);
+        ~Table() => System.Diagnostics.Debug.Assert(false);
 
         private int Hash(K key)
         {

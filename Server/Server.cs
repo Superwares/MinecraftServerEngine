@@ -43,6 +43,7 @@ namespace Application
                     continue;
                 }
 
+
                 _Connections.Enqueue((conn, player));
             }
         }
@@ -69,6 +70,8 @@ namespace Application
 
                 _Entities.Enqueue(entity);
             }
+
+            _World.Reset();
         }
 
         private void Render(long serverTicks)
@@ -128,11 +131,11 @@ namespace Application
 
             // Barrier
 
-            Reset();
+            Render(serverTicks);
 
             // Barrier
 
-            Render(serverTicks);
+            Reset();
 
             // Barrier
 

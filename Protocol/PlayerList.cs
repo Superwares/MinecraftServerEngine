@@ -105,8 +105,10 @@ namespace Protocol
 
             int laytencyInMilliseconds = item.laytencyInTicks * 50;
             foreach (var outPackets in _renderers.GetValues())
+            {
                 outPackets.Enqueue(new UpdatePlayerListItemLatencyPacket(
                     item.UniqueId, laytencyInMilliseconds));
+            }
         }
 
         private bool IsDisconnected(System.Guid uniqueId)

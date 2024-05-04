@@ -79,7 +79,7 @@ namespace Protocol
         private const int _MIN_RENDER_DISTANCE = 2, _MAX_RENDER_DISTANCE = 32;
         private int _renderDistance = -1;
 
-        private const int _MAX_LOAD_CHUNK_COUNT = 10;
+        private const int _MAX_LOAD_CHUNK_COUNT = 5;
         private Set<Chunk.Vector> _loadedChunkPositions = new();  // Disposable
         private Table<int, EntityRendererManager> _loadedEntityRendererManagers = new();  // Disposable
 
@@ -188,8 +188,6 @@ namespace Protocol
                 case ServerboundPlayingPacket.ConfirmSelfPlayerTeleportationPacketId:
                     {
                         ConfirmSelfPlayerTeleportationPacket packet = ConfirmSelfPlayerTeleportationPacket.Read(buffer);
-
-                        System.Console.Write("!!!!!!!!!");
 
                         if (_TELEPORTATION_RECORDS.Empty)
                         {
@@ -413,14 +411,14 @@ namespace Protocol
                     }
                     else
                     {
-                        if (serverTicks == 200)  // 10 seconds
+                        /*if (serverTicks == 200)  // 10 seconds
                         {
                             System.Diagnostics.Debug.Assert(_window != null);
                             _window.OpenWindowWithPublicInventory(
                                 _OUT_PACKETS,
                                 player._selfInventory,
                                 world._Inventory);
-                        }
+                        }*/
 
                         while (true)
                         {
@@ -551,7 +549,7 @@ namespace Protocol
             {
                 int i = 0;
                 var despawnedEntityIds = new int[prevRendererManagers.Count];
-                foreach ((int entityId, var rendererManager) in prevRendererManagers.GetElements())
+                foreach ((int entityId, var rendererManager) in prevRendererManagers.Flush())
                 {
                     System.Diagnostics.Debug.Assert(rendererManager.ContainsRenderer(Id));
                     rendererManager.RemoveRenderer(Id);
@@ -602,9 +600,9 @@ namespace Protocol
                     _OUT_PACKETS.Enqueue(new UnloadChunkPacket(p.X, p.Z));
                 }
             }
-                System.Diagnostics.Debug.Assert(newEntities.Empty);
+            System.Diagnostics.Debug.Assert(newEntities.Empty);
 
-                _loadedChunkPositions = loadedChunkPositions;
+            _loadedChunkPositions = loadedChunkPositions;
             _loadedEntityRendererManagers = rendererManagers;
         }
 
@@ -670,6 +668,8 @@ namespace Protocol
             catch (DisconnectedClientException)
             {
                 buffer.Flush();
+                player.Disconnect();
+                world.PlayerListDisconnect(player.UniqueId);
 
                 throw;
             }
@@ -683,7 +683,10 @@ namespace Protocol
 
             // TODO: Release resources corrently for no garbage.
             _loadedChunkPositions.Flush();
-            _loadedEntityRendererManagers.Flush();
+            foreach ((int entityId, var rendererManager) in _loadedEntityRendererManagers.Flush())
+            {
+                rendererManager.RemoveRenderer(Id);
+            }
 
             _TELEPORTATION_RECORDS.Flush();
 
