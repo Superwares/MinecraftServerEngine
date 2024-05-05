@@ -705,7 +705,7 @@ namespace Protocol
 
             while (app.Running)
             {
-                System.Console.Write(">");
+                /*System.Console.Write(">");*/
 
                 try
                 {

@@ -461,15 +461,15 @@ namespace Protocol
             {
                 int payload = new System.Random().Next();
                 selfRenderer.Enqueue(new TeleportSelfPlayerPacket(
-                Position.X, Position.Y, Position.Z,
-                Look.Yaw, Look.Pitch,
-                false, false, false, false, false,
-                    payload));
+                    Position.X, Position.Y, Position.Z,
+                    Look.Yaw, Look.Pitch,
+                    false, false, false, false, false,
+                        payload));
             }
 
             {
                 selfRenderer.Enqueue(new SetPlayerAbilitiesPacket(
-                    false, false, false, false, 0, 0));
+                    false, true, true, false, 0.1f, 0));
             }
 
             System.Diagnostics.Debug.Assert(_selfRenderer == null);

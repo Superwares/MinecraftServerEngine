@@ -275,17 +275,26 @@ namespace Protocol
             Chunk.Grid gridPrev = _ENTITY_TO_CHUNK_GRID.Extract(entity.Id);
             Chunk.Grid grid = Chunk.Grid.Generate(entity.Position, entity.GetBoundingBox());
 
+            /*System.Console.WriteLine();
+            System.Console.Write("gridPrev");
+            gridPrev.Print();
+            System.Console.Write("grid");
+            grid.Print();*/
+
             if (!gridPrev.Equals(grid))
             {
-                Chunk.Grid gridBetween = Chunk.Grid.Generate(grid, gridPrev);
+                Chunk.Grid? gridBetween = Chunk.Grid.Generate(grid, gridPrev);
+                /*System.Console.Write("gridBetween");
+                gridBetween.Print();*/
 
                 foreach (Chunk.Vector pChunk in gridPrev.GetVectors())
                 {
-                    if (gridBetween.Contains(pChunk))
+                    if (gridBetween != null && gridBetween.Contains(pChunk))
                     {
                         continue;
                     }
 
+                    /*System.Console.WriteLine($"pChunk: ({pChunk.X}, {pChunk.Z})");*/
                     Table<int, Entity> entities = _CHUNK_TO_ENTITIES.Lookup(pChunk);
 
                     Entity entityInChunk = entities.Extract(entity.Id);
@@ -300,7 +309,7 @@ namespace Protocol
 
                 foreach (Chunk.Vector pChunk in grid.GetVectors())
                 {
-                    if (gridBetween.Contains(pChunk))
+                    if (gridBetween != null && gridBetween.Contains(pChunk))
                     {
                         continue;
                     }
@@ -313,6 +322,7 @@ namespace Protocol
                     Table<int, Entity> entities = _CHUNK_TO_ENTITIES.Lookup(pChunk);
                     entities.Insert(entity.Id, entity);
                 }
+
             }
 
             _ENTITY_TO_CHUNK_GRID.Insert(entity.Id, grid);

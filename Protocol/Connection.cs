@@ -112,7 +112,7 @@ namespace Protocol
                 System.Diagnostics.Debug.Assert(_renderDistance == -1);
 
                 // TODO: If already player exists, use id of that player object, not new alloc id.
-                JoinGamePacket packet = new(player.Id, 0, 0, 0, "default", false);  // TODO
+                JoinGamePacket packet = new(player.Id, 1, 0, 0, "default", false);  // TODO
                 packet.Write(buffer);
                 _CLIENT.Send(buffer);
 
@@ -298,10 +298,7 @@ namespace Protocol
                 case ServerboundPlayingPacket.PlayerPositionPacketId:
                     {
                         PlayerPositionPacket packet = PlayerPositionPacket.Read(buffer);
-
-                        if (!_TELEPORTATION_RECORDS.Empty)
-                            throw new System.NotImplementedException();
-
+                
                         if (_TELEPORTATION_RECORDS.Empty)
                         {
                             player.Control(new(packet.X, packet.Y, packet.Z));
@@ -477,7 +474,7 @@ namespace Protocol
             foreach (Chunk.Vector p in grid.GetVectorsInSpiral())
             {
                 if (prevPositions.Contains(p))
-                {
+                {   
                     prevPositions.Extract(p);
                     positions.Insert(p);
 
@@ -526,11 +523,11 @@ namespace Protocol
                 {
                     (mask, data) = Chunk.Write();
                 }*/
-                (mask, data) = Chunk.Write2();
+                /*(mask, data) = Chunk.Write2();*/
+                (mask, data) = Chunk.Write();
 
                 _LOAD_CHUNK_PACKETS.Enqueue(new LoadChunkPacket(p.X, p.Z, true, mask, data));
 
-                
             }
 
             if (!prevRendererManagers.Empty)
@@ -631,8 +628,13 @@ namespace Protocol
 
                 System.Diagnostics.Debug.Assert(IsInit);
             }
-            
+
+            /*long start = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond), end;*/
+
             LoadWorld(world, player);
+
+            /*end = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
+            System.Console.WriteLine($"LoadWorld: {end - start}");*/
 
             try
             {
@@ -645,6 +647,9 @@ namespace Protocol
 
                     System.Diagnostics.Debug.Assert(buffer.Empty);
                 }
+
+                /*end = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
+                System.Console.WriteLine($"B: {end - start}");*/
 
                 while (!_OUT_PACKETS.Empty)
                 {
@@ -672,6 +677,9 @@ namespace Protocol
 
                     System.Diagnostics.Debug.Assert(buffer.Empty);
                 }
+
+                /*end = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
+                System.Console.WriteLine($"C: {end - start}");*/
 
             }
             catch (DisconnectedClientException)
