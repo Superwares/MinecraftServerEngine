@@ -55,7 +55,8 @@ namespace Protocol
         /// </summary>
         /// <param name="socket">TODO: Add description.</param>
         /// <param name="span">TODO: Add description.</param>
-        public static bool Poll(System.Net.Sockets.Socket socket, System.TimeSpan span)  // TODO: Use own System.TimeSpan in common library.
+        // TODO: Use own System.TimeSpan in common library.
+        public static bool Poll(System.Net.Sockets.Socket socket, System.TimeSpan span)  
         {
             // TODO: check the socket is binding and listening.
 
@@ -419,7 +420,7 @@ namespace Protocol
             {
                 (Client client, System.Guid uniqueId, string username) = _clients.Dequeue();
 
-                if (!world.CanJoinWorld())
+                if (!world.CanJoinWorld(uniqueId))
                 {
                     client.Close();
                     continue;
@@ -506,12 +507,16 @@ namespace Protocol
 
                         int packetId = buffer.ReadInt(true);
                         if (ServerboundHandshakingPacket.SetProtocolPacketId != packetId)
+                        {
                             throw new UnexpectedPacketException();
+                        }
 
                         SetProtocolPacket packet = SetProtocolPacket.Read(buffer);
 
                         if (!buffer.Empty)
+                        {
                             throw new BufferOverflowException();
+                        }
 
                         switch (packet.NextState)
                         {
@@ -534,12 +539,16 @@ namespace Protocol
 
                         int packetId = buffer.ReadInt(true);
                         if (ServerboundStatusPacket.RequestPacketId != packetId)
+                        {
                             throw new UnexpectedPacketException();
+                        }
 
                         RequestPacket requestPacket = RequestPacket.Read(buffer);
 
                         if (!buffer.Empty)
+                        {
                             throw new BufferOverflowException();
+                        }
 
                         // TODO
                         ResponsePacket responsePacket = new(100, 10, "Hello, World!");
@@ -556,12 +565,16 @@ namespace Protocol
 
                         int packetId = buffer.ReadInt(true);
                         if (ServerboundStatusPacket.PingPacketId != packetId)
+                        {
                             throw new UnexpectedPacketException();
+                        }
 
                         PingPacket inPacket = PingPacket.Read(buffer);
 
                         if (!buffer.Empty)
+                        {
                             throw new BufferOverflowException();
+                        }
 
                         PongPacket outPacket = new(inPacket.Payload);
                         outPacket.Write(buffer);
@@ -574,12 +587,16 @@ namespace Protocol
 
                         int packetId = buffer.ReadInt(true);
                         if (ServerboundLoginPacket.StartLoginPacketId != packetId)
+                        {
                             throw new UnexpectedPacketException();
+                        }
 
                         StartLoginPacket inPacket = StartLoginPacket.Read(buffer);
 
                         if (!buffer.Empty)
+                        {
                             throw new BufferOverflowException();
+                        }
 
                         // TODO: Check username is empty or invalid.
 

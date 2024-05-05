@@ -6,14 +6,20 @@ namespace Server
     {
         private bool _disposed = false;
 
-        private readonly ChestInventory _chestInventory;
+        private bool _gameInProgress = false;
 
-        public SuperWorld() : base(new(0, 61, 0), new(0,0)) 
+        public SuperWorld() : base(new(0, 61, 0), new(0,0)) { }
+
+        ~SuperWorld() => System.Diagnostics.Debug.Assert(false);
+
+        protected override bool DetermineToJoinWorld()
         {
-            _chestInventory = new ChestInventory();
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            return true;
         }
 
-        protected override bool CanJoinWorld()
+        protected override bool DetermineToDespawnPlayerOnDisconnect()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -31,6 +37,7 @@ namespace Server
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            // check player is dead. if dead, player must be respanwed.
         }
 
         protected override void Dispose(bool disposing)
