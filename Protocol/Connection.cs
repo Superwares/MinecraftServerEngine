@@ -80,7 +80,7 @@ namespace Protocol
         private int _renderDistance = -1;
 
         private const int _MAX_LOAD_CHUNK_COUNT = 5;
-        private readonly Set<Chunk.Vector> _loadedChunkPositions = new();  // Disposable
+        private Set<Chunk.Vector> _loadedChunkPositions = new();  // Disposable
         private Table<int, EntityRendererManager> _loadedEntityRendererManagers = new();  // Disposable
 
         private readonly Queue<TeleportationRecord> _TELEPORTATION_RECORDS = new();  // dispoasble
@@ -463,7 +463,8 @@ namespace Protocol
             using Table<int, EntityRendererManager> prevRendererManagers = _loadedEntityRendererManagers;
             Table<int, EntityRendererManager> rendererManagers = new();
 
-            using Queue<Chunk.Vector> oldPositions = new();
+            using Set<Chunk.Vector> prevPositions = _loadedChunkPositions;
+            Set<Chunk.Vector> positions = new();
 
             Chunk.Vector pCenter = Chunk.Vector.Convert(player.Position);
 
@@ -471,27 +472,15 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(_renderDistance <= _MAX_RENDER_DISTANCE);
             Chunk.Grid grid = Chunk.Grid.Generate(pCenter, _renderDistance);
 
-            foreach (Chunk.Vector p in _loadedChunkPositions.GetKeys())
-            {
-                if (grid.Contains(p))
-                {
-
-                }
-                else
-                {
-                    oldPositions.Enqueue(p);
-
-                }
-                
-
-            }
-
             int n = 0;
             int mask; byte[] data;
             foreach (Chunk.Vector p in grid.GetVectorsInSpiral())
             {
-                if (_loadedChunkPositions.Contains(p))
+                if (prevPositions.Contains(p))
                 {
+                    prevPositions.Extract(p);
+                    positions.Insert(p);
+
                     if (world.ContainsEntities(p))
                     {
                         foreach (Entity entity in world.GetEntities(p))
@@ -526,7 +515,7 @@ namespace Protocol
                     continue;
                 }
 
-                _loadedChunkPositions.Insert(p);
+                positions.Insert(p);
 
                 /*if (world.ContainsChunk(o))
                             {
@@ -591,16 +580,13 @@ namespace Protocol
                 }
             }
 
-            while (!oldPositions.Empty)
+            foreach (Chunk.Vector p in prevPositions.Flush())
             {
-                Chunk.Vector p = oldPositions.Dequeue();
-                _loadedChunkPositions.Extract(p);
                 _OUT_PACKETS.Enqueue(new UnloadChunkPacket(p.X, p.Z));
             }
 
-
-
             _loadedEntityRendererManagers = rendererManagers;
+            _loadedChunkPositions = positions;
         }
 
         /// <summary>

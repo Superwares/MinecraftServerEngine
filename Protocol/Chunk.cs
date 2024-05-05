@@ -116,9 +116,19 @@ namespace Protocol
 
             public System.Collections.Generic.IEnumerable<Vector> GetVectors()
             {
+                if (_max.X == _min.X && _max.Z == _min.Z)
+                {
+                    yield return new(_max.X, _min.Z);
+                    yield break;
+                }
+
                 for (int z = _min.Z; z <= _max.Z; ++z)
+                {
                     for (int x = _min.X; x <= _max.X; ++x)
+                    {
                         yield return new(x, z);
+                    }
+                }
 
             }
 
@@ -244,7 +254,7 @@ namespace Protocol
                     {
                         for (int x = 0; x < Width; x += 2)
                         {
-                            buffer.WriteByte(byte.MaxValue / 2);
+                            buffer.WriteByte(byte.MaxValue);
 
                         }
                     }
@@ -257,7 +267,7 @@ namespace Protocol
                     {
                         for (int x = 0; x < Width; x += 2)
                         {
-                            buffer.WriteByte(byte.MaxValue / 2);
+                            buffer.WriteByte(byte.MaxValue);
 
                         }
                     }
