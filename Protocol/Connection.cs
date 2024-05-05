@@ -112,7 +112,7 @@ namespace Protocol
                 System.Diagnostics.Debug.Assert(_renderDistance == -1);
 
                 // TODO: If already player exists, use id of that player object, not new alloc id.
-                JoinGamePacket packet = new(player.Id, 1, 0, 0, "default", false);  // TODO
+                JoinGamePacket packet = new(player.Id, 0, 0, 0, "default", false);  // TODO
                 packet.Write(buffer);
                 _CLIENT.Send(buffer);
 
@@ -523,8 +523,8 @@ namespace Protocol
                 {
                     (mask, data) = Chunk.Write();
                 }*/
-                /*(mask, data) = Chunk.Write2();*/
-                (mask, data) = Chunk.Write();
+                (mask, data) = Chunk.Write2();
+                /*(mask, data) = Chunk.Write();*/
 
                 _LOAD_CHUNK_PACKETS.Enqueue(new LoadChunkPacket(p.X, p.Z, true, mask, data));
 

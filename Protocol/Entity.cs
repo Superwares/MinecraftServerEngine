@@ -464,12 +464,12 @@ namespace Protocol
                     Position.X, Position.Y, Position.Z,
                     Look.Yaw, Look.Pitch,
                     false, false, false, false, false,
-                        payload));
+                    payload));
             }
 
             {
                 selfRenderer.Enqueue(new SetPlayerAbilitiesPacket(
-                    false, true, true, false, 0.1f, 0));
+                    false, false, true, false, 0.1f, 0));
             }
 
             System.Diagnostics.Debug.Assert(_selfRenderer == null);
