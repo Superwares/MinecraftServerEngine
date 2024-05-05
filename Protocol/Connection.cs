@@ -570,7 +570,7 @@ namespace Protocol
                                 spawnedPlayer.Id,
                                 spawnedPlayer.UniqueId,
                                 spawnedPlayer.Position.X, spawnedPlayer.Position.Y, spawnedPlayer.Position.Z,
-                                x, y,  // TODO: Convert yaw and pitch to angles of minecraft protocol.
+                                x, y, 
                                 metadata.WriteData()));
                         }
                         break;

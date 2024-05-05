@@ -2,8 +2,6 @@
 using Containers;
 using Protocol;
 using Server;
-using System;
-using System.Threading;
 
 namespace Application
 {
@@ -22,7 +20,7 @@ namespace Application
             _World = new SuperWorld();
         }
 
-        ~Server() => Dispose(false);
+        ~Server() => System.Diagnostics.Debug.Assert(false);
 
         private void Control(long serverTicks)
         {
@@ -111,7 +109,7 @@ namespace Application
         private void StartGameRoutine(
             long serverTicks, ConnectionListener connListener)
         {
-            Console.Write(".");
+            System.Console.Write(".");
 
             Control(serverTicks);
 
@@ -153,7 +151,7 @@ namespace Application
 
         private static long GetCurrentTime()
         {
-            return (DateTime.Now.Ticks / TimeSpan.TicksPerMicrosecond);
+            return (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
         }
 
         private void StartCoreRoutine(ConnectionListener connListener)
@@ -162,7 +160,7 @@ namespace Application
 
             long serverTicks = 0;
 
-            interval = total = (long)TimeSpan.FromMilliseconds(50).TotalMicroseconds;
+            interval = total = (long)System.TimeSpan.FromMilliseconds(50).TotalMicroseconds;
             start = GetCurrentTime();
 
             while (Running)
@@ -181,8 +179,8 @@ namespace Application
 
                 if (elapsed > interval)
                 {
-                    Console.WriteLine();
-                    Console.WriteLine($"The task is taking longer than expected. Elapsed Time: {elapsed}.");
+                    System.Console.WriteLine();
+                    System.Console.WriteLine($"The task is taking longer than expected. Elapsed Time: {elapsed}.");
                 }
             }
 
@@ -216,7 +214,7 @@ namespace Application
 
         public static void Main()
         {
-            Console.WriteLine("Hello, World!");
+            System.Console.WriteLine("Hello, World!");
 
             ushort port = 25565;
 
@@ -233,7 +231,7 @@ namespace Application
             while (app.Running)
             {
                 // Handle Barriers
-                Thread.Sleep(1000);
+                System.Threading.Thread.Sleep(1000);
             }
 
         }

@@ -60,7 +60,7 @@ namespace Protocol
             _PLAYER_LIST.KeepAlive(serverTicks, uniqueId);
         }
 
-        protected abstract bool DetermineToJoinWorld();
+        protected abstract bool DetermineNewPlayerCanJoinWorld();
 
         internal bool CanJoinWorld(System.Guid uniqueId)
         {
@@ -71,7 +71,7 @@ namespace Protocol
                 return true;
             }
 
-            return DetermineToJoinWorld();
+            return DetermineNewPlayerCanJoinWorld();
         }
 
         internal bool CanSpawnOrConnectPlayer(System.Guid uniqueId)
