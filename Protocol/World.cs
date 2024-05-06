@@ -114,6 +114,16 @@ namespace Protocol
             return player;
         }
 
+        internal ItemEntity SpawnItemEntity()
+        {
+            int id = _ENTITY_ID_LIST.Alloc();
+            ItemEntity itemEntity = new(id, _POS_SPAWNING, _LOOK_SPAWNING);
+
+            _ENTITY_SPAWNING_POOL.Enqueue(itemEntity);
+
+            return itemEntity;
+        }
+
         public void DespawnEntities()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -229,11 +239,16 @@ namespace Protocol
 
         protected abstract void StartSubRoutine(long serverTicks);
 
-        public void StartRoutine(long serverTicks) 
+        public void StartRoutine(long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             _PLAYER_LIST.StartRoutine(serverTicks);
+
+            if (serverTicks == 20 * 3)
+            {
+                SpawnItemEntity();
+            }
 
             StartSubRoutine(serverTicks);
         }

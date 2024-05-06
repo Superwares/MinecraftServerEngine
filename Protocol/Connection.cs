@@ -574,6 +574,25 @@ namespace Protocol
                                 metadata.WriteData()));
                         }
                         break;
+                    case ItemEntity itemEntity:
+                        {
+                            System.Console.Write("Spawn ItemEntity!");
+                            (byte x, byte y) = itemEntity.Look.ConvertToPacketFormat();
+                            _OUT_PACKETS.Enqueue(new SpawnObjectPacket(
+                                itemEntity.Id, itemEntity.UniqueId,
+                                2,
+                                itemEntity.Position.X, itemEntity.Position.Y, itemEntity.Position.Z,
+                                x, y,
+                                1,
+                                0, 0, 0));
+
+                            using EntityMetadata metadata = new();
+                            metadata.AddSlotData(6, new SlotData(280, 1));
+                            metadata.AddBool(5, true);
+                            _OUT_PACKETS.Enqueue(new EntityMetadataPacket(
+                                itemEntity.Id, metadata.WriteData()));
+                        }
+                        break;
                 }
             }
 

@@ -120,42 +120,71 @@ namespace Protocol
             }
         }
 
-        private bool _isDisposed = false;
-
-        private readonly Queue<Item> _items = new();
-
-        ~EntityMetadata()
+        private class SlotDataItem(byte index, SlotData value) : Item(index)
         {
-            Debug.Assert(false);
+            private readonly SlotData _VALUE = value;
+
+            public override void WriteData(Buffer buffer)
+            {
+                buffer.WriteInt(5, true);
+                buffer.WriteData(_VALUE.WriteData());
+            }
         }
+
+        private class BoolItem(byte index, bool value) : Item(index)
+        {
+            private readonly bool _VALUE = value;
+
+            public override void WriteData(Buffer buffer)
+            {
+                buffer.WriteInt(6, true);
+                buffer.WriteBool(_VALUE);
+            }
+        }
+
+        private bool _disposed = false;
+
+        private readonly Queue<Item> _ITEMS = new();
+
+        ~EntityMetadata() => System.Diagnostics.Debug.Assert(false);
 
         public void AddByte(byte index, byte value)
         {
-            _items.Enqueue(new ByteItem(index, value));
+            _ITEMS.Enqueue(new ByteItem(index, value));
         }
 
         public void AddInt(byte index, int value)
         {
-            _items.Enqueue(new IntItem(index, value));
+            _ITEMS.Enqueue(new IntItem(index, value));
         }
 
         public void AddFloat(byte index, float value)
         {
-            _items.Enqueue(new FloatItem(index, value));
+            _ITEMS.Enqueue(new FloatItem(index, value));
         }
 
         public void AddString(byte index, string value)
         {
-            _items.Enqueue(new StringItem(index, value));
+            _ITEMS.Enqueue(new StringItem(index, value));
+        }
+
+        public void AddSlotData(byte index, SlotData value)
+        {
+            _ITEMS.Enqueue(new SlotDataItem(index, value));
+        }
+
+        public void AddBool(byte index, bool value)
+        {
+            _ITEMS.Enqueue(new BoolItem(index, value));
         }
 
         public byte[] WriteData()
         {
             using Buffer buffer = new();
 
-            while (!_items.Empty)
+            while (!_ITEMS.Empty)
             {
-                Item item = _items.Dequeue();
+                Item item = _ITEMS.Dequeue();
                 item.Write(buffer);
             }
 
@@ -166,17 +195,17 @@ namespace Protocol
 
         private void Dispose(bool disposing)
         {
-            if (_isDisposed) return;
+            if (_disposed) return;
 
             if (disposing == true)
             {
                 // Release managed resources.
-                _items.Dispose();
+                _ITEMS.Dispose();
             }
 
             // Release unmanaged resources.
 
-            _isDisposed = true;
+            _disposed = true;
         }
 
         public void Dispose()
@@ -296,6 +325,7 @@ namespace Protocol
 
     internal abstract class ClientboundPlayingPacket(int id) : PlayingPacket(id)
     {
+        public const int SpawnObjectPacketId = 0x00;
         public const int SpawnNamedEntityPacketId = 0x05;
         public const int ClientboundConfirmTransactionPacketId = 0x11;
         public const int ClientboundCloseWindowPacketId = 0x12;
@@ -667,6 +697,55 @@ namespace Protocol
         {
             throw new NotImplementedException();
         }
+    }
+
+    internal class SpawnObjectPacket : ClientboundPlayingPacket
+    {
+        public readonly int EntityId;
+        public readonly System.Guid UniqueId;
+        public readonly sbyte Type;
+        public readonly double X, Y, Z;
+        public readonly byte Yaw, Pitch;
+        public readonly int Data;
+        public readonly short VelocityX, VelocityY, VelocityZ;
+
+        public static SpawnObjectPacket Read(Buffer buffer)
+        {
+            throw new System.NotImplementedException();
+        }
+        
+        public SpawnObjectPacket(
+            int entityId, System.Guid uniqueId,
+            sbyte type, double x, double y, double z,
+            byte yaw, byte pitch,
+            int data,
+            short vx, short vy, short vz) : base(SpawnObjectPacketId)
+        {
+            EntityId = entityId;
+            UniqueId = uniqueId;
+            Type = type;
+            X = x; Y = y; Z = z;
+            Yaw = yaw; Pitch = pitch;
+            Data = data;
+            VelocityX = vx; VelocityY = vy; VelocityZ = vz;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteInt(EntityId, true);
+            buffer.WriteGuid(UniqueId);
+            buffer.WriteSbyte(Type);
+            buffer.WriteDouble(X); buffer.WriteDouble(Y); buffer.WriteDouble(Z);
+            buffer.WriteByte(Yaw); buffer.WriteByte(Pitch);
+            buffer.WriteInt(Data);
+            if (Data > 0)
+            {
+                buffer.WriteShort(VelocityX);
+                buffer.WriteShort(VelocityY);
+                buffer.WriteShort(VelocityZ);
+            }
+        }
+
     }
 
     internal class SpawnNamedEntityPacket : ClientboundPlayingPacket

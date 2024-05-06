@@ -1,22 +1,23 @@
 ﻿using Containers;
+using System.Runtime.CompilerServices;
 
 namespace Protocol
 {
     internal abstract class Renderer
     {
-        private readonly int _ConnId;
+        private readonly int _CONN_ID;
 
-        private readonly Queue<ClientboundPlayingPacket> _OutPackets;
+        private readonly Queue<ClientboundPlayingPacket> _OUT_PACKETS;
 
         public Renderer(int connId, Queue<ClientboundPlayingPacket> outPackets)
         {
-            _ConnId = connId;
-            _OutPackets = outPackets;
+            _CONN_ID = connId;
+            _OUT_PACKETS = outPackets;
         }
 
         protected void Render(ClientboundPlayingPacket packet)
         {
-            _OutPackets.Enqueue(packet);
+            _OUT_PACKETS.Enqueue(packet);
         }
 
     }
@@ -89,4 +90,24 @@ namespace Protocol
         }
 
     }
+
+    /*internal sealed class SelfPlayerRenderer : Renderer
+    {
+        private readonly Client _CLIENT;
+
+        public EntityRenderer(
+            int connId, Queue<ClientboundPlayingPacket> outPackets, 
+            Client client)
+            : base(connId, outPackets) 
+        {
+            _CLIENT = client;
+        }
+
+        public void AddForce()
+        {
+            _CLIENT.Send();
+        }
+
+    }
+*/
 }

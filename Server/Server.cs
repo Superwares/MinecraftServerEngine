@@ -225,8 +225,7 @@ namespace Application
             app.Run(() => app.StartCoreRoutine(connListener));
 
             ClientListener listener = new(connListener);
-            app.Run(() => 
-                listener.StartRoutine(app, port));
+            app.Run(() => listener.StartRoutine(app, port));
 
             while (app.Running)
             {

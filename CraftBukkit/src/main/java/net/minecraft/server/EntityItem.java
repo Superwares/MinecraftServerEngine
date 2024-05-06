@@ -55,6 +55,9 @@ public class EntityItem extends Entity {
     }
 
     public void B_() {
+        System.out.println("locX: " + locX + ", locY: " + locY + ", locZ: " + locZ);
+        System.out.println("motX: " + motX + ", motY: " + motY + ", motZ: " + motZ);
+
         if (this.getItemStack().isEmpty()) {
             this.die();
         } else {
@@ -77,16 +80,16 @@ public class EntityItem extends Entity {
                 this.motY -= 0.03999999910593033D;
             }
 
-            if (this.world.isClientSide) {
+            /*if (this.world.isClientSide) {
                 this.noclip = false;
             } else {
                 this.noclip = this.i(this.locX, (this.getBoundingBox().b + this.getBoundingBox().e) / 2.0D, this.locZ);
-            }
+            }*/
 
             this.move(EnumMoveType.SELF, this.motX, this.motY, this.motZ);
-            boolean flag = (int) this.lastX != (int) this.locX || (int) this.lastY != (int) this.locY || (int) this.lastZ != (int) this.locZ;
+            /*boolean flag = (int) this.lastX != (int) this.locX || (int) this.lastY != (int) this.locY || (int) this.lastZ != (int) this.locZ;*/
 
-            if (flag || this.ticksLived % 25 == 0) {
+            /*if (flag || this.ticksLived % 25 == 0) {
                 if (this.world.getType(new BlockPosition(this)).getMaterial() == Material.LAVA) {
                     this.motY = 0.20000000298023224D;
                     this.motX = (double) ((this.random.nextFloat() - this.random.nextFloat()) * 0.2F);
@@ -97,13 +100,14 @@ public class EntityItem extends Entity {
                 if (!this.world.isClientSide) {
                     this.x();
                 }
-            }
+            }*/
 
-            float f = 0.98F;
+            /*float f = 0.98F;*/
+            float f = 1f;
 
-            if (this.onGround) {
+            /*if (this.onGround) {
                 f = this.world.getType(new BlockPosition(MathHelper.floor(this.locX), MathHelper.floor(this.getBoundingBox().b) - 1, MathHelper.floor(this.locZ))).getBlock().frictionFactor * 0.98F;
-            }
+            }*/
 
             this.motX *= (double) f;
             this.motY *= 0.9800000190734863D;
@@ -118,7 +122,7 @@ public class EntityItem extends Entity {
             }
             // Craftbukkit end */
 
-            this.aq();
+            /*this.aq();
             if (!this.world.isClientSide) {
                 double d3 = this.motX - d0;
                 double d4 = this.motY - d1;
@@ -128,9 +132,9 @@ public class EntityItem extends Entity {
                 if (d6 > 0.01D) {
                     this.impulse = true;
                 }
-            }
+            }*/
 
-            if (!this.world.isClientSide && this.age >= 6000) {
+            /*if (!this.world.isClientSide && this.age >= 6000) {
                 // CraftBukkit start - fire ItemDespawnEvent
                 if (org.bukkit.craftbukkit.event.CraftEventFactory.callItemDespawnEvent(this).isCancelled()) {
                     this.age = 0;
@@ -138,7 +142,7 @@ public class EntityItem extends Entity {
                 }
                 // CraftBukkit end
                 this.die();
-            }
+            }*/
 
         }
     }
