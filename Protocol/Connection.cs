@@ -587,8 +587,8 @@ namespace Protocol
                                 0, 0, 0));
 
                             using EntityMetadata metadata = new();
-                            metadata.AddSlotData(6, new SlotData(280, 1));
                             metadata.AddBool(5, true);
+                            metadata.AddSlotData(6, new SlotData(280, 1));
                             _OUT_PACKETS.Enqueue(new EntityMetadataPacket(
                                 itemEntity.Id, metadata.WriteData()));
                         }

@@ -1,4 +1,5 @@
 ﻿
+using Common;
 using Containers;
 
 namespace Protocol
@@ -22,7 +23,9 @@ namespace Protocol
 
             public bool Equals(Vector other)
             {
-                return (_x == other._x) && (_y == other._y) && (_z == other._z);
+                return Comparing.IsEqualTo(_x, other._x) && 
+                    Comparing.IsEqualTo(_y, other._y) &&
+                    Comparing.IsEqualTo(_z, other._z);
             }
 
         }
@@ -68,7 +71,8 @@ namespace Protocol
 
             public bool Equals(Angles other)
             {
-                return (other._yaw == _yaw) && (other._pitch == _pitch);
+                return Comparing.IsEqualTo(_yaw, other._yaw) &&
+                    Comparing.IsEqualTo(_pitch, other._pitch);
             }
 
         }
@@ -82,11 +86,11 @@ namespace Protocol
 
         public System.Guid UniqueId;
 
-        protected Vector _pos, _posPrev;
+        private Vector _pos;
         public Vector Position => _pos;
 
         private bool _rotated = false;
-        protected Angles _look;
+        private Angles _look;
         public Angles Look => _look;
 
         protected bool _onGround;
@@ -123,7 +127,7 @@ namespace Protocol
 
         ~Entity() => System.Diagnostics.Debug.Assert(false);
 
-        public void AddForce()
+        public virtual void AddForce()
         {
             throw new System.NotImplementedException();
         }
@@ -131,10 +135,6 @@ namespace Protocol
         public virtual void Reset()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-
-            _posPrev = _pos;
-            _rotated = false;
-            _teleported = false;
 
             // reset forces
         }
@@ -149,24 +149,36 @@ namespace Protocol
 
         }
 
+        protected virtual Vector Integrate()
+        {
+            // update position with velocity, accelaration and forces(gravity, damping).
+            throw new System.NotImplementedException();
+        }
+
         protected internal virtual void Move()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+            
+            Vector posNew = Integrate();
 
-            // update position with velocity, accelaration and forces(gravity, damping).
-
-            bool moved = !_posPrev.Equals(_pos);  // TODO: Compare with machine epsilon.
+            bool moved = !posNew.Equals(_pos);  // TODO: Compare with machine epsilon.
             // TODO: Check _pos - _posPrev is lower than 8 blocks.
             // If not, use EntityTeleportPacket to render.
             if (moved && _rotated)
             {
-                _RendererManager.MoveAndRotate(Id, _pos, _posPrev, _look, _onGround);
+                _RendererManager.MoveAndRotate(Id, posNew, _pos, _look, _onGround);
+
+                _pos = posNew;
+                _rotated = false;
             }
             else if (moved)
             {
                 System.Diagnostics.Debug.Assert(!_rotated);
 
-                _RendererManager.Move(Id, _pos, _posPrev, _onGround);
+                _RendererManager.Move(Id, posNew, _pos, _onGround);
+
+                _pos = posNew;
+                _rotated = false;
             }
             else if (_rotated)
             {
@@ -189,10 +201,12 @@ namespace Protocol
                 // update position data in chunk
 
                 _RendererManager.Teleport(Id, _pos, _look, _onGround);
+
+                _teleported = false;
             }
         }
 
-        public void Teleport(Vector pos, Angles look)
+        public virtual void Teleport(Vector pos, Angles look)
         {
             _teleported = true;
             _posTeleport = pos;
@@ -433,14 +447,41 @@ namespace Protocol
             _controled = false;
         }
 
+        public override void Teleport(Vector pos, Angles look)
+        {
+            base.Teleport(pos, look);
+
+            int payload = new System.Random().Next();
+
+            System.Diagnostics.Debug.Assert(_selfRenderer != null);
+            _selfRenderer.Enqueue(new TeleportSelfPlayerPacket(
+                pos.X, pos.Y, pos.Z,
+                look.Yaw, look.Pitch,
+                false, false, false, false, false,
+                payload));
+        }
+
+        protected override Vector Integrate()
+        {
+            if (IsConnected)
+            {
+                return base.Integrate();
+            }
+
+            if (_controled)
+            {
+                return _posControl;
+            }
+
+            return Position;
+        }
+
         internal void Control(Vector pos)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             _controled = true;
             _posControl = pos;
-
-            // TODO: send render data;
         }
 
         protected internal override void StartRoutine(long serverTicks, World world)
@@ -455,32 +496,6 @@ namespace Protocol
             }
 
             base.StartRoutine(serverTicks, world);
-        }
-
-        protected internal override void Move()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            if (_controled)
-            {
-                _pos = _posControl;
-            }
-
-            base.Move();
-
-            if (!IsConnected) return;
-
-            if (_teleported)
-            {
-                int payload = new System.Random().Next();
-
-                System.Diagnostics.Debug.Assert(_selfRenderer != null);
-                _selfRenderer.Enqueue(new TeleportSelfPlayerPacket(
-                    _pos.X, _pos.Y, _pos.Z,
-                    _look.Yaw, _look.Pitch,
-                    false, false, false, false, false,
-                    payload));
-            }
         }
 
         protected override void Dispose(bool disposing)

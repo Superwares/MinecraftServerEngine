@@ -1,4 +1,5 @@
-﻿using Containers;
+﻿using Common;
+using Containers;
 using System.Runtime.CompilerServices;
 
 namespace Protocol
@@ -31,12 +32,20 @@ namespace Protocol
             int entityId, 
             Entity.Vector pos, Entity.Vector posPrev, Entity.Angles look, bool onGround)
         {
+            double dx = (pos.X - posPrev.X) * (32 * 128),
+                dy = (pos.y - posPrev.y) * (32 * 128),
+                dz = (pos.Z - posPrev.Z) * (32 * 128);
+            System.Diagnostics.Debug.Assert(Comparing.IsGreaterThanOrEqualTo(dx, short.MinValue));
+            System.Diagnostics.Debug.Assert(Comparing.IsLessThanOrEqualTo(dx, short.MaxValue));
+            System.Diagnostics.Debug.Assert(Comparing.IsGreaterThanOrEqualTo(dy, short.MinValue));
+            System.Diagnostics.Debug.Assert(Comparing.IsLessThanOrEqualTo(dy, short.MaxValue));
+            System.Diagnostics.Debug.Assert(Comparing.IsGreaterThanOrEqualTo(dz, short.MinValue));
+            System.Diagnostics.Debug.Assert(Comparing.IsLessThanOrEqualTo(dz, short.MaxValue));
+
             (byte x, byte y) = look.ConvertToPacketFormat();
             Render(new EntityLookAndRelMovePacket(
                 entityId,
-                (short)((pos.X - posPrev.X) * 32 * 128),
-                (short)((pos.Y - posPrev.Y) * 32 * 128),
-                (short)((pos.Z - posPrev.Z) * 32 * 128),
+                (short)dx, (short)dy, (short)dz,
                 x, y,
                 onGround));
             Render(new EntityHeadLookPacket(entityId, x));
@@ -44,11 +53,19 @@ namespace Protocol
 
         public void Move(int entityId, Entity.Vector pos, Entity.Vector posPrev, bool onGround)
         {
+            double dx = (pos.X - posPrev.X) * (32 * 128), 
+                dy = (pos.y - posPrev.y) * (32 * 128), 
+                dz = (pos.Z - posPrev.Z) * (32 * 128);
+            System.Diagnostics.Debug.Assert(Comparing.IsGreaterThanOrEqualTo(dx, short.MinValue));
+            System.Diagnostics.Debug.Assert(Comparing.IsLessThanOrEqualTo(dx, short.MaxValue));
+            System.Diagnostics.Debug.Assert(Comparing.IsGreaterThanOrEqualTo(dy, short.MinValue));
+            System.Diagnostics.Debug.Assert(Comparing.IsLessThanOrEqualTo(dy, short.MaxValue));
+            System.Diagnostics.Debug.Assert(Comparing.IsGreaterThanOrEqualTo(dz, short.MinValue));
+            System.Diagnostics.Debug.Assert(Comparing.IsLessThanOrEqualTo(dz, short.MaxValue));
+
             Render(new EntityRelMovePacket(
                 entityId,
-                (short)((pos.X - posPrev.X) * 32 * 128),
-                (short)((pos.Y - posPrev.Y) * 32 * 128),
-                (short)((pos.Z - posPrev.Z) * 32 * 128),
+                (short)dx, (short)dy, (short)dz,
                 onGround));
         }
 
