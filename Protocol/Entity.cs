@@ -4,13 +4,25 @@ using Containers;
 
 namespace Protocol
 {
-    
-
     public abstract class Entity : System.IDisposable
     {
 
         public struct Vector : System.IEquatable<Vector>
         {
+            public static Vector operator+ (Vector v1, Vector v2)
+            {
+                return new(v1.X + v2.X, v1.Y + v2.Y, v1.Z + v2.Z);
+            }
+
+            public static Vector operator* (Vector v1, Vector v2)
+            {
+                return new(v1.X * v2.X, v1.Y * v2.Y, v1.Z * v2.Z);
+            }
+            public static Vector operator *(double s, Vector v)
+            {
+                return new(v.X * s, v.Y * s, v.Z * s);
+            }
+
             private double _x, _y, _z;
             public double X => _x;
             public double Y => _y;
@@ -86,23 +98,36 @@ namespace Protocol
 
         public System.Guid UniqueId;
 
+
+        private readonly Queue<Vector> _FORCES = new();
+
+
+        private Vector _v = new(0, 0, 0);
+        public Vector Velocity => _v;
+
+
         private Vector _pos;
         public Vector Position => _pos;
+
 
         private bool _rotated = false;
         private Angles _look;
         public Angles Look => _look;
 
+
         protected bool _onGround;
         public bool IsOnGround => _onGround;
+
 
         protected bool _sneaking, _sprinting;
         public bool IsSneaking => _sneaking;
         public bool IsSprinting => _sprinting;
 
+
         protected bool _teleported;
         protected Vector _posTeleport;
         protected Angles _lookTeleport;
+
 
         internal readonly EntityRendererManager _RendererManager = new();  // Disposable
 
@@ -127,9 +152,11 @@ namespace Protocol
 
         ~Entity() => System.Diagnostics.Debug.Assert(false);
 
-        public virtual void AddForce()
+        public virtual void AddForce(Vector force)
         {
-            throw new System.NotImplementedException();
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            _FORCES.Enqueue(force);
         }
 
         public virtual void Reset()
@@ -141,18 +168,33 @@ namespace Protocol
 
         public virtual bool IsDead()
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             return false;
         }
 
         protected internal virtual void StartRoutine(long serverTicks, World world)
         {
-
+            System.Diagnostics.Debug.Assert(!_disposed);
         }
 
         protected virtual Vector Integrate()
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            Vector pos = _pos;
+
             // update position with velocity, accelaration and forces(gravity, damping).
-            throw new System.NotImplementedException();
+            while (!_FORCES.Empty)
+            {
+                Vector force = _FORCES.Dequeue();
+
+                _v += force;
+            }
+
+            pos += _v;
+
+            return pos;
         }
 
         protected internal virtual void Move()
@@ -160,6 +202,7 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(!_disposed);
             
             Vector posNew = Integrate();
+            System.Diagnostics.Debug.Assert(_FORCES.Empty);
 
             bool moved = !posNew.Equals(_pos);  // TODO: Compare with machine epsilon.
             // TODO: Check _pos - _posPrev is lower than 8 blocks.
@@ -178,13 +221,14 @@ namespace Protocol
                 _RendererManager.Move(Id, posNew, _pos, _onGround);
 
                 _pos = posNew;
-                _rotated = false;
             }
             else if (_rotated)
             {
                 System.Diagnostics.Debug.Assert(!moved);
 
                 _RendererManager.Rotate(Id, _look, _onGround);
+
+                _rotated = false;
             }
             else
             {
@@ -277,9 +321,14 @@ namespace Protocol
         {
             if (_disposed) return;
 
+            // Assertion
+            System.Diagnostics.Debug.Assert(_FORCES.Empty);
+
             if (disposing == true)
             {
                 // Release managed resources.
+                _FORCES.Dispose();
+
                 _RendererManager.Dispose();
             }
 
@@ -437,18 +486,26 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(_selfRenderer != null);
             _selfRenderer = null;
         }
-        
-        public override void Reset()
+
+        public override void AddForce(Vector force)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            base.Reset();
-
-            _controled = false;
+            if (IsConnected)
+            {
+                throw new System.NotImplementedException();
+            }
+            else
+            {
+                base.AddForce(force);
+            }
+            
         }
 
         public override void Teleport(Vector pos, Angles look)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             base.Teleport(pos, look);
 
             int payload = new System.Random().Next();
@@ -463,6 +520,8 @@ namespace Protocol
 
         protected override Vector Integrate()
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             if (IsConnected)
             {
                 return base.Integrate();
@@ -470,6 +529,7 @@ namespace Protocol
 
             if (_controled)
             {
+                _controled = false;
                 return _posControl;
             }
 

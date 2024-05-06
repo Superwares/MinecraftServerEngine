@@ -36,19 +36,19 @@ namespace Protocol
 
         public void MoveAndRotate(
             int entityId,
-            Entity.Vector pos, Entity.Vector posPrev, Entity.Angles look, bool onGround)
+            Entity.Vector posNew, Entity.Vector pos, Entity.Angles look, bool onGround)
         {
             foreach (var renderer in _Renderers.GetValues())
             {
-                renderer.MoveAndRotate(entityId, pos, posPrev, look, onGround);
+                renderer.MoveAndRotate(entityId, posNew, pos, look, onGround);
             }
         }
 
-        public void Move(int entityId, Entity.Vector pos, Entity.Vector posPrev, bool onGround)
+        public void Move(int entityId, Entity.Vector posNew, Entity.Vector pos, bool onGround)
         {
             foreach (var renderer in _Renderers.GetValues())
             {
-                renderer.Move(entityId, pos, posPrev, onGround);
+                renderer.Move(entityId, posNew, pos, onGround);
             }
         }
 

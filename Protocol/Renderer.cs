@@ -30,11 +30,11 @@ namespace Protocol
         
         public void MoveAndRotate(
             int entityId, 
-            Entity.Vector pos, Entity.Vector posPrev, Entity.Angles look, bool onGround)
+            Entity.Vector posNew, Entity.Vector pos, Entity.Angles look, bool onGround)
         {
-            double dx = (pos.X - posPrev.X) * (32 * 128),
-                dy = (pos.y - posPrev.y) * (32 * 128),
-                dz = (pos.Z - posPrev.Z) * (32 * 128);
+            double dx = (posNew.X - pos.X) * (32 * 128),
+                dy = (posNew.Y - pos.Y) * (32 * 128),
+                dz = (posNew.Z - pos.Z) * (32 * 128);
             System.Diagnostics.Debug.Assert(Comparing.IsGreaterThanOrEqualTo(dx, short.MinValue));
             System.Diagnostics.Debug.Assert(Comparing.IsLessThanOrEqualTo(dx, short.MaxValue));
             System.Diagnostics.Debug.Assert(Comparing.IsGreaterThanOrEqualTo(dy, short.MinValue));
@@ -51,11 +51,11 @@ namespace Protocol
             Render(new EntityHeadLookPacket(entityId, x));
         }
 
-        public void Move(int entityId, Entity.Vector pos, Entity.Vector posPrev, bool onGround)
+        public void Move(int entityId, Entity.Vector posNew, Entity.Vector pos, bool onGround)
         {
-            double dx = (pos.X - posPrev.X) * (32 * 128), 
-                dy = (pos.y - posPrev.y) * (32 * 128), 
-                dz = (pos.Z - posPrev.Z) * (32 * 128);
+            double dx = (posNew.X - pos.X) * (32 * 128), 
+                dy = (posNew.Y - pos.Y) * (32 * 128), 
+                dz = (posNew.Z - pos.Z) * (32 * 128);
             System.Diagnostics.Debug.Assert(Comparing.IsGreaterThanOrEqualTo(dx, short.MinValue));
             System.Diagnostics.Debug.Assert(Comparing.IsLessThanOrEqualTo(dx, short.MaxValue));
             System.Diagnostics.Debug.Assert(Comparing.IsGreaterThanOrEqualTo(dy, short.MinValue));
