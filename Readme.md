@@ -1,5 +1,6 @@
 ﻿# Server
 
+```text
 /*************************************************************
 * Copyright © 2024 Jung Hyunseo. All rights reserved.
 **************************************************************
@@ -14,6 +15,7 @@
 * For inquiries regarding copyright or access permissions,
 * please contact welcomehyunseo@gmail.com.
 *************************************************************/
+```
 
 
 ## TODO
