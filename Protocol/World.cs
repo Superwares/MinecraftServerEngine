@@ -125,6 +125,8 @@ namespace Protocol
 
             _ENTITY_SPAWNING_POOL.Enqueue(itemEntity);
 
+            System.Console.WriteLine("SpawnItemEntity!");
+
             return itemEntity;
         }
 
@@ -182,7 +184,7 @@ namespace Protocol
                 
             }
 
-            {
+            /*{
                 if (entity is Player player && player.IsConnected)
                 {
 
@@ -194,7 +196,8 @@ namespace Protocol
                         entity.Velocity);  // Damping Force
                     entity.AddForce(0.08D * new Entity.Vector(0, -1, 0));  // Gravity
                 }
-            }
+            }*/
+
 
             {
                 entity.Move();
@@ -203,6 +206,7 @@ namespace Protocol
 
                 UpdateEntityRendering(entity);
             }
+
 
             return false;
         }
@@ -266,7 +270,7 @@ namespace Protocol
 
             _PLAYER_LIST.StartRoutine(serverTicks);
 
-            if (serverTicks == 20 * 3)
+            if (serverTicks == 20 * 5)
             {
                 SpawnItemEntity();
             }

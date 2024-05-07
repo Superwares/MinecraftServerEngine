@@ -370,11 +370,6 @@ namespace Protocol
 
         ~ItemEntity() => System.Diagnostics.Debug.Assert(false);
 
-        protected internal override void Move()
-        {
-            
-        }
-
         protected override void Dispose(bool disposing)
         {
             if (!_disposed)

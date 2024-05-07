@@ -148,6 +148,8 @@ namespace Protocol
             }
             catch (System.Net.Sockets.SocketException e)
             {
+                /*if (e.SocketErrorCode == System.Net.Sockets.SocketError.WouldBlock)
+                    throw new TryAgainException();*/
                 if (e.SocketErrorCode == System.Net.Sockets.SocketError.ConnectionAborted)
                     throw new DisconnectedClientException();
 

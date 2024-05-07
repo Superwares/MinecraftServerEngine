@@ -126,9 +126,9 @@ namespace Protocol
             double dx = (posNew.X - pos.X) * (32 * 128),
                 dy = (posNew.Y - pos.Y) * (32 * 128),
                 dz = (posNew.Z - pos.Z) * (32 * 128);
-            System.Diagnostics.Debug.Assert(Comparing.IsInRange(dx, short.MinValue, short.MinValue));
-            System.Diagnostics.Debug.Assert(Comparing.IsInRange(dy, short.MinValue, short.MinValue));
-            System.Diagnostics.Debug.Assert(Comparing.IsInRange(dz, short.MinValue, short.MinValue));
+            System.Diagnostics.Debug.Assert(Comparing.IsInRange(dx, short.MinValue, short.MaxValue));
+            System.Diagnostics.Debug.Assert(Comparing.IsInRange(dy, short.MinValue, short.MaxValue));
+            System.Diagnostics.Debug.Assert(Comparing.IsInRange(dz, short.MinValue, short.MaxValue));
 
             (byte x, byte y) = look.ConvertToPacketFormat();
             Render(new EntityLookAndRelMovePacket(
@@ -151,9 +151,9 @@ namespace Protocol
             double dx = (posNew.X - pos.X) * (32 * 128), 
                 dy = (posNew.Y - pos.Y) * (32 * 128), 
                 dz = (posNew.Z - pos.Z) * (32 * 128);
-            System.Diagnostics.Debug.Assert(Comparing.IsInRange(dx, short.MinValue, short.MinValue));
-            System.Diagnostics.Debug.Assert(Comparing.IsInRange(dy, short.MinValue, short.MinValue));
-            System.Diagnostics.Debug.Assert(Comparing.IsInRange(dz, short.MinValue, short.MinValue));
+            System.Diagnostics.Debug.Assert(Comparing.IsInRange(dx, short.MinValue, short.MaxValue));
+            System.Diagnostics.Debug.Assert(Comparing.IsInRange(dy, short.MinValue, short.MaxValue));
+            System.Diagnostics.Debug.Assert(Comparing.IsInRange(dz, short.MinValue, short.MaxValue));
 
             Render(new EntityRelMovePacket(
                 entityId,

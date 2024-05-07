@@ -1,11 +1,192 @@
 ﻿
 using Containers;
-using System.Numerics;
 
 namespace Protocol
 {
     public sealed class Connection : System.IDisposable
     {
+
+        private sealed class WorldLoadingCache : System.IDisposable
+        {
+            private bool _disposed = false;
+
+            private const int _MAX_COUNT = 5;
+
+            private Chunk.Vector _cPrev;
+
+            private int _index = 0;
+            private Chunk.Vector[]? _arr = null;
+
+            private int n = 0;
+
+            private readonly Set<Chunk.Vector> _LOADED_POSITIONS = new();
+
+            public WorldLoadingCache()
+            {
+
+            }
+
+            ~WorldLoadingCache() => System.Diagnostics.Debug.Assert(false);
+            
+            public void UnloadPosition(Chunk.Vector p)
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                System.Diagnostics.Debug.Assert(_arr != null);
+                System.Diagnostics.Debug.Assert(_MAX_COUNT > 0);
+                System.Diagnostics.Debug.Assert(n >= 0);
+                System.Diagnostics.Debug.Assert(_index >= 0);
+                System.Diagnostics.Debug.Assert(_index <= _arr.Length);
+
+                if (_LOADED_POSITIONS.Contains(p))
+                {
+                    _LOADED_POSITIONS.Extract(p);
+
+                }
+            }
+
+            public void Setup(Chunk.Vector c, int d)
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                if (_arr == null || !_cPrev.Equals(c))
+                {
+                    int length = (d + d + 1) * (d + d + 1);
+                    _arr = new Chunk.Vector[length];
+
+                    int i = 0;
+
+                    _arr[i++] = c;
+
+                    for (int j = 0; j < d; ++j)
+                    {
+                        int k = j + 1;
+                        int x = c.X + k, z = c.Z + k;
+                        int w = k * 2;
+
+                        for (int l = 0; l < w; ++l)
+                        {
+                            _arr[i++] = new(--x, z);
+                        }
+
+                        for (int l = 0; l < w; ++l)
+                        {
+                            _arr[i++] = new(x, --z);
+                        }
+
+                        for (int l = 0; l < w; ++l)
+                        {
+                            _arr[i++] = new(++x, z);
+                        }
+
+                        for (int l = 0; l < w; ++l)
+                        {
+                            _arr[i++] = new(x, ++z);
+                        }
+
+                        System.Diagnostics.Debug.Assert(x == c.X + k);
+                        System.Diagnostics.Debug.Assert(z == c.Z + k);
+
+                    }
+
+                    System.Diagnostics.Debug.Assert(i == _arr.Length);
+
+                    _cPrev = c;
+
+                    _index = 0;
+                }
+                else
+                {
+
+                }
+
+                n = 0;
+
+            }
+
+            public bool CanContinue()
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                System.Diagnostics.Debug.Assert(_arr != null);
+                System.Diagnostics.Debug.Assert(n >= 0);
+                System.Diagnostics.Debug.Assert(_index >= 0);
+                System.Diagnostics.Debug.Assert(_index <= _arr.Length);
+
+                System.Diagnostics.Debug.Assert(n <= _MAX_COUNT);
+                return n < _MAX_COUNT;
+            }
+
+            public Chunk.Vector GetVectorAndMoveNext()
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                System.Diagnostics.Debug.Assert(_arr != null);
+                System.Diagnostics.Debug.Assert(_MAX_COUNT > 0);
+                System.Diagnostics.Debug.Assert(n >= 0);
+                System.Diagnostics.Debug.Assert(_index >= 0);
+                System.Diagnostics.Debug.Assert(_index <= _arr.Length);
+
+                while (true)
+                {
+                    if (_index == _arr.Length)
+                    {
+                        System.Diagnostics.Debug.Assert(_LOADED_POSITIONS.Count == _arr.Length);
+
+                        _index = 0;
+                        _LOADED_POSITIONS.Flush();
+                    }
+
+                    Chunk.Vector p = _arr[_index++];
+                    if (!_LOADED_POSITIONS.Contains(p))
+                    {
+                        n++;
+                        /*System.Console.WriteLine($"n: {n}, p: {p.X} {p.Z}");*/
+
+                        _LOADED_POSITIONS.Insert(p);
+
+                        return p;
+                    }
+                }
+
+                throw new System.NotImplementedException();
+            }
+
+            public void Flush()
+            {
+                _index = 0;
+                _arr = null;
+                n = 0;
+
+                _LOADED_POSITIONS.Flush();
+            }
+
+            private void Dispose(bool disposing)
+            {
+                if (_disposed) return;
+
+                // Assertion
+                System.Diagnostics.Debug.Assert(_LOADED_POSITIONS.Empty);
+
+                if (disposing == true)
+                {
+                    // managed objects
+                    _LOADED_POSITIONS.Dispose();
+
+                }
+
+                // unmanaged objects
+
+                _disposed = true;
+            }
+
+            public void Dispose()
+            {
+                Dispose(true);
+                System.GC.SuppressFinalize(this);
+            }
+
+        }
 
         private sealed class TeleportationRecord
         {
@@ -85,10 +266,9 @@ namespace Protocol
         private const int _MIN_RENDER_DISTANCE = 2, _MAX_RENDER_DISTANCE = 32;
         private int _renderDistance = -1;
 
-
-        private const int _MAX_LOAD_COUNT = 5;
+        private readonly WorldLoadingCache _WORLD_LOADING_CACHE = new();
         private readonly Set<Chunk.Vector> _LOADED_CHUNK_POSITIONS = new();  // Disposable
-        private readonly Table<int, EntityRenderer> _ENTITY_TO_RENDERERS = new();
+        private readonly Table<int, EntityRenderer> _ENTITY_TO_RENDERERS = new();  // Disposable
 
 
         private readonly Queue<TeleportationRecord> _TELEPORTATION_RECORDS = new();  // Dispoasble
@@ -493,19 +673,19 @@ namespace Protocol
             {
                 if (!grid.Contains(pLoaded))
                 {
+                    _WORLD_LOADING_CACHE.UnloadPosition(pLoaded);
                     outOfRangeChunks.Enqueue(pLoaded);
-
                 }
             }
 
-            int n = 0;
+            _WORLD_LOADING_CACHE.Setup(pCenter, _renderDistance);
+
+            
+
             int mask; byte[] data;
-            foreach (Chunk.Vector p in grid.GetVectorsInSpiral())
+            do
             {
-                if (_LOADED_CHUNK_POSITIONS.Contains(p))
-                {
-                    continue;
-                }
+                Chunk.Vector p = _WORLD_LOADING_CACHE.GetVectorAndMoveNext();
 
                 if (world.ContainsEntities(p))
                 {
@@ -521,30 +701,31 @@ namespace Protocol
                             _OUT_PACKETS, pCenter, _renderDistance);
 
                         _ENTITY_TO_RENDERERS.Insert(entity.Id, renderer);
+                        
                     }
                 }
 
-                _LOADED_CHUNK_POSITIONS.Insert(p);
-
-                /*if (world.ContainsChunk(o))
+                if (!_LOADED_CHUNK_POSITIONS.Contains(p))
                 {
-                    Chunk chunk = world.GetChunk(p);
-                    (mask, data) = Chunk.Write(chunk);
-                }
-                else
-                {
-                    (mask, data) = Chunk.Write();
-                }
-                */
-                (mask, data) = Chunk.Write2();
+                    _LOADED_CHUNK_POSITIONS.Insert(p);
 
-                _LOAD_CHUNK_PACKETS.Enqueue(new LoadChunkPacket(p.X, p.Z, true, mask, data));
+                    /*if (world.ContainsChunk(o))
+                    {
+                        Chunk chunk = world.GetChunk(p);
+                        (mask, data) = Chunk.Write(chunk);
+                    }
+                    else
+                    {
+                        (mask, data) = Chunk.Write();
+                    }
+                    */
+                    (mask, data) = Chunk.Write2();
 
-                if (++n >= _MAX_LOAD_COUNT)
-                {
-                    break;
+                    _LOAD_CHUNK_PACKETS.Enqueue(new LoadChunkPacket(p.X, p.Z, true, mask, data));
                 }
-            }
+
+
+            } while (_WORLD_LOADING_CACHE.CanContinue());
 
             while (!newEntities.Empty)
             {
@@ -578,7 +759,6 @@ namespace Protocol
                         break;
                     case ItemEntity itemEntity:
                         {
-                            System.Console.Write("Spawn ItemEntity!");
                             (byte x, byte y) = itemEntity.Look.ConvertToPacketFormat();
                             _OUT_PACKETS.Enqueue(new SpawnObjectPacket(
                                 itemEntity.Id, itemEntity.UniqueId,
@@ -712,7 +892,7 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // TODO: Release resources corrently for no garbage.
-
+            
             _LOAD_CHUNK_PACKETS.Flush();
             foreach (ClientboundPlayingPacket packet in _OUT_PACKETS.Flush())
             {
@@ -730,6 +910,7 @@ namespace Protocol
                 }
             }
 
+            _WORLD_LOADING_CACHE.Flush();
             _LOADED_CHUNK_POSITIONS.Flush();
             foreach ((int entityId, var renderer) in _ENTITY_TO_RENDERERS.Flush())
             {
@@ -765,6 +946,7 @@ namespace Protocol
                 _LOAD_CHUNK_PACKETS.Dispose();
                 _OUT_PACKETS.Dispose();
 
+                _WORLD_LOADING_CACHE.Dispose();
                 _LOADED_CHUNK_POSITIONS.Dispose();
                 _ENTITY_TO_RENDERERS.Dispose();
 

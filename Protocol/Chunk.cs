@@ -135,7 +135,7 @@ namespace Protocol
 
             }
 
-            public System.Collections.Generic.IEnumerable<Vector> GetVectorsInSpiral()
+            /*public System.Collections.Generic.IEnumerable<Vector> GetVectorsInSpiral()
             {
                 int n = _max.X - _min.X;
                 System.Diagnostics.Debug.Assert(n == (_max.Z - _min.Z));  // Chest it's square.
@@ -176,7 +176,7 @@ namespace Protocol
                     System.Diagnostics.Debug.Assert(z == zCenter + j);
                 }
 
-            }
+            }*/
 
             public void Print()
             {

@@ -35,8 +35,8 @@ namespace Protocol
             Entity.Vector posNew, Entity.Vector pos, Entity.Angles look, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_movement);
-            
-            while (!_RENDERERS.Empty)
+
+            for (int i = 0; i < _RENDERERS.Count; ++i)
             {
                 EntityRenderer renderer = _RENDERERS.Dequeue();
 
@@ -59,7 +59,7 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_movement);
 
-            while (!_RENDERERS.Empty)
+            for (int i = 0; i < _RENDERERS.Count; ++i)
             {
                 EntityRenderer renderer = _RENDERERS.Dequeue();
 
@@ -81,7 +81,7 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_movement);
 
-            while (!_RENDERERS.Empty)
+            for (int i = 0; i < _RENDERERS.Count; ++i)
             {
                 EntityRenderer renderer = _RENDERERS.Dequeue();
 
@@ -103,7 +103,7 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_movement);
 
-            while (!_RENDERERS.Empty)
+            for (int i = 0; i < _RENDERERS.Count; ++i)
             {
                 EntityRenderer renderer = _RENDERERS.Dequeue();
 
@@ -125,7 +125,7 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(_movement);
 
-            while (!_RENDERERS.Empty)
+            for (int i = 0; i < _RENDERERS.Count; ++i)
             {
                 EntityRenderer renderer = _RENDERERS.Dequeue();
 
