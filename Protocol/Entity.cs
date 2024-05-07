@@ -504,7 +504,7 @@ namespace Protocol
 
             if (IsConnected)
             {
-                throw new System.NotImplementedException();
+                /*throw new System.NotImplementedException();*/
             }
             else
             {
@@ -535,13 +535,15 @@ namespace Protocol
 
             if (IsConnected)
             {
-                return base.Integrate();
+                if (_controled)
+                {
+                    _controled = false;
+                    return _posControl;
+                }
             }
-
-            if (_controled)
+            else
             {
-                _controled = false;
-                return _posControl;
+                return base.Integrate();
             }
 
             return Position;

@@ -601,6 +601,9 @@ namespace Protocol
             while (!outOfRangeChunks.Empty)
             {
                 Chunk.Vector p = outOfRangeChunks.Dequeue();
+
+                _LOADED_CHUNK_POSITIONS.Extract(p);
+
                 _OUT_PACKETS.Enqueue(new UnloadChunkPacket(p.X, p.Z));
             }
 
@@ -618,22 +621,25 @@ namespace Protocol
 
             try
             {
-                try
+                if (!IsInit)
                 {
-                    StartInitProcess(buffer, world, player);
+                    try
+                    {
+                        StartInitProcess(buffer, world, player);
+                    }
+                    catch (UnexpectedClientBehaviorExecption e)
+                    {
+                        // TODO: send disconnected message to client.
+
+                        System.Console.WriteLine(e.Message);
+
+                        throw new DisconnectedClientException();
+                    }
                 }
-                catch (UnexpectedClientBehaviorExecption e)
-                {
-                    // TODO: send disconnected message to client.
-
-                    System.Console.WriteLine(e.Message);
-
-                    throw new DisconnectedClientException();
-                }
-
-                LoadWorld(world, player);
 
                 System.Diagnostics.Debug.Assert(IsInit);
+
+                LoadWorld(world, player);
 
                 while (!_LOAD_CHUNK_PACKETS.Empty)
                 {
@@ -686,6 +692,7 @@ namespace Protocol
                 /*end = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
                 System.Console.WriteLine($"C: {end - start}");*/
 
+                System.Diagnostics.Debug.Assert(_OUT_PACKETS.Empty);
             }
             catch (TryAgainException)
             {
@@ -698,8 +705,6 @@ namespace Protocol
 
                 throw;
             }
-
-            System.Diagnostics.Debug.Assert(_OUT_PACKETS.Empty);
         }
 
         public void Flush(Player player)

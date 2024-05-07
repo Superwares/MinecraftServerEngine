@@ -426,12 +426,6 @@ namespace Protocol
                     continue;
                 }
 
-                if (!world.CanSpawnOrGetPlayer(uniqueId))
-                {
-                    _clients.Enqueue((client, uniqueId, username));
-                    continue;
-                }
-
                 Player player = world.SpawnOrFindPlayer(username, uniqueId);
                 Connection conn = new(client);
                 connections.Enqueue((conn, player));
