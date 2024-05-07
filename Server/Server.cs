@@ -9,100 +9,100 @@ namespace Application
     {
         private bool _isDisposed = false;
 
-        private readonly World _World;
+        private readonly World _WORLD;
 
-        private readonly Queue<(Connection, Player)> _Connections = new();
+        private readonly Queue<(Connection, Player)> _CONNECTIONS = new();
+        private readonly Queue<Connection> _DISCONNNECTIONS = new();
 
-        private readonly Queue<Entity> _Entities = new();  // Disposable
+        private readonly Queue<Entity> _ENTITIES = new();  // Disposable
 
         private Server() 
         {
-            _World = new SuperWorld();
+            _WORLD = new SuperWorld();
         }
 
         ~Server() => System.Diagnostics.Debug.Assert(false);
 
         private void Control(long serverTicks)
         {
-            for (int i = 0; i < _Connections.Count; ++i)
+            for (int i = 0; i < _CONNECTIONS.Count; ++i)
             {
-                (Connection conn, Player player) = _Connections.Dequeue();
+                (Connection conn, Player player) = _CONNECTIONS.Dequeue();
 
                 try
                 {
-                    conn.Control(serverTicks, _World, player);
+                    conn.Control(serverTicks, _WORLD, player);
                 }
                 catch (DisconnectedClientException)
                 {
-                    conn.Flush();
-                    conn.Close();
+                    conn.Flush(player);
+                    _DISCONNNECTIONS.Enqueue(conn);
+
                     continue;
                 }
 
-
-                _Connections.Enqueue((conn, player));
+                _CONNECTIONS.Enqueue((conn, player));
             }
         }
 
-        private void MoveEntities()
+        private void HandleEntities()
         {
-            for (int i = 0; i < _Entities.Count; ++i)
+            for (int i = 0; i < _ENTITIES.Count; ++i)
             {
-                Entity entity = _Entities.Dequeue();
+                Entity entity = _ENTITIES.Dequeue();
 
-                _World.MoveEntity(entity);
+                if (_WORLD.HandleEntity(entity))
+                {
+                    continue;
+                }
 
-                _Entities.Enqueue(entity);
+                _ENTITIES.Enqueue(entity);
             }
         }
 
-        private void Reset()
+        private void ReleaseResources()
         {
-            for (int i = 0; i < _Entities.Count; ++i)
+            while (!_DISCONNNECTIONS.Empty)
             {
-                Entity entity = _Entities.Dequeue();
-
-                entity.Reset();
-
-                _Entities.Enqueue(entity);
+                Connection conn = _DISCONNNECTIONS.Dequeue();
+                
+                conn.Close();
             }
 
-            _World.Reset();
+            _WORLD.ReleaseResources();
         }
 
         private void Render(long serverTicks)
         {
-            for (int i = 0; i < _Connections.Count; ++i)
+            for (int i = 0; i < _CONNECTIONS.Count; ++i)
             {
-                (Connection conn, Player player) = _Connections.Dequeue();
+                (Connection conn, Player player) = _CONNECTIONS.Dequeue();
 
                 try
                 {
-                    conn.Render(_World, player);
+                    conn.Render(_WORLD, player);
                 }
                 catch (DisconnectedClientException)
                 {
-                    conn.Flush();
-                    conn.Close();
+                    conn.Flush(player);
+                    _DISCONNNECTIONS.Enqueue(conn);
+
                     continue;
                 }
 
-                _Connections.Enqueue((conn, player));
+                _CONNECTIONS.Enqueue((conn, player));
             }
         }
 
         private void StartEntityRoutines(long serverTicks)
         {
-            for (int i = 0; i < _Entities.Count; ++i)
+            for (int i = 0; i < _ENTITIES.Count; ++i)
             {
-                Entity entity = _Entities.Dequeue();
+                Entity entity = _ENTITIES.Dequeue();
 
-                if (_World.StartEntitRoutine(serverTicks, entity))
-                {
-                    continue;
-                }
+                _WORLD.StartEntitRoutine(serverTicks, entity);
 
-                _Entities.Enqueue(entity);
+                _ENTITIES.Enqueue(entity);
             }
         }
         
@@ -115,15 +115,11 @@ namespace Application
 
             // Barrier
 
-            _World.DespawnEntities();
+            HandleEntities();
 
             // Barrier
 
-            MoveEntities();
-
-            // Barrier
-
-            _World.SpawnEntities(_Entities);
+            _WORLD.SpawnEntities(_ENTITIES);
 
             // Barrier
 
@@ -131,11 +127,11 @@ namespace Application
 
             // Barrier
 
-            Reset();
+            ReleaseResources();
 
             // Barrier
 
-            _World.StartRoutine(serverTicks);
+            _WORLD.StartRoutine(serverTicks);
 
             // Barrier
 
@@ -143,7 +139,7 @@ namespace Application
 
             // Barrier
 
-            connListener.Accept(_World, _Connections);
+            connListener.Accept(_WORLD, _CONNECTIONS);
 
             // Barrier
 
@@ -193,15 +189,15 @@ namespace Application
             if (!_isDisposed)
             {
 
-                System.Diagnostics.Debug.Assert(_Connections.Empty);
-                System.Diagnostics.Debug.Assert(_Entities.Empty);
+                System.Diagnostics.Debug.Assert(_CONNECTIONS.Empty);
+                System.Diagnostics.Debug.Assert(_ENTITIES.Empty);
 
                 if (disposing == true)
                 {
                     // Release managed resources.
-                    _World.Dispose();
-                    _Connections.Dispose();
-                    _Entities.Dispose();
+                    _WORLD.Dispose();
+                    _CONNECTIONS.Dispose();
+                    _ENTITIES.Dispose();
                 }
 
                 // Release unmanaged resources.

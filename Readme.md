@@ -32,6 +32,7 @@
 * WHat is difference between EndOfFileException and SocketError.WouldBlock in SocketException?
 * Make Common library project.
 * Make container library more optimized.
+* If the user already exist on the server, when the client is joined with the same user id, the client will be kicked by the ClientListener.
 
 ### Done
 

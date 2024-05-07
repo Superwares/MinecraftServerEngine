@@ -6,71 +6,146 @@ namespace Protocol
     {
         private bool _disposed = false;
 
-        private readonly Table<int, EntityRenderer> _Renderers = new();
+        private bool _movement = false;
+
+        private readonly NumList _ID_LIST = new();
+
+        private readonly Queue<EntityRenderer> _RENDERERS = new();
 
         public EntityRendererManager() { }
 
         ~EntityRendererManager() => System.Diagnostics.Debug.Assert(false);
 
-        internal bool ContainsRenderer(int connId)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-            return _Renderers.Contains(connId);
-        }
-
-        public void AddRenderer(int connId, EntityRenderer renderer)
+        public EntityRenderer Apply(
+            Queue<ClientboundPlayingPacket> outPackets,
+            Chunk.Vector p, int renderDistance)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(!_Renderers.Contains(connId));
-            _Renderers.Insert(connId, renderer);
-        }
+            int id = _ID_LIST.Alloc();
 
-        public void RemoveRenderer(int connId)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            EntityRenderer renderer = new(id, outPackets, p, renderDistance);
+            _RENDERERS.Enqueue(renderer);
 
-            System.Diagnostics.Debug.Assert(_Renderers.Contains(connId));
-            _Renderers.Extract(connId);
+            return renderer;
         }
 
         public void MoveAndRotate(
             int entityId,
             Entity.Vector posNew, Entity.Vector pos, Entity.Angles look, bool onGround)
         {
-            foreach (var renderer in _Renderers.GetValues())
+            System.Diagnostics.Debug.Assert(!_movement);
+            
+            while (!_RENDERERS.Empty)
             {
+                EntityRenderer renderer = _RENDERERS.Dequeue();
+
+                if (renderer.IsDisconnected)
+                {
+                    _ID_LIST.Dealloc(renderer.Id);
+                    continue;
+                }
+
                 renderer.MoveAndRotate(entityId, posNew, pos, look, onGround);
+                _RENDERERS.Enqueue(renderer);
+
             }
+
+            _movement = true;
         }
 
-        public void Move(int entityId, Entity.Vector posNew, Entity.Vector pos, bool onGround)
+        public void Move(
+            int entityId, Entity.Vector posNew, Entity.Vector pos, bool onGround)
         {
-            foreach (var renderer in _Renderers.GetValues())
+            System.Diagnostics.Debug.Assert(!_movement);
+
+            while (!_RENDERERS.Empty)
             {
+                EntityRenderer renderer = _RENDERERS.Dequeue();
+
+                if (renderer.IsDisconnected)
+                {
+                    _ID_LIST.Dealloc(renderer.Id);
+                    continue;
+                }
+
                 renderer.Move(entityId, posNew, pos, onGround);
+                _RENDERERS.Enqueue(renderer);
+
             }
+
+            _movement = true;
         }
 
         public void Rotate(int entityId, Entity.Angles look, bool onGround)
         {
-            foreach (var renderer in _Renderers.GetValues())
+            System.Diagnostics.Debug.Assert(!_movement);
+
+            while (!_RENDERERS.Empty)
             {
+                EntityRenderer renderer = _RENDERERS.Dequeue();
+
+                if (renderer.IsDisconnected)
+                {
+                    _ID_LIST.Dealloc(renderer.Id);
+                    continue;
+                }
+
                 renderer.Rotate(entityId, look, onGround);
+                _RENDERERS.Enqueue(renderer);
+
             }
+
+            _movement = true;
         }
 
         public void Stand(int entityId)
         {
-            foreach (var renderer in _Renderers.GetValues())
+            System.Diagnostics.Debug.Assert(!_movement);
+
+            while (!_RENDERERS.Empty)
             {
+                EntityRenderer renderer = _RENDERERS.Dequeue();
+
+                if (renderer.IsDisconnected)
+                {
+                    _ID_LIST.Dealloc(renderer.Id);
+                    continue;
+                }
+
                 renderer.Stand(entityId);
+                _RENDERERS.Enqueue(renderer);
+
             }
+        
+            _movement = true;
+        }
+
+        public void DeterminToContinueRendering(int entityId, Entity.Vector pos, BoundingBox boundingBox)
+        {
+            System.Diagnostics.Debug.Assert(_movement);
+
+            while (!_RENDERERS.Empty)
+            {
+                EntityRenderer renderer = _RENDERERS.Dequeue();
+
+                if (!renderer.CanRender(pos, boundingBox))
+                {
+                    _ID_LIST.Dealloc(renderer.Id);
+                    renderer.DestroyEntity(entityId);
+
+                    continue;
+                }
+
+                _RENDERERS.Enqueue(renderer);
+            }
+
+            _movement = false;
         }
 
         public void ChangeForms(int entityId, bool sneaking, bool sprinting)
         {
-            foreach (var renderer in _Renderers.GetValues())
+            foreach (var renderer in _RENDERERS.GetValues())
             {
                 renderer.ChangeForms(entityId, sneaking, sprinting);
             }
@@ -79,9 +154,20 @@ namespace Protocol
         public void Teleport(
             int entityId, Entity.Vector pos, Entity.Angles look, bool onGround)
         {
-            foreach (var renderer in _Renderers.GetValues())
+            foreach (var renderer in _RENDERERS.GetValues())
             {
                 renderer.Teleport(entityId, pos, look, onGround);
+            }
+        }
+
+        public void Flush(int entityId)
+        {
+            while (!_RENDERERS.Empty)
+            {
+                EntityRenderer renderer = _RENDERERS.Dequeue();
+
+                _ID_LIST.Dealloc(renderer.Id);
+                renderer.Flush(entityId);
             }
         }
 
@@ -89,12 +175,19 @@ namespace Protocol
         {
             if (_disposed) return;
 
-            System.Diagnostics.Debug.Assert(_Renderers.Empty);
+            // Assertion
+            System.Diagnostics.Debug.Assert(!_movement);
+
+            System.Diagnostics.Debug.Assert(_ID_LIST.Empty);
+
+            System.Diagnostics.Debug.Assert(_RENDERERS.Empty);
 
             if (disposing == true)
             {
                 // Release managed resources.
-                _Renderers.Dispose();
+                _ID_LIST.Dispose();
+
+                _RENDERERS.Dispose();
             }
 
             // Release unmanaged resources.

@@ -18,7 +18,7 @@ namespace Protocol
             {
                 return new(v1.X * v2.X, v1.Y * v2.Y, v1.Z * v2.Z);
             }
-            public static Vector operator *(double s, Vector v)
+            public static Vector operator* (double s, Vector v)
             {
                 return new(v.X * s, v.Y * s, v.Z * s);
             }
@@ -129,7 +129,8 @@ namespace Protocol
         protected Angles _lookTeleport;
 
 
-        internal readonly EntityRendererManager _RendererManager = new();  // Disposable
+        private readonly EntityRendererManager _RENDERER_MANAGER = new();  // Disposable
+
 
         internal Entity(
             int id,
@@ -152,18 +153,20 @@ namespace Protocol
 
         ~Entity() => System.Diagnostics.Debug.Assert(false);
 
+        internal EntityRenderer ApplyForRenderer(
+            Queue<ClientboundPlayingPacket> outPackets,
+            Chunk.Vector p, int renderDistance)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            return _RENDERER_MANAGER.Apply(outPackets, p, renderDistance);
+        }
+
         public virtual void AddForce(Vector force)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             _FORCES.Enqueue(force);
-        }
-
-        public virtual void Reset()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            // reset forces
         }
 
         public virtual bool IsDead()
@@ -209,7 +212,7 @@ namespace Protocol
             // If not, use EntityTeleportPacket to render.
             if (moved && _rotated)
             {
-                _RendererManager.MoveAndRotate(Id, posNew, _pos, _look, _onGround);
+                _RENDERER_MANAGER.MoveAndRotate(Id, posNew, _pos, _look, _onGround);
 
                 _pos = posNew;
                 _rotated = false;
@@ -218,7 +221,7 @@ namespace Protocol
             {
                 System.Diagnostics.Debug.Assert(!_rotated);
 
-                _RendererManager.Move(Id, posNew, _pos, _onGround);
+                _RENDERER_MANAGER.Move(Id, posNew, _pos, _onGround);
 
                 _pos = posNew;
             }
@@ -226,7 +229,7 @@ namespace Protocol
             {
                 System.Diagnostics.Debug.Assert(!moved);
 
-                _RendererManager.Rotate(Id, _look, _onGround);
+                _RENDERER_MANAGER.Rotate(Id, _look, _onGround);
 
                 _rotated = false;
             }
@@ -235,8 +238,10 @@ namespace Protocol
                 System.Diagnostics.Debug.Assert(!moved);
                 System.Diagnostics.Debug.Assert(!_rotated);
 
-                _RendererManager.Stand(Id);
+                _RENDERER_MANAGER.Stand(Id);
             }
+
+            _RENDERER_MANAGER.DeterminToContinueRendering(Id, _pos, GetBoundingBox());
 
             if (_teleported)
             {
@@ -244,7 +249,7 @@ namespace Protocol
                 _look = _lookTeleport;
                 // update position data in chunk
 
-                _RendererManager.Teleport(Id, _pos, _look, _onGround);
+                _RENDERER_MANAGER.Teleport(Id, _pos, _look, _onGround);
 
                 _teleported = false;
             }
@@ -274,7 +279,7 @@ namespace Protocol
 
         private void RanderFormChanging()
         {
-            _RendererManager.ChangeForms(Id, _sneaking, _sprinting);
+            _RENDERER_MANAGER.ChangeForms(Id, _sneaking, _sprinting);
         }
 
         public void Sneak()
@@ -317,6 +322,12 @@ namespace Protocol
             RanderFormChanging();
         }
         
+        public void Flush()
+        {
+            _FORCES.Flush();
+            _RENDERER_MANAGER.Flush(Id);
+        }
+
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed) return;
@@ -329,7 +340,7 @@ namespace Protocol
                 // Release managed resources.
                 _FORCES.Dispose();
 
-                _RendererManager.Dispose();
+                _RENDERER_MANAGER.Dispose();
             }
 
             // Release unmanaged resources.

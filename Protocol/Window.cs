@@ -217,13 +217,13 @@ namespace Protocol
             }
             else if (_windowId > 0)
             {
-                System.Diagnostics.Debug.Assert(_windowId > 0);
+                /*System.Diagnostics.Debug.Assert(_windowId > 0);
                 System.Diagnostics.Debug.Assert(_id >= 0);
                 System.Diagnostics.Debug.Assert(_publicInventory != null);
 
-                _publicInventory.Close(_id, _windowId);
+                _publicInventory.Close(_id, _windowId);*/
 
-
+                System.Diagnostics.Debug.Assert(false);
             }
 
             _windowId = -1;
