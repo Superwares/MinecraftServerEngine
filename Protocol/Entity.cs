@@ -197,6 +197,8 @@ namespace Protocol
 
             pos += _v;
 
+            System.Console.WriteLine($"pos: ({pos.X}, {pos.Y}, {pos.Z})");
+
             return pos;
         }
 

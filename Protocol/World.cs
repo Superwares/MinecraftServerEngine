@@ -184,7 +184,7 @@ namespace Protocol
                 
             }
 
-            /*{
+            {
                 if (entity is Player player && player.IsConnected)
                 {
 
@@ -194,9 +194,9 @@ namespace Protocol
                     entity.AddForce(
                         new Entity.Vector(-(1.0D - 0.91D), -(1.0D - 0.9800000190734863D), -(1.0D - 0.91D)) *
                         entity.Velocity);  // Damping Force
-                    entity.AddForce(0.08D * new Entity.Vector(0, -1, 0));  // Gravity
+                    entity.AddForce(0.0001D * new Entity.Vector(0, -1, 0));  // Gravity
                 }
-            }*/
+            }
 
 
             {
