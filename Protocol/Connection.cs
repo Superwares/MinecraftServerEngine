@@ -6,162 +6,152 @@ namespace Protocol
     public sealed class Connection : System.IDisposable
     {
 
-        private sealed class WorldLoadingCache : System.IDisposable
+        private sealed class LoadingHelper /*: System.IDisposable*/
         {
-            private bool _disposed = false;
+            /*private bool _disposed = false;*/
 
-            private const int _MAX_COUNT = 5;
+            private const int _MAX_LOAD_COUNT = 7;
+            private const int _MAX_SEARCH_COUNT = 100;
 
-            private Chunk.Vector _cPrev;
+            private readonly Set<Chunk.Vector> _LOADED_CHUNKS = new();  // Disposable
 
-            private int _index = 0;
-            private Chunk.Vector[]? _arr = null;
+            private Chunk.Grid? _grid;
+            private Chunk.Vector _c;
+            private int _d = - 1;
 
-            private int n = 0;
+            private int _x, _z, _layer, _n;
 
-            private readonly Set<Chunk.Vector> _LOADED_POSITIONS = new();
-
-            public WorldLoadingCache()
+            public LoadingHelper()
             {
 
             }
 
-            ~WorldLoadingCache() => System.Diagnostics.Debug.Assert(false);
-            
-            public void UnloadPosition(Chunk.Vector p)
+            ~LoadingHelper() => System.Diagnostics.Debug.Assert(false);
+
+            public void Load(
+                Queue<Chunk.Vector> newChunks,
+                Queue<Chunk.Vector> outOfRangeChunks, 
+                Chunk.Vector c, int d)
             {
-                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(d > 0);
+                System.Diagnostics.Debug.Assert(_MAX_LOAD_COUNT > 0);
+                System.Diagnostics.Debug.Assert(_MAX_SEARCH_COUNT >= _MAX_LOAD_COUNT);
 
-                System.Diagnostics.Debug.Assert(_arr != null);
-                System.Diagnostics.Debug.Assert(_MAX_COUNT > 0);
-                System.Diagnostics.Debug.Assert(n >= 0);
-                System.Diagnostics.Debug.Assert(_index >= 0);
-                System.Diagnostics.Debug.Assert(_index <= _arr.Length);
-
-                if (_LOADED_POSITIONS.Contains(p))
+                if (!c.Equals(_c) || (d != _d))
                 {
-                    _LOADED_POSITIONS.Extract(p);
-
-                }
-            }
-
-            public void Setup(Chunk.Vector c, int d)
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                if (_arr == null || !_cPrev.Equals(c))
-                {
-                    int length = (d + d + 1) * (d + d + 1);
-                    _arr = new Chunk.Vector[length];
-
-                    int i = 0;
-
-                    _arr[i++] = c;
-
-                    for (int j = 0; j < d; ++j)
+                    Chunk.Grid grid = Chunk.Grid.Generate(c, d);
+                    
+                    if (_grid != null)
                     {
-                        int k = j + 1;
-                        int x = c.X + k, z = c.Z + k;
-                        int w = k * 2;
+                        System.Diagnostics.Debug.Assert(!_grid.Equals(grid));
 
-                        for (int l = 0; l < w; ++l)
+                        foreach (Chunk.Vector p in _grid.GetVectors())
                         {
-                            _arr[i++] = new(--x, z);
+                            if (grid.Contains(p))
+                            {
+                                continue;
+                            }
+
+                            if (_LOADED_CHUNKS.Contains(p))
+                            {
+                                _LOADED_CHUNKS.Extract(p);
+                                outOfRangeChunks.Enqueue(p);
+                            }
                         }
-
-                        for (int l = 0; l < w; ++l)
-                        {
-                            _arr[i++] = new(x, --z);
-                        }
-
-                        for (int l = 0; l < w; ++l)
-                        {
-                            _arr[i++] = new(++x, z);
-                        }
-
-                        for (int l = 0; l < w; ++l)
-                        {
-                            _arr[i++] = new(x, ++z);
-                        }
-
-                        System.Diagnostics.Debug.Assert(x == c.X + k);
-                        System.Diagnostics.Debug.Assert(z == c.Z + k);
-
                     }
+                    
+                    _grid = grid;
+                    _d = d;
+                    _c = c;
 
-                    System.Diagnostics.Debug.Assert(i == _arr.Length);
+                    _layer = 0;
+                    _n = 0;
 
-                    _cPrev = c;
-
-                    _index = 0;
                 }
-                else
+
+                if (_layer > d)
                 {
-
+                    return;
                 }
 
-                n = 0;
-
-            }
-
-            public bool CanContinue()
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                System.Diagnostics.Debug.Assert(_arr != null);
-                System.Diagnostics.Debug.Assert(n >= 0);
-                System.Diagnostics.Debug.Assert(_index >= 0);
-                System.Diagnostics.Debug.Assert(_index <= _arr.Length);
-
-                System.Diagnostics.Debug.Assert(n <= _MAX_COUNT);
-                return n < _MAX_COUNT;
-            }
-
-            public Chunk.Vector GetVectorAndMoveNext()
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                System.Diagnostics.Debug.Assert(_arr != null);
-                System.Diagnostics.Debug.Assert(_MAX_COUNT > 0);
-                System.Diagnostics.Debug.Assert(n >= 0);
-                System.Diagnostics.Debug.Assert(_index >= 0);
-                System.Diagnostics.Debug.Assert(_index <= _arr.Length);
-
-                while (true)
                 {
-                    if (_index == _arr.Length)
+                    int i = 0, j = 0;
+
+                    int w;
+                    Chunk.Vector p;
+
+                    do
                     {
-                        System.Diagnostics.Debug.Assert(_LOADED_POSITIONS.Count == _arr.Length);
+                        w = _layer * 2;
 
-                        _index = 0;
-                        _LOADED_POSITIONS.Flush();
-                    }
+                        System.Diagnostics.Debug.Assert(_layer >= 0);
 
-                    Chunk.Vector p = _arr[_index++];
-                    if (!_LOADED_POSITIONS.Contains(p))
-                    {
-                        n++;
-                        /*System.Console.WriteLine($"n: {n}, p: {p.X} {p.Z}");*/
+                        if (_layer == 0)
+                        {
+                            p = c;
+                        }
+                        else
+                        {
 
-                        _LOADED_POSITIONS.Insert(p);
+                            if (_n >= 0 && _n < w)
+                            {
+                                p = new(--_x, _z);
+                            }
+                            else if (_n >= w && _n < w * 2)
+                            {
+                                p = new(_x, --_z);
+                            }
+                            else if (_n >= w * 2 && _n < w * 3)
+                            {
+                                p = new(++_x, _z);
+                            }
+                            else if (_n >= w * 3 && _n < w * 4)
+                            {
+                                p = new(_x, ++_z);
+                            }
+                            else
+                            {
+                                throw new System.NotImplementedException();
+                            }
 
-                        return p;
-                    }
+                            ++_n;
+                        }
+
+                        if (!_LOADED_CHUNKS.Contains(p))
+                        {
+                            newChunks.Enqueue(p);
+                            _LOADED_CHUNKS.Insert(p);
+                            ++i;
+                        }
+
+                        System.Diagnostics.Debug.Assert(_n <= w * 4);
+                        if (_n == w * 4)
+                        {
+                            ++_layer;
+                            _n = 0;
+
+                            _x = c.X + _layer; _z = c.Z + _layer;
+                        }
+
+                        if (_layer > d)
+                        {
+                            break;
+                        }
+
+                        System.Diagnostics.Debug.Assert(j <= _MAX_SEARCH_COUNT);
+                        if (++j == _MAX_SEARCH_COUNT)
+                        {
+                            break;
+                        }
+
+                    } while (i < _MAX_LOAD_COUNT);
                 }
 
-                throw new System.NotImplementedException();
+                System.Diagnostics.Debug.Assert(_LOADED_CHUNKS.Count <= (d + d + 1) * (d + d + 1));
+
             }
 
-            public void Flush()
-            {
-                _index = 0;
-                _arr = null;
-                n = 0;
-
-                _LOADED_POSITIONS.Flush();
-            }
-
-            private void Dispose(bool disposing)
+            /*private void Dispose(bool disposing)
             {
                 if (_disposed) return;
 
@@ -185,7 +175,7 @@ namespace Protocol
                 Dispose(true);
                 System.GC.SuppressFinalize(this);
             }
-
+*/
         }
 
         private sealed class TeleportationRecord
@@ -266,10 +256,8 @@ namespace Protocol
         private const int _MIN_RENDER_DISTANCE = 2, _MAX_RENDER_DISTANCE = 32;
         private int _renderDistance = -1;
 
-        private readonly WorldLoadingCache _WORLD_LOADING_CACHE = new();
-        private readonly Set<Chunk.Vector> _LOADED_CHUNK_POSITIONS = new();  // Disposable
+        private readonly LoadingHelper _LOADING_HELPER = new();
         private readonly Table<int, EntityRenderer> _ENTITY_TO_RENDERERS = new();  // Disposable
-
 
         private readonly Queue<TeleportationRecord> _TELEPORTATION_RECORDS = new();  // Dispoasble
         private KeepAliveRecord? _keepAliveRecord = null;
@@ -660,32 +648,59 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            using Queue<Entity> newEntities = new();
+            /*using Queue<Entity> newEntities = new();*/
+
+            using Queue<Chunk.Vector> newChunks = new();
             using Queue<Chunk.Vector> outOfRangeChunks = new();
 
-            Chunk.Vector pCenter = Chunk.Vector.Convert(player.Position);
+            Chunk.Vector c = Chunk.Vector.Convert(player.Position);
 
             System.Diagnostics.Debug.Assert(_renderDistance >= _MIN_RENDER_DISTANCE);
             System.Diagnostics.Debug.Assert(_renderDistance <= _MAX_RENDER_DISTANCE);
-            Chunk.Grid grid = Chunk.Grid.Generate(pCenter, _renderDistance);
+            _LOADING_HELPER.Load(newChunks, outOfRangeChunks, c, _renderDistance);
 
-            foreach (Chunk.Vector pLoaded in _LOADED_CHUNK_POSITIONS.GetKeys())
+            int mask; byte[] data;
+            while (!newChunks.Empty)
             {
-                if (!grid.Contains(pLoaded))
+                Chunk.Vector p = newChunks.Dequeue();
+
+                /*if (world.ContainsChunk(o))
                 {
-                    _WORLD_LOADING_CACHE.UnloadPosition(pLoaded);
-                    outOfRangeChunks.Enqueue(pLoaded);
+                    Chunk chunk = world.GetChunk(p);
+                    (mask, data) = Chunk.Write(chunk);
                 }
+                else
+                {
+                    (mask, data) = Chunk.Write();
+                }
+                */
+                (mask, data) = Chunk.Write2();
+
+                _LOAD_CHUNK_PACKETS.Enqueue(new LoadChunkPacket(p.X, p.Z, true, mask, data));
             }
 
-            _WORLD_LOADING_CACHE.Setup(pCenter, _renderDistance);
+            while (!outOfRangeChunks.Empty)
+            {
+                Chunk.Vector p = outOfRangeChunks.Dequeue();
 
-            
+                _OUT_PACKETS.Enqueue(new UnloadChunkPacket(p.X, p.Z));
+            }
+
+            /////
+
+            /*_WORLD_LOADING_CACHE.Setup(pCenter, _renderDistance);
 
             int mask; byte[] data;
             do
             {
+                long start, end;
+                start = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
+
                 Chunk.Vector p = _WORLD_LOADING_CACHE.GetVectorAndMoveNext();
+
+                end = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
+                System.Console.Write($"A: {end - start}, ");
+                start = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
 
                 if (world.ContainsEntities(p))
                 {
@@ -705,11 +720,15 @@ namespace Protocol
                     }
                 }
 
+                end = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
+                System.Console.Write($"B: {end - start}, ");
+                start = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
+
                 if (!_LOADED_CHUNK_POSITIONS.Contains(p))
                 {
                     _LOADED_CHUNK_POSITIONS.Insert(p);
 
-                    /*if (world.ContainsChunk(o))
+                    *//*if (world.ContainsChunk(o))
                     {
                         Chunk chunk = world.GetChunk(p);
                         (mask, data) = Chunk.Write(chunk);
@@ -718,14 +737,18 @@ namespace Protocol
                     {
                         (mask, data) = Chunk.Write();
                     }
-                    */
-                    (mask, data) = Chunk.Write2();
+                    *//*
+                    (mask, data) = Chunk.Write();
 
                     _LOAD_CHUNK_PACKETS.Enqueue(new LoadChunkPacket(p.X, p.Z, true, mask, data));
                 }
 
+                end = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
+                System.Console.Write($"C: {end - start}, ");
 
             } while (_WORLD_LOADING_CACHE.CanContinue());
+
+            System.Console.WriteLine();
 
             while (!newEntities.Empty)
             {
@@ -778,15 +801,8 @@ namespace Protocol
                 }
             }
 
-            while (!outOfRangeChunks.Empty)
-            {
-                Chunk.Vector p = outOfRangeChunks.Dequeue();
-
-                _LOADED_CHUNK_POSITIONS.Extract(p);
-
-                _OUT_PACKETS.Enqueue(new UnloadChunkPacket(p.X, p.Z));
-            }
-
+            
+*/
         }
 
         /// <summary>
@@ -831,9 +847,6 @@ namespace Protocol
                     System.Diagnostics.Debug.Assert(buffer.Empty);
                 }
 
-                /*end = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
-                System.Console.WriteLine($"B: {end - start}");*/
-
                 while (!_OUT_PACKETS.Empty)
                 {
                     ClientboundPlayingPacket packet = _OUT_PACKETS.Dequeue();
@@ -842,6 +855,13 @@ namespace Protocol
                     {
                         TeleportationRecord report = new(teleportPacket.Payload);
                         _TELEPORTATION_RECORDS.Enqueue(report);
+
+                        Entity.Vector p = new(teleportPacket.X, teleportPacket.Y, teleportPacket.Z);
+                        Chunk.Vector pChunk = Chunk.Vector.Convert(p);
+                        foreach (var renderer in _ENTITY_TO_RENDERERS.GetValues())
+                        {
+                            renderer.Update(pChunk);
+                        }
                     }
                     else if (packet is ClientboundCloseWindowPacket)
                     {
@@ -868,9 +888,6 @@ namespace Protocol
 
                     System.Diagnostics.Debug.Assert(buffer.Empty);
                 }
-
-                /*end = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
-                System.Console.WriteLine($"C: {end - start}");*/
 
                 System.Diagnostics.Debug.Assert(_OUT_PACKETS.Empty);
             }
@@ -910,8 +927,6 @@ namespace Protocol
                 }
             }
 
-            _WORLD_LOADING_CACHE.Flush();
-            _LOADED_CHUNK_POSITIONS.Flush();
             foreach ((int entityId, var renderer) in _ENTITY_TO_RENDERERS.Flush())
             {
                 renderer.Disconnect();
@@ -930,7 +945,6 @@ namespace Protocol
             if (_disposed) return;
 
             // Assertion
-            System.Diagnostics.Debug.Assert(_LOADED_CHUNK_POSITIONS.Empty);
             System.Diagnostics.Debug.Assert(_ENTITY_TO_RENDERERS.Empty);
 
             System.Diagnostics.Debug.Assert(_TELEPORTATION_RECORDS.Empty);
@@ -946,8 +960,6 @@ namespace Protocol
                 _LOAD_CHUNK_PACKETS.Dispose();
                 _OUT_PACKETS.Dispose();
 
-                _WORLD_LOADING_CACHE.Dispose();
-                _LOADED_CHUNK_POSITIONS.Dispose();
                 _ENTITY_TO_RENDERERS.Dispose();
 
                 _TELEPORTATION_RECORDS.Dispose();

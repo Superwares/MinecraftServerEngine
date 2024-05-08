@@ -15,23 +15,23 @@ namespace Containers
     public class Set<K> : IDisposable, IReadOnlySet<K>
         where K : struct, IEquatable<K>
     {
-        private bool _isDisposed = false;
+        private bool _disposed = false;
 
-        private const int _MinLength = 16;
-        private const int _ExpansionFactor = 2;
-        private const float _LoadFactor = 0.75F;
+        private const int _MIN_LENGTH = 16;
+        private const int _EXPENSION_FACTOR = 2;
+        private const float _LOAD_FACTOR = 0.75F;
         private const int _C = 5;
 
-        private bool[] _flags = new bool[_MinLength];
-        private K[] _keys = new K[_MinLength];
-        private int _length = _MinLength;
+        private bool[] _flags = new bool[_MIN_LENGTH];
+        private K[] _keys = new K[_MIN_LENGTH];
+        private int _length = _MIN_LENGTH;
         private int _count = 0;
 
         public int Count
         {
             get
             {
-                Debug.Assert(!_isDisposed);
+                Debug.Assert(!_disposed);
                 return _count;
             }
         }
@@ -43,7 +43,7 @@ namespace Containers
 
         private int Hash(K key)
         {
-            Debug.Assert(!_isDisposed);
+            Debug.Assert(!_disposed);
 
             /*Debug.Assert(key != null);*/
             return Math.Abs(key.GetHashCode() * _C);
@@ -51,11 +51,11 @@ namespace Containers
 
         private void Resize(int newLength)
         {
-            Debug.Assert(!_isDisposed);
+            Debug.Assert(!_disposed);
 
-            Debug.Assert(_flags.Length >= _MinLength);
-            Debug.Assert(_keys.Length >= _MinLength);
-            Debug.Assert(_length >= _MinLength);
+            Debug.Assert(_flags.Length >= _MIN_LENGTH);
+            Debug.Assert(_keys.Length >= _MIN_LENGTH);
+            Debug.Assert(_length >= _MIN_LENGTH);
             Debug.Assert(_count >= 0);
 
             bool[] oldFlags = _flags;
@@ -98,11 +98,11 @@ namespace Containers
 
         public virtual void Insert(K key)
         {
-            Debug.Assert(!_isDisposed);
+            Debug.Assert(!_disposed);
 
-            Debug.Assert(_flags.Length >= _MinLength);
-            Debug.Assert(_keys.Length >= _MinLength);
-            Debug.Assert(_length >= _MinLength);
+            Debug.Assert(_flags.Length >= _MIN_LENGTH);
+            Debug.Assert(_keys.Length >= _MIN_LENGTH);
+            Debug.Assert(_length >= _MIN_LENGTH);
             Debug.Assert(_count >= 0);
 
             int hash = Hash(key);
@@ -123,10 +123,10 @@ namespace Containers
                 _count++;
 
                 float factor = (float)_count / (float)_length;
-                if (factor < _LoadFactor)
+                if (factor < _LOAD_FACTOR)
                     return;
 
-                Resize(_length * _ExpansionFactor);
+                Resize(_length * _EXPENSION_FACTOR);
 
                 return;
             }
@@ -144,11 +144,11 @@ namespace Containers
 
         public virtual void Extract(K key)
         {
-            Debug.Assert(!_isDisposed);
+            Debug.Assert(!_disposed);
 
-            Debug.Assert(_flags.Length >= _MinLength);
-            Debug.Assert(_keys.Length >= _MinLength);
-            Debug.Assert(_length >= _MinLength);
+            Debug.Assert(_flags.Length >= _MIN_LENGTH);
+            Debug.Assert(_keys.Length >= _MIN_LENGTH);
+            Debug.Assert(_length >= _MIN_LENGTH);
             Debug.Assert(_count >= 0);
 
             if (_count == 0)
@@ -168,11 +168,11 @@ namespace Containers
 
                 _count--;
 
-                if (_MinLength < _length)
+                if (_MIN_LENGTH < _length)
                 {
-                    int reducedLength = _length / _ExpansionFactor;
+                    int reducedLength = _length / _EXPENSION_FACTOR;
                     float factor = (float)_count / (float)reducedLength;
-                    if (factor < _LoadFactor)
+                    if (factor < _LOAD_FACTOR)
                     {
                         _flags[index] = false;
                         Resize(reducedLength);
@@ -212,11 +212,11 @@ namespace Containers
 
         public virtual bool Contains(K key)
         {
-            Debug.Assert(!_isDisposed);
+            Debug.Assert(!_disposed);
 
-            Debug.Assert(_flags.Length >= _MinLength);
-            Debug.Assert(_keys.Length >= _MinLength);
-            Debug.Assert(_length >= _MinLength);
+            Debug.Assert(_flags.Length >= _MIN_LENGTH);
+            Debug.Assert(_keys.Length >= _MIN_LENGTH);
+            Debug.Assert(_length >= _MIN_LENGTH);
             Debug.Assert(_count >= 0);
             if (_count == 0)
                 return false;
@@ -238,13 +238,23 @@ namespace Containers
             return false;
         }
 
+        public void Reset()
+        {
+            Debug.Assert(!_disposed);
+
+            _flags = new bool[_MIN_LENGTH];
+            _keys = new K[_MIN_LENGTH];
+            _length = _MIN_LENGTH;
+            _count = 0;
+        }
+
         public virtual K[] Flush()
         {
-            Debug.Assert(!_isDisposed);
+            Debug.Assert(!_disposed);
 
-            Debug.Assert(_flags.Length >= _MinLength);
-            Debug.Assert(_keys.Length >= _MinLength);
-            Debug.Assert(_length >= _MinLength);
+            Debug.Assert(_flags.Length >= _MIN_LENGTH);
+            Debug.Assert(_keys.Length >= _MIN_LENGTH);
+            Debug.Assert(_length >= _MIN_LENGTH);
             Debug.Assert(_count >= 0);
 
             if (_count == 0)
@@ -262,9 +272,9 @@ namespace Containers
                 if (i == _count) break;
             }
 
-            _flags = new bool[_MinLength];
-            _keys = new K[_MinLength];
-            _length = _MinLength;
+            _flags = new bool[_MIN_LENGTH];
+            _keys = new K[_MIN_LENGTH];
+            _length = _MIN_LENGTH;
             _count = 0;
 
             return keys;
@@ -272,11 +282,11 @@ namespace Containers
 
         public virtual System.Collections.Generic.IEnumerable<K> GetKeys()
         {
-            Debug.Assert(!_isDisposed);
+            Debug.Assert(!_disposed);
 
-            Debug.Assert(_flags.Length >= _MinLength);
-            Debug.Assert(_keys.Length >= _MinLength);
-            Debug.Assert(_length >= _MinLength);
+            Debug.Assert(_flags.Length >= _MIN_LENGTH);
+            Debug.Assert(_keys.Length >= _MIN_LENGTH);
+            Debug.Assert(_length >= _MIN_LENGTH);
             Debug.Assert(_count >= 0);
 
             if (_count == 0)
@@ -296,11 +306,11 @@ namespace Containers
 
         protected virtual void Dispose(bool disposing)
         {
-            if (_isDisposed) return;
+            if (_disposed) return;
 
-            Debug.Assert(_flags.Length == _MinLength);
-            Debug.Assert(_keys.Length == _MinLength);
-            Debug.Assert(_length == _MinLength);
+            Debug.Assert(_flags.Length == _MIN_LENGTH);
+            Debug.Assert(_keys.Length == _MIN_LENGTH);
+            Debug.Assert(_length == _MIN_LENGTH);
             Debug.Assert(_count == 0);
 
             if (disposing == true)
@@ -312,7 +322,7 @@ namespace Containers
 
             // Release unmanaged resources.
 
-            _isDisposed = true;
+            _disposed = true;
         }
 
         public void Dispose()

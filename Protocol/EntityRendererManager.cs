@@ -43,6 +43,8 @@ namespace Protocol
                 if (renderer.IsDisconnected)
                 {
                     _ID_LIST.Dealloc(renderer.Id);
+                    renderer.Close();
+
                     continue;
                 }
 
@@ -66,6 +68,8 @@ namespace Protocol
                 if (renderer.IsDisconnected)
                 {
                     _ID_LIST.Dealloc(renderer.Id);
+                    renderer.Close();
+
                     continue;
                 }
 
@@ -88,6 +92,8 @@ namespace Protocol
                 if (renderer.IsDisconnected)
                 {
                     _ID_LIST.Dealloc(renderer.Id);
+                    renderer.Close();
+
                     continue;
                 }
 
@@ -110,6 +116,8 @@ namespace Protocol
                 if (renderer.IsDisconnected)
                 {
                     _ID_LIST.Dealloc(renderer.Id);
+                    renderer.Close();
+
                     continue;
                 }
 
@@ -133,6 +141,7 @@ namespace Protocol
                 {
                     _ID_LIST.Dealloc(renderer.Id);
                     renderer.DestroyEntity(entityId);
+                    renderer.Close();
 
                     continue;
                 }
@@ -168,6 +177,7 @@ namespace Protocol
 
                 _ID_LIST.Dealloc(renderer.Id);
                 renderer.Flush(entityId);
+                renderer.Close();
             }
         }
 

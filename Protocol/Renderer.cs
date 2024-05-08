@@ -49,6 +49,8 @@ namespace Protocol
             System.GC.SuppressFinalize(this);
         }
 
+        public void Close() => Dispose();
+
     }
 
     internal sealed class EntityRenderer : Renderer
