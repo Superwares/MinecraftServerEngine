@@ -1,8 +1,6 @@
 ﻿
 
 using Containers;
-using System.Diagnostics;
-using System.Xml;
 
 namespace Protocol
 {
@@ -61,8 +59,8 @@ namespace Protocol
 
         private bool _disposed = false;
 
-        private readonly Table<System.Guid, Item> _items = new();
-        private readonly Table<System.Guid, Queue<ClientboundPlayingPacket>> _renderers = new();
+        private readonly Table<System.Guid, Item> _ITEMS = new();
+        private readonly Table<System.Guid, Queue<ClientboundPlayingPacket>> _RENDERERS = new();
 
         internal PlayerList() { }
 
@@ -72,7 +70,7 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            foreach (Item item in _items.GetValues())
+            foreach (Item item in _ITEMS.GetValues())
             {
                 int laytencyInMilliseconds = item.laytencyInTicks * 50;
                 renderer.Enqueue(new AddPlayerListItemPacket(
@@ -86,17 +84,21 @@ namespace Protocol
 
             int laytencyInMilliseconds = item.laytencyInTicks * 50;
 
-            foreach (var renderer in _renderers.GetValues())
+            foreach (var renderer in _RENDERERS.GetValues())
+            {
                 renderer.Enqueue(new AddPlayerListItemPacket(
                     item.UniqueId, item.Username, laytencyInMilliseconds));
+            }
         }
 
         private void RenderToRemove(System.Guid uniqueId)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            foreach (var renderer in _renderers.GetValues())
+            foreach (var renderer in _RENDERERS.GetValues())
+            {
                 renderer.Enqueue(new RemovePlayerListItemPacket(uniqueId));
+            }
         }
 
         private void RenderToUpdateLatency(Item item)
@@ -104,7 +106,7 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(!_disposed);
 
             int laytencyInMilliseconds = item.laytencyInTicks * 50;
-            foreach (var outPackets in _renderers.GetValues())
+            foreach (var outPackets in _RENDERERS.GetValues())
             {
                 outPackets.Enqueue(new UpdatePlayerListItemLatencyPacket(
                     item.UniqueId, laytencyInMilliseconds));
@@ -115,17 +117,17 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            return !_renderers.Contains(uniqueId);
+            return !_RENDERERS.Contains(uniqueId);
         }
 
         internal void InitPlayer(System.Guid uniqueId, string username)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Debug.Assert(IsDisconnected(uniqueId));
+            System.Diagnostics.Debug.Assert(IsDisconnected(uniqueId));
 
             Item item = new(uniqueId, username);
-            _items.Insert(uniqueId, item);
+            _ITEMS.Insert(uniqueId, item);
 
             /*System.Console.WriteLine($"UniqueId: {uniqueId} in InitPlayer");*/
 
@@ -136,9 +138,9 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Debug.Assert(IsDisconnected(uniqueId));
+            System.Diagnostics.Debug.Assert(IsDisconnected(uniqueId));
 
-            _items.Extract(uniqueId);
+            _ITEMS.Extract(uniqueId);
 
             RenderToRemove(uniqueId);
         }
@@ -151,10 +153,10 @@ namespace Protocol
 
             /*System.Console.WriteLine($"UniqueId: {uniqueId} in Connect");*/
 
-            Debug.Assert(IsDisconnected(uniqueId));
-            _renderers.Insert(uniqueId, renderer);
+            System.Diagnostics.Debug.Assert(IsDisconnected(uniqueId));
+            _RENDERERS.Insert(uniqueId, renderer);
 
-            Item item = _items.Lookup(uniqueId);
+            Item item = _ITEMS.Lookup(uniqueId);
             item.Connect();
 
             RenderToInit(renderer);
@@ -164,10 +166,10 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Debug.Assert(!IsDisconnected(uniqueId));
-            _renderers.Extract(uniqueId);
+            System.Diagnostics.Debug.Assert(!IsDisconnected(uniqueId));
+            _RENDERERS.Extract(uniqueId);
 
-            Item item = _items.Lookup(uniqueId);
+            Item item = _ITEMS.Lookup(uniqueId);
             item.Disconnect();
 
             RenderToUpdateLatency(item);
@@ -177,7 +179,7 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Item item = _items.Lookup(uniqueId);
+            Item item = _ITEMS.Lookup(uniqueId);
             item.Done(serverTicks);
         }
 
@@ -187,7 +189,7 @@ namespace Protocol
 
             if (serverTicks % 20 != 0) return;
 
-            foreach (Item item in _items.GetValues())
+            foreach (Item item in _ITEMS.GetValues())
             {
                 if (IsDisconnected(item.UniqueId)) continue;
 
@@ -195,7 +197,7 @@ namespace Protocol
 
                 RenderToUpdateLatency(item);
 
-                Queue<ClientboundPlayingPacket> outPacket = _renderers.Lookup(item.UniqueId);
+                Queue<ClientboundPlayingPacket> outPacket = _RENDERERS.Lookup(item.UniqueId);
                 long payload = new System.Random().NextInt64();
                 outPacket.Enqueue(new RequestKeepAlivePacket(payload));
 
@@ -203,33 +205,23 @@ namespace Protocol
             }
         }
 
-        private void Dispose(bool disposing)
+        public void Dispose()
         {
-            if (_disposed) return;
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             // Assertion.
-            Debug.Assert(_items.Empty);
-            Debug.Assert(_renderers.Empty);
+            System.Diagnostics.Debug.Assert(_ITEMS.Empty);
+            System.Diagnostics.Debug.Assert(_RENDERERS.Empty);
 
-            if (disposing == true)
-            {
-                // Release managed resources.
-                _items.Dispose();
-                _renderers.Dispose();
-            }
+            // Release resources.
+            _ITEMS.Dispose();
+            _RENDERERS.Dispose();
 
-            // Release unmanaged resources.
-
+            // Finish.
+            System.GC.SuppressFinalize(this);
             _disposed = true;
         }
 
-        public void Dispose()
-        {
-            Dispose(true);
-            System.GC.SuppressFinalize(this);
-        }
-
-        public void Close() => Dispose();
 
     }
 

@@ -40,23 +40,16 @@ namespace Server
             // check player is dead. if dead, player must be respanwed.
         }
 
-        protected override void Dispose(bool disposing)
+        public override void Dispose()
         {
-            if (!_disposed)
-            {
-                // Assertion.
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-                if (disposing == true)
-                {
-                    // Release managed resources.
-                }
+            // Assertion.
 
-                // Release unmanaged resources.
+            // Release resources.
 
-                _disposed = true;
-            }
-
-            base.Dispose(disposing);
+            base.Dispose();
+            _disposed = true;
         }
 
     }

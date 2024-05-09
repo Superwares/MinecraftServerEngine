@@ -26,30 +26,18 @@ namespace Protocol
             _OUT_PACKETS.Enqueue(packet);
         }
 
-        protected virtual void Dispose(bool disposing)
+        public virtual void Dispose()
         {
-            if (_disposed) return;
+            System.Diagnostics.Debug.Assert(_disposed);
 
             // Assertion
 
-            if (disposing == true)
-            {
-                // managed objects
+            // Release Resources.
 
-            }
-
-            // unmanaged objects
-
+            // Finish.
+            System.GC.SuppressFinalize(this);
             _disposed = true;
         }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            System.GC.SuppressFinalize(this);
-        }
-
-        public void Close() => Dispose();
 
     }
 
@@ -222,26 +210,21 @@ namespace Protocol
 
         public void Flush(int entityId)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             DestroyEntity(entityId);
         }
 
-        protected override void Dispose(bool disposing)
+        public override void Dispose()
         {
-            if (!_disposed)
-            {
-                // Assertion.
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-                if (disposing == true)
-                {
-                    // Release managed resources.
-                }
+            // Assertion.
 
-                // Release unmanaged resources.
+            // Release resources.
 
-                _disposed = true;
-            }
-
-            base.Dispose(disposing);
+            base.Dispose();
+            _disposed = true;
         }
 
     }

@@ -34,6 +34,8 @@ namespace Protocol
             int entityId,
             Entity.Vector posNew, Entity.Vector pos, Entity.Angles look, bool onGround)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(!_movement);
 
             for (int i = 0; i < _RENDERERS.Count; ++i)
@@ -43,7 +45,7 @@ namespace Protocol
                 if (renderer.IsDisconnected)
                 {
                     _ID_LIST.Dealloc(renderer.Id);
-                    renderer.Close();
+                    renderer.Dispose();
 
                     continue;
                 }
@@ -59,6 +61,8 @@ namespace Protocol
         public void Move(
             int entityId, Entity.Vector posNew, Entity.Vector pos, bool onGround)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(!_movement);
 
             for (int i = 0; i < _RENDERERS.Count; ++i)
@@ -68,7 +72,7 @@ namespace Protocol
                 if (renderer.IsDisconnected)
                 {
                     _ID_LIST.Dealloc(renderer.Id);
-                    renderer.Close();
+                    renderer.Dispose();
 
                     continue;
                 }
@@ -83,6 +87,8 @@ namespace Protocol
 
         public void Rotate(int entityId, Entity.Angles look, bool onGround)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(!_movement);
 
             for (int i = 0; i < _RENDERERS.Count; ++i)
@@ -92,7 +98,7 @@ namespace Protocol
                 if (renderer.IsDisconnected)
                 {
                     _ID_LIST.Dealloc(renderer.Id);
-                    renderer.Close();
+                    renderer.Dispose();
 
                     continue;
                 }
@@ -107,6 +113,8 @@ namespace Protocol
 
         public void Stand(int entityId)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(!_movement);
 
             for (int i = 0; i < _RENDERERS.Count; ++i)
@@ -116,7 +124,7 @@ namespace Protocol
                 if (renderer.IsDisconnected)
                 {
                     _ID_LIST.Dealloc(renderer.Id);
-                    renderer.Close();
+                    renderer.Dispose();
 
                     continue;
                 }
@@ -131,6 +139,8 @@ namespace Protocol
 
         public void DeterminToContinueRendering(int entityId, Entity.Vector pos, BoundingBox boundingBox)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(_movement);
 
             for (int i = 0; i < _RENDERERS.Count; ++i)
@@ -141,7 +151,7 @@ namespace Protocol
                 {
                     _ID_LIST.Dealloc(renderer.Id);
                     renderer.DestroyEntity(entityId);
-                    renderer.Close();
+                    renderer.Dispose();
 
                     continue;
                 }
@@ -154,6 +164,8 @@ namespace Protocol
 
         public void ChangeForms(int entityId, bool sneaking, bool sprinting)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             foreach (var renderer in _RENDERERS.GetValues())
             {
                 renderer.ChangeForms(entityId, sneaking, sprinting);
@@ -163,6 +175,8 @@ namespace Protocol
         public void Teleport(
             int entityId, Entity.Vector pos, Entity.Angles look, bool onGround)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             foreach (var renderer in _RENDERERS.GetValues())
             {
                 renderer.Teleport(entityId, pos, look, onGround);
@@ -171,19 +185,21 @@ namespace Protocol
 
         public void Flush(int entityId)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             while (!_RENDERERS.Empty)
             {
                 EntityRenderer renderer = _RENDERERS.Dequeue();
 
                 _ID_LIST.Dealloc(renderer.Id);
                 renderer.Flush(entityId);
-                renderer.Close();
+                renderer.Dispose();
             }
         }
 
-        private void Dispose(bool disposing)
+        public void Dispose()
         {
-            if (_disposed) return;
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             // Assertion
             System.Diagnostics.Debug.Assert(!_movement);
@@ -192,26 +208,16 @@ namespace Protocol
 
             System.Diagnostics.Debug.Assert(_RENDERERS.Empty);
 
-            if (disposing == true)
-            {
-                // Release managed resources.
-                _ID_LIST.Dispose();
+            // Release  resources.
+            _ID_LIST.Dispose();
 
-                _RENDERERS.Dispose();
-            }
+            _RENDERERS.Dispose();
 
-            // Release unmanaged resources.
-
+            // Finish
+            System.GC.SuppressFinalize(this);
             _disposed = true;
         }
 
-        public void Dispose()
-        {
-            Dispose(true);
-            System.GC.SuppressFinalize(this);
-        }
-
-        public void Close() => Dispose();
     }
 
 }

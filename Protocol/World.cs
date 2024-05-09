@@ -419,9 +419,9 @@ namespace Protocol
             throw new System.NotImplementedException();
         }
 
-        protected virtual void Dispose(bool disposing)
+        public virtual void Dispose()
         {
-            if (_disposed) return;
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             // Assertion.
 
@@ -438,38 +438,27 @@ namespace Protocol
 
             System.Diagnostics.Debug.Assert(_DESPAWNED_ENTITIES.Empty);
 
-            if (disposing == true)
-            {
-                // Release managed resources.
-                _PLAYER_LIST.Dispose();
+            // Release resources.
+            _PLAYER_LIST.Dispose();
 
-                _ENTITY_ID_LIST.Dispose();
+            _ENTITY_ID_LIST.Dispose();
 
-                _CHUNKS.Dispose();
+            _CHUNKS.Dispose();
 
-                _ENTITY_SPAWNING_POOL.Dispose();
+            _ENTITY_SPAWNING_POOL.Dispose();
 
-                _DISCONNECTED_PLAYERS.Dispose();
+            _DISCONNECTED_PLAYERS.Dispose();
 
-                _CHUNK_TO_ENTITIES.Dispose();
-                _ENTITY_TO_CHUNK_GRID.Dispose();
+            _CHUNK_TO_ENTITIES.Dispose();
+            _ENTITY_TO_CHUNK_GRID.Dispose();
 
-                _DESPAWNED_ENTITIES.Dispose();
+            _DESPAWNED_ENTITIES.Dispose();
 
-            }
-
-            // Release unmanaged resources.
-
+            // Finish.
+            System.GC.SuppressFinalize(this);
             _disposed = true;
         }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            System.GC.SuppressFinalize(this);
-        }
-
-        public void Close() => Dispose();
+       
 
     }
 

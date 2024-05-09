@@ -154,17 +154,11 @@ namespace Protocol
 
             }
 
-            public void FLush()
-            {
-                _LOADED_CHUNKS.Flush();
-            }
-
             private void Dispose(bool disposing)
             {
-                if (_disposed) return;
+                System.Diagnostics.Debug.Assert(!_disposed);
 
                 // Assertion
-                System.Diagnostics.Debug.Assert(_LOADED_CHUNKS.Empty);
 
                 if (disposing == true)
                 {
@@ -912,21 +906,11 @@ namespace Protocol
             }
         }
 
-        public void Flush(Player player)
+        public void Flush(World world)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            // TODO: Release resources corrently for no garbage.
-            
-            _LOAD_CHUNK_PACKETS.Flush();
             foreach (ClientboundPlayingPacket packet in _OUT_PACKETS.Flush())
             {
-                if (packet is ClientboundCloseWindowPacket)
-                {
-                    System.Diagnostics.Debug.Assert(_window != null);
-                    _window.ResetWindowForcibly(player._selfInventory, _OUT_PACKETS, false);
-                }
-                else if (packet is DestroyEntitiesPacket destroyEntitiesPacket)
+                if (packet is DestroyEntitiesPacket destroyEntitiesPacket)
                 {
                     foreach (int entityId in destroyEntitiesPacket.EntityIds)
                     {
@@ -940,58 +924,42 @@ namespace Protocol
                 renderer.Disconnect();
             }
 
-            _TELEPORTATION_RECORDS.Flush();
-
             if (_window != null)
             {
-                _window.CloseWindow();
+                _window.Flush(world);
             }
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (_disposed) return;
-
-            // Assertion
-            System.Diagnostics.Debug.Assert(_ENTITY_TO_RENDERERS.Empty);
-
-            System.Diagnostics.Debug.Assert(_TELEPORTATION_RECORDS.Empty);
-
-            System.Diagnostics.Debug.Assert(_LOAD_CHUNK_PACKETS.Empty);
-            System.Diagnostics.Debug.Assert(_OUT_PACKETS.Empty);
-
-            if (disposing == true)
-            {
-                // managed objects
-                _CLIENT.Dispose();
-
-                _LOAD_CHUNK_PACKETS.Dispose();
-                _OUT_PACKETS.Dispose();
-
-                _ENTITY_TO_RENDERERS.Dispose();
-
-                _TELEPORTATION_RECORDS.Dispose();
-                _keepAliveRecord = null;
-
-                if (_window != null)
-                {
-                    _window.Dispose();
-                }
-
-            }
-
-            // unmanaged objects
-
-            _disposed = true;
         }
 
         public void Dispose()
         {
-            Dispose(true);
-            System.GC.SuppressFinalize(this);
-        }
+            System.Diagnostics.Debug.Assert(_disposed);
 
-        public void Close() => Dispose();
+            // Assertion
+            System.Diagnostics.Debug.Assert(_OUT_PACKETS.Empty);
+
+            System.Diagnostics.Debug.Assert(_ENTITY_TO_RENDERERS.Empty);
+
+            // Release Resources
+            _CLIENT.Dispose();
+
+            _LOAD_CHUNK_PACKETS.Dispose();
+            _OUT_PACKETS.Dispose();
+
+            _LOADING_HELPER.Dispose();
+            _ENTITY_TO_RENDERERS.Dispose();
+
+            _TELEPORTATION_RECORDS.Dispose();
+            _keepAliveRecord = null;
+
+            if (_window != null)
+            {
+                _window.Dispose();
+                _window = null;
+            }
+
+            System.GC.SuppressFinalize(this);
+            _disposed = true;
+        }
 
     }
 }

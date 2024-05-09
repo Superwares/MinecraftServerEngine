@@ -7,12 +7,12 @@ namespace Application
 {
     public sealed class Server : ConsoleApplication
     {
-        private bool _isDisposed = false;
+        private bool _disposed = false;
 
         private readonly World _WORLD;
 
-        private readonly Queue<(Connection, Player)> _CONNECTIONS = new();
-        private readonly Queue<Connection> _DISCONNNECTIONS = new();
+        private readonly Queue<(Connection, Player)> _CONNECTIONS = new();  // Disposable
+        private readonly Queue<Connection> _DISCONNNECTIONS = new();  // Disposable
 
         private readonly Queue<Entity> _ENTITIES = new();  // Disposable
 
@@ -35,7 +35,7 @@ namespace Application
                 }
                 catch (DisconnectedClientException)
                 {
-                    conn.Flush(player);
+                    conn.Flush(_WORLD);
                     _DISCONNNECTIONS.Enqueue(conn);
 
                     continue;
@@ -64,9 +64,7 @@ namespace Application
         {
             while (!_DISCONNNECTIONS.Empty)
             {
-                Connection conn = _DISCONNNECTIONS.Dequeue();
-                
-                conn.Close();
+                _DISCONNNECTIONS.Dequeue().Dispose();
             }
 
             _WORLD.ReleaseResources();
@@ -84,7 +82,7 @@ namespace Application
                 }
                 catch (DisconnectedClientException)
                 {
-                    conn.Flush(player);
+                    conn.Flush(_WORLD);
                     _DISCONNNECTIONS.Enqueue(conn);
 
                     continue;
@@ -186,24 +184,28 @@ namespace Application
 
         protected override void Dispose(bool disposing)
         {
-            if (!_isDisposed)
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            // Assertiong
+            System.Diagnostics.Debug.Assert(_CONNECTIONS.Empty);
+            System.Diagnostics.Debug.Assert(_DISCONNNECTIONS.Empty);
+
+            System.Diagnostics.Debug.Assert(_ENTITIES.Empty);
+
+            if (disposing == true)
             {
+                // Release managed resources.
+                _WORLD.Dispose();
 
-                System.Diagnostics.Debug.Assert(_CONNECTIONS.Empty);
-                System.Diagnostics.Debug.Assert(_ENTITIES.Empty);
+                _CONNECTIONS.Dispose();
+                _DISCONNNECTIONS.Dispose();
 
-                if (disposing == true)
-                {
-                    // Release managed resources.
-                    _WORLD.Dispose();
-                    _CONNECTIONS.Dispose();
-                    _ENTITIES.Dispose();
-                }
-
-                // Release unmanaged resources.
-
-                _isDisposed = true;
+                _ENTITIES.Dispose();
             }
+
+            // Release unmanaged resources.
+
+            _disposed = true;
 
             base.Dispose(disposing);
         }

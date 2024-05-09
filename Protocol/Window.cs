@@ -21,9 +21,6 @@ namespace Protocol
 
         private Item? _itemCursor = null;
 
-        /*private bool _startDrag = false;
-        private Queue<int> _dragedIndices = new();  // Disposable*/
-
         public Window(
             Queue<ClientboundPlayingPacket> outPackets,
             SelfInventory selfInventory)
@@ -201,40 +198,6 @@ namespace Protocol
                 _itemCursor = null;
 
                 outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));
-            }*/
-
-            System.Diagnostics.Debug.Assert(_itemCursor == null);
-        }
-
-        public void CloseWindow()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(_windowId >= 0);
-            if (_windowId == 0)
-            {
-
-            }
-            else if (_windowId > 0)
-            {
-                /*System.Diagnostics.Debug.Assert(_windowId > 0);
-                System.Diagnostics.Debug.Assert(_id >= 0);
-                System.Diagnostics.Debug.Assert(_publicInventory != null);
-
-                _publicInventory.Close(_id, _windowId);*/
-
-                System.Diagnostics.Debug.Assert(false);
-            }
-
-            _windowId = -1;
-            _id = -1;
-
-            _publicInventory = null;
-
-            /*if (_itemCursor != null)
-            {
-                // TODO: Drop item if _iremCursor is not null.
-                _itemCursor = null;
             }*/
 
             System.Diagnostics.Debug.Assert(_itemCursor == null);
@@ -594,34 +557,48 @@ namespace Protocol
 
         }
         
-        private void Dispose(bool disposing)
+        public void Flush(World world)
         {
-            if (_disposed) return;
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            // Assertion.
-            System.Diagnostics.Debug.Assert(_windowId == -1);
-            System.Diagnostics.Debug.Assert(_id == -1);
-            System.Diagnostics.Debug.Assert(_publicInventory == null);
-            System.Diagnostics.Debug.Assert(_itemCursor == null);
-
-            if (disposing == true)
+            if (_itemCursor != null)
             {
-                // Release managed resources.
+                // TODO: Drop Item.
+                throw new System.NotImplementedException();
 
+                _itemCursor = null;
             }
 
-            // Release unmanaged resources.
+            if (_publicInventory != null)
+            {
+                System.Diagnostics.Debug.Assert(_windowId > 0);
+                System.Diagnostics.Debug.Assert(_id >= 0);
 
-            _disposed = true;
+                _publicInventory.Close(_id, _windowId);
+
+                _publicInventory = null;
+            }
+
+            _windowId = 0;
+            _id = -1;
+
         }
 
         public void Dispose()
         {
-            Dispose(true);
-            System.GC.SuppressFinalize(this);
-        }
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-        public void Close() => Dispose();
+            // Assertion.
+            System.Diagnostics.Debug.Assert(_windowId == 0);
+            System.Diagnostics.Debug.Assert(_id == -1);
+            System.Diagnostics.Debug.Assert(_publicInventory == null);
+            System.Diagnostics.Debug.Assert(_itemCursor == null);
+
+            // Release Resources.
+
+            System.GC.SuppressFinalize(this);
+            _disposed = true;
+        }
 
     }
 }

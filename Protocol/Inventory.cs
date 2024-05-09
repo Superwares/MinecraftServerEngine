@@ -266,31 +266,19 @@ namespace Protocol
             System.Console.WriteLine();
         }
 
-        protected virtual void Dispose(bool disposing)
+        public virtual void Dispose()
         {
-            if (_disposed) return;
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             // Assertion.
             System.Diagnostics.Debug.Assert(_count == 0);
 
-            if (disposing == true)
-            {
-                // Release managed resources.
-                
-            }
+            // Release resources.
 
-            // Release unmanaged resources.
-
+            // Finish.
+            System.GC.SuppressFinalize(this);
             _disposed = true;
         }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            System.GC.SuppressFinalize(this);
-        }
-
-        public void Close() => Dispose();
 
     }
 
@@ -403,23 +391,17 @@ namespace Protocol
             throw new System.NotImplementedException();
         }
 
-        protected override void Dispose(bool disposing)
+        public override void Dispose()
         {
-            if (!_disposed)
-            {
-                // Assertion.
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-                if (disposing == true)
-                {
-                    // Release managed resources.
-                }
+            // Assertion.
 
-                // Release unmanaged resources.
+            // Release resources.
 
-                _disposed = true;
-            }
-
-            base.Dispose(disposing);
+            // Finish.
+            _disposed = true;
+            base.Dispose();
         }
 
     }
@@ -644,26 +626,20 @@ namespace Protocol
 
         }
 
-        protected override void Dispose(bool disposing)
+        public override void Dispose()
         {
-            if (!_disposed)
-            {
-                // Assertion.
-                System.Diagnostics.Debug.Assert(_IdList.Empty);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-                if (disposing == true)
-                {
-                    // Release managed resources.
-                    _IdList.Dispose();
-                    _Renderer.Dispose();
-                }
+            // Assertion.
+            System.Diagnostics.Debug.Assert(_IdList.Empty);
 
-                // Release unmanaged resources.
+            // Release resources.
+            _IdList.Dispose();
+            _Renderer.Dispose();
 
-                _disposed = true;
-            }
-
-            base.Dispose(disposing);
+            // Finish.
+            _disposed = true;
+            base.Dispose();
         }
 
     }
@@ -678,23 +654,17 @@ namespace Protocol
 
         ~ChestInventory() => System.Diagnostics.Debug.Assert(false);
 
-        protected override void Dispose(bool disposing)
+        public override void Dispose()
         {
-            if (!_disposed)
-            {
-                // Assertion.
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-                if (disposing == true)
-                {
-                    // Release managed resources.
-                }
+            // Assertion.
 
-                // Release unmanaged resources.
+            // Release resources.
 
-                _disposed = true;
-            }
-
-            base.Dispose(disposing);
+            // Finish.
+            _disposed = true;
+            base.Dispose();
         }
 
     }
