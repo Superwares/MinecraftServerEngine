@@ -1,14 +1,11 @@
-﻿using System;
-using System.Diagnostics;
-
-namespace Containers
+﻿namespace Containers
 {
     public interface IReadOnlyQueue<T>
     {
         public System.Collections.Generic.IEnumerable<T> GetValues();
     }
 
-    public class Queue<T> : IDisposable, IReadOnlyQueue<T>
+    public class Queue<T> : System.IDisposable, IReadOnlyQueue<T>
     {
         private class Node(T value)
         {
@@ -19,7 +16,7 @@ namespace Containers
 
         }
 
-        private bool _isDisposed = false;
+        private bool _disposed = false;
 
         private Node? _outNode = null, _inNode = null;
 
@@ -28,7 +25,7 @@ namespace Containers
         {
             get
             {
-                Debug.Assert(!_isDisposed);
+                System.Diagnostics.Debug.Assert(!_disposed);
 
                 return _count;
             }
@@ -42,21 +39,21 @@ namespace Containers
 
         public virtual void Enqueue(T value)
         {
-            Debug.Assert(!_isDisposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             Node newNode = new(value);
 
             if (_count == 0)
             {
-                Debug.Assert(_outNode == null);
-                Debug.Assert(_inNode == null);
+                System.Diagnostics.Debug.Assert(_outNode == null);
+                System.Diagnostics.Debug.Assert(_inNode == null);
 
                 _outNode = _inNode = newNode;
             }
             else
             {
-                Debug.Assert(_outNode != null);
-                Debug.Assert(_inNode != null);
+                System.Diagnostics.Debug.Assert(_outNode != null);
+                System.Diagnostics.Debug.Assert(_inNode != null);
 
                 _inNode.NextNode = newNode;
                 _inNode = newNode;
@@ -67,13 +64,13 @@ namespace Containers
 
         public virtual T Dequeue()
         {
-            Debug.Assert(!_isDisposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             if (_count == 0)
                 throw new EmptyQueueException();
 
-            Debug.Assert(_inNode != null);
-            Debug.Assert(_outNode != null);
+            System.Diagnostics.Debug.Assert(_inNode != null);
+            System.Diagnostics.Debug.Assert(_outNode != null);
             T value = _outNode.Value;
 
             if (_count == 1)
@@ -82,7 +79,7 @@ namespace Containers
             }
             else
             {
-                Debug.Assert(_count > 1);
+                System.Diagnostics.Debug.Assert(_count > 1);
                 _outNode = _outNode.NextNode;
             }
 
@@ -93,13 +90,13 @@ namespace Containers
 
         public virtual T[] Flush()
         {
-            Debug.Assert(!_isDisposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             if (_count == 0)
                 return [];
 
-            Debug.Assert(_inNode != null);
-            Debug.Assert(_outNode != null);
+            System.Diagnostics.Debug.Assert(_inNode != null);
+            System.Diagnostics.Debug.Assert(_outNode != null);
 
             T[] values = new T[_count];
 
@@ -107,11 +104,11 @@ namespace Containers
 
             for (int i = 0; i < _count; ++i)
             {
-                Debug.Assert(node != null);
+                System.Diagnostics.Debug.Assert(node != null);
                 values[i] = node.Value;
                 node = node.NextNode;
             }
-            Debug.Assert(node == null);
+            System.Diagnostics.Debug.Assert(node == null);
 
             _inNode = null;
             _outNode = null;
@@ -122,18 +119,18 @@ namespace Containers
 
         public virtual System.Collections.Generic.IEnumerable<T> GetValues()
         {
-            Debug.Assert(!_isDisposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             if (_count == 0)
                 yield break;
 
-            Debug.Assert(_inNode != null);
-            Debug.Assert(_outNode != null);
+            System.Diagnostics.Debug.Assert(_inNode != null);
+            System.Diagnostics.Debug.Assert(_outNode != null);
 
             Node? current = _outNode;
             do
             {
-                Debug.Assert(current != null);
+                System.Diagnostics.Debug.Assert(current != null);
 
                 yield return current.Value;
                 current = current.NextNode;
@@ -143,11 +140,7 @@ namespace Containers
 
         protected virtual void Dispose(bool disposing)
         {
-            if (_isDisposed) return;
-
-            Debug.Assert(Count == 0);
-            Debug.Assert(_outNode == null);
-            Debug.Assert(_inNode == null);
+            if (_disposed) return;
 
             if (disposing == true)
             {
@@ -157,18 +150,13 @@ namespace Containers
 
             // Release unmanaged resources.
 
-            _isDisposed = true;
+            _disposed = true;
         }
 
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        public void Close()
-        {
-            Dispose();
+            System.GC.SuppressFinalize(this);
         }
 
     }
@@ -178,7 +166,7 @@ namespace Containers
     {
         private readonly object _SharedResource = new();
 
-        private bool _isDisposed = false;
+        private bool _disposed = false;
 
         public ConcurrentQueue() { }
 
@@ -186,7 +174,7 @@ namespace Containers
 
         public override void Enqueue(T value)
         {
-            Debug.Assert(!_isDisposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             lock (_SharedResource)
             {
@@ -196,7 +184,7 @@ namespace Containers
 
         public override T Dequeue()
         {
-            Debug.Assert(!_isDisposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             lock (_SharedResource)
             {
@@ -206,7 +194,7 @@ namespace Containers
 
         public override T[] Flush()
         {
-            Debug.Assert(!_isDisposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             lock (_SharedResource)
             {
@@ -216,7 +204,7 @@ namespace Containers
 
         public override System.Collections.Generic.IEnumerable<T> GetValues()
         {
-            Debug.Assert(!_isDisposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
 
             lock (_SharedResource)
@@ -227,7 +215,7 @@ namespace Containers
 
         protected override void Dispose(bool disposing)
         {
-            if (!_isDisposed)
+            if (!_disposed)
             {
                 if (disposing == true)
                 {
@@ -236,7 +224,7 @@ namespace Containers
 
                 // Release unmanaged resources.
 
-                _isDisposed = true;
+                _disposed = true;
             }
 
             base.Dispose(disposing);

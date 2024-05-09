@@ -6,12 +6,12 @@ namespace Protocol
     public sealed class Connection : System.IDisposable
     {
 
-        private sealed class LoadingHelper /*: System.IDisposable*/
+        private sealed class LoadingHelper : System.IDisposable
         {
-            /*private bool _disposed = false;*/
+            private bool _disposed = false;
 
             private const int _MAX_LOAD_COUNT = 7;
-            private const int _MAX_SEARCH_COUNT = 100;
+            private const int _MAX_SEARCH_COUNT = 77;
 
             private readonly Set<Chunk.Vector> _LOADED_CHUNKS = new();  // Disposable
 
@@ -33,6 +33,8 @@ namespace Protocol
                 Queue<Chunk.Vector> outOfRangeChunks, 
                 Chunk.Vector c, int d)
             {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
                 System.Diagnostics.Debug.Assert(d > 0);
                 System.Diagnostics.Debug.Assert(_MAX_LOAD_COUNT > 0);
                 System.Diagnostics.Debug.Assert(_MAX_SEARCH_COUNT >= _MAX_LOAD_COUNT);
@@ -45,6 +47,7 @@ namespace Protocol
                     {
                         System.Diagnostics.Debug.Assert(!_grid.Equals(grid));
 
+                        // TODO: Refactoring without brute-force approch.
                         foreach (Chunk.Vector p in _grid.GetVectors())
                         {
                             if (grid.Contains(p))
@@ -151,17 +154,22 @@ namespace Protocol
 
             }
 
-            /*private void Dispose(bool disposing)
+            public void FLush()
+            {
+                _LOADED_CHUNKS.Flush();
+            }
+
+            private void Dispose(bool disposing)
             {
                 if (_disposed) return;
 
                 // Assertion
-                System.Diagnostics.Debug.Assert(_LOADED_POSITIONS.Empty);
+                System.Diagnostics.Debug.Assert(_LOADED_CHUNKS.Empty);
 
                 if (disposing == true)
                 {
                     // managed objects
-                    _LOADED_POSITIONS.Dispose();
+                    _LOADED_CHUNKS.Dispose();
 
                 }
 
@@ -175,7 +183,7 @@ namespace Protocol
                 Dispose(true);
                 System.GC.SuppressFinalize(this);
             }
-*/
+
         }
 
         private sealed class TeleportationRecord

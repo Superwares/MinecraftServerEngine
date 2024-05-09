@@ -1,11 +1,8 @@
-﻿using System;
-using System.Diagnostics;
-
-namespace Containers
+﻿namespace Containers
 {
-    public class NumList : IDisposable
+    public class NumList : System.IDisposable
     {
-        private bool _isDisposed = false;
+        private bool _disposed = false;
 
         private const int _MinNum = 0;
         private const int _MaxNum = int.MaxValue;
@@ -17,7 +14,7 @@ namespace Containers
 
         }
 
-        private Node _first;
+        private Node _nodeFirst;
 
         private int _count = 0;
         public int Count => _count;
@@ -25,33 +22,33 @@ namespace Containers
 
         public NumList()
         {
-            _first = new(_MinNum, _MaxNum);
+            _nodeFirst = new(_MinNum, _MaxNum);
         }
 
         ~NumList() => Dispose(false);
 
         public int Alloc()
         {
-            Debug.Assert(!_isDisposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            int from = _first.from, to = _first.to;
-            Debug.Assert(from <= to);
+            int from = _nodeFirst.from, to = _nodeFirst.to;
+            System.Diagnostics.Debug.Assert(from <= to);
 
             int num;
 
             if (from < to)
             {
                 num = from++;
-                _first.from = from;
+                _nodeFirst.from = from;
             }
             else
             {
-                Debug.Assert(from == to);
+                System.Diagnostics.Debug.Assert(from == to);
 
                 num = from;
-                Node? next = _first.next;
-                Debug.Assert(next != null);
-                _first = next;
+                Node? next = _nodeFirst.next;
+                System.Diagnostics.Debug.Assert(next != null);
+                _nodeFirst = next;
             }
 
             _count++;
@@ -61,17 +58,17 @@ namespace Containers
 
         public void Dealloc(int num)
         {
-            Debug.Assert(!_isDisposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            Debug.Assert(_first != null);
+            System.Diagnostics.Debug.Assert(_nodeFirst != null);
 
             Node? prev;
-            Node? current = _first;
+            Node? current = _nodeFirst;
 
             int from = current.from,
                 to = current.to;
-            Debug.Assert(from <= to);
-            Debug.Assert(!(from <= num && num <= to));
+            System.Diagnostics.Debug.Assert(from <= to);
+            System.Diagnostics.Debug.Assert(!(from <= num && num <= to));
 
             if (num < from)
             {
@@ -85,23 +82,23 @@ namespace Containers
                     {
                         prev = new(num, num);
                         prev.next = current;
-                        _first = prev;
+                        _nodeFirst = prev;
                     }
                 }
                 else
-                    Debug.Assert(false);
+                    System.Diagnostics.Debug.Assert(false);
             }
             else
             {
                 do
                 {
-                    Debug.Assert(current.from <= current.to);
-                    Debug.Assert(!(current.from <= num && num <= current.to));
-                    Debug.Assert(current.to < num);
+                    System.Diagnostics.Debug.Assert(current.from <= current.to);
+                    System.Diagnostics.Debug.Assert(!(current.from <= num && num <= current.to));
+                    System.Diagnostics.Debug.Assert(current.to < num);
 
                     prev = current;
                     current = prev.next;
-                    Debug.Assert(current != null);
+                    System.Diagnostics.Debug.Assert(current != null);
                 }
                 while (!(prev.to < num && num < current.from));
 
@@ -110,7 +107,7 @@ namespace Containers
 
                 if ((to + 1) == (from - 1))
                 {
-                    Debug.Assert((to + 1) == num);
+                    System.Diagnostics.Debug.Assert((to + 1) == num);
                     prev.to = current.to;
                     prev.next = current.next;
                 }
@@ -122,12 +119,12 @@ namespace Containers
                 }
                 else if ((to + 1) == num)
                 {
-                    Debug.Assert((to + 1) + 1 < from);
+                    System.Diagnostics.Debug.Assert((to + 1) + 1 < from);
                     prev.to++;
                 }
                 else
                 {
-                    Debug.Assert(to < (from - 1) - 1);
+                    System.Diagnostics.Debug.Assert(to < (from - 1) - 1);
                     current.from--;
                 }
             }
@@ -138,34 +135,23 @@ namespace Containers
 
         protected virtual void Dispose(bool disposing)
         {
-            if (_isDisposed == true) return;
-
-            Debug.Assert(_count == 0);
-            Debug.Assert(_first != null);
-            Debug.Assert(_first.next == null);
-            Debug.Assert(_first.from == _MinNum);
-            Debug.Assert(_first.to == _MaxNum);
+            if (_disposed == true) return;
 
             if (disposing == true)
             {
                 // managed objects
-                _first = null;
+                _nodeFirst = null;
             }
 
             // Release unmanaged objects
 
-            _isDisposed = true;
+            _disposed = true;
         }
 
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        public void Close()
-        {
-            Dispose();
+            System.GC.SuppressFinalize(this);
         }
 
     }
@@ -174,13 +160,13 @@ namespace Containers
     {
         private readonly object _SharedResource = new();
 
-        private bool _isDisposed = false;
+        private bool _disposed = false;
 
         ~ConcurrentNumList() => Dispose(false);
 
         public new int Alloc()
         {
-            Debug.Assert(!_isDisposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             lock (_SharedResource)
             {
@@ -190,7 +176,7 @@ namespace Containers
 
         public new void Dealloc(int num)
         {
-            Debug.Assert(!_isDisposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             lock (_SharedResource)
             {
@@ -200,7 +186,7 @@ namespace Containers
 
         protected override void Dispose(bool disposing)
         {
-            if (!_isDisposed)
+            if (!_disposed)
             {
                 if (disposing == true)
                 {
@@ -209,7 +195,7 @@ namespace Containers
 
                 // Release unmanaged resources.
 
-                _isDisposed = true;
+                _disposed = true;
             }
 
             base.Dispose(disposing);

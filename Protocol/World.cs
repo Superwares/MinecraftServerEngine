@@ -315,7 +315,7 @@ namespace Protocol
                 if (entities.Empty)
                 {
                     _CHUNK_TO_ENTITIES.Extract(p);
-                    entities.Close();
+                    entities.Dispose();
                 }
             }
 
@@ -379,7 +379,7 @@ namespace Protocol
                     if (entities.Empty)
                     {
                         _CHUNK_TO_ENTITIES.Extract(pChunk);
-                        entities.Close();
+                        entities.Dispose();
                     }
                 }
 

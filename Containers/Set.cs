@@ -1,10 +1,8 @@
-﻿using System;
-using System.Diagnostics;
-
+﻿
 namespace Containers
 {
 
-    public interface IReadOnlySet<K> where K : struct, IEquatable<K>
+    public interface IReadOnlySet<K> where K : struct, System.IEquatable<K>
     {
         public bool Contains(K key);
 
@@ -12,8 +10,8 @@ namespace Containers
 
     }
 
-    public class Set<K> : IDisposable, IReadOnlySet<K>
-        where K : struct, IEquatable<K>
+    public class Set<K> : System.IDisposable, IReadOnlySet<K>
+        where K : struct, System.IEquatable<K>
     {
         private bool _disposed = false;
 
@@ -31,7 +29,7 @@ namespace Containers
         {
             get
             {
-                Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(!_disposed);
                 return _count;
             }
         }
@@ -39,24 +37,24 @@ namespace Containers
 
         public Set() { }
 
-        ~Set() => Dispose(false);
+        ~Set() => System.Diagnostics.Debug.Assert(false);
 
         private int Hash(K key)
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             /*Debug.Assert(key != null);*/
-            return Math.Abs(key.GetHashCode() * _C);
+            return System.Math.Abs(key.GetHashCode() * _C);
         }
 
         private void Resize(int newLength)
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            Debug.Assert(_flags.Length >= _MIN_LENGTH);
-            Debug.Assert(_keys.Length >= _MIN_LENGTH);
-            Debug.Assert(_length >= _MIN_LENGTH);
-            Debug.Assert(_count >= 0);
+            System.Diagnostics.Debug.Assert(_flags.Length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_keys.Length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_count >= 0);
 
             bool[] oldFlags = _flags;
             K[] oldKeys = _keys;
@@ -98,12 +96,12 @@ namespace Containers
 
         public virtual void Insert(K key)
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            Debug.Assert(_flags.Length >= _MIN_LENGTH);
-            Debug.Assert(_keys.Length >= _MIN_LENGTH);
-            Debug.Assert(_length >= _MIN_LENGTH);
-            Debug.Assert(_count >= 0);
+            System.Diagnostics.Debug.Assert(_flags.Length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_keys.Length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_count >= 0);
 
             int hash = Hash(key);
             for (int i = 0; i < _length; ++i)
@@ -131,7 +129,7 @@ namespace Containers
                 return;
             }
 
-            throw new NotImplementedException();
+            throw new System.NotImplementedException();
         }
 
         private bool CanShift(int targetIndex, int currentIndex, int originIndex)
@@ -144,12 +142,12 @@ namespace Containers
 
         public virtual void Extract(K key)
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            Debug.Assert(_flags.Length >= _MIN_LENGTH);
-            Debug.Assert(_keys.Length >= _MIN_LENGTH);
-            Debug.Assert(_length >= _MIN_LENGTH);
-            Debug.Assert(_count >= 0);
+            System.Diagnostics.Debug.Assert(_flags.Length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_keys.Length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_count >= 0);
 
             if (_count == 0)
                 throw new NotFoundException();
@@ -187,8 +185,8 @@ namespace Containers
                 break;
             }
 
-            Debug.Assert(targetIndex >= 0);
-            Debug.Assert(nextI > 0);
+            System.Diagnostics.Debug.Assert(targetIndex >= 0);
+            System.Diagnostics.Debug.Assert(nextI > 0);
             for (int i = nextI; i < _length; ++i)
             {
                 int index = (hash + i) % _length;
@@ -212,12 +210,12 @@ namespace Containers
 
         public virtual bool Contains(K key)
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            Debug.Assert(_flags.Length >= _MIN_LENGTH);
-            Debug.Assert(_keys.Length >= _MIN_LENGTH);
-            Debug.Assert(_length >= _MIN_LENGTH);
-            Debug.Assert(_count >= 0);
+            System.Diagnostics.Debug.Assert(_flags.Length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_keys.Length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_count >= 0);
             if (_count == 0)
                 return false;
 
@@ -240,7 +238,7 @@ namespace Containers
 
         public void Reset()
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             _flags = new bool[_MIN_LENGTH];
             _keys = new K[_MIN_LENGTH];
@@ -250,12 +248,12 @@ namespace Containers
 
         public virtual K[] Flush()
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            Debug.Assert(_flags.Length >= _MIN_LENGTH);
-            Debug.Assert(_keys.Length >= _MIN_LENGTH);
-            Debug.Assert(_length >= _MIN_LENGTH);
-            Debug.Assert(_count >= 0);
+            System.Diagnostics.Debug.Assert(_flags.Length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_keys.Length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_count >= 0);
 
             if (_count == 0)
                 return [];
@@ -282,12 +280,12 @@ namespace Containers
 
         public virtual System.Collections.Generic.IEnumerable<K> GetKeys()
         {
-            Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            Debug.Assert(_flags.Length >= _MIN_LENGTH);
-            Debug.Assert(_keys.Length >= _MIN_LENGTH);
-            Debug.Assert(_length >= _MIN_LENGTH);
-            Debug.Assert(_count >= 0);
+            System.Diagnostics.Debug.Assert(_flags.Length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_keys.Length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_count >= 0);
 
             if (_count == 0)
                 yield break;
@@ -308,11 +306,6 @@ namespace Containers
         {
             if (_disposed) return;
 
-            Debug.Assert(_flags.Length == _MIN_LENGTH);
-            Debug.Assert(_keys.Length == _MIN_LENGTH);
-            Debug.Assert(_length == _MIN_LENGTH);
-            Debug.Assert(_count == 0);
-
             if (disposing == true)
             {
                 // Release managed resources.
@@ -328,10 +321,8 @@ namespace Containers
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
+            System.GC.SuppressFinalize(this);
         }
-
-        public void Close() => Dispose();
 
     }
 }
