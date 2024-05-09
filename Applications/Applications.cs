@@ -4,33 +4,34 @@ namespace Applications
 {
     public class ConsoleApplication : System.IDisposable/*, Application*/
     {
+        private bool _disposed = false;
+
         public delegate void StartRoutine();
 
-        private readonly object _SharedObject = new();
+        private readonly object _SHARED_OBJECT = new();
 
         private bool _running = true;
         public bool Running => _running;
 
-        private readonly Queue<System.Threading.Thread> _threads = new();
-
-        private bool _disposed = false;
+        private readonly Queue<System.Threading.Thread> _THREADS = new();
 
         private void Cancel()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            lock (_SharedObject)
+            lock (_SHARED_OBJECT)
             {
                 _running = false;
 
-                while (_threads.Count > 0)
+                while (_THREADS.Count > 0)
                 {
-                    System.Threading.Thread t = _threads.Dequeue();
+                    System.Threading.Thread t = _THREADS.Dequeue();
                     t.Join();
                 }
 
-                System.Threading.Monitor.Wait(_SharedObject);
+                System.Threading.Monitor.Wait(_SHARED_OBJECT);
             }
+
         }
 
         public ConsoleApplication()
@@ -43,49 +44,39 @@ namespace Applications
         protected void Run(StartRoutine startRoutine)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(_running);
 
             System.Threading.Thread thread = new(new System.Threading.ThreadStart(startRoutine));
             thread.Start();
 
-            _threads.Enqueue(thread);
+            _THREADS.Enqueue(thread);
         }
 
-        protected virtual void Dispose(bool disposing)
+        public virtual void Dispose()
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(!_running);
             
-            lock (_SharedObject)
+            lock (_SHARED_OBJECT)
             {
-                System.Threading.Monitor.Pulse(_SharedObject);
+                System.Threading.Monitor.Pulse(_SHARED_OBJECT);
             }
-
-            if (_disposed) return;
 
             // Assertion.
-            System.Diagnostics.Debug.Assert(_threads.Count == 0);
+            System.Diagnostics.Debug.Assert(_THREADS.Empty);
 
-            if (disposing == true)
-            {
-                // Release managed resources.
-                _threads.Dispose();
-            }
+            // Release resources.
+            _THREADS.Dispose();
 
-            // Release unmanaged resources.
-
+            // Finish
+            System.GC.SuppressFinalize(this);
             _disposed = true;
 
-            System.Console.WriteLine("Close!");
+            System.Console.Write("Cancel!");
         }
 
-        public void Dispose()
-        {
-            /*Console.WriteLine("Dispose!");*/
-            Dispose(true);
-            System.GC.SuppressFinalize(this);
-        }
-
-        /*public void Close() => Dispose();*/
 
     }
 

@@ -23,7 +23,7 @@ namespace Server
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            return false;
+            return true;
         }
 
         protected override void StartPlayerRoutine(long serverTicks, Player player)

@@ -400,8 +400,8 @@ namespace Protocol
             // Release resources.
 
             // Finish.
-            _disposed = true;
             base.Dispose();
+            _disposed = true;
         }
 
     }
@@ -638,8 +638,8 @@ namespace Protocol
             _Renderer.Dispose();
 
             // Finish.
-            _disposed = true;
             base.Dispose();
+            _disposed = true;
         }
 
     }
@@ -663,8 +663,8 @@ namespace Protocol
             // Release resources.
 
             // Finish.
-            _disposed = true;
             base.Dispose();
+            _disposed = true;
         }
 
     }

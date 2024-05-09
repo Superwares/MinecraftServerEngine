@@ -270,10 +270,10 @@ namespace Protocol
 
             _PLAYER_LIST.StartRoutine(serverTicks);
 
-            if (serverTicks == 20 * 5)
+            /*if (serverTicks == 20 * 5)
             {
                 SpawnItemEntity();
-            }
+            }*/
 
             StartSubRoutine(serverTicks);
         }

@@ -182,7 +182,7 @@ namespace Application
 
         }
 
-        protected override void Dispose(bool disposing)
+        public override void Dispose()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -192,22 +192,17 @@ namespace Application
 
             System.Diagnostics.Debug.Assert(_ENTITIES.Empty);
 
-            if (disposing == true)
-            {
-                // Release managed resources.
-                _WORLD.Dispose();
+            // Release resources.
+            _WORLD.Dispose();
 
-                _CONNECTIONS.Dispose();
-                _DISCONNNECTIONS.Dispose();
+            _CONNECTIONS.Dispose();
+            _DISCONNNECTIONS.Dispose();
 
-                _ENTITIES.Dispose();
-            }
+            _ENTITIES.Dispose();
 
-            // Release unmanaged resources.
-
+            // Finish
+            base.Dispose();
             _disposed = true;
-
-            base.Dispose(disposing);
         }
 
         public static void Main()

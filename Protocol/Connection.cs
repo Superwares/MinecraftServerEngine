@@ -932,7 +932,7 @@ namespace Protocol
 
         public void Dispose()
         {
-            System.Diagnostics.Debug.Assert(_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             // Assertion
             System.Diagnostics.Debug.Assert(_OUT_PACKETS.Empty);
