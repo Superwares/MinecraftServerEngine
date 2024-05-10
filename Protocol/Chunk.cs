@@ -1,11 +1,11 @@
-﻿using Containers;
+﻿using Common;
+using Containers;
+using System.Threading.Tasks;
 
 namespace Protocol
 {
     public sealed class Chunk : System.IDisposable
     {
-        private const int _WIDTH = 16;
-        private const int _HEIGHT = 16 * 16;
 
         public struct Vector : System.IEquatable<Vector>
         {
@@ -157,20 +157,342 @@ namespace Protocol
 
         }
 
-        private class Section
+        private class Section : System.IDisposable
         {
-            private const int _WIDTH = Chunk._WIDTH;
-            public const int HEIGHT = Chunk._HEIGHT / _WIDTH;
+
+            private bool _disposed = false;
+
+            private const int _WIDTH = 16;
+            private const int _HEIGHT = 16;
+
+
+            private const int _DATA_UNIT_BITS = sizeof(ulong) * 8; // TODO: Change to appropriate name.
+            private ulong[] _data;
+            private int _bitCount;
+
+            private Block[]? _palette;
 
             // (0, 0, 0), (1, 0, 0), ... , (16, 16, 16)
-            private Block?[] _blocks = new Block?[_WIDTH * _WIDTH * HEIGHT];
+            /*private Block?[] _blocks = new Block?[_WIDTH * _WIDTH * HEIGHT];*/
+
+            private static int GetDataLength(int bitCount)
+            {
+                int a = (_WIDTH * _WIDTH * _HEIGHT) * bitCount;
+                System.Diagnostics.Debug.Assert(_DATA_UNIT_BITS == 64);
+                System.Diagnostics.Debug.Assert(a % _DATA_UNIT_BITS == 0);
+                int length = a / _DATA_UNIT_BITS;
+                return length;
+            }
 
             public Section()
             {
+                _bitCount = 4;
+                _palette = [new Block(Block.Types.Air)];
 
+                int dataLength = GetDataLength(_bitCount);
+                _data = new ulong[dataLength];
+                System.Array.Fill<ulong>(_data, 0);
             }
 
             ~Section() => System.Diagnostics.Debug.Assert(false);
+
+            public bool ContainsBlock(int x, int y, int z)
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                System.Diagnostics.Debug.Assert(x >= 0 && x <= _WIDTH);
+                System.Diagnostics.Debug.Assert(z >= 0 && z <= _WIDTH);
+                System.Diagnostics.Debug.Assert(y >= 0 && y <= _HEIGHT);
+
+                ulong mask = ((Conversions.ToUlong(1) << _bitCount) - 1);
+
+                int i;
+                ulong value;
+
+                int start, offset, end;
+
+                i = (((y * _HEIGHT) + z) * _WIDTH) + x;
+                start = (i * _bitCount) / 64;
+                offset = (i * _bitCount) % 64;
+                end = ((i + 1) * _bitCount - 1) / 64;
+
+                if (start == end)
+                {
+                    value = (_data[start] >> offset);
+                }
+                else
+                {
+                    value = (_data[start] >> offset | _data[end] << (_DATA_UNIT_BITS - offset));
+                }
+
+                value &= mask;
+
+                if (_bitCount == 13)
+                {
+                    System.Diagnostics.Debug.Assert(_palette == null);
+                    return value > 0;  // value == 0 is air.
+                }
+                else
+                {
+                    System.Diagnostics.Debug.Assert(_palette != null);
+                    Block b = _palette[value];
+                    return b.Type != Block.Types.Air;
+                }
+            }
+
+            private void ExpandData(int bitCount)
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                System.Diagnostics.Debug.Assert(_palette != null);
+                System.Diagnostics.Debug.Assert(bitCount > _bitCount);
+
+                int length = GetDataLength(bitCount);
+                var data = new ulong[length];
+
+                ulong mask = ((Conversions.ToUlong(1) << bitCount) - 1);
+
+                int i;
+                ulong value;
+
+                int start, offset, end;
+
+                if (bitCount == 13)
+                {
+                    Block b;
+
+                    for (int y = 0; y < _HEIGHT; ++y)
+                    {
+                        for (int z = 0; z < _WIDTH; ++z)
+                        {
+                            for (int x = 0; x < _WIDTH; ++x)
+                            {
+                                i = (((y * _HEIGHT) + z) * _WIDTH) + x;
+
+                                {
+                                    start = (i * _bitCount) / _DATA_UNIT_BITS,
+                                    offset = (i * _bitCount) % _DATA_UNIT_BITS,
+                                    end = (((i + 1) * _bitCount) - 1) / _DATA_UNIT_BITS;
+
+                                    if (start == end)
+                                    {
+                                        value = (_data[start] >> offset);
+                                    }
+                                    else
+                                    {
+                                        value = (_data[start] >> offset | _data[end] << (_DATA_UNIT_BITS - offset));
+                                    }
+
+                                    value &= mask;
+                                    b = _palette[value];
+                                }
+
+                                {
+                                    start = (i * bitCount) / _DATA_UNIT_BITS,
+                                    offset = (i * bitCount) % _DATA_UNIT_BITS,
+                                    end = (((i + 1) * bitCount) - 1) / _DATA_UNIT_BITS;
+
+                                    value = b.GlobalPaletteId;
+
+                                    System.Diagnostics.Debug.Assert(
+                                        (value & ~((Conversions.ToUlong(1) << bitCount) - 1)) == 0);
+                                    data[start] |= (value << offset);
+
+                                    if (start != end)
+                                    {
+                                        data[end] = (value >> (_DATA_UNIT_BITS - offset));
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                    
+                }
+                else
+                {
+                    System.Diagnostics.Debug.Assert(bitCount > 4 && bitCount <= 8);
+
+                    for (int y = 0; y < _HEIGHT; ++y)
+                    {
+                        for (int z = 0; z < _WIDTH; ++z)
+                        {
+                            for (int x = 0; x < _WIDTH; ++x)
+                            {
+                                i = (((y * _HEIGHT) + z) * _WIDTH) + x;
+
+                                {
+                                    start = (i * _bitCount) / _DATA_UNIT_BITS,
+                                    offset = (i * _bitCount) % _DATA_UNIT_BITS,
+                                    end = (((i + 1) * _bitCount) - 1) / _DATA_UNIT_BITS;
+
+                                    if (start == end)
+                                    {
+                                        value = (_data[start] >> offset);
+                                    }
+                                    else
+                                    {
+                                        value = (_data[start] >> offset | _data[end] << (_DATA_UNIT_BITS - offset));
+                                    }
+
+                                    value &= mask;
+                                }
+
+                                {
+                                    start = (i * bitCount) / _DATA_UNIT_BITS,
+                                    offset = (i * bitCount) % _DATA_UNIT_BITS,
+                                    end = (((i + 1) * bitCount) - 1) / _DATA_UNIT_BITS;
+
+                                    System.Diagnostics.Debug.Assert(
+                                        (value & ~((Conversions.ToUlong(1) << bitCount) - 1)) == 0);
+                                    data[start] |= (value << offset);
+
+                                    if (start != end)
+                                    {
+                                        data[end] = (value >> (_DATA_UNIT_BITS - offset));
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                }
+
+                _bitCount = bitCount;
+            }
+
+            private ulong GetValueInPalette(Block block)
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                ulong value;
+
+                if (_bitCount == 13)
+                {
+                    System.Diagnostics.Debug.Assert(_palette == null);
+
+                    value = block.GlobalPaletteId;
+                }
+                else
+                {
+                    System.Diagnostics.Debug.Assert(_palette == null);
+                    System.Diagnostics.Debug.Assert(_bitCount >= 4 && _bitCount <= 8);
+                    System.Diagnostics.Debug.Assert(_palette.Length > 0);
+
+                    int indexInPalette = -1;
+
+                    System.Diagnostics.Debug.Assert(_palette != null);
+                    for (int i = 0; i < _palette.Length; ++i)
+                    {
+                        Block blockInPalette = _palette[i];
+                        if (blockInPalette.Equals(block))
+                        {
+                            indexInPalette = i;
+                        }
+                    }
+
+                    if (indexInPalette >= 0)
+                    {
+                        value = Conversions.ToUlong(indexInPalette);
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.Assert(indexInPalette == -1);
+
+                        int newLength = _palette.Length + 1;
+
+                        int bitCount;
+                        if (newLength <= 0b1111)
+                        {
+                            bitCount = 4;
+                        }
+                        else if (newLength <= 0b1_1111)
+                        {
+                            bitCount = 5;
+                        }
+                        else if (newLength <= 0b11_1111)
+                        {
+                            bitCount = 6;
+                        }
+                        else if (newLength <= 0b111_1111)
+                        {
+                            bitCount = 7;
+                        }
+                        else if (newLength <= 0b1111_1111)
+                        {
+                            bitCount = 8;
+                        }
+                        else
+                        {
+                            bitCount = 13;
+                        }
+
+                        if (bitCount > _bitCount)
+                        {
+                            ExpandData(bitCount);
+                        }
+
+                        if (bitCount == 13)
+                        {
+                            value = block.GlobalPaletteId;
+
+                            _palette = null;
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.Assert(bitCount > 4 && bitCount <= 8);
+
+                            var newPalette = new Block[newLength];
+
+                            int lastIndex = _palette.Length;
+                            System.Array.Copy(_palette, newPalette, lastIndex);
+                            newPalette[lastIndex] = block;
+
+                            value = Conversions.ToUlong(lastIndex);
+
+                            _palette = newPalette;
+                        }
+
+                    }
+                }
+
+                return value;
+            }
+
+            private void PlaceBlock(int x, int y, int z, Block block)
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                System.Diagnostics.Debug.Assert(x >= 0 && x <= _WIDTH);
+                System.Diagnostics.Debug.Assert(z >= 0 && z <= _WIDTH);
+                System.Diagnostics.Debug.Assert(y >= 0 && y <= _HEIGHT);
+
+                System.Diagnostics.Debug.Assert(block.Type != Block.Types.Air);
+                System.Diagnostics.Debug.Assert(!ContainsBlock(x, y, z));
+
+                ulong value = GetValueInPalette(block);
+
+                int i = (((y * _HEIGHT) + z) * _WIDTH) + x;
+                int start = (i * _bitCount) / 64;
+                int offset = (i * _bitCount) % 64;
+                int end = ((i + 1) * _bitCount - 1) / 64;
+
+                System.Diagnostics.Debug.Assert(
+                    (value & ~((Conversions.ToUlong(1) << _bitCount) - 1)) == 0);
+                _data[start] |= (value << offset);
+
+                if (start != end)
+                {
+                    _data[end] = (value >> (64 - offset));
+                }
+            }
+
+            private Block BreakBlock(int x, int y, int z)
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                throw new System.NotImplementedException();
+            }
 
             internal static void Write(Buffer buffer, Section section)
             {
@@ -266,15 +588,15 @@ namespace Protocol
 
         }
 
-        private const int _SECTION_TOTAL_COUNT = _HEIGHT / Section.HEIGHT;
+        private const int _TOTAL_SECTION_COUNT = 16;
 
         internal static (int, byte[]) Write(Chunk chunk)
         {
             Buffer buffer = new();
 
             int mask = 0;
-            System.Diagnostics.Debug.Assert(_SECTION_TOTAL_COUNT == 16);
-            for (int i = 0; i < _SECTION_TOTAL_COUNT; ++i)
+            System.Diagnostics.Debug.Assert(_TOTAL_SECTION_COUNT == 16);
+            for (int i = 0; i < _TOTAL_SECTION_COUNT; ++i)
             {
                 Section? section = chunk._sections[i];
                 if (section == null) continue;
@@ -300,7 +622,7 @@ namespace Protocol
             Buffer buffer = new();
 
             int mask = 0;
-            System.Diagnostics.Debug.Assert(_SECTION_TOTAL_COUNT == 16);
+            System.Diagnostics.Debug.Assert(_TOTAL_SECTION_COUNT == 16);
 
             // TODO: biomes
             for (int z = 0; z < _WIDTH; ++z)
@@ -319,7 +641,7 @@ namespace Protocol
             using Buffer buffer = new();
 
             int mask = 0;
-            System.Diagnostics.Debug.Assert(_SECTION_TOTAL_COUNT == 16);
+            System.Diagnostics.Debug.Assert(_TOTAL_SECTION_COUNT == 16);
 
             Section section = new();
 
@@ -344,7 +666,7 @@ namespace Protocol
         /*public int Count => _count;*/
 
         // from bottom to top
-        private Section?[] _sections = new Section?[_SECTION_TOTAL_COUNT];
+        private Section?[] _sections = new Section?[_TOTAL_SECTION_COUNT];
         private readonly Table<int, Entity> _ENTITIES = new();
 
         private readonly Vector _p;

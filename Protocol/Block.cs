@@ -1,9 +1,7 @@
-﻿using System;
-using System.Diagnostics;
-
+﻿
 namespace Protocol
 {
-    public sealed class Block : IEquatable<Block>
+    public struct Block : System.IEquatable<Block>
     {
         public enum Types : uint
         {
@@ -24,10 +22,10 @@ namespace Protocol
             get
             {
                 byte metadata = (byte)_metadata;
-                Debug.Assert((metadata & 0b_11110000) == 0);  // metadata is 4 bits
+                System.Diagnostics.Debug.Assert((metadata & 0b_11110000) == 0);  // metadata is 4 bits
 
                 ushort id = (ushort)_type;
-                Debug.Assert((id & 0b_11111110_00000000) == 0);  // id is 9 bits
+                System.Diagnostics.Debug.Assert((id & 0b_11111110_00000000) == 0);  // id is 9 bits
                 return (ulong)(id << 4 | metadata);  // 13 bits
             }
         }
@@ -38,16 +36,16 @@ namespace Protocol
             _metadata = metadata;
         }
 
-        public bool Equals(Block? other)
+        public Block(Types type)
         {
-            if (other == null)
-            {
-                return false;
-            }
-
-            return (_type == other._type) && (_metadata == other._metadata);
+            _type = type;
+            _metadata = 0;
         }
 
+        public readonly bool Equals(Block other)
+        {
+            return (_type == other._type) && (_metadata == other._metadata);
+        }
     }
 
 }

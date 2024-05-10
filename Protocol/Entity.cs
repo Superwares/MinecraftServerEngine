@@ -7,7 +7,7 @@ namespace Protocol
     public abstract class Entity : System.IDisposable
     {
 
-        public struct Vector : System.IEquatable<Vector>
+        public readonly struct Vector : System.IEquatable<Vector>
         {
             public static Vector operator+ (Vector v1, Vector v2)
             {
@@ -18,6 +18,12 @@ namespace Protocol
             {
                 return new(v1.X * v2.X, v1.Y * v2.Y, v1.Z * v2.Z);
             }
+
+            public static Vector operator *(Vector v, double s)
+            {
+                return new(v.X * s, v.Y * s, v.Z * s);
+            }
+
             public static Vector operator* (double s, Vector v)
             {
                 return new(v.X * s, v.Y * s, v.Z * s);
@@ -42,7 +48,7 @@ namespace Protocol
 
         }
 
-        public struct Angles : System.IEquatable<Angles>
+        public readonly struct Angles : System.IEquatable<Angles>
         {
             internal const float MaxYaw = 180, MinYaw = -180;
             internal const float MaxPitch = 90, MinPitch = -90;

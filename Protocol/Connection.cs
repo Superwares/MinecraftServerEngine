@@ -95,20 +95,20 @@ namespace Protocol
                         }
                         else
                         {
-
-                            if (_n >= 0 && _n < w)
+                            System.Diagnostics.Debug.Assert(_n >= 0);
+                            if (_n < w)
                             {
                                 p = new(--_x, _z);
                             }
-                            else if (_n >= w && _n < w * 2)
+                            else if (_n < w * 2)
                             {
                                 p = new(_x, --_z);
                             }
-                            else if (_n >= w * 2 && _n < w * 3)
+                            else if (_n < w * 3)
                             {
                                 p = new(++_x, _z);
                             }
-                            else if (_n >= w * 3 && _n < w * 4)
+                            else if (_n < w * 4)
                             {
                                 p = new(_x, ++_z);
                             }
