@@ -424,7 +424,6 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Assertion.
-
             System.Diagnostics.Debug.Assert(_ENTITY_ID_LIST.Empty);
 
             System.Diagnostics.Debug.Assert(_CHUNKS.Empty);

@@ -7,7 +7,7 @@ namespace Protocol
 {
     public sealed class Item : IEquatable<Item>
     {
-        public enum Types : int
+        public enum Types : uint
         {
             Stone = 1,
             Grass = 2,
@@ -35,7 +35,57 @@ namespace Protocol
         }
 
         private readonly Types _type;
-        public Types TYPE => _type;
+        public Types Type => _type;
+        
+        private static bool IsArmorType(Types type)
+        {
+            switch (type)
+            {
+                default:
+                    throw new System.NotImplementedException();
+                case Types.Stone:
+                    return false;
+                case Types.Grass:
+                    return false;
+                case Types.Dirt:
+                    return false;
+                case Types.Cobbestone:
+                    return false;
+
+                case Types.IronSword:
+                    return false;
+                case Types.WoodenSword:
+                    return false;
+
+                case Types.StoneSword:
+                    return false;
+
+                case Types.DiamondSword:
+                    return false;
+
+                case Types.GoldenSword:
+                    return false;
+
+                case Types.LeatherHelmet:
+                    return true;
+
+                case Types.ChainmailHelmet:
+                    return true;
+
+                case Types.IronHelmet:
+                    return true;
+
+                case Types.DiamondHelmet:
+                    return true;
+
+                case Types.GoldenHelmet:
+                    return true;
+            }
+        }
+        public bool IsArmor => IsArmorType(_type);
+
+        public const int MAX_COUNT = 1;
+        public int MinCount => MAX_COUNT;
 
         private static int GetItemMaxCountByType(Types type)
         {
@@ -84,65 +134,15 @@ namespace Protocol
 
             }
         }
-
-        private static bool IsArmorType(Types type)
-        {
-            switch (type)
-            {
-                default:
-                    throw new System.NotImplementedException();
-                case Types.Stone:
-                    return false;
-                case Types.Grass:
-                    return false;
-                case Types.Dirt:
-                    return false;
-                case Types.Cobbestone:
-                    return false;
-
-                case Types.IronSword:
-                    return false;
-                case Types.WoodenSword:
-                    return false;
-
-                case Types.StoneSword:
-                    return false;
-
-                case Types.DiamondSword:
-                    return false;
-
-                case Types.GoldenSword:
-                    return false;
-
-                case Types.LeatherHelmet:
-                    return true;
-
-                case Types.ChainmailHelmet:
-                    return true;
-
-                case Types.IronHelmet:
-                    return true;
-
-                case Types.DiamondHelmet:
-                    return true;
-
-                case Types.GoldenHelmet:
-                    return true;
-            }
-        }
-
-        public bool IsArmor() => IsArmorType(_type);
-
-        public const int MIN_COUNT = 1;
-        public int MAX_COUNT => GetItemMaxCountByType(_type);
+        public int MaxCount => GetItemMaxCountByType(_type);
 
         private int _count;
         public int Count
         {
             get
             {
-                Debug.Assert(_count <= MAX_COUNT);
-                Debug.Assert(_count >= MIN_COUNT);
+                Debug.Assert(_count <= MaxCount);
+                Debug.Assert(_count >= MinCount);
                 return _count;
             }
         }
@@ -152,25 +152,25 @@ namespace Protocol
             _type = type;
             _count = count;
 
-            Debug.Assert(MAX_COUNT >= MIN_COUNT);
-            Debug.Assert(count <= MAX_COUNT);
-            Debug.Assert(count >= MIN_COUNT);
+            Debug.Assert(MaxCount >= MinCount);
+            Debug.Assert(count <= MaxCount);
+            Debug.Assert(count >= MinCount);
         }
 
         internal int Stack(int count)
         {
-            System.Diagnostics.Debug.Assert(_count >= MIN_COUNT);
-            System.Diagnostics.Debug.Assert(_count <= MAX_COUNT);
-            System.Diagnostics.Debug.Assert(count >= MIN_COUNT);
-            System.Diagnostics.Debug.Assert(count <= MAX_COUNT);
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
+            System.Diagnostics.Debug.Assert(count >= MinCount);
+            System.Diagnostics.Debug.Assert(count <= MaxCount);
 
             int rest;
             _count += count;
 
-            if (_count > MAX_COUNT)
+            if (_count > MaxCount)
             {
-                rest = _count - MAX_COUNT;
-                _count = MAX_COUNT;
+                rest = _count - MaxCount;
+                _count = MaxCount;
             }
             else
             {
@@ -182,14 +182,14 @@ namespace Protocol
 
         internal void Spend(int count)
         {
-            System.Diagnostics.Debug.Assert(_count >= MIN_COUNT);
-            System.Diagnostics.Debug.Assert(_count <= MAX_COUNT);
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
 
             if (count == 0)
                 return;
 
-            System.Diagnostics.Debug.Assert(count >= MIN_COUNT);
-            System.Diagnostics.Debug.Assert(count <= MAX_COUNT);
+            System.Diagnostics.Debug.Assert(count >= MinCount);
+            System.Diagnostics.Debug.Assert(count <= MaxCount);
 
             System.Diagnostics.Debug.Assert(count < _count);
 
@@ -199,48 +199,48 @@ namespace Protocol
 
         internal Item DivideHalf()
         {
-            System.Diagnostics.Debug.Assert(_count >= MIN_COUNT);
-            System.Diagnostics.Debug.Assert(_count <= MAX_COUNT);
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
 
             int count = (_count / 2) + (_count % 2);
             _count /= 2;
 
-            System.Diagnostics.Debug.Assert(count >= MIN_COUNT);
-            System.Diagnostics.Debug.Assert(count <= MAX_COUNT);
-            System.Diagnostics.Debug.Assert(_count >= MIN_COUNT);
-            System.Diagnostics.Debug.Assert(_count <= MAX_COUNT);
+            System.Diagnostics.Debug.Assert(count >= MinCount);
+            System.Diagnostics.Debug.Assert(count <= MaxCount);
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
 
             return new Item(_type, count);
         }
 
         internal Item DivideExceptOne()
         {
-            System.Diagnostics.Debug.Assert(_count >= MIN_COUNT);
-            System.Diagnostics.Debug.Assert(_count <= MAX_COUNT);
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
 
             int count = _count - 1;
             _count = 1;
 
-            System.Diagnostics.Debug.Assert(count >= MIN_COUNT);
-            System.Diagnostics.Debug.Assert(_count >= MIN_COUNT);
+            System.Diagnostics.Debug.Assert(count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
 
             return new Item(_type, count);
         }
 
         internal void SetCount(int count)
         {
-            System.Diagnostics.Debug.Assert(_count >= MIN_COUNT);
-            System.Diagnostics.Debug.Assert(_count <= MAX_COUNT);
-            System.Diagnostics.Debug.Assert(count >= MIN_COUNT);
-            System.Diagnostics.Debug.Assert(count <= MAX_COUNT);
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
+            System.Diagnostics.Debug.Assert(count >= MinCount);
+            System.Diagnostics.Debug.Assert(count <= MaxCount);
 
             _count = count;
         }
 
         internal SlotData ConventToPacketFormat()
         {
-            System.Diagnostics.Debug.Assert(_count >= MIN_COUNT);
-            System.Diagnostics.Debug.Assert(_count <= MAX_COUNT);
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
 
             System.Diagnostics.Debug.Assert((int)_type >= short.MinValue);
             System.Diagnostics.Debug.Assert((int)_type <= short.MaxValue);
@@ -252,8 +252,8 @@ namespace Protocol
 
         internal bool CompareWithPacketFormat(SlotData slotData)
         {
-            System.Diagnostics.Debug.Assert(_count >= MIN_COUNT);
-            System.Diagnostics.Debug.Assert(_count <= MAX_COUNT);
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
 
             if (slotData.Id == -1)
                 return false;
@@ -267,15 +267,17 @@ namespace Protocol
             return true;
         }
 
-        public bool Equals(Item other)
+        public bool Equals(Item? other)
         {
-            System.Diagnostics.Debug.Assert(_count >= MIN_COUNT);
-            System.Diagnostics.Debug.Assert(_count <= MAX_COUNT);
+            if (other == null)
+            {
+                return false;
+            }
 
-            if (_type != other._type) return false;
-            if (Count != other.Count) return false;
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
 
-            return true;
+            return (_type == other._type) && (_count == other._count);
         }
     }
 

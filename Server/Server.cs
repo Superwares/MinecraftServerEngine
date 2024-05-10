@@ -12,7 +12,6 @@ namespace Application
         private readonly World _WORLD;
 
         private readonly Queue<(Connection, Player)> _CONNECTIONS = new();  // Disposable
-        private readonly Queue<Connection> _DISCONNNECTIONS = new();  // Disposable
 
         private readonly Queue<Entity> _ENTITIES = new();  // Disposable
 
@@ -25,6 +24,8 @@ namespace Application
 
         private void Control(long serverTicks)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             for (int i = 0; i < _CONNECTIONS.Count; ++i)
             {
                 (Connection conn, Player player) = _CONNECTIONS.Dequeue();
@@ -36,7 +37,7 @@ namespace Application
                 catch (DisconnectedClientException)
                 {
                     conn.Flush(_WORLD);
-                    _DISCONNNECTIONS.Enqueue(conn);
+                    conn.Dispose();
 
                     continue;
                 }
@@ -47,6 +48,8 @@ namespace Application
 
         private void HandleEntities()
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             for (int i = 0; i < _ENTITIES.Count; ++i)
             {
                 Entity entity = _ENTITIES.Dequeue();
@@ -62,16 +65,15 @@ namespace Application
 
         private void ReleaseResources()
         {
-            while (!_DISCONNNECTIONS.Empty)
-            {
-                _DISCONNNECTIONS.Dequeue().Dispose();
-            }
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             _WORLD.ReleaseResources();
         }
 
         private void Render(long serverTicks)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             for (int i = 0; i < _CONNECTIONS.Count; ++i)
             {
                 (Connection conn, Player player) = _CONNECTIONS.Dequeue();
@@ -83,7 +85,7 @@ namespace Application
                 catch (DisconnectedClientException)
                 {
                     conn.Flush(_WORLD);
-                    _DISCONNNECTIONS.Enqueue(conn);
+                    conn.Dispose();
 
                     continue;
                 }
@@ -94,6 +96,8 @@ namespace Application
 
         private void StartEntityRoutines(long serverTicks)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             for (int i = 0; i < _ENTITIES.Count; ++i)
             {
                 Entity entity = _ENTITIES.Dequeue();
@@ -104,9 +108,10 @@ namespace Application
             }
         }
         
-        private void StartGameRoutine(
-            long serverTicks, ConnectionListener connListener)
+        private void StartGameRoutine(long serverTicks, ConnectionListener connListener)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Console.Write(".");
 
             Control(serverTicks);
@@ -150,6 +155,8 @@ namespace Application
 
         private void StartCoreRoutine(ConnectionListener connListener)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             long interval, total, start, end, elapsed;
 
             long serverTicks = 0;
@@ -188,7 +195,6 @@ namespace Application
 
             // Assertiong
             System.Diagnostics.Debug.Assert(_CONNECTIONS.Empty);
-            System.Diagnostics.Debug.Assert(_DISCONNNECTIONS.Empty);
 
             System.Diagnostics.Debug.Assert(_ENTITIES.Empty);
 
@@ -196,7 +202,6 @@ namespace Application
             _WORLD.Dispose();
 
             _CONNECTIONS.Dispose();
-            _DISCONNNECTIONS.Dispose();
 
             _ENTITIES.Dispose();
 

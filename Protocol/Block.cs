@@ -1,51 +1,53 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 
 namespace Protocol
 {
-    public abstract class Block
+    public sealed class Block : IEquatable<Block>
     {
-        private readonly int _id;
-        public int Id => _id;
-
-        private readonly int _metadate;
-        public int Metadata => _metadate;
-
-        public Block(int id, int metadata)
+        public enum Types : uint
         {
-            _id = id;
-            _metadate = metadata;
+            Air              = 0,
+            Stone            = 1,
+            Grass            = 2,
+            Dirt             = 3,
         }
 
-        public ulong GetGlobalPaletteID()
-        {
-            byte metadata = (byte)_metadate;
-            Debug.Assert((metadata & 0b_11110000) == 0);  // metadata is 4 bits
+        private readonly Types _type;
+        public Types Type => _type;
 
-            ushort id = (ushort)_id;
-            Debug.Assert((id & 0b_11111110_00000000) == 0);  // id is 9 bits
-            return (ulong)(id << 4 | metadata);  // 13 bits
+        private readonly uint _metadata;
+        public uint Metadata => _metadata;
+
+        public ulong GlobalPaletteId
+        {
+            get
+            {
+                byte metadata = (byte)_metadata;
+                Debug.Assert((metadata & 0b_11110000) == 0);  // metadata is 4 bits
+
+                ushort id = (ushort)_type;
+                Debug.Assert((id & 0b_11111110_00000000) == 0);  // id is 9 bits
+                return (ulong)(id << 4 | metadata);  // 13 bits
+            }
         }
 
-    }
+        public Block(Types type, uint metadata)
+        {
+            _type = type;
+            _metadata = metadata;
+        }
 
-    public class Air() : Block(0, 0)
-    {
-        
-    }
+        public bool Equals(Block? other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
 
-    public class Stone() : Block(1, 0)
-    {
-        
-    }
+            return (_type == other._type) && (_metadata == other._metadata);
+        }
 
-    public class Granite() : Block(1, 1)
-    {
-        
-    }
-
-    public class PolishedGranite() : Block(1, 2)
-    {
-        
     }
 
 }

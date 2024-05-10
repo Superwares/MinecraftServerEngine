@@ -1,12 +1,9 @@
-﻿using System;
-using System.Diagnostics;
-using System.Text;
-
+﻿
 namespace Protocol
 {
 
     // TODO: Check system is little- or big-endian.
-    internal sealed class Buffer : IDisposable
+    internal sealed class Buffer : System.IDisposable
     {
         private static readonly int _EXPANSION_FACTOR = 2;
         private static readonly float _LOAD_FACTOR = 0.7F;
@@ -37,8 +34,8 @@ namespace Protocol
         {
             get
             {
-                Debug.Assert(_first >= 0);
-                Debug.Assert(_last >= _first);
+                System.Diagnostics.Debug.Assert(_first >= 0);
+                System.Diagnostics.Debug.Assert(_last >= _first);
                 return _last - _first;
             }
         }
@@ -58,7 +55,7 @@ namespace Protocol
 
         public bool IsEmpty()
         {
-            Debug.Assert(Size >= 0);
+            System.Diagnostics.Debug.Assert(Size >= 0);
             return (Size == 0);
         }
 
@@ -69,7 +66,7 @@ namespace Protocol
         /// <exception cref="UnexpectedClientBehaviorExecption">TODO: WHy it's thrown.</exception>
         private byte ExtractByte()
         {
-            Debug.Assert(_last >= _first);
+            System.Diagnostics.Debug.Assert(_last >= _first);
             if (_first == _last)
                 throw new EmptyBufferException();
 
@@ -84,7 +81,7 @@ namespace Protocol
         /// <exception cref="UnexpectedClientBehaviorExecption">TODO: WHy it's thrown.</exception>
         private byte[] ExtractBytes(int size)
         {
-            Debug.Assert(size >= 0);
+            System.Diagnostics.Debug.Assert(size >= 0);
             if (size == 0)
             {
                 return [];
@@ -94,13 +91,13 @@ namespace Protocol
                 return [ExtractByte()];
             }
 
-            Debug.Assert(_last >= _first);
+            System.Diagnostics.Debug.Assert(_last >= _first);
 
             if (_first + size > _last)
                 throw new EmptyBufferException();
 
             byte[] data = new byte[size];
-            Array.Copy(_data, _first, data, 0, size);
+            System.Array.Copy(_data, _first, data, 0, size);
             _first += size;
 
             return data;
@@ -108,7 +105,7 @@ namespace Protocol
 
         private void ExpandData(int addedSize)
         {
-            Debug.Assert(addedSize >= 0);
+            System.Diagnostics.Debug.Assert(addedSize >= 0);
             if (addedSize == 0)
                 return;
 
@@ -123,19 +120,19 @@ namespace Protocol
                 if (((float)requiredSize / (float)newSize) >= _LOAD_FACTOR)
                 newSize *= _EXPANSION_FACTOR;
 
-            Debug.Assert(prevSize <= newSize);
+            System.Diagnostics.Debug.Assert(prevSize <= newSize);
 
             _dataSize = newSize;
 
             var newData = new byte[newSize];
             if (Size > 0)
-                Array.Copy(_data, _first, newData, _first, Size);
+                System.Array.Copy(_data, _first, newData, _first, Size);
             _data = newData;
         }
 
         private void InsertByte(byte data)
         {
-            Debug.Assert(_last >= _first);
+            System.Diagnostics.Debug.Assert(_last >= _first);
 
             ExpandData(1);
             _data[_last++] = data;
@@ -143,11 +140,11 @@ namespace Protocol
 
         private void InsertBytes(byte[] data)
         {
-            Debug.Assert(_last >= _first);
+            System.Diagnostics.Debug.Assert(_last >= _first);
 
             int size = data.Length;
             ExpandData(size);
-            Array.Copy(data, 0, _data, _last, size);
+            System.Array.Copy(data, 0, _data, _last, size);
             _last += size;
         }
 
@@ -158,7 +155,7 @@ namespace Protocol
         public bool ReadBool()
         {
             byte data = ExtractByte();
-            Debug.Assert(data != 0x01 | data != 0x00);
+            System.Diagnostics.Debug.Assert(data != 0x01 | data != 0x00);
             return (data > 0x00);
         }
 
@@ -187,7 +184,7 @@ namespace Protocol
         public short ReadShort()
         {
             byte[] data = ExtractBytes(_SHORT_DATATYPE_SIZE);
-            Debug.Assert(data.Length == _SHORT_DATATYPE_SIZE);
+            System.Diagnostics.Debug.Assert(data.Length == _SHORT_DATATYPE_SIZE);
 
             return (short)(
                 ((short)data[0] << 8) |
@@ -201,7 +198,7 @@ namespace Protocol
         public ushort ReadUshort()
         {
             byte[] data = ExtractBytes(_USHORT_DATATYPE_SIZE);
-            Debug.Assert(data.Length == _USHORT_DATATYPE_SIZE);
+            System.Diagnostics.Debug.Assert(data.Length == _USHORT_DATATYPE_SIZE);
 
             return (ushort)(
                 ((ushort)data[0] << 8) |
@@ -215,7 +212,7 @@ namespace Protocol
         public int ReadInt()
         {
             byte[] data = ExtractBytes(_INT_DATATYPE_SIZE);
-            Debug.Assert(data.Length == _INT_DATATYPE_SIZE);
+            System.Diagnostics.Debug.Assert(data.Length == _INT_DATATYPE_SIZE);
 
             return (int)(
                 ((int)data[0] << 24) |
@@ -231,7 +228,7 @@ namespace Protocol
         public long ReadLong()
         {
             byte[] data = ExtractBytes(_LONG_DATATYPE_SIZE);
-            Debug.Assert(data.Length == _LONG_DATATYPE_SIZE);
+            System.Diagnostics.Debug.Assert(data.Length == _LONG_DATATYPE_SIZE);
 
             return (long)(
                 ((long)data[0] << 56) |
@@ -251,9 +248,9 @@ namespace Protocol
         public float ReadFloat()
         {
             byte[] data = ExtractBytes(_FLOAT_DATATYPE_SIZE);
-            Debug.Assert(data.Length == _FLOAT_DATATYPE_SIZE);
-            Array.Reverse(data);
-            return BitConverter.ToSingle(data);
+            System.Diagnostics.Debug.Assert(data.Length == _FLOAT_DATATYPE_SIZE);
+            System.Array.Reverse(data);
+            return System.BitConverter.ToSingle(data);
         }
 
         /// <summary>
@@ -263,9 +260,9 @@ namespace Protocol
         public double ReadDouble()
         {
             byte[] data = ExtractBytes(_DOUBLE_DATATYPE_SIZE);
-            Debug.Assert(data.Length == _DOUBLE_DATATYPE_SIZE);
-            Array.Reverse(data);
-            return BitConverter.ToDouble(data);
+            System.Diagnostics.Debug.Assert(data.Length == _DOUBLE_DATATYPE_SIZE);
+            System.Array.Reverse(data);
+            return System.BitConverter.ToDouble(data);
         }
 
         /// <summary>
@@ -295,7 +292,7 @@ namespace Protocol
                 if (position >= 32)
                     throw new InvalidEncodingException();
 
-                Debug.Assert(position > 0);
+                System.Diagnostics.Debug.Assert(position > 0);
             }
 
             return (int)uvalue;
@@ -328,7 +325,7 @@ namespace Protocol
                 if (position >= 64)
                     throw new InvalidEncodingException();
 
-                Debug.Assert(position > 0);
+                System.Diagnostics.Debug.Assert(position > 0);
             }
 
             return (long)uvalue;
@@ -341,22 +338,22 @@ namespace Protocol
         public string ReadString()
         {
             int size = ReadInt(true);
-            Debug.Assert(size >= 0);
+            System.Diagnostics.Debug.Assert(size >= 0);
 
             byte[] data = ExtractBytes(size);
-            return Encoding.UTF8.GetString(data);
+            return System.Text.Encoding.UTF8.GetString(data);
         }
 
         /// <summary>
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedClientBehaviorExecption">TODO: Why it's thrown.</exception>
-        public Guid ReadGuid()
+        public System.Guid ReadGuid()
         {
             byte[] data = ExtractBytes(_GUID_DATATYPE_SIZE);
-            Debug.Assert(data.Length == _GUID_DATATYPE_SIZE);
+            System.Diagnostics.Debug.Assert(data.Length == _GUID_DATATYPE_SIZE);
 
-            return new Guid(data);
+            return new System.Guid(data);
         }
 
         /// <summary>
@@ -388,49 +385,49 @@ namespace Protocol
 
         public void WriteShort(short value)
         {
-            byte[] data = BitConverter.GetBytes(value);
-            Debug.Assert(data.Length == _SHORT_DATATYPE_SIZE);
-            Array.Reverse(data);
+            byte[] data = System.BitConverter.GetBytes(value);
+            System.Diagnostics.Debug.Assert(data.Length == _SHORT_DATATYPE_SIZE);
+            System.Array.Reverse(data);
             InsertBytes(data);
         }
 
         public void WriteUshort(ushort value)
         {
-            byte[] data = BitConverter.GetBytes(value);
-            Debug.Assert(data.Length == _USHORT_DATATYPE_SIZE);
-            Array.Reverse(data);
+            byte[] data = System.BitConverter.GetBytes(value);
+            System.Diagnostics.Debug.Assert(data.Length == _USHORT_DATATYPE_SIZE);
+            System.Array.Reverse(data);
             InsertBytes(data);
         }
 
         public void WriteInt(int value)
         {
-            byte[] data = BitConverter.GetBytes(value);
-            Debug.Assert(data.Length == _INT_DATATYPE_SIZE);
-            Array.Reverse(data);
+            byte[] data = System.BitConverter.GetBytes(value);
+            System.Diagnostics.Debug.Assert(data.Length == _INT_DATATYPE_SIZE);
+            System.Array.Reverse(data);
             InsertBytes(data);
         }
 
         public void WriteLong(long value)
         {
-            byte[] data = BitConverter.GetBytes(value);
-            Debug.Assert(data.Length == _LONG_DATATYPE_SIZE);
-            Array.Reverse(data);
+            byte[] data = System.BitConverter.GetBytes(value);
+            System.Diagnostics.Debug.Assert(data.Length == _LONG_DATATYPE_SIZE);
+            System.Array.Reverse(data);
             InsertBytes(data);
         }
 
         public void WriteFloat(float value)
         {
-            byte[] data = BitConverter.GetBytes(value);
-            Debug.Assert(data.Length == _FLOAT_DATATYPE_SIZE);
-            Array.Reverse(data);
+            byte[] data = System.BitConverter.GetBytes(value);
+            System.Diagnostics.Debug.Assert(data.Length == _FLOAT_DATATYPE_SIZE);
+            System.Array.Reverse(data);
             InsertBytes(data);
         }
 
         public void WriteDouble(double value)
         {
-            byte[] data = BitConverter.GetBytes(value);
-            Debug.Assert(data.Length == _DOUBLE_DATATYPE_SIZE);
-            Array.Reverse(data);
+            byte[] data = System.BitConverter.GetBytes(value);
+            System.Diagnostics.Debug.Assert(data.Length == _DOUBLE_DATATYPE_SIZE);
+            System.Array.Reverse(data);
             InsertBytes(data);
         }
 
@@ -485,14 +482,14 @@ namespace Protocol
             int size = value.Length;
             WriteInt(size, true);
 
-            byte[] data = Encoding.UTF8.GetBytes(value);
+            byte[] data = System.Text.Encoding.UTF8.GetBytes(value);
             InsertBytes(data);
         }
 
-        public void WriteGuid(Guid value)
+        public void WriteGuid(System.Guid value)
         {
             byte[] data = value.ToByteArray();
-            Debug.Assert(data.Length == _GUID_DATATYPE_SIZE);
+            System.Diagnostics.Debug.Assert(data.Length == _GUID_DATATYPE_SIZE);
             InsertBytes(data);
         }
 
@@ -503,11 +500,11 @@ namespace Protocol
 
         public void Flush()
         {
-            Debug.Assert(_dataSize >= _InitDatasize);
+            System.Diagnostics.Debug.Assert(_dataSize >= _InitDatasize);
             if (Size == 0)
                 return;
 
-            Debug.Assert(_last >= _first);
+            System.Diagnostics.Debug.Assert(_last >= _first);
             _first = _last;
         }
 
@@ -515,7 +512,7 @@ namespace Protocol
         {
             if (_disposed) return;
 
-            Debug.Assert(Size == 0);
+            System.Diagnostics.Debug.Assert(Size == 0);
 
             if (disposing)
             {
@@ -531,7 +528,7 @@ namespace Protocol
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
+            System.GC.SuppressFinalize(this);
         }
 
     }
