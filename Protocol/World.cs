@@ -30,6 +30,13 @@ namespace Protocol
         public World(Entity.Vector posSpawning, Entity.Angles lookSpawning)
         {
             _POS_SPAWNING = posSpawning; _LOOK_SPAWNING = lookSpawning;
+
+            {
+                // Dummy code.
+                Chunk.Vector p = new(0, 0);
+                Chunk c = new Chunk(p);
+                _CHUNKS.Insert(p, c);
+            }
         }
 
         ~World() => System.Diagnostics.Debug.Assert(false);
@@ -323,21 +330,29 @@ namespace Protocol
 
         internal bool ContainsChunk(Chunk.Vector p)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             return _CHUNKS.Contains(p);
         }
 
         internal Chunk GetChunk(Chunk.Vector p)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             return _CHUNKS.Lookup(p);
         }
 
         internal bool ContainsEntities(Chunk.Vector p)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             return _CHUNK_TO_ENTITIES.Contains(p);
         }
 
         internal System.Collections.Generic.IEnumerable<Entity> GetEntities(Chunk.Vector p)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             Table<int, Entity> entities = _CHUNK_TO_ENTITIES.Lookup(p);
             foreach (Entity entity in entities.GetValues())
             {

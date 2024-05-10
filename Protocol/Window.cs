@@ -552,7 +552,7 @@ namespace Protocol
                 }
 
                 if (_itemCursor != null)
-                    System.Console.WriteLine($"itemCursor: {_itemCursor.TYPE} {_itemCursor.Count}");
+                    System.Console.WriteLine($"itemCursor: {_itemCursor.Type} {_itemCursor.Count}");
             }
 
         }

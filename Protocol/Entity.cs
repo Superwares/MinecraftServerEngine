@@ -29,21 +29,18 @@ namespace Protocol
                 return new(v.X * s, v.Y * s, v.Z * s);
             }
 
-            private double _x, _y, _z;
-            public double X => _x;
-            public double Y => _y;
-            public double Z => _z;
+            public readonly double X, Y, Z;
 
             public Vector(double x, double y, double z)
             {
-                _x = x; _y = y; _z = z;
+                X = x; Y = y; Z = z;
             }
 
             public bool Equals(Vector other)
             {
-                return Comparing.IsEqualTo(_x, other._x) && 
-                    Comparing.IsEqualTo(_y, other._y) &&
-                    Comparing.IsEqualTo(_z, other._z);
+                return Comparing.IsEqualTo(X, other.X) && 
+                    Comparing.IsEqualTo(Y, other.Y) &&
+                    Comparing.IsEqualTo(Z, other.Z);
             }
 
         }
@@ -53,9 +50,7 @@ namespace Protocol
             internal const float MaxYaw = 180, MinYaw = -180;
             internal const float MaxPitch = 90, MinPitch = -90;
 
-            private float _yaw, _pitch;
-            public float Yaw => _yaw;
-            public float Pitch => _pitch;
+            public readonly float Yaw, Pitch;
 
             public Angles(float yaw, float pitch)
             {
@@ -63,8 +58,8 @@ namespace Protocol
                 System.Diagnostics.Debug.Assert(pitch >= MinPitch);
                 System.Diagnostics.Debug.Assert(pitch <= MaxPitch);
 
-                _yaw = Frem(yaw);
-                _pitch = pitch;
+                Yaw = Frem(yaw);
+                Pitch = pitch;
             }
 
             private static float Frem(float angle)
@@ -75,12 +70,14 @@ namespace Protocol
 
             internal (byte, byte) ConvertToPacketFormat()
             {
-                System.Diagnostics.Debug.Assert(_pitch >= MinPitch);
-                System.Diagnostics.Debug.Assert(_pitch <= MaxPitch);
+                System.Diagnostics.Debug.Assert(Frem(Yaw) == Yaw);
+                System.Diagnostics.Debug.Assert(Frem(Pitch) == Pitch);
 
-                _yaw = Frem(_yaw);
-                float x = _yaw;
-                float y = Frem(_pitch);
+                System.Diagnostics.Debug.Assert(Pitch >= MinPitch);
+                System.Diagnostics.Debug.Assert(Pitch <= MaxPitch);
+                
+                float x = Yaw;
+                float y = Pitch;
 
                 return (
                     (byte)((byte.MaxValue * x) / 360),
@@ -89,8 +86,8 @@ namespace Protocol
 
             public bool Equals(Angles other)
             {
-                return Comparing.IsEqualTo(_yaw, other._yaw) &&
-                    Comparing.IsEqualTo(_pitch, other._pitch);
+                return Comparing.IsEqualTo(Yaw, other.Yaw) &&
+                    Comparing.IsEqualTo(Pitch, other.Pitch);
             }
 
         }

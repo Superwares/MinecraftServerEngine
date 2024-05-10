@@ -266,7 +266,6 @@ namespace Protocol
 
         private Window? _window = null;  // disposable
 
-
         internal Connection(Client client)
         {
             Id = client.LocalPort;
@@ -652,21 +651,21 @@ namespace Protocol
 
             /*using Queue<Entity> newEntities = new();*/
 
-            using Queue<Chunk.Vector> newChunks = new();
+            using Queue<Chunk.Vector> newChunkPositions = new();
             using Queue<Chunk.Vector> outOfRangeChunks = new();
 
             Chunk.Vector c = Chunk.Vector.Convert(player.Position);
 
             System.Diagnostics.Debug.Assert(_renderDistance >= _MIN_RENDER_DISTANCE);
             System.Diagnostics.Debug.Assert(_renderDistance <= _MAX_RENDER_DISTANCE);
-            _LOADING_HELPER.Load(newChunks, outOfRangeChunks, c, _renderDistance);
+            _LOADING_HELPER.Load(newChunkPositions, outOfRangeChunks, c, _renderDistance);
 
             int mask; byte[] data;
-            while (!newChunks.Empty)
+            while (!newChunkPositions.Empty)
             {
-                Chunk.Vector p = newChunks.Dequeue();
+                Chunk.Vector p = newChunkPositions.Dequeue();
 
-                /*if (world.ContainsChunk(o))
+                if (world.ContainsChunk(p))
                 {
                     Chunk chunk = world.GetChunk(p);
                     (mask, data) = Chunk.Write(chunk);
@@ -675,8 +674,6 @@ namespace Protocol
                 {
                     (mask, data) = Chunk.Write();
                 }
-                */
-                (mask, data) = Chunk.Write2();
 
                 _LOAD_CHUNK_PACKETS.Enqueue(new LoadChunkPacket(p.X, p.Z, true, mask, data));
             }

@@ -80,7 +80,7 @@ namespace Protocol
 
                 _items[index] = itemCursor;
 
-                if (itemCursor.TYPE == itemTaked.TYPE)
+                if (itemCursor.Type == itemTaked.Type)
                 {
                     int spend = itemCursor.Stack(itemTaked.Count);
 
@@ -170,7 +170,7 @@ namespace Protocol
 
                 _items[index] = itemCursor;
 
-                if (itemCursor.TYPE == itemTaked.TYPE)
+                if (itemCursor.Type == itemTaked.Type)
                 {
                     if (itemCursor.Count == 1)
                     {
@@ -261,7 +261,7 @@ namespace Protocol
                     continue;
                 }
 
-                System.Console.Write($"[{item.TYPE}, {item.Count}]");
+                System.Console.Write($"[{item.Type}, {item.Count}]");
             }
             System.Console.WriteLine();
         }
