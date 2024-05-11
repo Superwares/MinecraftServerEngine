@@ -348,6 +348,7 @@ namespace Protocol
         public const int DestroyEntitiesPacketId = 0x32;
         public const int EntityHeadLookPacketId = 0x36;
         public const int EntityMetadataPacketId = 0x3C;
+        public const int EntityVelocityPacketId = 0x3E;
         public const int EntityTeleportPacketId = 0x4C;
 
         public override WhereBound BoundTo => WhereBound.Clientbound;
@@ -1449,6 +1450,31 @@ namespace Protocol
         {
             buffer.WriteInt(EntityId, true);
             buffer.WriteData(Data);
+        }
+
+    }
+
+    internal class EntityVelocityPacket : ClientboundPlayingPacket
+    {
+        public readonly int EntityId;
+        public readonly short X, Y, Z;
+
+        internal static EntityVelocityPacket Read(Buffer buffer)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public EntityVelocityPacket(int entityId, short x, short y, short z)
+            : base(EntityVelocityPacketId)
+        {
+            EntityId = entityId;
+            X = x; Y = y; Z = z;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            buffer.WriteInt(EntityId, true);
+            buffer.WriteShort(X); buffer.WriteShort(Y); buffer.WriteShort(Z);
         }
 
     }

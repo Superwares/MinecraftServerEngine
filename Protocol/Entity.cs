@@ -52,6 +52,12 @@ namespace Protocol
 
             public readonly float Yaw, Pitch;
 
+            private static float Frem(float angle)
+            {
+                float y = 360.0f;
+                return angle - (y * (float)System.Math.Floor(angle / y));
+            }
+
             public Angles(float yaw, float pitch)
             {
                 // TODO: map yaw from 180 to -180.
@@ -62,22 +68,13 @@ namespace Protocol
                 Pitch = pitch;
             }
 
-            private static float Frem(float angle)
-            {
-                float y = 360.0f;
-                return angle - (y * (float)System.Math.Floor(angle / y));
-            }
-
             internal (byte, byte) ConvertToPacketFormat()
             {
-                System.Diagnostics.Debug.Assert(Frem(Yaw) == Yaw);
-                System.Diagnostics.Debug.Assert(Frem(Pitch) == Pitch);
-
                 System.Diagnostics.Debug.Assert(Pitch >= MinPitch);
                 System.Diagnostics.Debug.Assert(Pitch <= MaxPitch);
                 
-                float x = Yaw;
-                float y = Pitch;
+                float x = Frem(Yaw);
+                float y = Frem(Pitch);
 
                 return (
                     (byte)((byte.MaxValue * x) / 360),
@@ -133,7 +130,6 @@ namespace Protocol
 
 
         private readonly EntityRendererManager _RENDERER_MANAGER = new();  // Disposable
-
 
         internal Entity(
             int id,
@@ -358,8 +354,6 @@ namespace Protocol
             Dispose(true);
             System.GC.SuppressFinalize(this);
         }
-
-        public void Close() => Dispose();
     }
 
     public sealed class ItemEntity : Entity
@@ -504,13 +498,11 @@ namespace Protocol
 
             if (IsConnected)
             {
-                /*throw new System.NotImplementedException();*/
-            }
-            else
-            {
-                base.AddForce(force);
+                throw new System.NotImplementedException();
             }
             
+            base.AddForce(force);
+
         }
 
         public override void Teleport(Vector pos, Angles look)

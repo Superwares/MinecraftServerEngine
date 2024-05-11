@@ -11,7 +11,7 @@ namespace Protocol
             private bool _disposed = false;
 
             private const int _MAX_LOAD_COUNT = 7;
-            private const int _MAX_SEARCH_COUNT = 77;
+            private const int _MAX_SEARCH_COUNT = 103;
 
             private readonly Set<Chunk.Vector> _LOADED_CHUNKS = new();  // Disposable
 
@@ -255,6 +255,7 @@ namespace Protocol
         private readonly Queue<LoadChunkPacket> _LOAD_CHUNK_PACKETS = new();  // Dispoasble
         private readonly Queue<ClientboundPlayingPacket> _OUT_PACKETS = new();  // Dispoasble
 
+        private const int _MAX_ENTITY_RENDER_DISTANCE = 7;
         private const int _MIN_RENDER_DISTANCE = 2, _MAX_RENDER_DISTANCE = 32;
         private int _renderDistance = -1;
 
@@ -378,7 +379,8 @@ namespace Protocol
                         throw new System.NotImplementedException();
 
                         // TODO: Update rander distance of entity renderers in _ENTITY_TO_RENDERERS.
-                        
+                        // TODO: Consider _MAX_ENTITY_RENDER_DISTANCE to update render distance of renderer.
+
                         /*foreach (var renderer in _ENTITY_TO_RENDERERS.GetValues())
                         {
                             renderer.Update(_renderDistance);
@@ -649,85 +651,104 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            /*using Queue<Entity> newEntities = new();*/
-
-            using Queue<Chunk.Vector> newChunkPositions = new();
-            using Queue<Chunk.Vector> outOfRangeChunks = new();
-
-            Chunk.Vector c = Chunk.Vector.Convert(player.Position);
-
             System.Diagnostics.Debug.Assert(_renderDistance >= _MIN_RENDER_DISTANCE);
             System.Diagnostics.Debug.Assert(_renderDistance <= _MAX_RENDER_DISTANCE);
-            _LOADING_HELPER.Load(newChunkPositions, outOfRangeChunks, c, _renderDistance);
 
-            int mask; byte[] data;
-            while (!newChunkPositions.Empty)
+            Chunk.Vector c = Chunk.Vector.Convert(player.Position);
+            /*System.Console.WriteLine($"c: {c}");*/
+
             {
-                Chunk.Vector p = newChunkPositions.Dequeue();
+                int renderDistance = System.Math.Min(_renderDistance, _MAX_ENTITY_RENDER_DISTANCE);
 
-                if (world.ContainsChunk(p))
+                using Queue<Entity> newEntities = new();
+
+                Chunk.Grid grid = Chunk.Grid.Generate(c, renderDistance);
+                foreach (Chunk.Vector p in grid.GetVectors())
                 {
-                    Chunk chunk = world.GetChunk(p);
-                    (mask, data) = Chunk.Write(chunk);
-                }
-                else
-                {
-                    (mask, data) = Chunk.Write();
-                }
-
-                _LOAD_CHUNK_PACKETS.Enqueue(new LoadChunkPacket(p.X, p.Z, true, mask, data));
-            }
-
-            while (!outOfRangeChunks.Empty)
-            {
-                Chunk.Vector p = outOfRangeChunks.Dequeue();
-
-                _OUT_PACKETS.Enqueue(new UnloadChunkPacket(p.X, p.Z));
-            }
-
-            /////
-
-            /*_WORLD_LOADING_CACHE.Setup(pCenter, _renderDistance);
-
-            int mask; byte[] data;
-            do
-            {
-                long start, end;
-                start = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
-
-                Chunk.Vector p = _WORLD_LOADING_CACHE.GetVectorAndMoveNext();
-
-                end = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
-                System.Console.Write($"A: {end - start}, ");
-                start = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
-
-                if (world.ContainsEntities(p))
-                {
-                    foreach (Entity entity in world.GetEntities(p))
+                    if (world.ContainsEntities(p))
                     {
-                        if (entity.Id == player.Id) continue;
+                        foreach (Entity entity in world.GetEntities(p))
+                        {
+                            if (entity.Id == player.Id) continue;
 
-                        if (_ENTITY_TO_RENDERERS.Contains(entity.Id)) continue;
+                            if (_ENTITY_TO_RENDERERS.Contains(entity.Id)) continue;
 
-                        newEntities.Enqueue(entity);
+                            newEntities.Enqueue(entity);
 
-                        EntityRenderer renderer = entity.ApplyForRenderer(
-                            _OUT_PACKETS, pCenter, _renderDistance);
+                            EntityRenderer renderer = entity.ApplyForRenderer(
+                                _OUT_PACKETS, c, renderDistance);
 
-                        _ENTITY_TO_RENDERERS.Insert(entity.Id, renderer);
-                        
+                            _ENTITY_TO_RENDERERS.Insert(entity.Id, renderer);
+
+                        }
                     }
                 }
 
-                end = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
-                System.Console.Write($"B: {end - start}, ");
-                start = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
-
-                if (!_LOADED_CHUNK_POSITIONS.Contains(p))
+                while (!newEntities.Empty)
                 {
-                    _LOADED_CHUNK_POSITIONS.Insert(p);
+                    Entity entity = newEntities.Dequeue();
+                    System.Diagnostics.Debug.Assert(entity.Id != player.Id);
 
-                    *//*if (world.ContainsChunk(o))
+                    switch (entity)
+                    {
+                        default:
+                            throw new System.NotImplementedException();
+                        case Player spawnedPlayer:
+                            {
+                                byte flags = 0x00;
+
+                                if (spawnedPlayer.IsSneaking)
+                                    flags |= 0x02;
+                                if (spawnedPlayer.IsSprinting)
+                                    flags |= 0x08;
+
+                                using EntityMetadata metadata = new();
+                                metadata.AddByte(0, flags);
+
+                                (byte x, byte y) = spawnedPlayer.Look.ConvertToPacketFormat();
+                                _OUT_PACKETS.Enqueue(new SpawnNamedEntityPacket(
+                                    spawnedPlayer.Id,
+                                    spawnedPlayer.UniqueId,
+                                    spawnedPlayer.Position.X, spawnedPlayer.Position.Y, spawnedPlayer.Position.Z,
+                                    x, y,
+                                    metadata.WriteData()));
+                            }
+                            break;
+                        case ItemEntity itemEntity:
+                            {
+                                (byte x, byte y) = itemEntity.Look.ConvertToPacketFormat();
+                                _OUT_PACKETS.Enqueue(new SpawnObjectPacket(
+                                    itemEntity.Id, itemEntity.UniqueId,
+                                    2,
+                                    itemEntity.Position.X, itemEntity.Position.Y, itemEntity.Position.Z,
+                                    x, y,
+                                    1,
+                                    0, 0, 0));
+
+                                using EntityMetadata metadata = new();
+                                metadata.AddBool(5, true);
+                                metadata.AddSlotData(6, new SlotData(280, 1));
+                                _OUT_PACKETS.Enqueue(new EntityMetadataPacket(
+                                    itemEntity.Id, metadata.WriteData()));
+                            }
+                            break;
+                    }
+                }
+
+            }
+
+            {
+                using Queue<Chunk.Vector> newChunkPositions = new();
+                using Queue<Chunk.Vector> outOfRangeChunks = new();
+
+                _LOADING_HELPER.Load(newChunkPositions, outOfRangeChunks, c, _renderDistance);
+
+                int mask; byte[] data;
+                while (!newChunkPositions.Empty)
+                {
+                    Chunk.Vector p = newChunkPositions.Dequeue();
+
+                    if (world.ContainsChunk(p))
                     {
                         Chunk chunk = world.GetChunk(p);
                         (mask, data) = Chunk.Write(chunk);
@@ -736,72 +757,18 @@ namespace Protocol
                     {
                         (mask, data) = Chunk.Write();
                     }
-                    *//*
-                    (mask, data) = Chunk.Write();
 
                     _LOAD_CHUNK_PACKETS.Enqueue(new LoadChunkPacket(p.X, p.Z, true, mask, data));
                 }
 
-                end = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
-                System.Console.Write($"C: {end - start}, ");
-
-            } while (_WORLD_LOADING_CACHE.CanContinue());
-
-            System.Console.WriteLine();
-
-            while (!newEntities.Empty)
-            {
-                Entity entity = newEntities.Dequeue();
-                System.Diagnostics.Debug.Assert(entity.Id != player.Id);
-
-                switch (entity)
+                while (!outOfRangeChunks.Empty)
                 {
-                    default:
-                        throw new System.NotImplementedException();
-                    case Player spawnedPlayer:
-                        {
-                            byte flags = 0x00;
+                    Chunk.Vector p = outOfRangeChunks.Dequeue();
 
-                            if (spawnedPlayer.IsSneaking)
-                                flags |= 0x02;
-                            if (spawnedPlayer.IsSprinting)
-                                flags |= 0x08;
-
-                            using EntityMetadata metadata = new();
-                            metadata.AddByte(0, flags);
-
-                            (byte x, byte y) = spawnedPlayer.Look.ConvertToPacketFormat();
-                            _OUT_PACKETS.Enqueue(new SpawnNamedEntityPacket(
-                                spawnedPlayer.Id,
-                                spawnedPlayer.UniqueId,
-                                spawnedPlayer.Position.X, spawnedPlayer.Position.Y, spawnedPlayer.Position.Z,
-                                x, y,
-                                metadata.WriteData()));
-                        }
-                        break;
-                    case ItemEntity itemEntity:
-                        {
-                            (byte x, byte y) = itemEntity.Look.ConvertToPacketFormat();
-                            _OUT_PACKETS.Enqueue(new SpawnObjectPacket(
-                                itemEntity.Id, itemEntity.UniqueId,
-                                2,
-                                itemEntity.Position.X, itemEntity.Position.Y, itemEntity.Position.Z,
-                                x, y,
-                                1,
-                                0, 0, 0));
-
-                            using EntityMetadata metadata = new();
-                            metadata.AddBool(5, true);
-                            metadata.AddSlotData(6, new SlotData(280, 1));
-                            _OUT_PACKETS.Enqueue(new EntityMetadataPacket(
-                                itemEntity.Id, metadata.WriteData()));
-                        }
-                        break;
+                    _OUT_PACKETS.Enqueue(new UnloadChunkPacket(p.X, p.Z));
                 }
             }
 
-            
-*/
         }
 
         /// <summary>

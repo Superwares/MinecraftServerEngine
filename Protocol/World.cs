@@ -33,9 +33,16 @@ namespace Protocol
 
             {
                 // Dummy code.
-                Chunk.Vector p = new(0, 0);
-                Chunk c = new Chunk(p);
-                _CHUNKS.Insert(p, c);
+                for (int z = -10; z <= 10; ++z)
+                {
+                    for (int x = -10; x <= 10; ++x)
+                    {
+                        Chunk.Vector p = new(x, z);
+                        Chunk c = new Chunk(p);
+                        _CHUNKS.Insert(p, c);
+                    }
+                }
+                
             }
         }
 
@@ -192,17 +199,10 @@ namespace Protocol
             }
 
             {
-                if (entity is Player player && player.IsConnected)
-                {
-
-                }
-                else
-                {
-                    entity.AddForce(
+                entity.AddForce(
                         new Entity.Vector(-(1.0D - 0.91D), -(1.0D - 0.9800000190734863D), -(1.0D - 0.91D)) *
                         entity.Velocity);  // Damping Force
-                    entity.AddForce(0.0001D * new Entity.Vector(0, -1, 0));  // Gravity
-                }
+                entity.AddForce(0.0001D * new Entity.Vector(0, -1, 0));  // Gravity
             }
 
 
@@ -247,7 +247,7 @@ namespace Protocol
                 Entity entity = _DESPAWNED_ENTITIES.Dequeue();
 
                 _ENTITY_ID_LIST.Dealloc(entity.Id);
-                entity.Close();
+                entity.Dispose();
             }
         }
 
@@ -366,11 +366,10 @@ namespace Protocol
             Chunk.Grid gridPrev = _ENTITY_TO_CHUNK_GRID.Extract(entity.Id);
             Chunk.Grid grid = Chunk.Grid.Generate(entity.Position, entity.GetBoundingBox());
 
-            /*System.Console.WriteLine();
-            System.Console.Write("gridPrev");
-            gridPrev.Print();
-            System.Console.Write("grid");
-            grid.Print();*/
+            /*System.Console.WriteLine();*/
+            /*System.Console.Write("gridPrev");
+            gridPrev.Print();*/
+            /*System.Console.Write($"grid: {grid}");*/
 
             if (!gridPrev.Equals(grid))
             {

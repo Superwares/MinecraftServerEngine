@@ -1,6 +1,7 @@
 ﻿using Common;
 using Containers;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace Protocol
@@ -12,9 +13,22 @@ namespace Protocol
         {
             public static Vector Convert(Entity.Vector pos)
             {
-                return new(
-                    (pos.X >= 0) ? ((int)pos.X / _WIDTH) : (((int)pos.X / (_WIDTH + 1)) - 1),
-                    (pos.Z >= 0) ? ((int)pos.Z / _WIDTH) : (((int)pos.Z / (_WIDTH + 1)) - 1));
+                int x = (int)pos.X / _WIDTH,
+                    z = (int)pos.Z / _WIDTH;
+
+                double r1 = pos.X % _WIDTH,
+                       r2 = pos.Z % _WIDTH;
+                if (Comparing.IsLessThan(r1, 0))
+                {
+                    --x;
+                }
+
+                if (Comparing.IsLessThan(r2, 0))
+                {
+                    --z;
+                }
+
+                return new(x, z);
             }
 
             private int _x, _z;
@@ -163,7 +177,7 @@ namespace Protocol
             private bool _disposed = false;
 
             public const int WIDTH = 16;
-            public const int HEIGHT = 16;
+            public const int HEIGHT = WIDTH;
 
             private int _bitCount;
 
@@ -189,20 +203,29 @@ namespace Protocol
 
                 _palette = [new Block(Block.Types.Air)];
 
-                int dataLength = GetDataLength(_bitCount);
-                _data = new ulong[dataLength];
-                System.Array.Fill<ulong>(_data, 0);
+                {
+                    int length = GetDataLength(_bitCount);
+                    _data = new ulong[length];
+                    System.Array.Fill<ulong>(_data, 0);
+                }
 
-                int x = (WIDTH * WIDTH * HEIGHT) / 2;
-                _blockLights = new byte[x];
-                System.Array.Fill<byte>(_blockLights, byte.MaxValue);
-                _skyLights = new byte[x];
-                System.Array.Fill<byte>(_skyLights, byte.MaxValue);
-
+                {
+                    int length = (WIDTH * WIDTH * HEIGHT) / 2;
+                    _blockLights = new byte[length];
+                    System.Array.Fill<byte>(_blockLights, byte.MaxValue);
+                    _skyLights = new byte[length];
+                    System.Array.Fill<byte>(_skyLights, byte.MaxValue);
+                }
 
                 {
                     // Dummy Code
-                    PlaceBlock(0, 10, 0, new Block(Block.Types.Stone));
+                    for (int z = 0; z < _WIDTH; ++z)
+                    {
+                        for (int x = 0; x < _WIDTH; ++x)
+                        {
+                            PlaceBlock(x, 10, z, new Block(Block.Types.Stone));
+                        }
+                    }
                 }
             }
 

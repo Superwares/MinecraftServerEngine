@@ -113,7 +113,7 @@ public class EntityItem extends Entity {
             this.motY *= 0.9800000190734863D;  // Damping Force
             this.motZ *= (double) f;  // Friction or Damping Force
             if (this.onGround) {
-                this.motY *= -0.5D;  // Friction
+                this.motY *= -0.5D;  // ?
             }
 
             /* Craftbukkit start - moved up

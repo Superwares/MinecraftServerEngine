@@ -7,11 +7,9 @@ namespace Protocol
     {
         private bool _disposed = false;
 
-        public readonly int Id;
-
         private readonly Queue<ClientboundPlayingPacket> _OUT_PACKETS;
 
-        public Renderer(int id, Queue<ClientboundPlayingPacket> outPackets)
+        public Renderer(Queue<ClientboundPlayingPacket> outPackets)
         {
             Id = id;
             _OUT_PACKETS = outPackets;
@@ -28,7 +26,7 @@ namespace Protocol
 
         public virtual void Dispose()
         {
-            System.Diagnostics.Debug.Assert(_disposed);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             // Assertion
 
@@ -53,8 +51,8 @@ namespace Protocol
         private int _d;
 
         public EntityRenderer(
-            int id, Queue<ClientboundPlayingPacket> outPackets,
-            Chunk.Vector p, int d) : base(id, outPackets) 
+            Queue<ClientboundPlayingPacket> outPackets,
+            Chunk.Vector p, int d) : base(outPackets) 
         {
             System.Diagnostics.Debug.Assert(d > 0);
             _p = p;
@@ -98,8 +96,12 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(!_disconnected);
             System.Diagnostics.Debug.Assert(_d > 0);
 
+            /*System.Console.WriteLine($"d: {_d}");*/
+            System.Console.WriteLine();
             Chunk.Grid gridEntity = Chunk.Grid.Generate(p, boundingBox);
+            /*System.Console.WriteLine($"gridEntity: {gridEntity}");*/
             Chunk.Grid gridRender = Chunk.Grid.Generate(_p, _d);
+            /*System.Console.WriteLine($"gridRender: {gridRender}");*/
 
             bool overlap = (Chunk.Grid.Generate(gridEntity, gridRender) != null);
             return overlap;
@@ -229,23 +231,22 @@ namespace Protocol
 
     }
 
-    /*internal sealed class SelfPlayerRenderer : Renderer
+    internal sealed class SelfPlayerRenderer : Renderer
     {
         private readonly Client _CLIENT;
 
-        public EntityRenderer(
-            int connId, Queue<ClientboundPlayingPacket> outPackets, 
-            Client client)
-            : base(connId, outPackets) 
+        public SelfPlayerRenderer(
+            Queue<ClientboundPlayingPacket> outPackets,
+            Client client) : base(outPackets)
         {
             _CLIENT = client;
         }
 
-        public void AddForce()
+        public void ApplyForce(Entity.Vector force)
         {
             _CLIENT.Send();
         }
 
     }
-*/
+
 }

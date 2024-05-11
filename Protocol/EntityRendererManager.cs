@@ -8,7 +8,7 @@ namespace Protocol
 
         private bool _movement = false;
 
-        private readonly NumList _ID_LIST = new();
+        /*private readonly NumList _ID_LIST = new();*/
 
         private readonly Queue<EntityRenderer> _RENDERERS = new();
 
@@ -22,9 +22,9 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            int id = _ID_LIST.Alloc();
+            /*int id = _ID_LIST.Alloc();*/
 
-            EntityRenderer renderer = new(id, outPackets, p, renderDistance);
+            EntityRenderer renderer = new(outPackets, p, renderDistance);
             _RENDERERS.Enqueue(renderer);
 
             return renderer;
@@ -44,7 +44,7 @@ namespace Protocol
 
                 if (renderer.IsDisconnected)
                 {
-                    _ID_LIST.Dealloc(renderer.Id);
+                    /*_ID_LIST.Dealloc(renderer.Id);*/
                     renderer.Dispose();
 
                     continue;
@@ -71,7 +71,7 @@ namespace Protocol
 
                 if (renderer.IsDisconnected)
                 {
-                    _ID_LIST.Dealloc(renderer.Id);
+                    /*_ID_LIST.Dealloc(renderer.Id);*/
                     renderer.Dispose();
 
                     continue;
@@ -97,7 +97,7 @@ namespace Protocol
 
                 if (renderer.IsDisconnected)
                 {
-                    _ID_LIST.Dealloc(renderer.Id);
+                    /*_ID_LIST.Dealloc(renderer.Id);*/
                     renderer.Dispose();
 
                     continue;
@@ -123,7 +123,7 @@ namespace Protocol
 
                 if (renderer.IsDisconnected)
                 {
-                    _ID_LIST.Dealloc(renderer.Id);
+                    /*_ID_LIST.Dealloc(renderer.Id);*/
                     renderer.Dispose();
 
                     continue;
@@ -149,7 +149,7 @@ namespace Protocol
 
                 if (!renderer.CanRender(pos, boundingBox))
                 {
-                    _ID_LIST.Dealloc(renderer.Id);
+                    /*_ID_LIST.Dealloc(renderer.Id);*/
                     renderer.DestroyEntity(entityId);
                     renderer.Dispose();
 
@@ -191,7 +191,7 @@ namespace Protocol
             {
                 EntityRenderer renderer = _RENDERERS.Dequeue();
 
-                _ID_LIST.Dealloc(renderer.Id);
+                /*_ID_LIST.Dealloc(renderer.Id);*/
                 renderer.Flush(entityId);
                 renderer.Dispose();
             }
@@ -204,12 +204,12 @@ namespace Protocol
             // Assertion
             System.Diagnostics.Debug.Assert(!_movement);
 
-            System.Diagnostics.Debug.Assert(_ID_LIST.Empty);
+            /*System.Diagnostics.Debug.Assert(_ID_LIST.Empty);*/
 
             System.Diagnostics.Debug.Assert(_RENDERERS.Empty);
 
             // Release  resources.
-            _ID_LIST.Dispose();
+            /*_ID_LIST.Dispose();*/
 
             _RENDERERS.Dispose();
 
