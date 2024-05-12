@@ -32,5 +32,10 @@ namespace Common
             return (int)v;
         }
 
+        public static short ToShort(double v)
+        {
+            return (short)v;
+        }
+
     }
 }

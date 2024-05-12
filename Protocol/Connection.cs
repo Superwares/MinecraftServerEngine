@@ -1,5 +1,6 @@
 ﻿
 using Containers;
+using System;
 
 namespace Protocol
 {
@@ -249,18 +250,21 @@ namespace Protocol
         private readonly Client _CLIENT;  // Dispoasble
 
 
-        private int _initLevel = 0;
-        private bool IsInit => _initLevel >= 3;
+        /*private int _initLevel = 0;
+        private bool IsInit => _initLevel >= 3;*/
+        private bool _init = false;
 
         private readonly Queue<LoadChunkPacket> _LOAD_CHUNK_PACKETS = new();  // Dispoasble
         private readonly Queue<ClientboundPlayingPacket> _OUT_PACKETS = new();  // Dispoasble
 
         private const int _MAX_ENTITY_RENDER_DISTANCE = 7;
         private const int _MIN_RENDER_DISTANCE = 2, _MAX_RENDER_DISTANCE = 32;
-        private int _renderDistance = -1;
+        private int _renderDistance = _MIN_RENDER_DISTANCE;
 
         private readonly LoadingHelper _LOADING_HELPER = new();
         private readonly Table<int, EntityRenderer> _ENTITY_TO_RENDERERS = new();  // Disposable
+
+        private readonly SelfPlayerRenderer _SELF_RENDERER;  // Disposable
 
         private readonly Queue<TeleportationRecord> _TELEPORTATION_RECORDS = new();  // Dispoasble
         private KeepAliveRecord? _keepAliveRecord = null;
@@ -272,17 +276,17 @@ namespace Protocol
             Id = client.LocalPort;
 
             _CLIENT = client;
+
+            _SELF_RENDERER = new(_OUT_PACKETS, client);
         }
 
         ~Connection() => System.Diagnostics.Debug.Assert(false);
         
-        private void StartInitProcess(Buffer buffer, World world, Player player)
+        /*private void StartInitProcess(Buffer buffer, World world, Player player)
         {
             if (_initLevel == 0)
             {
-                /*Console.WriteLine("JoinGame!");*/
-
-                world.ConnectPlayer(player, _OUT_PACKETS);
+                *//*Console.WriteLine("JoinGame!");*//*
 
                 System.Diagnostics.Debug.Assert(_renderDistance == -1);
 
@@ -296,7 +300,7 @@ namespace Protocol
 
             if (_initLevel == 1)
             {
-                /*Console.WriteLine("ClientSettings!");*/
+                *//*Console.WriteLine("ClientSettings!");*//*
 
                 System.Diagnostics.Debug.Assert(_renderDistance == -1);
 
@@ -321,7 +325,7 @@ namespace Protocol
 
             if (_initLevel == 2)
             {
-                /*Console.WriteLine("PluginMessage!");*/
+                *//*Console.WriteLine("PluginMessage!");*//*
 
                 System.Diagnostics.Debug.Assert(_renderDistance >= _MIN_RENDER_DISTANCE);
                 System.Diagnostics.Debug.Assert(_renderDistance <= _MAX_RENDER_DISTANCE);
@@ -344,7 +348,7 @@ namespace Protocol
 
             System.Diagnostics.Debug.Assert(_window == null);
             _window = new(_OUT_PACKETS, player._selfInventory);
-        }
+        }*/
 
         private void RecvDataAndHandle(
             Buffer buffer, long serverTicks, World world, Player player)
@@ -376,15 +380,20 @@ namespace Protocol
                     {
                         SetClientSettingsPacket packet = SetClientSettingsPacket.Read(buffer);
 
-                        throw new System.NotImplementedException();
-
-                        // TODO: Update rander distance of entity renderers in _ENTITY_TO_RENDERERS.
-                        // TODO: Consider _MAX_ENTITY_RENDER_DISTANCE to update render distance of renderer.
-
-                        /*foreach (var renderer in _ENTITY_TO_RENDERERS.GetValues())
+                        if (_renderDistance != packet.RenderDistance)
                         {
-                            renderer.Update(_renderDistance);
-                        }*/
+                            _renderDistance = packet.RenderDistance;
+                            if (_renderDistance < _MIN_RENDER_DISTANCE || _renderDistance > _MAX_RENDER_DISTANCE)
+                            {
+                                throw new UnexpectedValueException("SetClientSettingsPacket.RenderDistance");
+                            }
+
+                            int entityRenderDistance = System.Math.Min(_renderDistance, _MAX_ENTITY_RENDER_DISTANCE);
+                            foreach (var renderer in _ENTITY_TO_RENDERERS.GetValues())
+                            {
+                                renderer.Update(entityRenderDistance);
+                            }
+                        }
                     }
                     break;
                 case ServerboundPlayingPacket.ServerboundConfirmTransactionPacketId:
@@ -453,6 +462,11 @@ namespace Protocol
 
                         System.Diagnostics.Debug.Assert(_window != null);
                         _window.ResetWindow(packet.WindowId, _OUT_PACKETS);
+                    }
+                    break;
+                case 0x09:
+                    {
+                        buffer.Flush();
                     }
                     break;
                 case ServerboundPlayingPacket.ResponseKeepAlivePacketId:
@@ -592,8 +606,10 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (!IsInit)
+            if (!_init)
+            {
                 return;
+            }
 
             /*if (serverTicks == 200)  // 10 seconds
             {
@@ -615,6 +631,10 @@ namespace Protocol
                         RecvDataAndHandle(buffer, serverTicks, world, player);
                     }
                 }
+                catch (TryAgainException)
+                {
+
+                }
                 catch (UnexpectedClientBehaviorExecption e)
                 {
                     // TODO: send disconnected message to client.
@@ -623,10 +643,21 @@ namespace Protocol
 
                     throw new DisconnectedClientException();
                 }
-            }
-            catch (TryAgainException)
-            {
 
+                if (_renderDistance == -1)
+                {
+                    throw new UnexpectedPacketException();
+                }
+
+                foreach (TeleportationRecord record in _TELEPORTATION_RECORDS.GetValues())
+                {
+                    record.Update();
+                }
+
+                if (_keepAliveRecord != null)
+                {
+                    _keepAliveRecord.Update();
+                }
             }
             catch (DisconnectedClientException)
             {
@@ -636,15 +667,7 @@ namespace Protocol
                 throw;
             }
 
-            foreach (TeleportationRecord record in _TELEPORTATION_RECORDS.GetValues())
-            {
-                record.Update();
-            }
-
-            if (_keepAliveRecord != null)
-            {
-                _keepAliveRecord.Update();
-            }
+            
         }
 
         private void LoadWorld(World world, Player player)
@@ -783,9 +806,10 @@ namespace Protocol
 
             try
             {
-                if (!IsInit)
+                if (!_init)
                 {
-                    try
+                    System.Console.WriteLine("INIT!!!");
+                    /*try
                     {
                         StartInitProcess(buffer, world, player);
                     }
@@ -796,10 +820,22 @@ namespace Protocol
                         System.Console.WriteLine(e.Message);
 
                         throw new DisconnectedClientException();
-                    }
+                    }*/
+
+                    JoinGamePacket packet = new(player.Id, 0, 0, 0, "default", false);
+                    packet.Write(buffer);
+                    _CLIENT.Send(buffer);
+
+                    world.ConnectPlayer(player, _OUT_PACKETS);
+                    player.Connect(_SELF_RENDERER);
+
+                    System.Diagnostics.Debug.Assert(_window == null);
+                    _window = new(_OUT_PACKETS, player._selfInventory);
+
+                    _init = true;
                 }
 
-                System.Diagnostics.Debug.Assert(IsInit);
+                System.Diagnostics.Debug.Assert(_init);
 
                 LoadWorld(world, player);
 
@@ -857,10 +893,6 @@ namespace Protocol
 
                 System.Diagnostics.Debug.Assert(_OUT_PACKETS.Empty);
             }
-            catch (TryAgainException)
-            {
-                System.Diagnostics.Debug.Assert(!IsInit);
-            }
             catch (DisconnectedClientException)
             {
                 buffer.Flush();
@@ -911,6 +943,8 @@ namespace Protocol
 
             _LOADING_HELPER.Dispose();
             _ENTITY_TO_RENDERERS.Dispose();
+
+            _SELF_RENDERER.Dispose();
 
             _TELEPORTATION_RECORDS.Dispose();
             _keepAliveRecord = null;

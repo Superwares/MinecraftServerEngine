@@ -11,7 +11,6 @@ namespace Protocol
 
         public Renderer(Queue<ClientboundPlayingPacket> outPackets)
         {
-            Id = id;
             _OUT_PACKETS = outPackets;
         }
 
@@ -233,6 +232,8 @@ namespace Protocol
 
     internal sealed class SelfPlayerRenderer : Renderer
     {
+        private bool _disposed = false;
+
         private readonly Client _CLIENT;
 
         public SelfPlayerRenderer(
@@ -242,9 +243,74 @@ namespace Protocol
             _CLIENT = client;
         }
 
-        public void ApplyForce(Entity.Vector force)
+        public void Init(
+            int entityId,
+            Entity.Vector v, Entity.Vector p, Entity.Angles look)
         {
-            _CLIENT.Send();
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            {
+                int payload = new System.Random().Next();
+                Render(new TeleportSelfPlayerPacket(
+                    p.X, p.Y, p.Z,
+                    look.Yaw, look.Pitch,
+                    false, false, false, false, false,
+                    payload));
+            }
+
+            {
+                Render(new SetPlayerAbilitiesPacket(
+                    false, false, false, false, 0f, 0));
+            }
+
+            {
+                Render(new EntityVelocityPacket(
+                    entityId,
+                    Conversions.ToShort(v.X * 8000),
+                    Conversions.ToShort(v.Y * 8000),
+                    Conversions.ToShort(v.Z * 8000)));
+            }
+
+
+        }
+
+        /*public void Teleport(Entity.Vector p, Entity.Angles look)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            int payload = new System.Random().Next();
+            Render(new TeleportSelfPlayerPacket(
+                p.X, p.Y, p.Z,
+                look.Yaw, look.Pitch,
+                false, false, false, false, false,
+                payload));
+        }*/
+
+        public void ApplyVelocity(int entityId, Entity.Vector v)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            using Buffer buffer = new();
+
+            var packet = new EntityVelocityPacket(
+                entityId,
+                Conversions.ToShort(v.X * 8000),
+                Conversions.ToShort(v.Y * 8000),
+                Conversions.ToShort(v.Z * 8000));
+            packet.Write(buffer);
+            _CLIENT.Send(buffer);
+        }
+
+        public override void Dispose()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            // Assertion.
+
+            // Release resources.
+
+            base.Dispose();
+            _disposed = true;
         }
 
     }

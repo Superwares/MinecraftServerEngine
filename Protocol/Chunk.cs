@@ -31,6 +31,25 @@ namespace Protocol
                 return new(x, z);
             }
 
+            public static Vector Convert(Block.Vector pos)
+            {
+                int x = pos.X / _WIDTH,
+                    z = pos.Z / _WIDTH;
+
+                double r1 = pos.X % _WIDTH,
+                       r2 = pos.Z % _WIDTH;
+                if (Comparing.IsLessThan(r1, 0))
+                {
+                    --x;
+                }
+                if (Comparing.IsLessThan(r2, 0))
+                {
+                    --z;
+                }
+
+                return new(x, z);
+            }
+
             private int _x, _z;
             public int X => _x;
             public int Z => _z;
@@ -110,15 +129,17 @@ namespace Protocol
 
             public static Grid Generate(Entity.Vector c, BoundingBox boundingBox)
             {
+                System.Diagnostics.Debug.Assert(boundingBox.Width > 0);
+                System.Diagnostics.Debug.Assert(boundingBox.Height > 0);
+
                 double h = boundingBox.Width / 2;
+                System.Diagnostics.Debug.Assert(h > 0);
+
                 Entity.Vector 
                     pEntityMax = new(c.X + h, 0, c.Z + h),
                     pEntityMin = new(c.X - h, 0, c.Z - h);
-                Vector
-                    pChunkMax = Vector.Convert(pEntityMax),
-                    pChunkMin = Vector.Convert(pEntityMin);
 
-                return new(pChunkMax, pChunkMin);
+                return new(Vector.Convert(pEntityMax), Vector.Convert(pEntityMin));
             }
 
             private readonly Vector _max, _min;
@@ -223,7 +244,7 @@ namespace Protocol
                     {
                         for (int x = 0; x < _WIDTH; ++x)
                         {
-                            PlaceBlock(x, 10, z, new Block(Block.Types.Stone));
+                            PlaceBlock(new(x, 10, z), new Block(Block.Types.Stone));
                         }
                     }
                 }
@@ -231,25 +252,25 @@ namespace Protocol
 
             ~Section() => System.Diagnostics.Debug.Assert(false);
 
-            public bool ContainsBlock(int x, int y, int z)
+            public bool ContainsBlock(Block.Vector p)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                System.Diagnostics.Debug.Assert(x >= 0 && x <= WIDTH);
-                System.Diagnostics.Debug.Assert(z >= 0 && z <= WIDTH);
-                System.Diagnostics.Debug.Assert(y >= 0 && y <= HEIGHT);
+                System.Diagnostics.Debug.Assert(p.X >= 0 && p.X <= WIDTH);
+                System.Diagnostics.Debug.Assert(p.Z >= 0 && p.Z <= WIDTH);
+                System.Diagnostics.Debug.Assert(p.Y >= 0 && p.Y <= HEIGHT);
 
-                ulong mask = ((Conversions.ToUlong(1) << _bitCount) - 1);
+                ulong mask = (((ulong)1 << _bitCount) - 1);
 
                 int i;
                 ulong value;
 
                 int start, offset, end;
 
-                i = (((y * HEIGHT) + z) * WIDTH) + x;
-                start = (i * _bitCount) / 64;
-                offset = (i * _bitCount) % 64;
-                end = ((i + 1) * _bitCount - 1) / 64;
+                i = (((p.Y * HEIGHT) + p.Z) * WIDTH) + p.X;
+                start = (i * _bitCount) / _DATA_UNIT_BITS;
+                offset = (i * _bitCount) % _DATA_UNIT_BITS;
+                end = ((i + 1) * _bitCount - 1) / _DATA_UNIT_BITS;
 
                 if (start == end)
                 {
@@ -494,23 +515,23 @@ namespace Protocol
                 return value;
             }
 
-            private void PlaceBlock(int x, int y, int z, Block block)
+            private void PlaceBlock(Block.Vector p, Block block)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                System.Diagnostics.Debug.Assert(x >= 0 && x <= WIDTH);
-                System.Diagnostics.Debug.Assert(z >= 0 && z <= WIDTH);
-                System.Diagnostics.Debug.Assert(y >= 0 && y <= HEIGHT);
+                System.Diagnostics.Debug.Assert(p.X >= 0 && p.X <= WIDTH);
+                System.Diagnostics.Debug.Assert(p.Z >= 0 && p.Z <= WIDTH);
+                System.Diagnostics.Debug.Assert(p.Y >= 0 && p.Y <= HEIGHT);
 
                 System.Diagnostics.Debug.Assert(block.Type != Block.Types.Air);
-                System.Diagnostics.Debug.Assert(!ContainsBlock(x, y, z));
+                System.Diagnostics.Debug.Assert(!ContainsBlock(p));
 
                 ulong value = GetValueInPalette(block);
 
-                int i = (((y * HEIGHT) + z) * WIDTH) + x;
-                int start = (i * _bitCount) / 64;
-                int offset = (i * _bitCount) % 64;
-                int end = ((i + 1) * _bitCount - 1) / 64;
+                int i = (((p.Y * HEIGHT) + p.Z) * WIDTH) + p.X;
+                int start = (i * _bitCount) / _DATA_UNIT_BITS;
+                int offset = (i * _bitCount) % _DATA_UNIT_BITS;
+                int end = ((i + 1) * _bitCount - 1) / _DATA_UNIT_BITS;
 
                 System.Diagnostics.Debug.Assert(
                     (value & ~((Conversions.ToUlong(1) << _bitCount) - 1)) == 0);
@@ -518,11 +539,11 @@ namespace Protocol
 
                 if (start != end)
                 {
-                    _data[end] = (value >> (64 - offset));
+                    _data[end] = (value >> (_DATA_UNIT_BITS - offset));
                 }
             }
 
-            private Block BreakBlock(int x, int y, int z)
+            private Block BreakBlock(Block.Vector p)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -586,9 +607,10 @@ namespace Protocol
 
         private bool _disposed = false;
 
-        private const int _WIDTH = Section.WIDTH;
+        private const int _TOTAL_SECTION_COUNT = 16; 
 
-        private const int _TOTAL_SECTION_COUNT = 16;
+        private const int _WIDTH = Section.WIDTH;
+        private const int _HEIGHT = Section.HEIGHT * _TOTAL_SECTION_COUNT;
 
         private int _count = 0;
         private Section?[] _sections = new Section?[_TOTAL_SECTION_COUNT];  // from bottom to top
@@ -652,6 +674,44 @@ namespace Protocol
                 // Dummy code.
                 _sections[3] = new Section();
             }
+        }
+
+        public bool ContainsBlock(Block.Vector p)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            int y = p.Y / Section.HEIGHT;
+            if (Comparing.IsLessThan(p.Y % Section.HEIGHT, 0))
+            {
+                return false;
+            }
+
+            /*if (y < 0)
+            {
+                return false;
+            }*/
+
+            if (y > _HEIGHT)
+            {
+                return false;
+            }
+
+            System.Diagnostics.Debug.Assert(y >= 0);
+            Block.Vector pPrime = new(
+                    p.X - ((_p.X < 0 ? -(_p.X + 1) : _p.X) * Section.WIDTH),
+                    p.Y - (y * Section.HEIGHT), 
+                    p.Z - ((_p.Z < 0 ? -(_p.Z + 1) : _p.Z) * Section.WIDTH));
+            System.Diagnostics.Debug.Assert(pPrime.X >= 0 && pPrime.X <= Section.WIDTH);
+            System.Diagnostics.Debug.Assert(pPrime.Y >= 0 && pPrime.Y <= Section.HEIGHT);
+            System.Diagnostics.Debug.Assert(pPrime.Z >= 0 && pPrime.Z <= Section.WIDTH);
+
+            Section? section = _sections[y];
+            if (section == null)
+            {
+                return false;
+            }
+
+            return section.ContainsBlock(pPrime);
         }
 
         public void Dispose()

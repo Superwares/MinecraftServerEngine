@@ -1,4 +1,5 @@
 ﻿using Containers;
+using System;
 
 namespace Protocol
 {
@@ -21,7 +22,7 @@ namespace Protocol
 
         private readonly 
             Table<Chunk.Vector, Table<int, Entity>> _CHUNK_TO_ENTITIES = new();  // Disposable
-        private readonly Table<int, Chunk.Grid> _ENTITY_TO_CHUNK_GRID = new();  // Disposable
+        private readonly Table<int, Chunk.Grid> _ENTITY_TO_CHUNKS = new();  // Disposable
 
         private readonly Queue<Entity> _DESPAWNED_ENTITIES = new();  // Disposable
 
@@ -52,13 +53,12 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _PLAYER_LIST.Connect(player.UniqueId, renderer);
-
+            /*System.Console.WriteLine($"player.UniqueId: {player.UniqueId}");*/
             System.Diagnostics.Debug.Assert(_DISCONNECTED_PLAYERS.Contains(player.UniqueId));
             Player playerExtracted = _DISCONNECTED_PLAYERS.Extract(player.UniqueId);
             System.Diagnostics.Debug.Assert(ReferenceEquals(player, playerExtracted));
 
-            player.Connect(renderer);
+            _PLAYER_LIST.Connect(player.UniqueId, renderer);
         }
 
         internal void DisconnectPlayer(Player player)
@@ -144,6 +144,15 @@ namespace Protocol
             return itemEntity;
         }
 
+        public void F(Entity.Vector pEntity, BoundingBox boundingBox)
+        {
+            Block.Grid grid = Block.Grid.Generate(pEntity, boundingBox);
+            foreach (Block.Vector pBlock in grid.GetVectors())
+            {
+
+            }
+        }
+
         public bool HandleEntity(Entity entity)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -199,17 +208,27 @@ namespace Protocol
             }
 
             {
-                entity.AddForce(
+                entity.ApplyBaseForce(
                         new Entity.Vector(-(1.0D - 0.91D), -(1.0D - 0.9800000190734863D), -(1.0D - 0.91D)) *
                         entity.Velocity);  // Damping Force
-                entity.AddForce(0.0001D * new Entity.Vector(0, -1, 0));  // Gravity
+                entity.ApplyBaseForce(entity.GetMass() * 0.08D * new Entity.Vector(0, -1, 0));  // Gravity
             }
 
 
             {
-                entity.Move();
 
-                // Test Collision and adjust position.
+                Entity.Vector p = entity.Integrate();
+
+                // Test collide with blocks and adjust position.
+                {
+                    int xMax, yMax, zMax,
+                        xMin, yMin, zMin;
+                    
+
+
+                }
+
+                entity.UpdateMovement(p, false);
 
                 UpdateEntityRendering(entity);
             }
@@ -229,6 +248,7 @@ namespace Protocol
                 if (entity is Player player)
                 {
                     _PLAYER_LIST.InitPlayer(player.UniqueId, player.Username);
+                    /*System.Console.WriteLine($"player.UniqueId: {player.UniqueId}");*/
                     _DISCONNECTED_PLAYERS.Insert(player.UniqueId, player);
                 }
 
@@ -301,16 +321,16 @@ namespace Protocol
                 entities.Insert(entity.Id, entity);
             }
 
-            System.Diagnostics.Debug.Assert(!_ENTITY_TO_CHUNK_GRID.Contains(entity.Id));
-            _ENTITY_TO_CHUNK_GRID.Insert(entity.Id, grid);
+            System.Diagnostics.Debug.Assert(!_ENTITY_TO_CHUNKS.Contains(entity.Id));
+            _ENTITY_TO_CHUNKS.Insert(entity.Id, grid);
         }
 
         private void CloseEntityRendering(Entity entity)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_ENTITY_TO_CHUNK_GRID.Contains(entity.Id));
-            Chunk.Grid grid = _ENTITY_TO_CHUNK_GRID.Extract(entity.Id);
+            System.Diagnostics.Debug.Assert(_ENTITY_TO_CHUNKS.Contains(entity.Id));
+            Chunk.Grid grid = _ENTITY_TO_CHUNKS.Extract(entity.Id);
 
             foreach (Chunk.Vector p in grid.GetVectors())
             {
@@ -362,8 +382,8 @@ namespace Protocol
 
         internal void UpdateEntityRendering(Entity entity)
         {
-            System.Diagnostics.Debug.Assert(_ENTITY_TO_CHUNK_GRID.Contains(entity.Id));
-            Chunk.Grid gridPrev = _ENTITY_TO_CHUNK_GRID.Extract(entity.Id);
+            System.Diagnostics.Debug.Assert(_ENTITY_TO_CHUNKS.Contains(entity.Id));
+            Chunk.Grid gridPrev = _ENTITY_TO_CHUNKS.Extract(entity.Id);
             Chunk.Grid grid = Chunk.Grid.Generate(entity.Position, entity.GetBoundingBox());
 
             /*System.Console.WriteLine();*/
@@ -415,7 +435,7 @@ namespace Protocol
 
             }
 
-            _ENTITY_TO_CHUNK_GRID.Insert(entity.Id, grid);
+            _ENTITY_TO_CHUNKS.Insert(entity.Id, grid);
         }
 
         public Entity RaycastClosestEntity(Entity.Vector p, Entity.Vector u, int d)
@@ -447,7 +467,7 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(_DISCONNECTED_PLAYERS.Empty);
 
             System.Diagnostics.Debug.Assert(_CHUNK_TO_ENTITIES.Empty);
-            System.Diagnostics.Debug.Assert(_ENTITY_TO_CHUNK_GRID.Empty);
+            System.Diagnostics.Debug.Assert(_ENTITY_TO_CHUNKS.Empty);
 
             System.Diagnostics.Debug.Assert(_DESPAWNED_ENTITIES.Empty);
 
@@ -463,7 +483,7 @@ namespace Protocol
             _DISCONNECTED_PLAYERS.Dispose();
 
             _CHUNK_TO_ENTITIES.Dispose();
-            _ENTITY_TO_CHUNK_GRID.Dispose();
+            _ENTITY_TO_CHUNKS.Dispose();
 
             _DESPAWNED_ENTITIES.Dispose();
 

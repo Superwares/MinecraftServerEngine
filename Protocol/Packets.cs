@@ -362,6 +362,7 @@ namespace Protocol
         public const int ServerboundConfirmTransactionPacketId = 0x05;
         public const int ClickWindowPacketId = 0x07;
         public const int ServerboundCloseWindowPacketId = 0x08;
+        
         public const int ResponseKeepAlivePacketId = 0x0B;
         public const int PlayerPacketId = 0x0C;
         public const int PlayerPositionPacketId = 0x0D;
