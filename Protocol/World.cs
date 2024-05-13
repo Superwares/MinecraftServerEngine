@@ -1,11 +1,12 @@
 ﻿using Containers;
-using System;
 
 namespace Protocol
 {
     public abstract class World : System.IDisposable
     {
         private bool _disposed = false;
+
+        private readonly object _SHARED_OBJECT = new();
 
         private readonly PlayerList _PLAYER_LIST = new();  // Disposable
 
@@ -16,7 +17,9 @@ namespace Protocol
 
         private readonly Table<Chunk.Vector, Chunk> _CHUNKS = new();  // Disposable
 
-        private readonly Queue<Entity> _ENTITY_SPAWNING_POOL = new();  // Disposable
+        private readonly DualQueue<Entity> _ENTITY_SPAWNING_POOL = new();  // Disposable
+        private readonly DualQueue<Entity> _ENTITIES = new();  // Disposable
+        private readonly ConcurrentQueue<Entity> _DESPAWNED_ENTITIES = new();  // Disposable
 
         private readonly Table<System.Guid, Player> _DISCONNECTED_PLAYERS = new(); // Disposable
 
@@ -24,7 +27,6 @@ namespace Protocol
             Table<Chunk.Vector, Table<int, Entity>> _CHUNK_TO_ENTITIES = new();  // Disposable
         private readonly Table<int, Chunk.Grid> _ENTITY_TO_CHUNKS = new();  // Disposable
 
-        private readonly Queue<Entity> _DESPAWNED_ENTITIES = new();  // Disposable
 
         /*internal PublicInventory _Inventory = new ChestInventory();*/
 
@@ -144,21 +146,142 @@ namespace Protocol
             return itemEntity;
         }
 
-        public void F(Entity.Vector pEntity, BoundingBox boundingBox)
+        public Block GetBlock(Block.Vector p)
         {
-            Block.Grid grid = Block.Grid.Generate(pEntity, boundingBox);
-            foreach (Block.Vector pBlock in grid.GetVectors())
+            Chunk.Vector pChunk = Chunk.Vector.Convert(p);
+            if (!_CHUNKS.Contains(pChunk))
             {
-
+                return new Block(Block.Types.Air);
             }
+
+            Chunk c = _CHUNKS.Lookup(pChunk);
+            return c.GetBlock(p);
         }
 
-        public bool HandleEntity(Entity entity)
+        private (Entity.Vector, bool) AdjustPosition(
+            Entity.Vector pEntity, Entity.BoundingBox bbEntity)
+        {
+            Block.Grid grid = Block.Grid.Generate(pEntity, bbEntity);
+
+            bool onGround = false;
+
+            foreach (Block.Vector pBlock in grid.GetVectors())
+            {
+                Block block = GetBlock(pBlock);
+                if (block.Type == Block.Types.Air)
+                {
+                    continue;
+                }
+
+                Entity.BoundingBox bbBlock = Entity.BoundingBox.GetBlockBB();
+                Entity.Grid gridEntity = Entity.Grid.Generate(pEntity, bbEntity),
+                            gridBlock = Entity.Grid.Generate(pBlock, bbBlock);
+
+                Entity.Vector centerBlock = gridBlock.GetCenter(),
+                       centerEntity = gridEntity.GetCenter();
+
+                if (gridBlock.Contains(centerEntity) || gridEntity.Contains(centerBlock))
+                {
+                    // inside
+                    System.Diagnostics.Debug.Assert(false);
+                }
+
+                Entity.Grid? gridOverlapped = Entity.Grid.Generate(gridEntity, gridBlock);
+                if (gridOverlapped == null)
+                {
+                    // outside
+                    System.Diagnostics.Debug.Assert(false);
+                }
+
+                if (centerEntity.Y > gridBlock.MAX.Y)
+                {
+                    // top
+                    double h1 = (bbEntity.Height + bbBlock.Height) / 2;
+                    System.Diagnostics.Debug.Assert(h1 > 0);
+
+                    double h2 = centerEntity.Y - centerBlock.Y;
+                    System.Diagnostics.Debug.Assert(h2 > 0);
+
+                    double h3 = h1 - h2;
+                    System.Diagnostics.Debug.Assert(h3 > 0);
+
+                    pEntity = new Entity.Vector(pEntity.X, pEntity.Y + h3, pEntity.Z);
+                }
+                else if (centerEntity.Y < gridBlock.MIN.Y)
+                {
+                    // bottom
+                    // top
+                    double h1 = (bbEntity.Height + bbBlock.Height) / 2;
+                    System.Diagnostics.Debug.Assert(h1 > 0);
+
+                    double h2 = centerBlock.Y - centerEntity.Y;
+                    System.Diagnostics.Debug.Assert(h2 > 0);
+
+                    double h3 = h1 - h2;
+                    System.Diagnostics.Debug.Assert(h3 > 0);
+
+                    pEntity = new Entity.Vector(pEntity.X, pEntity.Y - h3, pEntity.Z);
+                }
+                else
+                {
+                    bool f1 = centerEntity.Z > (centerEntity.X - centerBlock.X) + centerBlock.Z,
+                     f2 = centerEntity.Z > -(centerEntity.X - centerBlock.X) + centerBlock.Z;
+                    if (f1 && f2)
+                    {
+                        // front
+                        throw new System.NotFiniteNumberException();
+                    }
+                    else if (f1)
+                    {
+                        System.Diagnostics.Debug.Assert(!f2);
+                        // left
+                        throw new System.NotFiniteNumberException();
+                    }
+                    else if (f2)
+                    {
+                        System.Diagnostics.Debug.Assert(!f1);
+                        // right
+                        throw new System.NotFiniteNumberException();
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.Assert(!f1 && !f2);
+                        // bottom
+                        throw new System.NotFiniteNumberException();
+                    }
+                }
+
+
+            }
+
+            return (pEntity, onGround);
+        }
+
+        private void DespawnEntity(Entity entity)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            CloseEntityRendering(entity);
+
+            entity.Flush();
+
+            _DESPAWNED_ENTITIES.Enqueue(entity);
+        }
+
+        public void HandleEntities()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            Entity? entity = null;
+            while (true)
             {
-                bool despawnEntity = false;
+                entity = _ENTITIES.Dequeue();
+                if (entity == null)
+                {
+                    break;
+                }
+
+                bool despawn = false;
 
                 if (entity is Player player)
                 {
@@ -176,7 +299,7 @@ namespace Protocol
 
                             _PLAYER_LIST.ClosePlayer(player.UniqueId);
 
-                            despawnEntity = true;
+                            despawn = true;
                         }
                         else
                         {
@@ -187,63 +310,47 @@ namespace Protocol
                     {
                         if (entity.IsDead())
                         {
-                            System.Diagnostics.Debug.Assert(!despawnEntity);
-                            despawnEntity = true;
+                            System.Diagnostics.Debug.Assert(!despawn);
+                            despawn = true;
                         }
                     }
                 }
 
-                if (despawnEntity)
+                if (despawn)
                 {
-                    CloseEntityRendering(entity);
-
-                    entity.Flush();
-
-                    _DESPAWNED_ENTITIES.Enqueue(entity);
-
-                    return true;
+                    DespawnEntity(entity);
+                    continue;
                 }
 
-                
-            }
-
-            {
-                entity.ApplyBaseForce(
-                        new Entity.Vector(-(1.0D - 0.91D), -(1.0D - 0.9800000190734863D), -(1.0D - 0.91D)) *
-                        entity.Velocity);  // Damping Force
-                entity.ApplyBaseForce(entity.GetMass() * 0.08D * new Entity.Vector(0, -1, 0));  // Gravity
-            }
-
-
-            {
-
-                Entity.Vector p = entity.Integrate();
-
-                // Test collide with blocks and adjust position.
                 {
-                    int xMax, yMax, zMax,
-                        xMin, yMin, zMin;
-                    
+                    Entity.Vector p = entity.Integrate();
 
+                    (Entity.Vector pAdjusted, bool onGround) = 
+                        AdjustPosition(p, entity.GetBoundingBox());
 
+                    entity.Move(pAdjusted, onGround);
+
+                    UpdateEntityRendering(entity);
                 }
 
-                entity.UpdateMovement(p, false);
 
-                UpdateEntityRendering(entity);
+                _ENTITIES.Enqueue(entity);
             }
 
-
-            return false;
         }
 
-        public void SpawnEntities(Queue<Entity> entities)
+        public void SpawnEntities()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            while (!_ENTITY_SPAWNING_POOL.Empty)
+            Entity? entity = null;
+            while (true)
             {
-                Entity entity = _ENTITY_SPAWNING_POOL.Dequeue();
+                entity = _ENTITY_SPAWNING_POOL.Dequeue();
+                if (entity == null)
+                {
+                    break;
+                }
 
                 if (entity is Player player)
                 {
@@ -252,9 +359,14 @@ namespace Protocol
                     _DISCONNECTED_PLAYERS.Insert(player.UniqueId, player);
                 }
 
+                (Entity.Vector p, bool onGround) =
+                        AdjustPosition(entity.Position, entity.GetBoundingBox());
+
+                entity.Spawn(p, onGround);
+
                 InitEntityRendering(entity);
 
-                entities.Enqueue(entity);
+                _ENTITIES.Enqueue(entity);
             }
         }
 
@@ -262,29 +374,60 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            while (!_DESPAWNED_ENTITIES.Empty)
+            while (true)
             {
-                Entity entity = _DESPAWNED_ENTITIES.Dequeue();
+                Entity? entity = _DESPAWNED_ENTITIES.Dequeue();
+                if (entity == null)
+                {
+                    break;
+                }
 
                 _ENTITY_ID_LIST.Dealloc(entity.Id);
                 entity.Dispose();
             }
+
+        }
+
+        public void Reset()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            _ENTITY_SPAWNING_POOL.Switch();
+            _ENTITIES.Switch();
         }
 
         protected abstract bool DetermineToDespawnPlayerOnDisconnect();
 
-        public void StartEntitRoutine(long serverTicks, Entity entity)
+        public void StartEntitRoutines(long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            entity.StartRoutine(serverTicks, this);
-
-            /*if (entity is Player player)
+            Entity? entity;
+            while (true)
             {
-                StartPlayerRoutine(serverTicks, player);
-            }*/
+                entity = _ENTITIES.Dequeue();
+                if (entity == null)
+                {
+                    break;
+                }
 
-            return;
+                // TODO: Resolve Collisions with other entities.
+                // TODO: Add Global Forces with OnGround flag. (Gravity, Damping Force, ...)
+                {
+                    entity.ApplyGlobalForce(
+                            new Entity.Vector(-(1.0D - 0.91D), -(1.0D - 0.9800000190734863D), -(1.0D - 0.91D)) *
+                            entity.Velocity);  // Damping Force
+                    entity.ApplyGlobalForce(entity.GetMass() * 0.08D * new Entity.Vector(0, -1, 0));  // Gravity
+                }
+
+                entity.StartRoutine(serverTicks, this);
+
+                /*if (entity is Player player)
+                {
+                    StartPlayerRoutine(serverTicks, player);
+                }*/
+
+            }
         }
 
         protected abstract void StartPlayerRoutine(long serverTicks, Player player);

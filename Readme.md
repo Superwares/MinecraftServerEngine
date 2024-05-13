@@ -16,10 +16,15 @@
 * Make Common library project.
 * Make container library more optimized.
 * If the user already exist on the server, when the client is joined with the same user id, the client will be kicked by the ClientListener.
+* TODO: Make concurrency mechanisms using rwmutex.
+
 
 ### Done
 
 ## Conventions
+
+float 이나 double 을 사용할 때는 F 와 D 를 무조건 붙인다.
+
 
 ### Exceptions
 In case of exceptions that must be handled, they must be documented using XML tags.

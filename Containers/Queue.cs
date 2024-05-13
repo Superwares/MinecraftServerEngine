@@ -163,6 +163,7 @@
 
     // TODO: Make concurrency mechanisms using rwmutex.
     public sealed class ConcurrentQueue<T> : Queue<T>
+        where T : class
     {
         private readonly object _SharedResource = new();
 
@@ -182,12 +183,17 @@
             }
         }
 
-        public override T Dequeue()
+        public new T? Dequeue()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             lock (_SharedResource)
             {
+                if (Empty)
+                {
+                    return null;
+                }
+
                 return base.Dequeue();
             }
         }

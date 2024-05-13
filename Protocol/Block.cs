@@ -56,7 +56,7 @@ namespace Protocol
         {
             private readonly Vector _max, _min;
 
-            public static Grid Generate(Entity.Vector p, BoundingBox boundingBox)
+            public static Grid Generate(Entity.Vector p, Entity.BoundingBox boundingBox)
             {
                 System.Diagnostics.Debug.Assert(boundingBox.Width > 0);
                 System.Diagnostics.Debug.Assert(boundingBox.Height > 0);
@@ -64,11 +64,32 @@ namespace Protocol
                 double h = boundingBox.Width / 2;
                 System.Diagnostics.Debug.Assert(h > 0);
 
+                double xEntityMax = p.X + h, yEntityMax = p.Y + boundingBox.Height, zEntityMax = p.Z + h,
+                       xEntityMin = p.X - h, yEntityMin = p.Y, zEntityMin = p.Z - h;
                 Entity.Vector 
-                    pEntityMax = new(p.X + h, p.Y + boundingBox.Height, p.Z + h),
-                    pEntityMin = new(p.X - h, p.Y, p.Z - h);
+                    maxEntity = new(xEntityMax, yEntityMax, zEntityMax),
+                    minEntity = new(xEntityMin, yEntityMin, zEntityMin);
+                Vector max = Vector.Convert(maxEntity),
+                       min = Vector.Convert(minEntity);
 
-                return new(Vector.Convert(pEntityMax), Vector.Convert(pEntityMin));
+                double r1 = xEntityMin % 1,
+                       r2 = yEntityMin % 1,
+                       r3 = zEntityMin % 1;
+                int xMin = min.X, yMin = min.Y, zMin = min.Z;
+                if (Comparing.IsEqualTo(r1, 0))
+                {
+                    --xMin;
+                }
+                if (Comparing.IsEqualTo(r2, 0))
+                {
+                    --yMin;
+                }
+                if (Comparing.IsEqualTo(r3, 0))
+                {
+                    --zMin;
+                }
+
+                return new(max, new(xMin, yMin, zMin));
             }
 
             public Grid(Vector max, Vector min)
@@ -134,20 +155,20 @@ namespace Protocol
             Dirt             = 3,
         }
 
-        private readonly Types _type;
-        public Types Type => _type;
+        private readonly Types _TYPE;
+        public Types Type => _TYPE;
 
-        private readonly uint _metadata;
-        public uint Metadata => _metadata;
+        private readonly uint _METADATA;
+        public uint Metadata => _METADATA;
 
         public ulong GlobalPaletteId
         {
             get
             {
-                byte metadata = (byte)_metadata;
+                byte metadata = (byte)_METADATA;
                 System.Diagnostics.Debug.Assert((metadata & 0b_11110000) == 0);  // metadata is 4 bits
 
-                ushort id = (ushort)_type;
+                ushort id = (ushort)_TYPE;
                 System.Diagnostics.Debug.Assert((id & 0b_11111110_00000000) == 0);  // id is 9 bits
                 return (ulong)(id << 4 | metadata);  // 13 bits
             }
@@ -155,19 +176,19 @@ namespace Protocol
 
         public Block(Types type, uint metadata)
         {
-            _type = type;
-            _metadata = metadata;
+            _TYPE = type;
+            _METADATA = metadata;
         }
 
         public Block(Types type)
         {
-            _type = type;
-            _metadata = 0;
+            _TYPE = type;
+            _METADATA = 0;
         }
 
         public readonly bool Equals(Block other)
         {
-            return (_type == other._type) && (_metadata == other._metadata);
+            return (_TYPE == other._TYPE) && (_METADATA == other._METADATA);
         }
     }
 

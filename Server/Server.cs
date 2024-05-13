@@ -13,7 +13,7 @@ namespace Application
 
         private readonly Queue<(Connection, Player)> _CONNECTIONS = new();  // Disposable
 
-        private readonly Queue<Entity> _ENTITIES = new();  // Disposable
+        
 
         private Server() 
         {
@@ -43,23 +43,6 @@ namespace Application
                 }
 
                 _CONNECTIONS.Enqueue((conn, player));
-            }
-        }
-
-        private void HandleEntities()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            for (int i = 0; i < _ENTITIES.Count; ++i)
-            {
-                Entity entity = _ENTITIES.Dequeue();
-
-                if (_WORLD.HandleEntity(entity))
-                {
-                    continue;
-                }
-
-                _ENTITIES.Enqueue(entity);
             }
         }
 
@@ -118,11 +101,11 @@ namespace Application
 
             // Barrier
 
-            HandleEntities();
+            _WORLD.HandleEntities();
 
             // Barrier
 
-            _WORLD.SpawnEntities(_ENTITIES);
+            _WORLD.SpawnEntities();
 
             // Barrier
 
@@ -138,7 +121,7 @@ namespace Application
 
             // Barrier
 
-            StartEntityRoutines(serverTicks);
+            _WORLD.StartEntitRoutines(serverTicks);
 
             // Barrier
 

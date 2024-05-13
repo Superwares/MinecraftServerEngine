@@ -103,12 +103,11 @@ namespace Protocol
 
             public static Grid? Generate(Grid g1, Grid g2)
             {
-                int xMax = System.Math.Min(g1._max.X, g2._max.X),
-                    zMax = System.Math.Min(g1._max.Z, g2._max.Z),
-                    xMin = System.Math.Max(g1._min.X, g2._min.X),
-                    zMin = System.Math.Max(g1._min.Z, g2._min.Z);
-
                 /*int temp;*/
+
+                int xMax = System.Math.Min(g1._MAX.X, g2._MAX.X),
+                    xMin = System.Math.Max(g1._MIN.X, g2._MIN.X);
+                
                 if (xMax < xMin)
                 {
                     /*temp = xMax;
@@ -116,6 +115,10 @@ namespace Protocol
                     xMin = temp;*/
                     return null;
                 }
+
+                int zMin = System.Math.Max(g1._MIN.Z, g2._MIN.Z),
+                    zMax = System.Math.Min(g1._MAX.Z, g2._MAX.Z);
+
                 if (zMax < zMin)
                 {
                     /*temp = zMax;
@@ -127,49 +130,68 @@ namespace Protocol
                 return new(new(xMax, zMax), new(xMin, zMin));
             }
 
-            public static Grid Generate(Entity.Vector c, BoundingBox boundingBox)
+            public static Grid Generate(Entity.Vector p, Entity.BoundingBox bb)
             {
-                System.Diagnostics.Debug.Assert(boundingBox.Width > 0);
-                System.Diagnostics.Debug.Assert(boundingBox.Height > 0);
+                System.Diagnostics.Debug.Assert(bb.Width > 0);
+                System.Diagnostics.Debug.Assert(bb.Height > 0);
 
-                double h = boundingBox.Width / 2;
+                double h = bb.Width / 2;
                 System.Diagnostics.Debug.Assert(h > 0);
 
+                double xEntityMax = p.X + h, zEntityMax = p.Z + h,
+                       xEntityMin = p.X - h, zEntityMin = p.Z - h;
                 Entity.Vector 
-                    pEntityMax = new(c.X + h, 0, c.Z + h),
-                    pEntityMin = new(c.X - h, 0, c.Z - h);
+                    maxEntity = new(xEntityMax, 0, xEntityMin),
+                    minEntity = new(zEntityMax, 0, zEntityMin);
+                Vector max = Vector.Convert(maxEntity),
+                       min = Vector.Convert(minEntity);
 
-                return new(Vector.Convert(pEntityMax), Vector.Convert(pEntityMin));
+                double r1 = xEntityMin % _WIDTH,
+                       r2 = zEntityMin % _WIDTH;
+                int xMin = min.X, zMin = min.Z;
+                if (Comparing.IsEqualTo(r1, 0))
+                {
+                    --xMin;
+                }
+                if (Comparing.IsEqualTo(r2, 0))
+                {
+                    --zMin;
+                }
+
+                return new(max, new(xMin, zMin));
             }
 
-            private readonly Vector _max, _min;
+            private readonly Vector _MAX, _MIN;
 
             public Grid(Vector max, Vector min)
             {
                 System.Diagnostics.Debug.Assert(max.X >= min.X);
                 System.Diagnostics.Debug.Assert(max.Z >= min.Z);
 
-                _max = max; _min = min;
+                _MAX = max; _MIN = min;
             }
 
             public bool Contains(Vector p)
             {
-                return (p.X <= _max.X && p.X >= _min.X && p.Z <= _max.Z && p.Z >= _min.Z);
+                return (
+                    p.X <= _MAX.X && p.X >= _MIN.X && 
+                    p.Z <= _MAX.Z && p.Z >= _MIN.Z);
             }
 
             public System.Collections.Generic.IEnumerable<Vector> GetVectors()
             {
-                if (_max.X == _min.X && _max.Z == _min.Z)
+                if (_MAX.X == _MIN.X && _MAX.Z == _MIN.Z)
                 {
-                    yield return new(_max.X, _min.Z);
-                    yield break;
+                    yield return new(_MAX.X, _MIN.Z);
                 }
-
-                for (int z = _min.Z; z <= _max.Z; ++z)
+                else
                 {
-                    for (int x = _min.X; x <= _max.X; ++x)
+                    for (int z = _MIN.Z; z <= _MAX.Z; ++z)
                     {
-                        yield return new(x, z);
+                        for (int x = _MIN.X; x <= _MAX.X; ++x)
+                        {
+                            yield return new(x, z);
+                        }
                     }
                 }
 
@@ -177,7 +199,7 @@ namespace Protocol
 
             public override string? ToString()
             {
-                return $"( Max: ({_max.X}, {_max.Z}), Min: ({_min.X}, {_min.Z}) )";
+                return $"( Max: ({_MAX.X}, {_MAX.Z}), Min: ({_MIN.X}, {_MIN.Z}) )";
             }
 
             public bool Equals(Grid? other)
@@ -188,7 +210,7 @@ namespace Protocol
                 }
 
                 System.Diagnostics.Debug.Assert(other != null);
-                return (other._max.Equals(_max) && other._min.Equals(_min));
+                return (other._MAX.Equals(_MAX) && other._MIN.Equals(_MIN));
             }
 
         }
@@ -676,7 +698,7 @@ namespace Protocol
             }
         }
 
-        public bool ContainsBlock(Block.Vector p)
+        public Block GetBlock(Block.Vector p)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

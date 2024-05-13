@@ -137,7 +137,8 @@ namespace Protocol
             _movement = true;
         }
 
-        public void DeterminToContinueRendering(int entityId, Entity.Vector pos, BoundingBox boundingBox)
+        public void DeterminToContinueRendering(
+            int entityId, Entity.Vector pos, Entity.BoundingBox bb)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -147,7 +148,7 @@ namespace Protocol
             {
                 EntityRenderer renderer = _RENDERERS.Dequeue();
 
-                if (!renderer.CanRender(pos, boundingBox))
+                if (!renderer.CanRender(pos, bb))
                 {
                     /*_ID_LIST.Dealloc(renderer.Id);*/
                     renderer.DestroyEntity(entityId);
@@ -192,7 +193,7 @@ namespace Protocol
                 EntityRenderer renderer = _RENDERERS.Dequeue();
 
                 /*_ID_LIST.Dealloc(renderer.Id);*/
-                renderer.Flush(entityId);
+                renderer.DestroyEntity(entityId);
                 renderer.Dispose();
             }
         }

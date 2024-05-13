@@ -37,5 +37,10 @@ namespace Common
             return (short)v;
         }
 
+        public static double ToDouble(int v)
+        {
+            return (double)v;
+        }
+
     }
 }

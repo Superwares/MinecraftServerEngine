@@ -489,7 +489,11 @@ namespace Protocol
                     {
                         PlayerPacket packet = PlayerPacket.Read(buffer);
 
-                        player.Stand(packet.OnGround);
+                        if (_TELEPORTATION_RECORDS.Empty)
+                        {
+                            player.Control(packet.OnGround);
+                        }
+
                     }
                     break;
                 case ServerboundPlayingPacket.PlayerPositionPacketId:
@@ -499,7 +503,7 @@ namespace Protocol
                         if (_TELEPORTATION_RECORDS.Empty)
                         {
                             Entity.Vector p = new(packet.X, packet.Y, packet.Z);
-                            player.Control(p);
+                            player.Control(p, packet.OnGround);
 
                             Chunk.Vector pChunk = Chunk.Vector.Convert(p);
                             foreach (var renderer in _ENTITY_TO_RENDERERS.GetValues())
@@ -508,7 +512,6 @@ namespace Protocol
                             }
                         }
 
-                        player.Stand(packet.OnGround);
                     }
                     break;
                 case ServerboundPlayingPacket.PlayerPosAndLookPacketId:
@@ -518,7 +521,7 @@ namespace Protocol
                         if (_TELEPORTATION_RECORDS.Empty)
                         {
                             Entity.Vector p = new(packet.X, packet.Y, packet.Z);
-                            player.Control(p);
+                            player.Control(p, packet.OnGround);
 
                             Chunk.Vector pChunk = Chunk.Vector.Convert(p);
                             foreach (var renderer in _ENTITY_TO_RENDERERS.GetValues())
@@ -528,15 +531,18 @@ namespace Protocol
                         }
 
                         player.Rotate(new(packet.Yaw, packet.Pitch));
-                        player.Stand(packet.OnGround);
                     }
                     break;
                 case ServerboundPlayingPacket.PlayerLookPacketId:
                     {
                         PlayerLookPacket packet = PlayerLookPacket.Read(buffer);
 
+                        if (_TELEPORTATION_RECORDS.Empty)
+                        {
+                            player.Control(packet.OnGround);
+                        }
+
                         player.Rotate(new(packet.Yaw, packet.Pitch));
-                        player.Stand(packet.OnGround);
                     }
                     break;
                 case ServerboundPlayingPacket.EntityActionPacketId:

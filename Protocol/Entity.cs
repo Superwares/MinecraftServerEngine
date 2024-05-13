@@ -1,6 +1,8 @@
 ﻿
 using Common;
 using Containers;
+using System;
+using static Protocol.Entity.BoundingBox;
 
 namespace Protocol
 {
@@ -73,6 +75,113 @@ namespace Protocol
 
         }
 
+        public class Grid : System.IEquatable<Grid>
+        {
+            public static Grid Generate(Block.Vector p, BoundingBox bb)
+            {
+                Vector min = new(
+                    Conversions.ToDouble(p.X),
+                    Conversions.ToDouble(p.Y),
+                    Conversions.ToDouble(p.Z));
+                Vector max = new(
+                    Conversions.ToDouble(p.X) + bb.Width,
+                    Conversions.ToDouble(p.Y) + bb.Height,
+                    Conversions.ToDouble(p.Z) + bb.Width);
+
+                return new(max, min);
+            }
+
+            public static Grid? Generate(Grid g1, Grid g2)
+            {
+                double xMax = System.Math.Min(g1.MAX.X, g2.MAX.X),
+                       xMin = System.Math.Max(g1.MIN.X, g2.MIN.X);
+                if (Comparing.IsLessThan(xMax, xMin))
+                {
+                    return null;
+                }
+
+                double yMax = System.Math.Min(g1.MAX.Y, g2.MAX.Y),
+                       yMin = System.Math.Max(g1.MIN.Y, g2.MIN.Y);
+                if (Comparing.IsLessThan(yMax, yMin))
+                {
+                    return null;
+                }
+
+                double zMin = System.Math.Max(g1.MIN.Z, g2.MIN.Z),
+                       zMax = System.Math.Min(g1.MAX.Z, g2.MAX.Z);
+                if (Comparing.IsLessThan(zMax, zMin))
+                {
+                    return null;
+                }
+
+                return new(new(xMax, yMax, zMax), new(xMin, yMin, zMin));
+            }
+
+            public static Grid Generate(Vector p, BoundingBox bb)
+            {
+                double h = bb.Width / 2.0D;
+                Vector min = new(
+                        p.X - h, p.Y, p.Z - h),
+                       max = new(
+                        p.X + h, p.Y + bb.Height, p.Z + h);
+
+                return new(max, min);
+            }
+
+            public readonly Vector MAX, MIN;
+
+            public Grid(Vector max, Vector min)
+            {
+                System.Diagnostics.Debug.Assert(
+                    Comparing.IsGreaterThanOrEqualTo(max.X, min.X));
+                System.Diagnostics.Debug.Assert(
+                    Comparing.IsGreaterThanOrEqualTo(max.Y, min.Y));
+                System.Diagnostics.Debug.Assert(
+                    Comparing.IsGreaterThanOrEqualTo(max.Z, min.Z));
+
+                MAX = max; MIN = min;
+            }
+
+            public Vector GetCenter()
+            {
+                return new((MAX.X + MIN.X) / 2, (MAX.Y + MIN.Y) / 2, (MAX.Z + MIN.Z) / 2);
+            }
+
+            public bool Contains(Vector p)
+            {
+                return (
+                    p.X <= MAX.X && p.X >= MIN.X &&
+                    p.Y <= MAX.Y && p.Y >= MIN.Y &&
+                    p.Z <= MAX.Z && p.Z >= MIN.Z);
+            }
+
+            public bool Equals(Grid? other)
+            {
+                if (other == null)
+                {
+                    return false;
+                }
+
+                return MAX.Equals(other.MAX) && MIN.Equals(other.MIN);
+            }
+        }
+
+        public struct BoundingBox
+        {
+            public static BoundingBox GetBlockBB() => new(1, 1);
+
+            public readonly double Width, Height;
+
+            public BoundingBox(double width, double height)
+            {
+                System.Diagnostics.Debug.Assert(width > 0);
+                System.Diagnostics.Debug.Assert(height > 0);
+
+                Width = width; Height = height;
+            }
+
+        }
+
         public readonly struct Angles : System.IEquatable<Angles>
         {
             internal const float MaxYaw = 180, MinYaw = -180;
@@ -126,6 +235,8 @@ namespace Protocol
 
         private bool _disposed = false;
 
+        private bool _spawned = false;
+
         private int _id;
         public int Id => _id;
 
@@ -151,7 +262,7 @@ namespace Protocol
 
 
         protected bool _onGround;
-        public bool IsOnGround => _onGround;
+        public bool OnGround => _onGround;
 
 
         protected bool _sneaking, _sprinting;
@@ -200,12 +311,16 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(_spawned);
+
             return _RENDERER_MANAGER.Apply(outPackets, p, renderDistance);
         }
 
-        public void ApplyBaseForce(Vector force)
+        public void ApplyGlobalForce(Vector force)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_spawned);
 
             _FORCES.Enqueue(force);
         }
@@ -214,6 +329,8 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(_spawned);
+
             _FORCES.Enqueue(force);
         }
 
@@ -221,19 +338,36 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(_spawned);
+
             return false;
         }
 
         protected internal virtual void StartRoutine(long serverTicks, World world)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_spawned);
+        }
+
+        public void Spawn(Vector p, bool onGround)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(!_spawned);
+
+            _p = p;
+            _onGround = onGround;
+            _spawned = true;
         }
 
         public virtual Vector Integrate()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Vector pos = _p;
+            System.Diagnostics.Debug.Assert(_spawned);
+
+            Vector p = _p;
 
             while (!_FORCES.Empty)
             {
@@ -242,15 +376,17 @@ namespace Protocol
                 _v += (force / GetMass());
             }
 
-            pos += _v;
-            /*System.Console.WriteLine($"pos: ({pos.X}, {pos.Y}, {pos.Z})");*/
+            p += _v;
+            /*System.Console.WriteLine($"p: ({p.X}, {p.Y}, {p.Z})");*/
 
-            return pos;
+            return p;
         }
-
-        internal void UpdateMovement(Vector p, bool onGround)
+        
+        public virtual void Move(Vector p, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_spawned);
 
             System.Diagnostics.Debug.Assert(_FORCES.Empty);
 
@@ -293,21 +429,11 @@ namespace Protocol
 
                 _RENDERER_MANAGER.Stand(Id);
             }
-
+            
             _onGround = onGround;
 
             _RENDERER_MANAGER.DeterminToContinueRendering(Id, _p, GetBoundingBox());
 
-            /*if (_teleported)
-            {
-                _pos = _posTeleport;
-                _look = _lookTeleport;
-                // update position data in chunk
-
-                _RENDERER_MANAGER.Teleport(Id, _pos, _look, _onGround);
-
-                _teleported = false;
-            }*/
         }
 
         /*public virtual void Teleport(Vector pos, Angles look)
@@ -317,29 +443,30 @@ namespace Protocol
             _lookTeleport = look;
         }*/
 
-        public void Stand(bool f)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            _onGround = f;
-        }
-
         public void Rotate(Angles look)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(_spawned);
+            
             _rotated = true;
             _look = look;
         }
 
         private void RanderFormChanging()
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_spawned);
+
             _RENDERER_MANAGER.ChangeForms(Id, _sneaking, _sprinting);
         }
 
         public void Sneak()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_spawned);
 
             System.Diagnostics.Debug.Assert(!_sneaking);
             _sneaking = true;
@@ -351,6 +478,8 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(_spawned);
+
             System.Diagnostics.Debug.Assert(_sneaking);
             _sneaking = false;
 
@@ -360,6 +489,8 @@ namespace Protocol
         public void Sprint()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_spawned);
 
             System.Diagnostics.Debug.Assert(!_sprinting);
             _sprinting = true;
@@ -371,6 +502,8 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(_spawned);
+
             System.Diagnostics.Debug.Assert(_sprinting);
             _sprinting = false;
 
@@ -379,6 +512,8 @@ namespace Protocol
         
         public void Flush()
         {
+            System.Diagnostics.Debug.Assert(_spawned);
+
             _FORCES.Flush();
             _RENDERER_MANAGER.Flush(Id);
         }
@@ -388,6 +523,7 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Assertion
+            System.Diagnostics.Debug.Assert(_spawned);
             System.Diagnostics.Debug.Assert(_FORCES.Empty);
 
             // Release resources.
@@ -492,8 +628,8 @@ namespace Protocol
         private readonly Queue<Vector> _FORCES;
         private Vector _v;
 
-        private bool _controled;
         private Vector _p;
+        private bool _onGround;
 
         internal Player(
             int id, System.Guid uniqueId,
@@ -509,9 +645,6 @@ namespace Protocol
 
             _FORCES = new();
             _v = new(0, 0, 0);
-
-            _controled = false;
-            _p = p;
         }
 
         ~Player() => System.Diagnostics.Debug.Assert(false);
@@ -527,6 +660,7 @@ namespace Protocol
             _selfRenderer = renderer;
 
             _p = Position;
+            _onGround = OnGround;
 
             renderer.Init(Id, _v, _p, Look);
         }
@@ -573,8 +707,6 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Vector p = base.Integrate();
-
             while (!_FORCES.Empty)
             {
                 Vector force = _FORCES.Dequeue();
@@ -582,35 +714,47 @@ namespace Protocol
                 _v += (force / GetMass());
             }
 
+            return base.Integrate();
+        }
+
+        public override void Move(Vector p, bool onGround)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             if (IsConnected)
             {
                 // TODO: Check the difference between _p and p. and predict movement....
-                /*System.Console.WriteLine($"p: {p}, _p: {_p}, ");*/
+                /*System.Console.WriteLine($"p: {p}, _p: {_p}, ");
                 System.Console.WriteLine($"Length: {Vector.GetLength(p, _p)}");
-                /*if (Vector.GetLength(p, _p) > k)
+                if (Vector.GetLength(p, _p) > k)
                 {
-                }*/
-
-
-                if (_controled)
-                {
-                    System.Console.WriteLine("Hello!");
-                    _controled = false;
-                    return _p;
                 }
+                */
+
+                p = _p;
+                onGround = _onGround;
             }
 
-            return p;
+            base.Move(p, onGround);
         }
 
-        internal void Control(Vector p)
+        internal void Control(Vector p, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(IsConnected);
 
-            _controled = true;
             _p = p;
+            _onGround = onGround;
+        }
+
+        internal void Control(bool onGround)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(IsConnected);
+
+            _onGround = onGround;
         }
 
         protected internal override void StartRoutine(long serverTicks, World world)

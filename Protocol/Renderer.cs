@@ -88,7 +88,7 @@ namespace Protocol
             _d = d;
         }
 
-        public bool CanRender(Entity.Vector p, BoundingBox boundingBox)
+        public bool CanRender(Entity.Vector p, Entity.BoundingBox bb)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -96,8 +96,8 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(_d > 0);
 
             /*System.Console.WriteLine($"d: {_d}");*/
-            System.Console.WriteLine();
-            Chunk.Grid gridEntity = Chunk.Grid.Generate(p, boundingBox);
+            /*System.Console.WriteLine();*/
+            Chunk.Grid gridEntity = Chunk.Grid.Generate(p, bb);
             /*System.Console.WriteLine($"gridEntity: {gridEntity}");*/
             Chunk.Grid gridRender = Chunk.Grid.Generate(_p, _d);
             /*System.Console.WriteLine($"gridRender: {gridRender}");*/
@@ -207,13 +207,6 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Render(new DestroyEntitiesPacket([entityId]));
-        }
-
-        public void Flush(int entityId)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            DestroyEntity(entityId);
         }
 
         public override void Dispose()
