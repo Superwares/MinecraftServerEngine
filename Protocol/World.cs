@@ -491,6 +491,8 @@ namespace Protocol
                             -1 * new Entity.Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
                             entity.Velocity);  // Damping Force
                     entity.ApplyGlobalForce(entity.GetMass() * 0.08D * new Entity.Vector(0, -1, 0));  // Gravity
+
+                    /*entity.ApplyGlobalForce(entity.GetMass() * 0.001D * new Entity.Vector(0, -1, 0));  // Gravity*/
                 }
 
                 entity.StartRoutine(serverTicks, this);
@@ -515,10 +517,10 @@ namespace Protocol
 
             _PLAYER_LIST.StartRoutine(serverTicks);
 
-            if (serverTicks == 20 * 5)
+            /*if (serverTicks == 20 * 5)
             {
                 SpawnItemEntity();
-            }
+            }*/
 
             StartSubRoutine(serverTicks);
         }

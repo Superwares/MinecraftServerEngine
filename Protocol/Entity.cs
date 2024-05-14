@@ -412,10 +412,9 @@ namespace Protocol
                 v += (force / GetMass());
             }
 
-            /*System.Console.WriteLine($"v: {v}");*/
-
             p += v;
-            /*System.Console.WriteLine($"p: ({p.X}, {p.Y}, {p.Z})");*/
+
+            /*System.Console.WriteLine($"v: {v}, p: {p}, ");*/
 
             return (v, p);
         }
@@ -588,7 +587,7 @@ namespace Protocol
         public override BoundingBox GetBoundingBox() => BOUNDING_BOX;
 
 
-        public const double MASS = 0.2;
+        public const double MASS = 0.1D;
         public override double GetMass() => MASS;
 
 

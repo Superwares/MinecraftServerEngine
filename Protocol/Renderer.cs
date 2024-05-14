@@ -253,7 +253,7 @@ namespace Protocol
 
             {
                 Render(new SetPlayerAbilitiesPacket(
-                    false, false, true, false, 0f, 0));
+                    false, false, false, false, 0.0F, 0.0F));
             }
 
             {

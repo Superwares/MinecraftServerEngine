@@ -1866,6 +1866,8 @@ public abstract class EntityLiving extends Entity {
 
     public void B_() {
 
+        /*System.out.println("motY: " + motY);*/
+
         super.B_();
 
         this.cI();

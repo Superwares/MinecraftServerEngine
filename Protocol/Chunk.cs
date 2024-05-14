@@ -704,21 +704,24 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(!_disposed);
 
             int y = p.Y / Section.HEIGHT;
-            if (Comparing.IsLessThan(p.Y % Section.HEIGHT, 0))
+            double r = Conversions.ToDouble(p.Y) % Conversions.ToDouble(Section.HEIGHT);
+            if (Comparing.IsLessThan(r, 0.0D))
+            {
+                --y;
+            }
+
+            /*System.Console.WriteLine($"y: {y}");*/
+
+            if (y < 0)
             {
                 return new Block(Block.Types.Air);
             }
 
-            /*if (y < 0)
-            {
-                return false;
-            }*/
-
-            if (y > _HEIGHT)
+            if (y >= _TOTAL_SECTION_COUNT)
             {
                 return new Block(Block.Types.Air);
             }
-
+            
             System.Diagnostics.Debug.Assert(y >= 0);
             Block.Vector pPrime = new(
                     p.X - (_p.X * Section.WIDTH),
@@ -728,6 +731,7 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(pPrime.Y >= 0 && pPrime.Y <= Section.HEIGHT);
             System.Diagnostics.Debug.Assert(pPrime.Z >= 0 && pPrime.Z <= Section.WIDTH);
 
+            
             Section? section = _sections[y];
             if (section == null)
             {
