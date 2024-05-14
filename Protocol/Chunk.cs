@@ -141,8 +141,8 @@ namespace Protocol
                 double xEntityMax = p.X + h, zEntityMax = p.Z + h,
                        xEntityMin = p.X - h, zEntityMin = p.Z - h;
                 Entity.Vector 
-                    maxEntity = new(xEntityMax, 0, xEntityMin),
-                    minEntity = new(zEntityMax, 0, zEntityMin);
+                    maxEntity = new(xEntityMax, 0, zEntityMax),
+                    minEntity = new(xEntityMin, 0, zEntityMin);
                 Vector max = Vector.Convert(maxEntity),
                        min = Vector.Convert(minEntity);
 
@@ -274,7 +274,7 @@ namespace Protocol
 
             ~Section() => System.Diagnostics.Debug.Assert(false);
 
-            public bool ContainsBlock(Block.Vector p)
+            public Block GetBlock(Block.Vector p)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -308,13 +308,14 @@ namespace Protocol
                 if (_bitCount == 13)
                 {
                     System.Diagnostics.Debug.Assert(_palette == null);
-                    return value > 0;  // value == 0 is air.
+
+                    return Block.GetBlockByGlobalPaletteId(value);
                 }
                 else
                 {
                     System.Diagnostics.Debug.Assert(_palette != null);
                     Block b = _palette[value];
-                    return b.Type != Block.Types.Air;
+                    return b;
                 }
             }
 
@@ -546,7 +547,7 @@ namespace Protocol
                 System.Diagnostics.Debug.Assert(p.Y >= 0 && p.Y <= HEIGHT);
 
                 System.Diagnostics.Debug.Assert(block.Type != Block.Types.Air);
-                System.Diagnostics.Debug.Assert(!ContainsBlock(p));
+                System.Diagnostics.Debug.Assert(GetBlock(p).Type == Block.Types.Air);
 
                 ulong value = GetValueInPalette(block);
 
@@ -705,7 +706,7 @@ namespace Protocol
             int y = p.Y / Section.HEIGHT;
             if (Comparing.IsLessThan(p.Y % Section.HEIGHT, 0))
             {
-                return false;
+                return new Block(Block.Types.Air);
             }
 
             /*if (y < 0)
@@ -715,14 +716,14 @@ namespace Protocol
 
             if (y > _HEIGHT)
             {
-                return false;
+                return new Block(Block.Types.Air);
             }
 
             System.Diagnostics.Debug.Assert(y >= 0);
             Block.Vector pPrime = new(
-                    p.X - ((_p.X < 0 ? -(_p.X + 1) : _p.X) * Section.WIDTH),
+                    p.X - (_p.X * Section.WIDTH),
                     p.Y - (y * Section.HEIGHT), 
-                    p.Z - ((_p.Z < 0 ? -(_p.Z + 1) : _p.Z) * Section.WIDTH));
+                    p.Z - (_p.Z * Section.WIDTH));
             System.Diagnostics.Debug.Assert(pPrime.X >= 0 && pPrime.X <= Section.WIDTH);
             System.Diagnostics.Debug.Assert(pPrime.Y >= 0 && pPrime.Y <= Section.HEIGHT);
             System.Diagnostics.Debug.Assert(pPrime.Z >= 0 && pPrime.Z <= Section.WIDTH);
@@ -730,10 +731,10 @@ namespace Protocol
             Section? section = _sections[y];
             if (section == null)
             {
-                return false;
+                return new Block(Block.Types.Air);
             }
 
-            return section.ContainsBlock(pPrime);
+            return section.GetBlock(pPrime);
         }
 
         public void Dispose()

@@ -19,6 +19,16 @@ namespace Common
             return (byte)v;
         }
 
+        public static uint ToUint(ulong v)
+        {
+            return (uint)v;
+        }
+
+        public static uint ToUint(int v)
+        {
+            return (uint)v;
+        }
+
         public static long ToLong(ulong v)
         {
             long ret = (long)v;

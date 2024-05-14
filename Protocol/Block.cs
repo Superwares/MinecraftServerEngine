@@ -1,5 +1,6 @@
 ﻿
 using Common;
+using System;
 
 namespace Protocol
 {
@@ -56,12 +57,41 @@ namespace Protocol
         {
             private readonly Vector _max, _min;
 
+            public static Grid Generate(Entity.Grid grid)
+            {
+                Vector max = Vector.Convert(grid.MAX),
+                       min = Vector.Convert(grid.MIN);
+
+                Entity.BoundingBox bb = Entity.BoundingBox.GetBlockBB();
+
+                double r1 = grid.MIN.X % bb.Width,
+                       r2 = grid.MIN.Y % bb.Height,
+                       r3 = grid.MIN.Z % bb.Width;
+                int xMin = min.X, yMin = min.Y, zMin = min.Z;
+                if (Comparing.IsEqualTo(r1, 0.0D))
+                {
+                    --xMin;
+                }
+                if (Comparing.IsEqualTo(r2, 0.0D))
+                {
+                    --yMin;
+                }
+                if (Comparing.IsEqualTo(r3, 0.0D))
+                {
+                    --zMin;
+                }
+
+                return new(max, new(xMin, yMin, zMin));
+            }
+
             public static Grid Generate(Entity.Vector p, Entity.BoundingBox boundingBox)
             {
-                System.Diagnostics.Debug.Assert(boundingBox.Width > 0);
-                System.Diagnostics.Debug.Assert(boundingBox.Height > 0);
+                System.Diagnostics.Debug.Assert(Comparing.IsGreaterThan(boundingBox.Width, 0));
+                System.Diagnostics.Debug.Assert(Comparing.IsGreaterThan(boundingBox.Height, 0));
 
-                double h = boundingBox.Width / 2;
+                Entity.BoundingBox bb = Entity.BoundingBox.GetBlockBB();
+
+                double h = boundingBox.Width / 2.0D;
                 System.Diagnostics.Debug.Assert(h > 0);
 
                 double xEntityMax = p.X + h, yEntityMax = p.Y + boundingBox.Height, zEntityMax = p.Z + h,
@@ -72,19 +102,19 @@ namespace Protocol
                 Vector max = Vector.Convert(maxEntity),
                        min = Vector.Convert(minEntity);
 
-                double r1 = xEntityMin % 1,
-                       r2 = yEntityMin % 1,
-                       r3 = zEntityMin % 1;
+                double r1 = xEntityMin % bb.Width,
+                       r2 = yEntityMin % bb.Height,
+                       r3 = zEntityMin % bb.Width;
                 int xMin = min.X, yMin = min.Y, zMin = min.Z;
-                if (Comparing.IsEqualTo(r1, 0))
+                if (Comparing.IsEqualTo(r1, 0.0D))
                 {
                     --xMin;
                 }
-                if (Comparing.IsEqualTo(r2, 0))
+                if (Comparing.IsEqualTo(r2, 0.0D))
                 {
                     --yMin;
                 }
-                if (Comparing.IsEqualTo(r3, 0))
+                if (Comparing.IsEqualTo(r3, 0.0D))
                 {
                     --zMin;
                 }
@@ -145,6 +175,17 @@ namespace Protocol
                 System.Diagnostics.Debug.Assert(other != null);
                 return (other._max.Equals(_max) && other._min.Equals(_min));
             }
+        }
+
+        public static Block GetBlockByGlobalPaletteId(ulong value)
+        {
+            uint metadata = Conversions.ToUint(value) & 0b_1111;
+            uint id = Conversions.ToUint(value) >> 4;
+            System.Diagnostics.Debug.Assert((id & ~Conversions.ToUint(0b1_1111_1111)) == 0);
+
+            Types type = (Types)id;
+
+            return new(type, metadata);
         }
 
         public enum Types : uint

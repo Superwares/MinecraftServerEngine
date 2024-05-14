@@ -1,4 +1,6 @@
-﻿namespace Containers
+﻿using System;
+
+namespace Containers
 {
     public interface IReadOnlyQueue<T>
     {

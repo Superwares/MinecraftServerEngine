@@ -814,7 +814,6 @@ namespace Protocol
             {
                 if (!_init)
                 {
-                    System.Console.WriteLine("INIT!!!");
                     /*try
                     {
                         StartInitProcess(buffer, world, player);

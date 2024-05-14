@@ -1,8 +1,6 @@
 ﻿
 using Common;
 using Containers;
-using System;
-using static Protocol.Entity.BoundingBox;
 
 namespace Protocol
 {
@@ -91,28 +89,19 @@ namespace Protocol
                 return new(max, min);
             }
 
-            public static Grid? Generate(Grid g1, Grid g2)
+            public static Grid Generate(Grid g1, Grid g2)
             {
-                double xMax = System.Math.Min(g1.MAX.X, g2.MAX.X),
-                       xMin = System.Math.Max(g1.MIN.X, g2.MIN.X);
-                if (Comparing.IsLessThan(xMax, xMin))
-                {
-                    return null;
-                }
+                double xMax = System.Math.Max(g1.MAX.X, g2.MAX.X),
+                       xMin = System.Math.Min(g1.MIN.X, g2.MIN.X);
+                System.Diagnostics.Debug.Assert(Comparing.IsGreaterThan(xMax, xMin));
 
-                double yMax = System.Math.Min(g1.MAX.Y, g2.MAX.Y),
-                       yMin = System.Math.Max(g1.MIN.Y, g2.MIN.Y);
-                if (Comparing.IsLessThan(yMax, yMin))
-                {
-                    return null;
-                }
+                double yMax = System.Math.Max(g1.MAX.Y, g2.MAX.Y),
+                       yMin = System.Math.Min(g1.MIN.Y, g2.MIN.Y);
+                System.Diagnostics.Debug.Assert(Comparing.IsGreaterThan(yMax, yMin));
 
-                double zMin = System.Math.Max(g1.MIN.Z, g2.MIN.Z),
-                       zMax = System.Math.Min(g1.MAX.Z, g2.MAX.Z);
-                if (Comparing.IsLessThan(zMax, zMin))
-                {
-                    return null;
-                }
+                double zMax = System.Math.Max(g1.MAX.Z, g2.MAX.Z),
+                       zMin = System.Math.Min(g1.MIN.Z, g2.MIN.Z);
+                System.Diagnostics.Debug.Assert(Comparing.IsGreaterThan(zMax, zMin));
 
                 return new(new(xMax, yMax, zMax), new(xMin, yMin, zMin));
             }
@@ -144,7 +133,14 @@ namespace Protocol
 
             public Vector GetCenter()
             {
-                return new((MAX.X + MIN.X) / 2, (MAX.Y + MIN.Y) / 2, (MAX.Z + MIN.Z) / 2);
+                return new((MAX.X + MIN.X) / 2.0D, (MAX.Y + MIN.Y) / 2.0D, (MAX.Z + MIN.Z) / 2.0D);
+            }
+
+            public double GetHeight()
+            {
+                double h = (MAX.Y - MIN.Y);
+                System.Diagnostics.Debug.Assert(h >= 0);
+                return h;
             }
 
             public bool Contains(Vector p)
@@ -153,6 +149,37 @@ namespace Protocol
                     p.X <= MAX.X && p.X >= MIN.X &&
                     p.Y <= MAX.Y && p.Y >= MIN.Y &&
                     p.Z <= MAX.Z && p.Z >= MIN.Z);
+            }
+
+            public bool IsOverlapped(Grid other)
+            {
+                double xMax = System.Math.Min(MAX.X, other.MAX.X),
+                       xMin = System.Math.Max(MIN.X, other.MIN.X);
+                if (Comparing.IsLessThan(xMax, xMin))
+                {
+                    return false;
+                }
+
+                double yMax = System.Math.Min(MAX.Y, other.MAX.Y),
+                       yMin = System.Math.Max(MIN.Y, other.MIN.Y);
+                if (Comparing.IsLessThan(yMax, yMin))
+                {
+                    return false;
+                }
+
+                double zMax = System.Math.Min(MAX.Z, other.MAX.Z),
+                       zMin = System.Math.Max(MIN.Z, other.MIN.Z);
+                if (Comparing.IsLessThan(zMax, zMin))
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
+            public override string? ToString()
+            {
+                return $"( MAX: {MAX}, MIN: {MIN} )";
             }
 
             public bool Equals(Grid? other)
@@ -166,7 +193,7 @@ namespace Protocol
             }
         }
 
-        public struct BoundingBox
+        public struct BoundingBox /*: System.IEquatable<BoundingBox>*/
         {
             public static BoundingBox GetBlockBB() => new(1, 1);
 
@@ -178,6 +205,11 @@ namespace Protocol
                 System.Diagnostics.Debug.Assert(height > 0);
 
                 Width = width; Height = height;
+            }
+
+            public override readonly string? ToString()
+            {
+                return $"( Width: {Width}, Height: {Height} )";
             }
 
         }
@@ -361,30 +393,38 @@ namespace Protocol
             _spawned = true;
         }
 
-        public virtual Vector Integrate()
+        public virtual (Vector, Vector) Integrate()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(_spawned);
 
-            Vector p = _p;
+            /*System.Console.WriteLine("Integrate!");*/
+
+            Vector v = _v, p = _p;
+            /*System.Console.WriteLine();
+            System.Console.WriteLine($"p: ({p.X}, {p.Y}, {p.Z})");*/
 
             while (!_FORCES.Empty)
             {
                 Vector force = _FORCES.Dequeue();
 
-                _v += (force / GetMass());
+                v += (force / GetMass());
             }
 
-            p += _v;
+            /*System.Console.WriteLine($"v: {v}");*/
+
+            p += v;
             /*System.Console.WriteLine($"p: ({p.X}, {p.Y}, {p.Z})");*/
 
-            return p;
+            return (v, p);
         }
         
-        public virtual void Move(Vector p, bool onGround)
+        public virtual void Move(Vector v, Vector p, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            /*System.Console.WriteLine($"p: ({p.X}, {p.Y}, {p.Z})");*/
 
             System.Diagnostics.Debug.Assert(_spawned);
 
@@ -429,7 +469,8 @@ namespace Protocol
 
                 _RENDERER_MANAGER.Stand(Id);
             }
-            
+
+            _v = v;
             _onGround = onGround;
 
             _RENDERER_MANAGER.DeterminToContinueRendering(Id, _p, GetBoundingBox());
@@ -686,7 +727,7 @@ namespace Protocol
                 _selfRenderer.ApplyVelocity(Id, force / GetMass());
             }
 
-            _FORCES.Enqueue(force);
+            /*_FORCES.Enqueue(force);*/
 
             base.ApplyForce(force);
 
@@ -703,21 +744,21 @@ namespace Protocol
             // TODO: Check the velocity was reset in client when teleported.
         }*/
 
-        public override Vector Integrate()
+        public override (Vector, Vector) Integrate()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            while (!_FORCES.Empty)
+            /*while (!_FORCES.Empty)
             {
                 Vector force = _FORCES.Dequeue();
 
                 _v += (force / GetMass());
-            }
+            }*/
 
             return base.Integrate();
         }
 
-        public override void Move(Vector p, bool onGround)
+        public override void Move(Vector v, Vector p, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -735,7 +776,8 @@ namespace Protocol
                 onGround = _onGround;
             }
 
-            base.Move(p, onGround);
+            
+            base.Move(v, p, onGround);
         }
 
         internal void Control(Vector p, bool onGround)

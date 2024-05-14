@@ -13,8 +13,6 @@ namespace Application
 
         private readonly Queue<(Connection, Player)> _CONNECTIONS = new();  // Disposable
 
-        
-
         private Server() 
         {
             _WORLD = new SuperWorld();
@@ -46,13 +44,6 @@ namespace Application
             }
         }
 
-        private void ReleaseResources()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            _WORLD.ReleaseResources();
-        }
-
         private void Render(long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -77,20 +68,6 @@ namespace Application
             }
         }
 
-        private void StartEntityRoutines(long serverTicks)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            for (int i = 0; i < _ENTITIES.Count; ++i)
-            {
-                Entity entity = _ENTITIES.Dequeue();
-
-                _WORLD.StartEntitRoutine(serverTicks, entity);
-
-                _ENTITIES.Enqueue(entity);
-            }
-        }
-        
         private void StartGameRoutine(long serverTicks, ConnectionListener connListener)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -98,6 +75,10 @@ namespace Application
             System.Console.Write(".");
 
             Control(serverTicks);
+
+            // Barrier
+
+            _WORLD.Reset();
 
             // Barrier
 
@@ -113,7 +94,11 @@ namespace Application
 
             // Barrier
 
-            ReleaseResources();
+            _WORLD.ReleaseResources();
+
+            // Barrier
+
+            _WORLD.Reset();
 
             // Barrier
 
@@ -179,14 +164,10 @@ namespace Application
             // Assertiong
             System.Diagnostics.Debug.Assert(_CONNECTIONS.Empty);
 
-            System.Diagnostics.Debug.Assert(_ENTITIES.Empty);
-
             // Release resources.
             _WORLD.Dispose();
 
             _CONNECTIONS.Dispose();
-
-            _ENTITIES.Dispose();
 
             // Finish
             base.Dispose();

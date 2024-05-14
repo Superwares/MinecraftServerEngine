@@ -1,4 +1,5 @@
-﻿using Containers;
+﻿using Common;
+using Containers;
 
 namespace Protocol
 {
@@ -17,7 +18,7 @@ namespace Protocol
 
         private readonly Table<Chunk.Vector, Chunk> _CHUNKS = new();  // Disposable
 
-        private readonly DualQueue<Entity> _ENTITY_SPAWNING_POOL = new();  // Disposable
+        private readonly ConcurrentQueue<Entity> _ENTITY_SPAWNING_POOL = new();  // Disposable
         private readonly DualQueue<Entity> _ENTITIES = new();  // Disposable
         private readonly ConcurrentQueue<Entity> _DESPAWNED_ENTITIES = new();  // Disposable
 
@@ -158,36 +159,44 @@ namespace Protocol
             return c.GetBlock(p);
         }
 
-        private (Entity.Vector, bool) AdjustPosition(
-            Entity.Vector pEntity, Entity.BoundingBox bbEntity)
+        private (Entity.Vector, Entity.Vector, bool) AdjustPosition(
+            Entity.Vector vEntity, Entity.Vector pEntity, Entity.Grid gridEntity)
         {
-            Block.Grid grid = Block.Grid.Generate(pEntity, bbEntity);
+            Block.Grid grid = Block.Grid.Generate(gridEntity);
 
-            bool onGround = false;
+            /*System.Console.WriteLine($"gridEntity: {gridEntity}");*/
+
+            /*System.Console.WriteLine($"bbEntity: {bbEntity}");*/
+
+            Entity.BoundingBox bbBlock = Entity.BoundingBox.GetBlockBB();
+
+            bool top, bottom, front, left, back, right;
+            top = bottom = front = left = back = right = false;
 
             foreach (Block.Vector pBlock in grid.GetVectors())
             {
+                /*System.Console.WriteLine($"pBlock: {pBlock}");*/
                 Block block = GetBlock(pBlock);
                 if (block.Type == Block.Types.Air)
                 {
                     continue;
                 }
 
-                Entity.BoundingBox bbBlock = Entity.BoundingBox.GetBlockBB();
-                Entity.Grid gridEntity = Entity.Grid.Generate(pEntity, bbEntity),
-                            gridBlock = Entity.Grid.Generate(pBlock, bbBlock);
+                Entity.Grid gridBlock = Entity.Grid.Generate(pBlock, bbBlock);
 
                 Entity.Vector centerBlock = gridBlock.GetCenter(),
-                       centerEntity = gridEntity.GetCenter();
+                              centerEntity = gridEntity.GetCenter();
+                /*System.Console.WriteLine($"centerBlock: {centerBlock}");
+                System.Console.WriteLine($"centerEntity: {centerEntity}");*/
 
+                /*System.Console.WriteLine(pBlock);*/
                 if (gridBlock.Contains(centerEntity) || gridEntity.Contains(centerBlock))
                 {
                     // inside
                     System.Diagnostics.Debug.Assert(false);
                 }
 
-                Entity.Grid? gridOverlapped = Entity.Grid.Generate(gridEntity, gridBlock);
-                if (gridOverlapped == null)
+                if (!gridEntity.IsOverlapped(gridBlock))
                 {
                     // outside
                     System.Diagnostics.Debug.Assert(false);
@@ -195,32 +204,55 @@ namespace Protocol
 
                 if (centerEntity.Y > gridBlock.MAX.Y)
                 {
-                    // top
-                    double h1 = (bbEntity.Height + bbBlock.Height) / 2;
-                    System.Diagnostics.Debug.Assert(h1 > 0);
+                    if (top)
+                    {
+                        continue;
+                    }
+
+                    if (vEntity.Y < 0)
+                    {
+                        vEntity = new Entity.Vector(vEntity.X, 0, vEntity.Z);
+                    }
+
+                    double h1 = (gridEntity.GetHeight() + bbBlock.Height) / 2.0D;
+                    System.Diagnostics.Debug.Assert(Comparing.IsGreaterThan(h1, 0.0D));
 
                     double h2 = centerEntity.Y - centerBlock.Y;
-                    System.Diagnostics.Debug.Assert(h2 > 0);
+                    System.Diagnostics.Debug.Assert(Comparing.IsGreaterThan(h2, 0.0D));
 
                     double h3 = h1 - h2;
-                    System.Diagnostics.Debug.Assert(h3 > 0);
+                    System.Diagnostics.Debug.Assert(Comparing.IsGreaterThanOrEqualTo(h3, 0.0D));
+
+                    /*System.Console.WriteLine($"h1: {h1}, h2: {h2}, h3: {h3}");*/
 
                     pEntity = new Entity.Vector(pEntity.X, pEntity.Y + h3, pEntity.Z);
+
+                    top = true;
                 }
                 else if (centerEntity.Y < gridBlock.MIN.Y)
                 {
-                    // bottom
-                    // top
-                    double h1 = (bbEntity.Height + bbBlock.Height) / 2;
-                    System.Diagnostics.Debug.Assert(h1 > 0);
+                    if (bottom)
+                    {
+                        continue;
+                    }
+
+                    if (vEntity.Y > 0)
+                    {
+                        vEntity = new Entity.Vector(vEntity.X, 0, vEntity.Z);
+                    }
+
+                    double h1 = (gridEntity.GetHeight() + bbBlock.Height) / 2.0D;
+                    System.Diagnostics.Debug.Assert(Comparing.IsGreaterThan(h1, 0.0D));
 
                     double h2 = centerBlock.Y - centerEntity.Y;
-                    System.Diagnostics.Debug.Assert(h2 > 0);
+                    System.Diagnostics.Debug.Assert(Comparing.IsGreaterThan(h2, 0.0D));
 
                     double h3 = h1 - h2;
-                    System.Diagnostics.Debug.Assert(h3 > 0);
+                    System.Diagnostics.Debug.Assert(Comparing.IsGreaterThanOrEqualTo(h3, 0.0D));
 
                     pEntity = new Entity.Vector(pEntity.X, pEntity.Y - h3, pEntity.Z);
+
+                    bottom = true;
                 }
                 else
                 {
@@ -228,33 +260,60 @@ namespace Protocol
                      f2 = centerEntity.Z > -(centerEntity.X - centerBlock.X) + centerBlock.Z;
                     if (f1 && f2)
                     {
-                        // front
+                        if (front)
+                        {
+                            continue;
+                        }
+
                         throw new System.NotFiniteNumberException();
+
+                        front = true;
                     }
                     else if (f1)
                     {
                         System.Diagnostics.Debug.Assert(!f2);
-                        // left
+
+                        if (left)
+                        {
+                            continue;
+                        }
+
                         throw new System.NotFiniteNumberException();
+
+                        left = true;
                     }
                     else if (f2)
                     {
                         System.Diagnostics.Debug.Assert(!f1);
-                        // right
+
+                        if (right)
+                        {
+                            continue;
+                        }
+
                         throw new System.NotFiniteNumberException();
+
+                        right = true;
                     }
                     else
                     {
                         System.Diagnostics.Debug.Assert(!f1 && !f2);
-                        // bottom
+
+                        if (back)
+                        {
+                            continue;
+                        }
+
                         throw new System.NotFiniteNumberException();
+
+                        back = true;
                     }
                 }
 
 
             }
 
-            return (pEntity, onGround);
+            return (vEntity, pEntity, top);
         }
 
         private void DespawnEntity(Entity entity)
@@ -323,12 +382,23 @@ namespace Protocol
                 }
 
                 {
-                    Entity.Vector p = entity.Integrate();
+                    Entity.Vector pPrev = entity.Position;
+                    (Entity.Vector v, Entity.Vector p) = entity.Integrate();
 
-                    (Entity.Vector pAdjusted, bool onGround) = 
-                        AdjustPosition(p, entity.GetBoundingBox());
+                    Entity.BoundingBox bb = entity.GetBoundingBox();
+                    Entity.Grid
+                        gridPrev = Entity.Grid.Generate(pPrev, bb),
+                        grid = Entity.Grid.Generate(p, bb),
+                        gridTotal = Entity.Grid.Generate(gridPrev, grid);
+                    /*System.Console.WriteLine($"gridPrev: {gridPrev}");
+                    System.Console.WriteLine($"grid: {grid}");
+                    System.Console.WriteLine($"gridTotal: {gridTotal}");
+                    System.Console.WriteLine();*/
 
-                    entity.Move(pAdjusted, onGround);
+                    (Entity.Vector vPrime, Entity.Vector pPrime, bool onGround) = 
+                        AdjustPosition(v, p, gridTotal);
+
+                    entity.Move(vPrime, pPrime, onGround);
 
                     UpdateEntityRendering(entity);
                 }
@@ -359,10 +429,14 @@ namespace Protocol
                     _DISCONNECTED_PLAYERS.Insert(player.UniqueId, player);
                 }
 
-                (Entity.Vector p, bool onGround) =
-                        AdjustPosition(entity.Position, entity.GetBoundingBox());
+                Entity.Vector v = new(0, 0, 0), p = entity.Position;
+                Entity.BoundingBox bb = entity.GetBoundingBox();
+                Entity.Grid grid = Entity.Grid.Generate(p, bb);
 
-                entity.Spawn(p, onGround);
+                (Entity.Vector vPrime, Entity.Vector pPrime, bool onGround) = AdjustPosition(v, p, grid);
+                System.Diagnostics.Debug.Assert(vPrime.Equals(v));
+
+                entity.Spawn(pPrime, onGround);
 
                 InitEntityRendering(entity);
 
@@ -392,7 +466,6 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _ENTITY_SPAWNING_POOL.Switch();
             _ENTITIES.Switch();
         }
 
@@ -415,7 +488,7 @@ namespace Protocol
                 // TODO: Add Global Forces with OnGround flag. (Gravity, Damping Force, ...)
                 {
                     entity.ApplyGlobalForce(
-                            new Entity.Vector(-(1.0D - 0.91D), -(1.0D - 0.9800000190734863D), -(1.0D - 0.91D)) *
+                            -1 * new Entity.Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
                             entity.Velocity);  // Damping Force
                     entity.ApplyGlobalForce(entity.GetMass() * 0.08D * new Entity.Vector(0, -1, 0));  // Gravity
                 }
@@ -426,6 +499,8 @@ namespace Protocol
                 {
                     StartPlayerRoutine(serverTicks, player);
                 }*/
+
+                _ENTITIES.Enqueue(entity);
 
             }
         }
@@ -440,10 +515,10 @@ namespace Protocol
 
             _PLAYER_LIST.StartRoutine(serverTicks);
 
-            /*if (serverTicks == 20 * 5)
+            if (serverTicks == 20 * 5)
             {
                 SpawnItemEntity();
-            }*/
+            }
 
             StartSubRoutine(serverTicks);
         }

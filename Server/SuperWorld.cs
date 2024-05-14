@@ -8,7 +8,7 @@ namespace Server
 
         private bool _gameInProgress = false;
 
-        public SuperWorld() : base(new(0, 61, 0), new(0,0)) { }
+        public SuperWorld() : base(new(0, 70, 0), new(0,0)) { }
 
         ~SuperWorld() => System.Diagnostics.Debug.Assert(false);
 

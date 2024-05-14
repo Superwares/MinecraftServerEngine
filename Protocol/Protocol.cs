@@ -403,58 +403,65 @@ namespace Protocol
 
     }
 
+    internal sealed class User(Client client, System.Guid userId, string username)
+    {
+        public readonly Client CLIENT = client;
+        public readonly System.Guid USER_ID = userId;
+        public readonly string USERNAME = username;
+    }
+
     public sealed class ConnectionListener : System.IDisposable
     {
         private bool _disposed = false;
 
-        private readonly ConcurrentQueue<(Client, System.Guid, string)> _clients = new();
+        private readonly ConcurrentQueue<User> _users = new();
 
         ~ConnectionListener() => System.Diagnostics.Debug.Assert(false);
 
-        internal void Add(Client client, System.Guid userId, string username)
+        internal void AddUser(Client client, System.Guid userId, string username)
         {
-            _clients.Enqueue((client, userId, username));
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            _users.Enqueue(new(client, userId, username));
         }
 
         public void Accept(World world, Queue<(Connection, Player)> connections)
         {
-            for (int i = 0; i < _clients.Count; ++i)
-            {
-                (Client client, System.Guid uniqueId, string username) = _clients.Dequeue();
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-                if (!world.CanJoinWorld(uniqueId))
+            while (true)
+            {
+                User? user = _users.Dequeue();
+                if (user == null)
                 {
-                    client.Close();
+                    break;
+                }
+
+                if (!world.CanJoinWorld(user.USER_ID))
+                {
+                    // TODO: send message why disconnected.
+                    user.CLIENT.Close();
                     continue;
                 }
 
-                Player player = world.SpawnOrFindPlayer(username, uniqueId);
-                Connection conn = new(client);
+                Player player = world.SpawnOrFindPlayer(user.USERNAME, user.USER_ID);
+                Connection conn = new(user.CLIENT);
                 connections.Enqueue((conn, player));
             }
 
         }
 
-        private void Dispose(bool disposing)
+        public void Dispose()
         {
-            if (_disposed) return;
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             // Assertion.
 
-            if (disposing == true)
-            {
-                // Release managed resources.
-            }
+            // Release resources.
 
-            // Release unmanaged resources.
-
-            _disposed = true;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
+            // Finish
             System.GC.SuppressFinalize(this);
+            _disposed = true;
         }
 
     }
@@ -630,7 +637,7 @@ namespace Protocol
                         client.Send(buffer);
 
                         // TODO: Must dealloc id when connection is disposed.
-                        _connListener.Add(client, userId, username);
+                        _connListener.AddUser(client, userId, username);
 
                         success = true;
                     }
