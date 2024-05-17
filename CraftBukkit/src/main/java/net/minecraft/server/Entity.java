@@ -536,6 +536,8 @@ public abstract class Entity implements ICommandListener {
     }
 
     public void move(EnumMoveType enummovetype, double d0, double d1, double d2) {
+        /*System.out.println("this.noclip: " + this.noclip);*/
+
         if (this.noclip) {
             this.a(this.getBoundingBox().d(d0, d1, d2));
             this.recalcPosition();
@@ -555,6 +557,7 @@ public abstract class Entity implements ICommandListener {
             if (d0 == 0 && d1 == 0 && d2 == 0 && this.isVehicle() && this.isPassenger()) {
                 return;
             }
+
             // CraftBukkit end
             if (enummovetype == EnumMoveType.PISTON) {
                 long i = this.world.getTime();
@@ -663,6 +666,7 @@ public abstract class Entity implements ICommandListener {
             int k;
             int l;
 
+            // Y
             if (d1 != 0.0D) {
                 k = 0;
 
@@ -672,7 +676,7 @@ public abstract class Entity implements ICommandListener {
 
                 this.a(this.getBoundingBox().d(0.0D, d1, 0.0D));
             }
-
+            // X
             if (d0 != 0.0D) {
                 k = 0;
 
@@ -684,7 +688,7 @@ public abstract class Entity implements ICommandListener {
                     this.a(this.getBoundingBox().d(d0, 0.0D, 0.0D));
                 }
             }
-
+            // Z
             if (d2 != 0.0D) {
                 k = 0;
 
@@ -700,7 +704,13 @@ public abstract class Entity implements ICommandListener {
             boolean flag = this.onGround || d1 != d8 && d1 < 0.0D; // CraftBukkit - decompile error
             double d11;
 
+
+            /*if (d7 != d0 || d9 != d2)
+            {
+                System.out.println("d7: " + d7 + ", d0: " + d0 + ", d9: " + d9 + ", d2: " + d2);
+            }*/
             if (this.P > 0.0F && flag && (d7 != d0 || d9 != d2)) {
+                /*System.out.println("d7: " + d7 + ", d0: " + d0 + ", d9: " + d9 + ", d2: " + d2);*/
                 double d12 = d0;
                 double d13 = d1;
                 double d14 = d2;
@@ -794,6 +804,8 @@ public abstract class Entity implements ICommandListener {
             this.world.methodProfiler.b();
             this.world.methodProfiler.a("rest");
             this.recalcPosition();
+
+
             this.positionChanged = d7 != d0 || d9 != d2;
             this.B = d1 != d8; // CraftBukkit - decompile error
             this.onGround = this.B && d8 < 0.0D;
@@ -932,11 +944,13 @@ public abstract class Entity implements ICommandListener {
     }
 
     public void recalcPosition() {
+
         AxisAlignedBB axisalignedbb = this.getBoundingBox();
 
         this.locX = (axisalignedbb.a + axisalignedbb.d) / 2.0D;
         this.locY = axisalignedbb.b;
         this.locZ = (axisalignedbb.c + axisalignedbb.f) / 2.0D;
+
         if (valid) world.entityJoinedWorld(this, false); // CraftBukkit
     }
 
@@ -2577,6 +2591,7 @@ public abstract class Entity implements ICommandListener {
     // if the length is greater than 64,
     // and set it to the current member variable this.boundingBox.
     public void a(AxisAlignedBB axisalignedbb) {
+
         // CraftBukkit start - block invalid bounding boxes
         double a = axisalignedbb.a,
                 b = axisalignedbb.b,

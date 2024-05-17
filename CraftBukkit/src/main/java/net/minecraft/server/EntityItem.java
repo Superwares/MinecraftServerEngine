@@ -55,8 +55,8 @@ public class EntityItem extends Entity {
     }
 
     public void B_() {
-        System.out.println("locX: " + locX + ", locY: " + locY + ", locZ: " + locZ);
-        System.out.println("motX: " + motX + ", motY: " + motY + ", motZ: " + motZ);
+        /*System.out.println("locX: " + locX + ", locY: " + locY + ", locZ: " + locZ);
+        System.out.println("motX: " + motX + ", motY: " + motY + ", motZ: " + motZ);*/
 
         if (this.getItemStack().isEmpty()) {
             this.die();

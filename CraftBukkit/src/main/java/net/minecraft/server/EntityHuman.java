@@ -1771,6 +1771,8 @@ public abstract class EntityHuman extends EntityLiving {
             f -= 0.08F;
         }
 
+        /*System.out.println("Head Height: " + f);*/
+
         return f;
     }
 

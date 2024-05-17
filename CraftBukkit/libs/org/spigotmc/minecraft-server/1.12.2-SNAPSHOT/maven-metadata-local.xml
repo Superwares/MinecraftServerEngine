@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata modelVersion="1.1.0">
+  <groupId>org.spigotmc</groupId>
+  <artifactId>minecraft-server</artifactId>
+  <versioning>
+    <lastUpdated>20240505173107</lastUpdated>
+    <snapshot>
+      <localCopy>true</localCopy>
+    </snapshot>
+    <snapshotVersions>
+      <snapshotVersion>
+        <extension>jar</extension>
+        <value>1.12.2-SNAPSHOT</value>
+        <updated>20240505173107</updated>
+      </snapshotVersion>
+      <snapshotVersion>
+        <extension>pom</extension>
+        <value>1.12.2-SNAPSHOT</value>
+        <updated>20240505173107</updated>
+      </snapshotVersion>
+    </snapshotVersions>
+  </versioning>
+  <version>1.12.2-SNAPSHOT</version>
+</metadata>

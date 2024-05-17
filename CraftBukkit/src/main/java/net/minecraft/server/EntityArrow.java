@@ -343,7 +343,7 @@ public abstract class EntityArrow extends Entity implements IProjectile {
                 }
             }
         } else {
-            System.out.println("1");
+            /*System.out.println("1");*/
             BlockPosition blockposition = movingobjectposition.a();
 
             this.h = blockposition.getX();
