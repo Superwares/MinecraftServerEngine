@@ -793,8 +793,6 @@ namespace Protocol
         public readonly sbyte WindowId;
         public readonly short ActionNumber;
         public readonly bool Accepted;
-        private int v1;
-        private bool v2;
 
         public static ClientboundConfirmTransactionPacket Read(Buffer buffer)
         {

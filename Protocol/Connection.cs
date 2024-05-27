@@ -14,10 +14,10 @@ namespace Protocol
             private const int _MAX_LOAD_COUNT = 7;
             private const int _MAX_SEARCH_COUNT = 103;
 
-            private readonly Set<Chunk.Vector> _LOADED_CHUNKS = new();  // Disposable
+            private readonly Set<ChunkData.Location> _LOADED_CHUNKS = new();  // Disposable
 
-            private Chunk.Grid? _grid;
-            private Chunk.Vector _c;
+            private ChunkData.Grid? _grid;
+            private ChunkData.Location _c;
             private int _d = - 1;
 
             private int _x, _z, _layer, _n;
@@ -30,9 +30,9 @@ namespace Protocol
             ~LoadingHelper() => System.Diagnostics.Debug.Assert(false);
 
             public void Load(
-                Queue<Chunk.Vector> newChunks,
-                Queue<Chunk.Vector> outOfRangeChunks, 
-                Chunk.Vector c, int d)
+                Queue<ChunkData.Location> newChunks,
+                Queue<ChunkData.Location> outOfRangeChunks, 
+                ChunkData.Location c, int d)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -42,14 +42,14 @@ namespace Protocol
 
                 if (!c.Equals(_c) || (d != _d))
                 {
-                    Chunk.Grid grid = Chunk.Grid.Generate(c, d);
+                    ChunkData.Grid grid = ChunkData.Grid.Generate(c, d);
                     
                     if (_grid != null)
                     {
                         System.Diagnostics.Debug.Assert(!_grid.Equals(grid));
 
                         // TODO: Refactoring without brute-force approch.
-                        foreach (Chunk.Vector p in _grid.GetVectors())
+                        foreach (ChunkData.Location p in _grid.GetVectors())
                         {
                             if (grid.Contains(p))
                             {
@@ -82,7 +82,7 @@ namespace Protocol
                     int i = 0, j = 0;
 
                     int w;
-                    Chunk.Vector p;
+                    ChunkData.Location p;
 
                     do
                     {
@@ -254,6 +254,8 @@ namespace Protocol
         private bool IsInit => _initLevel >= 3;*/
         private bool _init = false;
 
+        private bool _disconnected = false;
+
         private readonly Queue<LoadChunkPacket> _LOAD_CHUNK_PACKETS = new();  // Dispoasble
         private readonly Queue<ClientboundPlayingPacket> _OUT_PACKETS = new();  // Dispoasble
 
@@ -353,6 +355,11 @@ namespace Protocol
         private void RecvDataAndHandle(
             Buffer buffer, long serverTicks, World world, Player player)
         {
+            if (_disconnected)
+            {
+                throw new DisconnectedClientException();
+            }
+
             _CLIENT.Recv(buffer);
 
             int packetId = buffer.ReadInt(true);
@@ -505,7 +512,7 @@ namespace Protocol
                             Entity.Vector p = new(packet.X, packet.Y, packet.Z);
                             player.Control(p, packet.OnGround);
 
-                            Chunk.Vector pChunk = Chunk.Vector.Convert(p);
+                            ChunkData.Location pChunk = ChunkData.Location.Convert(p);
                             foreach (var renderer in _ENTITY_TO_RENDERERS.GetValues())
                             {
                                 renderer.Update(pChunk);
@@ -523,7 +530,7 @@ namespace Protocol
                             Entity.Vector p = new(packet.X, packet.Y, packet.Z);
                             player.Control(p, packet.OnGround);
 
-                            Chunk.Vector pChunk = Chunk.Vector.Convert(p);
+                            ChunkData.Location pChunk = ChunkData.Location.Convert(p);
                             foreach (var renderer in _ENTITY_TO_RENDERERS.GetValues())
                             {
                                 renderer.Update(pChunk);
@@ -612,11 +619,8 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (!_init)
-            {
-                return;
-            }
-
+            System.Diagnostics.Debug.Assert(_init);
+            
             /*if (serverTicks == 200)  // 10 seconds
             {
                 System.Diagnostics.Debug.Assert(_window != null);
@@ -670,6 +674,8 @@ namespace Protocol
                 buffer.Flush();
                 world.DisconnectPlayer(player);
 
+                _disconnected = true;
+
                 throw;
             }
 
@@ -683,7 +689,7 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(_renderDistance >= _MIN_RENDER_DISTANCE);
             System.Diagnostics.Debug.Assert(_renderDistance <= _MAX_RENDER_DISTANCE);
 
-            Chunk.Vector c = Chunk.Vector.Convert(player.Position);
+            ChunkData.Location c = ChunkData.Location.Convert(player.Position);
             /*System.Console.WriteLine($"c: {c}");*/
 
             {
@@ -691,8 +697,8 @@ namespace Protocol
 
                 using Queue<Entity> newEntities = new();
 
-                Chunk.Grid grid = Chunk.Grid.Generate(c, renderDistance);
-                foreach (Chunk.Vector p in grid.GetVectors())
+                ChunkData.Grid grid = ChunkData.Grid.Generate(c, renderDistance);
+                foreach (ChunkData.Location p in grid.GetVectors())
                 {
                     if (world.ContainsEntities(p))
                     {
@@ -767,24 +773,24 @@ namespace Protocol
             }
 
             {
-                using Queue<Chunk.Vector> newChunkPositions = new();
-                using Queue<Chunk.Vector> outOfRangeChunks = new();
+                using Queue<ChunkData.Location> newChunkPositions = new();
+                using Queue<ChunkData.Location> outOfRangeChunks = new();
 
                 _LOADING_HELPER.Load(newChunkPositions, outOfRangeChunks, c, _renderDistance);
 
                 int mask; byte[] data;
                 while (!newChunkPositions.Empty)
                 {
-                    Chunk.Vector p = newChunkPositions.Dequeue();
+                    ChunkData.Location p = newChunkPositions.Dequeue();
 
                     if (world.ContainsChunk(p))
                     {
-                        Chunk chunk = world.GetChunk(p);
-                        (mask, data) = Chunk.Write(chunk);
+                        ChunkData chunk = world.GetChunk(p);
+                        (mask, data) = ChunkData.Write(chunk);
                     }
                     else
                     {
-                        (mask, data) = Chunk.Write();
+                        (mask, data) = ChunkData.Write();
                     }
 
                     _LOAD_CHUNK_PACKETS.Enqueue(new LoadChunkPacket(p.X, p.Z, true, mask, data));
@@ -792,7 +798,7 @@ namespace Protocol
 
                 while (!outOfRangeChunks.Empty)
                 {
-                    Chunk.Vector p = outOfRangeChunks.Dequeue();
+                    ChunkData.Location p = outOfRangeChunks.Dequeue();
 
                     _OUT_PACKETS.Enqueue(new UnloadChunkPacket(p.X, p.Z));
                 }
@@ -807,6 +813,8 @@ namespace Protocol
         public void Render(World world, Player player)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(!_disconnected);
 
             using Buffer buffer = new();
 
@@ -864,7 +872,7 @@ namespace Protocol
                         _TELEPORTATION_RECORDS.Enqueue(report);
 
                         Entity.Vector p = new(teleportPacket.X, teleportPacket.Y, teleportPacket.Z);
-                        Chunk.Vector pChunk = Chunk.Vector.Convert(p);
+                        ChunkData.Location pChunk = ChunkData.Location.Convert(p);
                         foreach (var renderer in _ENTITY_TO_RENDERERS.GetValues())
                         {
                             renderer.Update(pChunk);
@@ -901,10 +909,10 @@ namespace Protocol
             catch (DisconnectedClientException)
             {
                 buffer.Flush();
-                world.DisconnectPlayer(player);
 
-                throw;
+                _disconnected = true;
             }
+
         }
 
         public void Flush(World world)

@@ -2,21 +2,8 @@
 namespace Containers
 {
 
-    public interface IReadOnlyTable<K, V> where K : struct, System.IEquatable<K>
-    {
-        public int Count { get; }
-        public bool Empty { get; }
-
-        public V Lookup(K key);
-        public bool Contains(K key);
-
-        public System.Collections.Generic.IEnumerable<K> GetKeys();
-        public System.Collections.Generic.IEnumerable<V> GetValues();
-
-    }
-
-    public class Table<K, V> : System.IDisposable, IReadOnlyTable<K, V>
-        where K : struct, System.IEquatable<K>
+    public class Table<K, V> : System.IDisposable
+        where K : struct
     {
         private bool _isDisposed = false;
 

@@ -99,7 +99,9 @@ namespace Protocol
             {
                 int n = socket.Receive(buffer, offset, size, System.Net.Sockets.SocketFlags.None);
                 if (n == 0)
+                {
                     throw new DisconnectedClientException();
+                }
 
                 System.Diagnostics.Debug.Assert(n <= size);
 
@@ -108,7 +110,9 @@ namespace Protocol
             catch (System.Net.Sockets.SocketException e)
             {
                 if (e.SocketErrorCode == System.Net.Sockets.SocketError.WouldBlock)
+                {
                     throw new TryAgainException();
+                }
 
                 throw;
             }
@@ -432,12 +436,9 @@ namespace Protocol
             while (true)
             {
                 User? user = _users.Dequeue();
-                if (user == null)
-                {
-                    break;
-                }
+                if (user == null) break;
 
-                if (!world.CanJoinWorld(user.USER_ID))
+                if (!world.CanJoinWorld())
                 {
                     // TODO: send message why disconnected.
                     user.CLIENT.Close();

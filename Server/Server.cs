@@ -12,6 +12,7 @@ namespace Application
         private readonly World _WORLD;
 
         private readonly Queue<(Connection, Player)> _CONNECTIONS = new();  // Disposable
+        private readonly Queue<Connection> _DISCONNECTIONS = new();  // Disposable
 
         private Server() 
         {
@@ -34,13 +35,26 @@ namespace Application
                 }
                 catch (DisconnectedClientException)
                 {
-                    conn.Flush(_WORLD);
-                    conn.Dispose();
+                    _DISCONNECTIONS.Enqueue(conn);
 
                     continue;
                 }
 
                 _CONNECTIONS.Enqueue((conn, player));
+            }
+
+        }
+
+        private void HandleDisconnections()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            for (int i = 0; i < _DISCONNECTIONS.Count; ++i)
+            {
+                Connection conn = _DISCONNECTIONS.Dequeue();
+
+                conn.Flush(_WORLD);
+                conn.Dispose();
             }
         }
 
@@ -52,17 +66,7 @@ namespace Application
             {
                 (Connection conn, Player player) = _CONNECTIONS.Dequeue();
 
-                try
-                {
-                    conn.Render(_WORLD, player);
-                }
-                catch (DisconnectedClientException)
-                {
-                    conn.Flush(_WORLD);
-                    conn.Dispose();
-
-                    continue;
-                }
+                conn.Render(_WORLD, player);
 
                 _CONNECTIONS.Enqueue((conn, player));
             }
@@ -78,11 +82,15 @@ namespace Application
 
             // Barrier
 
-            _WORLD.Reset();
+            HandleDisconnections();
 
             // Barrier
 
             _WORLD.HandleEntities();
+
+            // Barrier
+
+            connListener.Accept(_WORLD, _CONNECTIONS);
 
             // Barrier
 
@@ -94,14 +102,6 @@ namespace Application
 
             // Barrier
 
-            _WORLD.ReleaseResources();
-
-            // Barrier
-
-            _WORLD.Reset();
-
-            // Barrier
-
             _WORLD.StartRoutine(serverTicks);
 
             // Barrier
@@ -110,9 +110,12 @@ namespace Application
 
             // Barrier
 
-            connListener.Accept(_WORLD, _CONNECTIONS);
+            adsf
+            /*_WORLD.ReleaseResources();
 
-            // Barrier
+            // Barrier*/
+
+            
 
         }
 

@@ -7,7 +7,7 @@ namespace Protocol
     public abstract class Entity : System.IDisposable
     {
 
-        public readonly struct Vector : System.IEquatable<Vector>
+        /*public readonly struct Vector : System.IEquatable<Vector>
         {
             public static Vector operator+ (Vector v1, Vector v2)
             {
@@ -75,7 +75,7 @@ namespace Protocol
 
         public class Grid : System.IEquatable<Grid>
         {
-            public static Grid Generate(Block.Vector p, BoundingBox bb)
+            public static Grid Generate(Block.Location p, BoundingBox bb)
             {
                 Vector min = new(
                     Conversions.ToDouble(p.X),
@@ -191,9 +191,9 @@ namespace Protocol
 
                 return MAX.Equals(other.MAX) && MIN.Equals(other.MIN);
             }
-        }
+        }*/
 
-        public struct BoundingBox /*: System.IEquatable<BoundingBox>*/
+        /*public struct BoundingBox *//*: System.IEquatable<BoundingBox>*//*
         {
             public static BoundingBox GetBlockBB() => new(1, 1);
 
@@ -212,6 +212,23 @@ namespace Protocol
                 return $"( Width: {Width}, Height: {Height} )";
             }
 
+        }*/
+
+        public readonly struct Hitbox
+        {
+            public readonly double Width, Height;
+            /*public readonly double EyeHeight, MaxStepHeight;*/
+
+            public Hitbox(double w, double h)
+            {
+                Width = w;
+                Height = h;
+            }
+
+            public BoundingBox Convert(Vector p)
+            {
+                throw new System.NotImplementedException();
+            }
         }
 
         public readonly struct Angles : System.IEquatable<Angles>
@@ -267,25 +284,22 @@ namespace Protocol
 
         private bool _disposed = false;
 
-        private bool _spawned = false;
-
         private int _id;
         public int Id => _id;
 
         public System.Guid UniqueId;
 
-        public abstract BoundingBox GetBoundingBox();
 
         public abstract double GetMass();
 
+
         private readonly Queue<Vector> _FORCES;
+        public Queue<Vector> Forces => _FORCES;
 
         private Vector _v;
         public Vector Velocity => _v;
 
-
-        private Vector _p;
-        public Vector Position => _p;
+        private Vector _p;  // sub-property
 
 
         private bool _rotated;
@@ -293,14 +307,14 @@ namespace Protocol
         public Angles Look => _look;
 
 
-        protected bool _onGround;
-        public bool OnGround => _onGround;
-
-
         protected bool _sneaking, _sprinting;
         public bool IsSneaking => _sneaking;
         public bool IsSprinting => _sprinting;
 
+
+        public abstract Hitbox GetHitbox();
+        private BoundingBox _bb;
+        public BoundingBox BB => _bb;
 
         /*protected bool _teleported;
         protected Vector _posTeleport;
@@ -310,8 +324,7 @@ namespace Protocol
         private readonly EntityRendererManager _RENDERER_MANAGER = new();  // Disposable
 
         internal Entity(
-            int id, System.Guid uniqueId,
-            Vector pos, Angles look)
+            int id, System.Guid uniqueId, Vector p, Angles look)
         {
             _id = id;
 
@@ -321,14 +334,15 @@ namespace Protocol
 
             _v = new Vector(0, 0, 0);
 
-            _p = pos;
+            _p = p;
 
             _rotated = false;
             _look = look;
 
-            _onGround = false;
-
             _sneaking = _sprinting = false;
+
+            Hitbox hitbox = GetHitbox();
+            _bb = hitbox.Convert(_p);
 
             /*_teleported = false;*/
             /*_posTeleport = new(0, 0, 0);
@@ -339,7 +353,7 @@ namespace Protocol
 
         internal EntityRenderer ApplyForRenderer(
             Queue<ClientboundPlayingPacket> outPackets,
-            Chunk.Vector p, int renderDistance)
+            ChunkData.Location p, int renderDistance)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -382,26 +396,11 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(_spawned);
         }
 
-        public void Spawn(Vector p, bool onGround)
+        internal (BoundingBox, Vector) Integrate()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(!_spawned);
-
-            _p = p;
-            _onGround = onGround;
-            _spawned = true;
-        }
-
-        public virtual (Vector, Vector) Integrate()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(_spawned);
-
-            /*System.Console.WriteLine("Integrate!");*/
-
-            Vector v = _v, p = _p;
+            Vector v = _v;
             /*System.Console.WriteLine();
             System.Console.WriteLine($"p: ({p.X}, {p.Y}, {p.Z})");*/
 
@@ -412,25 +411,27 @@ namespace Protocol
                 v += (force / GetMass());
             }
 
-            p += v;
+            /*p += v;*/
 
             /*System.Console.WriteLine($"v: {v}, p: {p}, ");*/
 
-            return (v, p);
+            Hitbox hitbox = GetHitbox();
+            BoundingBox bb = hitbox.Convert(_p);
+
+            return (bb, v);
         }
         
-        public virtual void Move(Vector v, Vector p, bool onGround)
+        public virtual void Move(BoundingBox bb, Vector v, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             /*System.Console.WriteLine($"p: ({p.X}, {p.Y}, {p.Z})");*/
 
-            System.Diagnostics.Debug.Assert(_spawned);
-
             System.Diagnostics.Debug.Assert(_FORCES.Empty);
 
             /*System.Console.WriteLine($"p: {p}");*/
 
+            Vector p = bb.GetBottomCenter();
             bool moved = !p.Equals(_p);  // TODO: Compare with machine epsilon.
 
             if (moved)
@@ -470,9 +471,9 @@ namespace Protocol
             }
 
             _v = v;
-            _onGround = onGround;
+            _bb = bb;
 
-            _RENDERER_MANAGER.DeterminToContinueRendering(Id, _p, GetBoundingBox());
+            _RENDERER_MANAGER.DeterminToContinueRendering(Id, _p, _bb);
 
         }
 
@@ -742,20 +743,6 @@ namespace Protocol
             _selfRenderer.Teleport(pos, look);
             // TODO: Check the velocity was reset in client when teleported.
         }*/
-
-        public override (Vector, Vector) Integrate()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            /*while (!_FORCES.Empty)
-            {
-                Vector force = _FORCES.Dequeue();
-
-                _v += (force / GetMass());
-            }*/
-
-            return base.Integrate();
-        }
 
         public override void Move(Vector v, Vector p, bool onGround)
         {

@@ -18,7 +18,7 @@ namespace Protocol
 
         public EntityRenderer Apply(
             Queue<ClientboundPlayingPacket> outPackets,
-            Chunk.Vector p, int renderDistance)
+            ChunkData.Location p, int renderDistance)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

@@ -45,13 +45,13 @@ namespace Protocol
         private bool _disconnected = false;
         public bool IsDisconnected => _disconnected;
 
-        private Chunk.Vector _p;
+        private ChunkData.Location _p;
 
         private int _d;
 
         public EntityRenderer(
             Queue<ClientboundPlayingPacket> outPackets,
-            Chunk.Vector p, int d) : base(outPackets) 
+            ChunkData.Location p, int d) : base(outPackets) 
         {
             System.Diagnostics.Debug.Assert(d > 0);
             _p = p;
@@ -69,7 +69,7 @@ namespace Protocol
             _disconnected = true;
         }
 
-        public void Update(Chunk.Vector p)
+        public void Update(ChunkData.Location p)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -97,12 +97,12 @@ namespace Protocol
 
             /*System.Console.WriteLine($"d: {_d}");*/
             /*System.Console.WriteLine();*/
-            Chunk.Grid gridEntity = Chunk.Grid.Generate(p, bb);
+            ChunkData.Grid gridEntity = ChunkData.Grid.Generate(p, bb);
             /*System.Console.WriteLine($"gridEntity: {gridEntity}");*/
-            Chunk.Grid gridRender = Chunk.Grid.Generate(_p, _d);
+            ChunkData.Grid gridRender = ChunkData.Grid.Generate(_p, _d);
             /*System.Console.WriteLine($"gridRender: {gridRender}");*/
 
-            bool overlap = (Chunk.Grid.Generate(gridEntity, gridRender) != null);
+            bool overlap = (ChunkData.Grid.Generate(gridEntity, gridRender) != null);
             return overlap;
         }
 
