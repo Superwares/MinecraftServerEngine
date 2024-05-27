@@ -1,6 +1,7 @@
 ﻿
 using Common;
 using Containers;
+using static Protocol.Entity;
 
 namespace Protocol
 {
@@ -280,8 +281,6 @@ namespace Protocol
 
         }
 
-        private const double _MAX_MOVEMENT_LENGTH = 0.4;  // at one tick.
-
         private bool _disposed = false;
 
         private int _id;
@@ -299,7 +298,8 @@ namespace Protocol
         private Vector _v;
         public Vector Velocity => _v;
 
-        private Vector _p;  // sub-property
+        private Vector _p;
+        public Vector Position => _p;
 
 
         private bool _rotated;
@@ -313,6 +313,7 @@ namespace Protocol
 
 
         public abstract Hitbox GetHitbox();
+
         private BoundingBox _bb;
         public BoundingBox BB => _bb;
 
@@ -351,31 +352,24 @@ namespace Protocol
 
         ~Entity() => System.Diagnostics.Debug.Assert(false);
 
-        internal EntityRenderer ApplyForRenderer(
-            Queue<ClientboundPlayingPacket> outPackets,
-            ChunkData.Location p, int renderDistance)
+        internal abstract void Spawn(Queue<ClientboundPlayingPacket> outPackets);
+
+        internal void ApplyRenderer(
+            Queue<ClientboundPlayingPacket> outPackets, 
+            int id, EntityRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_spawned);
-
-            return _RENDERER_MANAGER.Apply(outPackets, p, renderDistance);
-        }
-
-        public void ApplyGlobalForce(Vector force)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(_spawned);
-
-            _FORCES.Enqueue(force);
+            bool exists = _RENDERER_MANAGER.Apply(id, renderer);
+            if (!exists)
+            {
+                Spawn(outPackets);
+            }
         }
 
         public virtual void ApplyForce(Vector force)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(_spawned);
 
             _FORCES.Enqueue(force);
         }
@@ -384,8 +378,6 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_spawned);
-
             return false;
         }
 
@@ -393,7 +385,6 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_spawned);
         }
 
         internal (BoundingBox, Vector) Integrate()
@@ -425,20 +416,13 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            /*System.Console.WriteLine($"p: ({p.X}, {p.Y}, {p.Z})");*/
-
             System.Diagnostics.Debug.Assert(_FORCES.Empty);
 
-            /*System.Console.WriteLine($"p: {p}");*/
-
             Vector p = bb.GetBottomCenter();
+
+            _RENDERER_MANAGER.HandleRendering(Id, _p);
+
             bool moved = !p.Equals(_p);  // TODO: Compare with machine epsilon.
-
-            if (moved)
-            {
-                /*System.Diagnostics.Debug.Assert(Vector.GetLength(p, _p) < _MAX_MOVEMENT_LENGTH);*/
-            }
-
             if (moved && _rotated)
             {
                 _RENDERER_MANAGER.MoveAndRotate(Id, p, _p, _look, onGround);
@@ -473,7 +457,7 @@ namespace Protocol
             _v = v;
             _bb = bb;
 
-            _RENDERER_MANAGER.DeterminToContinueRendering(Id, _p, _bb);
+            _RENDERER_MANAGER.FinishMovementRenderring();
 
         }
 
@@ -583,21 +567,41 @@ namespace Protocol
     {
         private bool _disposed = false;
 
-
-        public readonly BoundingBox BOUNDING_BOX = new(0.25f, 0.25f);
-        public override BoundingBox GetBoundingBox() => BOUNDING_BOX;
-
-
+        
         public const double MASS = 0.1D;
-        public override double GetMass() => MASS;
+        public override double GetMass()
+        {
+            return MASS;
+        }
 
 
-        public ItemEntity(
-            int id,
-            Vector pos, Angles look) : base(id, System.Guid.NewGuid(), pos, look)
-        { }
+        public static readonly Hitbox HITBOX = new(0.25D, 0.25D);
+        public override Hitbox GetHitbox()
+        {
+            return HITBOX;
+        }
+
+
+        public ItemEntity(int id, Vector pos, Angles look) 
+            : base(id, System.Guid.NewGuid(), pos, look) { }
 
         ~ItemEntity() => System.Diagnostics.Debug.Assert(false);
+
+        internal override void Spawn(Queue<ClientboundPlayingPacket> outPackets)
+        {
+            (byte x, byte y) = Look.ConvertToPacketFormat();
+            outPackets.Enqueue(new SpawnObjectPacket(
+                Id, UniqueId, 2,
+                Position.X, Position.Y, Position.Z,
+                x, y,
+                1, 0, 0, 0));
+
+            using EntityMetadata metadata = new();
+            metadata.AddBool(5, true);
+            metadata.AddSlotData(6, new SlotData(280, 1));
+            outPackets.Enqueue(new EntityMetadataPacket(
+                Id, metadata.WriteData()));
+        }
 
         public override void Dispose()
         {
@@ -618,11 +622,8 @@ namespace Protocol
     {
         private bool _disposed = false;
 
-
-        internal LivingEntity(
-            int id, System.Guid uniqueId,
-            Vector pos, Angles look) : base(id, uniqueId, pos, look)
-        { }
+        internal LivingEntity(int id, System.Guid uniqueId, Vector pos, Angles look) 
+            : base(id, uniqueId, pos, look) { }
 
         ~LivingEntity() => System.Diagnostics.Debug.Assert(false);
 
@@ -646,12 +647,24 @@ namespace Protocol
         private bool _disposed = false;
 
 
-        public readonly BoundingBox BOUNDING_BOX = new(0.6f, 1.8f);
-        public override BoundingBox GetBoundingBox() => BOUNDING_BOX;
-
-
-        public const double MASS = 1.0;
+        public const double MASS = 1.0D;
         public override double GetMass() => MASS;
+
+
+        public override Hitbox GetHitbox()
+        {
+            double w = 0.6D, h;
+            if (IsSneaking)
+            {
+                h = 1.65D;
+            }
+            else
+            {
+                h = 1.8D;
+            }
+
+            return new(w, h);
+        }
 
 
         public readonly string Username;
@@ -690,6 +703,26 @@ namespace Protocol
 
         ~Player() => System.Diagnostics.Debug.Assert(false);
 
+        internal override void Spawn(Queue<ClientboundPlayingPacket> outPackets)
+        {
+            byte flags = 0x00;
+
+            if (IsSneaking)
+                flags |= 0x02;
+            if (IsSprinting)
+                flags |= 0x08;
+
+            using EntityMetadata metadata = new();
+            metadata.AddByte(0, flags);
+
+            (byte x, byte y) = Look.ConvertToPacketFormat();
+            outPackets.Enqueue(new SpawnNamedEntityPacket(
+                Id, UniqueId,
+                Position.X, Position.Y, Position.Z,
+                x, y,
+                metadata.WriteData()));
+        }
+
         internal void Connect(SelfPlayerRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -701,9 +734,8 @@ namespace Protocol
             _selfRenderer = renderer;
 
             _p = Position;
-            _onGround = OnGround;
 
-            renderer.Init(Id, _v, _p, Look);
+            renderer.Init(Id, _p, Look);
         }
 
         internal void Disconnect()
@@ -730,7 +762,6 @@ namespace Protocol
             /*_FORCES.Enqueue(force);*/
 
             base.ApplyForce(force);
-
         }
 
         /*public override void Teleport(Vector pos, Angles look)
@@ -744,7 +775,7 @@ namespace Protocol
             // TODO: Check the velocity was reset in client when teleported.
         }*/
 
-        public override void Move(Vector v, Vector p, bool onGround)
+        public override void Move(BoundingBox bb, Vector v, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -758,12 +789,11 @@ namespace Protocol
                 }
                 */
 
-                p = _p;
+                bb = GetHitbox().Convert(_p);
                 onGround = _onGround;
             }
-
             
-            base.Move(v, p, onGround);
+            base.Move(bb, v, onGround);
         }
 
         internal void Control(Vector p, bool onGround)

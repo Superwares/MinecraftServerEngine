@@ -8,78 +8,56 @@ namespace Protocol
 
         private bool _movement = false;
 
-        /*private readonly NumList _ID_LIST = new();*/
-
-        private readonly Queue<EntityRenderer> _RENDERERS = new();
+        private readonly Set<int> _IDENTIFIERS = new();  // Disposable
+        private readonly Queue<EntityRenderer> _RENDERERS = new();  // Disposable
 
         public EntityRendererManager() { }
 
         ~EntityRendererManager() => System.Diagnostics.Debug.Assert(false);
 
-        public EntityRenderer Apply(
-            Queue<ClientboundPlayingPacket> outPackets,
-            ChunkData.Location p, int renderDistance)
+        public bool Apply(int id, EntityRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            /*int id = _ID_LIST.Alloc();*/
+            if (_IDENTIFIERS.Contains(id))
+            {
+                return true;
+            }
 
-            EntityRenderer renderer = new(outPackets, p, renderDistance);
+            _IDENTIFIERS.Insert(id);
             _RENDERERS.Enqueue(renderer);
 
-            return renderer;
+            return false;
         }
 
         public void MoveAndRotate(
             int entityId,
-            Entity.Vector posNew, Entity.Vector pos, Entity.Angles look, bool onGround)
+            Vector p, Vector pPrev, Entity.Angles look, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(!_movement);
+            System.Diagnostics.Debug.Assert(!_IDENTIFIERS.Contains(entityId));
 
-            for (int i = 0; i < _RENDERERS.Count; ++i)
+            foreach (EntityRenderer renderer in _RENDERERS.GetValues())
             {
-                EntityRenderer renderer = _RENDERERS.Dequeue();
-
-                if (renderer.IsDisconnected)
-                {
-                    /*_ID_LIST.Dealloc(renderer.Id);*/
-                    renderer.Dispose();
-
-                    continue;
-                }
-
-                renderer.MoveAndRotate(entityId, posNew, pos, look, onGround);
-                _RENDERERS.Enqueue(renderer);
-
+                renderer.MoveAndRotate(entityId, p, pPrev, look, onGround);
             }
 
             _movement = true;
         }
 
         public void Move(
-            int entityId, Entity.Vector posNew, Entity.Vector pos, bool onGround)
+            int entityId, Vector p, Vector pPrev, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(!_movement);
+            System.Diagnostics.Debug.Assert(!_IDENTIFIERS.Contains(entityId));
 
-            for (int i = 0; i < _RENDERERS.Count; ++i)
+            foreach (EntityRenderer renderer in _RENDERERS.GetValues())
             {
-                EntityRenderer renderer = _RENDERERS.Dequeue();
-
-                if (renderer.IsDisconnected)
-                {
-                    /*_ID_LIST.Dealloc(renderer.Id);*/
-                    renderer.Dispose();
-
-                    continue;
-                }
-
-                renderer.Move(entityId, posNew, pos, onGround);
-                _RENDERERS.Enqueue(renderer);
-
+                renderer.Move(entityId, p, pPrev, onGround);
             }
 
             _movement = true;
@@ -90,24 +68,13 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(!_movement);
+            System.Diagnostics.Debug.Assert(!_IDENTIFIERS.Contains(entityId));
 
-            for (int i = 0; i < _RENDERERS.Count; ++i)
+            foreach (EntityRenderer renderer in _RENDERERS.GetValues())
             {
-                EntityRenderer renderer = _RENDERERS.Dequeue();
-
-                if (renderer.IsDisconnected)
-                {
-                    /*_ID_LIST.Dealloc(renderer.Id);*/
-                    renderer.Dispose();
-
-                    continue;
-                }
-
                 renderer.Rotate(entityId, look, onGround);
-                _RENDERERS.Enqueue(renderer);
-
             }
-
+            
             _movement = true;
         }
 
@@ -116,6 +83,22 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(!_movement);
+            System.Diagnostics.Debug.Assert(!_IDENTIFIERS.Contains(entityId));
+
+            foreach (EntityRenderer renderer in _RENDERERS.GetValues())
+            {
+                renderer.Stand(entityId);
+            }
+        
+            _movement = true;
+        }
+
+        public void HandleRendering(int entityId, Vector p)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(!_movement);
+            System.Diagnostics.Debug.Assert(!_IDENTIFIERS.Contains(entityId));
 
             for (int i = 0; i < _RENDERERS.Count; ++i)
             {
@@ -123,42 +106,25 @@ namespace Protocol
 
                 if (renderer.IsDisconnected)
                 {
-                    /*_ID_LIST.Dealloc(renderer.Id);*/
-                    renderer.Dispose();
+                    continue;
+                }
+                else if (!renderer.CanRender(p))
+                {
+                    renderer.DestroyEntity(entityId);
 
                     continue;
                 }
 
-                renderer.Stand(entityId);
                 _RENDERERS.Enqueue(renderer);
-
             }
-        
-            _movement = true;
+
         }
 
-        public void DeterminToContinueRendering(
-            int entityId, Entity.Vector pos, Entity.BoundingBox bb)
+        public void FinishMovementRenderring()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(_movement);
-
-            for (int i = 0; i < _RENDERERS.Count; ++i)
-            {
-                EntityRenderer renderer = _RENDERERS.Dequeue();
-
-                if (!renderer.CanRender(pos, bb))
-                {
-                    /*_ID_LIST.Dealloc(renderer.Id);*/
-                    renderer.DestroyEntity(entityId);
-                    renderer.Dispose();
-
-                    continue;
-                }
-
-                _RENDERERS.Enqueue(renderer);
-            }
 
             _movement = false;
         }
@@ -167,22 +133,26 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(!_IDENTIFIERS.Contains(entityId));
+
             foreach (var renderer in _RENDERERS.GetValues())
             {
                 renderer.ChangeForms(entityId, sneaking, sprinting);
             }
         }
 
-        public void Teleport(
+        /*public void Teleport(
             int entityId, Entity.Vector pos, Entity.Angles look, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(!_IDENTIFIERS.Contains(entityId));
 
             foreach (var renderer in _RENDERERS.GetValues())
             {
                 renderer.Teleport(entityId, pos, look, onGround);
             }
-        }
+        }*/
 
         public void Flush(int entityId)
         {

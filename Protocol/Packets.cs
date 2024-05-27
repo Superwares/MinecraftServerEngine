@@ -1389,7 +1389,7 @@ namespace Protocol
             throw new NotImplementedException();
         }
 
-        public DestroyEntitiesPacket(int[] entityIds) : base(DestroyEntitiesPacketId)
+        public DestroyEntitiesPacket(params int[] entityIds) : base(DestroyEntitiesPacketId)
         {
             EntityIds = entityIds;  // TODO: Copy
         }
