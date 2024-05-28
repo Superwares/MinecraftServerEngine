@@ -161,10 +161,7 @@ namespace Protocol
             while (!_RENDERERS.Empty)
             {
                 EntityRenderer renderer = _RENDERERS.Dequeue();
-
-                /*_ID_LIST.Dealloc(renderer.Id);*/
                 renderer.DestroyEntity(entityId);
-                renderer.Dispose();
             }
         }
 
@@ -174,9 +171,6 @@ namespace Protocol
 
             // Assertion
             System.Diagnostics.Debug.Assert(!_movement);
-
-            /*System.Diagnostics.Debug.Assert(_ID_LIST.Empty);*/
-
             System.Diagnostics.Debug.Assert(_RENDERERS.Empty);
 
             // Release  resources.

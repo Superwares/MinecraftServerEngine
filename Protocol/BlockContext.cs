@@ -10,11 +10,45 @@ namespace Protocol
     {
         private sealed class ChunkData : System.IDisposable
         {
-            private const int _WIDTH = ChunkLocation.WIDTH;
-            private const int _MAX_SECTION_COUNT = 16;
-
             private sealed class SectionData : System.IDisposable
             {
+                public static void Write(Buffer buffer, SectionData sectionData)
+                {
+                    int bitCount = sectionData._bitsPerBlock;
+                    buffer.WriteByte(Conversions.ToByte(bitCount));
+
+                    (int, int)[] palette = sectionData._palette;
+                    System.Diagnostics.Debug.Assert(palette != null);
+                    if (bitCount == 13)
+                    {
+                        buffer.WriteInt(0, true);
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.Assert(bitCount >= 4 && bitCount <= 8);
+
+                        int length = palette.Length;
+                        buffer.WriteInt(length, true);
+
+                        for (int i = 0; i < length; ++i)
+                        {
+                            (int id, _) = palette[i];
+                            buffer.WriteInt(id, true);
+                        }
+                    }
+
+                    long[] data = sectionData._data;
+                    buffer.WriteInt(data.Length, true);
+                    for (int i = 0; i < data.Length; ++i)
+                    {
+                        buffer.WriteLong(data[i]);
+                    }
+
+                    buffer.WriteData(sectionData._blockLights);
+                    buffer.WriteData(sectionData._skyLights);
+
+                }
+
                 private bool _disposed = false;
 
                 public const int WIDTH = _WIDTH;
@@ -91,7 +125,6 @@ namespace Protocol
                 }
 
                 ~SectionData() => System.Diagnostics.Debug.Assert(false);
-
 
                 public int GetId(int x, int y, int z)
                 {
@@ -366,7 +399,7 @@ namespace Protocol
                     return value;
                 }
 
-                public bool SetId(int x, int y, int z, int id)
+                public void SetId(int x, int y, int z, int id)
                 {
                     System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -382,52 +415,13 @@ namespace Protocol
                     int end = ((i + 1) * _bitsPerBlock - 1) / _BITS_PER_DATA_UNIT;
 
                     System.Diagnostics.Debug.Assert(
-                        (value & ~((Conversions.ToLong(1) << _bitsPerBlock) - 1)) == 0);
+                        (value & ~((1L << _bitsPerBlock) - 1L)) == 0L);
                     _data[start] |= (value << offset);
 
                     if (start != end)
                     {
                         _data[end] = (value >> (_BITS_PER_DATA_UNIT - offset));
                     }
-
-                    throw new System.NotImplementedException();
-                }
-
-                internal static void Write(Buffer buffer, SectionData sectionData)
-                {
-                    int bitCount = sectionData._bitsPerBlock;
-                    buffer.WriteByte(Conversions.ToByte(bitCount));
-
-                    (int, int)[] palette = sectionData._palette;
-                    System.Diagnostics.Debug.Assert(palette != null);
-                    if (bitCount == 13)
-                    {
-                        buffer.WriteInt(0, true);
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.Assert(bitCount >= 4 && bitCount <= 8);
-
-                        int length = palette.Length;
-                        buffer.WriteInt(length, true);
-
-                        for (int i = 0; i < length; ++i)
-                        {
-                            (int id, _) = palette[i];
-                            buffer.WriteInt(id, true);
-                        }
-                    }
-
-                    long[] data = sectionData._data;
-                    buffer.WriteInt(data.Length, true);
-                    for (int i = 0; i < data.Length; ++i)
-                    {
-                        buffer.WriteLong(data[i]);
-                    }
-
-                    buffer.WriteData(sectionData._blockLights);
-                    buffer.WriteData(sectionData._skyLights);
-
                 }
 
                 public void Dispose()
@@ -450,13 +444,10 @@ namespace Protocol
 
             }
 
-            private bool _disposed = false;
+            private const int _WIDTH = ChunkLocation.WIDTH;
+            private const int _MAX_SECTION_COUNT = 16;
 
-            private int _count = 0;
-            private SectionData?[] _sections = new SectionData?[_MAX_SECTION_COUNT];  // from bottom to top
-            /*public int Count => _count;*/
-
-            internal static (int, byte[]) Write(ChunkData chunkData)
+            public static (int, byte[]) Write(ChunkData chunkData)
             {
                 using Buffer buffer = new();
 
@@ -482,7 +473,7 @@ namespace Protocol
                 return (mask, buffer.ReadData());
             }
 
-            internal static (int, byte[]) Write()
+            public static (int, byte[]) Write()
             {
                 Buffer buffer = new();
 
@@ -500,6 +491,11 @@ namespace Protocol
 
                 return (mask, buffer.ReadData());
             }
+
+            private bool _disposed = false;
+
+            private int _count = 0;
+            private SectionData?[] _sections = new SectionData?[_MAX_SECTION_COUNT];  // from bottom to top
 
             public ChunkData() { }
 
@@ -531,7 +527,6 @@ namespace Protocol
                 }
 
                 section.SetId(x, yPrime, z, id);
-                return;
             }
 
             public int GetId(int defaultId, int x, int y, int z)
@@ -642,6 +637,21 @@ namespace Protocol
                 z = loc.Z - (locChunk.Z * ChunkLocation.WIDTH);
             int id = chunk.GetId(_DEFAULT_BLOCK.GetId(), x, y, z);
             return BlockExtensions.ToBlock(id);
+        }
+
+        internal (int, byte[]) GetChunkData(ChunkLocation loc)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (_CHUNKS.Contains(loc))
+            {
+                ChunkData data = _CHUNKS.Lookup(loc);
+                return ChunkData.Write(data);
+            }
+            else
+            {
+                return ChunkData.Write();
+            }
         }
 
         public void Dispose()

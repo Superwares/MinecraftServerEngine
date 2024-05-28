@@ -22,7 +22,7 @@ namespace Protocol
 
         private readonly Table<System.Guid, Player> _DISCONNECTED_PLAYERS = new(); // Disposable
 
-        private readonly BlockContext _BLOCK_CTX = new(Blocks.Air.GetId());  // Disposable
+        private readonly BlockContext _BLOCK_CTX = new();  // Disposable
         
         private readonly Table<ChunkLocation, Table<int, Entity>> _CHUNK_TO_ENTITIES = new();
         private readonly Table<int, ChunkGrid> _ENTITY_TO_CHUNKS = new();  // Disposable
@@ -41,7 +41,7 @@ namespace Protocol
                     {
                         BlockLocation loc = new(x, 100, z);
 
-                        _BLOCK_CTX.SetBlock(loc, Blocks.Stone.GetId());
+                        _BLOCK_CTX.SetBlock(loc, Blocks.Stone);
                     }
                 }
                 
@@ -83,7 +83,6 @@ namespace Protocol
 
         public abstract bool CanJoinWorld();
         
-
         internal Player SpawnOrFindPlayer(string username, System.Guid uniqueId)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -118,8 +117,6 @@ namespace Protocol
 
             _ENTITY_SPAWNING_POOL.Enqueue(itemEntity);
 
-            /*System.Console.WriteLine("SpawnItemEntity!");*/
-
             return itemEntity;
         }
 
@@ -151,16 +148,14 @@ namespace Protocol
             Directions d = block.GetStairsDirection();
             bool bottom = block.IsBottomStairsBlock();
 
-            int id2 = _BLOCK_CTX.GetBlock(loc.Shift(d, 1));
-            Blocks block2 = BlockExtensions.ToBlock(id2);
+            Blocks block2 = _BLOCK_CTX.GetBlock(loc.Shift(d, 1));
             if (block2.IsStairsBlock() &&
                 bottom == block2.IsBottomStairsBlock())
             {
                 if (block2.IsVerticalStairsBlock() != block.IsVerticalStairsBlock())
                 {
                     Directions d2 = block2.GetStairsDirection();
-                    int id3 = _BLOCK_CTX.GetBlock(loc.Shift(d2.GetOpposite(), 1));
-                    Blocks block3 = BlockExtensions.ToBlock(id3);
+                    Blocks block3 = _BLOCK_CTX.GetBlock(loc.Shift(d2.GetOpposite(), 1));
                     if (!block3.IsStairsBlock() ||
                         block3.GetStairsDirection() != d ||
                         block3.IsBottomStairsBlock() != bottom)
@@ -181,16 +176,14 @@ namespace Protocol
 
             }
 
-            int id4 = _BLOCK_CTX.GetBlock(loc.Shift(d.GetOpposite(), 1));
-            Blocks block4 = BlockExtensions.ToBlock(id4);
+            Blocks block4 = _BLOCK_CTX.GetBlock(loc.Shift(d.GetOpposite(), 1));
             if (block4.IsStairsBlock() &&
                 bottom == block4.IsBottomStairsBlock())
             {
                 if (block4.IsVerticalStairsBlock() != block.IsVerticalStairsBlock())
                 {
                     Directions d4 = block4.GetStairsDirection();
-                    int id5 = _BLOCK_CTX.GetBlock(loc.Shift(d4, 1));
-                    Blocks block5 = BlockExtensions.ToBlock(id5);
+                    Blocks block5 = _BLOCK_CTX.GetBlock(loc.Shift(d4, 1));
                     if (!block5.IsStairsBlock() ||
                         block5.GetStairsDirection() != d ||
                         block5.IsBottomStairsBlock() != bottom)
@@ -219,8 +212,7 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            int id = _BLOCK_CTX.GetBlock(loc);
-            Blocks block = BlockExtensions.ToBlock(id);
+            Blocks block = _BLOCK_CTX.GetBlock(loc);
 
             /**
              * 0: None (Air)
@@ -469,12 +461,12 @@ namespace Protocol
                 // TODO: Resolve Collisions with other entities.
                 // TODO: Add Global Forces with OnGround flag. (Gravity, Damping Force, ...)
                 {
-                    entity.ApplyGlobalForce(
+                    entity.ApplyForce(
                             -1.0D * new Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
                             entity.Velocity);  // Damping Force
-                    entity.ApplyGlobalForce(entity.GetMass() * 0.08D * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
+                    entity.ApplyForce(entity.GetMass() * 0.08D * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
 
-                    /*entity.ApplyGlobalForce(entity.GetMass() * 0.001D * new Entity.Vector(0, -1, 0));  // Gravity*/
+                    /*entity.ApplyForce(entity.GetMass() * 0.001D * new Entity.Vector(0, -1, 0));  // Gravity*/
                 }
 
                 entity.StartRoutine(serverTicks, this);
@@ -608,38 +600,25 @@ namespace Protocol
             _ENTITY_TO_CHUNKS.Insert(entity.Id, grid);
         }
 
-        /*
-        internal bool ContainsChunk(Chunk.Location p)
+        internal (int, byte[]) GetChunkData(ChunkLocation loc)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            return _CHUNKS.Contains(p);
+            return _BLOCK_CTX.GetChunkData(loc);
         }
 
-        internal Chunk GetChunk(Chunk.Location p)
+        internal System.Collections.Generic.IEnumerable<Entity> GetEntities(ChunkLocation loc)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            return _CHUNKS.Lookup(p);
-        }*/
-
-        /*internal bool ContainsEntities(Chunk.Location p)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            return _CHUNK_TO_ENTITIES.Contains(p);
-        }*/
-
-        /*internal System.Collections.Generic.IEnumerable<Entity> GetEntities(Chunk.Location p)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Table<int, Entity> entities = _CHUNK_TO_ENTITIES.Lookup(p);
-            foreach (Entity entity in entities.GetValues())
+            if (!_CHUNK_TO_ENTITIES.Contains(loc))
             {
-                yield return entity;
+                return [];
             }
-        }*/
+
+            Table<int, Entity> entities = _CHUNK_TO_ENTITIES.Lookup(loc);
+            return entities.GetValues();
+        }
 
         /*public Entity RaycastClosestEntity(Entity.Vector p, Entity.Vector u, int d)
         {
@@ -658,37 +637,38 @@ namespace Protocol
 
         public virtual void Dispose()
         {
+            // Assertion.
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            // Assertion.
             System.Diagnostics.Debug.Assert(_ENTITY_ID_LIST.Empty);
 
-            System.Diagnostics.Debug.Assert(_CHUNKS.Empty);
-
             System.Diagnostics.Debug.Assert(_ENTITY_SPAWNING_POOL.Empty);
+            System.Diagnostics.Debug.Assert(_ENTITIES1.Empty);
+            System.Diagnostics.Debug.Assert(_ENTITIES2.Empty);
+            System.Diagnostics.Debug.Assert(_DESPAWNED_ENTITIES.Empty);
 
             System.Diagnostics.Debug.Assert(_DISCONNECTED_PLAYERS.Empty);
 
             System.Diagnostics.Debug.Assert(_CHUNK_TO_ENTITIES.Empty);
             System.Diagnostics.Debug.Assert(_ENTITY_TO_CHUNKS.Empty);
 
-            System.Diagnostics.Debug.Assert(_DESPAWNED_ENTITIES.Empty);
 
             // Release resources.
             _PLAYER_LIST.Dispose();
 
             _ENTITY_ID_LIST.Dispose();
 
-            _CHUNKS.Dispose();
-
             _ENTITY_SPAWNING_POOL.Dispose();
+            _ENTITIES1.Dispose();
+            _ENTITIES2.Dispose();
+            _DESPAWNED_ENTITIES.Dispose();
 
             _DISCONNECTED_PLAYERS.Dispose();
 
+            _BLOCK_CTX.Dispose();
+
             _CHUNK_TO_ENTITIES.Dispose();
             _ENTITY_TO_CHUNKS.Dispose();
-
-            _DESPAWNED_ENTITIES.Dispose();
 
             // Finish.
             System.GC.SuppressFinalize(this);

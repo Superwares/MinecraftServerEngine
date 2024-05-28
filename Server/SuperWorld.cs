@@ -8,11 +8,11 @@ namespace Server
 
         private bool _gameInProgress = false;
 
-        public SuperWorld() : base(new(0, 70, 0), new(0,0)) { }
+        public SuperWorld() : base(new(0, 101, 0), new(0,0)) { }
 
         ~SuperWorld() => System.Diagnostics.Debug.Assert(false);
 
-        protected override bool CanJoinWorld()
+        public override bool CanJoinWorld()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -28,9 +28,8 @@ namespace Server
 
         public override void Dispose()
         {
+            // Assertions.
             System.Diagnostics.Debug.Assert(!_disposed);
-
-            // Assertion.
 
             // Release resources.
 

@@ -64,28 +64,17 @@ namespace Protocol
 
         public static ChunkGrid Generate(BoundingBox bb)
         {
-            System.Diagnostics.Debug.Assert(bb.Width > 0);
-            System.Diagnostics.Debug.Assert(bb.Height > 0);
-
-            double h = bb.Width / 2;
-            System.Diagnostics.Debug.Assert(h > 0);
-
-            double xEntityMax = p.X + h, zEntityMax = p.Z + h,
-                   xEntityMin = p.X - h, zEntityMin = p.Z - h;
-            Entity.Vector
-                maxEntity = new(xEntityMax, 0, zEntityMax),
-                minEntity = new(xEntityMin, 0, zEntityMin);
-            ChunkLocation max = ChunkLocation.Convert(maxEntity),
-                   min = ChunkLocation.Convert(minEntity);
-
-            double r1 = xEntityMin % _WIDTH,
-                   r2 = zEntityMin % _WIDTH;
+            ChunkLocation
+                max = ChunkLocation.Generate(bb.Max),
+                min = ChunkLocation.Generate(bb.Min);
+            double r1 = bb.Min.X % Conversions.ToDouble(ChunkLocation.WIDTH),
+                   r2 = bb.Min.Z % Conversions.ToDouble(ChunkLocation.WIDTH);
             int xMin = min.X, zMin = min.Z;
-            if (Comparing.IsEqualTo(r1, 0))
+            if (Comparing.IsEqualTo(r1, 0.0D))
             {
                 --xMin;
             }
-            if (Comparing.IsEqualTo(r2, 0))
+            if (Comparing.IsEqualTo(r2, 0.0D))
             {
                 --zMin;
             }

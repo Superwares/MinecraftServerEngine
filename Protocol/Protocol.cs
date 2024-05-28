@@ -42,7 +42,9 @@ namespace Protocol
             catch (System.Net.Sockets.SocketException e)
             {
                 if (e.SocketErrorCode == System.Net.Sockets.SocketError.WouldBlock)
+                {
                     throw new TryAgainException();
+                }
 
                 throw;
             }
@@ -152,10 +154,14 @@ namespace Protocol
             }
             catch (System.Net.Sockets.SocketException e)
             {
-                /*if (e.SocketErrorCode == System.Net.Sockets.SocketError.WouldBlock)
-                    throw new TryAgainException();*/
+                if (e.SocketErrorCode == System.Net.Sockets.SocketError.WouldBlock)
+                {
+                    throw new TryAgainException();
+                }
                 if (e.SocketErrorCode == System.Net.Sockets.SocketError.ConnectionAborted)
+                {
                     throw new DisconnectedClientException();
+                }
 
                 throw;
             }
@@ -446,7 +452,7 @@ namespace Protocol
                 }
 
                 Player player = world.SpawnOrFindPlayer(user.USERNAME, user.USER_ID);
-                Connection conn = new(user.CLIENT);
+                Connection conn = new(world, player, user.CLIENT);
                 connections.Enqueue((conn, player));
             }
 

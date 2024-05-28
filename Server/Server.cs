@@ -110,12 +110,9 @@ namespace Application
 
             // Barrier
 
-            adsf
-            /*_WORLD.ReleaseResources();
+            _WORLD.ReleaseResources();
 
-            // Barrier*/
-
-            
+            // Barrier
 
         }
 

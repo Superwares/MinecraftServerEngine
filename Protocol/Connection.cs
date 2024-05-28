@@ -1,7 +1,5 @@
 ﻿
 using Containers;
-using System;
-using System.Numerics;
 
 namespace Protocol
 {
@@ -253,6 +251,8 @@ namespace Protocol
 
         private readonly Client _CLIENT;  // Dispoasble
 
+        private bool _init = false;
+
         private bool _disconnected = false;
 
         private readonly Queue<LoadChunkPacket> _LOAD_CHUNK_PACKETS = new();  // Dispoasble
@@ -263,15 +263,14 @@ namespace Protocol
         private int _dEntityRendering = _MIN_RENDER_DISTANCE;
         private int _dChunkRendering = _MIN_RENDER_DISTANCE;
 
-        private readonly LoadingHelper _LOADING_HELPER = new();
-        private readonly EntityRenderer _ENTITY_RENDERER;  // Disposable
+        private readonly EntityRenderer _ENTITY_RENDERER;
+        private readonly SelfPlayerRenderer _SELF_RENDERER;
 
-        private readonly SelfPlayerRenderer _SELF_RENDERER;  // Disposable
-
+        private readonly LoadingHelper _LOADING_HELPER = new();  // Dispoasble
         private readonly Queue<TeleportationRecord> _TELEPORTATION_RECORDS = new();  // Dispoasble
         private KeepAliveRecord? _keepAliveRecord = null;
 
-        private Window? _window = null;  // disposable
+        private Window _window;  // disposable
 
         internal Connection(World world, Player player, Client client)
         {
@@ -286,15 +285,6 @@ namespace Protocol
 
             using Buffer buffer = new();
 
-            JoinGamePacket packet = new(player.Id, 0, 0, 0, "default", false);
-            /*packet.Write(buffer);
-            _CLIENT.Send(buffer);*/
-            _OUT_PACKETS.Enqueue(packet);
-
-            world.ConnectPlayer(player, _OUT_PACKETS);
-            player.Connect(_SELF_RENDERER);
-
-            System.Diagnostics.Debug.Assert(_window == null);
             _window = new Window(_OUT_PACKETS, player._selfInventory);
 
             ChunkLocation loc = ChunkLocation.Generate(player.Position);
@@ -707,56 +697,38 @@ namespace Protocol
 
             ChunkLocation locCenter = ChunkLocation.Generate(player.Position);
 
+            ChunkGrid grid = ChunkGrid.Generate(locCenter, _dEntityRendering);
+            foreach (ChunkLocation loc in grid.GetLocations())
             {
-                ChunkGrid grid = ChunkGrid.Generate(locCenter, _dEntityRendering);
-                foreach (ChunkLocation loc in grid.GetLocations())
+                foreach (Entity entity in world.GetEntities(loc))
                 {
-                    if (world.ContainsEntities(loc))
-                    {
-                        foreach (Entity entity in world.GetEntities(loc))
-                        {
-                            if (entity.Id == player.Id) continue;
+                    if (entity.Id == player.Id) continue;
 
-                            entity.ApplyRenderer(_OUT_PACKETS, Id, _ENTITY_RENDERER);
-                        }
-                    }
+                    entity.ApplyRenderer(_OUT_PACKETS, Id, _ENTITY_RENDERER);
                 }
-
             }
 
+            using Queue<ChunkLocation> newChunkPositions = new();
+            using Queue<ChunkLocation> outOfRangeChunks = new();
+
+            _LOADING_HELPER.Load(newChunkPositions, outOfRangeChunks, locCenter, _dChunkRendering);
+
+            int mask; byte[] data;
+            while (!newChunkPositions.Empty)
             {
-                using Queue<ChunkLocation> newChunkPositions = new();
-                using Queue<ChunkLocation> outOfRangeChunks = new();
+                ChunkLocation locChunk = newChunkPositions.Dequeue();
 
-                _LOADING_HELPER.Load(newChunkPositions, outOfRangeChunks, locCenter, _dChunkRendering);
+                (mask, data) = world.GetChunkData(locChunk);
 
-                int mask; byte[] data;
-                while (!newChunkPositions.Empty)
-                {
-                    ChunkLocation locChunk = newChunkPositions.Dequeue();
+                _LOAD_CHUNK_PACKETS.Enqueue(new LoadChunkPacket(
+                    locChunk.X, locChunk.Z, true, mask, data));
+            }
 
-                    /*if (world.ContainsChunk(p))
-                    {
-                        ChunkData chunk = world.GetChunk(p);
-                        (mask, data) = ChunkWrite(chunk);
-                    }
-                    else
-                    {
-                        (mask, data) = ChunkData.Write();
-                    }*/
+            while (!outOfRangeChunks.Empty)
+            {
+                ChunkLocation p = outOfRangeChunks.Dequeue();
 
-                    (mask, data) = world.GetChunkData(locChunk);
-
-                    _LOAD_CHUNK_PACKETS.Enqueue(new LoadChunkPacket(
-                        locChunk.X, locChunk.Z, true, mask, data));
-                }
-
-                while (!outOfRangeChunks.Empty)
-                {
-                    ChunkLocation p = outOfRangeChunks.Dequeue();
-
-                    _OUT_PACKETS.Enqueue(new UnloadChunkPacket(p.X, p.Z));
-                }
+                _OUT_PACKETS.Enqueue(new UnloadChunkPacket(p.X, p.Z));
             }
 
         }
@@ -775,6 +747,17 @@ namespace Protocol
 
             try
             {
+                if (!_init)
+                {
+                    JoinGamePacket packet = new(player.Id, 0, 0, 0, "default", false);
+                    packet.Write(buffer);
+                    _CLIENT.Send(buffer);
+
+                    world.ConnectPlayer(player, _OUT_PACKETS);
+                    player.Connect(_SELF_RENDERER);
+
+                    _init = true;
+                }
 
                 LoadWorld(world, player);
 
@@ -840,41 +823,28 @@ namespace Protocol
         {
             _ENTITY_RENDERER.Disconnect();
 
-            if (_window != null)
-            {
-                _window.Flush(world);
-            }
+            _window.Flush(world);
         }
 
         public void Dispose()
         {
+            // Assertions.
             System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disconnected);
 
-            // Assertion
-            System.Diagnostics.Debug.Assert(_OUT_PACKETS.Empty);
-
-            System.Diagnostics.Debug.Assert(_ENTITY_TO_RENDERERS.Empty);
-
-            // Release Resources
+            // Release Resources.
             _CLIENT.Dispose();
 
             _LOAD_CHUNK_PACKETS.Dispose();
             _OUT_PACKETS.Dispose();
 
             _LOADING_HELPER.Dispose();
-            _ENTITY_TO_RENDERERS.Dispose();
-
-            _SELF_RENDERER.Dispose();
-
             _TELEPORTATION_RECORDS.Dispose();
             _keepAliveRecord = null;
 
-            if (_window != null)
-            {
-                _window.Dispose();
-                _window = null;
-            }
+            _window.Dispose();
 
+            // Finish.
             System.GC.SuppressFinalize(this);
             _disposed = true;
         }

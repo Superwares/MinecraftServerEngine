@@ -22,6 +22,27 @@ namespace Protocol
             _MAX = max; _MIN = min;
         }
 
+        public double GetLengthX()
+        {
+            System.Diagnostics.Debug.Assert(_MAX.X >= _MIN.X);
+
+            return _MAX.X -_MIN.X;
+        }
+
+        public double GetLengthY()
+        {
+            System.Diagnostics.Debug.Assert(_MAX.Y >= _MIN.Y);
+
+            return _MAX.Y - _MIN.Y;
+        }
+
+        public double GetLengthZ()
+        {
+            System.Diagnostics.Debug.Assert(_MAX.Z >= _MIN.Z);
+
+            return _MAX.Z - _MIN.Z;
+        }
+
         public BoundingBox MoveX(double s)
         {
             Vector
@@ -150,6 +171,7 @@ namespace Protocol
             return Comparing.IsLessThanOrEqualTo(bb.Min.Y, Max.Y) &&
                    Comparing.IsGreaterThanOrEqualTo(bb.Max.Y, Min.Y);
         }
+        
         public bool IsContactingZ(BoundingBox bb)
         {
             return Comparing.IsLessThanOrEqualTo(bb.Min.Z, Max.Z) &&
@@ -192,12 +214,60 @@ namespace Protocol
 
         public double AdjustY(BoundingBox bb, double s)
         {
-            throw new System.NotImplementedException();
+            if (IsOverlappingX(bb) && IsOverlappingZ(bb))
+            {
+                double sPrime;
+                if (Comparing.IsGreaterThan(s, 0.0D) &&
+                    Comparing.IsLessThanOrEqualTo(bb.Max.Y, Min.Y))
+                {
+                    sPrime = Min.Y - bb.Max.Y;
+                    if (Comparing.IsLessThan(sPrime, s))
+                    {
+                        s = sPrime;
+                    }
+                }
+                else if (
+                    Comparing.IsLessThan(s, 0.0D) &&
+                    Comparing.IsGreaterThanOrEqualTo(bb.Min.Y, Max.Y))
+                {
+                    sPrime = Max.Y - bb.Min.Y;
+                    if (Comparing.IsGreaterThan(sPrime, s))
+                    {
+                        s = sPrime;
+                    }
+                }
+            }
+
+            return s;
         }
 
         public double AdjustZ(BoundingBox bb, double s)
         {
-            throw new System.NotImplementedException();
+            if (IsOverlappingX(bb) && IsOverlappingY(bb))
+            {
+                double sPrime;
+                if (Comparing.IsGreaterThan(s, 0.0D) &&
+                    Comparing.IsLessThanOrEqualTo(bb.Max.Z, Min.Z))
+                {
+                    sPrime = Min.Z - bb.Max.Z;
+                    if (Comparing.IsLessThan(sPrime, s))
+                    {
+                        s = sPrime;
+                    }
+                }
+                else if (
+                    Comparing.IsLessThan(s, 0.0D) &&
+                    Comparing.IsGreaterThanOrEqualTo(bb.Min.Z, Max.Z))
+                {
+                    sPrime = Max.Z - bb.Min.Z;
+                    if (Comparing.IsGreaterThan(sPrime, s))
+                    {
+                        s = sPrime;
+                    }
+                }
+            }
+
+            return s;
         }
 
         public Vector GetBottomCenter()

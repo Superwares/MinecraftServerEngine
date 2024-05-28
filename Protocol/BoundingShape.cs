@@ -31,12 +31,40 @@ namespace Protocol
 
         public double AdjustY(BoundingBox bb, double s)
         {
-            throw new System.NotImplementedException();
+            int length = _PRIMITIVES.Length;
+            System.Diagnostics.Debug.Assert(length >= 0);
+
+            if (length == 0)
+            {
+                return s;
+            }
+
+            for (int i = 0; i < length; ++i)
+            {
+                BoundingBox bbFixed = _PRIMITIVES[i];
+                s = bbFixed.AdjustY(bb, s);
+            }
+
+            return s;
         }
 
         public double AdjustZ(BoundingBox bb, double s)
         {
-            throw new System.NotImplementedException();
+            int length = _PRIMITIVES.Length;
+            System.Diagnostics.Debug.Assert(length >= 0);
+
+            if (length == 0)
+            {
+                return s;
+            }
+
+            for (int i = 0; i < length; ++i)
+            {
+                BoundingBox bbFixed = _PRIMITIVES[i];
+                s = bbFixed.AdjustZ(bb, s);
+            }
+
+            return s;
         }
 
     }

@@ -33,7 +33,7 @@ namespace Protocol
             return new(max, new(xMin, yMin, zMin));
         }
 
-        public static BlockGrid Generate(Vector p, BoundingBox bb)
+        /*public static BlockGrid Generate(Vector p, BoundingBox bb)
         {
             System.Diagnostics.Debug.Assert(Comparing.IsGreaterThan(bb.Width, 0));
             System.Diagnostics.Debug.Assert(Comparing.IsGreaterThan(bb.Height, 0));
@@ -69,7 +69,7 @@ namespace Protocol
             }
 
             return new(max, new(xMin, yMin, zMin));
-        }
+        }*/
 
         public BlockGrid(BlockLocation max, BlockLocation min)
         {

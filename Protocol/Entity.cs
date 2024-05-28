@@ -194,27 +194,6 @@ namespace Protocol
             }
         }*/
 
-        /*public struct BoundingBox *//*: System.IEquatable<BoundingBox>*//*
-        {
-            public static BoundingBox GetBlockBB() => new(1, 1);
-
-            public readonly double Width, Height;
-
-            public BoundingBox(double width, double height)
-            {
-                System.Diagnostics.Debug.Assert(width > 0);
-                System.Diagnostics.Debug.Assert(height > 0);
-
-                Width = width; Height = height;
-            }
-
-            public override readonly string? ToString()
-            {
-                return $"( Width: {Width}, Height: {Height} )";
-            }
-
-        }*/
-
         public readonly struct Hitbox
         {
             public readonly double Width, Height;
@@ -228,7 +207,11 @@ namespace Protocol
 
             public BoundingBox Convert(Vector p)
             {
-                throw new System.NotImplementedException();
+                double w = Width / 2.0D;
+
+                Vector max = new(p.X + w, p.Y + Height, p.Z + w),
+                       min = new(p.X - w, p.Y, p.Z - w);
+                return new(max, min);
             }
         }
 
@@ -472,8 +455,6 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_spawned);
-            
             _rotated = true;
             _look = look;
         }
@@ -481,18 +462,14 @@ namespace Protocol
         private void RanderFormChanging()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(_spawned);
-
+            
             _RENDERER_MANAGER.ChangeForms(Id, _sneaking, _sprinting);
         }
 
         public void Sneak()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(_spawned);
-
+            
             System.Diagnostics.Debug.Assert(!_sneaking);
             _sneaking = true;
 
@@ -502,9 +479,7 @@ namespace Protocol
         public void Unsneak()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(_spawned);
-
+            
             System.Diagnostics.Debug.Assert(_sneaking);
             _sneaking = false;
 
@@ -514,9 +489,7 @@ namespace Protocol
         public void Sprint()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(_spawned);
-
+            
             System.Diagnostics.Debug.Assert(!_sprinting);
             _sprinting = true;
 
@@ -526,34 +499,27 @@ namespace Protocol
         public void Unsprint()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(_spawned);
-
+            
             System.Diagnostics.Debug.Assert(_sprinting);
             _sprinting = false;
 
             RanderFormChanging();
         }
         
-        public void Flush()
+        public virtual void Flush()
         {
-            System.Diagnostics.Debug.Assert(_spawned);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            _FORCES.Flush();
             _RENDERER_MANAGER.Flush(Id);
         }
 
         public virtual void Dispose()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
             // Assertion
-            System.Diagnostics.Debug.Assert(_spawned);
-            System.Diagnostics.Debug.Assert(_FORCES.Empty);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
             _FORCES.Dispose();
-
             _RENDERER_MANAGER.Dispose();
 
             // Finish.
@@ -833,9 +799,8 @@ namespace Protocol
 
         public override void Dispose()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
             // Assertion.
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
 
