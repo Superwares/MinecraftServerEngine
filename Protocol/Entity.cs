@@ -196,20 +196,25 @@ namespace Protocol
 
         public readonly struct Hitbox
         {
-            public readonly double Width, Height;
+            public readonly double _W, _H;
+            public double Width => _W;
+            public double Height => _H;
             /*public readonly double EyeHeight, MaxStepHeight;*/
 
             public Hitbox(double w, double h)
             {
-                Width = w;
-                Height = h;
+                _W = w;
+                _H = h;
             }
 
             public BoundingBox Convert(Vector p)
             {
-                double w = Width / 2.0D;
+                System.Diagnostics.Debug.Assert(Comparing.IsGreaterThan(_W, 0.0D));
+                System.Diagnostics.Debug.Assert(Comparing.IsGreaterThan(_H, 0.0D));
 
-                Vector max = new(p.X + w, p.Y + Height, p.Z + w),
+                double w = _W / 2.0D;
+
+                Vector max = new(p.X + w, p.Y + _H, p.Z + w),
                        min = new(p.X - w, p.Y, p.Z - w);
                 return new(max, min);
             }
@@ -415,7 +420,6 @@ namespace Protocol
             bool moved = !p.Equals(_p);  // TODO: Compare with machine epsilon.
             if (moved && _rotated)
             {
-                
                 _RENDERER_MANAGER.MoveAndRotate(Id, p, _p, _look, onGround);
 
                 _p = p;

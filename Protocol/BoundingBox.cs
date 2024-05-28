@@ -45,27 +45,24 @@ namespace Protocol
 
         public BoundingBox MoveX(double s)
         {
-            Vector
-                max = new(Max.X + s, Max.Y, Max.Z),
-                min = new(Min.X + s, Min.Y, Min.Z);
+            Vector max = new(Max.X + s, Max.Y, Max.Z),
+                   min = new(Min.X + s, Min.Y, Min.Z);
 
             return new(max, min);
         }
 
         public BoundingBox MoveY(double s)
         {
-            Vector
-                max = new(Max.X, Max.Y + s, Max.Z),
-                min = new(Min.X, Min.Y + s, Min.Z);
+            Vector max = new(Max.X, Max.Y + s, Max.Z),
+                   min = new(Min.X, Min.Y + s, Min.Z);
 
             return new(max, min);
         }
 
         public BoundingBox MoveZ(double s)
         {
-            Vector
-                max = new(Max.X, Max.Y, Max.Z + s),
-                min = new(Min.X, Min.Y, Min.Z + s);
+            Vector max = new(Max.X, Max.Y, Max.Z + s),
+                   min = new(Min.X, Min.Y, Min.Z + s);
 
             return new(max, min);
         }
@@ -192,6 +189,8 @@ namespace Protocol
                     Comparing.IsLessThanOrEqualTo(bb.Max.X, Min.X))
                 {
                     sPrime = Min.X - bb.Max.X;
+                    System.Diagnostics.Debug.Assert(
+                        Comparing.IsGreaterThanOrEqualTo(sPrime, 0.0D));
                     if (Comparing.IsLessThan(sPrime, s))
                     {
                         s = sPrime;
@@ -202,6 +201,8 @@ namespace Protocol
                     Comparing.IsGreaterThanOrEqualTo(bb.Min.X, Max.X))
                 {
                     sPrime = Max.X - bb.Min.X;
+                    System.Diagnostics.Debug.Assert(
+                        Comparing.IsLessThanOrEqualTo(sPrime, 0.0D));
                     if (Comparing.IsGreaterThan(sPrime, s))
                     {
                         s = sPrime;
@@ -221,6 +222,8 @@ namespace Protocol
                     Comparing.IsLessThanOrEqualTo(bb.Max.Y, Min.Y))
                 {
                     sPrime = Min.Y - bb.Max.Y;
+                    System.Diagnostics.Debug.Assert(
+                        Comparing.IsGreaterThanOrEqualTo(sPrime, 0.0D));
                     if (Comparing.IsLessThan(sPrime, s))
                     {
                         s = sPrime;
@@ -231,6 +234,8 @@ namespace Protocol
                     Comparing.IsGreaterThanOrEqualTo(bb.Min.Y, Max.Y))
                 {
                     sPrime = Max.Y - bb.Min.Y;
+                    System.Diagnostics.Debug.Assert(
+                        Comparing.IsLessThanOrEqualTo(sPrime, 0.0D));
                     if (Comparing.IsGreaterThan(sPrime, s))
                     {
                         s = sPrime;
@@ -250,6 +255,8 @@ namespace Protocol
                     Comparing.IsLessThanOrEqualTo(bb.Max.Z, Min.Z))
                 {
                     sPrime = Min.Z - bb.Max.Z;
+                    System.Diagnostics.Debug.Assert(
+                        Comparing.IsGreaterThanOrEqualTo(sPrime, 0.0D));
                     if (Comparing.IsLessThan(sPrime, s))
                     {
                         s = sPrime;
@@ -260,6 +267,8 @@ namespace Protocol
                     Comparing.IsGreaterThanOrEqualTo(bb.Min.Z, Max.Z))
                 {
                     sPrime = Max.Z - bb.Min.Z;
+                    System.Diagnostics.Debug.Assert(
+                        Comparing.IsLessThanOrEqualTo(sPrime, 0.0D));
                     if (Comparing.IsGreaterThan(sPrime, s))
                     {
                         s = sPrime;

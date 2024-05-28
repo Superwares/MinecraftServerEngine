@@ -12,8 +12,6 @@ namespace Protocol
             _OUT_PACKETS = outPackets;
         }
 
-        ~Renderer() => System.Diagnostics.Debug.Assert(false);
-
         protected void Render(ClientboundPlayingPacket packet)
         {
             _OUT_PACKETS.Enqueue(packet);
@@ -39,8 +37,6 @@ namespace Protocol
 
             _dEntityRendering = dEntityRendering;
         }
-
-        ~EntityRenderer() => System.Diagnostics.Debug.Assert(false);
 
         public void Disconnect()
         {
