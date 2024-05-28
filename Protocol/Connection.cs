@@ -287,14 +287,15 @@ namespace Protocol
             using Buffer buffer = new();
 
             JoinGamePacket packet = new(player.Id, 0, 0, 0, "default", false);
-            packet.Write(buffer);
-            _CLIENT.Send(buffer);
+            /*packet.Write(buffer);
+            _CLIENT.Send(buffer);*/
+            _OUT_PACKETS.Enqueue(packet);
 
             world.ConnectPlayer(player, _OUT_PACKETS);
             player.Connect(_SELF_RENDERER);
 
             System.Diagnostics.Debug.Assert(_window == null);
-            _window = new(_OUT_PACKETS, player._selfInventory);
+            _window = new Window(_OUT_PACKETS, player._selfInventory);
 
             ChunkLocation loc = ChunkLocation.Generate(player.Position);
             _ENTITY_RENDERER = new(_OUT_PACKETS, loc, _dEntityRendering);
@@ -807,7 +808,7 @@ namespace Protocol
                     {
                         // TODO: save payload and check when recived.
                         System.Diagnostics.Debug.Assert(_keepAliveRecord == null);
-                        _keepAliveRecord = new(requestKeepAlivePacket.Payload);
+                        _keepAliveRecord = new KeepAliveRecord(requestKeepAlivePacket.Payload);
                     }
                     /*else if (packet is DestroyEntitiesPacket destroyEntitiesPacket)
                     {

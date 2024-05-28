@@ -2,6 +2,7 @@
 
 using Common;
 using Containers;
+using static System.Collections.Specialized.BitVector32;
 
 namespace Protocol
 {
@@ -22,10 +23,10 @@ namespace Protocol
 
                 private int _bitsPerBlock;
 
-                private int[]? _palette;
+                private (int, int)[] _palette;
 
-                private const int _BITS_PER_DATA_UNIT = sizeof(ulong) * 8; // TODO: Change to appropriate name.
-                private ulong[] _data;
+                private const int _BITS_PER_DATA_UNIT = sizeof(long) * 8; // TODO: Change to appropriate name.
+                private long[] _data;
 
                 private byte[] _blockLights, _skyLights;
 
@@ -37,16 +38,46 @@ namespace Protocol
                     return length;
                 }
 
-                public SectionData(int defaultBlockId)
+                public SectionData(int defaultId)
                 {
                     _bitsPerBlock = 4;
 
-                    _palette = [defaultBlockId];
+                    _palette = [(defaultId, _TOTAL_BLOCK_COUNT)];
 
                     {
                         int length = GetDataLength(_bitsPerBlock);
-                        _data = new ulong[length];
-                        System.Array.Fill<ulong>(_data, defaultBlockId);
+                        _data = new long[length];
+
+                        int i;
+                        long value = Conversions.ToLong(defaultId);
+
+                        int start, offset, end;
+
+                        for (int y = 0; y < HEIGHT; ++y)
+                        {
+                            for (int z = 0; z < WIDTH; ++z)
+                            {
+                                for (int x = 0; x < WIDTH; ++x)
+                                {
+                                    i = (((y * HEIGHT) + z) * WIDTH) + x;
+
+                                    start = (i * _bitsPerBlock) / _BITS_PER_DATA_UNIT;
+                                    offset = (i * _bitsPerBlock) % _BITS_PER_DATA_UNIT;
+                                    end = (((i + 1) * _bitsPerBlock) - 1) / _BITS_PER_DATA_UNIT;
+
+                                    System.Diagnostics.Debug.Assert(
+                                        (value & ~((1L << _bitsPerBlock) - 1L)) == 0);
+                                    _data[start] |= (value << offset);
+
+                                    if (start != end)
+                                    {
+                                        _data[end] = value >> (_BITS_PER_DATA_UNIT - offset);
+                                    }
+
+                                }
+                            }
+                        }
+
                     }
 
                     {
@@ -62,7 +93,7 @@ namespace Protocol
                 ~SectionData() => System.Diagnostics.Debug.Assert(false);
 
 
-                public int GetBlockId(int x, int y, int z)
+                public int GetId(int x, int y, int z)
                 {
                     System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -70,10 +101,10 @@ namespace Protocol
                     System.Diagnostics.Debug.Assert(z >= 0 && z <= WIDTH);
                     System.Diagnostics.Debug.Assert(y >= 0 && y <= HEIGHT);
 
-                    ulong mask = (1UL << _bitsPerBlock) - 1UL;
+                    long mask = (1L << _bitsPerBlock) - 1L;
 
                     int i;
-                    ulong value;
+                    long value;
 
                     int start, offset, end;
 
@@ -100,7 +131,9 @@ namespace Protocol
                     else
                     {
                         System.Diagnostics.Debug.Assert(_palette != null);
-                        return _palette[value];
+
+                        (int id, var _) = _palette[value];
+                        return id;
                     }
                 }
 
@@ -112,12 +145,12 @@ namespace Protocol
                     System.Diagnostics.Debug.Assert(bitsPerBlock > _bitsPerBlock);
 
                     int length = GetDataLength(bitsPerBlock);
-                    var data = new ulong[length];
+                    var data = new long[length];
 
-                    ulong mask = ((Conversions.ToUlong(1) << bitsPerBlock) - 1);
+                    long mask = (1L << bitsPerBlock) - 1L;
 
                     int i;
-                    ulong value;
+                    long value;
 
                     int start, offset, end;
 
@@ -144,11 +177,14 @@ namespace Protocol
                                         }
                                         else
                                         {
-                                            value = (_data[start] >> offset | _data[end] << (_BITS_PER_DATA_UNIT - offset));
+                                            value = 
+                                                (_data[start] >> offset) | 
+                                                (_data[end] << (_BITS_PER_DATA_UNIT - offset));
                                         }
 
                                         value &= mask;
-                                        id = _palette[value];
+                                        (id, int count) = _palette[value];
+                                        System.Diagnostics.Debug.Assert(count > 0);
                                     }
 
                                     {
@@ -156,9 +192,10 @@ namespace Protocol
                                         offset = (i * bitsPerBlock) % _BITS_PER_DATA_UNIT;
                                         end = (((i + 1) * bitsPerBlock) - 1) / _BITS_PER_DATA_UNIT;
 
-                                        value = Conversions.ToUlong(id);
+                                        value = Conversions.ToLong(id);
 
-                                        System.Diagnostics.Debug.Assert((value & ~((1UL << bitsPerBlock) - 1UL)) == 0);
+                                        System.Diagnostics.Debug.Assert(
+                                            (value & ~((1L << bitsPerBlock) - 1L)) == 0);
                                         data[start] |= (value << offset);
 
                                         if (start != end)
@@ -174,7 +211,8 @@ namespace Protocol
                     }
                     else
                     {
-                        System.Diagnostics.Debug.Assert(bitsPerBlock > 4 && bitsPerBlock <= 8);
+                        System.Diagnostics.Debug.Assert(
+                            bitsPerBlock > 4 && bitsPerBlock <= 8);
 
                         for (int y = 0; y < HEIGHT; ++y)
                         {
@@ -195,7 +233,9 @@ namespace Protocol
                                         }
                                         else
                                         {
-                                            value = (_data[start] >> offset | _data[end] << (_BITS_PER_DATA_UNIT - offset));
+                                            value = 
+                                                (_data[start] >> offset | 
+                                                _data[end] << (_BITS_PER_DATA_UNIT - offset));
                                         }
 
                                         value &= mask;
@@ -207,12 +247,12 @@ namespace Protocol
                                         end = (((i + 1) * bitsPerBlock) - 1) / _BITS_PER_DATA_UNIT;
 
                                         System.Diagnostics.Debug.Assert(
-                                            (value & ~((Conversions.ToUlong(1) << bitsPerBlock) - 1)) == 0);
+                                            (value & ~((1L << bitsPerBlock) - 1L)) == 0);
                                         data[start] |= (value << offset);
 
                                         if (start != end)
                                         {
-                                            data[end] = (value >> (_BITS_PER_DATA_UNIT - offset));
+                                            data[end] = value >> (_BITS_PER_DATA_UNIT - offset);
                                         }
                                     }
 
@@ -222,19 +262,20 @@ namespace Protocol
                     }
 
                     _bitsPerBlock = bitsPerBlock;
+                    _data = data;
                 }
 
-                private ulong AcquireValue(int id)
+                private long GetValue(int id)
                 {
                     System.Diagnostics.Debug.Assert(!_disposed);
 
-                    ulong value;
+                    long value;
 
                     if (_bitsPerBlock == 13)
                     {
                         System.Diagnostics.Debug.Assert(_palette == null);
 
-                        value = Conversions.ToUlong(id);
+                        value = Conversions.ToLong(id);
                     }
                     else
                     {
@@ -247,22 +288,26 @@ namespace Protocol
                         System.Diagnostics.Debug.Assert(_palette != null);
                         for (int i = 0; i < _palette.Length; ++i)
                         {
-                            int idPalette = _palette[i];
+                            (int idPalette, int count) = _palette[i];
+                            System.Diagnostics.Debug.Assert(count >= 0);
+
                             if (id == idPalette)
                             {
                                 indexPalette = i;
+                                _palette[i] = (idPalette, ++count);
                             }
                         }
 
                         if (indexPalette >= 0)
                         {
-                            value = Conversions.ToUlong(indexPalette);
+                            value = Conversions.ToLong(indexPalette);
                         }
                         else
                         {
                             System.Diagnostics.Debug.Assert(indexPalette == -1);
 
-                            int lengthNew = _palette.Length + 1;
+                            int length = _palette.Length;
+                            int lengthNew = length + 1;
 
                             int bitsPerBlock;
                             if (lengthNew <= 0b1111)
@@ -295,25 +340,24 @@ namespace Protocol
                                 ExpandData(bitsPerBlock);
                             }
 
+                            {
+                                var paletteNew = new (int, int)[lengthNew];
+
+                                System.Array.Copy(_palette, paletteNew, length);
+                                paletteNew[length] = (id, 1);
+
+                                _palette = paletteNew;
+                            }
+
                             if (bitsPerBlock == 13)
                             {
-                                value = Conversions.ToUlong(id);
-
-                                _palette = null;
+                                value = Conversions.ToLong(id);
                             }
                             else
                             {
                                 System.Diagnostics.Debug.Assert(bitsPerBlock >= 4 && bitsPerBlock <= 8);
 
-                                var paletteNew = new int[lengthNew];
-
-                                int lastIndex = _palette.Length;
-                                System.Array.Copy(_palette, paletteNew, lastIndex);
-                                paletteNew[lastIndex] = id;
-
-                                value = Conversions.ToUlong(lastIndex);
-
-                                _palette = paletteNew;
+                                value = Conversions.ToLong(length);
                             }
 
                         }
@@ -322,7 +366,7 @@ namespace Protocol
                     return value;
                 }
 
-                public bool SetBlockId(int x, int y, int z, int id)
+                public bool SetId(int x, int y, int z, int id)
                 {
                     System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -330,7 +374,7 @@ namespace Protocol
                     System.Diagnostics.Debug.Assert(y >= 0 && y <= WIDTH);
                     System.Diagnostics.Debug.Assert(z >= 0 && z <= HEIGHT);
 
-                    ulong value = AcquireValue(id);
+                    long value = GetValue(id);
 
                     int i = (((y * HEIGHT) + z) * WIDTH) + x;
                     int start = (i * _bitsPerBlock) / _BITS_PER_DATA_UNIT;
@@ -338,7 +382,7 @@ namespace Protocol
                     int end = ((i + 1) * _bitsPerBlock - 1) / _BITS_PER_DATA_UNIT;
 
                     System.Diagnostics.Debug.Assert(
-                        (value & ~((Conversions.ToUlong(1) << _bitsPerBlock) - 1)) == 0);
+                        (value & ~((Conversions.ToLong(1) << _bitsPerBlock) - 1)) == 0);
                     _data[start] |= (value << offset);
 
                     if (start != end)
@@ -349,56 +393,57 @@ namespace Protocol
                     throw new System.NotImplementedException();
                 }
 
-                internal static void Write(Buffer buffer, SectionData section)
+                internal static void Write(Buffer buffer, SectionData sectionData)
                 {
-                    int bitCount = section._bitsPerBlock;
+                    int bitCount = sectionData._bitsPerBlock;
                     buffer.WriteByte(Conversions.ToByte(bitCount));
 
-                    // Write pallete.
-                    Block[]? palette = section._palette;
+                    (int, int)[] palette = sectionData._palette;
+                    System.Diagnostics.Debug.Assert(palette != null);
                     if (bitCount == 13)
                     {
-                        System.Diagnostics.Debug.Assert(palette == null);
-
                         buffer.WriteInt(0, true);
                     }
                     else
                     {
-                        System.Diagnostics.Debug.Assert(palette != null);
                         System.Diagnostics.Debug.Assert(bitCount >= 4 && bitCount <= 8);
 
                         int length = palette.Length;
                         buffer.WriteInt(length, true);
+
                         for (int i = 0; i < length; ++i)
                         {
-                            Block b = palette[i];
-                            buffer.WriteInt(Conversions.ToInt(b.GlobalPaletteId), true);
+                            (int id, _) = palette[i];
+                            buffer.WriteInt(id, true);
                         }
                     }
 
-                    // TODO: Use memory copying;
-                    System.Diagnostics.Debug.Assert(unchecked((long)ulong.MaxValue) == -1);
-                    buffer.WriteInt(section._data.Length, true);
-                    for (int i = 0; i < section._data.Length; ++i)
+                    long[] data = sectionData._data;
+                    buffer.WriteInt(data.Length, true);
+                    for (int i = 0; i < data.Length; ++i)
                     {
-                        buffer.WriteLong(Conversions.ToLong(section._data[i]));
+                        buffer.WriteLong(data[i]);
                     }
 
-                    buffer.WriteData(section._blockLights);
-                    buffer.WriteData(section._skyLights);
+                    buffer.WriteData(sectionData._blockLights);
+                    buffer.WriteData(sectionData._skyLights);
 
                 }
 
                 public void Dispose()
                 {
+                    // Assertion.
                     System.Diagnostics.Debug.Assert(!_disposed);
 
+                    // Release resources.
                     _palette = null;
 
                     _data = null;
 
                     _blockLights = null; _skyLights = null;
 
+                    // Finish.
+                    System.GC.SuppressFinalize(this);
                     _disposed = true;
                 }
 
@@ -407,20 +452,18 @@ namespace Protocol
 
             private bool _disposed = false;
 
-            private readonly int _DEFAULT_BLOCK_ID;
-
             private int _count = 0;
             private SectionData?[] _sections = new SectionData?[_MAX_SECTION_COUNT];  // from bottom to top
             /*public int Count => _count;*/
 
-            internal static (int, byte[]) Write(ChunkData chunk)
+            internal static (int, byte[]) Write(ChunkData chunkData)
             {
                 using Buffer buffer = new();
 
                 int mask = 0;
                 for (int i = 0; i < _MAX_SECTION_COUNT; ++i)
                 {
-                    SectionData? section = chunk._sections[i];
+                    SectionData? section = chunkData._sections[i];
                     if (section == null) continue;
 
                     mask |= (1 << i);  // TODO;
@@ -444,7 +487,7 @@ namespace Protocol
                 Buffer buffer = new();
 
                 int mask = 0;
-                System.Diagnostics.Debug.Assert(_TOTAL_SECTION_COUNT == 16);
+                System.Diagnostics.Debug.Assert(_MAX_SECTION_COUNT == 16);
 
                 // TODO: biomes
                 for (int z = 0; z < _WIDTH; ++z)
@@ -458,12 +501,9 @@ namespace Protocol
                 return (mask, buffer.ReadData());
             }
 
-            public ChunkData(int defaultBlockId)
-            {
-                _DEFAULT_BLOCK_ID = defaultBlockId;
-            }
+            public ChunkData() { }
 
-            public bool SetBlockId(int x, int y, int z, int id)
+            public void SetId(int defaultId, int x, int y, int z, int id)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -481,21 +521,20 @@ namespace Protocol
                 SectionData? section = _sections[ySection];
                 if (section == null)
                 {
-                    if (id == _DEFAULT_BLOCK_ID)
+                    if (id == defaultId)
                     {
                         return;
                     }
 
-                    section = new SectionData(_DEFAULT_BLOCK_ID);
+                    section = new SectionData(defaultId);
                     _sections[ySection] = section;
                 }
 
-                section.SetBlockId(x, yPrime, z, id);
-
-                throw new System.NotImplementedException();
+                section.SetId(x, yPrime, z, id);
+                return;
             }
 
-            public int GetBlockId(int x, int y, int z)
+            public int GetId(int defaultId, int x, int y, int z)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -504,14 +543,13 @@ namespace Protocol
 
                 if (y < 0)
                 {
-                    return _DEFAULT_BLOCK_ID;
+                    return defaultId;
                 }
 
                 int ySection = y / SectionData.HEIGHT;
-
                 if (ySection >= _MAX_SECTION_COUNT)
                 {
-                    return _DEFAULT_BLOCK_ID;
+                    return defaultId;
                 }
 
                 int yPrime = y - (ySection * SectionData.HEIGHT);
@@ -520,21 +558,29 @@ namespace Protocol
                 SectionData? section = _sections[ySection];
                 if (section == null)
                 {
-                    return _DEFAULT_BLOCK_ID;
+                    return defaultId;
                 }
 
-                return section.GetBlockId(x, yPrime, z);
+                return section.GetId(x, yPrime, z);
             }
 
             public void Dispose()
             {
+                // Assertion.
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                // Assertion.
-                System.Diagnostics.Debug.Assert(_count == 0);
-
-
                 // Release resources.
+                for (int i = 0; i < _sections.Length; ++i)
+                {
+                    SectionData? data = _sections[i];
+                    if (data == null)
+                    {
+                        continue;
+                    }
+
+                    data.Dispose();
+                }
+                _sections = null;
 
                 // Finish.
                 System.GC.SuppressFinalize(this);
@@ -545,16 +591,13 @@ namespace Protocol
 
         private bool _disposed = false;
 
-        private readonly int _DEFAULT_BLOCK_ID;
+        public static readonly Blocks _DEFAULT_BLOCK = Blocks.Air;
 
         private readonly Table<ChunkLocation, ChunkData> _CHUNKS = new();  // Disposable
 
-        public BlockContext(int defaultBlockId)
-        {
-            _DEFAULT_BLOCK_ID = defaultBlockId;
-        }
+        public BlockContext() { }
 
-        public void SetBlockId(BlockLocation loc, int id)
+        public void SetBlock(BlockLocation loc, Blocks block)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -563,12 +606,12 @@ namespace Protocol
             ChunkLocation locChunk = ChunkLocation.Generate(loc);
             if (!_CHUNKS.Contains(locChunk))
             {
-                if (id == _DEFAULT_BLOCK_ID)
+                if (block == _DEFAULT_BLOCK)
                 {
                     return;
                 }
 
-                chunk = new ChunkData(_DEFAULT_BLOCK_ID);
+                chunk = new ChunkData();
                 _CHUNKS.Insert(locChunk, chunk);
             }
             else
@@ -576,16 +619,13 @@ namespace Protocol
                 chunk = _CHUNKS.Lookup(locChunk);
             }
 
-
             int x = loc.X - (locChunk.X * ChunkLocation.WIDTH),
                 y = loc.Y,
                 z = loc.Z - (locChunk.Z * ChunkLocation.WIDTH);
-
-            chunk.SetBlockId(x, y, z, id);
-
+            chunk.SetId(_DEFAULT_BLOCK.GetId(), x, y, z, block.GetId());
         }
 
-        public int GetBlockId(BlockLocation loc)
+        public Blocks GetBlock(BlockLocation loc)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -593,17 +633,34 @@ namespace Protocol
 
             if (!_CHUNKS.Contains(locChunk))
             {
-                return _DEFAULT_BLOCK_ID;
+                return _DEFAULT_BLOCK;
             }
 
             ChunkData chunk = _CHUNKS.Lookup(locChunk);
-
             int x = loc.X - (locChunk.X * ChunkLocation.WIDTH),
                 y = loc.Y,
                 z = loc.Z - (locChunk.Z * ChunkLocation.WIDTH);
-            
+            int id = chunk.GetId(_DEFAULT_BLOCK.GetId(), x, y, z);
+            return BlockExtensions.ToBlock(id);
+        }
 
-            return chunk.GetBlockId(x, y, z);
+        public void Dispose()
+        {
+            // Assertion.
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            // Release resources.
+            (ChunkLocation, ChunkData)[]_chunks = _CHUNKS.Flush();
+            for (int i = 0; i < _chunks.Length; ++i)
+            {
+                (var _, ChunkData data) = _chunks[i];
+                data.Dispose();
+            }
+            _CHUNKS.Dispose();
+
+            // Finish.
+            System.GC.SuppressFinalize(this);
+            _disposed = true;
         }
 
     }

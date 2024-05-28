@@ -41,7 +41,7 @@ namespace Protocol
                     {
                         BlockLocation loc = new(x, 100, z);
 
-                        _BLOCK_CTX.SetBlockId(loc, Blocks.Stone.GetId());
+                        _BLOCK_CTX.SetBlock(loc, Blocks.Stone.GetId());
                     }
                 }
                 
@@ -151,7 +151,7 @@ namespace Protocol
             Directions d = block.GetStairsDirection();
             bool bottom = block.IsBottomStairsBlock();
 
-            int id2 = _BLOCK_CTX.GetBlockId(loc.Shift(d, 1));
+            int id2 = _BLOCK_CTX.GetBlock(loc.Shift(d, 1));
             Blocks block2 = BlockExtensions.ToBlock(id2);
             if (block2.IsStairsBlock() &&
                 bottom == block2.IsBottomStairsBlock())
@@ -159,7 +159,7 @@ namespace Protocol
                 if (block2.IsVerticalStairsBlock() != block.IsVerticalStairsBlock())
                 {
                     Directions d2 = block2.GetStairsDirection();
-                    int id3 = _BLOCK_CTX.GetBlockId(loc.Shift(d2.GetOpposite(), 1));
+                    int id3 = _BLOCK_CTX.GetBlock(loc.Shift(d2.GetOpposite(), 1));
                     Blocks block3 = BlockExtensions.ToBlock(id3);
                     if (!block3.IsStairsBlock() ||
                         block3.GetStairsDirection() != d ||
@@ -181,7 +181,7 @@ namespace Protocol
 
             }
 
-            int id4 = _BLOCK_CTX.GetBlockId(loc.Shift(d.GetOpposite(), 1));
+            int id4 = _BLOCK_CTX.GetBlock(loc.Shift(d.GetOpposite(), 1));
             Blocks block4 = BlockExtensions.ToBlock(id4);
             if (block4.IsStairsBlock() &&
                 bottom == block4.IsBottomStairsBlock())
@@ -189,7 +189,7 @@ namespace Protocol
                 if (block4.IsVerticalStairsBlock() != block.IsVerticalStairsBlock())
                 {
                     Directions d4 = block4.GetStairsDirection();
-                    int id5 = _BLOCK_CTX.GetBlockId(loc.Shift(d4, 1));
+                    int id5 = _BLOCK_CTX.GetBlock(loc.Shift(d4, 1));
                     Blocks block5 = BlockExtensions.ToBlock(id5);
                     if (!block5.IsStairsBlock() ||
                         block5.GetStairsDirection() != d ||
@@ -219,7 +219,7 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            int id = _BLOCK_CTX.GetBlockId(loc);
+            int id = _BLOCK_CTX.GetBlock(loc);
             Blocks block = BlockExtensions.ToBlock(id);
 
             /**
@@ -261,8 +261,7 @@ namespace Protocol
                     return BoundingShapeGenerator.Make(loc);
                 case 3:
                     {
-                        (Directions d, bool bottom, int b) = 
-                            DetermineStairsBlockShape(loc, block);
+                        (Directions d, bool bottom, int b) = DetermineStairsBlockShape(loc, block);
                         return BoundingShapeGenerator.Make(loc, d, bottom, b);
                     }
             }

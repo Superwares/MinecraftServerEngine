@@ -40,6 +40,12 @@ namespace Common
             System.Diagnostics.Debug.Assert(v <= uint.MaxValue);
             return (uint)v;
         }
+
+        public static long ToLong(int v)
+        {
+            return (long)v;
+        }
+
         public static long ToLong(ulong v)
         {
             System.Diagnostics.Debug.Assert(v <= long.MaxValue);
