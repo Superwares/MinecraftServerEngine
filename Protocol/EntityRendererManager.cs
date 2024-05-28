@@ -57,6 +57,7 @@ namespace Protocol
 
             foreach (EntityRenderer renderer in _RENDERERS.GetValues())
             {
+                
                 renderer.Move(entityId, p, pPrev, onGround);
             }
 

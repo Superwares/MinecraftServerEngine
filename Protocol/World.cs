@@ -461,10 +461,10 @@ namespace Protocol
                 // TODO: Resolve Collisions with other entities.
                 // TODO: Add Global Forces with OnGround flag. (Gravity, Damping Force, ...)
                 {
-                    entity.ApplyForce(
+                    entity.ApplyGlobalForce(
                             -1.0D * new Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
                             entity.Velocity);  // Damping Force
-                    entity.ApplyForce(entity.GetMass() * 0.08D * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
+                    entity.ApplyGlobalForce(entity.GetMass() * 0.08D * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
 
                     /*entity.ApplyForce(entity.GetMass() * 0.001D * new Entity.Vector(0, -1, 0));  // Gravity*/
                 }

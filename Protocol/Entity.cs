@@ -357,6 +357,13 @@ namespace Protocol
             _FORCES.Enqueue(force);
         }
 
+        public virtual void ApplyGlobalForce(Vector force)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            _FORCES.Enqueue(force);
+        }
+
         public virtual bool IsDead()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -408,6 +415,7 @@ namespace Protocol
             bool moved = !p.Equals(_p);  // TODO: Compare with machine epsilon.
             if (moved && _rotated)
             {
+                
                 _RENDERER_MANAGER.MoveAndRotate(Id, p, _p, _look, onGround);
 
                 _p = p;
@@ -645,16 +653,12 @@ namespace Protocol
 
         private SelfPlayerRenderer? _selfRenderer;
 
-        private readonly Queue<Vector> _FORCES;
-        private Vector _v;
-
         private Vector _p;
         private bool _onGround;
 
         internal Player(
-            int id, System.Guid uniqueId,
-            Vector p, Angles look,
-            string username) : base(id, uniqueId, p, look)
+            int id, System.Guid uniqueId, Vector p, Angles look, string username) 
+            : base(id, uniqueId, p, look)
         {
 
             Username = username;
@@ -663,8 +667,6 @@ namespace Protocol
 
             _selfRenderer = null;
 
-            _FORCES = new();
-            _v = new(0, 0, 0);
         }
 
         ~Player() => System.Diagnostics.Debug.Assert(false);
@@ -725,9 +727,19 @@ namespace Protocol
                 _selfRenderer.ApplyVelocity(Id, force / GetMass());
             }
 
-            /*_FORCES.Enqueue(force);*/
-
             base.ApplyForce(force);
+        }
+
+        public override void ApplyGlobalForce(Vector force)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (IsConnected)
+            {
+                
+            }
+
+            base.ApplyGlobalForce(force);
         }
 
         /*public override void Teleport(Vector pos, Angles look)
@@ -754,6 +766,10 @@ namespace Protocol
                 {
                 }
                 */
+
+                /*Vector v1 = bb.GetBottomCenter(), v2 = _p;
+                double length = Vector.GetLength(v1, v2);
+                System.Console.WriteLine($"length: {length}");*/
 
                 bb = GetHitbox().Convert(_p);
                 onGround = _onGround;

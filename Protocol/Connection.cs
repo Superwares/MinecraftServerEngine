@@ -702,7 +702,10 @@ namespace Protocol
             {
                 foreach (Entity entity in world.GetEntities(loc))
                 {
-                    if (entity.Id == player.Id) continue;
+                    if (entity.Id == player.Id)
+                    {
+                        continue;
+                    }
 
                     entity.ApplyRenderer(_OUT_PACKETS, Id, _ENTITY_RENDERER);
                 }
@@ -732,11 +735,7 @@ namespace Protocol
             }
 
         }
-
-        /// <summary>
-        /// TODO: Add description.
-        /// </summary>
-        /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
+        
         public void Render(World world, Player player)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
