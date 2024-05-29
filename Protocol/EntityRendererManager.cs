@@ -15,16 +15,16 @@ namespace Protocol
 
         ~EntityRendererManager() => System.Diagnostics.Debug.Assert(false);
 
-        public bool Apply(int id, EntityRenderer renderer)
+        public bool Apply(EntityRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (_IDENTIFIERS.Contains(id))
+            if (_IDENTIFIERS.Contains(renderer.Id))
             {
                 return true;
             }
 
-            _IDENTIFIERS.Insert(id);
+            _IDENTIFIERS.Insert(renderer.Id);
             _RENDERERS.Enqueue(renderer);
 
             return false;
@@ -57,7 +57,6 @@ namespace Protocol
 
             foreach (EntityRenderer renderer in _RENDERERS.GetValues())
             {
-                
                 renderer.Move(entityId, p, pPrev, onGround);
             }
 
@@ -107,10 +106,13 @@ namespace Protocol
 
                 if (renderer.IsDisconnected)
                 {
+                    _IDENTIFIERS.Extract(renderer.Id);
+
                     continue;
                 }
                 else if (!renderer.CanRender(p))
                 {
+                    _IDENTIFIERS.Extract(renderer.Id);
                     renderer.DestroyEntity(entityId);
 
                     continue;

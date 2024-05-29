@@ -28,11 +28,16 @@ namespace Protocol
 
         private int _dEntityRendering = -1;
 
+        public readonly int Id;
+
         public EntityRenderer(
+            int id,
             Queue<ClientboundPlayingPacket> outPackets,
             ChunkLocation loc, int dEntityRendering) 
             : base(outPackets) 
         {
+            Id = id;
+
             _loc = loc;
 
             _dEntityRendering = dEntityRendering;
@@ -65,9 +70,7 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(!_disconnected);
             System.Diagnostics.Debug.Assert(_dEntityRendering > 0);
 
-
             ChunkGrid grid = ChunkGrid.Generate(_loc, _dEntityRendering);
-
             ChunkLocation loc = ChunkLocation.Generate(p);
             return grid.Contains(loc);
         }

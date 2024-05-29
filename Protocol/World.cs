@@ -292,7 +292,6 @@ namespace Protocol
             /*System.Console.WriteLine($"bb: {bb}");*/
 
             BoundingBox bbTotal = bb.Extend(v);
-
             BoundingShape[] shapes = GetBlockBoundingShapes(bbTotal);
 
             bool f, onGround;
@@ -310,7 +309,6 @@ namespace Protocol
 
             f = !Comparing.IsEqualTo(vy, v.Y);
             onGround = Comparing.IsLessThan(v.Y, 0.0D) && f;
-
             if (f)
             {
                 vy = 0.0D;
@@ -327,7 +325,6 @@ namespace Protocol
             }
 
             f = !Comparing.IsEqualTo(vx, v.X);
-
             if (f)
             {
                 vx = 0.0D;
@@ -344,7 +341,6 @@ namespace Protocol
             }
 
             f = !Comparing.IsEqualTo(vz, v.Z);
-
             if (f)
             {
                 vz = 0.0D;

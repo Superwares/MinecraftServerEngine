@@ -247,8 +247,6 @@ namespace Protocol
 
         private bool _disposed = false;
 
-        private readonly int Id;
-
         private readonly Client _CLIENT;  // Dispoasble
 
         private bool _init = false;
@@ -277,8 +275,6 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(_MAX_ENTITY_RENDER_DISTANCE >= _MIN_RENDER_DISTANCE);
             System.Diagnostics.Debug.Assert(_MAX_RENDER_DISTANCE >= _MAX_ENTITY_RENDER_DISTANCE);
 
-            Id = player.Id;
-
             _CLIENT = client;
 
             _SELF_RENDERER = new(_OUT_PACKETS, client);
@@ -288,7 +284,7 @@ namespace Protocol
             _window = new Window(_OUT_PACKETS, player._selfInventory);
 
             ChunkLocation loc = ChunkLocation.Generate(player.Position);
-            _ENTITY_RENDERER = new(_OUT_PACKETS, loc, _dEntityRendering);
+            _ENTITY_RENDERER = new EntityRenderer(player.Id, _OUT_PACKETS, loc, _dEntityRendering);
         }
 
         ~Connection() => System.Diagnostics.Debug.Assert(false);
@@ -707,7 +703,7 @@ namespace Protocol
                         continue;
                     }
 
-                    entity.ApplyRenderer(_OUT_PACKETS, Id, _ENTITY_RENDERER);
+                    entity.ApplyRenderer(_OUT_PACKETS, _ENTITY_RENDERER);
                 }
             }
 

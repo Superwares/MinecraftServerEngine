@@ -344,11 +344,11 @@ namespace Protocol
 
         internal void ApplyRenderer(
             Queue<ClientboundPlayingPacket> outPackets, 
-            int id, EntityRenderer renderer)
+            EntityRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            bool exists = _RENDERER_MANAGER.Apply(id, renderer);
+            bool exists = _RENDERER_MANAGER.Apply(renderer);
             if (!exists)
             {
                 Spawn(outPackets);
@@ -415,31 +415,24 @@ namespace Protocol
 
             Vector p = bb.GetBottomCenter();
 
-            _RENDERER_MANAGER.HandleRendering(Id, _p);
+            _RENDERER_MANAGER.HandleRendering(Id, p);
 
             bool moved = !p.Equals(_p);  // TODO: Compare with machine epsilon.
             if (moved && _rotated)
             {
                 _RENDERER_MANAGER.MoveAndRotate(Id, p, _p, _look, onGround);
-
-                _p = p;
-                _rotated = false;
             }
             else if (moved)
             {
                 System.Diagnostics.Debug.Assert(!_rotated);
 
                 _RENDERER_MANAGER.Move(Id, p, _p, onGround);
-
-                _p = p;
             }
             else if (_rotated)
             {
                 System.Diagnostics.Debug.Assert(!moved);
 
                 _RENDERER_MANAGER.Rotate(Id, _look, onGround);
-
-                _rotated = false;
             }
             else
             {
@@ -450,7 +443,11 @@ namespace Protocol
             }
 
             _v = v;
+            _p = p;
+
             _bb = bb;
+
+            _rotated = false;
 
             _RENDERER_MANAGER.FinishMovementRenderring();
 
