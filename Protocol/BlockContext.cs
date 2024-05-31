@@ -6,8 +6,191 @@ using static System.Collections.Specialized.BitVector32;
 
 namespace Protocol
 {
+    internal static class BlockExtensions
+    {
+        private static Table<Blocks, int> _BLOCK_ENUM_TO_ID_MAP = new();
+        private static Table<int, Blocks> _BLOCK_ID_TO_ENUM_MAP = new();
+
+        static BlockExtensions()
+        {
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.Air, (0 << 4) | 0);
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.Stone, (1 << 4) | 0);
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.Granite, (1 << 4) | 1);
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.PolishedGranite, (1 << 4) | 2);
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.Diorite, (1 << 4) | 3);
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.PolishedDiorite, (1 << 4) | 4);
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.Andesite, (1 << 4) | 5);
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.PolishedAndesite, (1 << 4) | 6);
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.Grass, (2 << 4) | 0);
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.Dirt, (3 << 4) | 0);
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.CoarseDirt, (3 << 4) | 1);
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.Podzol, (3 << 4) | 2);
+
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.EastBottomOakWoodStairs, (53 << 4) | 0);
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.WestBottomOakWoodStairs, (53 << 4) | 1);
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.SouthBottomOakWoodStairs, (53 << 4) | 2);
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.NorthBottomOakWoodStairs, (53 << 4) | 3);
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.EastTopOakWoodStairs, (53 << 4) | 4);
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.WestTopOakWoodStairs, (53 << 4) | 5);
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.SouthTopOakWoodStairs, (53 << 4) | 6);
+            _BLOCK_ENUM_TO_ID_MAP.Insert(Blocks.NorthTopOakWoodStairs, (53 << 4) | 7);
+
+            foreach ((Blocks block, int id) in _BLOCK_ENUM_TO_ID_MAP.GetElements())
+            {
+                _BLOCK_ID_TO_ENUM_MAP.Insert(id, block);
+            }
+
+            System.Diagnostics.Debug.Assert(_BLOCK_ENUM_TO_ID_MAP.Count == _BLOCK_ID_TO_ENUM_MAP.Count);
+
+        }
+
+        public static Blocks ToBlock(int id)
+        {
+            System.Diagnostics.Debug.Assert(_BLOCK_ID_TO_ENUM_MAP.Contains(id));
+
+            return _BLOCK_ID_TO_ENUM_MAP.Lookup(id);
+        }
+
+        public static int GetId(this Blocks block)
+        {
+            System.Diagnostics.Debug.Assert(_BLOCK_ENUM_TO_ID_MAP.Contains(block));
+
+            return _BLOCK_ENUM_TO_ID_MAP.Lookup(block);
+        }
+    }
+
     internal sealed class BlockContext : System.IDisposable
     {
+        private enum Directions
+        {
+            DOWN,
+            UP,
+            NORTH,
+            SOUTH,
+            WEST,
+            EAST,
+        }
+
+        private static Directions ToCCWDirection(Directions d)
+        {
+            switch (d)
+            {
+                default:
+                    throw new System.NotImplementedException();
+                case Directions.NORTH:
+                    return Directions.WEST;
+                case Directions.EAST:
+                    return Directions.NORTH;
+                case Directions.SOUTH:
+                    return Directions.EAST;
+                case Directions.WEST:
+                    return Directions.SOUTH;
+            }
+        }
+
+        private static Directions ToCWDirection(Directions d)
+        {
+            switch (d)
+            {
+                default:
+                    throw new System.NotImplementedException();
+                case Directions.NORTH:
+                    return Directions.EAST;
+                case Directions.EAST:
+                    return Directions.SOUTH;
+                case Directions.SOUTH:
+                    return Directions.WEST;
+                case Directions.WEST:
+                    return Directions.NORTH;
+            }
+        }
+
+        private static Directions ToOppositeDirection(Directions d)
+        {
+            switch (d)
+            {
+                default:
+                    throw new System.NotImplementedException();
+                case Directions.UP:
+                    return Directions.DOWN;
+                case Directions.DOWN:
+                    return Directions.UP;
+                case Directions.NORTH:
+                    return Directions.SOUTH;
+                case Directions.EAST:
+                    return Directions.WEST;
+                case Directions.SOUTH:
+                    return Directions.NORTH;
+                case Directions.WEST:
+                    return Directions.EAST;
+            }
+        }
+
+        private static bool IsStairsBlock(Blocks block)
+        {
+            switch (block)
+            {
+                default:
+                    return false;
+                case Blocks.EastBottomOakWoodStairs:
+                    return true;
+                case Blocks.WestBottomOakWoodStairs:
+                    return true;
+                case Blocks.SouthBottomOakWoodStairs:
+                    return true;
+                case Blocks.NorthBottomOakWoodStairs:
+                    return true;
+                case Blocks.EastTopOakWoodStairs:
+                    return true;
+                case Blocks.WestTopOakWoodStairs:
+                    return true;
+                case Blocks.SouthTopOakWoodStairs:
+                    return true;
+                case Blocks.NorthTopOakWoodStairs:
+                    return true;
+
+            }
+        }
+
+        private static Directions GetStairsDirection(Blocks block)
+        {
+            System.Diagnostics.Debug.Assert(IsStairsBlock(block));
+
+            int id = block.GetId();
+            int metadata = id & 0b_1111;
+            switch (metadata % 4)
+            {
+                default:
+                    throw new System.NotImplementedException();
+                case 0:
+                    return Directions.EAST;
+                case 1:
+                    return Directions.WEST;
+                case 2:
+                    return Directions.SOUTH;
+                case 3:
+                    return Directions.NORTH;
+            }
+        }
+
+        private static bool IsBottomStairsBlock(Blocks block)
+        {
+            System.Diagnostics.Debug.Assert(IsStairsBlock(block));
+
+            int id = block.GetId();
+            int metadata = id & 0b_1111;
+            return metadata < 4;
+        }
+
+        private static bool IsVerticalStairsBlock(Blocks block)
+        {
+            System.Diagnostics.Debug.Assert(IsStairsBlock(block));
+
+            int id = block.GetId();
+            int metadata = id & 0b_1111;
+            return metadata == 0 || metadata == 1 || metadata == 4 || metadata == 5;
+        }
+
         private sealed class ChunkData : System.IDisposable
         {
             private sealed class SectionData : System.IDisposable
@@ -625,7 +808,6 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(!_disposed);
 
             ChunkLocation locChunk = ChunkLocation.Generate(loc);
-
             if (!_CHUNKS.Contains(locChunk))
             {
                 return _DEFAULT_BLOCK;
@@ -637,6 +819,196 @@ namespace Protocol
                 z = loc.Z - (locChunk.Z * ChunkLocation.WIDTH);
             int id = chunk.GetId(_DEFAULT_BLOCK.GetId(), x, y, z);
             return BlockExtensions.ToBlock(id);
+        }
+
+        private Blocks GetBlock(BlockLocation loc, Directions d, int s)
+        {
+            BlockLocation locPrime;
+            switch (d)
+            {
+                default:
+                    throw new System.NotImplementedException();
+                case Directions.EAST:
+                    locPrime = new BlockLocation(loc.X + s, loc.Y, loc.Z);
+                    break;
+                case Directions.WEST:
+                    locPrime = new BlockLocation(loc.X - s, loc.Y, loc.Z);
+                    break;
+                case Directions.SOUTH:
+                    locPrime = new BlockLocation(loc.X, loc.Y, loc.Z + s);
+                    break;
+                case Directions.NORTH:
+                    locPrime = new BlockLocation(loc.X, loc.Y, loc.Z - s);
+                    break;
+                case Directions.UP:
+                    locPrime = new BlockLocation(loc.X, loc.Y + s, loc.Z);
+                    break;
+                case Directions.DOWN:
+                    locPrime = new BlockLocation(loc.X, loc.Y - s, loc.Z);
+                    break;
+            }
+
+            return GetBlock(locPrime);
+        }
+        private static BoundingShape GenerateNone()
+        {
+            return new BoundingShape();
+        }
+
+        private static BoundingShape GenerateCube(BlockLocation loc)
+        {
+            Vector min = loc.Convert(),
+                   max = new(min.X + 1.0D, min.Y + 1.0D, min.Z + 1.0D);
+            BoundingBox bb = new(max, min);
+            return new BoundingShape(bb);
+        }
+
+        private (Directions, bool, int) DetermineStairsShape(
+            BlockLocation loc, Blocks block)
+        {
+            System.Diagnostics.Debug.Assert(IsStairsBlock(block));
+
+            Directions d = GetStairsDirection(block);
+            bool bottom = IsBottomStairsBlock(block);
+
+            Blocks block2 = GetBlock(loc, d, 1);
+            if (IsStairsBlock(block2) &&
+                bottom == IsBottomStairsBlock(block2))
+            {
+                if (IsVerticalStairsBlock(block2) != IsVerticalStairsBlock(block))
+                {
+                    Directions d2 = GetStairsDirection(block2);
+                    Blocks block3 = GetBlock(loc, ToOppositeDirection(d2), 1);
+                    if (!IsStairsBlock(block3) ||
+                        GetStairsDirection(block3) != d ||
+                        IsBottomStairsBlock(block3) != bottom)
+                    {
+                        if (d2 == ToCCWDirection(d))
+                        {
+                            // outer left
+                            return (d, bottom, 1);
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.Assert(d2 == ToCWDirection(d));
+                            // outer right
+                            return (d, bottom, 2);
+                        }
+                    }
+                }
+
+            }
+
+            Blocks block4 = GetBlock(loc, ToOppositeDirection(d), 1);
+            if (IsStairsBlock(block4) &&
+                bottom == IsBottomStairsBlock(block4))
+            {
+                if (IsVerticalStairsBlock(block4) != IsVerticalStairsBlock(block))
+                {
+                    Directions d4 = GetStairsDirection(block4);
+                    Blocks block5 = GetBlock(loc, d4, 1);
+                    if (!IsStairsBlock(block5) ||
+                        GetStairsDirection(block5) != d ||
+                        IsBottomStairsBlock(block5) != bottom)
+                    {
+                        if (d4 == ToCCWDirection(d))
+                        {
+                            // inner left
+                            return (d, bottom, 3);
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.Assert(d4 == ToCWDirection(d));
+                            // inner right
+                            return (d, bottom, 4);
+                        }
+                    }
+                }
+            }
+
+
+            // straight
+            return (d, bottom, 0);
+        }
+
+        private BoundingShape GenerateStairs(BlockLocation loc, Blocks block)
+        {
+            (Directions d, bool bottom, int b) = DetermineStairsShape(loc, block);
+
+            throw new System.NotImplementedException();
+        }
+
+        private BoundingShape Generate(BlockLocation loc)
+        {
+            Blocks block = GetBlock(loc);
+
+            /**
+             * 0: None (Air)
+             * 1: Cube
+             * 2: Slab
+             * 3: Stairs
+             */
+            int a = 0;
+
+            switch (block)
+            {
+                default:
+                    throw new System.NotImplementedException();
+                case Blocks.Air:
+                    a = 0;
+                    break;
+                case Blocks.Stone:
+                    a = 1;
+                    break;
+                case Blocks.Granite:
+                    a = 1;
+                    break;
+                case Blocks.PolishedGranite:
+                    a = 1;
+                    break;
+                case Blocks.EastBottomOakWoodStairs:
+                    a = 3;
+                    break;
+            }
+
+            switch (a)
+            {
+                default:
+                    throw new System.NotImplementedException();
+                case 0:
+                    return GenerateNone();
+                case 1:
+                    return GenerateCube(loc);
+                case 3:
+                    return GenerateStairs(loc, block);
+            }
+        }
+
+        public BoundingShape[] GetBlockShapes(BoundingBox bb)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            BlockGrid grid = BlockGrid.Generate(bb);
+
+            int count = grid.GetCount(), i = 0;
+            var shapes = new BoundingShape[count];
+
+            for (int y = grid.Min.Y; y <= grid.Max.Y; ++y)
+            {
+                for (int z = grid.Min.Z; z <= grid.Max.Z; ++z)
+                {
+                    for (int x = grid.Min.X; x <= grid.Max.X; ++x)
+                    {
+                        BlockLocation loc = new(x, y, z);
+
+                        BoundingShape shape = Generate(loc);
+                        shapes[i++] = shape;
+                    }
+                }
+            }
+            System.Diagnostics.Debug.Assert(i == count);
+
+            return shapes;
         }
 
         internal (int, byte[]) GetChunkData(ChunkLocation loc)

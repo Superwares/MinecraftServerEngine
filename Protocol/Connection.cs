@@ -21,10 +21,7 @@ namespace Protocol
 
             private int _x, _z, _layer, _n;
 
-            public LoadingHelper()
-            {
-
-            }
+            public LoadingHelper() { }
 
             ~LoadingHelper() => System.Diagnostics.Debug.Assert(false);
 
@@ -153,28 +150,17 @@ namespace Protocol
 
             }
 
-            private void Dispose(bool disposing)
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                // Assertion
-
-                if (disposing == true)
-                {
-                    // managed objects
-                    _LOADED_CHUNKS.Dispose();
-
-                }
-
-                // unmanaged objects
-
-                _disposed = true;
-            }
-
             public void Dispose()
             {
-                Dispose(true);
+                // Assertions.
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                // Release resources.
+                _LOADED_CHUNKS.Dispose();
+
+                // Finish.
                 System.GC.SuppressFinalize(this);
+                _disposed = true;
             }
 
         }

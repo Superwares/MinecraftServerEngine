@@ -30,16 +30,16 @@ namespace Protocol
 
         public static ChunkLocation Generate(BlockLocation loc)
         {
-            int x = loc.X / Conversions.ToInt(WIDTH),
-                z = loc.Z / Conversions.ToInt(WIDTH);
+            int x = loc.X / WIDTH,
+                z = loc.Z / WIDTH;
 
-            double r1 = loc.X % Conversions.ToInt(WIDTH),
-                   r2 = loc.Z % Conversions.ToInt(WIDTH);
-            if (Comparing.IsLessThan(r1, 0))
+            double r1 = loc.X % Conversions.ToDouble(WIDTH),
+                   r2 = loc.Z % Conversions.ToDouble(WIDTH);
+            if (Comparing.IsLessThan(r1, 0.0D))
             {
                 --x;
             }
-            if (Comparing.IsLessThan(r2, 0))
+            if (Comparing.IsLessThan(r2, 0.0D))
             {
                 --z;
             }

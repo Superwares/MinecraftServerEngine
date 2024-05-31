@@ -1,43 +1,49 @@
 ﻿# Server
 
 
-## TODO
+## Code Conventions
 
-### Planned
-* Compress Packets
-* To reduce garbage as much as possible 
-* Unit testing for Containers. (NumberList)
-* Check leaks of Allocation and deallocation about NumberList.
-* Make chunk section with indirect or direct palette.
-* Mask variables as private in all packet class
-* Create own containers library. (Table, Set, NumList...)
-* 마인크래프트 클라이언트에서 Refresh 를 누르다보면 해당 Client가 Queue 에서 소멸하지 않고 계속 루프를 돌게됨. 왜 그런지 이유를 찾아내야됨. 아마도 Nonblokcing 에 의해 넘어가는 코드인것 같지만 어떨때는 루프가 안끝나는 경우가 있음.
-* WHat is difference between EndOfFileException and SocketError.WouldBlock in SocketException?
-* Make Common library project.
-* Make container library more optimized.
-* If the user already exist on the server, when the client is joined with the same user id, the client will be kicked by the ClientListener.
-* TODO: Make concurrency mechanisms using rwmutex.
+### Types
+
+The following list is available value types.
+
+* bool, sbyte, byte, short, ushort, int, uint, long, ulong, char, float, double
+
+The following list is available reference types.
+
+* object, string
 
 
-### Done
 
-## Conventions
+#### Using Float & Double
 
-float 이나 double 을 사용할 때는 F 와 D 를 무조건 붙인다.
+Always use the F suffix for float literals and the D suffix for double literals to explicitly denote the type.
 
+```c#
+float floatValue = 3.14F;
+double doubleValue = 3.14D;
+```
 
 ### Exceptions
-In case of exceptions that must be handled, they must be documented using XML tags.
-If not, they don't need documentation. 
-For instance, the exception NotImplementedException should not be handled internally, but should be passed on to the user.
 
-Reduce using try/catch for optimization.
+In case of exceptions that must be thrown, they must be documented using XML tags on the methods,
+except the exception "System.NotImplementedException()".
+All exceptions must be handled without exception, except for the exception 'System.NotImplementedException()', 
+which should not be handled as users need to be notified for confirmation.
 
-#### UnexpectedValueException
-```
-throw new UnexpectedValueException($"ClickWindowPacket.ModeNumber {packet.ModeNumber}");
-```
-위처럼 패킷.변수이름 {값} 의 형태로 해당 예외를 사용한다.
+Throwing exceptions is not allowed except for network-related functions, but the exception "System.NotImplementedException()" can be used anywhere.
+This means that any network operations that may potentially throw exceptions should be handled appropriately, 
+while exceptions should not be used for other purposes within the codebase.
+
+Throwing exceptions are restricted to network-related functions due to several reasons. 
+First, network conditions are often unpredictable, 
+and errors like connection timeouts or server unavailability can occur unexpectedly. 
+By allowing exceptions specifically for network operations, developers can handle these unforeseen circumstances more effectively.
+Furthermore, excessive and indiscriminate use of exceptions can significantly impact performance, especially during debugging. 
+When exceptions are thrown frequently outside of network-related contexts, 
+it becomes more challenging to monitor and debug code effectively. 
+Focusing exceptions on network operations helps developers to isolate and address issues more efficiently without sacrificing overall performance.
+Overall, restricting exceptions to network-related functions enhances code clarity, improves performance, and allows for better management of unpredictable network conditions.
 
 ### Containers
 All containers must be implemented as IDisposable interface, and have empty data if the container is disposed.
@@ -166,7 +172,7 @@ public sealed class Object : IDisposable
 }
 ```
 
-### Disposable Instances
+#### Disposable Instances
 
 Disposable instances must be handled by 'using' statement except members of class and struct.
 If disposable objects were used as members of class and struct, they must be disposed at the current object Dispose(bool disposing) fucntion.

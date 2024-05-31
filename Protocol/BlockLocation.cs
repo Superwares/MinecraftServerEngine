@@ -56,26 +56,7 @@ namespace Protocol
             return new(x, y, z);
         }
 
-        public BlockLocation Shift(Directions d, int s)
-        {
-            switch (d)
-            {
-                default:
-                    throw new System.NotImplementedException();
-                case Directions.EAST:
-                    return new BlockLocation(X + s, Y, Z);
-                case Directions.WEST:
-                    return new BlockLocation(X - s, Y, Z);
-                case Directions.SOUTH:
-                    return new BlockLocation(X, Y, Z + s);
-                case Directions.NORTH:
-                    return new BlockLocation(X, Y, Z - s);
-                case Directions.UP:
-                    return new BlockLocation(X, Y + s, Z);
-                case Directions.DOWN:
-                    return new BlockLocation(X, Y - s, Z);
-            }
-        }
+        
 
         public override readonly string? ToString()
         {
