@@ -446,9 +446,6 @@ namespace Protocol
         public readonly int OnlinePlayers;
         public readonly string Description;
 
-        /// <summary>
-        /// TODO: Add description.
-        /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static ResponsePacket Read(Buffer buffer)
         {

@@ -25,7 +25,7 @@
             _nodeFirst = new(_MinNum, _MaxNum);
         }
 
-        ~NumList() => Dispose(false);
+        ~NumList() => System.Diagnostics.Debug.Assert(false);
 
         public int Alloc()
         {
@@ -86,7 +86,9 @@
                     }
                 }
                 else
+                {
                     System.Diagnostics.Debug.Assert(false);
+                }
             }
             else
             {
@@ -133,25 +135,17 @@
 
         }
 
-        protected virtual void Dispose(bool disposing)
+        public virtual void Dispose()
         {
-            if (_disposed == true) return;
+            // Assertions.
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (disposing == true)
-            {
-                // managed objects
-                _nodeFirst = null;
-            }
+            // Release resources.
+            _nodeFirst = null;
 
-            // Release unmanaged objects
-
-            _disposed = true;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
+            // Finish.
             System.GC.SuppressFinalize(this);
+            _disposed = true;
         }
 
     }
@@ -162,7 +156,7 @@
 
         private bool _disposed = false;
 
-        ~ConcurrentNumList() => Dispose(false);
+        ~ConcurrentNumList() => System.Diagnostics.Debug.Assert(false);
 
         public new int Alloc()
         {
@@ -184,21 +178,16 @@
             }
         }
 
-        protected override void Dispose(bool disposing)
+        public override void Dispose()
         {
-            if (!_disposed)
-            {
-                if (disposing == true)
-                {
-                    // Release managed resources.
-                }
+            // Assertions.
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-                // Release unmanaged resources.
+            // Release resources.
 
-                _disposed = true;
-            }
-
-            base.Dispose(disposing);
+            // Finish.
+            base.Dispose();
+            _disposed = true;
         }
 
     }

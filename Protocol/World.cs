@@ -7,18 +7,17 @@ namespace Protocol
     {
         private bool _disposed = false;
 
-        
+        private readonly Vector _P_SPAWE;
+        private readonly Entity.Angles _LOOK_SPAWE;
+
         private readonly PlayerList _PLAYER_LIST = new();  // Disposable
 
         private readonly NumList _ENTITY_ID_LIST = new();  // Disposable
 
-        private readonly Vector _P_SPAWE;
-        private readonly Entity.Angles _LOOK_SPAWE;
-
-        private readonly ConcurrentQueue<Entity> _ENTITY_SPAWNING_POOL = new();  // Disposable
-        private readonly ConcurrentQueue<Entity> _ENTITIES1 = new();  // Disposable
-        private readonly ConcurrentQueue<Entity> _ENTITIES2 = new();  // Disposable
-        private readonly ConcurrentQueue<Entity> _DESPAWNED_ENTITIES = new();  // Disposable
+        private readonly Queue<Entity> _ENTITY_SPAWNING_POOL = new();  // Disposable
+        private readonly Queue<Entity> _ENTITIES1 = new();  // Disposable
+        private readonly Queue<Entity> _ENTITIES2 = new();  // Disposable
+        private readonly Queue<Entity> _DESPAWNED_ENTITIES = new();  // Disposable
 
         private readonly Table<System.Guid, Player> _DISCONNECTED_PLAYERS = new(); // Disposable
 
@@ -211,8 +210,12 @@ namespace Protocol
             Entity? entity = null;
             while (true)
             {
+                if (_ENTITIES2.Empty)
+                {
+                    break;
+                }
+
                 entity = _ENTITIES2.Dequeue();
-                if (entity == null) break;
 
                 bool despawn = false;
 
@@ -257,11 +260,15 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Entity? entity = null;
+            Entity entity;
             while (true)
             {
+                if (_ENTITY_SPAWNING_POOL.Empty)
+                {
+                    break;
+                }
+
                 entity = _ENTITY_SPAWNING_POOL.Dequeue();
-                if (entity == null) break;
 
                 if (entity is Player player)
                 {
@@ -295,11 +302,15 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Entity? entity;
+            Entity entity;
             while (true)
             {
+                if (_ENTITIES1.Empty)
+                {
+                    break;
+                }
+
                 entity = _ENTITIES1.Dequeue();
-                if (entity == null) break;
 
                 // TODO: Resolve Collisions with other entities.
                 // TODO: Add Global Forces with OnGround flag. (Gravity, Damping Force, ...)

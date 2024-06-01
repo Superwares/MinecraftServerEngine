@@ -658,7 +658,7 @@ namespace Protocol
 
             public static (int, byte[]) Write()
             {
-                Buffer buffer = new();
+                using Buffer buffer = new();
 
                 int mask = 0;
                 System.Diagnostics.Debug.Assert(_MAX_SECTION_COUNT == 16);
