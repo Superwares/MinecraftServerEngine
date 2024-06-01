@@ -70,11 +70,11 @@ namespace Protocol
             double r1 = bb.Min.X % (double)ChunkLocation.WIDTH,
                    r2 = bb.Min.Z % (double)ChunkLocation.WIDTH;
             int xMin = min.X, zMin = min.Z;
-            if (Comparing.IsEqualTo(r1, 0.0D))
+            if (r1 == 0.0D)
             {
                 --xMin;
             }
-            if (Comparing.IsEqualTo(r2, 0.0D))
+            if (r2 == 0.0D)
             {
                 --zMin;
             }

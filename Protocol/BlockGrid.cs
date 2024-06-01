@@ -17,15 +17,15 @@ namespace Protocol
             double r1 = bb.Min.X % 1.0D,
                    r2 = bb.Min.Y % 1.0D,
                    r3 = bb.Min.Z % 1.0D;
-            if (Comparing.IsEqualTo(r1, 0.0D))
+            if (r1 == 0.0D)
             {
                 --xMin;
             }
-            if (Comparing.IsEqualTo(r2, 0.0D))
+            if (r2 == 0.0D)
             {
                 --yMin;
             }
-            if (Comparing.IsEqualTo(r3, 0.0D))
+            if (r3 == 0.0D)
             {
                 --zMin;
             }

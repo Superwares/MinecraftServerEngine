@@ -15,12 +15,12 @@ namespace Protocol
 
             double r1 = p.X % WIDTH,
                    r2 = p.Z % WIDTH;
-            if (Comparing.IsLessThan(r1, 0))
+            if (r1 < 0.0D)
             {
                 --x;
             }
 
-            if (Comparing.IsLessThan(r2, 0))
+            if (r2 < 0.0D)
             {
                 --z;
             }
@@ -35,11 +35,11 @@ namespace Protocol
 
             double r1 = loc.X % (double)WIDTH,
                    r2 = loc.Z % (double)WIDTH;
-            if (Comparing.IsLessThan(r1, 0.0D))
+            if (r1 < 0.0D)
             {
                 --x;
             }
-            if (Comparing.IsLessThan(r2, 0.0D))
+            if (r2 < 0.0D)
             {
                 --z;
             }

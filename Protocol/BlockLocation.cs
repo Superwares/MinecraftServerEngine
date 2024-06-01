@@ -18,17 +18,17 @@ namespace Protocol
             double r1 = p.X % 1.0D,
                    r2 = p.Y % 1.0D,
                    r3 = p.Z % 1.0D;
-            if (Comparing.IsLessThan(r1, 0.0D))
+            if (r1 < 0.0D)
             {
                 --x;
             }
 
-            if (Comparing.IsLessThan(r2, 0.0D))
+            if (r2 < 0.0D)
             {
                 --y;
             }
 
-            if (Comparing.IsLessThan(r3, 0.0D))
+            if (r3 < 0.0D)
             {
                 --z;
             }

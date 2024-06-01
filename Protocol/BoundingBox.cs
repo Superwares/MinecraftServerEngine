@@ -12,12 +12,9 @@ namespace Protocol
 
         public BoundingBox(Vector max, Vector min)
         {
-            System.Diagnostics.Debug.Assert(
-                Comparing.IsGreaterThanOrEqualTo(max.X, min.X));
-            System.Diagnostics.Debug.Assert(
-                Comparing.IsGreaterThanOrEqualTo(max.Y, min.Y));
-            System.Diagnostics.Debug.Assert(
-                Comparing.IsGreaterThanOrEqualTo(max.Z, min.Z));
+            System.Diagnostics.Debug.Assert(max.X >= min.X);
+            System.Diagnostics.Debug.Assert(max.Y >= min.Y);
+            System.Diagnostics.Debug.Assert(max.Z >= min.Z);
 
             _MAX = max; _MIN = min;
         }
@@ -80,11 +77,11 @@ namespace Protocol
         {
             Vector max = Max, min = Min;
 
-            if (Comparing.IsGreaterThan(s, 0.0D))
+            if (s > 0.0D)
             {
                 max = new(max.X + s, max.Y, max.Z);
             }
-            else if (Comparing.IsLessThan(s, 0.0D))
+            else if (s < 0.0D)
             {
                 min = new(min.X + s, min.Y, min.Z);
             }
@@ -96,11 +93,11 @@ namespace Protocol
         {
             Vector max = Max, min = Min;
 
-            if (Comparing.IsGreaterThan(s, 0.0D))
+            if (s > 0.0D)
             {
                 max = new(max.X, max.Y + s, max.Z);
             }
-            else if (Comparing.IsLessThan(s, 0.0D))
+            else if (s < 0.0D)
             {
                 min = new(min.X, min.Y + s, min.Z);
             }
@@ -112,11 +109,11 @@ namespace Protocol
         {
             Vector max = Max, min = Min;
 
-            if (Comparing.IsGreaterThan(s, 0.0D))
+            if (s > 0.0D)
             {
                 max = new(max.X, max.Y, max.Z + s);
             }
-            else if (Comparing.IsLessThan(s, 0.0D))
+            else if (s < 0.0D)
             {
                 min = new(min.X, min.Y, min.Z + s);
             }
@@ -136,20 +133,17 @@ namespace Protocol
 
         public bool IsOverlappingX(BoundingBox bb)
         {
-            return Comparing.IsLessThan(bb.Min.X, Max.X) &&
-                   Comparing.IsGreaterThan(bb.Max.X, Min.X);
+            return (bb.Min.X < Max.X) && (bb.Max.X > Min.X);
         }
 
         public bool IsOverlappingY(BoundingBox bb)
         {
-            return Comparing.IsLessThan(bb.Min.Y, Max.Y) &&
-                   Comparing.IsGreaterThan(bb.Max.Y, Min.Y);
+            return (bb.Min.Y < Max.Y) && (bb.Max.Y > Min.Y);
         }
 
         public bool IsOverlappingZ(BoundingBox bb)
         {
-            return Comparing.IsLessThan(bb.Min.Z, Max.Z) &&
-                   Comparing.IsGreaterThan(bb.Max.Z, Min.Z);
+            return (bb.Min.Z < Max.Z) && (bb.Max.Z > Min.Z);
         }
 
         public bool IsOverlapping(BoundingBox bb)
@@ -159,20 +153,17 @@ namespace Protocol
 
         public bool IsContactingX(BoundingBox bb)
         {
-            return Comparing.IsLessThanOrEqualTo(bb.Min.X, Max.X) &&
-                   Comparing.IsGreaterThanOrEqualTo(bb.Max.X, Min.X);
+            return (bb.Min.X <= Max.X) && (bb.Max.X >= Min.X);
         }
 
         public bool IsContactingY(BoundingBox bb)
         {
-            return Comparing.IsLessThanOrEqualTo(bb.Min.Y, Max.Y) &&
-                   Comparing.IsGreaterThanOrEqualTo(bb.Max.Y, Min.Y);
+            return (bb.Min.Y <= Max.Y) && (bb.Max.Y >= Min.Y);
         }
         
         public bool IsContactingZ(BoundingBox bb)
         {
-            return Comparing.IsLessThanOrEqualTo(bb.Min.Z, Max.Z) &&
-                   Comparing.IsGreaterThanOrEqualTo(bb.Max.Z, Min.Z);
+            return (bb.Min.Z <= Max.Z) && (bb.Max.Z >= Min.Z);
         }
 
         public bool IsContacting(BoundingBox bb)
@@ -185,25 +176,20 @@ namespace Protocol
             if (IsOverlappingY(bb) && IsOverlappingZ(bb))
             {
                 double sPrime;
-                if (Comparing.IsGreaterThan(s, 0.0D) && 
-                    Comparing.IsLessThanOrEqualTo(bb.Max.X, Min.X))
+                if ((s > 0.0D) && (bb.Max.X <= Min.X))
                 {
                     sPrime = Min.X - bb.Max.X;
-                    System.Diagnostics.Debug.Assert(
-                        Comparing.IsGreaterThanOrEqualTo(sPrime, 0.0D));
-                    if (Comparing.IsLessThan(sPrime, s))
+                    System.Diagnostics.Debug.Assert(sPrime >= 0.0D);
+                    if (sPrime < s)
                     {
                         s = sPrime;
                     }
                 }
-                else if(
-                    Comparing.IsLessThan(s, 0.0D) &&
-                    Comparing.IsGreaterThanOrEqualTo(bb.Min.X, Max.X))
+                else if((s < 0.0D) && (bb.Min.X >= Max.X))
                 {
                     sPrime = Max.X - bb.Min.X;
-                    System.Diagnostics.Debug.Assert(
-                        Comparing.IsLessThanOrEqualTo(sPrime, 0.0D));
-                    if (Comparing.IsGreaterThan(sPrime, s))
+                    System.Diagnostics.Debug.Assert(sPrime <= 0.0D);
+                    if (sPrime > s)
                     {
                         s = sPrime;
                     }
@@ -218,25 +204,20 @@ namespace Protocol
             if (IsOverlappingX(bb) && IsOverlappingZ(bb))
             {
                 double sPrime;
-                if (Comparing.IsGreaterThan(s, 0.0D) &&
-                    Comparing.IsLessThanOrEqualTo(bb.Max.Y, Min.Y))
+                if ((s > 0.0D) && (bb.Max.Y <= Min.Y))
                 {
                     sPrime = Min.Y - bb.Max.Y;
-                    System.Diagnostics.Debug.Assert(
-                        Comparing.IsGreaterThanOrEqualTo(sPrime, 0.0D));
-                    if (Comparing.IsLessThan(sPrime, s))
+                    System.Diagnostics.Debug.Assert(sPrime >= 0.0D);
+                    if (sPrime < s)
                     {
                         s = sPrime;
                     }
                 }
-                else if (
-                    Comparing.IsLessThan(s, 0.0D) &&
-                    Comparing.IsGreaterThanOrEqualTo(bb.Min.Y, Max.Y))
+                else if ((s < 0.0D) && (bb.Min.Y >= Max.Y))
                 {
                     sPrime = Max.Y - bb.Min.Y;
-                    System.Diagnostics.Debug.Assert(
-                        Comparing.IsLessThanOrEqualTo(sPrime, 0.0D));
-                    if (Comparing.IsGreaterThan(sPrime, s))
+                    System.Diagnostics.Debug.Assert(sPrime <= 0.0D);
+                    if (sPrime > s)
                     {
                         s = sPrime;
                     }
@@ -251,25 +232,20 @@ namespace Protocol
             if (IsOverlappingX(bb) && IsOverlappingY(bb))
             {
                 double sPrime;
-                if (Comparing.IsGreaterThan(s, 0.0D) &&
-                    Comparing.IsLessThanOrEqualTo(bb.Max.Z, Min.Z))
+                if ((s > 0.0D) && (bb.Max.Z <= Min.Z))
                 {
                     sPrime = Min.Z - bb.Max.Z;
-                    System.Diagnostics.Debug.Assert(
-                        Comparing.IsGreaterThanOrEqualTo(sPrime, 0.0D));
-                    if (Comparing.IsLessThan(sPrime, s))
+                    System.Diagnostics.Debug.Assert(sPrime >= 0.0D);
+                    if (sPrime < s)
                     {
                         s = sPrime;
                     }
                 }
-                else if (
-                    Comparing.IsLessThan(s, 0.0D) &&
-                    Comparing.IsGreaterThanOrEqualTo(bb.Min.Z, Max.Z))
+                else if ((s < 0.0D) && (bb.Min.Z >= Max.Z))
                 {
                     sPrime = Max.Z - bb.Min.Z;
-                    System.Diagnostics.Debug.Assert(
-                        Comparing.IsLessThanOrEqualTo(sPrime, 0.0D));
-                    if (Comparing.IsGreaterThan(sPrime, s))
+                    System.Diagnostics.Debug.Assert(sPrime <= 0.0D);
+                    if (sPrime > s)
                     {
                         s = sPrime;
                     }
@@ -281,12 +257,9 @@ namespace Protocol
 
         public Vector GetBottomCenter()
         {
-            System.Diagnostics.Debug.Assert(
-                Comparing.IsGreaterThanOrEqualTo(_MAX.X, _MIN.X));
-            System.Diagnostics.Debug.Assert(
-                Comparing.IsGreaterThanOrEqualTo(_MAX.Y, _MIN.Y));
-            System.Diagnostics.Debug.Assert(
-                Comparing.IsGreaterThanOrEqualTo(_MAX.Z, _MIN.Z));
+            System.Diagnostics.Debug.Assert(_MAX.X >= _MIN.X);
+            System.Diagnostics.Debug.Assert(_MAX.Y >= _MIN.Y);
+            System.Diagnostics.Debug.Assert(_MAX.Z >= _MIN.Z);
 
             double x = (_MAX.X + _MIN.X) / 2.0D,
                    y = _MIN.Y,

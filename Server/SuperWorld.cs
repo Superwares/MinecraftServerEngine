@@ -6,8 +6,6 @@ namespace Server
     {
         private bool _disposed = false;
 
-        private bool _gameInProgress = false;
-
         public SuperWorld() : base(new(0, 101, 0), new(0,0)) { }
 
         ~SuperWorld() => System.Diagnostics.Debug.Assert(false);

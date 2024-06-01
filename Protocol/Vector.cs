@@ -75,9 +75,7 @@ namespace Protocol
 
         public readonly bool Equals(Vector other)
         {
-            return Comparing.IsEqualTo(X, other.X) &&
-                Comparing.IsEqualTo(Y, other.Y) &&
-                Comparing.IsEqualTo(Z, other.Z);
+            return X == other.X && Y == other.Y && Z == other.Z;
         }
 
     }

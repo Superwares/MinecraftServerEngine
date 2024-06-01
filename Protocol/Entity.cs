@@ -209,8 +209,8 @@ namespace Protocol
 
             public BoundingBox Convert(Vector p)
             {
-                System.Diagnostics.Debug.Assert(Comparing.IsGreaterThan(_W, 0.0D));
-                System.Diagnostics.Debug.Assert(Comparing.IsGreaterThan(_H, 0.0D));
+                System.Diagnostics.Debug.Assert(_W > 0.0D);
+                System.Diagnostics.Debug.Assert(_H > 0.0D);
 
                 double w = _W / 2.0D;
 
@@ -263,8 +263,7 @@ namespace Protocol
 
             public bool Equals(Angles other)
             {
-                return Comparing.IsEqualTo(Yaw, other.Yaw) &&
-                    Comparing.IsEqualTo(Pitch, other.Pitch);
+                return (Yaw == other.Yaw) && (Pitch == other.Pitch);
             }
 
         }

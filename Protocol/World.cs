@@ -154,13 +154,13 @@ namespace Protocol
                 BoundingShape shape = shapes[i];
                 vy = shape.AdjustY(bb, vy);
             }
-            if (!Comparing.IsEqualTo(vy, 0.0D))
+            if (vy != 0.0D)
             {
                 bb = bb.MoveY(vy);
             }
 
-            f = !Comparing.IsEqualTo(vy, v.Y);
-            onGround = Comparing.IsLessThan(v.Y, 0.0D) && f;
+            f = vy != v.Y;
+            onGround = (v.Y < 0.0D) && f;
             if (f)
             {
                 vy = 0.0D;
@@ -171,12 +171,12 @@ namespace Protocol
                 BoundingShape shape = shapes[i];
                 vx = shape.AdjustX(bb, vx);
             }
-            if (!Comparing.IsEqualTo(vx, 0.0D))
+            if (vx != 0.0D)
             {
                 bb = bb.MoveX(vx);
             }
 
-            f = !Comparing.IsEqualTo(vx, v.X);
+            f = vx != v.X;
             if (f)
             {
                 vx = 0.0D;
@@ -187,12 +187,12 @@ namespace Protocol
                 BoundingShape shape = shapes[i];
                 vz = shape.AdjustZ(bb, vz);
             }
-            if (!Comparing.IsEqualTo(vz, 0.0D))
+            if (vz != 0.0D)
             {
                 bb = bb.MoveZ(vz);
             }
 
-            f = !Comparing.IsEqualTo(vz, v.Z);
+            f = vz != v.Z;
             if (f)
             {
                 vz = 0.0D;
