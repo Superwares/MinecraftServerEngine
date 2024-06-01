@@ -10,8 +10,8 @@ namespace Protocol
 
         public static ChunkLocation Generate(Vector p)
         {
-            int x = Conversions.ToInt(p.X / WIDTH),
-                z = Conversions.ToInt(p.Z / WIDTH);
+            int x = (int)(p.X / WIDTH),
+                z = (int)(p.Z / WIDTH);
 
             double r1 = p.X % WIDTH,
                    r2 = p.Z % WIDTH;
@@ -33,8 +33,8 @@ namespace Protocol
             int x = loc.X / WIDTH,
                 z = loc.Z / WIDTH;
 
-            double r1 = loc.X % Conversions.ToDouble(WIDTH),
-                   r2 = loc.Z % Conversions.ToDouble(WIDTH);
+            double r1 = loc.X % (double)WIDTH,
+                   r2 = loc.Z % (double)WIDTH;
             if (Comparing.IsLessThan(r1, 0.0D))
             {
                 --x;

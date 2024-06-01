@@ -225,9 +225,9 @@ namespace Protocol
 
             var packet = new EntityVelocityPacket(
                 entityId,
-                Conversions.ToShort(v.X * 8000),
-                Conversions.ToShort(v.Y * 8000),
-                Conversions.ToShort(v.Z * 8000));
+                (short)(v.X * 8000),
+                (short)(v.Y * 8000),
+                (short)(v.Z * 8000));
             packet.Write(buffer);
             _CLIENT.Send(buffer);
         }

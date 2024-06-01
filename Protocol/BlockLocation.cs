@@ -11,9 +11,9 @@ namespace Protocol
 
         public static BlockLocation Generate(Vector p)
         {
-            int x = Conversions.ToInt(p.X),
-                y = Conversions.ToInt(p.Y),
-                z = Conversions.ToInt(p.Z);
+            int x = (int)p.X,
+                y = (int)p.Y,
+                z = (int)p.Z;
 
             double r1 = p.X % 1.0D,
                    r2 = p.Y % 1.0D,
@@ -50,9 +50,9 @@ namespace Protocol
 
         public Vector Convert()
         {
-            double x = Conversions.ToDouble(X),
-                y = Conversions.ToDouble(Y),
-                z = Conversions.ToDouble(Z);
+            double x = (double)X,
+                y = (double)Y,
+                z = (double)Z;
             return new(x, y, z);
         }
 

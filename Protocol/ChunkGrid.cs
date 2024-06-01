@@ -67,8 +67,8 @@ namespace Protocol
             ChunkLocation
                 max = ChunkLocation.Generate(bb.Max),
                 min = ChunkLocation.Generate(bb.Min);
-            double r1 = bb.Min.X % Conversions.ToDouble(ChunkLocation.WIDTH),
-                   r2 = bb.Min.Z % Conversions.ToDouble(ChunkLocation.WIDTH);
+            double r1 = bb.Min.X % (double)ChunkLocation.WIDTH,
+                   r2 = bb.Min.Z % (double)ChunkLocation.WIDTH;
             int xMin = min.X, zMin = min.Z;
             if (Comparing.IsEqualTo(r1, 0.0D))
             {

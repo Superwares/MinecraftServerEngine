@@ -197,8 +197,8 @@ namespace Protocol
             {
                 public static void Write(Buffer buffer, SectionData sectionData)
                 {
-                    int bitCount = sectionData._bitsPerBlock;
-                    buffer.WriteByte(Conversions.ToByte(bitCount));
+                    byte bitCount = sectionData._bitsPerBlock;
+                    buffer.WriteByte(bitCount);
 
                     (int, int)[] palette = sectionData._palette;
                     System.Diagnostics.Debug.Assert(palette != null);
@@ -238,7 +238,7 @@ namespace Protocol
                 public const int HEIGHT = WIDTH;
                 private const int _TOTAL_BLOCK_COUNT = WIDTH * WIDTH * HEIGHT;
 
-                private int _bitsPerBlock;
+                private byte _bitsPerBlock;
 
                 private (int, int)[] _palette;
 
@@ -266,7 +266,7 @@ namespace Protocol
                         _data = new long[length];
 
                         int i;
-                        long value = Conversions.ToLong(defaultId);
+                        long value = (long)defaultId;
 
                         int start, offset, end;
 
@@ -342,7 +342,8 @@ namespace Protocol
 
                     if (_bitsPerBlock == 13)
                     {
-                        return Conversions.ToInt(value);
+                        System.Diagnostics.Debug.Assert(value <= int.MaxValue);
+                        return (int)value;
                     }
                     else
                     {
@@ -353,7 +354,7 @@ namespace Protocol
                     }
                 }
 
-                private void ExpandData(int bitsPerBlock)
+                private void ExpandData(byte bitsPerBlock)
                 {
                     System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -408,7 +409,7 @@ namespace Protocol
                                         offset = (i * bitsPerBlock) % _BITS_PER_DATA_UNIT;
                                         end = (((i + 1) * bitsPerBlock) - 1) / _BITS_PER_DATA_UNIT;
 
-                                        value = Conversions.ToLong(id);
+                                        value = (long)id;
 
                                         System.Diagnostics.Debug.Assert(
                                             (value & ~((1L << bitsPerBlock) - 1L)) == 0);
@@ -427,8 +428,7 @@ namespace Protocol
                     }
                     else
                     {
-                        System.Diagnostics.Debug.Assert(
-                            bitsPerBlock > 4 && bitsPerBlock <= 8);
+                        System.Diagnostics.Debug.Assert(bitsPerBlock > 4 && bitsPerBlock <= 8);
 
                         for (int y = 0; y < HEIGHT; ++y)
                         {
@@ -491,7 +491,7 @@ namespace Protocol
                     {
                         System.Diagnostics.Debug.Assert(_palette == null);
 
-                        value = Conversions.ToLong(id);
+                        value = (long)id;
                     }
                     else
                     {
@@ -516,7 +516,7 @@ namespace Protocol
 
                         if (indexPalette >= 0)
                         {
-                            value = Conversions.ToLong(indexPalette);
+                            value = (long)indexPalette;
                         }
                         else
                         {
@@ -525,24 +525,24 @@ namespace Protocol
                             int length = _palette.Length;
                             int lengthNew = length + 1;
 
-                            int bitsPerBlock;
-                            if (lengthNew <= 0b1111)
+                            byte bitsPerBlock;
+                            if (lengthNew <= 0b_00001111U)
                             {
                                 bitsPerBlock = 4;
                             }
-                            else if (lengthNew <= 0b1_1111)
+                            else if (lengthNew <= 0b_00011111U)
                             {
                                 bitsPerBlock = 5;
                             }
-                            else if (lengthNew <= 0b11_1111)
+                            else if (lengthNew <= 0b_00111111U)
                             {
                                 bitsPerBlock = 6;
                             }
-                            else if (lengthNew <= 0b111_1111)
+                            else if (lengthNew <= 0b_01111111U)
                             {
                                 bitsPerBlock = 7;
                             }
-                            else if (lengthNew <= 0b1111_1111)
+                            else if (lengthNew <= 0b_11111111U)
                             {
                                 bitsPerBlock = 8;
                             }
@@ -567,13 +567,13 @@ namespace Protocol
 
                             if (bitsPerBlock == 13)
                             {
-                                value = Conversions.ToLong(id);
+                                value = (long)id;
                             }
                             else
                             {
                                 System.Diagnostics.Debug.Assert(bitsPerBlock >= 4 && bitsPerBlock <= 8);
 
-                                value = Conversions.ToLong(length);
+                                value = (long)length;
                             }
 
                         }
