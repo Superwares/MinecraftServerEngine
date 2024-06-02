@@ -1,11 +1,11 @@
 ﻿namespace Containers
 {
-    public class NumList : System.IDisposable
+    public sealed class NumList : System.IDisposable
     {
         private bool _disposed = false;
 
-        private const int _MinNum = 0;
-        private const int _MaxNum = int.MaxValue;
+        private const int _MIN_NUM = 0;
+        private const int _MAX_NUM = int.MaxValue;
 
         private class Node(int from, int to)
         {
@@ -22,7 +22,7 @@
 
         public NumList()
         {
-            _nodeFirst = new(_MinNum, _MaxNum);
+            _nodeFirst = new(_MIN_NUM, _MAX_NUM);
         }
 
         ~NumList() => System.Diagnostics.Debug.Assert(false);
@@ -135,7 +135,7 @@
 
         }
 
-        public virtual void Dispose()
+        public void Dispose()
         {
             // Assertions.
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -150,45 +150,4 @@
 
     }
 
-    public class ConcurrentNumList : NumList
-    {
-        private readonly object _SharedResource = new();
-
-        private bool _disposed = false;
-
-        ~ConcurrentNumList() => System.Diagnostics.Debug.Assert(false);
-
-        public new int Alloc()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            lock (_SharedResource)
-            {
-                return base.Alloc();
-            }
-        }
-
-        public new void Dealloc(int num)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            lock (_SharedResource)
-            {
-                base.Dealloc(num);
-            }
-        }
-
-        public override void Dispose()
-        {
-            // Assertions.
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            // Release resources.
-
-            // Finish.
-            base.Dispose();
-            _disposed = true;
-        }
-
-    }
 }

@@ -167,7 +167,7 @@ namespace Protocol
 
         private sealed class TeleportationRecord
         {
-            private const long TickLimit = 20;  // 1 seconds, 20 ticks
+            private const long _MAX_TICKS = 20;  // 1 seconds, 20 ticks
 
             public readonly int _payload;
             private long _ticks = 0;
@@ -191,7 +191,7 @@ namespace Protocol
             {
                 System.Diagnostics.Debug.Assert(_ticks >= 0);
 
-                if (_ticks++ > TickLimit)
+                if (_ticks++ > _MAX_TICKS)
                 {
                     throw new TeleportationConfirmTimeoutException();
                 }
@@ -480,7 +480,7 @@ namespace Protocol
                         _keepAliveRecord.Confirm(packet.Payload);
                         _keepAliveRecord = null;
 
-                        world.KeepAlivePlayer(serverTicks, player.UniqueId);
+                        world.KeepAlivePlayer(serverTicks, player);
 
                     }
                     break;
@@ -591,16 +591,8 @@ namespace Protocol
                     break;
             }
 
-            if (!buffer.Empty)
-            {
-                throw new BufferOverflowException();
-            }
         }
 
-        /// <summary>
-        /// TODO: Add description.
-        /// </summary>
-        /// <returns>TODO: Add description.</returns>
         /// <exception cref="DisconnectedClientException">TODO: Why it's thrown.</exception>
         public void Control(
             long serverTicks, World world, Player player)
@@ -622,14 +614,27 @@ namespace Protocol
             {
                 try
                 {
-                    while (true)
+                    try
                     {
-                        RecvDataAndHandle(buffer, serverTicks, world, player);
+                        while (true)
+                        {
+                            RecvDataAndHandle(buffer, serverTicks, world, player);
+                        }
                     }
-                }
-                catch (TryAgainException)
-                {
+                    catch (TryAgainException)
+                    {
 
+                    }
+
+                    foreach (TeleportationRecord record in _TELEPORTATION_RECORDS.GetValues())
+                    {
+                        record.Update();
+                    }
+
+                    if (_keepAliveRecord != null)
+                    {
+                        _keepAliveRecord.Update();
+                    }
                 }
                 catch (UnexpectedClientBehaviorExecption e)
                 {
@@ -639,32 +644,19 @@ namespace Protocol
 
                     throw new DisconnectedClientException();
                 }
-
-                /*if (_renderDistance == -1)
-                {
-                    throw new UnexpectedPacketException();
-                }*/
-
-                foreach (TeleportationRecord record in _TELEPORTATION_RECORDS.GetValues())
-                {
-                    record.Update();
-                }
-
-                if (_keepAliveRecord != null)
-                {
-                    _keepAliveRecord.Update();
-                }
+                
             }
             catch (DisconnectedClientException)
             {
                 buffer.Flush();
+
                 world.DisconnectPlayer(player);
+                player.Disconnect();
 
                 _disconnected = true;
 
                 throw;
             }
-
             
         }
 
@@ -802,6 +794,9 @@ namespace Protocol
 
         public void Flush(World world)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disconnected);
+
             _ENTITY_RENDERER.Disconnect();
 
             _window.Flush(world);

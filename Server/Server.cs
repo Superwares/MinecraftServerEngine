@@ -11,7 +11,8 @@ namespace Application
 
         private readonly World _WORLD;
 
-        private readonly Queue<(Connection, Player)> _CONNECTIONS = new();  // Disposable
+        private readonly Queue<(Connection, Player)> _CONNECTIONS1 = new();  // Disposable
+        private readonly Queue<(Connection, Player)> _CONNECTIONS2 = new();  // Disposable
         private readonly Queue<Connection> _DISCONNECTIONS = new();  // Disposable
 
         private Server() 
@@ -25,9 +26,16 @@ namespace Application
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            for (int i = 0; i < _CONNECTIONS.Count; ++i)
+            Connection conn;
+            Player player;
+            while (true)
             {
-                (Connection conn, Player player) = _CONNECTIONS.Dequeue();
+                if (_CONNECTIONS1.Empty)
+                {
+                    break;
+                }
+
+                (conn, player) = _CONNECTIONS1.Dequeue();
 
                 try
                 {
@@ -40,7 +48,7 @@ namespace Application
                     continue;
                 }
 
-                _CONNECTIONS.Enqueue((conn, player));
+                _CONNECTIONS2.Enqueue((conn, player));
             }
 
         }
@@ -49,9 +57,15 @@ namespace Application
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            for (int i = 0; i < _DISCONNECTIONS.Count; ++i)
+            Connection conn;
+            while (true)
             {
-                Connection conn = _DISCONNECTIONS.Dequeue();
+                if (_DISCONNECTIONS.Empty)
+                {
+                    break;
+                }
+
+                conn = _DISCONNECTIONS.Dequeue();
 
                 conn.Flush(_WORLD);
                 conn.Dispose();
@@ -62,13 +76,20 @@ namespace Application
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            for (int i = 0; i < _CONNECTIONS.Count; ++i)
+            Connection conn;
+            Player player;
+            while (true)
             {
-                (Connection conn, Player player) = _CONNECTIONS.Dequeue();
+                if (_CONNECTIONS2.Empty)
+                {
+                    break;
+                }
+
+                (conn, player) = _CONNECTIONS2.Dequeue();
 
                 conn.Render(_WORLD, player);
 
-                _CONNECTIONS.Enqueue((conn, player));
+                _CONNECTIONS1.Enqueue((conn, player));
             }
         }
 
@@ -86,11 +107,15 @@ namespace Application
 
             // Barrier
 
-            _WORLD.HandleEntities();
+            _WORLD.DespawnEntities();
 
             // Barrier
 
-            connListener.Accept(_WORLD, _CONNECTIONS);
+            _WORLD.MoveEntities();
+
+            // Barrier
+
+            connListener.Accept(_WORLD, _CONNECTIONS2);
 
             // Barrier
 
@@ -107,10 +132,6 @@ namespace Application
             // Barrier
 
             _WORLD.StartEntitRoutines(serverTicks);
-
-            // Barrier
-
-            _WORLD.ReleaseResources();
 
             // Barrier
 
@@ -159,15 +180,17 @@ namespace Application
 
         public override void Dispose()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
             // Assertiong
-            System.Diagnostics.Debug.Assert(_CONNECTIONS.Empty);
+            System.Diagnostics.Debug.Assert(!_disposed);
+            
+            System.Diagnostics.Debug.Assert(_CONNECTIONS1.Empty);
+            System.Diagnostics.Debug.Assert(_CONNECTIONS2.Empty);
 
             // Release resources.
             _WORLD.Dispose();
 
-            _CONNECTIONS.Dispose();
+            _CONNECTIONS1.Dispose();
+            _CONNECTIONS2.Dispose();
 
             // Finish
             base.Dispose();

@@ -565,6 +565,11 @@ namespace Protocol
             // Assertions.
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            if (!Empty)
+            {
+                throw new BufferOverflowException();
+            }
+
             // Release resources.
             _data = null;
 
