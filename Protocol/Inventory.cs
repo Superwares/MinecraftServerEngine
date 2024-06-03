@@ -1,5 +1,9 @@
 ﻿
 using Containers;
+using System;
+using System.Linq;
+using System.Numerics;
+using System.Reflection;
 
 namespace Protocol
 {
@@ -7,11 +11,14 @@ namespace Protocol
     {
         private bool _disposed = false;
 
+        //private readonly InventoryRenderer _Renderer = new();  // Disposable
         public readonly int TotalSlotCount;
 
         private int _count = 0;
         public int Count => _count;
         protected readonly Item?[] _items;
+        internal readonly InventoryRenderer _Renderer = new();  // Disposable
+
         public System.Collections.Generic.IEnumerable<Item?> Items
         {
             get
@@ -274,12 +281,261 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(_count == 0);
 
             // Release resources.
+            _Renderer.Dispose();
 
             // Finish.
             System.GC.SuppressFinalize(this);
             _disposed = true;
         }
 
+        internal virtual void TakeOne(ItemCursor cursor, int index)
+        {
+            Item? slotItem = _items[index];
+            System.Diagnostics.Debug.Assert(slotItem != null);
+
+            if (slotItem.Count == 1)
+            {
+                TakeAll(cursor, index);
+                return;
+            }
+
+            Item? cursorItem = cursor.GetItem();
+            if (cursorItem == null)
+            {
+                slotItem.SetCount(slotItem.Count - 1);
+                cursor.SetItem(new Item(slotItem.Type, 1));
+                Render(index);
+                return;
+            }
+
+            if (cursorItem.Type != slotItem.Type)
+            {
+                return;
+            }
+
+            if (cursorItem.MaxCount == cursorItem.Count)
+            {
+                return;
+            }
+
+            cursorItem.SetCount(cursorItem.Count + 1);
+            slotItem.SetCount(slotItem.Count - 1);
+            Render(index);
+        }
+
+        internal virtual void TakeHalf(ItemCursor cursor, int index)
+        {
+            Item? cursorItem = cursor.GetItem();
+            System.Diagnostics.Debug.Assert(cursorItem == null);
+
+            Item? slotItem = _items[index];
+            if (slotItem == null)
+            {
+                return;
+            }
+
+            if (slotItem.Count == 1)
+            {
+                TakeAll(cursor, index);
+                return;
+            }
+
+            int remain = slotItem.Count / 2;
+            int count = slotItem.Count - remain;
+            slotItem.SetCount(remain);
+            cursor.SetItem(new Item(slotItem.Type, count));
+            Render(index);
+            return;
+        }
+
+        internal virtual void TakeAll(ItemCursor cursor, int index)
+        {
+            Item? slotItem = _items[index];
+            System.Diagnostics.Debug.Assert(slotItem != null);
+
+            Item? cursorItem = cursor.GetItem();
+            if (cursorItem == null)
+            {
+                cursor.SetItem(slotItem);
+                _items[index] = null;
+                --_count;
+                Render(index);
+                return ;
+            }
+
+            if (cursorItem.Type != slotItem.Type)
+            {
+                return;
+            }
+
+            if (cursorItem.MaxCount == cursorItem.Count)
+            {
+                return;
+            }
+
+            int n = cursorItem.MaxCount - cursorItem.Count;
+            if (slotItem.Count > n)
+            {
+                cursorItem.SetCount(cursorItem.Count + n);
+                slotItem.SetCount(slotItem.Count - n);
+                Render(index);
+                return;
+            }
+
+            cursorItem.SetCount(cursorItem.Count + slotItem.Count);
+            _items[index] = null;
+            --_count;
+            Render(index);
+        }
+
+        internal virtual void PutOne(ItemCursor cursor, int index)
+        {
+            Item? cursorItem = cursor.GetItem();
+            System.Diagnostics.Debug.Assert(cursorItem != null);
+
+            if (cursorItem.Count == 1)
+            {
+                PutAll(cursor, index);
+                return;
+            }
+
+            Item? slotItem = _items[index];
+            if (slotItem == null)
+            {
+                _items[index] = new Item(cursorItem.Type, 1);
+                cursorItem.SetCount(cursorItem.Count - 1);
+                Render(index);
+                return;
+            }
+
+            if (cursorItem.Type != slotItem.Type)
+            {
+                return;
+            }
+
+            if (slotItem.MaxCount == slotItem.Count)
+            {
+                return;
+            }
+
+            cursorItem.SetCount(cursorItem.Count - 1);
+            slotItem.SetCount(slotItem.Count + 1);
+            Render(index);
+        }
+
+        internal virtual void PutAll(ItemCursor cursor, int index)
+        {
+            Item? cursorItem = cursor.GetItem();
+            System.Diagnostics.Debug.Assert(cursorItem != null);
+
+            Item? slotItem = _items[index];
+            if (slotItem == null)
+            {
+                _items[index] = cursorItem;
+                cursor.SetItem(null);
+                ++_count;
+                Render(index);
+                return;
+            }
+
+            if (slotItem.Type != cursorItem.Type)
+            {
+                return;
+            }
+
+            if (slotItem.MaxCount == slotItem.Count)
+            {
+                return;
+            }
+
+            int n = slotItem.MaxCount - slotItem.Count;
+            if (cursorItem.Count > n)
+            {
+                slotItem.SetCount(slotItem.Count + n);
+                cursorItem.SetCount(cursorItem.Count - n);
+                Render(index);
+                return;
+            }
+
+            slotItem.SetCount(slotItem.Count + cursorItem.Count);
+            cursor.SetItem(null);
+            Render(index);
+        }
+
+        internal virtual void Swap(ItemCursor cursor, int index)
+        {
+            Item? cursorItem = cursor.GetItem();
+            System.Diagnostics.Debug.Assert(cursorItem != null);
+
+            Item? slotItem = _items[index];
+            System.Diagnostics.Debug.Assert(slotItem != null);
+
+            Item temp = cursorItem;
+            cursor.SetItem(slotItem);
+            _items[index] = temp;
+            Render(index);
+            return;
+        }
+
+        internal virtual Item? GetItem(int index)
+        {
+            return _items[index];
+        }
+
+        internal virtual Item? TakeItem(int index)
+        {
+            Item? item = _items[index];
+            if (item == null)
+            {
+                return null;
+            }
+
+            _items[index] = null;
+            --_count;
+            Render(index);
+            return item;
+        }
+
+        internal virtual void PutItem(Item? item, int index)
+        {
+            System.Diagnostics.Debug.Assert(item != null);
+            if (item == null)
+            {
+                return;
+            }
+
+            _items[index] = item;
+            ++_count;
+            Render(index);
+        }
+
+        internal virtual bool Exists(int index)
+        {
+            return _items.GetValue(index) != null;
+        }
+
+        internal virtual SlotData GetSlotData(int index)
+        {
+            Item? slotItem = GetItem(index);
+            SlotData slotData = (slotItem == null) ? new() : slotItem.ConvertToPacketFormat();
+            return slotData;
+        }
+
+        internal virtual void Render(int index)
+        {
+            SlotData slotData = GetSlotData(index);
+            _Renderer.Render(index, slotData);
+        }
+
+        internal void AddCount()
+        {
+            ++_count;
+        }
+
+        internal void SubCount()
+        {
+            --_count;
+        }
     }
 
     internal sealed class SelfInventory : Inventory
@@ -319,10 +575,23 @@ namespace Protocol
 
         public SelfInventory() : base(46) 
         {
-         /*   PutAll(15, new Item(Item.Types.Stone, 64), new(-1, 0));
-            PutAll(16, new Item(Item.Types.Stone, 1), new(-1, 0));
-            PutAll(17, new Item(Item.Types.Grass, 64), new(-1, 0));*/
-
+            PutAll(9, new Item(Item.Types.Shield, 1), new(-1, 0));
+            PutAll(10, new Item(Item.Types.DiamondHelmet, 1), new(-1, 0));
+            PutAll(11, new Item(Item.Types.DiamondChestPlate, 1), new(-1, 0));
+            PutAll(12, new Item(Item.Types.DiamondLeggins, 1), new(-1, 0));
+            PutAll(13, new Item(Item.Types.DiamondBoots, 1), new(-1, 0));
+            PutAll(14, new Item(Item.Types.planks, 64), new(-1, 0));
+            PutAll(15, new Item(Item.Types.Grass, 64), new(-1, 0));
+            PutAll(16, new Item(Item.Types.Stone, 64), new(-1, 0));
+            PutAll(17, new Item(Item.Types.Stone, 64), new(-1, 0));
+            PutAll(18, new Item(Item.Types.Stone, 32), new(-1, 0));
+            PutAll(19, new Item(Item.Types.IronHelmet, 1), new(-1, 0));
+            for (int index = 20; index <= 35; ++index)
+            {
+                PutAll(index, new Item(Item.Types.Stone, 1), new(-1, 0));
+            }
+            PutAll(36, new Item(Item.Types.DiamondHelmet, 1), new(-1, 0));
+            PutAll(37, new Item(Item.Types.chest, 64), new(-1, 0));
         }
 
         ~SelfInventory() => System.Diagnostics.Debug.Assert(false);
@@ -398,12 +667,550 @@ namespace Protocol
             // Assertion.
 
             // Release resources.
+            _Renderer.Dispose();
 
             // Finish.
             base.Dispose();
             _disposed = true;
         }
 
+        internal void ShiftClick(int clickIndex)
+        {
+            Item? clickItem = _items[clickIndex];
+            _items[clickIndex] = null;
+            if (clickItem == null)
+            {
+                return;
+            }
+
+            if (clickIndex == 0)
+            {
+                MoveToEndOfInventory(clickItem);
+                return;
+            }
+
+            if (clickIndex >= 1 && clickIndex <= 8 || clickIndex == 45)
+            {
+                MoveToInventory(clickItem);
+                return;
+            }
+
+            if (clickIndex >= 9 && clickIndex <= 35)
+            {
+                bool isCanMove = IsCanMoveShieldOrArmorSlot(clickItem);
+                if (isCanMove)
+                {
+                    MoveToShieldOrArmor(clickItem);
+                    return;
+                }
+
+                MoveToHotBar(clickItem);
+                return;
+            }
+
+            if (clickIndex >= 36 && clickIndex <= 44)
+            {
+                bool isCanMove = IsCanMoveShieldOrArmorSlot(clickItem);
+                if (isCanMove)
+                {
+                    MoveToShieldOrArmor(clickItem);
+                    return;
+                }
+
+                MoveToMainInventory(clickItem);
+                return;
+            }
+        }
+
+        public bool IsCanMoveShieldOrArmorSlot(Item clickItem)
+        {
+            if (clickItem.IsHelmet)
+            {
+                return Exists(5) == false;
+            }
+
+            if (clickItem.IsChestPlate)
+            {
+                return Exists(6) == false;
+            }
+
+            if (clickItem.IsLeggins)
+            {
+                return Exists(7) == false;
+            }
+
+            if (clickItem.IsBoots)
+            {
+                return Exists(8) == false;
+            }
+
+            if (clickItem.IsShield)
+            {
+                return Exists(45) == false;
+            }
+
+            return false;
+        }
+
+        public int GetArmorIndex(Item item)
+        {
+            if (item == null)
+            {
+                return -1;
+            }
+
+            if (item.IsHelmet)
+            {
+                return 5;
+            }
+            
+            if (item.IsChestPlate)
+            {
+                return 6;
+            }
+
+            if (item.IsLeggins)
+            {
+                return 7;
+            }
+
+            if (item.IsBoots)
+            {
+                return 8;
+            }
+
+            if (item.IsShield)
+            {
+                return 45;
+            }
+
+            return -1;
+        }
+
+        private void MoveToShieldOrArmor(Item clickItem)
+        {
+            int index = GetArmorIndex(clickItem);
+
+            System.Diagnostics.Debug.Assert(index != -1);
+
+            _items.SetValue(clickItem, index);
+        }
+
+        private void MoveToEmptyInventory(Item clickItem)
+        {
+            for (int index = 9; index <= 44; ++index)
+            {
+                if (!Exists(index))
+                {
+                    _items.SetValue(clickItem, index);
+                    Render(index);
+                    return;
+                }
+            }
+        }
+
+        internal void MoveToInventory(Item clickItem)
+        {
+            for (int index = 9; index <= 44; ++index)
+            {
+                if (clickItem.Count == 1)
+                {
+                    break;
+                }
+
+                Item? slotItem = (Item?)_items.GetValue(index);
+                if (slotItem == null)
+                {
+                    continue;
+                }
+
+                if (slotItem.Type != clickItem.Type)
+                {
+                    continue;
+                }
+
+                if (slotItem.Count == slotItem.MaxCount)
+                {
+                    continue;
+                }
+
+
+                int blank = slotItem.MaxCount - slotItem.Count;
+
+                if (clickItem.Count > blank)
+                {
+                    int remain = clickItem.Count - blank;
+                    slotItem.SetCount(slotItem.MaxCount);
+                    clickItem.SetCount(remain);
+                    Render(index);
+                    continue;
+                }
+
+                slotItem.SetCount(slotItem.Count + clickItem.Count);
+                Render(index);
+                return;
+            }
+
+            MoveToEmptyInventory(clickItem);
+        }
+
+        private void MoveToEptyMainInventory(Item clickItem)
+        {
+            for (int index = 9; index <= 35; ++index)
+            {
+                Item? slotItem = (Item?)_items.GetValue(index);
+                if (slotItem == null)
+                {
+                    _items.SetValue(clickItem, index);
+                    Render(index);
+                    return;
+                }
+            }
+        }
+
+        private void  MoveToMainInventory(Item clickItem)
+        {
+            for (int index = 9; index <= 35; ++index)
+            {
+                if (clickItem.Count == 1)
+                {
+                    break;
+                }
+
+                Item? slotItem = (Item?)_items.GetValue(index);
+                if (slotItem == null)
+                {
+                    continue;
+                }
+
+                if (slotItem.Type != clickItem.Type)
+                {
+                    continue;
+                }
+
+                if (slotItem.Count == slotItem.MaxCount)
+                {
+                    continue;
+                }
+
+
+                int blank = slotItem.MaxCount - slotItem.Count;
+
+                if (clickItem.Count > blank)
+                {
+                    int remain = clickItem.Count - blank;
+                    slotItem.SetCount(slotItem.MaxCount);
+                    clickItem.SetCount(remain);
+                    Render(index);
+                    continue;
+                }
+
+                slotItem.SetCount(slotItem.Count + clickItem.Count);
+                Render(index);
+                return;
+            }
+
+            MoveToEptyMainInventory(clickItem);
+        }
+
+        private void MoveToEmptyHotBar(Item clickItem)
+        {
+            for (int index = 36; index <= 44; ++index)
+            {
+                Item? slotItem = _items[index];
+                if (slotItem == null)
+                {
+                    _items.SetValue(clickItem, index);
+                    Render(index);
+                    return;
+                }
+            }
+        }
+
+        private void MoveToHotBar(Item clickItem)
+        {
+            for (int index = 36; index <= 44; ++index)
+            {
+                if (clickItem.Count == 1)
+                {
+                    break;
+                }
+
+                Item? slotItem = _items[index];
+                if (slotItem == null)
+                {
+                    continue;
+                }
+
+                if (slotItem.Type != clickItem.Type)
+                {
+                    continue;
+                }
+
+                if (slotItem.Count == slotItem.MaxCount)
+                {
+                    continue;
+                }
+
+                int blank = slotItem.MaxCount - slotItem.Count;
+
+                if (clickItem.Count > blank)
+                {
+                    int remain = clickItem.Count - blank;
+                    slotItem.SetCount(slotItem.MaxCount);
+                    clickItem.SetCount(remain);
+                    Render(index);
+                    continue;
+                }
+
+                slotItem.SetCount(slotItem.Count + clickItem.Count);
+                Render(index);
+                return;
+            }
+
+            MoveToEmptyHotBar(clickItem);
+        }
+
+        private void MoveToEndOfEmptyInventory(Item clickItem)
+        {
+            for (int index = 44; index >= 9; --index)
+            {
+                if (Exists(index))
+                {
+                    continue;
+                }
+
+                _items[index] = clickItem;
+                AddCount();
+                Render(index);
+                return;
+            }
+        }
+
+        internal void MoveToEndOfInventory(Item clickItem)
+        {
+            for (int index = 44; index >= 9; --index)
+            {
+                if (clickItem.MaxCount == 1)
+                {
+                    break;
+                }
+
+                Item? slotItem = _items[index];
+                if (slotItem == null)
+                {
+                    continue;
+                }
+
+                if (slotItem.Type != clickItem.Type)
+                {
+                    continue;
+                }
+
+                if (slotItem.Count == slotItem.MaxCount)
+                {
+                    continue;
+                }
+
+                int blank = slotItem.MaxCount - slotItem.Count;
+
+                if (clickItem.Count > blank)
+                {
+                    int remain = clickItem.Count - blank;
+                    slotItem.SetCount(slotItem.MaxCount);
+                    clickItem.SetCount(remain);
+                    Render(index);
+                    continue;
+                }
+
+                slotItem.SetCount(slotItem.Count + clickItem.Count);
+                Render(index);
+                return;
+            }
+
+            MoveToEndOfEmptyInventory(clickItem);
+        }
+
+
+        internal override void TakeAll(ItemCursor cursor, int index)
+        {
+            Item? slotItem = _items[index];
+            if (slotItem == null)
+            {
+                return;
+            }
+
+            if (index >= 5 && index <= 8)
+            {
+                TakeArmor(cursor, index);
+                return;
+            }
+
+            base.TakeAll(cursor, index);
+        }
+
+        private void TakeArmor(ItemCursor cursor, int index)
+        {
+            Item? slotItem = _items[index];
+            System.Diagnostics.Debug.Assert(slotItem != null);
+
+            Item? cursorItem = cursor.GetItem();
+            if (cursorItem == null)
+            {
+                base.TakeAll(cursor, index);
+                return;
+            }
+
+            int armorIndex = GetArmorIndex(cursorItem);
+
+            if (armorIndex == index)
+            {
+                Swap(cursor, index);
+                return;
+            }
+        }
+
+        internal override void PutAll(ItemCursor cursor, int index)
+        {
+            Item? cursorItem = cursor.GetItem();
+            System.Diagnostics.Debug.Assert(cursorItem != null);
+
+            if (index >= 5 && index <= 8)
+            {
+                PutArmor(cursor, index);
+                return;
+            }
+
+            base.PutAll(cursor, index);
+        }
+
+        private void PutArmor(ItemCursor cursor, int index)
+        {
+            Item? cursorItem = cursor.GetItem();
+            System.Diagnostics.Debug.Assert(cursorItem != null);
+
+            int armorIndex = GetArmorIndex(cursorItem);
+            if (armorIndex != index)
+            {
+                return;
+            }
+
+            Item? slotItem = _items[index];
+            if (slotItem != null)
+            {
+                Swap(cursor, index);
+                return;
+            }
+
+            base.PutAll(cursor, index);
+        }
+
+        internal void LeftClick(ItemCursor cursor, int index)
+        {
+            if (index == 0)
+            {
+                TakeOne(cursor, index);
+                return;
+            }
+
+            Item? cursorItem = cursor.GetItem();
+            if (cursorItem == null)
+            {
+                TakeAll(cursor, index);
+                return;
+            }
+
+            Item? slotItem = _items[index];
+            if (slotItem == null)
+            {
+                PutAll(cursor, index);
+                return;
+            }
+
+            if (cursorItem.Type == slotItem.Type)
+            {
+                PutAll(cursor, index);
+                return;
+            }
+
+            Swap(cursor, index);
+        }
+
+        internal void RightClick(ItemCursor cursor, int index)
+        {
+            if (index == 0)
+            {
+                TakeOne(cursor, index);
+                return;
+            }
+
+            Item? cursorItem = cursor.GetItem();
+            if (cursorItem == null)
+            {
+                TakeHalf(cursor, index);
+                return;
+            }
+
+            Item? slotItem = _items[index];
+            if (slotItem == null)
+            {
+                PutOne(cursor, index);
+                return;
+            }
+
+            if (cursorItem.Type == slotItem.Type)
+            {
+                PutOne(cursor, index);
+                return;
+            }
+
+            Swap(cursor, index);
+        }
+
+        internal void NumberKey(int buttonIndex, int cursorIndex)
+        {
+            buttonIndex += 36;
+            Item? buttonItem = _items[buttonIndex];
+            Item? cursorItem = _items[cursorIndex];
+            if (cursorItem == null && buttonItem == null)
+            {
+                return;
+            }
+
+            if (buttonItem == null)
+            {
+                _items[buttonIndex] = cursorItem;
+                _items[cursorIndex] = buttonItem;
+                Render(buttonIndex);
+                Render(cursorIndex);
+                return;
+            }
+
+            if (cursorIndex == 5 && !buttonItem.IsHelmet)
+            {
+                return;
+            }
+
+            if (cursorIndex == 6 && !buttonItem.IsChestPlate)
+            {
+                return;
+            }
+
+            if (cursorIndex == 7 && !buttonItem.IsLeggins)
+            {
+                return;
+            }
+
+            if (cursorIndex == 8 && !buttonItem.IsBoots)
+            {
+                return;
+            }
+
+            _items[buttonIndex] = cursorItem;
+            _items[cursorIndex] = buttonItem;
+            Render(buttonIndex);
+            Render(cursorIndex);
+        }
     }
 
     public abstract class PublicInventory : Inventory
@@ -416,7 +1223,6 @@ namespace Protocol
         private readonly object _SharedObject = new();
 
         private readonly NumList _IdList = new();  // Disposable
-        private readonly PublicInventoryRenderer _Renderer = new();  // Disposable
 
         public PublicInventory(int count) : base(count) { }
 
@@ -443,7 +1249,7 @@ namespace Protocol
                         continue;
                     }
 
-                    arr[i] = item.ConventToPacketFormat();
+                    arr[i] = item.ConvertToPacketFormat();
                 }
 
                 outPackets.Enqueue(new SetWindowItemsPacket(0, arr));
@@ -455,7 +1261,7 @@ namespace Protocol
                 }
                 else
                 {
-                    outPackets.Enqueue(new SetSlotPacket(0, 45, offHandItem.ConventToPacketFormat()));
+                    outPackets.Enqueue(new SetSlotPacket(0, 45, offHandItem.ConvertToPacketFormat()));
                 }
             }
 
@@ -482,7 +1288,7 @@ namespace Protocol
                         continue;
                     }
 
-                    arr[i++] = item.ConventToPacketFormat();
+                    arr[i++] = item.ConvertToPacketFormat();
                 }
 
                 foreach (Item? item in selfInventory.PrimaryItems)
@@ -493,7 +1299,7 @@ namespace Protocol
                         continue;
                     }
 
-                    arr[i++] = item.ConventToPacketFormat();
+                    arr[i++] = item.ConvertToPacketFormat();
                 }
 
                 System.Diagnostics.Debug.Assert(windowId >= byte.MinValue);
@@ -507,7 +1313,6 @@ namespace Protocol
 
                 return id;
             }
-
         }
 
         internal void Close(int id, int _windowId)
@@ -642,6 +1447,162 @@ namespace Protocol
             _disposed = true;
         }
 
+
+        internal override Item? TakeItem(int index)
+        {
+            lock (_SharedObject)
+            {
+                Item? item = base.TakeItem(index);
+
+                Render(index);
+                return item;
+            }
+        }
+
+        internal override void TakeHalf(ItemCursor cursor, int index)
+        {
+            base.TakeHalf(cursor, index);
+        }
+
+        internal override void TakeAll(ItemCursor cursor, int index)
+        {
+            base.TakeAll(cursor, index);
+        }
+
+        internal override void PutItem(Item? item, int index)
+        {
+            lock (_SharedObject)
+            {
+                base.PutItem(item, index);
+            }
+        }
+
+        internal override void PutAll(ItemCursor cursor, int index)
+        {
+            base.PutAll(cursor, index);
+        }
+
+        internal override void Swap(ItemCursor cursor, int index)
+        {
+            base.Swap(cursor, index);
+        }
+
+        internal virtual void LeftClick(ItemCursor cursor, int index)
+        {
+            lock (_SharedObject)
+            {
+                Item? cursorItem = cursor.GetItem();
+                if (cursorItem == null)
+                {
+                    TakeAll(cursor, index);
+                    return;
+                }
+
+                Item? slotItem = _items[index];
+                if (slotItem == null)
+                {
+                    PutAll(cursor, index);
+                    return;
+                }
+
+                if (cursorItem.Type == slotItem.Type)
+                {
+                    PutAll(cursor, index);
+                }
+
+                Swap(cursor, index);
+            }
+        }
+
+        internal void RightClick(ItemCursor cursor, int index)
+        {
+            lock (_SharedObject)
+            {
+                Item? cursorItem = cursor.GetItem();
+                if (cursorItem == null)
+                {
+                    TakeHalf(cursor, index);
+                    return;
+                }
+
+                Item? slotItem = _items[index];
+                if (slotItem == null)
+                {
+                    PutOne(cursor, index);
+                    return;
+                }
+
+                if (cursorItem.Type == slotItem.Type)
+                {
+                    PutOne(cursor, index);
+                    return;
+                }
+
+                Swap(cursor, index);
+            }
+        }
+
+        private void MoveToEmptyInventory(Item clickItem)
+        {
+            for (int index = 0; index <= 26; ++index)
+            {
+                if (Exists(index))
+                {
+                    continue;
+                }
+                _items[index] = clickItem;
+                AddCount();
+                Render(index);
+                return;
+            }
+        }
+
+        internal void MoveToInventory(Item clickItem)
+        {
+            lock(_SharedObject)
+            {
+                for (int index = 0; index <= 26; ++index)
+                {
+                    if (clickItem.MaxCount == 1)
+                    {
+                        break;
+                    }
+
+                    Item? slotItem = _items[index];
+                    if (slotItem == null)
+                    {
+                        continue;
+                    }
+
+                    if (slotItem.Type != clickItem.Type)
+                    {
+                        continue;
+                    }
+
+                    if (slotItem.Count == slotItem.MaxCount)
+                    {
+                        continue;
+                    }
+
+                    int blank = slotItem.MaxCount - slotItem.Count;
+
+                    if (clickItem.Count > blank)
+                    {
+                        int remain = clickItem.Count - blank;
+                        slotItem.SetCount(slotItem.MaxCount);
+                        clickItem.SetCount(remain);
+                        Render(index);
+                        continue;
+                    }
+
+                    slotItem.SetCount(slotItem.Count + clickItem.Count);
+                    Render(index);
+                    return;
+                }
+
+                MoveToEmptyInventory(clickItem);
+            }
+        }
     }
 
     public sealed class ChestInventory : PublicInventory
@@ -665,6 +1626,36 @@ namespace Protocol
             // Finish.
             base.Dispose();
             _disposed = true;
+        }
+
+    }
+
+    public sealed class CraftingInventory : PublicInventory
+    {
+        private bool _disposed = false;
+
+        internal override string WindowType => "minecraft:crafting_table";
+
+        public CraftingInventory() : base(10) { }
+
+        ~CraftingInventory() => System.Diagnostics.Debug.Assert(false);
+
+        public override void Dispose()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            // Assertion.
+
+            // Release resources.
+
+            // Finish.
+            base.Dispose();
+            _disposed = true;
+        }
+
+        internal override void LeftClick(ItemCursor cursor, int index)
+        {
+            base.LeftClick(cursor, index);
         }
 
     }

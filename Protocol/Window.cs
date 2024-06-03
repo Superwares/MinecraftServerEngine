@@ -1,5 +1,9 @@
 ﻿
 using Containers;
+using System;
+using System.Dynamic;
+using System.Reflection;
+using System.Xml;
 
 namespace Protocol
 {
@@ -18,8 +22,11 @@ namespace Protocol
         private int _id = -1;
 
         private PublicInventory? _publicInventory = null;
+        // TODO: 
+        private SelfInventory _selfInventory;
 
-        private Item? _itemCursor = null;
+        //private Item? _itemCursor = null;
+        private readonly ItemCursor _cursor = new ItemCursor();
 
         public Window(
             Queue<ClientboundPlayingPacket> outPackets,
@@ -39,19 +46,20 @@ namespace Protocol
                         continue;
                     }
 
-                    arr[i++] = item.ConventToPacketFormat();
+                    arr[i++] = item.ConvertToPacketFormat();
                 }
 
                 System.Diagnostics.Debug.Assert(_windowId >= byte.MinValue);
                 System.Diagnostics.Debug.Assert(_windowId <= byte.MaxValue);
                 outPackets.Enqueue(new SetWindowItemsPacket((byte)_windowId, arr));
 
-                System.Diagnostics.Debug.Assert(_itemCursor == null);
+                System.Diagnostics.Debug.Assert(_cursor.GetItem() == null);
                 outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));
 
                 System.Diagnostics.Debug.Assert(i == n);
             }
 
+            _selfInventory = selfInventory;
         }
 
         ~Window() => System.Diagnostics.Debug.Assert(false);
@@ -90,9 +98,11 @@ namespace Protocol
             _windowId = (new System.Random().Next() % 100) + 1;
 
             _id = publicInventory.Open(_windowId, outPackets, selfInventory);
-            if (_itemCursor != null)
+
+            Item? cursorItem = _cursor.GetItem();
+            if (cursorItem != null)
             {
-                outPackets.Enqueue(new SetSlotPacket(-1, 0, _itemCursor.ConventToPacketFormat()));
+                outPackets.Enqueue(new SetSlotPacket(-1, 0, cursorItem.ConvertToPacketFormat()));
             }
 
             _publicInventory = publicInventory;
@@ -147,7 +157,7 @@ namespace Protocol
                 outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));
             }*/
 
-            System.Diagnostics.Debug.Assert(_itemCursor == null);
+            System.Diagnostics.Debug.Assert(_cursor.GetItem() == null);
         }
 
         internal void ResetWindowForcibly(
@@ -169,11 +179,11 @@ namespace Protocol
             _publicInventory = null;
 
             {
-                int count = selfInventory.TotalSlotCount;
+                int count = _selfInventory.TotalSlotCount;
                 int i = 0;
                 var arr = new SlotData[count];
 
-                foreach (Item? item in selfInventory.Items)
+                foreach (Item? item in _selfInventory.Items)
                 {
                     if (item == null)
                     {
@@ -181,7 +191,7 @@ namespace Protocol
                         continue;
                     }
 
-                    arr[i++] = item.ConventToPacketFormat();
+                    arr[i++] = item.ConvertToPacketFormat();
                 }
 
                 System.Diagnostics.Debug.Assert(_windowId == 0);
@@ -200,7 +210,7 @@ namespace Protocol
                 outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));
             }*/
 
-            System.Diagnostics.Debug.Assert(_itemCursor == null);
+            System.Diagnostics.Debug.Assert(_cursor.GetItem() == null);
         }
 
         private void ClickLeftMouseButton(
@@ -208,20 +218,24 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (index >= selfInventory.TotalSlotCount)
+            if (index >= _selfInventory.TotalSlotCount)
             {
                 throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
             }
 
             bool f;
 
-            if (_itemCursor == null)
+            if (_cursor.GetItem() == null)
             {
-                (f, _itemCursor) = selfInventory.TakeAll(index, slotData);
+                Item item;
+                (f, item) = _selfInventory.TakeAll(index, slotData);
+                _cursor.SetItem(item);
             }
             else
             {
-                (f, _itemCursor) = selfInventory.PutAll(index, _itemCursor, slotData);
+                Item item;
+                (f, item) = _selfInventory.PutAll(index, _cursor.GetItem(), slotData);
+                _cursor.SetItem(item);
             }
 
             if (!f)
@@ -245,18 +259,22 @@ namespace Protocol
 
             bool f;
 
-            if (_itemCursor == null)
+            if (_cursor.GetItem() == null)
             {
                 if (index >= 0 && index < _publicInventory.TotalSlotCount)
                 {
-                    (f, _itemCursor) = _publicInventory.TakeAll(index, slotData);
+                    Item item;
+                    (f, item) = _publicInventory.TakeAll(index, slotData);
+                    _cursor.SetItem(item);
                 }
                 else if (
                     index >= _publicInventory.TotalSlotCount &&
-                    index < _publicInventory.TotalSlotCount + selfInventory.PrimarySlotCount)
+                    index < _publicInventory.TotalSlotCount + _selfInventory.PrimarySlotCount)
                 {
                     int j = index + 9 - _publicInventory.TotalSlotCount;
-                    (f, _itemCursor) = selfInventory.TakeAll(j, slotData);
+                    Item item;
+                    (f, item) = _selfInventory.TakeAll(j, slotData);
+                    _cursor.SetItem(item);
                 }
                 else
                 {
@@ -267,14 +285,19 @@ namespace Protocol
             {
                 if (index >= 0 && index < _publicInventory.TotalSlotCount)
                 {
-                    (f, _itemCursor) = _publicInventory.PutAll(index, _itemCursor, slotData);
+                    Item item;
+                    (f, item) = _publicInventory.PutAll(index, _cursor.GetItem(), slotData);
+                    _cursor.SetItem(item);
+
                 }
                 else if (
                     index >= _publicInventory.TotalSlotCount &&
-                    index < _publicInventory.TotalSlotCount + selfInventory.PrimarySlotCount)
+                    index < _publicInventory.TotalSlotCount + _selfInventory.PrimarySlotCount)
                 {
                     int j = index + 9 - _publicInventory.TotalSlotCount;
-                    (f, _itemCursor) = selfInventory.PutAll(j, _itemCursor, slotData);
+                    Item item;
+                    (f, item) = _selfInventory.PutAll(index, _cursor.GetItem(), slotData);
+                    _cursor.SetItem(item);
                 }
                 else
                 {
@@ -284,7 +307,7 @@ namespace Protocol
 
             if (!f)
             {
-                if (_itemCursor == null)
+                if (_cursor.GetItem() == null)
                 {
                     if (index >= 0 && index < _publicInventory.TotalSlotCount)
                     {
@@ -292,7 +315,7 @@ namespace Protocol
                     }
                     else if (
                         index >= _publicInventory.TotalSlotCount &&
-                        index < _publicInventory.TotalSlotCount + selfInventory.PrimarySlotCount)
+                        index < _publicInventory.TotalSlotCount + _selfInventory.PrimarySlotCount)
                     {
                         throw new UnexpectedValueException("ClickWindowPacket.SLOT_DATA");
                     }
@@ -305,11 +328,11 @@ namespace Protocol
                 {
                     if (index >= 0 && index < _publicInventory.TotalSlotCount)
                     {
-                        outPackets.Enqueue(new SetSlotPacket(-1, 0, _itemCursor.ConventToPacketFormat()));
+                        outPackets.Enqueue(new SetSlotPacket(-1, 0, _cursor.GetItem().ConvertToPacketFormat()));
                     }
                     else if (
                         index >= _publicInventory.TotalSlotCount &&
-                        index < _publicInventory.TotalSlotCount + selfInventory.PrimarySlotCount)
+                        index < _publicInventory.TotalSlotCount + _selfInventory.PrimarySlotCount)
                     {
                         throw new UnexpectedValueException("ClickWindowPacket.SLOT_DATA");
                     }
@@ -327,20 +350,24 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (index >= selfInventory.TotalSlotCount)
+            if (index >= _selfInventory.TotalSlotCount)
             {
                 throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
             }
 
             bool f;
 
-            if (_itemCursor == null)
+            if (_cursor.GetItem() == null)
             {
-                (f, _itemCursor) = selfInventory.TakeHalf(index, slotData);
+                Item item;
+                (f, item) = _selfInventory.TakeHalf(index, slotData);
+                _cursor.SetItem(item);
             }
             else
             {
-                (f, _itemCursor) = selfInventory.PutOne(index, _itemCursor, slotData);
+                Item item;
+                (f, item) = _selfInventory.PutOne(index, _cursor.GetItem(), slotData);
+                _cursor.SetItem(item);
             }
 
             if (!f)
@@ -364,18 +391,22 @@ namespace Protocol
 
             bool f;
 
-            if (_itemCursor == null)
+            if (_cursor.GetItem() == null)
             {
                 if (index >= 0 && index < _publicInventory.TotalSlotCount)
                 {
-                    (f, _itemCursor) = _publicInventory.TakeHalf(index, slotData);
+                    Item item;
+                    (f, item) = _selfInventory.TakeHalf(index, slotData);
+                    _cursor.SetItem(item);
                 }
                 else if (
                     index >= _publicInventory.TotalSlotCount &&
-                    index < _publicInventory.TotalSlotCount + selfInventory.PrimarySlotCount)
+                    index < _publicInventory.TotalSlotCount + _selfInventory.PrimarySlotCount)
                 {
                     int j = index + 9 - _publicInventory.TotalSlotCount;
-                    (f, _itemCursor) = selfInventory.TakeHalf(j, slotData);
+                    Item item;
+                    (f, item) = _selfInventory.TakeHalf(j, slotData);
+                    _cursor.SetItem(item);
                 }
                 else
                 {
@@ -386,14 +417,18 @@ namespace Protocol
             {
                 if (index >= 0 && index < _publicInventory.TotalSlotCount)
                 {
-                    (f, _itemCursor) = _publicInventory.PutOne(index, _itemCursor, slotData);
+                    Item item;
+                    (f, item) = _publicInventory.PutOne(index, _cursor.GetItem(), slotData);
+                    _cursor.SetItem(item);
                 }
                 else if (
                     index >= _publicInventory.TotalSlotCount &&
-                    index < _publicInventory.TotalSlotCount + selfInventory.PrimarySlotCount)
+                    index < _publicInventory.TotalSlotCount + _selfInventory.PrimarySlotCount)
                 {
                     int j = index + 9 - _publicInventory.TotalSlotCount;
-                    (f, _itemCursor) = selfInventory.PutOne(j, _itemCursor, slotData);
+                    Item item;
+                    (f, item) = _publicInventory.PutOne(j, _cursor.GetItem(), slotData);
+                    _cursor.SetItem(item);
                 }
                 else
                 {
@@ -403,7 +438,7 @@ namespace Protocol
 
             if (!f)
             {
-                if (_itemCursor == null)
+                if (_cursor.GetItem() == null)
                 {
                     if (index >= 0 && index < _publicInventory.TotalSlotCount)
                     {
@@ -411,7 +446,7 @@ namespace Protocol
                     }
                     else if (
                         index >= _publicInventory.TotalSlotCount &&
-                        index < _publicInventory.TotalSlotCount + selfInventory.PrimarySlotCount)
+                        index < _publicInventory.TotalSlotCount + _selfInventory.PrimarySlotCount)
                     {
                         throw new UnexpectedValueException("ClickWindowPacket.SLOT_DATA");
                     }
@@ -424,11 +459,11 @@ namespace Protocol
                 {
                     if (index >= 0 && index < _publicInventory.TotalSlotCount)
                     {
-                        outPackets.Enqueue(new SetSlotPacket(-1, 0, _itemCursor.ConventToPacketFormat()));
+                        outPackets.Enqueue(new SetSlotPacket(-1, 0, _cursor.GetItem().ConvertToPacketFormat()));
                     }
                     else if (
                         index >= _publicInventory.TotalSlotCount &&
-                        index < _publicInventory.TotalSlotCount + selfInventory.PrimarySlotCount)
+                        index < _publicInventory.TotalSlotCount + _selfInventory.PrimarySlotCount)
                     {
                         throw new UnexpectedValueException("ClickWindowPacket.SLOT_DATA");
                     }
@@ -441,9 +476,119 @@ namespace Protocol
 
         }
 
-        public void Handle(
-            SelfInventory selfInventory,
-            int windowId, int mode, int button, int index, SlotData slotData,
+        internal void Handle(Queue<ClickWindowPacket> packets, Queue<ClientboundPlayingPacket> outPackets)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_windowId >= 0);
+
+            Item? cursorItem = _cursor.GetItem();
+            if (cursorItem == null)
+            {
+                return;
+            }
+
+            SlotFiltering(packets, cursorItem);
+
+            int count = cursorItem.Count / packets.Count;
+            int remain = cursorItem.Count % packets.Count;
+            while (packets.Empty == false)
+            {
+                ClickWindowPacket packet = packets.Dequeue();
+
+                int index = packet.SLOT;
+                Item? slotItem = _selfInventory.GetItem(index);
+                if (slotItem == null)
+                {
+                    _selfInventory.PutItem(new Item(cursorItem.Type, count), index);
+                    continue;
+                }
+
+                int blank = slotItem.MaxCount - slotItem.Count;
+                if (count > blank)
+                {
+                    remain += count - blank;
+                    slotItem.SetCount(slotItem.MaxCount);
+                    _selfInventory.Render(index);
+                    continue;
+                }
+
+                int sum = slotItem.Count + count;
+                slotItem.SetCount(sum);
+                _selfInventory.Render(index);
+            }
+
+            if (remain == 0)
+            {
+                _cursor.SetItem(null);
+            }
+            else
+            {
+                cursorItem.SetCount(remain);
+            }
+
+            if (_cursor.GetItem() == null)
+            {
+                outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));
+            }
+            else
+            {
+                outPackets.Enqueue(new SetSlotPacket(-1, 0, _cursor.GetItem().ConvertToPacketFormat()));
+            }
+
+            // console log
+            {
+                if (_windowId == 0)
+                {
+                    _selfInventory.Print();
+                }
+                else
+                {
+                    System.Diagnostics.Debug.Assert(_publicInventory != null);
+                    _publicInventory.Print();
+                    _selfInventory.Print();
+                }
+
+                cursorItem = _cursor.GetItem();
+                if (cursorItem != null)
+                    System.Console.WriteLine($"itemCursor: {cursorItem.Type} {cursorItem.Count}");
+            }
+        }
+
+        private void SlotFiltering(Queue<ClickWindowPacket> packets, Item? cursorItem)
+        {
+            for (int i = 0; i < packets.Count; ++i)
+            {
+                ClickWindowPacket packet = packets.Dequeue();
+                if (_windowId != packet.WINDOW_ID)
+                {
+                    throw new UnexpectedValueException("ClickWindowPacket.WindowId");
+                    // return
+                }
+
+                int index = packet.SLOT;
+
+                Item? slotItem = _selfInventory.GetItem(index);
+                if (slotItem == null)
+                {
+                    packets.Enqueue(packet);
+                    continue;
+                }
+
+                if (cursorItem.Type != slotItem.Type)
+                {
+                    continue;
+                }
+
+                if (slotItem.Count == slotItem.MaxCount)
+                {
+                    continue;
+                }
+
+                packets.Enqueue(packet);
+            }
+        }
+
+        public void Handle(int windowId, int mode, int button, int index,
             Queue<ClientboundPlayingPacket> outPackets)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -492,6 +637,68 @@ namespace Protocol
                 throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
             }
 
+
+
+            // TODO: 
+            /*if (_windowId == 0)
+            {
+                // self
+                if (mode == 0 && button == 0)
+                {
+                    selfInventory.LeftClick(_cursor, index);
+                }
+                else if (mode == 0 && button == 1)
+                {
+
+                }
+                else if (mode == 1 && button == 0)
+                {
+                    selfInventory.ShiftClick(index);
+                }
+                else if (mode == 1 && button == 1)
+                {
+                    selfInventory.ShiftClick(index);
+                }
+                else if (mode == 2 && button == 0)
+                {
+
+                }
+            }
+            else
+            {
+                // public
+                if (mode == 0 && button == 0)
+                {
+                    LeftClickWithPublicInventory(index);
+                }
+                else if (mode == 0 && button == 1)
+                {
+
+                }
+                else if (mode == 1 && button == 0)
+                {
+
+                }
+                else if (mode == 1 && button == 1)
+                {
+
+                }
+                else if (mode == 2 && button == 0)
+                {
+
+                }
+            }
+            if (_cursor.GetItem() == null)
+            {
+                outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));
+            }
+            else
+            {
+                outPackets.Enqueue(new SetSlotPacket(-1, 0, _cursor.GetItem().ConvertToPacketFormat()));
+            }*/
+
+
+
             switch (mode)
             {
                 default:
@@ -504,28 +711,104 @@ namespace Protocol
                         case 0:
                             if (_windowId == 0)
                             {
-                                ClickLeftMouseButton(selfInventory, index, slotData);
+                                // TODO: done
+                                _selfInventory.LeftClick(_cursor, index);
+                                break;
                             }
-                            else
-                            {
-                                ClickLeftMouseButtonWithPublicInventory(
+
+                            // TODO: done
+                            LeftClickWithPublicInventory(index);
+
+                            /*ClickLeftMouseButtonWithPublicInventory(
                                     selfInventory, index, slotData,
-                                    outPackets);
-                            }
+                                    outPackets);*/
+
                             break;
                         case 1:
                             if (_windowId == 0)
                             {
-                                ClickRightMouseButton(selfInventory, index, slotData);
+                                // TODO: done
+                                _selfInventory.RightClick(_cursor, index);
+                                break;
                             }
-                            else
-                            {
-                                ClickRightMouseButtonWithPublicInventory(
+                            
+                            // TODO: done
+                            RightClickWithPublicInventory(index);
+
+                            /*ClickRightMouseButtonWithPublicInventory(
                                     selfInventory, index, slotData,
-                                    outPackets);
-                            }
+                                    outPackets);*/
+
                             break;
                     }
+                    break;
+
+                case 1:
+                    switch (button)
+                    {
+                        default:
+                            throw new UnexpectedValueException("ClickWindowPacket.ButtonNumber");
+
+                        case 0:
+                        case 1:
+                            if (_windowId == 0)
+                            {
+                                // _itemCursor?
+                                _selfInventory.ShiftClick(index);
+                                break;
+                            }
+                            // TODO: done
+                            ShiftClickWithPublicInventory(index);
+
+                            break;
+                    }
+                    break;
+
+                case 2:
+                    if (_windowId == 0)
+                    {
+                        // TODO: done
+                        _selfInventory.NumberKey(button, index);
+                        break;
+                    }
+
+                    // TODO: done
+                    NumberKeyWithPublicInventory(button, index);
+                    break;
+                case 4:
+                    // TODO: left click item drop
+                    if (button == 0 && index == -999)
+                    {
+                        Item? cursorItem = _cursor.GetItem();
+                        if (cursorItem == null)
+                        {
+                            return;
+                        }
+
+                        // TODO: make ItemEntity
+
+                        // TODO: spawn ItemEntity in player position
+                        /*Entity.Vector pos = player.Position;
+                        SpawnObjectPacket spawnObjectPacket = new(1, Guid.NewGuid(), 1, pos.X, pos.Y, pos.Z, 1, 1, 1, 1, 1, 1);
+                        outPackets.Enqueue(spawnObjectPacket);*/
+                    }
+
+                    if (button == 1 && index == -999)
+                    {
+
+                    }
+
+                    break;
+                case 5:
+                    if (button == 0)
+                    {
+                        
+                    }
+                    if (button != 1)
+                    {
+                        return;
+                    }
+
                     break;
                 case 6:
                     // Drop item
@@ -533,40 +816,151 @@ namespace Protocol
                     {
                         _itemCursor = null;
                     }*/
-
-                    System.Diagnostics.Debug.Assert(_itemCursor == null);
-                    ResetWindowForcibly(selfInventory, outPackets, true);
+                    /*System.Diagnostics.Debug.Assert(_cursor.GetItem() == null);
+                    ResetWindowForcibly(selfInventory, outPackets, true);*/
                     break;
             }
+            if (_cursor.GetItem() == null)
+            {
+                outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));
+            }
+            else
+            {
+                outPackets.Enqueue(new SetSlotPacket(-1, 0, _cursor.GetItem().ConvertToPacketFormat()));
+            }
 
+            // console log
             {
                 if (_windowId == 0)
                 {
-                    selfInventory.Print();
+                    _selfInventory.Print();
                 }
                 else
                 {
                     System.Diagnostics.Debug.Assert(_publicInventory != null);
                     _publicInventory.Print();
-                    selfInventory.Print();
+                    _selfInventory.Print();
                 }
 
-                if (_itemCursor != null)
-                    System.Console.WriteLine($"itemCursor: {_itemCursor.Type} {_itemCursor.Count}");
+                Item? cursorItem = _cursor.GetItem();
+                if (cursorItem != null)
+                    System.Console.WriteLine($"itemCursor: {cursorItem.Type} {cursorItem.Count}");
+            }
+        }
+
+        private void NumberKeyWithPublicInventory(int button, int index)
+        {
+            if (_publicInventory == null)
+            {
+                return;
             }
 
+            if (index >= 0 && index < _publicInventory.TotalSlotCount)
+            {
+                button = button + 36;
+                Item? cursorItem = _publicInventory.TakeItem(index);
+                Item? buttonItem = _selfInventory.TakeItem(button);
+
+                _publicInventory.PutItem(buttonItem, index);
+                _selfInventory.PutItem(cursorItem, button);
+                return;
+            }
+
+            if (index >= _publicInventory.TotalSlotCount && index < _publicInventory.TotalSlotCount + (_selfInventory.TotalSlotCount - 10))
+            {
+                int convertIndex = index - _publicInventory.TotalSlotCount + 9;
+
+                _selfInventory.NumberKey(button, convertIndex);
+                return;
+            }
         }
-        
+
+        private void ShiftClickWithPublicInventory(int index)
+        {
+            if (_publicInventory == null)
+            {
+                return;
+            }
+
+            if (index >= 0 && index < _publicInventory.TotalSlotCount)
+            {
+                Item? clickItem = _publicInventory.TakeItem(index);
+                if (clickItem == null)
+                {
+                    return;
+                }
+
+                _selfInventory.MoveToEndOfInventory(clickItem);
+                return;
+            }
+
+            if (index >= _publicInventory.TotalSlotCount && index < _publicInventory.TotalSlotCount + (_selfInventory.TotalSlotCount - 10))
+            {
+                int convertIndex = index - _publicInventory.TotalSlotCount + 9;
+
+                Item? clickItem = _selfInventory.TakeItem(convertIndex);
+                if (clickItem == null)
+                {
+                    return;
+                }
+
+                _publicInventory.MoveToInventory(clickItem);
+                return;
+            }
+        }
+
+        private void RightClickWithPublicInventory(int index)
+        {
+            if (_publicInventory == null)
+            {
+                return;
+            }
+
+            if (index >= 0 && index < _publicInventory.TotalSlotCount)
+            {
+                _publicInventory.RightClick(_cursor, index);
+                return;
+            }
+
+            if (index >= _publicInventory.TotalSlotCount && index < _publicInventory.TotalSlotCount + (_selfInventory.TotalSlotCount - 10))
+            {
+                int convertIndex = index - _publicInventory.TotalSlotCount + 9;
+                _selfInventory.RightClick(_cursor, convertIndex);
+                return;
+            }
+        }
+
+        private void LeftClickWithPublicInventory(int index)
+        {
+            if (_publicInventory == null)
+            {
+                return;
+            }
+
+            if (index >= 0 && index < _publicInventory.TotalSlotCount)
+            {
+                _publicInventory.LeftClick(_cursor, index);
+                return;
+            }
+
+            if (index >= _publicInventory.TotalSlotCount && index < _publicInventory.TotalSlotCount + (_selfInventory.TotalSlotCount - 10))
+            {
+                int convertIndex = index - _publicInventory.TotalSlotCount + 9;
+                _selfInventory.LeftClick(_cursor, convertIndex);
+                return;
+            }
+        }
+
         public void Flush(World world)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (_itemCursor != null)
+            if (_cursor.GetItem() != null)
             {
                 // TODO: Drop Item.
                 throw new System.NotImplementedException();
 
-                _itemCursor = null;
+                _cursor.SetItem(null);
             }
 
             if (_publicInventory != null)
@@ -592,13 +986,20 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(_windowId == 0);
             System.Diagnostics.Debug.Assert(_id == -1);
             System.Diagnostics.Debug.Assert(_publicInventory == null);
-            System.Diagnostics.Debug.Assert(_itemCursor == null);
+            System.Diagnostics.Debug.Assert(_cursor.GetItem() == null);
 
             // Release Resources.
 
             System.GC.SuppressFinalize(this);
             _disposed = true;
         }
+    }
 
+    public class ItemCursor
+    {
+        private Item? item = null;
+
+        public void SetItem(Item? item) { this.item = item; }
+        public Item? GetItem() { return this.item; }
     }
 }

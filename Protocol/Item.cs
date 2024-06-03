@@ -3,6 +3,8 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 
+// item: type(code?), name(#code/number?), NBT?, count, maxCount,,,
+
 namespace Protocol
 {
     public sealed class Item : IEquatable<Item>
@@ -13,8 +15,12 @@ namespace Protocol
             Grass = 2,
             Dirt = 3,
             Cobbestone = 4,
+            planks = 5,
+
+            chest = 54,
 
             IronSword = 267,
+
             WoodenSword = 268,
 
             StoneSword = 272,
@@ -24,14 +30,31 @@ namespace Protocol
             GoldenSword = 283,
 
             LeatherHelmet = 298,
+            LeatherChestPlate = 299,
+            LeatherLeggins = 300,
+            LeatherBoots = 301,
 
             ChainmailHelmet = 302,
+            ChainmailChestPlate = 303,
+            ChainmailLeggins = 304,
+            ChainmailBoots = 305,
 
             IronHelmet = 306,
+            IronChestPlate = 307,
+            IronLeggins = 308,
+            IronBoots = 309,
 
             DiamondHelmet = 310,
+            DiamondChestPlate = 311,
+            DiamondLeggins = 312,
+            DiamondBoots = 313,
 
             GoldenHelmet = 314,
+            GoldenChestPlate = 315,
+            GoldenLeggins = 316,
+            GoldenBoots = 317,
+
+            Shield = 442,
         }
 
         private readonly Types _type;
@@ -39,6 +62,9 @@ namespace Protocol
         
         private static bool IsArmorType(Types type)
         {
+            // IsHelmet || IsChestPlate || IsLeggins || IsBoots = true
+            // else false
+
             switch (type)
             {
                 default:
@@ -51,38 +77,138 @@ namespace Protocol
                     return false;
                 case Types.Cobbestone:
                     return false;
+                case Types.planks:
+                    return false;
+
+                case Types.chest:
+                    return false;
 
                 case Types.IronSword:
                     return false;
                 case Types.WoodenSword:
                     return false;
-
                 case Types.StoneSword:
                     return false;
-
                 case Types.DiamondSword:
                     return false;
-
                 case Types.GoldenSword:
                     return false;
 
                 case Types.LeatherHelmet:
-                    return true;
-
                 case Types.ChainmailHelmet:
-                    return true;
-
                 case Types.IronHelmet:
-                    return true;
-
                 case Types.DiamondHelmet:
-                    return true;
-
                 case Types.GoldenHelmet:
                     return true;
+
+                case Types.DiamondChestPlate:
+                case Types.GoldenChestPlate:
+                case Types.IronChestPlate:
+                case Types.ChainmailChestPlate:
+                case Types.LeatherChestPlate:
+                    return true;
+
+                case Types.DiamondLeggins:
+                case Types.GoldenLeggins:
+                case Types.IronLeggins:
+                case Types.ChainmailLeggins:
+                case Types.LeatherLeggins:
+                    return true;
+
+                case Types.DiamondBoots:
+                case Types.GoldenBoots:
+                case Types.IronBoots:
+                case Types.ChainmailBoots:
+                case Types.LeatherBoots:
+                    return true;
+
+                case Types.Shield:
+                    return false;
             }
         }
         public bool IsArmor => IsArmorType(_type);
+
+        private static bool IsShieldType(Types type)
+        {
+            switch (type)
+            {
+                default:
+                    return false;
+                case Types.Shield:
+                    return true;
+            }
+        }
+
+        public bool IsShield => IsShieldType(_type);
+
+        private static bool IsHelmetType(Types type)
+        {
+            switch (type)
+            {
+                default:
+                    return false;
+                case Types.DiamondHelmet:
+                case Types.GoldenHelmet:
+                case Types.IronHelmet:
+                case Types.ChainmailHelmet:
+                case Types.LeatherHelmet:
+                    return true;
+            }
+        }
+
+        public bool IsHelmet => IsHelmetType(_type);
+
+        private static bool IsChestPlateType(Types type)
+        {
+            switch (type)
+            {
+                default:
+                    return false;
+                case Types.DiamondChestPlate:
+                case Types.GoldenChestPlate:
+                case Types.IronChestPlate:
+                case Types.ChainmailChestPlate:
+                case Types.LeatherChestPlate:
+                    return true;
+            }
+        }
+
+        public bool IsChestPlate => IsChestPlateType(_type);
+
+        private static bool IsLegginsType(Types type)
+        {
+            switch (type)
+            {
+                default:
+                    return false;
+                case Types.DiamondLeggins:
+                case Types.GoldenLeggins:
+                case Types.IronLeggins:
+                case Types.ChainmailLeggins:
+                case Types.LeatherLeggins:
+                    return true;
+            }
+        }
+
+        public bool IsLeggins => IsLegginsType(_type);
+
+        private static bool IsBootsType(Types type)
+        {
+            switch (type)
+            {
+                default:
+                    return false;
+                case Types.DiamondBoots:
+                case Types.GoldenBoots:
+                case Types.IronBoots:
+                case Types.ChainmailBoots:
+                case Types.LeatherBoots:
+                    return true;
+            }
+        }
+
+        public bool IsBoots => IsBootsType(_type);
+
 
         public const int MAX_COUNT = 1;
         public int MinCount => MAX_COUNT;
@@ -101,6 +227,11 @@ namespace Protocol
                     return 64;
                 case Types.Cobbestone:
                     return 64;
+                case Types.planks:
+                    return 64;
+
+                case Types.chest:
+                    return 64;
 
                 case Types.IronSword:
                     return 1;
@@ -117,20 +248,35 @@ namespace Protocol
                     return 1;
 
                 case Types.LeatherHelmet:
-                    return 1;
-
                 case Types.ChainmailHelmet:
-                    return 1;
-
                 case Types.IronHelmet:
-                    return 1;
-
                 case Types.DiamondHelmet:
-                    return 1;
-
                 case Types.GoldenHelmet:
                     return 1;
 
+                case Types.DiamondChestPlate:
+                case Types.GoldenChestPlate:
+                case Types.IronChestPlate:
+                case Types.ChainmailChestPlate:
+                case Types.LeatherChestPlate:
+                    return 1;
+
+                case Types.DiamondLeggins:
+                case Types.GoldenLeggins:
+                case Types.IronLeggins:
+                case Types.ChainmailLeggins:
+                case Types.LeatherLeggins:
+                    return 1;
+
+                case Types.DiamondBoots:
+                case Types.GoldenBoots:
+                case Types.IronBoots:
+                case Types.ChainmailBoots:
+                case Types.LeatherBoots:
+                    return 1;
+
+                case Types.Shield:
+                    return 1;
 
             }
         }
@@ -237,7 +383,7 @@ namespace Protocol
             _count = count;
         }
 
-        internal SlotData ConventToPacketFormat()
+        internal SlotData ConvertToPacketFormat()
         {
             System.Diagnostics.Debug.Assert(_count >= MinCount);
             System.Diagnostics.Debug.Assert(_count <= MaxCount);

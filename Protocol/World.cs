@@ -29,7 +29,7 @@ namespace Protocol
         private readonly Table<int, Chunk.Grid> _ENTITY_TO_CHUNKS = new();  // Disposable
 
 
-        /*internal PublicInventory _Inventory = new ChestInventory();*/
+        internal PublicInventory _Inventory = new ChestInventory();
 
         public World(Entity.Vector posSpawning, Entity.Angles lookSpawning)
         {

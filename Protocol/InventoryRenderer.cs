@@ -2,16 +2,16 @@
 
 namespace Protocol
 {
-    internal sealed class PublicInventoryRenderer : System.IDisposable
+    internal sealed class InventoryRenderer : System.IDisposable
     {
         private bool _disposed = false;
 
         private readonly 
             Table<int, (int, Queue<ClientboundPlayingPacket>)> _Table = new();  // Disposable
 
-        public PublicInventoryRenderer() { }
+        public InventoryRenderer() { }
 
-        ~PublicInventoryRenderer() => System.Diagnostics.Debug.Assert(false);
+        ~InventoryRenderer() => System.Diagnostics.Debug.Assert(false);
 
         public void Add(
             int id,
@@ -40,7 +40,7 @@ namespace Protocol
             {
                 System.Diagnostics.Debug.Assert(windowId > 0);
 
-                SlotData slotData = item.ConventToPacketFormat();
+                SlotData slotData = item.ConvertToPacketFormat();
 
                 System.Diagnostics.Debug.Assert(windowId >= sbyte.MinValue);
                 System.Diagnostics.Debug.Assert(windowId <= sbyte.MaxValue);
@@ -67,6 +67,24 @@ namespace Protocol
                 System.Diagnostics.Debug.Assert(index <= short.MaxValue);
                 outPackets.Enqueue(new SetSlotPacket(
                     (sbyte)windowId, (short)index, slotData));
+            }
+        }
+
+        public void Render(int index, SlotData slotData)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            foreach ((int windowId, var outPackets) in _Table.GetValues())
+            {
+                System.Diagnostics.Debug.Assert(windowId > 0);
+
+                System.Diagnostics.Debug.Assert(windowId >= sbyte.MinValue);
+                System.Diagnostics.Debug.Assert(windowId <= sbyte.MaxValue);
+                System.Diagnostics.Debug.Assert(index >= short.MinValue);
+                System.Diagnostics.Debug.Assert(index <= short.MaxValue);
+
+                SetSlotPacket setSlotPacket = new SetSlotPacket((sbyte)windowId, (short)index, slotData);
+                outPackets.Enqueue(setSlotPacket);
             }
         }
 

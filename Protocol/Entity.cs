@@ -1,6 +1,7 @@
 ﻿
 using Common;
 using Containers;
+using System;
 
 namespace Protocol
 {
@@ -591,9 +592,7 @@ namespace Protocol
         public override double GetMass() => MASS;
 
 
-        public ItemEntity(
-            int id,
-            Vector pos, Angles look) : base(id, System.Guid.NewGuid(), pos, look)
+        public ItemEntity(int id, Vector pos, Angles look): base(id, System.Guid.NewGuid(), pos, look)
         { }
 
         ~ItemEntity() => System.Diagnostics.Debug.Assert(false);
@@ -826,8 +825,6 @@ namespace Protocol
             base.Dispose();
             _disposed = true;
         }
-
-
     }
 
 }

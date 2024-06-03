@@ -1,6 +1,7 @@
 ﻿
 using Containers;
 using System;
+using System.Numerics;
 
 namespace Protocol
 {
@@ -424,16 +425,33 @@ namespace Protocol
                                 $"SlotData.Id: {packet.SLOT_DATA.Id}, " +
                                 $"SlotData.Count: {packet.SLOT_DATA.Count}, ");
                         }
-
                         System.Diagnostics.Debug.Assert(_window != null);
-                        _window.Handle(
-                            player._selfInventory,
-                            packet.WINDOW_ID,
-                            packet.MODE,
-                            packet.BUTTON,
-                            packet.SLOT,
-                            packet.SLOT_DATA,
-                            _OUT_PACKETS);
+
+                        // TODO: Drag
+                        if (packet.MODE == 5)
+                        {
+                            Queue<ClickWindowPacket> packets = new Queue<ClickWindowPacket>();
+                            while (true)
+                            {
+                                _CLIENT.Recv(buffer);
+                                packetId = buffer.ReadInt(true);
+                                if (packetId != ServerboundPlayingPacket.ClickWindowPacketId)
+                                {
+                                    
+                                }
+                                ClickWindowPacket dragPacket = ClickWindowPacket.Read(buffer);
+                                if (dragPacket.SLOT == -999)
+                                {
+                                    break;
+                                }
+                                packets.Enqueue(dragPacket);
+                            }
+                            _window.Handle(packets, _OUT_PACKETS);
+                        }
+                        else
+                        {
+                            _window.Handle(packet.WINDOW_ID, packet.MODE, packet.BUTTON, packet.SLOT, _OUT_PACKETS);
+                        }
 
                         _OUT_PACKETS.Enqueue(new ClientboundConfirmTransactionPacket(
                                 (sbyte)packet.WINDOW_ID, packet.ACTION, true));
@@ -617,14 +635,14 @@ namespace Protocol
                 return;
             }
 
-            /*if (serverTicks == 200)  // 10 seconds
+            if (serverTicks == 100)  // 5 seconds
             {
                 System.Diagnostics.Debug.Assert(_window != null);
                 _window.OpenWindowWithPublicInventory(
                     _OUT_PACKETS,
                     player._selfInventory,
                     world._Inventory);
-            }*/
+            }
 
             using Buffer buffer = new();
 

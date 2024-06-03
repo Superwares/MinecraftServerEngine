@@ -55,7 +55,6 @@ namespace Protocol
 
             return buffer.ReadData();
         }
-
     }
 
     internal class EntityMetadata : IDisposable
