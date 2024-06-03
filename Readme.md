@@ -13,8 +13,6 @@ The following list is available reference types.
 
 * object, string
 
-
-
 #### Using Float & Double
 
 Always use the F suffix for float literals and the D suffix for double literals to explicitly denote the type.
@@ -45,132 +43,10 @@ it becomes more challenging to monitor and debug code effectively.
 Focusing exceptions on network operations helps developers to isolate and address issues more efficiently without sacrificing overall performance.
 Overall, restricting exceptions to network-related functions enhances code clarity, improves performance, and allows for better management of unpredictable network conditions.
 
-### Containers
-All containers must be implemented as IDisposable interface, and have empty data if the container is disposed.
+An additional reason for limiting exception handling is to eliminate the need for handling exceptional situations, 
+such as with try-finally constructs, when using concurrency primitives.
 
 ### Dispose Pattern
-
-```C#
-class Base : IDisposable
-{
-    ...
-
-	private bool _disposed = false;
-
-    ...
-
-	~Base() => Dispose(false);
-
-    ...
-
-    public void DoWork()
-    {
-        Debug.Assert(!_disposed);
-
-        ...
-    }
-
-    ...
-
-	protected virtual void Dispose(bool disposing)
-    {
-        if (_disposed) return;
-             
-        // Assertion.
-
-        if (disposing == true)
-        {
-            // Release managed resources.
-        }
-
-        // Release unmanaged resources.
-
-        _disposed = true;
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-}
-
-class Derived : Base
-{
-    ...
-
-    private bool _disposed = false;
-    
-    ...
-    
-    ~Derived() => Dispose(false):
-
-    ...
-
-    public void DoWork2()
-    {
-        Debug.Assert(!_disposed);
-
-        ...
-    }
-
-    ...
-
-    protected override void Dispose(bool disposing)
-    {
-        if (!_disposed)
-        {
-            // Assertion.
-
-            if (disposing == true)
-            {
-                // Release managed resources.
-            }
-
-            // Release unmanaged resources.
-
-            _disposed = true;
-        }
-
-        base.Dispose(disposing);
-    }
-
-}
-
-```
-
-```C#
-public sealed class Object : IDisposable
-{
-    private bool _disposed = false;
-
-    ~Object() => Dispose(false);
-
-    private void Dispose(bool disposing)
-    {
-        if (_disposed) return;
-
-        // Assertion.
-
-        if (disposing == true)
-        {
-            // Release managed resources.
-        }
-
-        // Release unmanaged resources.
-
-        _disposed = true;
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-}
-```
 
 #### Disposable Instances
 
