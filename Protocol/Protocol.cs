@@ -1,6 +1,7 @@
 ﻿using Common;
 using Applications;
 using Containers;
+using System.Numerics;
 
 namespace Protocol
 {
@@ -365,7 +366,7 @@ namespace Protocol
     {
         private bool _disposed = false;
 
-        private readonly ConcurrentQueue<User> _users = new();
+        private readonly ConcurrentQueue<User> _USERS = new();
 
         ~ConnectionListener() => System.Diagnostics.Debug.Assert(false);
 
@@ -373,28 +374,26 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _users.Enqueue(new(client, userId, username));
+            _USERS.Enqueue(new User(client, userId, username));
         }
 
-        public void Accept(World world, Queue<(Connection, Player)> connections)
+        public void Accept(World world)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            while (true)
+            User? user = null;
+            while (_USERS.Dequeue(ref user))
             {
-                User? user = _users.Dequeue();
-                if (user == null) break;
+                System.Diagnostics.Debug.Assert(user != null);
 
                 if (!world.CanJoinWorld())
                 {
-                    // TODO: send message why disconnected.
+                    // TODO: Send message why disconnected.
                     user.CLIENT.Dispose();
                     continue;
                 }
 
-                Player player = world.SpawnOrFindPlayer(user.USERNAME, user.USER_ID);
-                Connection conn = new(world, player, user.CLIENT);
-                connections.Enqueue((conn, player));
+                world.SpawnOrConnectPlayer(user.CLIENT, user.USERNAME, user.USER_ID);
             }
 
         }

@@ -2,7 +2,6 @@
 
 using Common;
 using Containers;
-using static System.Collections.Specialized.BitVector32;
 
 namespace Protocol
 {
@@ -61,7 +60,7 @@ namespace Protocol
 
     internal sealed class BlockContext : System.IDisposable
     {
-        private enum Directions
+        private enum Directions : int
         {
             DOWN,
             UP,

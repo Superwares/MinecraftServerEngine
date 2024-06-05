@@ -10,6 +10,7 @@
     <ProjectReference Include="..\Applications\Applications.csproj" />
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\Containers\Containers.csproj" />
+    <ProjectReference Include="..\Threading\Threading.csproj" />
   </ItemGroup>
 
 </Project>

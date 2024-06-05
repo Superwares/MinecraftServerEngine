@@ -5,9 +5,9 @@ namespace Protocol
 {
     internal abstract class Renderer
     {
-        private readonly Queue<ClientboundPlayingPacket> _OUT_PACKETS;
+        private readonly ConcurrentQueue<ClientboundPlayingPacket> _OUT_PACKETS;
 
-        public Renderer(Queue<ClientboundPlayingPacket> outPackets)
+        public Renderer(ConcurrentQueue<ClientboundPlayingPacket> outPackets)
         {
             _OUT_PACKETS = outPackets;
         }
@@ -19,7 +19,59 @@ namespace Protocol
         
     }
 
-    internal sealed class EntityRenderer : Renderer
+    internal sealed class PlayerListRenderer : Renderer
+    {
+        public PlayerListRenderer(
+            ConcurrentQueue<ClientboundPlayingPacket> outPackets)
+            : base(outPackets) { }
+
+        public void AddPlayerWithLaytency(
+            System.Guid userId, string username, long ticks)
+        {
+            System.Diagnostics.Debug.Assert(ticks <= int.MaxValue);
+            System.Diagnostics.Debug.Assert(ticks >= int.MinValue);
+            
+            int ms = (int)ticks;
+
+            Render(new AddPlayerListItemPacket(userId, username, ms));
+        }
+
+        public void RemovePlayer(System.Guid userId)
+        {
+            Render(new RemovePlayerListItemPacket(userId));
+        }
+
+        public void UpdatePlayerLatency(System.Guid userId, long ticks)
+        {
+            System.Diagnostics.Debug.Assert(ticks <= int.MaxValue);
+            System.Diagnostics.Debug.Assert(ticks >= int.MinValue);
+
+            int ms = (int)ticks;
+
+            Render(new UpdatePlayerListItemLatencyPacket(userId, (int)ms));
+        }
+    }
+
+    /*internal sealed class InventoryRenderer : Renderer
+    {
+
+    }
+
+    internal sealed class ChunkRenderer : Renderer
+    {
+
+    }*/
+
+    internal abstract class WorldRenderer : Renderer
+    {
+        public WorldRenderer(
+            ConcurrentQueue<ClientboundPlayingPacket> outPackets) 
+            : base(outPackets) { }
+
+        // particles
+    }
+
+    internal sealed class EntityRenderer : WorldRenderer
     {
         private bool _disconnected = false;
         public bool IsDisconnected => _disconnected;
@@ -28,16 +80,12 @@ namespace Protocol
 
         private int _dEntityRendering = -1;
 
-        public readonly int Id;
 
         public EntityRenderer(
-            int id,
-            Queue<ClientboundPlayingPacket> outPackets,
+            ConcurrentQueue<ClientboundPlayingPacket> outPackets,
             ChunkLocation loc, int dEntityRendering) 
             : base(outPackets) 
         {
-            Id = id;
-
             _loc = loc;
 
             _dEntityRendering = dEntityRendering;
@@ -169,12 +217,12 @@ namespace Protocol
 
     }
 
-    internal sealed class SelfPlayerRenderer : Renderer
+    internal sealed class SelfPlayerRenderer : WorldRenderer
     {
         private readonly Client _CLIENT;
 
         public SelfPlayerRenderer(
-            Queue<ClientboundPlayingPacket> outPackets, Client client) 
+            ConcurrentQueue<ClientboundPlayingPacket> outPackets, Client client) 
             : base(outPackets)
         {
             _CLIENT = client;
@@ -182,19 +230,7 @@ namespace Protocol
 
         public void Init(int entityId, Vector p, Entity.Angles look)
         {
-            {
-                int payload = new System.Random().Next();
-                Render(new TeleportSelfPlayerPacket(
-                    p.X, p.Y, p.Z,
-                    look.Yaw, look.Pitch,
-                    false, false, false, false, false,
-                    payload));
-            }
-
-            {
-                Render(new SetPlayerAbilitiesPacket(
-                    false, false, true, false, 0.1F, 0.0F));
-            }
+            
 
             /*{
                 Render(new EntityVelocityPacket(

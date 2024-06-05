@@ -1,6 +1,7 @@
 ﻿
 
 using Containers;
+using Threading;
 
 namespace Protocol
 {
@@ -8,199 +9,147 @@ namespace Protocol
     {
         private class Info
         {
-            public readonly System.Guid UniqueId;
+            public readonly System.Guid UserId;
             public readonly string Username;
-            private long _laytencyInTicks = -1;
-            public long LaytencyInMilliseconds
-            {
-                get
-                {
-                    System.Diagnostics.Debug.Assert(_laytencyInTicks <= long.MaxValue / 50);
-                    return _laytencyInTicks * 50;
-                }
-            }
+            private long _laytency = -1;
+            public long Laytency => _laytency;
 
             public Info(System.Guid uniqueId, string username)
             {
-                UniqueId = uniqueId;
+                UserId = uniqueId;
                 Username = username;
             }
 
             public void Connect()
             {
-                System.Diagnostics.Debug.Assert(_laytencyInTicks == -1);
-                _laytencyInTicks = 0;
+                System.Diagnostics.Debug.Assert(_laytency == -1);
+                _laytency = 0;
             }
 
             public void UpdateLaytency(long ticks)
             {
                 System.Diagnostics.Debug.Assert(ticks > 0);
-                System.Diagnostics.Debug.Assert(_laytencyInTicks >= 0);
-                _laytencyInTicks = ticks;
+                System.Diagnostics.Debug.Assert(_laytency >= 0);
+                _laytency = ticks;
             }
 
             public void Disconnect()
             {
-                System.Diagnostics.Debug.Assert(_laytencyInTicks == 0);
-                _laytencyInTicks = -1;
+                System.Diagnostics.Debug.Assert(_laytency == 0);
+                _laytency = -1;
             }
 
         }
 
         private bool _disposed = false;
 
-        private readonly Table<System.Guid, Info> _INFORS = new();
-        private readonly Table<System.Guid, Queue<ClientboundPlayingPacket>> _RENDERERS = new();
+        private readonly Mutex _MUTEX = new();  // Disposable
+        private readonly ConcurrentTable<System.Guid, Info> _INFORS = new();  // Disposable
+        private readonly PlayerListRendererManager _MANAGER = new();  // Disposable
 
         internal PlayerList() { }
 
         ~PlayerList() => System.Diagnostics.Debug.Assert(false);
 
-        private void RenderToAddPlayer(Info item)
+        private bool IsDisconnected(System.Guid userId)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            long ms = item.LaytencyInMilliseconds;
-            System.Diagnostics.Debug.Assert(ms < 0);
-            System.Diagnostics.Debug.Assert(ms <= int.MaxValue);
-
-            foreach (var renderer in _RENDERERS.GetValues())
-            {
-                renderer.Enqueue(
-                    new AddPlayerListItemPacket(item.UniqueId, item.Username, (int)ms));
-            }
+            return !_MANAGER.Contains(userId);
         }
 
-        private void RenderToAddAllPlayers(Queue<ClientboundPlayingPacket> renderer)
+        public void Add(System.Guid userId, string username)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(IsDisconnected(userId));
+
+            Info info = new(userId, username);
+            System.Diagnostics.Debug.Assert(!_INFORS.Contains(userId));
+            _INFORS.Insert(userId, info);
+
+            _MANAGER.AddPlayerWithLaytency(userId, username, info.Laytency);
+        }
+
+        public void Connect(System.Guid userId, PlayerListRenderer renderer)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            _MUTEX.Lock();
 
             foreach (Info info in _INFORS.GetValues())
             {
-                long ms = info.LaytencyInMilliseconds;
-                System.Diagnostics.Debug.Assert(ms <= int.MaxValue);
-
-                renderer.Enqueue(new AddPlayerListItemPacket(
-                    info.UniqueId, info.Username, (int)ms));
+                renderer.AddPlayerWithLaytency(info.UserId, info.Username, info.Laytency);
             }
+
+            System.Diagnostics.Debug.Assert(_INFORS.Contains(userId));
+            Info infoSelf = _INFORS.Lookup(userId);
+
+            System.Diagnostics.Debug.Assert(userId == infoSelf.UserId);
+            infoSelf.Connect();
+
+            System.Diagnostics.Debug.Assert(IsDisconnected(userId));
+            _MANAGER.Apply(userId, renderer);
+
+            _MANAGER.UpdatePlayerLatency(infoSelf.UserId, infoSelf.Laytency);
+
+            _MUTEX.Unlock();
         }
 
-        private void RenderToRemovePlayer(System.Guid uniqueId)
+        public void UpdateLaytency(System.Guid userId, long ticks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            foreach (var renderer in _RENDERERS.GetValues())
-            {
-                renderer.Enqueue(new RemovePlayerListItemPacket(uniqueId));
-            }
+            System.Diagnostics.Debug.Assert(_INFORS.Contains(userId));
+            Info info = _INFORS.Lookup(userId);
+            info.UpdateLaytency(ticks);
+
+            System.Diagnostics.Debug.Assert(userId == info.UserId);
+            _MANAGER.UpdatePlayerLatency(info.UserId, ticks);
         }
 
-        private void RenderToUpdateLatency(System.Guid uniqueId, long ms)
+        public void Disconnect(System.Guid userId)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(ms <= int.MaxValue);
+            _MUTEX.Lock();
 
-            foreach (var renderer in _RENDERERS.GetValues())
-            {
-                System.Diagnostics.Debug.Assert(ms <= int.MaxValue);
-                renderer.Enqueue(
-                    new UpdatePlayerListItemLatencyPacket(uniqueId,(int)ms));
-            }
-        }
+            System.Diagnostics.Debug.Assert(!IsDisconnected(userId));
+            _MANAGER.Cancel(userId);
 
-        private bool IsDisconnected(System.Guid uniqueId)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            return !_RENDERERS.Contains(uniqueId);
-        }
-
-        public void AddPlayer(System.Guid uniqueId, string username)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(IsDisconnected(uniqueId));
-
-            Info item = new(uniqueId, username);
-            System.Diagnostics.Debug.Assert(!_INFORS.Contains(uniqueId));
-            _INFORS.Insert(uniqueId, item);
-
-            RenderToAddPlayer(item);
-        }
-
-        public void ConnectPlayer(
-            System.Guid uniqueId,
-            Queue<ClientboundPlayingPacket> renderer)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            /*System.Console.WriteLine($"UniqueId: {uniqueId} in Connect");*/
-
-            System.Diagnostics.Debug.Assert(IsDisconnected(uniqueId));
-            _RENDERERS.Insert(uniqueId, renderer);
-
-            System.Diagnostics.Debug.Assert(_INFORS.Contains(uniqueId));
-            Info info = _INFORS.Lookup(uniqueId);
-            
-            System.Diagnostics.Debug.Assert(uniqueId == info.UniqueId);
-            info.Connect();
-
-            RenderToAddAllPlayers(renderer);
-
-            System.Diagnostics.Debug.Assert(uniqueId == info.UniqueId);
-            RenderToUpdateLatency(info.UniqueId, info.LaytencyInMilliseconds);
-        }
-
-        public void UpdatePlayerLaytency(System.Guid uniqueId, long ticks)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(_INFORS.Contains(uniqueId));
-            Info item = _INFORS.Lookup(uniqueId);
-            item.UpdateLaytency(ticks);
-
-            System.Diagnostics.Debug.Assert(uniqueId == item.UniqueId);
-            RenderToUpdateLatency(item.UniqueId, item.LaytencyInMilliseconds);
-        }
-
-        public void DisconnectPlayer(System.Guid uniqueId)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(!IsDisconnected(uniqueId));
-            _RENDERERS.Extract(uniqueId);
-
-            System.Diagnostics.Debug.Assert(_INFORS.Contains(uniqueId));
-            Info info = _INFORS.Lookup(uniqueId);
+            System.Diagnostics.Debug.Assert(_INFORS.Contains(userId));
+            Info info = _INFORS.Lookup(userId);
             info.Disconnect();
 
-            System.Diagnostics.Debug.Assert(uniqueId == info.UniqueId);
-            RenderToUpdateLatency(info.UniqueId, info.LaytencyInMilliseconds);
+            System.Diagnostics.Debug.Assert(userId == info.UserId);
+            _MANAGER.UpdatePlayerLatency(info.UserId, info.Laytency);
+
+            _MUTEX.Unlock();
         }
 
-        public void RemovePlayer(System.Guid uniqueId)
+        public void Remove(System.Guid userId)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(IsDisconnected(uniqueId));
+            System.Diagnostics.Debug.Assert(IsDisconnected(userId));
 
-            Info info = _INFORS.Extract(uniqueId);
-            System.Diagnostics.Debug.Assert(info.UniqueId == uniqueId);
+            Info info = _INFORS.Extract(userId);
+            System.Diagnostics.Debug.Assert(info.UserId == userId);
 
-            RenderToRemovePlayer(uniqueId);
+            _MANAGER.RemovePlayer(userId);
         }
 
         public void Dispose()
         {
             // Assertion.
             System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(_INFORS.Empty);
-            System.Diagnostics.Debug.Assert(_RENDERERS.Empty);
 
             // Release resources.
+            _MUTEX.Dispose();
             _INFORS.Dispose();
-            _RENDERERS.Dispose();
+            _MANAGER.Dispose();
 
             // Finish.
             System.GC.SuppressFinalize(this);

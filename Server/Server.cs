@@ -1,7 +1,7 @@
 ﻿using Applications;
-using Containers;
 using Protocol;
 using Server;
+using Threading;
 
 namespace Application
 {
@@ -11,9 +11,7 @@ namespace Application
 
         private readonly World _WORLD;
 
-        private readonly Queue<(Connection, Player)> _CONNECTIONS1 = new();  // Disposable
-        private readonly Queue<(Connection, Player)> _CONNECTIONS2 = new();  // Disposable
-        private readonly Queue<Connection> _DISCONNECTIONS = new();  // Disposable
+        private long _ticks = 0;
 
         private Server() 
         {
@@ -22,24 +20,26 @@ namespace Application
 
         ~Server() => System.Diagnostics.Debug.Assert(false);
 
-        private void Control(long serverTicks)
+        private void CountTicks()
+        {
+            System.Diagnostics.Debug.Assert(_ticks >= 0);
+            System.Diagnostics.Debug.Assert(_ticks <= long.MaxValue);
+
+            ++_ticks;
+        }
+
+        /*private void HandleControls()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Connection conn;
-            Player player;
-            while (true)
+            Connection? conn = null;
+            while (_CONNECTIONS.Dequeue(ref conn))
             {
-                if (_CONNECTIONS1.Empty)
-                {
-                    break;
-                }
-
-                (conn, player) = _CONNECTIONS1.Dequeue();
+                System.Diagnostics.Debug.Assert(conn != null);
 
                 try
                 {
-                    conn.Control(serverTicks, _WORLD, player);
+                    conn.Control(_ticks, _WORLD);
                 }
                 catch (DisconnectedClientException)
                 {
@@ -48,133 +48,98 @@ namespace Application
                     continue;
                 }
 
-                _CONNECTIONS2.Enqueue((conn, player));
+                _CONNECTIONS.Enqueue(conn);
             }
 
+            System.Diagnostics.Debug.Assert(_CONNECTIONS.Empty);
         }
 
         private void HandleDisconnections()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Connection conn;
-            while (true)
+            Connection? conn = null;
+            while (_DISCONNECTIONS.Dequeue(ref conn))
             {
-                if (_DISCONNECTIONS.Empty)
-                {
-                    break;
-                }
+                System.Diagnostics.Debug.Assert(conn != null);
 
                 conn = _DISCONNECTIONS.Dequeue();
 
                 conn.Flush(_WORLD);
                 conn.Dispose();
             }
+
+            System.Diagnostics.Debug.Assert(_DISCONNECTIONS.Empty);
         }
 
-        private void Render(long serverTicks)
+        private void HandleRenders()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Connection conn;
-            Player player;
-            while (true)
+            Connection? conn = null;
+            while (_CONNECTIONS.Dequeue(ref conn))
             {
-                if (_CONNECTIONS2.Empty)
-                {
-                    break;
-                }
+                System.Diagnostics.Debug.Assert(conn != null);
 
-                (conn, player) = _CONNECTIONS2.Dequeue();
+                conn.Render(_WORLD);
 
-                conn.Render(_WORLD, player);
-
-                _CONNECTIONS1.Enqueue((conn, player));
+                _CONNECTIONS.Enqueue(conn);
             }
-        }
 
-        private void StartGameRoutine(long serverTicks, ConnectionListener connListener)
+            System.Diagnostics.Debug.Assert(_CONNECTIONS.Empty);
+        }*/
+
+        private void StartCoreRoutine(Barrier barrier, ConnectionListener connListener)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_ticks >= 0);
 
             System.Console.Write(".");
 
-            Control(serverTicks);
+            barrier.Hold();
 
-            // Barrier
+            _WORLD.StartPlayerRoutines(_ticks);
 
-            HandleDisconnections();
+            barrier.Hold();
 
-            // Barrier
+            _WORLD.HandlePlayerConnections(_ticks);
+
+            barrier.Hold();
 
             _WORLD.DespawnEntities();
 
-            // Barrier
+            barrier.Hold();
+
+            _WORLD.DespawnPlayers();
+
+            barrier.Hold();
 
             _WORLD.MoveEntities();
 
-            // Barrier
+            barrier.Hold();
 
-            connListener.Accept(_WORLD, _CONNECTIONS2);
+            connListener.Accept(_WORLD);
 
-            // Barrier
+            barrier.Hold();
 
             _WORLD.SpawnEntities();
 
-            // Barrier
+            barrier.Hold();
 
-            Render(serverTicks);
+            _WORLD.HandlePlayerRenders();
 
-            // Barrier
+            barrier.Hold();
 
-            _WORLD.StartRoutine(serverTicks);
+            _WORLD.ReleaseResources();
 
-            // Barrier
+            barrier.Hold();
 
-            _WORLD.StartEntitRoutines(serverTicks);
+            _WORLD.StartRoutine(_ticks);
 
-            // Barrier
+            barrier.Hold();
 
-        }
-
-        private static long GetCurrentTime()
-        {
-            return (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
-        }
-
-        private void StartCoreRoutine(ConnectionListener connListener)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            long interval, total, start, end, elapsed;
-
-            long serverTicks = 0;
-
-            interval = total = (long)System.TimeSpan.FromMilliseconds(50).TotalMicroseconds;
-            start = GetCurrentTime();
-
-            while (Running)
-            {
-                if (total >= interval)
-                {
-                    total -= interval;
-
-                    StartGameRoutine(serverTicks++, connListener);
-                }
-
-                end = GetCurrentTime();
-                elapsed = end - start;
-                total += elapsed;
-                start = end;
-
-                if (elapsed > interval)
-                {
-                    System.Console.WriteLine();
-                    System.Console.WriteLine($"The task is taking longer than expected. Elapsed Time: {elapsed}.");
-                }
-            }
-
-            // Handle close routine...
+            _WORLD.StartEntityRoutines(_ticks);
 
         }
 
@@ -183,18 +148,98 @@ namespace Application
             // Assertiong
             System.Diagnostics.Debug.Assert(!_disposed);
             
-            System.Diagnostics.Debug.Assert(_CONNECTIONS1.Empty);
-            System.Diagnostics.Debug.Assert(_CONNECTIONS2.Empty);
+            System.Diagnostics.Debug.Assert(_CONNECTIONS.Empty);
+            System.Diagnostics.Debug.Assert(_DISCONNECTIONS.Empty);
 
             // Release resources.
             _WORLD.Dispose();
 
-            _CONNECTIONS1.Dispose();
-            _CONNECTIONS2.Dispose();
+            _CONNECTIONS.Dispose();
+            _DISCONNECTIONS.Dispose();
 
             // Finish
             base.Dispose();
             _disposed = true;
+        }
+
+        private static long GetCurrentMicroseconds()
+        {
+            return (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
+        }
+
+        private static void StartMainRoutine(Barrier barrier, Server server)
+        {
+            barrier.Wait();
+
+            server._CONNECTIONS.Switch();
+
+            barrier.Start();
+
+            // Handle controls.
+
+            barrier.Wait();
+
+            server._DISCONNECTIONS.Switch();
+
+            barrier.Start();
+
+            // Handle disconnections.
+
+            barrier.Wait();
+
+            server._WORLD._ENTITIES.Switch();
+
+            barrier.Start();
+
+            // Despawn entities.
+
+            barrier.Wait();
+
+            server._WORLD._ENTITIES.Switch();
+
+            barrier.Start();
+
+            // Move entities.
+
+            barrier.Wait();
+
+            barrier.Start();
+
+            // Accept new connections.
+
+            barrier.Wait();
+
+            barrier.Start();
+
+            // Spawn entities.
+
+            barrier.Wait();
+
+            server._CONNECTIONS.Switch();
+
+            barrier.Start();
+
+            // Handle renders.
+
+            barrier.Wait();
+
+            barrier.Start();
+
+            // Start world routine
+
+            barrier.Wait();
+
+            server._WORLD._ENTITIES.Switch();
+
+            barrier.Start();
+
+            // Start entity routines
+
+            barrier.Wait();
+
+            barrier.Start();
+
+            // Release resources.
         }
 
         public static void Main()
@@ -203,20 +248,55 @@ namespace Application
 
             ushort port = 25565;
 
-            using Server app = new();
+            using Server server = new();
 
+            int n = 2;
+
+            using Barrier barrier = new(n);
             using ConnectionListener connListener = new();
 
-            app.Run(() => app.StartCoreRoutine(connListener));
+            for (int i = 0; i < n; ++i)
+            {
+                server.Run(() =>
+                {
+                    server.StartCoreRoutine(barrier, connListener);
+                });
+            }
 
             ClientListener listener = new(connListener);
-            app.Run(() => listener.StartRoutine(app, port));
-
-            while (app.Running)
+            server.Run(() =>
             {
-                // Handle Barriers
-                System.Threading.Thread.Sleep(1000);
+                listener.StartRoutine(server, port);
+            });
+
+            long interval, total, start, end, elapsed;
+
+            interval = total = 50L * 1000L;  // 50 milliseconds
+            start = GetCurrentMicroseconds();
+
+            while (server.Running)
+            {
+                if (total >= interval)
+                {
+                    total -= interval;
+
+                    StartMainRoutine(barrier, server);
+                    server.CountTicks();
+                }
+
+                end = GetCurrentMicroseconds();
+                elapsed = end - start;
+                total += elapsed;
+                start = end;
+
+                if (elapsed > interval)
+                {
+                    System.Console.WriteLine();
+                    System.Console.WriteLine($"The task is taking longer than expected, ElapsedTime: {elapsed}.");
+                }
             }
+
+            // Handle close routine...
 
         }
 

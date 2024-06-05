@@ -1,5 +1,6 @@
 ﻿
 using Containers;
+using System.Collections.Concurrent;
 
 namespace Protocol
 {
@@ -22,7 +23,7 @@ namespace Protocol
         private Item? _itemCursor = null;
 
         public Window(
-            Queue<ClientboundPlayingPacket> outPackets,
+            ConcurrentQueue<ClientboundPlayingPacket> outPackets,
             SelfInventory selfInventory)
         {
             _windowId = 0;
@@ -75,7 +76,7 @@ namespace Protocol
         }
 
         public void OpenWindowWithPublicInventory(
-            Queue<ClientboundPlayingPacket> outPackets,
+            ConcurrentQueue<ClientboundPlayingPacket> outPackets,
             SelfInventory selfInventory,
             PublicInventory publicInventory)
         {
@@ -99,7 +100,7 @@ namespace Protocol
         }
 
         public void ResetWindow(
-            int windowId, Queue<ClientboundPlayingPacket> outPackets)
+            int windowId, ConcurrentQueue<ClientboundPlayingPacket> outPackets)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -151,7 +152,8 @@ namespace Protocol
         }
 
         internal void ResetWindowForcibly(
-            SelfInventory selfInventory, Queue<ClientboundPlayingPacket> outPackets, bool f)
+            SelfInventory selfInventory, 
+            ConcurrentQueue<ClientboundPlayingPacket> outPackets, bool f)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -236,7 +238,7 @@ namespace Protocol
 
         private void ClickLeftMouseButtonWithPublicInventory(
             SelfInventory selfInventory, int index, SlotData slotData,
-            Queue<ClientboundPlayingPacket> outPackets)
+            ConcurrentQueue<ClientboundPlayingPacket> outPackets)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -355,7 +357,7 @@ namespace Protocol
 
         private void ClickRightMouseButtonWithPublicInventory(
             SelfInventory selfInventory, int index, SlotData slotData,
-            Queue<ClientboundPlayingPacket> outPackets)
+            ConcurrentQueue<ClientboundPlayingPacket> outPackets)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -444,7 +446,7 @@ namespace Protocol
         public void Handle(
             SelfInventory selfInventory,
             int windowId, int mode, int button, int index, SlotData slotData,
-            Queue<ClientboundPlayingPacket> outPackets)
+            ConcurrentQueue<ClientboundPlayingPacket> outPackets)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

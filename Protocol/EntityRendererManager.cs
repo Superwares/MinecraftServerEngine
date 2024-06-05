@@ -8,26 +8,43 @@ namespace Protocol
 
         private bool _movement = false;
 
-        private readonly Set<int> _IDENTIFIERS = new();  // Disposable
         private readonly Queue<EntityRenderer> _RENDERERS = new();  // Disposable
 
         public EntityRendererManager() { }
 
         ~EntityRendererManager() => System.Diagnostics.Debug.Assert(false);
 
-        public bool Apply(EntityRenderer renderer)
+        public void Apply(EntityRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (_IDENTIFIERS.Contains(renderer.Id))
+            _RENDERERS.Enqueue(renderer);
+        }
+
+        public void HandleRendering(int entityId, Vector p)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(!_movement);
+
+            for (int i = 0; i < _RENDERERS.Count; ++i)
             {
-                return true;
+                EntityRenderer renderer = _RENDERERS.Dequeue();
+
+                if (renderer.IsDisconnected)
+                {
+                    continue;
+                }
+                else if (!renderer.CanRender(p))
+                {
+                    renderer.DestroyEntity(entityId);
+
+                    continue;
+                }
+
+                _RENDERERS.Enqueue(renderer);
             }
 
-            _IDENTIFIERS.Insert(renderer.Id);
-            _RENDERERS.Enqueue(renderer);
-
-            return false;
         }
 
         public void MoveAndRotate(
@@ -37,7 +54,6 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(!_movement);
-            System.Diagnostics.Debug.Assert(!_IDENTIFIERS.Contains(entityId));
 
             foreach (EntityRenderer renderer in _RENDERERS.GetValues())
             {
@@ -53,7 +69,6 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(!_movement);
-            System.Diagnostics.Debug.Assert(!_IDENTIFIERS.Contains(entityId));
 
             foreach (EntityRenderer renderer in _RENDERERS.GetValues())
             {
@@ -68,7 +83,6 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(!_movement);
-            System.Diagnostics.Debug.Assert(!_IDENTIFIERS.Contains(entityId));
 
             foreach (EntityRenderer renderer in _RENDERERS.GetValues())
             {
@@ -83,7 +97,6 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(!_movement);
-            System.Diagnostics.Debug.Assert(!_IDENTIFIERS.Contains(entityId));
 
             foreach (EntityRenderer renderer in _RENDERERS.GetValues())
             {
@@ -91,36 +104,6 @@ namespace Protocol
             }
         
             _movement = true;
-        }
-
-        public void HandleRendering(int entityId, Vector p)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(!_movement);
-            System.Diagnostics.Debug.Assert(!_IDENTIFIERS.Contains(entityId));
-
-            for (int i = 0; i < _RENDERERS.Count; ++i)
-            {
-                EntityRenderer renderer = _RENDERERS.Dequeue();
-
-                if (renderer.IsDisconnected)
-                {
-                    _IDENTIFIERS.Extract(renderer.Id);
-
-                    continue;
-                }
-                else if (!renderer.CanRender(p))
-                {
-                    _IDENTIFIERS.Extract(renderer.Id);
-                    renderer.DestroyEntity(entityId);
-
-                    continue;
-                }
-
-                _RENDERERS.Enqueue(renderer);
-            }
-
         }
 
         public void FinishMovementRenderring()
@@ -135,8 +118,6 @@ namespace Protocol
         public void ChangeForms(int entityId, bool sneaking, bool sprinting)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(!_IDENTIFIERS.Contains(entityId));
 
             foreach (var renderer in _RENDERERS.GetValues())
             {
@@ -164,6 +145,11 @@ namespace Protocol
             while (!_RENDERERS.Empty)
             {
                 EntityRenderer renderer = _RENDERERS.Dequeue();
+                if (renderer.IsDisconnected)
+                {
+                    continue;
+                }
+
                 renderer.DestroyEntity(entityId);
             }
         }
@@ -177,8 +163,6 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(_RENDERERS.Empty);
 
             // Release  resources.
-            /*_ID_LIST.Dispose();*/
-
             _RENDERERS.Dispose();
 
             // Finish

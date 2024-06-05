@@ -83,6 +83,7 @@ namespace Protocol
 
         private bool _disposed = false;
 
+
         private int _id;
         public int Id => _id;
 
@@ -116,6 +117,7 @@ namespace Protocol
 
         private BoundingBox _bb;
         public BoundingBox BB => _bb;
+
 
         /*protected bool _teleported;
         protected Vector _posTeleport;
@@ -152,19 +154,15 @@ namespace Protocol
 
         ~Entity() => System.Diagnostics.Debug.Assert(false);
 
-        internal abstract void Spawn(Queue<ClientboundPlayingPacket> outPackets);
+        internal abstract void Spawn(EntityRenderer renderer);
 
-        internal void ApplyRenderer(
-            Queue<ClientboundPlayingPacket> outPackets, 
-            EntityRenderer renderer)
+        internal void ApplyRenderer(EntityRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            bool exists = _RENDERER_MANAGER.Apply(renderer);
-            if (!exists)
-            {
-                Spawn(outPackets);
-            }
+            _RENDERER_MANAGER.Apply(renderer);
+
+            Spawn(renderer);
         }
 
         public virtual void ApplyForce(Vector force)
@@ -188,9 +186,10 @@ namespace Protocol
             return false;
         }
 
-        protected internal virtual void StartRoutine(long serverTicks, World world)
+        public virtual void StartRoutine(long serverTicks, World world)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
 
         }
 
@@ -374,9 +373,9 @@ namespace Protocol
 
         ~ItemEntity() => System.Diagnostics.Debug.Assert(false);
 
-        internal override void Spawn(Queue<ClientboundPlayingPacket> outPackets)
+        internal override void Spawn(EntityRenderer renderer)
         {
-            (byte x, byte y) = Look.ConvertToPacketFormat();
+            /*(byte x, byte y) = Look.ConvertToPacketFormat();
             outPackets.Enqueue(new SpawnObjectPacket(
                 Id, UniqueId, 2,
                 Position.X, Position.Y, Position.Z,
@@ -387,7 +386,9 @@ namespace Protocol
             metadata.AddBool(5, true);
             metadata.AddSlotData(6, new SlotData(280, 1));
             outPackets.Enqueue(new EntityMetadataPacket(
-                Id, metadata.WriteData()));
+                Id, metadata.WriteData()));*/
+
+            renderer.SpawnItemEntity();
         }
 
         public override void Dispose()
@@ -460,11 +461,9 @@ namespace Protocol
         internal readonly SelfInventory _selfInventory;
 
 
-        private bool _connected = false;
-        public bool IsConnected => _connected;
+        private Connection? _CONN;
+        public bool Connected => (_CONN != null);
 
-
-        private SelfPlayerRenderer? _selfRenderer;
 
         private Vector _p;
         private bool _onGround;
@@ -484,9 +483,9 @@ namespace Protocol
 
         ~Player() => System.Diagnostics.Debug.Assert(false);
 
-        internal override void Spawn(Queue<ClientboundPlayingPacket> outPackets)
+        internal override void Spawn(EntityRenderer renderer)
         {
-            byte flags = 0x00;
+            /*byte flags = 0x00;
 
             if (IsSneaking)
                 flags |= 0x02;
@@ -501,40 +500,26 @@ namespace Protocol
                 Id, UniqueId,
                 Position.X, Position.Y, Position.Z,
                 x, y,
-                metadata.WriteData()));
+                metadata.WriteData()));*/
+
+            renderer.SpawnPlayer();
         }
 
-        internal void Connect(SelfPlayerRenderer renderer)
+        internal void Connect(Client client, World world)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(!IsConnected);
-            _connected = true;
-
-            System.Diagnostics.Debug.Assert(_selfRenderer == null);
-            _selfRenderer = renderer;
 
             _p = Position;
 
-            renderer.Init(Id, _p, Look);
-        }
-
-        internal void Disconnect()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(IsConnected);
-            _connected = false;
-
-            System.Diagnostics.Debug.Assert(_selfRenderer != null);
-            _selfRenderer = null;
+            _CONN = new Connection(client, world, _p, _selfInventory);
+            
         }
 
         public override void ApplyForce(Vector force)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (IsConnected)
+            if (Connected)
             {
                 System.Diagnostics.Debug.Assert(_selfRenderer != null);
                 _selfRenderer.ApplyVelocity(Id, force / GetMass());
@@ -547,7 +532,7 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (IsConnected)
+            if (Connected)
             {
                 
             }
@@ -570,7 +555,7 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (IsConnected)
+            if (Connected)
             {
                 // TODO: Check the difference between _p and p. and predict movement....
                 /*System.Console.WriteLine($"p: {p}, _p: {_p}, ");
@@ -595,7 +580,7 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(IsConnected);
+            System.Diagnostics.Debug.Assert(Connected);
 
             _p = p;
             _onGround = onGround;
@@ -605,25 +590,61 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(IsConnected);
+            System.Diagnostics.Debug.Assert(Connected);
 
             _onGround = onGround;
         }
 
-        protected internal override void StartRoutine(long serverTicks, World world)
+        public override void StartRoutine(long serverTicks, World world)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (IsConnected)
+            if (Connected)
             {
+                System.Diagnostics.Debug.Assert(_CONN != null);
 
-            }
-            else
-            {
-
+                // control
             }
 
             base.StartRoutine(serverTicks, world);
+        }
+
+        public bool HandlePlayerConnection(World world)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (_CONN == null)
+            {
+                return false;
+            }
+
+            System.Diagnostics.Debug.Assert(_CONN != null);
+            if (_CONN.Disconnected)
+            {
+                
+
+                _CONN.Flush(world);
+                _CONN.Dispose();
+
+                _CONN = null;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        public void Render(World world)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (!Connected)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(_CONN != null);
+            _CONN.Render(world, Id, Position, Look);
         }
 
         public override void Dispose()
