@@ -147,15 +147,9 @@ namespace Application
         {
             // Assertiong
             System.Diagnostics.Debug.Assert(!_disposed);
-            
-            System.Diagnostics.Debug.Assert(_CONNECTIONS.Empty);
-            System.Diagnostics.Debug.Assert(_DISCONNECTIONS.Empty);
 
             // Release resources.
             _WORLD.Dispose();
-
-            _CONNECTIONS.Dispose();
-            _DISCONNECTIONS.Dispose();
 
             // Finish
             base.Dispose();

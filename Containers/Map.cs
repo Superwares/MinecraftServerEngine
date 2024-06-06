@@ -2,7 +2,7 @@
 namespace Containers
 {
 
-    public class Table<K, T> : System.IDisposable
+    public class Map<K, T> : System.IDisposable
         where K : System.IEquatable<K>
     {
         private bool _disposed = false;
@@ -29,9 +29,9 @@ namespace Containers
 
         public bool Empty => (Count == 0);
 
-        public Table() { }
+        public Map() { }
 
-        ~Table() => System.Diagnostics.Debug.Assert(false);
+        ~Map() => System.Diagnostics.Debug.Assert(false);
 
         private int Hash(K key)
         {
@@ -469,16 +469,16 @@ namespace Containers
 
     }
 
-    public sealed class ConcurrentTable<K, T> : Table<K, T> 
+    public sealed class ConcurrentMap<K, T> : Map<K, T>
         where K : System.IEquatable<K>
     {
         private bool _disposed = false;
 
         private readonly RWMutex _MUTEX = new();
 
-        public ConcurrentTable() { }
+        public ConcurrentMap() { }
 
-        ~ConcurrentTable() => System.Diagnostics.Debug.Assert(false);
+        ~ConcurrentMap() => System.Diagnostics.Debug.Assert(false);
 
         public override void Insert(K key, T value)
         {

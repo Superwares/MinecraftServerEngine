@@ -1,5 +1,6 @@
 ﻿
 using Containers;
+using Threading;
 
 namespace Protocol
 {
@@ -55,7 +56,7 @@ namespace Protocol
             _MUTEX.Unlock();
         }
 
-        private void InitEntityChunkMapping(Entity entity)
+        public void InitEntityChunkMapping(Entity entity)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -69,7 +70,7 @@ namespace Protocol
             _ENTITY_TO_CHUNKS.Insert(entity.Id, grid);
         }
 
-        private void CloseEntityChunkMapping(Entity entity)
+        public void CloseEntityChunkMapping(Entity entity)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -83,7 +84,7 @@ namespace Protocol
 
         }
 
-        private void UpdateEntityChunkMapping(Entity entity)
+        public void UpdateEntityChunkMapping(Entity entity)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -155,7 +156,7 @@ namespace Protocol
             throw new System.NotImplementedException();
         }*/
 
-        public virtual void Dispose()
+        public void Dispose()
         {
             // Assertion.
             System.Diagnostics.Debug.Assert(!_disposed);

@@ -1,14 +1,12 @@
 ﻿
+using Threading;
+
 namespace Containers
 {
-    public interface IReadOnlyQueue<T>
-    {
-        public System.Collections.Generic.IEnumerable<T> GetValues();
-    }
 
-    public sealed class Queue<T> : System.IDisposable, IReadOnlyQueue<T>
+    public class Queue<T> : System.IDisposable
     {
-        private class Node(T value)
+        protected class Node(T value)
         {
             private T _value = value;
             public T Value => _value;
@@ -19,7 +17,7 @@ namespace Containers
 
         private bool _disposed = false;
 
-        private Node? _outNode = null, _inNode = null;
+        protected Node? _outNode = null, _inNode = null;
 
         private int _count = 0;
         public int Count
@@ -38,7 +36,7 @@ namespace Containers
 
         ~Queue() => System.Diagnostics.Debug.Assert(false);
 
-        public void Enqueue(T value)
+        public virtual void Enqueue(T value)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -63,7 +61,7 @@ namespace Containers
             _count++;
         }
 
-        public T Dequeue()
+        public virtual T Dequeue()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -91,7 +89,7 @@ namespace Containers
             return value;
         }
 
-        public T[] Flush()
+        public virtual T[] Flush()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -146,7 +144,7 @@ namespace Containers
 
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             // Assertions.
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -159,6 +157,116 @@ namespace Containers
             _disposed = true;
         }
 
+    }
+
+    public sealed class ConcurrentQueue<T> : Queue<T>
+    {
+        private bool _disposed = false;
+
+        private readonly RWMutex _MUTEX = new();
+
+        public ConcurrentQueue() { }
+
+        ~ConcurrentQueue() => System.Diagnostics.Debug.Assert(false);
+
+        public override void Enqueue(T value)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            _MUTEX.Lock();
+
+            base.Enqueue(value);
+
+            _MUTEX.Unlock();
+        }
+
+        public override T Dequeue()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            _MUTEX.Lock();
+
+            T v = base.Dequeue();
+
+            _MUTEX.Unlock();
+
+            return v;
+        }
+
+        public bool Dequeue(ref T? v)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            bool f;
+
+            _MUTEX.Lock();
+
+            if (Empty)
+            {
+                f = false;
+            }
+            else
+            {
+                v = base.Dequeue();
+
+                f = true;
+            }
+
+            _MUTEX.Unlock();
+
+            return f;
+        }
+
+        public override T[] Flush()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            _MUTEX.Lock();
+
+            T[] arr = base.Flush();
+
+            _MUTEX.Unlock();
+
+            return arr;
+        }
+
+        public new System.Collections.Generic.IEnumerable<T> GetValues()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            _MUTEX.Rlock();
+
+            if (!Empty)
+            {
+                System.Diagnostics.Debug.Assert(_inNode != null);
+                System.Diagnostics.Debug.Assert(_outNode != null);
+
+                Node? current = _outNode;
+                do
+                {
+                    System.Diagnostics.Debug.Assert(current != null);
+
+                    yield return current.Value;
+
+                    current = current.NextNode;
+                } while (current != null);
+            }
+
+            _MUTEX.Unlock();
+        }
+
+        public override void Dispose()
+        {
+            // Assertions.
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            // Release resources.
+            _MUTEX.Dispose();
+
+            // Finish.
+            base.Dispose();
+            _disposed = true;
+        }
     }
 
 }

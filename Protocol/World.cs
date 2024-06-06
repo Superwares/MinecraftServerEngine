@@ -137,6 +137,8 @@ namespace Protocol
 
                 if (player.HandlePlayerConnection(this))
                 {
+                    System.Guid userId = player.UniqueId;
+
                     System.Diagnostics.Debug.Assert(!_DISCONNECTED_PLAYERS.Contains(userId));
                     _DISCONNECTED_PLAYERS.Insert(userId, player);
                     
@@ -159,7 +161,7 @@ namespace Protocol
                 System.Diagnostics.Debug.Assert(ReferenceEquals(extracted, player));
             }
 
-            CloseEntityChunkMapping(entity);
+            _ENTITY_CTX.CloseEntityChunkMapping(entity);
 
             entity.Flush();
 
@@ -278,7 +280,7 @@ namespace Protocol
             v = new(vx, vy, vz);
             entity.Move(bb, v, onGround);
 
-            UpdateEntityChunkMapping(entity);
+            _ENTITY_CTX.UpdateEntityChunkMapping(entity);
         }
 
         public void MoveEntities()
@@ -308,7 +310,7 @@ namespace Protocol
 
                 System.Diagnostics.Debug.Assert(entity is not Player);
 
-                InitEntityChunkMapping(entity);
+                _ENTITY_CTX.InitEntityChunkMapping(entity);
 
                 _ENTITIES.Enqueue(entity);
             }
@@ -382,12 +384,10 @@ namespace Protocol
 
             System.Diagnostics.Debug.Assert(_ENTITY_SPAWNING_POOL.Empty);
             System.Diagnostics.Debug.Assert(_ENTITIES.Empty);
+            System.Diagnostics.Debug.Assert(_PLAYERS.Empty);
             System.Diagnostics.Debug.Assert(_DESPAWNED_ENTITIES.Empty);
 
             System.Diagnostics.Debug.Assert(_DISCONNECTED_PLAYERS.Empty);
-
-            System.Diagnostics.Debug.Assert(_CHUNK_TO_ENTITIES.Empty);
-            System.Diagnostics.Debug.Assert(_ENTITY_TO_CHUNKS.Empty);
 
             // Release resources.
             _PLAYER_LIST.Dispose();
@@ -396,15 +396,14 @@ namespace Protocol
 
             _ENTITY_SPAWNING_POOL.Dispose();
             _ENTITIES.Dispose();
+            _PLAYERS.Dispose();
             _DESPAWNED_ENTITIES.Dispose();
 
             _DISCONNECTED_PLAYERS.Dispose();
 
             _BLOCK_CTX.Dispose();
 
-            _MUTEX.Dispose();
-            _CHUNK_TO_ENTITIES.Dispose();
-            _ENTITY_TO_CHUNKS.Dispose();
+            _ENTITY_CTX.Dispose();
 
             // Finish.
             System.GC.SuppressFinalize(this);
