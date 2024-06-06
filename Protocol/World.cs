@@ -1,5 +1,6 @@
 ﻿using Common;
 using Containers;
+using System.Numerics;
 using Threading;
 
 namespace Protocol
@@ -18,7 +19,6 @@ namespace Protocol
         private readonly ConcurrentQueue<Entity> _ENTITY_SPAWNING_POOL = new();  // Disposable
         private readonly ParallelQueue<Entity> _ENTITIES = new();  // Disposable
         private readonly ParallelQueue<Player> _PLAYERS = new();
-        private readonly ConcurrentQueue<Entity> _DESPAWNED_ENTITIES = new();  // Disposable
 
         private readonly ConcurrentTable<System.Guid, Player> _DISCONNECTED_PLAYERS = new(); // Disposable
 
@@ -51,7 +51,7 @@ namespace Protocol
 
         public abstract bool CanJoinWorld();
 
-        internal ItemEntity SpawnItemEntity()
+        /*internal ItemEntity SpawnItemEntity()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -61,6 +61,13 @@ namespace Protocol
             _ENTITY_SPAWNING_POOL.Enqueue(itemEntity);
 
             return itemEntity;
+        }*/
+
+        public void SpawnEntity(Entity entity)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            throw new System.NotImplementedException();
         }
 
         protected abstract bool DetermineToDespawnPlayerOnDisconnect();
@@ -79,6 +86,7 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            entity.StartInternalRoutine(serverTicks, this);
             entity.StartRoutine(serverTicks, this);
         }
 
@@ -107,7 +115,6 @@ namespace Protocol
                 StartEntityRoutine(serverTicks, entity);
 
                 _ENTITIES.Enqueue(entity);
-
             }
         }
 
@@ -149,7 +156,7 @@ namespace Protocol
             }
         }
 
-        private void DespawnEntity(Entity entity)
+        private void DestroyEntity(Entity entity)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -163,12 +170,13 @@ namespace Protocol
 
             _ENTITY_CTX.CloseEntityChunkMapping(entity);
 
-            entity.Flush();
+            _ENTITY_ID_LIST.Dealloc(entity.Id);
 
-            _DESPAWNED_ENTITIES.Enqueue(entity);
+            entity.Flush();
+            entity.Dispose();
         }
 
-        public void DespawnEntities()
+        public void DestroyEntities()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -181,7 +189,7 @@ namespace Protocol
 
                 if (entity.IsDead())
                 {
-                    DespawnEntity(entity);
+                    DestroyEntity(entity);
                 }
                 else
                 {
@@ -191,7 +199,7 @@ namespace Protocol
             }
         }
 
-        public void DespawnPlayers()
+        public void DestroyPlayers()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -207,7 +215,7 @@ namespace Protocol
 
                     if (DetermineToDespawnPlayerOnDisconnect())
                     {
-                        DespawnEntity(player);
+                        DestroyEntity(player);
                     }
                 }
                 else
@@ -299,7 +307,7 @@ namespace Protocol
 
         }
 
-        public void SpawnEntities()
+        public void CreateEntities()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -310,13 +318,20 @@ namespace Protocol
 
                 System.Diagnostics.Debug.Assert(entity is not Player);
 
+                int id = _ENTITY_ID_LIST.Alloc();
+                System.Guid uniqueId = System.Guid.NewGuid();
+
+                entity.Create(id, uniqueId, _P_SPAWE, _LOOK_SPAWE);
+
                 _ENTITY_CTX.InitEntityChunkMapping(entity);
 
                 _ENTITIES.Enqueue(entity);
             }
         }
 
-        internal void SpawnOrConnectPlayer(Client client, string username, System.Guid userId)
+        protected abstract Player CreatePlayer();
+
+        internal void CreateOrConnectPlayer(Client client, string username, System.Guid userId)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -329,17 +344,18 @@ namespace Protocol
             else
             {
                 int id = _ENTITY_ID_LIST.Alloc();
-                player = new(
-                    id,
-                    userId,
-                    _P_SPAWE, _LOOK_SPAWE,
-                    username);
 
-                _PLAYER_LIST.Add(player.UniqueId, player.Username);
+                player = CreatePlayer();
+                player.Create(
+                    id, userId, 
+                    _P_SPAWE, _LOOK_SPAWE);
+
+                _ENTITY_CTX.InitEntityChunkMapping(player);
+
+                _PLAYER_LIST.Add(userId, username);
             }
-
             
-            player.Connect(client, this);
+            player.Connect(client, this, userId);
 
             _PLAYERS.Enqueue(player);
         }
@@ -359,22 +375,6 @@ namespace Protocol
             }
         }
 
-        public void ReleaseResources()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Entity? entity = null;
-            while (_DESPAWNED_ENTITIES.Dequeue(ref entity))
-            {
-                System.Diagnostics.Debug.Assert(entity != null);
-
-                _ENTITY_ID_LIST.Dealloc(entity.Id);
-
-                entity.Dispose();
-            }
-
-        }
-
         public virtual void Dispose()
         {
             // Assertion.
@@ -385,7 +385,6 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(_ENTITY_SPAWNING_POOL.Empty);
             System.Diagnostics.Debug.Assert(_ENTITIES.Empty);
             System.Diagnostics.Debug.Assert(_PLAYERS.Empty);
-            System.Diagnostics.Debug.Assert(_DESPAWNED_ENTITIES.Empty);
 
             System.Diagnostics.Debug.Assert(_DISCONNECTED_PLAYERS.Empty);
 
@@ -397,7 +396,6 @@ namespace Protocol
             _ENTITY_SPAWNING_POOL.Dispose();
             _ENTITIES.Dispose();
             _PLAYERS.Dispose();
-            _DESPAWNED_ENTITIES.Dispose();
 
             _DISCONNECTED_PLAYERS.Dispose();
 

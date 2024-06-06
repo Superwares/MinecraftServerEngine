@@ -8,24 +8,44 @@ namespace Protocol
 
         private bool _movement = false;
 
-        private readonly Queue<EntityRenderer> _RENDERERS = new();  // Disposable
+        private readonly int _id;
+        public int Id => _id;
 
-        public EntityRendererManager() { }
+        private readonly ConcurrentSet<int> _IDS = new();  // Disposable
+        private readonly ConcurrentQueue<EntityRenderer> _RENDERERS = new();  // Disposable
+
+        public EntityRendererManager(int id) 
+        {
+            _id = id;
+        }
 
         ~EntityRendererManager() => System.Diagnostics.Debug.Assert(false);
 
-        public void Apply(EntityRenderer renderer)
+        public bool Apply(EntityRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            if (renderer.Id == Id)
+            {
+                return false;
+            }
+            if (_IDS.Contains(renderer.Id))
+            {
+                return false;
+            }
+
+            _IDS.Insert(renderer.Id);
             _RENDERERS.Enqueue(renderer);
+            return true;
         }
 
-        public void HandleRendering(int entityId, Vector p)
+        public void HandleRendering(Vector p)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(!_movement);
+
+            System.Diagnostics.Debug.Assert(!_IDS.Contains(id));
 
             for (int i = 0; i < _RENDERERS.Count; ++i)
             {
@@ -33,11 +53,14 @@ namespace Protocol
 
                 if (renderer.IsDisconnected)
                 {
+                    _IDS.Extract(renderer.Id);
+
                     continue;
                 }
                 else if (!renderer.CanRender(p))
                 {
-                    renderer.DestroyEntity(entityId);
+                    _IDS.Extract(renderer.Id);
+                    renderer.DestroyEntity(Id);
 
                     continue;
                 }
@@ -48,59 +71,65 @@ namespace Protocol
         }
 
         public void MoveAndRotate(
-            int entityId,
             Vector p, Vector pPrev, Entity.Angles look, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(!_movement);
 
+            System.Diagnostics.Debug.Assert(!_IDS.Contains(id));
+
             foreach (EntityRenderer renderer in _RENDERERS.GetValues())
             {
-                renderer.MoveAndRotate(entityId, p, pPrev, look, onGround);
+                renderer.MoveAndRotate(Id, p, pPrev, look, onGround);
             }
 
             _movement = true;
         }
 
-        public void Move(
-            int entityId, Vector p, Vector pPrev, bool onGround)
+        public void Move(Vector p, Vector pPrev, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(!_movement);
 
+            System.Diagnostics.Debug.Assert(!_IDS.Contains(id));
+
             foreach (EntityRenderer renderer in _RENDERERS.GetValues())
             {
-                renderer.Move(entityId, p, pPrev, onGround);
+                renderer.Move(Id, p, pPrev, onGround);
             }
 
             _movement = true;
         }
 
-        public void Rotate(int entityId, Entity.Angles look, bool onGround)
+        public void Rotate(Entity.Angles look, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(!_movement);
 
+            System.Diagnostics.Debug.Assert(!_IDS.Contains(id));
+
             foreach (EntityRenderer renderer in _RENDERERS.GetValues())
             {
-                renderer.Rotate(entityId, look, onGround);
+                renderer.Rotate(Id, look, onGround);
             }
             
             _movement = true;
         }
 
-        public void Stand(int entityId)
+        public void Stand()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(!_movement);
 
+            System.Diagnostics.Debug.Assert(!_IDS.Contains(id));
+
             foreach (EntityRenderer renderer in _RENDERERS.GetValues())
             {
-                renderer.Stand(entityId);
+                renderer.Stand(Id);
             }
         
             _movement = true;
@@ -115,13 +144,15 @@ namespace Protocol
             _movement = false;
         }
 
-        public void ChangeForms(int entityId, bool sneaking, bool sprinting)
+        public void ChangeForms(bool sneaking, bool sprinting)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(!_IDS.Contains(id));
+
             foreach (var renderer in _RENDERERS.GetValues())
             {
-                renderer.ChangeForms(entityId, sneaking, sprinting);
+                renderer.ChangeForms(Id, sneaking, sprinting);
             }
         }
 
@@ -138,9 +169,11 @@ namespace Protocol
             }
         }*/
 
-        public void Flush(int entityId)
+        public void Flush()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(!_IDS.Contains(Id));
 
             while (!_RENDERERS.Empty)
             {
@@ -150,7 +183,9 @@ namespace Protocol
                     continue;
                 }
 
-                renderer.DestroyEntity(entityId);
+                renderer.DestroyEntity(Id);
+
+                System.Diagnostics.Debug.Assert(_IDS.Contains(renderer.Id));
             }
         }
 
@@ -163,6 +198,7 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(_RENDERERS.Empty);
 
             // Release  resources.
+            _IDS.Dispose();
             _RENDERERS.Dispose();
 
             // Finish

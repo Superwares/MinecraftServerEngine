@@ -76,6 +76,10 @@ namespace Protocol
         private bool _disconnected = false;
         public bool IsDisconnected => _disconnected;
 
+
+        private readonly int _id;
+        public int Id => _id;
+
         private ChunkLocation _loc;
 
         private int _dEntityRendering = -1;
@@ -83,9 +87,12 @@ namespace Protocol
 
         public EntityRenderer(
             ConcurrentQueue<ClientboundPlayingPacket> outPackets,
+            int id,
             ChunkLocation loc, int dEntityRendering) 
             : base(outPackets) 
         {
+            _id = id;
+
             _loc = loc;
 
             _dEntityRendering = dEntityRendering;
@@ -105,12 +112,12 @@ namespace Protocol
             _loc = loc;
         }
 
-        public void Update(int dEntityRendering)
+        public void Update(int d)
         {
             System.Diagnostics.Debug.Assert(!_disconnected);
-            System.Diagnostics.Debug.Assert(dEntityRendering > 0);
+            System.Diagnostics.Debug.Assert(d > 0);
 
-            _dEntityRendering = dEntityRendering;
+            _dEntityRendering = d;
         }
 
         public bool CanRender(Vector p)
@@ -124,9 +131,11 @@ namespace Protocol
         }
 
         public void MoveAndRotate(
-            int entityId, 
+            int id, 
             Vector p, Vector pPrev, Entity.Angles look, bool onGround)
         {
+            System.Diagnostics.Debug.Assert(id != Id);
+
             System.Diagnostics.Debug.Assert(!_disconnected);
 
             double dx = (p.X - pPrev.X) * (32 * 128),
@@ -138,16 +147,18 @@ namespace Protocol
 
             (byte x, byte y) = look.ConvertToPacketFormat();
             Render(new EntityLookAndRelMovePacket(
-                entityId,
+                id,
                 (short)dx, (short)dy, (short)dz,
                 x, y,
                 onGround));
-            Render(new EntityHeadLookPacket(entityId, x));
+            Render(new EntityHeadLookPacket(id, x));
         
         }
 
-        public void Move(int entityId, Vector p, Vector pPrev, bool onGround)
+        public void Move(int id, Vector p, Vector pPrev, bool onGround)
         {
+            System.Diagnostics.Debug.Assert(id != Id);
+
             System.Diagnostics.Debug.Assert(!_disconnected);
 
             double dx = (p.X - pPrev.X) * (32 * 128), 
@@ -158,26 +169,30 @@ namespace Protocol
             System.Diagnostics.Debug.Assert((dz >= short.MinValue) && (dz <= short.MaxValue));
 
             Render(new EntityRelMovePacket(
-                entityId,
+                id,
                 (short)dx, (short)dy, (short)dz,
                 onGround));
 
         }
 
-        public void Rotate(int entityId, Entity.Angles look, bool onGround)
+        public void Rotate(int id, Entity.Angles look, bool onGround)
         {
+            System.Diagnostics.Debug.Assert(id != Id);
+
             System.Diagnostics.Debug.Assert(!_disconnected);
 
             (byte x, byte y) = look.ConvertToPacketFormat();
-            Render(new EntityLookPacket(entityId, x, y, onGround));
-            Render(new EntityHeadLookPacket(entityId, x));
+            Render(new EntityLookPacket(id, x, y, onGround));
+            Render(new EntityHeadLookPacket(id, x));
         }
 
-        public void Stand(int entityId)
+        public void Stand(int id)
         {
+            System.Diagnostics.Debug.Assert(id != Id);
+
             System.Diagnostics.Debug.Assert(!_disconnected);
 
-            Render(new EntityPacket(entityId));
+            Render(new EntityPacket(id));
         }
 
         /*public void Teleport(
@@ -191,8 +206,12 @@ namespace Protocol
                 onGround));
         }*/
 
-        public void ChangeForms(int entityId, bool sneaking, bool sprinting)
+        public void ChangeForms(int id, bool sneaking, bool sprinting)
         {
+            System.Diagnostics.Debug.Assert(id != Id);
+
+            System.Diagnostics.Debug.Assert(!_disconnected);
+
             byte flags = 0x00;
 
             if (sneaking)
@@ -207,12 +226,56 @@ namespace Protocol
             using EntityMetadata metadata = new();
             metadata.AddByte(0, flags);
 
-            Render(new EntityMetadataPacket(entityId, metadata.WriteData()));
+            Render(new EntityMetadataPacket(id, metadata.WriteData()));
         }
 
-        public void DestroyEntity(int entityId)
+        public void SpawnPlayer(
+            int id, System.Guid uniqueId, 
+            Vector p, Entity.Angles look, 
+            bool sneaking, bool sprinting)
         {
-            Render(new DestroyEntitiesPacket(entityId));
+            System.Diagnostics.Debug.Assert(id != Id);
+
+            System.Diagnostics.Debug.Assert(!_disconnected);
+
+            byte flags = 0x00;
+
+            if (sneaking)
+            {
+                flags |= 0x02;
+            }
+            if (sprinting)
+            {
+                flags |= 0x08;
+            }
+
+            using EntityMetadata metadata = new();
+            metadata.AddByte(0, flags);
+
+            (byte x, byte y) = look.ConvertToPacketFormat();
+            Render(new SpawnNamedEntityPacket(
+                id, uniqueId,
+                p.X, p.Y, p.Z,
+                x, y,
+                metadata.WriteData()));
+        }
+
+        public void SpawnItemEntity(int id)
+        {
+            System.Diagnostics.Debug.Assert(id != Id);
+
+            System.Diagnostics.Debug.Assert(!_disconnected);
+
+            throw new System.NotImplementedException();
+        }
+
+        public void DestroyEntity(int id)
+        {
+            System.Diagnostics.Debug.Assert(id != Id);
+
+            System.Diagnostics.Debug.Assert(!_disconnected);
+
+            Render(new DestroyEntitiesPacket(id));
         }
 
     }

@@ -1,35 +1,30 @@
 ﻿
+using Threading;
+
 namespace Containers
 {
 
-    public interface IReadOnlySet<K> where K : struct, System.IEquatable<K>
-    {
-        public bool Contains(K key);
-
-        public System.Collections.Generic.IEnumerable<K> GetKeys();
-
-    }
-
-    public sealed class Set<K> : System.IDisposable, IReadOnlySet<K>
-        where K : struct, System.IEquatable<K>
+    public class Set<K> : System.IDisposable
+        where K : System.IEquatable<K>
     {
         private bool _disposed = false;
 
-        private const int _MIN_LENGTH = 16;
-        private const int _EXPENSION_FACTOR = 2;
-        private const float _LOAD_FACTOR = 0.75F;
-        private const int _C = 5;
+        protected const int _MIN_LENGTH = 16;
+        protected const int _EXPENSION_FACTOR = 2;
+        protected const float _LOAD_FACTOR = 0.75F;
+        protected const int _C = 5;
 
-        private bool[] _flags = new bool[_MIN_LENGTH];
-        private K[] _keys = new K[_MIN_LENGTH];
-        private int _length = _MIN_LENGTH;
-        private int _count = 0;
+        protected bool[] _flags = new bool[_MIN_LENGTH];
+        protected K[] _keys = new K[_MIN_LENGTH];
+        protected int _length = _MIN_LENGTH;
+        protected int _count = 0;
 
         public int Count
         {
             get
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
+
                 return _count;
             }
         }
@@ -94,7 +89,7 @@ namespace Containers
 
         }
 
-        public void Insert(K key)
+        public virtual void Insert(K key)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -141,7 +136,7 @@ namespace Containers
                 (originIndex == targetIndex);
         }
 
-        public void Extract(K key)
+        public virtual void Extract(K key)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -220,7 +215,7 @@ namespace Containers
             return;
         }
 
-        public bool Contains(K key)
+        public virtual bool Contains(K key)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -254,17 +249,7 @@ namespace Containers
             return false;
         }
 
-        public void Reset()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            _flags = new bool[_MIN_LENGTH];
-            _keys = new K[_MIN_LENGTH];
-            _length = _MIN_LENGTH;
-            _count = 0;
-        }
-
-        public K[] Flush()
+        public virtual K[] Flush()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -313,22 +298,30 @@ namespace Containers
             System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
-            if (_count == 0)
+            if (Empty)
+            {
                 yield break;
+            }
 
             int i = 0;
             for (int j = 0; j < _length; ++j)
             {
-                if (!_flags[j]) continue;
+                if (!_flags[j])
+                {
+                    continue;
+                }
 
                 yield return _keys[j];
 
-                if (++i == _count) break;
+                if (++i == _count)
+                {
+                    break;
+                }
             }
 
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             // Assertions.
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -343,4 +336,112 @@ namespace Containers
         }
 
     }
+
+    public sealed class ConcurrentSet<K> : Set<K>
+        where K : System.IEquatable<K>
+    {
+        private bool _disposed = false;
+
+        private readonly RWMutex _MUTEX = new();
+
+        public ConcurrentSet() { }
+
+        ~ConcurrentSet() => System.Diagnostics.Debug.Assert(false);
+
+        public override void Insert(K key)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            _MUTEX.Lock();
+
+            base.Insert(key);
+
+            _MUTEX.Unlock();
+        }
+
+        public override void Extract(K key)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            _MUTEX.Lock();
+
+            base.Extract(key);
+
+            _MUTEX.Unlock();
+        }
+
+        public override bool Contains(K key)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            _MUTEX.Rlock();
+
+            bool f = base.Contains(key);
+
+            _MUTEX.Unlock();
+
+            return f;
+        }
+
+        public override K[] Flush()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            _MUTEX.Lock();
+
+            K[] keys = base.Flush();
+
+            _MUTEX.Unlock();
+
+            return keys;
+        }
+
+        public new System.Collections.Generic.IEnumerable<K> GetKeys()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_flags.Length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_keys.Length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_count >= 0);
+
+            _MUTEX.Rlock();
+
+            if (!Empty)
+            {
+                int i = 0;
+                for (int j = 0; j < _length; ++j)
+                {
+                    if (!_flags[j])
+                    {
+                        continue;
+                    }
+
+                    yield return _keys[j];
+
+                    if (++i == _count)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            _MUTEX.Unlock();
+        }
+
+        public override void Dispose()
+        {
+            // Assertions.
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            // Release resources.
+            _MUTEX.Dispose();
+
+            // Finish.
+            base.Dispose();
+            _disposed = true;
+        }
+
+    }
+
 }

@@ -83,86 +83,150 @@ namespace Protocol
 
         private bool _disposed = false;
 
+        private bool _created = false;
+
 
         private int _id;
-        public int Id => _id;
+        internal int Id
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_created);
+                return _id;
+            }
+        }
 
-        public System.Guid UniqueId;
+        private System.Guid _uniqueId;
+        internal System.Guid UniqueId
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_created);
+                return _uniqueId;
+            }
+        }
 
 
         public abstract double GetMass();
 
-
-        private readonly Queue<Vector> _FORCES;
-        public Queue<Vector> Forces => _FORCES;
-
-        private Vector _v;
-        public Vector Velocity => _v;
-
-        private Vector _p;
-        public Vector Position => _p;
-
-
-        private bool _rotated;
-        private Angles _look;
-        public Angles Look => _look;
-
-
-        protected bool _sneaking, _sprinting;
-        public bool IsSneaking => _sneaking;
-        public bool IsSprinting => _sprinting;
-
-
         public abstract Hitbox GetHitbox();
 
+
+        private readonly ConcurrentQueue<Vector> _FORCES = new();
+
+        private Vector _v = new Vector(0, 0, 0);
+        public Vector Velocity
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_created);
+                return _v;
+            }
+        }
+
         private BoundingBox _bb;
-        public BoundingBox BB => _bb;
+        public BoundingBox BB
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_created);
+                return _bb;
+            }
+        }
+
+        private Vector _p;
+        internal Vector Position
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_created);
+                return _p;
+            }
+        }
 
 
-        /*protected bool _teleported;
+        private bool _rotated = false;
+        private Angles _look;
+        public Angles Look
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_created);
+                return _look;
+            }
+        }
+
+
+        protected bool _sneaking = false, _sprinting = false;
+        public bool Sneaking
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_created);
+                return _sneaking;
+            }
+        }
+        public bool Sprinting
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_created);
+                return _sprinting;
+            }
+        }
+
+
+        /*protected bool _teleported = false;
         protected Vector _posTeleport;
         protected Angles _lookTeleport;*/
 
 
-        private readonly EntityRendererManager _RENDERER_MANAGER = new();  // Disposable
+        private EntityRendererManager? _MANAGER = null;  // Disposable
 
-        internal Entity(
-            int id, System.Guid uniqueId, Vector p, Angles look)
-        {
-            _id = id;
-
-            UniqueId = uniqueId;
-
-            _FORCES = new Queue<Vector>();
-
-            _v = new Vector(0, 0, 0);
-
-            _p = p;
-
-            _rotated = false;
-            _look = look;
-
-            _sneaking = _sprinting = false;
-
-            Hitbox hitbox = GetHitbox();
-            _bb = hitbox.Convert(_p);
-
-            /*_teleported = false;*/
-            /*_posTeleport = new(0, 0, 0);
-            _lookTeleport = new(0, 0);*/
-        }
+        internal Entity() { }
 
         ~Entity() => System.Diagnostics.Debug.Assert(false);
 
-        internal abstract void Spawn(EntityRenderer renderer);
+        public void Create(
+            int id, System.Guid uniqueId, 
+            Vector p, Angles look)
+        {
+            System.Diagnostics.Debug.Assert(!_created);
+
+            _id = id;
+            _uniqueId = uniqueId;
+
+            Hitbox hitbox = GetHitbox();
+            _bb = hitbox.Convert(p);
+
+            _p = p;
+
+            _look = look;
+
+            _MANAGER = new(id);
+
+            _created = true;
+        }
+
+        private protected abstract void RenderSpawning(EntityRenderer renderer);
 
         internal void ApplyRenderer(EntityRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _RENDERER_MANAGER.Apply(renderer);
-
-            Spawn(renderer);
+            System.Diagnostics.Debug.Assert(_MANAGER != null);
+            if (_MANAGER.Apply(renderer))
+            {
+                RenderSpawning(renderer);
+            }
         }
 
         public virtual void ApplyForce(Vector force)
@@ -186,20 +250,19 @@ namespace Protocol
             return false;
         }
 
-        public virtual void StartRoutine(long serverTicks, World world)
+        public virtual void StartInternalRoutine(long serverTicks, World world)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-
         }
+
+        public abstract void StartRoutine(long serverTicks, World world);
 
         internal (BoundingBox, Vector) Integrate()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Vector v = _v;
-            /*System.Console.WriteLine();
-            System.Console.WriteLine($"p: ({p.X}, {p.Y}, {p.Z})");*/
 
             while (!_FORCES.Empty)
             {
@@ -207,10 +270,6 @@ namespace Protocol
 
                 v += (force / GetMass());
             }
-
-            /*p += v;*/
-
-            /*System.Console.WriteLine($"v: {v}, p: {p}, ");*/
 
             Hitbox hitbox = GetHitbox();
             BoundingBox bb = hitbox.Convert(_p);
@@ -226,42 +285,42 @@ namespace Protocol
 
             Vector p = bb.GetBottomCenter();
 
-            _RENDERER_MANAGER.HandleRendering(Id, p);
+            System.Diagnostics.Debug.Assert(_MANAGER != null);
+            _MANAGER.HandleRendering(p);
 
             bool moved = !p.Equals(_p);  // TODO: Compare with machine epsilon.
             if (moved && _rotated)
             {
-                _RENDERER_MANAGER.MoveAndRotate(Id, p, _p, _look, onGround);
+                _MANAGER.MoveAndRotate(p, _p, _look, onGround);
             }
             else if (moved)
             {
                 System.Diagnostics.Debug.Assert(!_rotated);
 
-                _RENDERER_MANAGER.Move(Id, p, _p, onGround);
+                _MANAGER.Move(p, _p, onGround);
             }
             else if (_rotated)
             {
                 System.Diagnostics.Debug.Assert(!moved);
 
-                _RENDERER_MANAGER.Rotate(Id, _look, onGround);
+                _MANAGER.Rotate(_look, onGround);
             }
             else
             {
                 System.Diagnostics.Debug.Assert(!moved);
                 System.Diagnostics.Debug.Assert(!_rotated);
 
-                _RENDERER_MANAGER.Stand(Id);
+                _MANAGER.Stand();
             }
 
             _v = v;
-            _p = p;
-
             _bb = bb;
+
+            _p = p;
 
             _rotated = false;
 
-            _RENDERER_MANAGER.FinishMovementRenderring();
-
+            _MANAGER.FinishMovementRenderring();
         }
 
         /*public virtual void Teleport(Vector pos, Angles look)
@@ -283,7 +342,7 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
             
-            _RENDERER_MANAGER.ChangeForms(Id, _sneaking, _sprinting);
+            _MANAGER.ChangeForms(_sneaking, _sprinting);
         }
 
         public void Sneak()
@@ -330,7 +389,8 @@ namespace Protocol
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _RENDERER_MANAGER.Flush(Id);
+            System.Diagnostics.Debug.Assert(_MANAGER != null);
+            _MANAGER.Flush();
         }
 
         public virtual void Dispose()
@@ -340,7 +400,7 @@ namespace Protocol
 
             // Release resources.
             _FORCES.Dispose();
-            _RENDERER_MANAGER.Dispose();
+            _MANAGER.Dispose();
 
             // Finish.
             System.GC.SuppressFinalize(this);
@@ -349,7 +409,7 @@ namespace Protocol
 
     }
 
-    public sealed class ItemEntity : Entity
+    public abstract class ItemEntity : Entity
     {
         private bool _disposed = false;
 
@@ -368,12 +428,11 @@ namespace Protocol
         }
 
 
-        public ItemEntity(int id, Vector pos, Angles look) 
-            : base(id, System.Guid.NewGuid(), pos, look) { }
+        public ItemEntity() : base() { }
 
         ~ItemEntity() => System.Diagnostics.Debug.Assert(false);
 
-        internal override void Spawn(EntityRenderer renderer)
+        private protected override void RenderSpawning(EntityRenderer renderer)
         {
             /*(byte x, byte y) = Look.ConvertToPacketFormat();
             outPackets.Enqueue(new SpawnObjectPacket(
@@ -388,7 +447,7 @@ namespace Protocol
             outPackets.Enqueue(new EntityMetadataPacket(
                 Id, metadata.WriteData()));*/
 
-            renderer.SpawnItemEntity();
+            renderer.SpawnItemEntity(Id);
         }
 
         public override void Dispose()
@@ -410,8 +469,7 @@ namespace Protocol
     {
         private bool _disposed = false;
 
-        internal LivingEntity(int id, System.Guid uniqueId, Vector pos, Angles look) 
-            : base(id, uniqueId, pos, look) { }
+        internal LivingEntity() : base() { }
 
         ~LivingEntity() => System.Diagnostics.Debug.Assert(false);
 
@@ -430,7 +488,7 @@ namespace Protocol
 
     }
 
-    public sealed class Player : LivingEntity
+    public abstract class Player : LivingEntity
     {
         private bool _disposed = false;
 
@@ -442,7 +500,7 @@ namespace Protocol
         public override Hitbox GetHitbox()
         {
             double w = 0.6D, h;
-            if (IsSneaking)
+            if (Sneaking)
             {
                 h = 1.65D;
             }
@@ -455,10 +513,8 @@ namespace Protocol
         }
 
 
-        public readonly string Username;
 
-
-        internal readonly SelfInventory _selfInventory;
+        internal readonly SelfInventory _selfInventory = new();
 
 
         private Connection? _CONN;
@@ -468,51 +524,28 @@ namespace Protocol
         private Vector _p;
         private bool _onGround;
 
-        internal Player(
-            int id, System.Guid uniqueId, Vector p, Angles look, string username) 
-            : base(id, uniqueId, p, look)
-        {
 
-            Username = username;
-
-            _selfInventory = new();
-
-            _selfRenderer = null;
-
-        }
+        public Player() : base() { }
 
         ~Player() => System.Diagnostics.Debug.Assert(false);
 
-        internal override void Spawn(EntityRenderer renderer)
+        private protected override void RenderSpawning(EntityRenderer renderer)
         {
-            /*byte flags = 0x00;
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (IsSneaking)
-                flags |= 0x02;
-            if (IsSprinting)
-                flags |= 0x08;
-
-            using EntityMetadata metadata = new();
-            metadata.AddByte(0, flags);
-
-            (byte x, byte y) = Look.ConvertToPacketFormat();
-            outPackets.Enqueue(new SpawnNamedEntityPacket(
+            renderer.SpawnPlayer(
                 Id, UniqueId,
-                Position.X, Position.Y, Position.Z,
-                x, y,
-                metadata.WriteData()));*/
-
-            renderer.SpawnPlayer();
+                Position, Look,
+                Sneaking, Sprinting);
         }
 
-        internal void Connect(Client client, World world)
+        internal void Connect(Client client, World world, System.Guid userId)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             _p = Position;
 
-            _CONN = new Connection(client, world, _p, _selfInventory);
-            
+            _CONN = new Connection(client, world, Id, userId, _p, _selfInventory);
         }
 
         public override void ApplyForce(Vector force)
@@ -521,8 +554,9 @@ namespace Protocol
 
             if (Connected)
             {
-                System.Diagnostics.Debug.Assert(_selfRenderer != null);
-                _selfRenderer.ApplyVelocity(Id, force / GetMass());
+                System.Diagnostics.Debug.Assert(_CONN != null);
+                Vector v = force / GetMass();
+                _CONN.ApplyVelocity(Id, v);
             }
 
             base.ApplyForce(force);
@@ -595,7 +629,34 @@ namespace Protocol
             _onGround = onGround;
         }
 
-        public override void StartRoutine(long serverTicks, World world)
+        private void HandleControl(ServerboundPlayingPacket control)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            switch (control)
+            {
+                default:
+                    System.Diagnostics.Debug.Assert(false);
+                    break;
+                case PlayerPacket:
+                    throw new System.NotImplementedException();
+                    break;
+                case PlayerPositionPacket:
+                    throw new System.NotImplementedException();
+                    break;
+                case PlayerPosAndLookPacket:
+                    throw new System.NotImplementedException();
+                    break;
+                case PlayerLookPacket:
+                    throw new System.NotImplementedException();
+                    break;
+                case EntityActionPacket:
+                    throw new System.NotImplementedException();
+                    break;
+            }
+        }
+
+        public override void StartInternalRoutine(long serverTicks, World world)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -603,10 +664,18 @@ namespace Protocol
             {
                 System.Diagnostics.Debug.Assert(_CONN != null);
 
-                // control
+                using Queue<ServerboundPlayingPacket> controls = new();
+
+                _CONN.Control(controls, world, UniqueId, Sneaking, Sprinting, _selfInventory);
+
+                while (!controls.Empty)
+                {
+                    ServerboundPlayingPacket control = controls.Dequeue();
+                    HandleControl(control);
+                }
             }
 
-            base.StartRoutine(serverTicks, world);
+            base.StartInternalRoutine(serverTicks, world);
         }
 
         public bool HandlePlayerConnection(World world)
@@ -621,9 +690,7 @@ namespace Protocol
             System.Diagnostics.Debug.Assert(_CONN != null);
             if (_CONN.Disconnected)
             {
-                
-
-                _CONN.Flush(world);
+                _CONN.Flush(world, UniqueId);
                 _CONN.Dispose();
 
                 _CONN = null;
@@ -644,9 +711,13 @@ namespace Protocol
             }
 
             System.Diagnostics.Debug.Assert(_CONN != null);
-            _CONN.Render(world, Id, Position, Look);
+            _CONN.Render(
+                world, 
+                Id, 
+                Position, Look, 
+                _selfInventory);
         }
-
+        
         public override void Dispose()
         {
             // Assertion.

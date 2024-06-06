@@ -24,6 +24,11 @@ namespace Server
             return false;
         }
 
+        protected override Player CreatePlayer()
+        {
+            return new SuperPlayer();
+        }
+
         public override void Dispose()
         {
             // Assertions.
