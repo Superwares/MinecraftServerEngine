@@ -10,7 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Applications\Applications.csproj" />
     <ProjectReference Include="..\Containers\Containers.csproj" />
-    <ProjectReference Include="..\Protocol\Protocol.csproj" />
+    <ProjectReference Include="..\Protocol\Framework.csproj" />
   </ItemGroup>
 
 </Project>

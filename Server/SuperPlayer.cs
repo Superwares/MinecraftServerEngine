@@ -1,6 +1,6 @@
 ﻿using Protocol;
 
-namespace Server
+namespace TestServer
 {
     public sealed class SuperPlayer : Player
     {

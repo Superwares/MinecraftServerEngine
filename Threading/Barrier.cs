@@ -5,7 +5,10 @@ namespace Threading
     {
         private bool _disposed = false;
 
-        public Barrier() { }
+        public Barrier(int n) 
+        {
+            throw new System.NotImplementedException();
+        }
 
         ~Barrier() => System.Diagnostics.Debug.Assert(false):
 

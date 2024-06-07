@@ -32,40 +32,28 @@ namespace Protocol
         {
             _P_SPAWE = pSpawe; _LOOK_SPAWE = lookSpawe;
 
+            // Dummy code.
+            for (int z = -10; z <= 10; ++z)
             {
-                // Dummy code.
-                for (int z = -10; z <= 10; ++z)
+                for (int x = -10; x <= 10; ++x)
                 {
-                    for (int x = -10; x <= 10; ++x)
-                    {
-                        BlockLocation loc = new(x, 100, z);
+                    BlockLocation loc = new(x, 100, z);
 
-                        _BLOCK_CTX.SetBlock(loc, Blocks.Stone);
-                    }
+                    _BLOCK_CTX.SetBlock(loc, Blocks.Stone);
                 }
-                
             }
+
         }
 
         ~World() => System.Diagnostics.Debug.Assert(false);
 
         public abstract bool CanJoinWorld();
 
-        /*internal ItemEntity SpawnItemEntity()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            int id = _ENTITY_ID_LIST.Alloc();
-            ItemEntity itemEntity = new(id, _P_SPAWE, _LOOK_SPAWE);
-
-            _ENTITY_SPAWNING_POOL.Enqueue(itemEntity);
-
-            return itemEntity;
-        }*/
-
         public void SpawnEntity(Entity entity)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            _ENTITY_SPAWNING_POOL.Enqueue(entity);
 
             throw new System.NotImplementedException();
         }

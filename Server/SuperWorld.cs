@@ -1,6 +1,6 @@
 ﻿using Protocol;
 
-namespace Server
+namespace TestServer
 {
     internal sealed class SuperWorld : World
     {

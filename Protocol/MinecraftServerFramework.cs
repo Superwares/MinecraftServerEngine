@@ -1,11 +1,11 @@
-﻿using Applications;
+﻿
+using Applications;
 using Protocol;
-using Server;
 using Threading;
 
-namespace Application
+namespace Framework
 {
-    public sealed class Server : ConsoleApplication
+    public class MinecraftServerFramework : ConsoleApplication
     {
         private bool _disposed = false;
 
@@ -13,12 +13,13 @@ namespace Application
 
         private long _ticks = 0;
 
-        private Server() 
+
+        public MinecraftServerFramework(World world)
         {
-            _WORLD = new SuperWorld();
+            _WORLD = world;
         }
 
-        ~Server() => System.Diagnostics.Debug.Assert(false);
+        ~MinecraftServerFramework() => System.Diagnostics.Debug.Assert(false);
 
         private void CountTicks()
         {
@@ -27,67 +28,6 @@ namespace Application
 
             ++_ticks;
         }
-
-        /*private void HandleControls()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Connection? conn = null;
-            while (_CONNECTIONS.Dequeue(ref conn))
-            {
-                System.Diagnostics.Debug.Assert(conn != null);
-
-                try
-                {
-                    conn.Control(_ticks, _WORLD);
-                }
-                catch (DisconnectedClientException)
-                {
-                    _DISCONNECTIONS.Enqueue(conn);
-
-                    continue;
-                }
-
-                _CONNECTIONS.Enqueue(conn);
-            }
-
-            System.Diagnostics.Debug.Assert(_CONNECTIONS.Empty);
-        }
-
-        private void HandleDisconnections()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Connection? conn = null;
-            while (_DISCONNECTIONS.Dequeue(ref conn))
-            {
-                System.Diagnostics.Debug.Assert(conn != null);
-
-                conn = _DISCONNECTIONS.Dequeue();
-
-                conn.Flush(_WORLD);
-                conn.Dispose();
-            }
-
-            System.Diagnostics.Debug.Assert(_DISCONNECTIONS.Empty);
-        }
-
-        private void HandleRenders()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Connection? conn = null;
-            while (_CONNECTIONS.Dequeue(ref conn))
-            {
-                System.Diagnostics.Debug.Assert(conn != null);
-
-                conn.Render(_WORLD);
-
-                _CONNECTIONS.Enqueue(conn);
-            }
-
-            System.Diagnostics.Debug.Assert(_CONNECTIONS.Empty);
-        }*/
 
         private void StartCoreRoutine(Barrier barrier, ConnectionListener connListener)
         {
@@ -131,10 +71,6 @@ namespace Application
 
             barrier.Hold();
 
-            _WORLD.ReleaseResources();
-
-            barrier.Hold();
-
             _WORLD.StartRoutine(_ticks);
 
             barrier.Hold();
@@ -143,25 +79,12 @@ namespace Application
 
         }
 
-        public override void Dispose()
-        {
-            // Assertiong
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            // Release resources.
-            _WORLD.Dispose();
-
-            // Finish
-            base.Dispose();
-            _disposed = true;
-        }
-
         private static long GetCurrentMicroseconds()
         {
             return (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
         }
 
-        private static void StartMainRoutine(Barrier barrier, Server server)
+        private void StartMainRoutine(Barrier barrier)
         {
             barrier.Wait();
 
@@ -181,7 +104,7 @@ namespace Application
 
             barrier.Wait();
 
-            server._WORLD._ENTITIES.Switch();
+            _WORLD._ENTITIES.Switch();
 
             barrier.Start();
 
@@ -189,7 +112,7 @@ namespace Application
 
             barrier.Wait();
 
-            server._WORLD._ENTITIES.Switch();
+            _WORLD._ENTITIES.Switch();
 
             barrier.Start();
 
@@ -223,7 +146,7 @@ namespace Application
 
             barrier.Wait();
 
-            server._WORLD._ENTITIES.Switch();
+            _WORLD._ENTITIES.Switch();
 
             barrier.Start();
 
@@ -236,13 +159,9 @@ namespace Application
             // Release resources.
         }
 
-        public static void Main()
+        public void Run()
         {
-            System.Console.WriteLine("Hello, World!");
-
             ushort port = 25565;
-
-            using Server server = new();
 
             int n = 2;
 
@@ -251,16 +170,26 @@ namespace Application
 
             for (int i = 0; i < n; ++i)
             {
-                server.Run(() =>
+                Run(() =>
                 {
-                    server.StartCoreRoutine(barrier, connListener);
+                    while (Running)
+                    {
+                        StartCoreRoutine(barrier, connListener);
+                    }
                 });
             }
 
-            ClientListener listener = new(connListener);
-            server.Run(() =>
+
+            Run(() =>
             {
-                listener.StartRoutine(server, port);
+                using ClientListener clientListener = new(connListener, port);
+
+                while (Running)
+                {
+                    clientListener.StartRoutine();
+                }
+
+                clientListener.Flush();
             });
 
             long interval, total, start, end, elapsed;
@@ -268,14 +197,14 @@ namespace Application
             interval = total = 50L * 1000L;  // 50 milliseconds
             start = GetCurrentMicroseconds();
 
-            while (server.Running)
+            while (Running)
             {
                 if (total >= interval)
                 {
                     total -= interval;
 
-                    StartMainRoutine(barrier, server);
-                    server.CountTicks();
+                    StartMainRoutine(barrier);
+                    CountTicks();
                 }
 
                 end = GetCurrentMicroseconds();
@@ -291,10 +220,20 @@ namespace Application
             }
 
             // Handle close routine...
+        }
 
+        public override void Dispose()
+        {
+            // Assertiong
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            // Release resources.
+            _WORLD.Dispose();
+
+            // Finish
+            base.Dispose();
+            _disposed = true;
         }
 
     }
-
 }
-

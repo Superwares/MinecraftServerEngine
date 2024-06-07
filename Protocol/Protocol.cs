@@ -1,7 +1,6 @@
 ﻿using Common;
 using Applications;
 using Containers;
-using System.Numerics;
 
 namespace Protocol
 {
@@ -413,25 +412,48 @@ namespace Protocol
 
     }
 
-    public sealed class ClientListener
+    public sealed class ClientListener : System.IDisposable
     {
+        private bool _disposed = false;
+
+
         private static readonly System.TimeSpan _PendingTimeout = System.TimeSpan.FromSeconds(1);
 
         private readonly ConnectionListener _connListener;
 
-        public ClientListener(ConnectionListener connListener)
+
+        private readonly System.Net.Sockets.Socket _SOCKET;  // Disposable
+
+        private readonly Queue<Client> _VISITORS;  // Disposable
+
+        /*
+         * 0: Handshake
+         * 1: Request
+         * 2: Ping
+         * 3: Start Login
+         */
+        private readonly Queue<int> _LEVEL_QUEUE;  // Disposable
+
+
+        public ClientListener(ConnectionListener connListener, ushort port)
         {
             _connListener = connListener;
+
+            _SOCKET = SocketMethods.Establish(port);
+            _VISITORS = new();
+            _LEVEL_QUEUE = new();
+
+            SocketMethods.SetBlocking(_SOCKET, true);
         }
 
         ~ClientListener() => System.Diagnostics.Debug.Assert(false);
 
-        private int HandleVisitors(Queue<Client> visitors, Queue<int> levelQueue)
+        private int HandleVisitors()
         {
-            /*Console.Write(".");*/
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            int count = visitors.Count;
-            System.Diagnostics.Debug.Assert(count == levelQueue.Count);
+            int count = _VISITORS.Count;
+            System.Diagnostics.Debug.Assert(count == _LEVEL_QUEUE.Count);
             if (count == 0) return 0;
 
             bool close, success;
@@ -440,8 +462,8 @@ namespace Protocol
             {
                 close = success = false;
 
-                Client client = visitors.Dequeue();
-                int level = levelQueue.Dequeue();
+                Client client = _VISITORS.Dequeue();
+                int level = _LEVEL_QUEUE.Dequeue();
 
                 /*Console.WriteLine($"count: {count}, level: {level}");*/
 
@@ -637,8 +659,8 @@ namespace Protocol
                 {
                     if (close == false)
                     {
-                        visitors.Enqueue(client);
-                        levelQueue.Enqueue(level);
+                        _VISITORS.Enqueue(client);
+                        _LEVEL_QUEUE.Enqueue(level);
                     }
                     else
                     {
@@ -652,54 +674,63 @@ namespace Protocol
 
             }
 
-            return visitors.Count;
+            return _VISITORS.Count;
         }
 
-        public void StartRoutine(ConsoleApplication app, ushort port)
+        public void StartRoutine()
         {
-            using System.Net.Sockets.Socket socket = SocketMethods.Establish(port);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            using Queue<Client> visitors = new();
-            /*
-             * 0: Handshake
-             * 1: Request
-             * 2: Ping
-             * 3: Start Login
-             */
-            using Queue<int> levelQueue = new();
+            System.Console.Write(">");
 
-            SocketMethods.SetBlocking(socket, true);
-
-            while (app.Running)
+            try
             {
-                System.Console.Write(">");
-
-                try
+                if (!SocketMethods.IsBlocking(_SOCKET) &&
+                    HandleVisitors() == 0)
                 {
-                    if (!SocketMethods.IsBlocking(socket) &&
-                        HandleVisitors(visitors, levelQueue) == 0)
-                    {
-                        SocketMethods.SetBlocking(socket, true);
-                    }
-
-                    if (SocketMethods.Poll(socket, _PendingTimeout))
-                    {
-                        Client client = Client.Accept(socket);
-                        visitors.Enqueue(client);
-                        levelQueue.Enqueue(0);
-
-                        SocketMethods.SetBlocking(socket, false);
-                    }
-                }
-                catch (TryAgainException)
-                {
-                    /*Console.WriteLine("TryAgainException!");*/
-                    continue;
+                    SocketMethods.SetBlocking(_SOCKET, true);
                 }
 
+                if (SocketMethods.Poll(_SOCKET, _PendingTimeout))
+                {
+                    Client client = Client.Accept(_SOCKET);
+                    _VISITORS.Enqueue(client);
+                    _LEVEL_QUEUE.Enqueue(0);
+
+                    SocketMethods.SetBlocking(_SOCKET, false);
+                }
+            }
+            catch (TryAgainException)
+            {
+                /*Console.WriteLine("TryAgainException!");*/
             }
 
+            
+        }
+
+        public void Flush()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             // TODO: Handle client, send Disconnet Packet if the client's step is after StartLogin;
+        }
+
+        public void Dispose()
+        {
+            // Assertions.
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_VISITORS.Empty);
+            System.Diagnostics.Debug.Assert(_LEVEL_QUEUE.Empty);
+
+            // Release resources.
+            _SOCKET.Dispose();
+            _VISITORS.Dispose();
+            _LEVEL_QUEUE.Dispose();
+
+            // Finish.
+            System.GC.SuppressFinalize(this);
+            _disposed = true;
         }
 
     }
