@@ -1,7 +1,7 @@
 ﻿
 using Common;
 
-namespace MinecraftServerFramework
+namespace MinecraftServerEngine
 {
     public enum Blocks : int
     {

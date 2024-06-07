@@ -3,7 +3,7 @@ using Containers;
 using System.Numerics;
 using Threading;
 
-namespace MinecraftServerFramework
+namespace MinecraftServerEngine
 {
     public abstract class World : System.IDisposable
     {

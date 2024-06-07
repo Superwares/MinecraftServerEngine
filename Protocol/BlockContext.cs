@@ -3,7 +3,7 @@
 using Common;
 using Containers;
 
-namespace MinecraftServerFramework
+namespace MinecraftServerEngine
 {
     internal static class BlockExtensions
     {

@@ -1,7 +1,7 @@
 ﻿
 using Containers;
 
-namespace MinecraftServerFramework
+namespace MinecraftServerEngine
 {
     internal class PlayerListRendererManager : System.IDisposable
     {

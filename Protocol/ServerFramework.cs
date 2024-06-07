@@ -2,9 +2,9 @@
 using Applications;
 using Threading;
 
-namespace MinecraftServerFramework
+namespace MinecraftServerEngine
 {
-    public class MinecraftServerFramework : ConsoleApplication
+    public class ServerFramework : ConsoleApplication
     {
         private bool _disposed = false;
 
@@ -12,13 +12,12 @@ namespace MinecraftServerFramework
 
         private long _ticks = 0;
 
-
-        public MinecraftServerFramework(World world)
+        public ServerFramework(World world)
         {
             _WORLD = world;
         }
 
-        ~MinecraftServerFramework() => System.Diagnostics.Debug.Assert(false);
+        ~ServerFramework() => System.Diagnostics.Debug.Assert(false);
 
         private void CountTicks()
         {

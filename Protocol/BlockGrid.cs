@@ -1,7 +1,7 @@
 ﻿
 using Common;
 
-namespace MinecraftServerFramework
+namespace MinecraftServerEngine
 {
     internal sealed class BlockGrid : System.IEquatable<BlockGrid>
     {

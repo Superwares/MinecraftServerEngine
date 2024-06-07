@@ -2,7 +2,7 @@
 
 using Common;
 
-namespace MinecraftServerFramework
+namespace MinecraftServerEngine
 {
     internal readonly struct ChunkLocation : System.IEquatable<ChunkLocation>
     {

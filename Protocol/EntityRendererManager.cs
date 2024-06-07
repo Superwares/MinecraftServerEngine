@@ -1,6 +1,6 @@
 ﻿using Containers;
 
-namespace MinecraftServerFramework
+namespace MinecraftServerEngine
 {
     internal sealed class EntityRendererManager : System.IDisposable
     {

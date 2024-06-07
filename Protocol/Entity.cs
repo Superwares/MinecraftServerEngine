@@ -2,7 +2,7 @@
 using Common;
 using Containers;
 
-namespace MinecraftServerFramework
+namespace MinecraftServerEngine
 {
     public abstract class Entity : System.IDisposable
     {

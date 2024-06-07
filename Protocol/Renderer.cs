@@ -1,7 +1,7 @@
 ﻿using Common;
 using Containers;
 
-namespace MinecraftServerFramework
+namespace MinecraftServerEngine
 {
     internal abstract class Renderer
     {

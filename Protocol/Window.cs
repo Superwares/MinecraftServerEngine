@@ -1,7 +1,7 @@
 ﻿
 using Containers;
 
-namespace MinecraftServerFramework
+namespace MinecraftServerEngine
 {
     internal sealed class Window : System.IDisposable
     {

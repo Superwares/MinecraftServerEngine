@@ -1,5 +1,9 @@
-﻿# Server
+﻿# Minecraft Server Engine
+The Minecraft Server Engine is a game engine designed to enhance the gameplay experience in Minecraft.
 
+## Features
+* Comprehensive Customization of Game Objects
+* Parallel Computing
 
 ## Code Conventions
 

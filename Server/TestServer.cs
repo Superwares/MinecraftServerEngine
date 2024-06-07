@@ -1,5 +1,4 @@
-﻿using Protocol;
-using Framework;
+﻿using MinecraftServerEngine;
 
 namespace TestServer
 {
@@ -12,7 +11,7 @@ namespace TestServer
 
             using World world = new SuperWorld();
 
-            using MinecraftServerFramework framework = new(world);
+            using ServerFramework framework = new(world);
             framework.Run();
         }
 
