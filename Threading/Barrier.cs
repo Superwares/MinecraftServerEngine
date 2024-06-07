@@ -10,7 +10,7 @@ namespace Threading
             throw new System.NotImplementedException();
         }
 
-        ~Barrier() => System.Diagnostics.Debug.Assert(false):
+        ~Barrier() => System.Diagnostics.Debug.Assert(false);
 
         public void Hold()
         {

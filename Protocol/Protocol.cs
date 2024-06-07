@@ -2,7 +2,7 @@
 using Applications;
 using Containers;
 
-namespace Protocol
+namespace MinecraftServerFramework
 {
     internal static class SocketMethods
     {

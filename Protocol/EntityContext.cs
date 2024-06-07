@@ -2,7 +2,7 @@
 using Containers;
 using Threading;
 
-namespace Protocol
+namespace MinecraftServerFramework
 {
     internal sealed class EntityContext : System.IDisposable
     {

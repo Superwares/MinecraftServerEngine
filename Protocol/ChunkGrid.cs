@@ -1,7 +1,7 @@
 ﻿
 using Common;
 
-namespace Protocol
+namespace MinecraftServerFramework
 {
     internal sealed class ChunkGrid : System.IEquatable<ChunkGrid>
     {

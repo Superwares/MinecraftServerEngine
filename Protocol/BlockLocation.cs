@@ -2,7 +2,7 @@
 
 using Common;
 
-namespace Protocol
+namespace MinecraftServerFramework
 {
     internal readonly struct BlockLocation : System.IEquatable<BlockLocation>
     {

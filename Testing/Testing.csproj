@@ -21,8 +21,8 @@
     <ProjectReference Include="..\Applications\Applications.csproj" />
     <ProjectReference Include="..\Application\Server.csproj" />
     <ProjectReference Include="..\Containers\Containers.csproj" />
-    <ProjectReference Include="..\Protocol\Framework.csproj" />
-    <ProjectReference Include="..\Server\Server.csproj" />
+    <ProjectReference Include="..\Protocol\MinecraftServerFramework.csproj" />
+    <ProjectReference Include="..\Server\TestServer.csproj" />
   </ItemGroup>
 
   <ItemGroup>

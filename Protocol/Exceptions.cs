@@ -1,6 +1,6 @@
 ﻿
 
-namespace Protocol
+namespace MinecraftServerFramework
 {
     public abstract class ProtocolException : System.Exception
     {

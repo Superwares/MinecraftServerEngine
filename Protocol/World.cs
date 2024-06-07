@@ -3,7 +3,7 @@ using Containers;
 using System.Numerics;
 using Threading;
 
-namespace Protocol
+namespace MinecraftServerFramework
 {
     public abstract class World : System.IDisposable
     {
@@ -17,8 +17,8 @@ namespace Protocol
         private readonly ConcurrentNumList _ENTITY_ID_LIST = new();  // Disposable
 
         private readonly ConcurrentQueue<Entity> _ENTITY_SPAWNING_POOL = new();  // Disposable
-        private readonly ParallelQueue<Entity> _ENTITIES = new();  // Disposable
-        private readonly ParallelQueue<Player> _PLAYERS = new();
+        internal readonly ParallelQueue<Entity> _ENTITIES = new();  // Disposable
+        internal readonly ParallelQueue<Player> _PLAYERS = new();
 
         private readonly ConcurrentTable<System.Guid, Player> _DISCONNECTED_PLAYERS = new(); // Disposable
 

@@ -1,7 +1,7 @@
 ﻿
 using Common;
 
-namespace Protocol
+namespace MinecraftServerFramework
 {
 
     // TODO: Check system is little- or big-endian.

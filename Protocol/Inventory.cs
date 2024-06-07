@@ -1,7 +1,7 @@
 ﻿
 using Containers;
 
-namespace Protocol
+namespace MinecraftServerFramework
 {
     public abstract class Inventory : System.IDisposable
     {

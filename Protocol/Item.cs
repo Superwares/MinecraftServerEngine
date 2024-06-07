@@ -3,7 +3,7 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 
-namespace Protocol
+namespace MinecraftServerFramework
 {
     public sealed class Item : IEquatable<Item>
     {

@@ -1,6 +1,6 @@
 ﻿using Containers;
 
-namespace Protocol
+namespace MinecraftServerFramework
 {
     internal sealed class PublicInventoryRenderer : System.IDisposable
     {

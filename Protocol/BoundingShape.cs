@@ -1,5 +1,5 @@
 ﻿
-namespace Protocol
+namespace MinecraftServerFramework
 {
     internal sealed class BoundingShape
     {

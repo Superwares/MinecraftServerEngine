@@ -2,7 +2,7 @@
 
 using Common;
 
-namespace Protocol
+namespace MinecraftServerFramework
 {
     public readonly struct Vector : System.IEquatable<Vector>
     {

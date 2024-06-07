@@ -3,7 +3,7 @@
 using Containers;
 using Threading;
 
-namespace Protocol
+namespace MinecraftServerFramework
 {
     internal class PlayerList : System.IDisposable
     {

@@ -2,7 +2,7 @@
 
 using Common;
 
-namespace Protocol
+namespace MinecraftServerFramework
 {
     internal readonly struct ChunkLocation : System.IEquatable<ChunkLocation>
     {

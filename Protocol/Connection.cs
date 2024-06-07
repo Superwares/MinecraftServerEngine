@@ -1,7 +1,7 @@
 ﻿
 using Containers;
 
-namespace Protocol
+namespace MinecraftServerFramework
 {
     public sealed class Connection : System.IDisposable
     {

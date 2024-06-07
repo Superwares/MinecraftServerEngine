@@ -1,7 +1,7 @@
 ﻿
 using Common;
 
-namespace Protocol
+namespace MinecraftServerFramework
 {
     public sealed class BoundingBox
     {

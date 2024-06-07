@@ -1,9 +1,8 @@
 ﻿
 using Applications;
-using Protocol;
 using Threading;
 
-namespace Framework
+namespace MinecraftServerFramework
 {
     public class MinecraftServerFramework : ConsoleApplication
     {
@@ -47,11 +46,11 @@ namespace Framework
 
             barrier.Hold();
 
-            _WORLD.DespawnEntities();
+            _WORLD.DestroyEntities();
 
             barrier.Hold();
 
-            _WORLD.DespawnPlayers();
+            _WORLD.DestroyPlayers();
 
             barrier.Hold();
 
@@ -59,11 +58,11 @@ namespace Framework
 
             barrier.Hold();
 
-            connListener.Accept(_WORLD);
+            _WORLD.CreateEntities();
 
             barrier.Hold();
 
-            _WORLD.SpawnEntities();
+            connListener.Accept(_WORLD);
 
             barrier.Hold();
 
@@ -88,19 +87,19 @@ namespace Framework
         {
             barrier.Wait();
 
-            server._CONNECTIONS.Switch();
+            _WORLD._PLAYERS.Switch();
 
             barrier.Start();
 
-            // Handle controls.
+            // Start player routines.
 
             barrier.Wait();
 
-            server._DISCONNECTIONS.Switch();
+            _WORLD._PLAYERS.Switch();
 
             barrier.Start();
 
-            // Handle disconnections.
+            // Handle player connections.
 
             barrier.Wait();
 
@@ -108,7 +107,15 @@ namespace Framework
 
             barrier.Start();
 
-            // Despawn entities.
+            // Destroy entities.
+
+            barrier.Wait();
+
+            _WORLD._PLAYERS.Switch();
+
+            barrier.Start();
+
+            // Destroy players.
 
             barrier.Wait();
 
@@ -122,27 +129,27 @@ namespace Framework
 
             barrier.Start();
 
-            // Accept new connections.
+            // Create entities.
 
             barrier.Wait();
 
             barrier.Start();
 
-            // Spawn entities.
+            // Create or connect players.
 
             barrier.Wait();
 
-            server._CONNECTIONS.Switch();
+            _WORLD._PLAYERS.Switch();
 
             barrier.Start();
 
-            // Handle renders.
+            // Handle player renders.
 
             barrier.Wait();
 
             barrier.Start();
 
-            // Start world routine
+            // Start world routine.
 
             barrier.Wait();
 
@@ -150,13 +157,7 @@ namespace Framework
 
             barrier.Start();
 
-            // Start entity routines
-
-            barrier.Wait();
-
-            barrier.Start();
-
-            // Release resources.
+            // Start entity routines.
         }
 
         public void Run()

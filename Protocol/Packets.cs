@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using Containers;
 
-namespace Protocol
+namespace MinecraftServerFramework
 {
 
     internal class SlotData

@@ -3,7 +3,7 @@
 using Common;
 using Containers;
 
-namespace Protocol
+namespace MinecraftServerFramework
 {
     internal static class BlockExtensions
     {

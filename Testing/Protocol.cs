@@ -1,6 +1,6 @@
 ﻿using Protocol;
 
-namespace Protocol
+namespace MinecraftServerFramework
 {
     public class Tests
     {
