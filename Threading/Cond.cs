@@ -5,7 +5,7 @@ namespace Threading
     {
         private bool _disposed = false;
 
-        public void Hold()
+        public void Wait()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

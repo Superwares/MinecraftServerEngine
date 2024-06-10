@@ -81,43 +81,43 @@ namespace MinecraftServerEngine
 
             System.Console.Write(".");
 
-            barrier.Hold();
+            barrier.Wait();
 
             _WORLD.StartPlayerRoutines(_ticks);
 
-            barrier.Hold();
+            barrier.Wait();
 
             _WORLD.HandlePlayerConnections(_ticks);
 
-            barrier.Hold();
+            barrier.Wait();
 
             _WORLD.DestroyEntities();
 
-            barrier.Hold();
+            barrier.Wait();
 
             _WORLD.DestroyPlayers();
 
-            barrier.Hold();
+            barrier.Wait();
 
             _WORLD.MoveEntities();
 
-            barrier.Hold();
+            barrier.Wait();
 
             _WORLD.CreateEntities();
 
-            barrier.Hold();
+            barrier.Wait();
 
             connListener.Accept(_WORLD);
 
-            barrier.Hold();
+            barrier.Wait();
 
             _WORLD.HandlePlayerRenders();
 
-            barrier.Hold();
+            barrier.Wait();
 
             _WORLD.StartRoutine(_ticks);
 
-            barrier.Hold();
+            barrier.Wait();
 
             _WORLD.StartEntityRoutines(_ticks);
 
@@ -130,7 +130,7 @@ namespace MinecraftServerEngine
 
         private void StartMainRoutine(Barrier barrier)
         {
-            barrier.Wait();
+            barrier.Hold();
 
             _WORLD._PLAYERS.Switch();
 
@@ -138,7 +138,7 @@ namespace MinecraftServerEngine
 
             // Start player routines.
 
-            barrier.Wait();
+            barrier.Hold();
 
             _WORLD._PLAYERS.Switch();
 
@@ -146,7 +146,7 @@ namespace MinecraftServerEngine
 
             // Handle player connections.
 
-            barrier.Wait();
+            barrier.Hold();
 
             _WORLD._ENTITIES.Switch();
 
@@ -154,7 +154,7 @@ namespace MinecraftServerEngine
 
             // Destroy entities.
 
-            barrier.Wait();
+            barrier.Hold();
 
             _WORLD._PLAYERS.Switch();
 
@@ -162,7 +162,7 @@ namespace MinecraftServerEngine
 
             // Destroy players.
 
-            barrier.Wait();
+            barrier.Hold();
 
             _WORLD._ENTITIES.Switch();
 
@@ -170,19 +170,19 @@ namespace MinecraftServerEngine
 
             // Move entities.
 
-            barrier.Wait();
+            barrier.Hold();
 
             barrier.Release();
 
             // Create entities.
 
-            barrier.Wait();
+            barrier.Hold();
 
             barrier.Release();
 
             // Create or connect players.
 
-            barrier.Wait();
+            barrier.Hold();
 
             _WORLD._PLAYERS.Switch();
 
@@ -190,13 +190,13 @@ namespace MinecraftServerEngine
 
             // Handle player renders.
 
-            barrier.Wait();
+            barrier.Hold();
 
             barrier.Release();
 
             // Start world routine.
 
-            barrier.Wait();
+            barrier.Hold();
 
             _WORLD._ENTITIES.Switch();
 

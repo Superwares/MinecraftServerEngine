@@ -12,21 +12,21 @@ namespace Threading
 
         ~Barrier() => System.Diagnostics.Debug.Assert(false);
 
-        public void Hold()
+        public void ReachAndWait()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             throw new System.NotImplementedException();
         }
 
-        public void Wait()
+        public void WaitAllReaching()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             throw new System.NotImplementedException();
         }
 
-        public void Release()
+        public void Broadcast()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
