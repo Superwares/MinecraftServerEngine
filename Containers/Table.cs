@@ -99,6 +99,12 @@ namespace Containers
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <exception cref="DuplicateKeyException"></exception>
         public virtual void Insert(K key, T value)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -118,10 +124,9 @@ namespace Containers
 
                 if (_flags[k])
                 {
-                    /*Console.WriteLine($"_keys[index]: {_keys[index]}, _key: {key} ");*/
                     if (_keys[k].Equals(key))
                     {
-                        System.Diagnostics.Debug.Assert(false);
+                        throw new DuplicateKeyException();
                     }
 
                     continue;
@@ -153,6 +158,12 @@ namespace Containers
                 (indexOrigin == indexTarget);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        /// <exception cref="KeyNotFoundException"></exception>
         public virtual T Extract(K key)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -165,7 +176,7 @@ namespace Containers
 
             if (_count == 0)
             {
-                System.Diagnostics.Debug.Assert(false);
+                throw new KeyNotFoundException();
             }
 
             int j = -1;
@@ -180,7 +191,7 @@ namespace Containers
 
                 if (!_flags[index])
                 {
-                    System.Diagnostics.Debug.Assert(false);
+                    throw new KeyNotFoundException();
                 }
 
                 if (!_keys[index].Equals(key))
@@ -246,6 +257,12 @@ namespace Containers
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        /// <exception cref="KeyNotFoundException"></exception>
         public virtual T Lookup(K key)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -258,7 +275,7 @@ namespace Containers
 
             if (_count == 0)
             {
-                System.Diagnostics.Debug.Assert(false);
+                throw new KeyNotFoundException();
             }
 
             int j = -1;
@@ -270,7 +287,7 @@ namespace Containers
 
                 if (!_flags[k])
                 {
-                    System.Diagnostics.Debug.Assert(false);
+                    throw new KeyNotFoundException();
                 }
 
                 if (!_keys[k].Equals(key))
@@ -492,6 +509,12 @@ namespace Containers
 
         ~ConcurrentTable() => System.Diagnostics.Debug.Assert(false);
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <exception cref="DuplicateKeyException"></exception>
         public override void Insert(K key, T value)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -503,6 +526,12 @@ namespace Containers
             _MUTEX.Unlock();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        /// <exception cref="KeyNotFoundException"></exception>
         public override T Extract(K key)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -516,6 +545,12 @@ namespace Containers
             return v;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        /// <exception cref="KeyNotFoundException"></exception>
         public override T Lookup(K key)
         {
             System.Diagnostics.Debug.Assert(!_disposed);

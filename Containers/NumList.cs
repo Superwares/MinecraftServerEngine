@@ -12,7 +12,7 @@ namespace Containers
         private class Node(int from, int to)
         {
             public int from = from, to = to;
-            public Node? next = null;
+            public Node next = null;
 
         }
 
@@ -53,7 +53,7 @@ namespace Containers
                 System.Diagnostics.Debug.Assert(from == to);
 
                 num = from;
-                Node? next = _first.next;
+                Node next = _first.next;
                 System.Diagnostics.Debug.Assert(next != null);
                 _first = next;
             }
@@ -69,8 +69,8 @@ namespace Containers
 
             System.Diagnostics.Debug.Assert(_first != null);
 
-            Node? prev;
-            Node? current = _first;
+            Node prev;
+            Node current = _first;
 
             int from = current.from,
                 to = current.to;
@@ -87,7 +87,7 @@ namespace Containers
                     }
                     else
                     {
-                        prev = new(n, n);
+                        prev = new Node(n, n);
                         prev.next = current;
                         _first = prev;
                     }
