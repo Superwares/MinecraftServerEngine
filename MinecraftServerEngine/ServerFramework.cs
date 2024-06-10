@@ -134,7 +134,7 @@ namespace MinecraftServerEngine
 
             _WORLD._PLAYERS.Switch();
 
-            barrier.Start();
+            barrier.Release();
 
             // Start player routines.
 
@@ -142,7 +142,7 @@ namespace MinecraftServerEngine
 
             _WORLD._PLAYERS.Switch();
 
-            barrier.Start();
+            barrier.Release();
 
             // Handle player connections.
 
@@ -150,7 +150,7 @@ namespace MinecraftServerEngine
 
             _WORLD._ENTITIES.Switch();
 
-            barrier.Start();
+            barrier.Release();
 
             // Destroy entities.
 
@@ -158,7 +158,7 @@ namespace MinecraftServerEngine
 
             _WORLD._PLAYERS.Switch();
 
-            barrier.Start();
+            barrier.Release();
 
             // Destroy players.
 
@@ -166,19 +166,19 @@ namespace MinecraftServerEngine
 
             _WORLD._ENTITIES.Switch();
 
-            barrier.Start();
+            barrier.Release();
 
             // Move entities.
 
             barrier.Wait();
 
-            barrier.Start();
+            barrier.Release();
 
             // Create entities.
 
             barrier.Wait();
 
-            barrier.Start();
+            barrier.Release();
 
             // Create or connect players.
 
@@ -186,13 +186,13 @@ namespace MinecraftServerEngine
 
             _WORLD._PLAYERS.Switch();
 
-            barrier.Start();
+            barrier.Release();
 
             // Handle player renders.
 
             barrier.Wait();
 
-            barrier.Start();
+            barrier.Release();
 
             // Start world routine.
 
@@ -200,7 +200,7 @@ namespace MinecraftServerEngine
 
             _WORLD._ENTITIES.Switch();
 
-            barrier.Start();
+            barrier.Release();
 
             // Start entity routines.
         }

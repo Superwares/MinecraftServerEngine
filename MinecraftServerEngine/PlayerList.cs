@@ -43,7 +43,7 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
-        private readonly Mutex _MUTEX = new();  // Disposable
+        private readonly Lock _MUTEX = new();  // Disposable
         private readonly ConcurrentTable<System.Guid, Info> _INFORS = new();  // Disposable
         private readonly PlayerListRendererManager _MANAGER = new();  // Disposable
 
@@ -75,7 +75,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Lock();
+            _MUTEX.Hold();
 
             foreach (Info info in _INFORS.GetValues())
             {
@@ -93,7 +93,7 @@ namespace MinecraftServerEngine
 
             _MANAGER.UpdatePlayerLatency(infoSelf.UserId, infoSelf.Laytency);
 
-            _MUTEX.Unlock();
+            _MUTEX.Release();
         }
 
         public void UpdateLaytency(System.Guid userId, long ticks)
@@ -112,7 +112,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Lock();
+            _MUTEX.Hold();
 
             System.Diagnostics.Debug.Assert(!IsDisconnected(userId));
             _MANAGER.Cancel(userId);
@@ -124,7 +124,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(userId == info.UserId);
             _MANAGER.UpdatePlayerLatency(info.UserId, info.Laytency);
 
-            _MUTEX.Unlock();
+            _MUTEX.Release();
         }
 
         public void Remove(System.Guid userId)

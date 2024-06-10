@@ -100,7 +100,7 @@ namespace Containers
     {
         private bool _disposed = false;
 
-        private readonly Mutex _MUTEX = new();
+        private readonly Lock _MUTEX = new();
 
         public ConcurrentSwapQueue() { }
 
@@ -110,22 +110,22 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Lock();
+            _MUTEX.Hold();
 
             base.Swap();
 
-            _MUTEX.Unlock();
+            _MUTEX.Release();
         }
 
         public override void Enqueue(T value)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Lock();
+            _MUTEX.Hold();
 
             base.Enqueue(value);
 
-            _MUTEX.Unlock();
+            _MUTEX.Release();
         }
 
         /// <summary>
@@ -137,11 +137,11 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Lock();
+            _MUTEX.Hold();
 
             T value = base.Dequeue();
 
-            _MUTEX.Unlock();
+            _MUTEX.Release();
 
             return value;
         }

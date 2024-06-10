@@ -26,7 +26,7 @@ namespace Threading
             throw new System.NotImplementedException();
         }
 
-        public void Start()
+        public void Release()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

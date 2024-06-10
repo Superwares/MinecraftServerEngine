@@ -8,7 +8,7 @@ namespace MinecraftServerEngine
     {
         private bool _disposed = false;
 
-        private readonly Mutex _MUTEX = new();  // Disposable
+        private readonly Lock _MUTEX = new();  // Disposable
         private readonly Table<ChunkLocation, Table<int, Entity>> _CHUNK_TO_ENTITIES = new();  // Disposable
         private readonly ConcurrentTable<int, ChunkGrid> _ENTITY_TO_CHUNKS = new();  // Disposable
 
@@ -17,7 +17,7 @@ namespace MinecraftServerEngine
 
         private void InsertEntityToChunk(ChunkLocation loc, Entity entity)
         {
-            _MUTEX.Lock();
+            _MUTEX.Hold();
 
             Table<int, Entity> entities;
             if (!_CHUNK_TO_ENTITIES.Contains(loc))
@@ -32,14 +32,14 @@ namespace MinecraftServerEngine
 
             entities.Insert(entity.Id, entity);
 
-            _MUTEX.Unlock();
+            _MUTEX.Release();
         }
 
         private void ExtractEntityToChunk(ChunkLocation loc, Entity entity)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Lock();
+            _MUTEX.Hold();
 
             System.Diagnostics.Debug.Assert(_CHUNK_TO_ENTITIES.Contains(loc));
             Table<int, Entity> entities = _CHUNK_TO_ENTITIES.Lookup(loc);
@@ -53,7 +53,7 @@ namespace MinecraftServerEngine
                 entities.Dispose();
             }
 
-            _MUTEX.Unlock();
+            _MUTEX.Release();
         }
 
         public void InitEntityChunkMapping(Entity entity)

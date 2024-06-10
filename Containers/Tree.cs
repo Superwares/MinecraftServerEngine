@@ -368,7 +368,7 @@ namespace Containers
     {
         private bool _disposed = false;
 
-        private readonly RWMutex _MUTEX = new();
+        private readonly RWLock _MUTEX = new();
 
         public ConcurrentTree() { }
 
@@ -384,11 +384,11 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Lock();
+            _MUTEX.Hold();
 
             base.Insert(key);
 
-            _MUTEX.Unlock();
+            _MUTEX.Release();
         }
 
         /// <summary>
@@ -401,22 +401,22 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Lock();
+            _MUTEX.Hold();
 
             base.Extract(key);
 
-            _MUTEX.Unlock();
+            _MUTEX.Release();
         }
 
         public override bool Contains(K key)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Rlock();
+            _MUTEX.HoldForRead();
 
             bool f = base.Contains(key);
 
-            _MUTEX.Unlock();
+            _MUTEX.Release();
 
             return f;
         }
@@ -425,11 +425,11 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Lock();
+            _MUTEX.Hold();
 
             K[] keys = base.Flush();
 
-            _MUTEX.Unlock();
+            _MUTEX.Release();
 
             return keys;
         }
@@ -443,7 +443,7 @@ namespace Containers
             System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
-            _MUTEX.Rlock();
+            _MUTEX.HoldForRead();
 
             if (!Empty)
             {
@@ -464,7 +464,7 @@ namespace Containers
                 }
             }
 
-            _MUTEX.Unlock();
+            _MUTEX.Release();
         }
 
         public override void Dispose()

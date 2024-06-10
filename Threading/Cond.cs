@@ -1,22 +1,25 @@
 ﻿
 namespace Threading
 {
-    public sealed class Mutex : System.IDisposable
+    public sealed class Cond : System.IDisposable
     {
         private bool _disposed = false;
 
-        public Mutex() { }
-
-        ~Mutex() => System.Diagnostics.Debug.Assert(false):
-
-        public void Lock()
+        public void Hold()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             throw new System.NotImplementedException();
         }
 
-        public void Unlock()
+        public void Signal()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            throw new System.NotImplementedException();
+        }
+
+        public void Broadcast()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
