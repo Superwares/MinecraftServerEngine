@@ -12,8 +12,6 @@ namespace MinecraftServerEngine
         private bool _disposed = false;
 
 
-        private readonly object _SHARED_OBJECT = new();
-
 
         private bool _running = true;
         public bool Running => _running;
@@ -81,43 +79,43 @@ namespace MinecraftServerEngine
 
             System.Console.Write(".");
 
-            barrier.Wait();
+            barrier.ReachAndWait();
 
             _WORLD.StartPlayerRoutines(_ticks);
 
-            barrier.Wait();
+            barrier.ReachAndWait();
 
             _WORLD.HandlePlayerConnections(_ticks);
 
-            barrier.Wait();
+            barrier.ReachAndWait();
 
             _WORLD.DestroyEntities();
 
-            barrier.Wait();
+            barrier.ReachAndWait();
 
             _WORLD.DestroyPlayers();
 
-            barrier.Wait();
+            barrier.ReachAndWait();
 
             _WORLD.MoveEntities();
 
-            barrier.Wait();
+            barrier.ReachAndWait();
 
             _WORLD.CreateEntities();
 
-            barrier.Wait();
+            barrier.ReachAndWait();
 
             connListener.Accept(_WORLD);
 
-            barrier.Wait();
+            barrier.ReachAndWait();
 
             _WORLD.HandlePlayerRenders();
 
-            barrier.Wait();
+            barrier.ReachAndWait();
 
             _WORLD.StartRoutine(_ticks);
 
-            barrier.Wait();
+            barrier.ReachAndWait();
 
             _WORLD.StartEntityRoutines(_ticks);
 
@@ -130,77 +128,77 @@ namespace MinecraftServerEngine
 
         private void StartMainRoutine(Barrier barrier)
         {
-            barrier.Hold();
+            barrier.WaitAllReaching();
 
             _WORLD._PLAYERS.Switch();
 
-            barrier.Release();
+            barrier.Broadcast();
 
             // Start player routines.
 
-            barrier.Hold();
+            barrier.WaitAllReaching();
 
             _WORLD._PLAYERS.Switch();
 
-            barrier.Release();
+            barrier.Broadcast();
 
             // Handle player connections.
 
-            barrier.Hold();
+            barrier.WaitAllReaching();
 
             _WORLD._ENTITIES.Switch();
 
-            barrier.Release();
+            barrier.Broadcast();
 
             // Destroy entities.
 
-            barrier.Hold();
+            barrier.WaitAllReaching();
 
             _WORLD._PLAYERS.Switch();
 
-            barrier.Release();
+            barrier.Broadcast();
 
             // Destroy players.
 
-            barrier.Hold();
+            barrier.WaitAllReaching();
 
             _WORLD._ENTITIES.Switch();
 
-            barrier.Release();
+            barrier.Broadcast();
 
             // Move entities.
 
-            barrier.Hold();
+            barrier.WaitAllReaching();
 
-            barrier.Release();
+            barrier.Broadcast();
 
             // Create entities.
 
-            barrier.Hold();
+            barrier.WaitAllReaching();
 
-            barrier.Release();
+            barrier.Broadcast();
 
             // Create or connect players.
 
-            barrier.Hold();
+            barrier.WaitAllReaching();
 
             _WORLD._PLAYERS.Switch();
 
-            barrier.Release();
+            barrier.Broadcast();
 
             // Handle player renders.
 
-            barrier.Hold();
+            barrier.WaitAllReaching();
 
-            barrier.Release();
+            barrier.Broadcast();
 
             // Start world routine.
 
-            barrier.Hold();
+            barrier.WaitAllReaching();
 
             _WORLD._ENTITIES.Switch();
 
-            barrier.Release();
+            barrier.Broadcast();
 
             // Start entity routines.
         }
@@ -249,6 +247,7 @@ namespace MinecraftServerEngine
                 {
                     total -= interval;
 
+                    System.Diagnostics.Debug.Assert(_ticks >= 0);
                     StartMainRoutine(barrier);
                     CountTicks();
                 }
