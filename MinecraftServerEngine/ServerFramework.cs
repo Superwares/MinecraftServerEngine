@@ -1,20 +1,19 @@
 ﻿
-using Threading;
+using Common;
+using Sync;
 using Containers;
 
 namespace MinecraftServerEngine
 {
     public class ServerFramework : System.IDisposable
     {
-        private delegate void StartRoutine();
-
 
         private bool _disposed = false;
 
 
         private bool _running = true;
 
-        private readonly Queue<System.Threading.Thread> _THREADS = new();  // Disposable
+        private readonly Queue<Thread> _THREADS = new();  // Disposable
 
 
         private readonly World _WORLD;
@@ -28,18 +27,6 @@ namespace MinecraftServerEngine
         }
 
         ~ServerFramework() => System.Diagnostics.Debug.Assert(false);
-
-        private void NewThread(StartRoutine startRoutine)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(_running);
-
-            System.Threading.Thread thread = new(new System.Threading.ThreadStart(startRoutine));
-            thread.Start();
-
-            _THREADS.Enqueue(thread);
-        }
 
         private void CountTicks()
         {
@@ -196,7 +183,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            HandleCancelSignal(StartCancelRoutine);
+            Console.HandleCancelEvent(StartCancelRoutine);
 
             ushort port = 25565;
 
@@ -207,17 +194,19 @@ namespace MinecraftServerEngine
 
             for (int i = 0; i < n; ++i)
             {
-                NewThread(() =>
+                var coreThread = Thread.New(() =>
                 {
                     while (_running)
                     {
                         StartCoreRoutine(barrier, connListener);
                     }
                 });
+
+                _THREADS.Enqueue(coreThread);
             }
 
 
-            NewThread(() =>
+            var subThread1 = Thread.New(() =>
             {
                 using ClientListener clientListener = new(connListener, port);
 
@@ -228,6 +217,8 @@ namespace MinecraftServerEngine
 
                 clientListener.Flush();
             });
+
+            _THREADS.Enqueue(subThread1);
 
             long interval, total, start, end, elapsed;
 
@@ -260,7 +251,7 @@ namespace MinecraftServerEngine
             // Handle close routine.
             while (!_THREADS.Empty)
             {
-                System.Threading.Thread t = _THREADS.Dequeue();
+                Thread t = _THREADS.Dequeue();
                 t.Join();
             }
 

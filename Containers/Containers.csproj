@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj" />
-    <ProjectReference Include="..\Threading\Threading.csproj" />
+    <ProjectReference Include="..\Threading\Sync.csproj" />
   </ItemGroup>
 
 </Project>

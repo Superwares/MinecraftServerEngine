@@ -1,5 +1,5 @@
 ﻿
-namespace Threading
+namespace Sync
 {
     public sealed class Cond : System.IDisposable
     {
