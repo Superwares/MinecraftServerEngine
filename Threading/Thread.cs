@@ -2,7 +2,7 @@
 
 namespace Threading
 {
-    public sealed class ParallelQueue
+    internal class Thread
     {
     }
 }

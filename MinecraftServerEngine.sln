@@ -23,7 +23,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Threading", "Threading\Thre
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinecraftServerEngine", "MinecraftServerEngine\MinecraftServerEngine.csproj", "{B3EE03EE-628A-49B7-B423-D1D659DDDBE0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestServer", "TestServer\TestServer.csproj", "{0BBCAEC1-509B-4076-95AA-26F7E3C2D0B5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestServerApplication", "TestServer\TestServerApplication.csproj", "{0BBCAEC1-509B-4076-95AA-26F7E3C2D0B5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

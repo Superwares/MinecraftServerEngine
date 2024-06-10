@@ -1,23 +1,69 @@
 ﻿
-using Applications;
 using Threading;
+using Containers;
 
 namespace MinecraftServerEngine
 {
-    public class ServerFramework : ConsoleApplication
+    public class ServerFramework : System.IDisposable
     {
+        private delegate void StartRoutine();
+
+
         private bool _disposed = false;
+
+
+        private readonly object _SHARED_OBJECT = new();
+
+
+        private bool _running = true;
+        public bool Running => _running;
+
+        private readonly Queue<System.Threading.Thread> _THREADS = new();  // Disposable
+
 
         private readonly World _WORLD;
 
         private long _ticks = 0;
 
+        private void Cancel(object? sender, System.ConsoleCancelEventArgs e)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            lock (_SHARED_OBJECT)
+            {
+                _running = false;
+
+                while (_THREADS.Count > 0)
+                {
+                    System.Threading.Thread t = _THREADS.Dequeue();
+                    t.Join();
+                }
+
+                System.Threading.Monitor.Wait(_SHARED_OBJECT);
+            }
+
+        }
+
         public ServerFramework(World world)
         {
             _WORLD = world;
+
+            System.Console.CancelKeyPress += Cancel;
         }
 
         ~ServerFramework() => System.Diagnostics.Debug.Assert(false);
+
+        private void NewThread(StartRoutine startRoutine)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_running);
+
+            System.Threading.Thread thread = new(new System.Threading.ThreadStart(startRoutine));
+            thread.Start();
+
+            _THREADS.Enqueue(thread);
+        }
 
         private void CountTicks()
         {
@@ -170,7 +216,7 @@ namespace MinecraftServerEngine
 
             for (int i = 0; i < n; ++i)
             {
-                Run(() =>
+                NewThread(() =>
                 {
                     while (Running)
                     {
@@ -180,7 +226,7 @@ namespace MinecraftServerEngine
             }
 
 
-            Run(() =>
+            NewThread(() =>
             {
                 using ClientListener clientListener = new(connListener, port);
 
@@ -222,17 +268,28 @@ namespace MinecraftServerEngine
             // Handle close routine...
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
             // Assertiong
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            lock (_SHARED_OBJECT)
+            {
+                System.Threading.Monitor.Pulse(_SHARED_OBJECT);
+            }
+
+            System.Diagnostics.Debug.Assert(!_running);
+            System.Diagnostics.Debug.Assert(_THREADS.Empty);
+
             // Release resources.
+            _THREADS.Dispose();
             _WORLD.Dispose();
 
             // Finish
-            base.Dispose();
+            System.GC.SuppressFinalize(this);
             _disposed = true;
+
+            System.Console.Write("Cancel!");
         }
 
     }

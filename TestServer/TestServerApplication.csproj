@@ -8,9 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Applications\Applications.csproj" />
     <ProjectReference Include="..\Containers\Containers.csproj" />
-    <ProjectReference Include="..\Protocol\MinecraftServerEngine.csproj" />
+    <ProjectReference Include="..\MinecraftServerEngine\MinecraftServerEngine.csproj" />
   </ItemGroup>
 
 </Project>

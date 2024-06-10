@@ -10,7 +10,7 @@ namespace Containers
         private bool _disposed = false;
 
         protected const int _MIN_LENGTH = 16;
-        protected const int _EXPENSION_FACTOR = 2;
+        protected const int _EXPANSION_FACTOR = 2;
         protected const float _LOAD_FACTOR = 0.75F;
         protected const int _C = 5;
 
@@ -98,14 +98,17 @@ namespace Containers
             System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
+            int j = -1;
+
             int hash = Hash(key);
             for (int i = 0; i < _length; ++i)
             {
-                int index = (hash + i) % _length;
+                int k = (hash + i) % _length;
 
-                if (_flags[index])
+                if (_flags[k])
                 {
-                    if (_keys[index].Equals(key))
+                    /*Console.WriteLine($"_keys[index]: {_keys[index]}, _key: {key} ");*/
+                    if (_keys[k].Equals(key))
                     {
                         System.Diagnostics.Debug.Assert(false);
                     }
@@ -113,27 +116,29 @@ namespace Containers
                     continue;
                 }
 
-                _flags[index] = true;
-                _keys[index] = key;
-                _count++;
-
-                float factor = (float)_count / (float)_length;
-                if (factor >= _LOAD_FACTOR)
-                {
-                    Resize(_length * _EXPENSION_FACTOR);
-                }
+                j = k;
 
                 break;
             }
 
+            System.Diagnostics.Debug.Assert(j >= 0);
+            _flags[j] = true;
+            _keys[j] = key;
+            _count++;
+
+            float factor = (float)_count / (float)_length;
+            if (factor >= _LOAD_FACTOR)
+            {
+                Resize(_length * _EXPANSION_FACTOR);
+            }
         }
 
-        private bool CanShift(int targetIndex, int currentIndex, int originIndex)
+        private bool CanShift(int indexTarget, int indexCurrent, int indexOrigin)
         {
-            return (targetIndex < currentIndex && currentIndex < originIndex) ||
-                (originIndex < targetIndex && targetIndex < currentIndex) ||
-                (currentIndex < originIndex && originIndex < targetIndex) ||
-                (originIndex == targetIndex);
+            return (indexTarget < indexCurrent && indexCurrent < indexOrigin) ||
+                (indexOrigin < indexTarget && indexTarget < indexCurrent) ||
+                (indexCurrent < indexOrigin && indexOrigin < indexTarget) ||
+                (indexOrigin == indexTarget);
         }
 
         public virtual void Extract(K key)
@@ -150,11 +155,15 @@ namespace Containers
                 System.Diagnostics.Debug.Assert(false);
             }
 
-            int targetIndex = -1, nextI = -1;
+            int j = -1;
+
             int hash = Hash(key);
-            for (int i = 0; i < _length; ++i)
+
+            int index = -1;
+            int i;
+            for (i = 0; i < _length; ++i)
             {
-                int index = (hash + i) % _length;
+                index = (hash + i) % _length;
 
                 if (!_flags[index])
                 {
@@ -166,53 +175,59 @@ namespace Containers
                     continue;
                 }
 
-                _count--;
-
-                if (_MIN_LENGTH < _length)
-                {
-                    int reducedLength = _length / _EXPENSION_FACTOR;
-                    float factor = (float)_count / (float)reducedLength;
-                    if (factor < _LOAD_FACTOR)
-                    {
-                        _flags[index] = false;
-                        Resize(reducedLength);
-
-                        return;
-                    }
-                }
-
-                targetIndex = index;
-                nextI = i + 1;
+                j = index;
 
                 break;
             }
 
-            System.Diagnostics.Debug.Assert(targetIndex >= 0);
-            System.Diagnostics.Debug.Assert(nextI > 0);
-            for (int i = nextI; i < _length; ++i)
+            --_count;
+
+            if (_MIN_LENGTH < _length)
             {
-                int index = (hash + i) % _length;
-
-                if (!_flags[index])
+                int lenReduced = _length / _EXPANSION_FACTOR;
+                float factor = (float)_count / (float)lenReduced;
+                if (factor < _LOAD_FACTOR)
                 {
-                    break;
+                    System.Diagnostics.Debug.Assert(j >= 0);
+                    _flags[j] = false;
+
+                    Resize(lenReduced);
+
+                    return;
                 }
-
-                K shiftedKey = _keys[index];
-                int originIndex = Hash(shiftedKey) % _length;
-                if (!CanShift(targetIndex, index, originIndex))
-                {
-                    continue;
-                }
-
-                _keys[targetIndex] = shiftedKey;
-
-                targetIndex = index;
             }
 
-            _flags[targetIndex] = false;
+            {
+                System.Diagnostics.Debug.Assert(index >= 0);
+                int indexTarget = index, indexOrigin;
 
-            return;
+                K keyShift;
+
+                for (++i; i < _length; ++i)
+                {
+                    index = (hash + i) % _length;
+
+                    if (!_flags[index])
+                    {
+                        break;
+                    }
+
+                    keyShift = _keys[index];
+                    indexOrigin = Hash(keyShift) % _length;
+                    if (!CanShift(indexTarget, index, indexOrigin))
+                    {
+                        continue;
+                    }
+
+                    _keys[indexTarget] = keyShift;
+
+                    indexTarget = index;
+                }
+
+                _flags[indexTarget] = false;
+
+                return;
+            }
         }
 
         public virtual bool Contains(K key)

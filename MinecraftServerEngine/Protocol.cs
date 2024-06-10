@@ -1,6 +1,4 @@
-﻿using Common;
-using Applications;
-using Containers;
+﻿using Containers;
 
 namespace MinecraftServerEngine
 {
@@ -392,7 +390,7 @@ namespace MinecraftServerEngine
                     continue;
                 }
 
-                world.SpawnOrConnectPlayer(user.CLIENT, user.USERNAME, user.USER_ID);
+                world.CreateOrConnectPlayer(user.CLIENT, user.USERNAME, user.USER_ID);
             }
 
         }

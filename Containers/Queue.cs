@@ -11,13 +11,13 @@ namespace Containers
             private T _value = value;
             public T Value => _value;
 
-            public Node? NextNode = null;
+            public Node NextNode = null;
 
         }
 
         private bool _disposed = false;
 
-        protected Node? _outNode = null, _inNode = null;
+        protected Node _outNode = null, _inNode = null;
 
         private int _count = 0;
         public int Count
@@ -40,6 +40,8 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(value != null);
+
             Node newNode = new(value);
 
             if (_count == 0)
@@ -61,13 +63,18 @@ namespace Containers
             _count++;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="EmptyContainerException">The Queue<T> is empty.</exception>
         public virtual T Dequeue()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             if (_count == 0)
             {
-                System.Diagnostics.Debug.Assert(false);
+                throw new EmptyContainerException();
             }
 
             System.Diagnostics.Debug.Assert(_inNode != null);
@@ -86,6 +93,7 @@ namespace Containers
 
             _count--;
 
+            System.Diagnostics.Debug.Assert(value != null);
             return value;
         }
 
@@ -103,7 +111,7 @@ namespace Containers
 
             T[] values = new T[_count];
 
-            Node? node = _outNode;
+            Node node = _outNode;
 
             for (int i = 0; i < _count; ++i)
             {
@@ -132,7 +140,7 @@ namespace Containers
             System.Diagnostics.Debug.Assert(_inNode != null);
             System.Diagnostics.Debug.Assert(_outNode != null);
 
-            Node? current = _outNode;
+            Node current = _outNode;
             do
             {
                 System.Diagnostics.Debug.Assert(current != null);
@@ -180,6 +188,11 @@ namespace Containers
             _MUTEX.Unlock();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="EmptyContainerException">The Queue<T> is empty.</exception>
         public override T Dequeue()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -191,30 +204,6 @@ namespace Containers
             _MUTEX.Unlock();
 
             return v;
-        }
-
-        public bool Dequeue(ref T? v)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            bool f;
-
-            _MUTEX.Lock();
-
-            if (Empty)
-            {
-                f = false;
-            }
-            else
-            {
-                v = base.Dequeue();
-
-                f = true;
-            }
-
-            _MUTEX.Unlock();
-
-            return f;
         }
 
         public override T[] Flush()
@@ -241,7 +230,7 @@ namespace Containers
                 System.Diagnostics.Debug.Assert(_inNode != null);
                 System.Diagnostics.Debug.Assert(_outNode != null);
 
-                Node? current = _outNode;
+                Node current = _outNode;
                 do
                 {
                     System.Diagnostics.Debug.Assert(current != null);
