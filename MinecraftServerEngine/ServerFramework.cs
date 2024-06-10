@@ -12,9 +12,7 @@ namespace MinecraftServerEngine
         private bool _disposed = false;
 
 
-
         private bool _running = true;
-        public bool Running => _running;
 
         private readonly Queue<System.Threading.Thread> _THREADS = new();  // Disposable
 
@@ -23,30 +21,10 @@ namespace MinecraftServerEngine
 
         private long _ticks = 0;
 
-        private void Cancel(object? sender, System.ConsoleCancelEventArgs e)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            lock (_SHARED_OBJECT)
-            {
-                _running = false;
-
-                while (_THREADS.Count > 0)
-                {
-                    System.Threading.Thread t = _THREADS.Dequeue();
-                    t.Join();
-                }
-
-                System.Threading.Monitor.Wait(_SHARED_OBJECT);
-            }
-
-        }
 
         public ServerFramework(World world)
         {
             _WORLD = world;
-
-            System.Console.CancelKeyPress += Cancel;
         }
 
         ~ServerFramework() => System.Diagnostics.Debug.Assert(false);
@@ -65,6 +43,8 @@ namespace MinecraftServerEngine
 
         private void CountTicks()
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(_ticks >= 0);
             System.Diagnostics.Debug.Assert(_ticks <= long.MaxValue);
 
@@ -128,6 +108,8 @@ namespace MinecraftServerEngine
 
         private void StartMainRoutine(Barrier barrier)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             barrier.WaitAllReaching();
 
             _WORLD._PLAYERS.Switch();
@@ -203,8 +185,19 @@ namespace MinecraftServerEngine
             // Start entity routines.
         }
 
+        private void StartCancelRoutine()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            _running = false;
+        }
+
         public void Run()
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            HandleCancelSignal(StartCancelRoutine);
+
             ushort port = 25565;
 
             int n = 2;
@@ -216,7 +209,7 @@ namespace MinecraftServerEngine
             {
                 NewThread(() =>
                 {
-                    while (Running)
+                    while (_running)
                     {
                         StartCoreRoutine(barrier, connListener);
                     }
@@ -228,7 +221,7 @@ namespace MinecraftServerEngine
             {
                 using ClientListener clientListener = new(connListener, port);
 
-                while (Running)
+                while (_running)
                 {
                     clientListener.StartRoutine();
                 }
@@ -241,7 +234,7 @@ namespace MinecraftServerEngine
             interval = total = 50L * 1000L;  // 50 milliseconds
             start = GetCurrentMicroseconds();
 
-            while (Running)
+            while (_running)
             {
                 if (total >= interval)
                 {
@@ -264,19 +257,21 @@ namespace MinecraftServerEngine
                 }
             }
 
-            // Handle close routine...
+            // Handle close routine.
+            while (!_THREADS.Empty)
+            {
+                System.Threading.Thread t = _THREADS.Dequeue();
+                t.Join();
+            }
+
+            System.Diagnostics.Debug.Assert(!_running);
+
         }
 
         public void Dispose()
         {
             // Assertiong
             System.Diagnostics.Debug.Assert(!_disposed);
-
-            lock (_SHARED_OBJECT)
-            {
-                System.Threading.Monitor.Pulse(_SHARED_OBJECT);
-            }
-
             System.Diagnostics.Debug.Assert(!_running);
             System.Diagnostics.Debug.Assert(_THREADS.Empty);
 

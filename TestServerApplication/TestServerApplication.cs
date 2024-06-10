@@ -2,12 +2,8 @@
 
 namespace TestServer
 {
-    public class TestServerApplication : ServerFramework
+    public static class TestServerApplication
     {
-        public TestServerApplication() : base(new SuperWorld())
-        {
-        }
-
         public static void Main()
         {
             System.Console.WriteLine("Hello, World!");
