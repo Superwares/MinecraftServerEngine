@@ -5,6 +5,8 @@ namespace Common
     {
         public static Thread New(StartRoutine f)
         {
+            // TODO: Check it is created in main thread.
+
             throw new System.NotImplementedException();
         }
 

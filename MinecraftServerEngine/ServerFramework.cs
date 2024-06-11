@@ -50,37 +50,46 @@ namespace MinecraftServerEngine
 
             _WORLD.StartPlayerRoutines(_ticks);
 
+
             barrier.ReachAndWait();
 
             _WORLD.HandlePlayerConnections(_ticks);
+
 
             barrier.ReachAndWait();
 
             _WORLD.DestroyEntities();
 
+
             barrier.ReachAndWait();
 
             _WORLD.DestroyPlayers();
+
 
             barrier.ReachAndWait();
 
             _WORLD.MoveEntities();
 
+
             barrier.ReachAndWait();
 
             _WORLD.CreateEntities();
+
 
             barrier.ReachAndWait();
 
             connListener.Accept(_WORLD);
 
+
             barrier.ReachAndWait();
 
             _WORLD.HandlePlayerRenders();
 
+
             barrier.ReachAndWait();
 
             _WORLD.StartRoutine(_ticks);
+
 
             barrier.ReachAndWait();
 
@@ -88,16 +97,11 @@ namespace MinecraftServerEngine
 
         }
 
-        private static long GetCurrentMicroseconds()
-        {
-            return (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
-        }
-
         private void StartMainRoutine(Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            barrier.WaitAllReaching();
+            barrier.WaitAllReach();
 
             _WORLD._PLAYERS.Switch();
 
@@ -105,7 +109,8 @@ namespace MinecraftServerEngine
 
             // Start player routines.
 
-            barrier.WaitAllReaching();
+
+            barrier.WaitAllReach();
 
             _WORLD._PLAYERS.Switch();
 
@@ -113,7 +118,8 @@ namespace MinecraftServerEngine
 
             // Handle player connections.
 
-            barrier.WaitAllReaching();
+
+            barrier.WaitAllReach();
 
             _WORLD._ENTITIES.Switch();
 
@@ -121,7 +127,8 @@ namespace MinecraftServerEngine
 
             // Destroy entities.
 
-            barrier.WaitAllReaching();
+
+            barrier.WaitAllReach();
 
             _WORLD._PLAYERS.Switch();
 
@@ -129,7 +136,8 @@ namespace MinecraftServerEngine
 
             // Destroy players.
 
-            barrier.WaitAllReaching();
+
+            barrier.WaitAllReach();
 
             _WORLD._ENTITIES.Switch();
 
@@ -137,19 +145,22 @@ namespace MinecraftServerEngine
 
             // Move entities.
 
-            barrier.WaitAllReaching();
+
+            barrier.WaitAllReach();
 
             barrier.Broadcast();
 
             // Create entities.
 
-            barrier.WaitAllReaching();
+
+            barrier.WaitAllReach();
 
             barrier.Broadcast();
 
             // Create or connect players.
 
-            barrier.WaitAllReaching();
+
+            barrier.WaitAllReach();
 
             _WORLD._PLAYERS.Switch();
 
@@ -157,19 +168,22 @@ namespace MinecraftServerEngine
 
             // Handle player renders.
 
-            barrier.WaitAllReaching();
+
+            barrier.WaitAllReach();
 
             barrier.Broadcast();
 
             // Start world routine.
 
-            barrier.WaitAllReaching();
+
+            barrier.WaitAllReach();
 
             _WORLD._ENTITIES.Switch();
 
             barrier.Broadcast();
 
             // Start entity routines.
+
         }
 
         private void StartCancelRoutine()
@@ -187,7 +201,7 @@ namespace MinecraftServerEngine
 
             ushort port = 25565;
 
-            int n = 2;
+            int n = 2;  // TODO: Determine using number of processor.
 
             using Barrier barrier = new(n);
             using ConnectionListener connListener = new();
@@ -220,42 +234,48 @@ namespace MinecraftServerEngine
 
             _THREADS.Enqueue(subThread1);
 
-            long interval, total, start, end, elapsed;
-
-            interval = total = 50L * 1000L;  // 50 milliseconds
-            start = GetCurrentMicroseconds();
-
-            while (_running)
             {
-                if (total >= interval)
+                Time interval, accumulated, start, end, elapsed;
+
+                interval = accumulated = Time.FromMilliseconds(50);
+                start = Time.Now();
+
+                while (_running)
                 {
-                    total -= interval;
+                    if (accumulated >= interval)
+                    {
+                        accumulated -= interval;
 
-                    System.Diagnostics.Debug.Assert(_ticks >= 0);
-                    StartMainRoutine(barrier);
-                    CountTicks();
-                }
+                        System.Diagnostics.Debug.Assert(_ticks >= 0);
+                        StartMainRoutine(barrier);
+                        CountTicks();
+                    }
 
-                end = GetCurrentMicroseconds();
-                elapsed = end - start;
-                total += elapsed;
-                start = end;
+                    end = Time.Now();
+                    elapsed = end - start;
+                    start = end;
+                    accumulated += elapsed;
 
-                if (elapsed > interval)
-                {
-                    System.Console.WriteLine();
-                    System.Console.WriteLine($"The task is taking longer than expected, ElapsedTime: {elapsed}.");
+                    if (elapsed > interval)
+                    {
+                        System.Console.WriteLine();
+                        System.Console.WriteLine($"The task is taking longer than expected, ElapsedTime: {elapsed}.");
+                    }
                 }
             }
 
-            // Handle close routine.
-            while (!_THREADS.Empty)
             {
-                Thread t = _THREADS.Dequeue();
-                t.Join();
+                // Handle close routine.
+                while (!_THREADS.Empty)
+                {
+                    Thread t = _THREADS.Dequeue();
+                    t.Join();
+                }
+
+                System.Diagnostics.Debug.Assert(!_running);
             }
 
-            System.Diagnostics.Debug.Assert(!_running);
+            System.Console.Write("Terminated!!");
 
         }
 
@@ -273,8 +293,6 @@ namespace MinecraftServerEngine
             // Finish
             System.GC.SuppressFinalize(this);
             _disposed = true;
-
-            System.Console.Write("Cancel!");
         }
 
     }

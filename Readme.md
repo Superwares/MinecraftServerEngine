@@ -26,6 +26,18 @@ float floatValue = 3.14F;
 double doubleValue = 3.14D;
 ```
 
+###
+<ImplicitUsings>disable</ImplicitUsings>
+<Nullable>disable</Nullable>
+<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+###
+? 또는 ! 를 사용하지 않습니다.
+```c#
+Time? t;
+Time t2 = t!;
+```
+
 ### Exceptions
 
 In case of exceptions that must be thrown, they must be documented using XML tags on the methods,

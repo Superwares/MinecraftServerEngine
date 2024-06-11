@@ -19,7 +19,7 @@ namespace Sync
             throw new System.NotImplementedException();
         }
 
-        public void WaitAllReaching()
+        public void WaitAllReach()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
