@@ -1,6 +1,4 @@
-﻿using Containers;
-
-namespace Containers
+﻿namespace Containers
 {
     internal class NumListTests
     {
@@ -8,7 +6,7 @@ namespace Containers
         public void Test1()
         {
             int N = 10_000;
-            using NumList numList = new();
+            using Numlist numList = new();
 
             for (int i = 0; i < N; ++i)
             {
@@ -35,7 +33,7 @@ namespace Containers
         public void Test2()
         {
             int N = 10_000;
-            using NumList numList = new();
+            using Numlist numList = new();
 
             for (int i = 0; i < N; ++i)
             {

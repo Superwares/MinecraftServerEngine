@@ -155,31 +155,8 @@ namespace PhysicsEngine
 
         private readonly Table<Cell, Tree<PhysicsObject>> _CELL_TO_OBJECTS = new();  // Disposable
         private readonly Table<PhysicsObject, Grid> _OBJECT_TO_GRID = new();  // Disposable
-        
-        public abstract BoundingVolume[] GetTerrainBoundingVolumes(Vector max, Vector min);
 
-        public BoundingVolume[] GetTerrainBoundingVolumes(BoundingVolume volume)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            switch (volume)
-            {
-                default:
-                    throw new System.NotImplementedException();
-                case AxisAlignedBoundingBox aabb:
-                    return GetTerrainBoundingVolumes(aabb.Max, aabb.Min);
-            }
-            
-        }
-
-        public BoundingVolume[] GetTerrainBoundingVolumes(BoundingVolume volume, Vector v)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            BoundingVolume volumeTotal = volume.GetMinBoundingVolume(v);
-
-            return GetTerrainBoundingVolumes(volumeTotal);
-        }
+        public abstract BoundingVolume[] GetTerrainBoundingVolumes(BoundingVolume volume);
 
         public Tree<PhysicsObject> GetPhysicsObjects(BoundingVolume volume)
         {
@@ -290,7 +267,8 @@ namespace PhysicsEngine
 
             (BoundingVolume volumeMoving, Vector v) = obj.Integrate();
 
-            BoundingVolume[] fixedVolumes = GetTerrainBoundingVolumes(volumeMoving, v);
+            BoundingVolume volumeTotal = volumeMoving.GetMinBoundingVolume(v);
+            BoundingVolume[] fixedVolumes = GetTerrainBoundingVolumes(volumeTotal);
 
             int i;
 

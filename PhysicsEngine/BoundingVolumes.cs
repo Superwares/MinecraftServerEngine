@@ -2,26 +2,35 @@
 
 namespace PhysicsEngine
 {
-    public abstract class BoundingVolume
+    public interface BoundingVolume
     {
-        public abstract BoundingVolume Extend(Vector v);
-        public abstract BoundingVolume Move(Vector v);
+        BoundingVolume Extend(Vector v);
+        BoundingVolume Move(Vector v);
 
-        public abstract BoundingVolume GetMinBoundingVolume();
-        public abstract BoundingVolume GetMinBoundingVolume(Vector v);
+        BoundingVolume GetMinBoundingVolume();
+        BoundingVolume GetMinBoundingVolume(Vector v);
 
-        public abstract Vector GetCenter();
-        public abstract Vector GetBottomCenter();
+        Vector GetCenter();
+        Vector GetBottomCenter();
 
-        public abstract bool TestIntersection(BoundingVolume volume);
-        public abstract bool TestIntersection(BoundingVolume volumeMoving, Vector v);
+        bool TestIntersection(BoundingVolume volume);
+        bool TestIntersection(BoundingVolume volumeMoving, Vector v);
 
-        public abstract Vector AdjustMovingVolumeUpAndDown(BoundingVolume volumeMoving, Vector v);
-        public abstract Vector AdjustMovingVolumeSideToSide(BoundingVolume volumeMoving, Vector v);
+        Vector AdjustMovingVolumeUpAndDown(BoundingVolume volumeMoving, Vector v);
+        Vector AdjustMovingVolumeSideToSide(BoundingVolume volumeMoving, Vector v);
 
     }
 
-    public sealed class AxisAlignedBoundingBox : BoundingVolume
+    public readonly struct EmptyBoundingVolume 
+        : BoundingVolume, System.IEquatable<EmptyBoundingVolume>
+    {
+        public EmptyBoundingVolume() { }
+
+
+    }
+
+    public readonly struct AxisAlignedBoundingBox 
+        : BoundingVolume, System.IEquatable<AxisAlignedBoundingBox>
     {
         private readonly Vector _MAX, _MIN;
         public Vector Max => _MAX;
@@ -37,7 +46,7 @@ namespace PhysicsEngine
             _MIN = Min;
         }
 
-        public override bool TestIntersection(BoundingVolume other)
+        public readonly bool TestIntersection(BoundingVolume other)
         {
             switch (other)
             {
@@ -58,12 +67,14 @@ namespace PhysicsEngine
         
     }
 
-    /*public sealed class OrientedBoundingBox : BoundingVolume
+    /*public readonly struct OrientedBoundingBox 
+     * : BoundingVolume, System.IEquatable<EmptyBoundingVolume>
     {
 
     }*/
 
-    /*public sealed class BoundingSphere : BoundingVolume
+    /*public readonly struct BoundingSphere 
+     * : BoundingVolume, System.IEquatable<EmptyBoundingVolume>
     {
         private readonly Vector _CENTER;
         private readonly double _RADIUS;
@@ -74,12 +85,12 @@ namespace PhysicsEngine
             _RADIUS = r;
         }
 
-        public override BoundingVolume Extend(Vector v)
+        public readonly BoundingVolume Extend(Vector v)
         {
             throw new System.NotImplementedException();
         }
 
-        public override bool TestIntersection(BoundingVolume other)
+        public readonly bool TestIntersection(BoundingVolume other)
         {
             switch (other)
             {
@@ -99,7 +110,8 @@ namespace PhysicsEngine
 
     }*/
 
-    public sealed class CompoundBoundingVolume : BoundingVolume
+    public readonly struct CompoundBoundingVolume 
+        : BoundingVolume, System.IEquatable<EmptyBoundingVolume>
     {
         private readonly BoundingVolume[] _VOLUMES;
 
@@ -109,12 +121,12 @@ namespace PhysicsEngine
             _VOLUMES = volumes;
         }
 
-        public override BoundingVolume Extend(Vector v)
+        public readonly BoundingVolume Extend(Vector v)
         {
             throw new System.NotImplementedException();
         }
 
-        public override bool TestIntersection(BoundingVolume other)
+        public readonly bool TestIntersection(BoundingVolume other)
         {
             for (int i = 0; i < _VOLUMES.Length; ++i)
             {

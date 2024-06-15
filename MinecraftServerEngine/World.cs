@@ -13,7 +13,7 @@ namespace MinecraftServerEngine
 
         internal readonly PlayerList _PLAYER_LIST = new();  // Disposable
 
-        private readonly NumList _ENTITY_ID_LIST = new();  // Disposable
+        private readonly Numlist _ENTITY_ID_LIST = new();  // Disposable
 
         private readonly Queue<Entity> _ENTITY_SPAWNING_POOL = new();  // Disposable
         internal readonly SwapQueue<Entity> _ENTITIES = new();  // Disposable
@@ -43,6 +43,19 @@ namespace MinecraftServerEngine
         }
 
         ~World() => System.Diagnostics.Debug.Assert(false);
+
+        public override BoundingVolume[] GetTerrainBoundingVolumes(BoundingVolume volume)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            switch (volume)
+            {
+                default:
+                    throw new System.NotImplementedException();
+                case AxisAlignedBoundingBox aabb:
+                    return _BLOCK_CTX.GetBlockBoundingVolumes(aabb.Max, aabb.Min);
+            }
+        }
 
         public abstract bool CanJoinWorld();
 

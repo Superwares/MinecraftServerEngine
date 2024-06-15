@@ -1,10 +1,5 @@
-using Application;
-using System;
-using System.Diagnostics;
-using System.Numerics;
 
-
-namespace Application
+namespace Common
 {
     public class Tests
     {

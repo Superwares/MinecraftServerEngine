@@ -1,5 +1,6 @@
 ﻿
 using Common;
+using PhysicsEngine;
 
 namespace MinecraftServerEngine
 {
@@ -7,7 +8,7 @@ namespace MinecraftServerEngine
     {
         public readonly BlockLocation Max, Min;
 
-        public static BlockGrid Generate(BoundingBox bb)
+        public static BlockGrid Generate(Vector max, Vector min)
         {
             BlockLocation max = BlockLocation.Generate(bb.Max),
                    min = BlockLocation.Generate(bb.Min);

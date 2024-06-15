@@ -1,6 +1,7 @@
 ﻿
 using Containers;
 using PhysicsEngine;
+using Sync;
 
 namespace MinecraftServerEngine
 {
@@ -645,21 +646,25 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_dEntityRendering >= _MIN_RENDER_DISTANCE);
             System.Diagnostics.Debug.Assert(_dEntityRendering <= _MAX_ENTITY_RENDER_DISTANCE);
 
-            ChunkLocation locCenter = ChunkLocation.Generate(p);
+            ChunkLocation loc = ChunkLocation.Generate(p);
 
-            ChunkGrid grid = ChunkGrid.Generate(locCenter, _dEntityRendering);
-            foreach (ChunkLocation loc in grid.GetLocations())
+            ChunkGrid grid = ChunkGrid.Generate(loc, _dEntityRendering);
+            foreach (PhysicsObject obj in world.GetPhysicsObjects(grid.GetMinBoundingVolume()).GetKeys())
             {
-                foreach (Entity entity in world._ENTITY_CTX.GetEntities(loc))
+                switch (obj)
                 {
-                    entity.ApplyRenderer(_ENTITY_RENDERER);
-                }
+                    default:
+                        throw new System.NotImplementedException();
+                    case Entity entity:
+                        entity.ApplyRenderer(_ENTITY_RENDERER);
+                        break;
+                }    
             }
 
             using Queue<ChunkLocation> newChunkPositions = new();
             using Queue<ChunkLocation> outOfRangeChunks = new();
 
-            _LOADING_HELPER.Load(newChunkPositions, outOfRangeChunks, locCenter, _dChunkRendering);
+            _LOADING_HELPER.Load(newChunkPositions, outOfRangeChunks, loc, _dChunkRendering);
 
             int mask; byte[] data;
             while (!newChunkPositions.Empty)
@@ -674,9 +679,9 @@ namespace MinecraftServerEngine
 
             while (!outOfRangeChunks.Empty)
             {
-                ChunkLocation loc = outOfRangeChunks.Dequeue();
+                ChunkLocation locOut = outOfRangeChunks.Dequeue();
 
-                _OUT_PACKETS.Enqueue(new UnloadChunkPacket(loc.X, loc.Z));
+                _OUT_PACKETS.Enqueue(new UnloadChunkPacket(locOut.X, locOut.Z));
             }
 
         }

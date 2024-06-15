@@ -415,7 +415,7 @@ namespace MinecraftServerEngine
 
         private readonly object _SharedObject = new();
 
-        private readonly NumList _IdList = new();  // Disposable
+        private readonly Numlist _IdList = new();  // Disposable
         private readonly PublicInventoryRenderer _Renderer = new();  // Disposable
 
         public PublicInventory(int count) : base(count) { }

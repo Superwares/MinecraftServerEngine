@@ -1,8 +1,8 @@
-﻿using Threading;
+﻿using Sync;
 
 namespace Containers
 {
-    public class NumList : System.IDisposable
+    public class Numlist : System.IDisposable
     {
         private bool _disposed = false;
 
@@ -30,9 +30,9 @@ namespace Containers
         }
         public bool Empty => (_count == 0);
 
-        public NumList() { }
+        public Numlist() { }
 
-        ~NumList() => System.Diagnostics.Debug.Assert(false);
+        ~Numlist() => System.Diagnostics.Debug.Assert(false);
 
         public virtual int Alloc()
         {
@@ -157,7 +157,7 @@ namespace Containers
 
     }
 
-    public class ConcurrentNumList : NumList
+    public class ConcurrentNumList : Numlist
     {
         private bool _disposed = false;
 

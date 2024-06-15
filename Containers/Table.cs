@@ -4,8 +4,7 @@ using Sync;
 namespace Containers
 {
 
-    public class Table<K, T> : System.IDisposable
-        where K : notnull
+    public class Table<K, T> : System.IDisposable where K : notnull
     {
         private bool _disposed = false;
 
@@ -14,8 +13,7 @@ namespace Containers
         protected const float _LOAD_FACTOR = 0.75F;
         protected const int _C = 5;
 
-        private readonly System.Collections.Generic.IEqualityComparer<K> 
-            _COMPARER = System.Collections.Generic.EqualityComparer<K>.Default;
+        private readonly System.Collections.Generic.IEqualityComparer<K> _COMPARER;
 
         protected bool[] _flags = new bool[_MIN_LENGTH];
         protected K[] _keys = new K[_MIN_LENGTH];
@@ -34,7 +32,15 @@ namespace Containers
 
         public bool Empty => (Count == 0);
 
-        public Table() { }
+        public Table()
+        {
+            _COMPARER = System.Collections.Generic.EqualityComparer<K>.Default;
+        }
+
+        public Table(System.Collections.Generic.IEqualityComparer<K> comparer)
+        {
+            _COMPARER = comparer;
+        }
 
         ~Table() => System.Diagnostics.Debug.Assert(false);
 
@@ -151,7 +157,7 @@ namespace Containers
             }
         }
 
-        private bool CanShift(int indexTarget, int indexCurrent, int indexOrigin)
+        private static bool CanShift(int indexTarget, int indexCurrent, int indexOrigin)
         {
             return (indexTarget < indexCurrent && indexCurrent < indexOrigin) ||
                 (indexOrigin < indexTarget && indexTarget < indexCurrent) ||
@@ -315,7 +321,7 @@ namespace Containers
                 return false;
             }
 
-            int index = -1;
+            int index;
 
             int hash = Hash(key);
             for (int i = 0; i < _length; ++i)
