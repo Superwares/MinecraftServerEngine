@@ -1,7 +1,7 @@
 ﻿
 using Containers;
 
-namespace MinecraftServerEngine
+namespace MinecraftServerEngine.trash
 {
     /*internal sealed class EntityContext : System.IDisposable
     {

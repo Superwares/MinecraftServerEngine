@@ -1,7 +1,7 @@
 ﻿
 using Common;
 
-namespace MinecraftServerEngine
+namespace MinecraftServerEngine.trash
 {
     /*public sealed class BoundingBox
     {
