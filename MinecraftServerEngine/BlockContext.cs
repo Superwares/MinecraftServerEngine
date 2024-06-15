@@ -2,13 +2,14 @@
 
 using Common;
 using Containers;
+using PhysicsEngine;
 
 namespace MinecraftServerEngine
 {
     internal static class BlockExtensions
     {
-        private static Table<Blocks, int> _BLOCK_ENUM_TO_ID_MAP = new();
-        private static Table<int, Blocks> _BLOCK_ID_TO_ENUM_MAP = new();
+        private readonly static Table<Blocks, int> _BLOCK_ENUM_TO_ID_MAP = new();
+        private readonly static Table<int, Blocks> _BLOCK_ID_TO_ENUM_MAP = new();
 
         static BlockExtensions()
         {
@@ -796,9 +797,9 @@ namespace MinecraftServerEngine
                 chunk = _CHUNKS.Lookup(locChunk);
             }
 
-            int x = loc.X - (locChunk.X * ChunkLocation.WIDTH),
+            int x = loc.X - (locChunk.X * ChunkLocation.BLOCKS_PER_WIDTH),
                 y = loc.Y,
-                z = loc.Z - (locChunk.Z * ChunkLocation.WIDTH);
+                z = loc.Z - (locChunk.Z * ChunkLocation.BLOCKS_PER_WIDTH);
             chunk.SetId(_DEFAULT_BLOCK.GetId(), x, y, z, block.GetId());
         }
 
@@ -849,14 +850,10 @@ namespace MinecraftServerEngine
 
             return GetBlock(locPrime);
         }
-        private static BoundingShape GenerateNone()
-        {
-            return new BoundingShape();
-        }
 
         private static BoundingShape GenerateCube(BlockLocation loc)
         {
-            Vector min = loc.Convert(),
+            Vector min = loc.GetMinVector(),
                    max = new(min.X + 1.0D, min.Y + 1.0D, min.Z + 1.0D);
             BoundingBox bb = new(max, min);
             return new BoundingShape(bb);

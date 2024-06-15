@@ -1,0 +1,85 @@
+﻿
+using Containers;
+using Sync;
+
+namespace PhysicsEngine
+{
+    public abstract class PhysicsObject : System.IDisposable
+    {
+        private bool _disposed = false;
+
+        private readonly RWLock _LOCK = new();  // Disposable
+
+        private readonly double _MASS;
+
+        private readonly double _MAX_STEP_LEVEL;
+
+        private readonly Queue<Vector> _FORCES = new();  // Disposable
+
+        private Vector _v;
+
+        private bool _onGround;
+
+        private BoundingVolume _volume;
+        public BoundingVolume BOUNDING_VOLUME => _volume;
+
+
+        public PhysicsObject(double m, double maxStepLevel)
+        {
+            _MASS = m;
+            _MAX_STEP_LEVEL = maxStepLevel;
+        }
+
+        public virtual void ApplyForce(Vector v)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            _FORCES.Enqueue(v);
+        }
+
+        protected abstract BoundingVolume GenerateBoundingVolume();
+
+        internal (BoundingVolume, Vector) Integrate()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            Vector v = _v;
+
+            while (!_FORCES.Empty)
+            {
+                Vector force = _FORCES.Dequeue();
+
+                v += (force / _MASS);
+            }
+
+            BoundingVolume volume = GenerateBoundingVolume();
+            return (volume, v);
+        }
+
+        public virtual void Move(BoundingVolume volume, Vector v, bool onGround)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_FORCES.Empty);
+
+            _volume = volume;
+            _v = v;
+            _onGround = onGround;
+        }
+
+        public virtual void Dispose()
+        {
+            // Assertions.
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            // Release resources.
+            _LOCK.Dispose();
+            _FORCES.Dispose();
+
+            // Finish.
+            System.GC.SuppressFinalize(this);
+            _disposed = true;
+        }
+
+    }
+}

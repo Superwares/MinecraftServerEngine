@@ -1,10 +1,11 @@
 ﻿
 using Common;
 using Containers;
+using PhysicsEngine;
 
 namespace MinecraftServerEngine
 {
-    public abstract class Entity : System.IDisposable
+    public abstract class Entity : PhysicsObject
     {
 
         public readonly struct Hitbox
@@ -31,6 +32,18 @@ namespace MinecraftServerEngine
                        min = new(p.X - w, p.Y, p.Z - w);
                 return new(max, min);
             }
+        }
+
+        public readonly struct Position : System.IEquatable<Position>
+        {
+            public readonly double X, Y, Z;
+
+            public Position(double x, double y, double z)
+            {
+                X = x; Y = y; Z = z;
+            }
+
+
         }
 
         public readonly struct Angles : System.IEquatable<Angles>
@@ -69,7 +82,7 @@ namespace MinecraftServerEngine
                     (byte)((byte.MaxValue * y) / 360));
             }
 
-            public override readonly string? ToString()
+            public override readonly string ToString()
             {
                 throw new System.NotImplementedException();
             }
@@ -258,7 +271,15 @@ namespace MinecraftServerEngine
 
         public abstract void StartRoutine(long serverTicks, World world);
 
-        internal (BoundingBox, Vector) Integrate()
+        protected override BoundingVolume GenerateBoundingVolume()
+        {
+            Hitbox hitbox = GetHitbox();
+            BoundingBox bb = hitbox.Convert(_p);
+
+            throw new System.NotImplementedException();
+        }
+
+        /*internal (BoundingBox, Vector) Integrate()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -275,15 +296,13 @@ namespace MinecraftServerEngine
             BoundingBox bb = hitbox.Convert(_p);
 
             return (bb, v);
-        }
-        
-        public virtual void Move(BoundingBox bb, Vector v, bool onGround)
+        }*/
+
+        public override void Move(BoundingVolume volume, Vector v, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_FORCES.Empty);
-
-            Vector p = bb.GetBottomCenter();
+            Vector p = volume.GetBottomCenter();
 
             System.Diagnostics.Debug.Assert(_MANAGER != null);
             _MANAGER.HandleRendering(p);
@@ -313,14 +332,12 @@ namespace MinecraftServerEngine
                 _MANAGER.Stand();
             }
 
-            _v = v;
-            _bb = bb;
-
             _p = p;
-
             _rotated = false;
 
             _MANAGER.FinishMovementRenderring();
+
+            base.Move(volume, v, onGround);
         }
 
         /*public virtual void Teleport(Vector pos, Angles look)
@@ -393,7 +410,7 @@ namespace MinecraftServerEngine
             _MANAGER.Flush();
         }
 
-        public virtual void Dispose()
+        public override void Dispose()
         {
             // Assertion
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -403,7 +420,7 @@ namespace MinecraftServerEngine
             _MANAGER.Dispose();
 
             // Finish.
-            System.GC.SuppressFinalize(this);
+            base.Dispose();
             _disposed = true;
         }
 

@@ -1,9 +1,20 @@
 ﻿# Minecraft Server Engine
-The Minecraft Server Engine is a game engine designed to enhance the gameplay experience in Minecraft.
+The Minecraft Server Engine is a powerful and versatile game engine designed to significantly enhance the gameplay experience in Minecraft.
 
 ## Features
-* Comprehensive Customization of Game Objects
-* Parallel Computing
+
+### Comprehensive Customization of Game Objects
+The Minecraft Server Engine offers extensive customization options for game objects, 
+allowing server developers to tailor the game to their specific needs. 
+
+* World: TODO description
+* Entities: TODO description
+* Skill Objects: TODO description
+
+### Parallel Computing
+One of the standout features of the Minecraft Server Engine is its support for parallel computing, 
+which significantly enhances server performance and scalability.
+
 
 ## Code Conventions
 
@@ -16,6 +27,11 @@ The following list is available value types.
 The following list is available reference types.
 
 * object, string
+
+###
+레퍼런스 타입은 레퍼런스 비교 (class)
+Value Type 은 값 비교 (Built-in types, structures)
+예외 (string)
 
 #### Using Float & Double
 
@@ -37,6 +53,8 @@ double doubleValue = 3.14D;
 Time? t;
 Time t2 = t!;
 ```
+
+Value Type에는 Nullable 을 사용하지 않습니다.
 
 ### Exceptions
 

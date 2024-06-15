@@ -10,6 +10,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\Containers\Containers.csproj" />
+    <ProjectReference Include="..\PhysicsEngine\PhysicsEngine.csproj" />
+    <ProjectReference Include="..\Physics\PhysicsEngine.csproj" />
     <ProjectReference Include="..\Sync\Sync.csproj" />
     <ProjectReference Include="..\Threading\Sync.csproj" />
   </ItemGroup>

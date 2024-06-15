@@ -93,7 +93,7 @@ namespace Common
 
         public bool Equals(Time other)
         {
-            return _AMOUNT == other._AMOUNT;
+            return this == other;
         }
     }
 }

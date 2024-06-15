@@ -3,7 +3,7 @@ using Common;
 
 namespace MinecraftServerEngine
 {
-    public sealed class BoundingBox
+    /*public sealed class BoundingBox
     {
 
         private readonly Vector _MAX, _MIN;
@@ -23,7 +23,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(_MAX.X >= _MIN.X);
 
-            return _MAX.X -_MIN.X;
+            return _MAX.X - _MIN.X;
         }
 
         public double GetLengthY()
@@ -160,7 +160,7 @@ namespace MinecraftServerEngine
         {
             return (bb.Min.Y <= Max.Y) && (bb.Max.Y >= Min.Y);
         }
-        
+
         public bool IsContactingZ(BoundingBox bb)
         {
             return (bb.Min.Z <= Max.Z) && (bb.Max.Z >= Min.Z);
@@ -185,7 +185,7 @@ namespace MinecraftServerEngine
                         s = sPrime;
                     }
                 }
-                else if((s < 0.0D) && (bb.Min.X >= Max.X))
+                else if ((s < 0.0D) && (bb.Min.X >= Max.X))
                 {
                     sPrime = Max.X - bb.Min.X;
                     System.Diagnostics.Debug.Assert(sPrime <= 0.0D);
@@ -282,5 +282,5 @@ namespace MinecraftServerEngine
 
             return Max.Equals(other.Max) && Min.Equals(other.Min);
         }
-    }
+    }*/
 }

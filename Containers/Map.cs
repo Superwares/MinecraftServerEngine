@@ -1,11 +1,10 @@
 ﻿
-using Threading;
+using Sync;
 
 namespace Containers
 {
 
-    public class Map<K, T> : System.IDisposable
-        where K : notnull, System.IEquatable<K>
+    public class Map<K, T> : System.IDisposable where K : notnull
     {
         private bool _disposed = false;
 

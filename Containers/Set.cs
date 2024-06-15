@@ -1,11 +1,10 @@
 ﻿
-using Threading;
+using Sync;
 
 namespace Containers
 {
 
-    public class Set<K> : System.IDisposable
-        where K : notnull, System.IEquatable<K>
+    public class Set<K> : System.IDisposable where K : notnull
     {
         private bool _disposed = false;
 

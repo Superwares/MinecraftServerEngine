@@ -1,11 +1,11 @@
 ﻿
-using Threading;
+using Sync;
 
 namespace Containers
 {
 
     public class Table<K, T> : System.IDisposable
-        where K : notnull, System.IEquatable<K>
+        where K : notnull
     {
         private bool _disposed = false;
 
@@ -13,6 +13,9 @@ namespace Containers
         protected const int _EXPANSION_FACTOR = 2;
         protected const float _LOAD_FACTOR = 0.75F;
         protected const int _C = 5;
+
+        private readonly System.Collections.Generic.IEqualityComparer<K> 
+            _COMPARER = System.Collections.Generic.EqualityComparer<K>.Default;
 
         protected bool[] _flags = new bool[_MIN_LENGTH];
         protected K[] _keys = new K[_MIN_LENGTH];
@@ -115,16 +118,16 @@ namespace Containers
             System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
-            int j = -1;
+            int index = -1;
 
             int hash = Hash(key);
             for (int i = 0; i < _length; ++i)
             {
-                int k = (hash + i) % _length;
+                index = (hash + i) % _length;
 
-                if (_flags[k])
+                if (_flags[index])
                 {
-                    if (_keys[k].Equals(key))
+                    if (_COMPARER.Equals(_keys[index], key))
                     {
                         throw new DuplicateKeyException();
                     }
@@ -132,15 +135,13 @@ namespace Containers
                     continue;
                 }
 
-                j = k;
-
                 break;
             }
 
-            System.Diagnostics.Debug.Assert(j >= 0);
-            _flags[j] = true;
-            _keys[j] = key;
-            _values[j] = value;
+            System.Diagnostics.Debug.Assert(index >= 0);
+            _flags[index] = true;
+            _keys[index] = key;
+            _values[index] = value;
             _count++;
 
             float factor = (float)_count / (float)_length;
@@ -179,11 +180,10 @@ namespace Containers
                 throw new KeyNotFoundException();
             }
 
-            int j = -1;
+            int index = -1;
 
             int hash = Hash(key);
 
-            int index = -1;
             int i;
             for (i = 0; i < _length; ++i)
             {
@@ -194,12 +194,10 @@ namespace Containers
                     throw new KeyNotFoundException();
                 }
 
-                if (!_keys[index].Equals(key))
+                if (!_COMPARER.Equals(_keys[index], key))
                 {
                     continue;
                 }
-
-                j = index;
 
                 break;
             }
@@ -212,9 +210,9 @@ namespace Containers
                 float factor = (float)_count / (float)lenReduced;
                 if (factor < _LOAD_FACTOR)
                 {
-                    System.Diagnostics.Debug.Assert(j >= 0);
-                    T v = _values[j];
-                    _flags[j] = false;
+                    System.Diagnostics.Debug.Assert(index >= 0);
+                    T v = _values[index];
+                    _flags[index] = false;
 
                     Resize(lenReduced);
 
@@ -278,30 +276,28 @@ namespace Containers
                 throw new KeyNotFoundException();
             }
 
-            int j = -1;
+            int index = -1;
 
             int hash = Hash(key);
             for (int i = 0; i < _length; ++i)
             {
-                int k = (hash + i) % _length;
+                index = (hash + i) % _length;
 
-                if (!_flags[k])
+                if (!_flags[index])
                 {
                     throw new KeyNotFoundException();
                 }
 
-                if (!_keys[k].Equals(key))
+                if (!_COMPARER.Equals(_keys[index], key))
                 {
                     continue;
                 }
 
-                j = k;
-
                 break;
             }
 
-            System.Diagnostics.Debug.Assert(j >= 0);
-            return _values[j];
+            System.Diagnostics.Debug.Assert(index >= 0);
+            return _values[index];
         }
 
         public virtual bool Contains(K key)
@@ -319,17 +315,19 @@ namespace Containers
                 return false;
             }
 
+            int index = -1;
+
             int hash = Hash(key);
             for (int i = 0; i < _length; ++i)
             {
-                int index = (hash + i) % _length;
+                index = (hash + i) % _length;
 
                 if (!_flags[index])
                 {
                     return false;
                 }
 
-                if (!_keys[index].Equals(key))
+                if (!_COMPARER.Equals(_keys[index], key))
                 {
                     continue;
                 }

@@ -1,12 +1,14 @@
 ﻿
 
 using Common;
+using PhysicsEngine;
 
 namespace MinecraftServerEngine
 {
     internal readonly struct ChunkLocation : System.IEquatable<ChunkLocation>
     {
-        public const int WIDTH = BlockLocation.Width * 16;
+        public const int BLOCKS_PER_WIDTH = 16;
+        public const double WIDTH = BlockLocation.WIDTH * BLOCKS_PER_WIDTH;
 
         public static ChunkLocation Generate(Vector p)
         {
@@ -30,11 +32,11 @@ namespace MinecraftServerEngine
 
         public static ChunkLocation Generate(BlockLocation loc)
         {
-            int x = loc.X / WIDTH,
-                z = loc.Z / WIDTH;
+            int x = loc.X / BLOCKS_PER_WIDTH,
+                z = loc.Z / BLOCKS_PER_WIDTH;
 
-            double r1 = loc.X % (double)WIDTH,
-                   r2 = loc.Z % (double)WIDTH;
+            double r1 = (double)loc.X % (double)BLOCKS_PER_WIDTH,
+                   r2 = (double)loc.Z % (double)BLOCKS_PER_WIDTH;
             if (r1 < 0.0D)
             {
                 --x;

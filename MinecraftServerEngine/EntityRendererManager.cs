@@ -1,4 +1,5 @@
 ﻿using Containers;
+using PhysicsEngine;
 
 namespace MinecraftServerEngine
 {
@@ -44,8 +45,6 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(!_movement);
-
-            System.Diagnostics.Debug.Assert(!_IDS.Contains(id));
 
             for (int i = 0; i < _RENDERERS.Count; ++i)
             {

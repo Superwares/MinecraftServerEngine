@@ -46,6 +46,7 @@ namespace MinecraftServerEngine
 
             System.Console.Write(".");
 
+
             barrier.ReachAndWait();
 
             _WORLD.StartPlayerRoutines(_ticks);
@@ -69,6 +70,11 @@ namespace MinecraftServerEngine
             barrier.ReachAndWait();
 
             _WORLD.MoveEntities();
+
+
+            barrier.ReachAndWait();
+
+            _WORLD.MovePlayers();
 
 
             barrier.ReachAndWait();
@@ -103,7 +109,7 @@ namespace MinecraftServerEngine
 
             barrier.WaitAllReach();
 
-            _WORLD._PLAYERS.Switch();
+            _WORLD._PLAYERS.Swap();
 
             barrier.Broadcast();
 
@@ -112,7 +118,7 @@ namespace MinecraftServerEngine
 
             barrier.WaitAllReach();
 
-            _WORLD._PLAYERS.Switch();
+            _WORLD._PLAYERS.Swap();
 
             barrier.Broadcast();
 
@@ -121,7 +127,7 @@ namespace MinecraftServerEngine
 
             barrier.WaitAllReach();
 
-            _WORLD._ENTITIES.Switch();
+            _WORLD._ENTITIES.Swap();
 
             barrier.Broadcast();
 
@@ -130,7 +136,7 @@ namespace MinecraftServerEngine
 
             barrier.WaitAllReach();
 
-            _WORLD._PLAYERS.Switch();
+            _WORLD._PLAYERS.Swap();
 
             barrier.Broadcast();
 
@@ -139,11 +145,20 @@ namespace MinecraftServerEngine
 
             barrier.WaitAllReach();
 
-            _WORLD._ENTITIES.Switch();
+            _WORLD._ENTITIES.Swap();
 
             barrier.Broadcast();
 
             // Move entities.
+
+
+            barrier.WaitAllReach();
+
+            _WORLD._PLAYERS.Swap();
+
+            barrier.Broadcast();
+
+            // Move players.
 
 
             barrier.WaitAllReach();
@@ -162,7 +177,7 @@ namespace MinecraftServerEngine
 
             barrier.WaitAllReach();
 
-            _WORLD._PLAYERS.Switch();
+            _WORLD._PLAYERS.Swap();
 
             barrier.Broadcast();
 
@@ -178,7 +193,7 @@ namespace MinecraftServerEngine
 
             barrier.WaitAllReach();
 
-            _WORLD._ENTITIES.Switch();
+            _WORLD._ENTITIES.Swap();
 
             barrier.Broadcast();
 
@@ -201,7 +216,7 @@ namespace MinecraftServerEngine
 
             ushort port = 25565;
 
-            int n = 2;  // TODO: Determine using number of processor.
+            int n = 1;  // TODO: Determine using number of processor.
 
             using Barrier barrier = new(n);
             using ConnectionListener connListener = new();

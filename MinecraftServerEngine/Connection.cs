@@ -1,5 +1,6 @@
 ﻿
 using Containers;
+using PhysicsEngine;
 
 namespace MinecraftServerEngine
 {
@@ -8,26 +9,34 @@ namespace MinecraftServerEngine
 
         private sealed class LoadingHelper : System.IDisposable
         {
-            private bool _disposed = false;
-
             private const int _MAX_LOAD_COUNT = 7;
             private const int _MAX_SEARCH_COUNT = 103;
 
+            private bool _disposed = false;
+
             private readonly Set<ChunkLocation> _LOADED_CHUNKS = new();  // Disposable
 
-            private ChunkGrid? _grid;
-            private ChunkLocation _c;
-            private int _d = - 1;
+            private ChunkGrid _grid;
+            private ChunkLocation _loc;
+            private int _d;
 
             private int _x, _z, _layer, _n;
 
-            public LoadingHelper() { }
+            public LoadingHelper(ChunkLocation loc, int d) 
+            {
+                _loc = loc;
+                _d = d;
+                _grid = ChunkGrid.Generate(loc, d);
+
+                _layer = 0;
+                _n = 0;
+            }
 
             ~LoadingHelper() => System.Diagnostics.Debug.Assert(false);
 
             public void Load(
                 Queue<ChunkLocation> newChunks, Queue<ChunkLocation> outOfRangeChunks, 
-                ChunkLocation locCenter, int d)
+                ChunkLocation loc, int d)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -35,37 +44,33 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(_MAX_LOAD_COUNT > 0);
                 System.Diagnostics.Debug.Assert(_MAX_SEARCH_COUNT >= _MAX_LOAD_COUNT);
 
-                if (!locCenter.Equals(_c) || (d != _d))
+                if (!loc.Equals(_loc) || (d != _d))
                 {
-                    ChunkGrid grid = ChunkGrid.Generate(locCenter, d);
-                    
-                    if (_grid != null)
+                    ChunkGrid grid = ChunkGrid.Generate(loc, d);
+
+                    System.Diagnostics.Debug.Assert(!_grid.Equals(grid));
+
+                    // TODO: Refactoring without brute-force approch.
+                    foreach (ChunkLocation locPrev in _grid.GetLocations())
                     {
-                        System.Diagnostics.Debug.Assert(!_grid.Equals(grid));
-
-                        // TODO: Refactoring without brute-force approch.
-                        foreach (ChunkLocation p in _grid.GetLocations())
+                        if (grid.Contains(locPrev))
                         {
-                            if (grid.Contains(p))
-                            {
-                                continue;
-                            }
+                            continue;
+                        }
 
-                            if (_LOADED_CHUNKS.Contains(p))
-                            {
-                                _LOADED_CHUNKS.Extract(p);
-                                outOfRangeChunks.Enqueue(p);
-                            }
+                        if (_LOADED_CHUNKS.Contains(locPrev))
+                        {
+                            _LOADED_CHUNKS.Extract(locPrev);
+                            outOfRangeChunks.Enqueue(locPrev);
                         }
                     }
-                    
-                    _grid = grid;
+
+                    _loc = loc;
                     _d = d;
-                    _c = locCenter;
+                    _grid = grid;
 
                     _layer = 0;
                     _n = 0;
-
                 }
 
                 if (_layer > d)
@@ -77,7 +82,7 @@ namespace MinecraftServerEngine
                     int i = 0, j = 0;
 
                     int w;
-                    ChunkLocation p;
+                    ChunkLocation locTarget;
 
                     do
                     {
@@ -87,26 +92,26 @@ namespace MinecraftServerEngine
 
                         if (_layer == 0)
                         {
-                            p = locCenter;
+                            locTarget = loc;
                         }
                         else
                         {
                             System.Diagnostics.Debug.Assert(_n >= 0);
                             if (_n < w)
                             {
-                                p = new(--_x, _z);
+                                locTarget = new(--_x, _z);
                             }
                             else if (_n < w * 2)
                             {
-                                p = new(_x, --_z);
+                                locTarget = new(_x, --_z);
                             }
                             else if (_n < w * 3)
                             {
-                                p = new(++_x, _z);
+                                locTarget = new(++_x, _z);
                             }
                             else if (_n < w * 4)
                             {
-                                p = new(_x, ++_z);
+                                locTarget = new(_x, ++_z);
                             }
                             else
                             {
@@ -116,10 +121,10 @@ namespace MinecraftServerEngine
                             ++_n;
                         }
 
-                        if (!_LOADED_CHUNKS.Contains(p))
+                        if (!_LOADED_CHUNKS.Contains(locTarget))
                         {
-                            newChunks.Enqueue(p);
-                            _LOADED_CHUNKS.Insert(p);
+                            newChunks.Enqueue(locTarget);
+                            _LOADED_CHUNKS.Insert(locTarget);
                             ++i;
                         }
 
@@ -129,7 +134,7 @@ namespace MinecraftServerEngine
                             ++_layer;
                             _n = 0;
 
-                            _x = locCenter.X + _layer; _z = locCenter.Z + _layer;
+                            _x = loc.X + _layer; _z = loc.Z + _layer;
                         }
 
                         if (_layer > d)
@@ -147,7 +152,6 @@ namespace MinecraftServerEngine
                 }
 
                 System.Diagnostics.Debug.Assert(_LOADED_CHUNKS.Count <= (d + d + 1) * (d + d + 1));
-
             }
 
             public void Dispose()
@@ -278,7 +282,7 @@ namespace MinecraftServerEngine
         private readonly EntityRenderer _ENTITY_RENDERER;
 
 
-        private readonly LoadingHelper _LOADING_HELPER = new();  // Dispoasble
+        private readonly LoadingHelper _LOADING_HELPER;  // Dispoasble
         private readonly Queue<TeleportationRecord> _TELEPORTATION_RECORDS = new();  // Dispoasble
         private KeepAliveRecord _keepAliveRecord = new();  // Disposable
 
@@ -295,11 +299,13 @@ namespace MinecraftServerEngine
             _CLIENT = client;
 
 
-            ChunkLocation loc = ChunkLocation.Generate(p);
             System.Diagnostics.Debug.Assert(_MAX_ENTITY_RENDER_DISTANCE >= _MIN_RENDER_DISTANCE);
             System.Diagnostics.Debug.Assert(_MAX_RENDER_DISTANCE >= _MAX_ENTITY_RENDER_DISTANCE);
+
+            ChunkLocation loc = ChunkLocation.Generate(p);
             _ENTITY_RENDERER = new EntityRenderer(_OUT_PACKETS, id, loc, _dEntityRendering);
-            
+
+            _LOADING_HELPER = new LoadingHelper(loc, _dChunkRendering);
 
             _window = new Window(_OUT_PACKETS, inv);
 
@@ -378,7 +384,7 @@ namespace MinecraftServerEngine
 
                         throw new UnexpectedPacketException();
                     }
-                    break;
+                    /*break;*/
                 case ServerboundPlayingPacket.ClickWindowPacketId:
                     {
                         ClickWindowPacket packet = ClickWindowPacket.Read(buffer);

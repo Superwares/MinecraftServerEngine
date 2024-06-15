@@ -1,10 +1,19 @@
-﻿
+﻿using Common;
 
-
-namespace MinecraftServerEngine
+namespace PhysicsEngine
 {
     public readonly struct Vector : System.IEquatable<Vector>
     {
+        public static bool operator !=(Vector v1, Vector v2)
+        {
+            return v1.X != v2.X || v1.Y != v2.Y || v1.Z != v2.Z;
+        }
+
+        public static bool operator ==(Vector v1, Vector v2)
+        {
+            return v1.X == v2.X && v1.Y == v2.Y && v1.Z == v2.Z;
+        }
+
         public static Vector operator +(Vector v1, Vector v2)
         {
             return new(v1.X + v2.X, v1.Y + v2.Y, v1.Z + v2.Z);
@@ -46,7 +55,7 @@ namespace MinecraftServerEngine
         public static double GetLength(Vector v1, Vector v2)
         {
             double s = GetLengthSquared(v1, v2);
-            return System.Math.Sqrt(s);
+            return Math.Sqrt(s);
         }
 
         public readonly double X, Y, Z;
@@ -64,20 +73,28 @@ namespace MinecraftServerEngine
         public double GetLength()
         {
             double s = GetLengthSquared();
-            return System.Math.Sqrt(s);
+            return Math.Sqrt(s);
         }
 
-        public override readonly string? ToString()
+        public override readonly string ToString()
         {
             return $"( X: {X}, Y: {Y}, Z: {Z} )";
         }
 
         public readonly bool Equals(Vector other)
         {
-            return X == other.X && Y == other.Y && Z == other.Z;
+            return this == other;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is Vector v && Equals(v);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
 
     }
-
-    
 }

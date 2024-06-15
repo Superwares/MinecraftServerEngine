@@ -1,10 +1,9 @@
 ﻿
 using Containers;
-using Threading;
 
 namespace MinecraftServerEngine
 {
-    internal sealed class EntityContext : System.IDisposable
+    /*internal sealed class EntityContext : System.IDisposable
     {
         private bool _disposed = false;
 
@@ -135,7 +134,7 @@ namespace MinecraftServerEngine
             return entities.GetValues();
         }
 
-        /*public Entity RaycastClosestEntity(Entity.Vector p, Entity.Vector u, int d)
+        *//*public Entity RaycastClosestEntity(Entity.Vector p, Entity.Vector u, int d)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
             
@@ -154,7 +153,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
             
             throw new System.NotImplementedException();
-        }*/
+        }*//*
 
         public void Dispose()
         {
@@ -175,5 +174,5 @@ namespace MinecraftServerEngine
         }
 
 
-    }
+    }*/
 }

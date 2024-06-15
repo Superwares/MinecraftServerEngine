@@ -1,13 +1,14 @@
 ﻿
 
 using Common;
+using PhysicsEngine;
 
 namespace MinecraftServerEngine
 {
     internal readonly struct BlockLocation : System.IEquatable<BlockLocation>
     {
-        public const int Width = 1;
-        public const int Height = 1;
+        public const double WIDTH = 1.0D;
+        public const double HEIGHT = 1.0D;
 
         public static BlockLocation Generate(Vector p)
         {
@@ -15,9 +16,9 @@ namespace MinecraftServerEngine
                 y = (int)p.Y,
                 z = (int)p.Z;
 
-            double r1 = p.X % 1.0D,
-                   r2 = p.Y % 1.0D,
-                   r3 = p.Z % 1.0D;
+            double r1 = p.X % WIDTH,
+                   r2 = p.Y % HEIGHT,
+                   r3 = p.Z % WIDTH;
             if (r1 < 0.0D)
             {
                 --x;
@@ -36,10 +37,10 @@ namespace MinecraftServerEngine
             return new(x, y, z);
         }
 
-        public static BlockLocation Genrate(ChunkLocation loc)
+        /*public static BlockLocation Genrate(ChunkLocation loc)
         {
             throw new System.NotImplementedException();
-        }
+        }*/
 
         public readonly int X, Y, Z;
 
@@ -48,7 +49,7 @@ namespace MinecraftServerEngine
             X = x; Y = y; Z = z;
         }
 
-        public Vector Convert()
+        public readonly Vector GetMinVector()
         {
             double x = (double)X,
                 y = (double)Y,
@@ -56,9 +57,15 @@ namespace MinecraftServerEngine
             return new(x, y, z);
         }
 
-        
+        public readonly Vector GetMaxVector()
+        {
+            double x = (double)X + WIDTH,
+                y = (double)Y + HEIGHT,
+                z = (double)Z + WIDTH;
+            return new(x, y, z);
+        }
 
-        public override readonly string? ToString()
+        public override readonly string ToString()
         {
             return $"( X: {X}, Y: {Y}, Z: {Z} )";
         }
