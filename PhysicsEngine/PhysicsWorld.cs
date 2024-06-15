@@ -45,9 +45,19 @@ namespace PhysicsEngine
                 return $"( X: {X}, Z: {Z} )";
             }
 
-            public bool Equals(Cell other)
+            public readonly bool Equals(Cell other)
             {
-                return (other.X == X && other.Z == Z);
+                return other.X == X && other.Z == Z;
+            }
+
+            public readonly override bool Equals(object obj)
+            {
+                return (obj is Cell other) && Equals(other);
+            }
+
+            public readonly override int GetHashCode()
+            {
+                return base.GetHashCode();
             }
 
         }
@@ -62,7 +72,7 @@ namespace PhysicsEngine
                 return new(max, min);
             }
 
-            public static Grid Generate(BoundingVolume volume)
+            public static Grid Generate(IBoundingVolume volume)
             {
                 switch (volume)
                 {
@@ -102,11 +112,12 @@ namespace PhysicsEngine
             }
 
             private readonly Cell _MAX, _MIN;
+            public Cell Max => _MAX;
+            public Cell Min => _MIN;
 
             public Grid(Cell max, Cell min)
             {
                 System.Diagnostics.Debug.Assert(max.X >= min.X);
-                System.Diagnostics.Debug.Assert(max.Y >= min.Y);
                 System.Diagnostics.Debug.Assert(max.Z >= min.Z);
 
                 _MAX = max; _MIN = min;
@@ -143,9 +154,19 @@ namespace PhysicsEngine
                 return $"( Max: {_MAX}, Min: {_MIN} )";
             }
 
-            public bool Equals(Grid other)
+            public readonly bool Equals(Grid other)
             {
-                return (_MAX.Equals(other._MAX) && _MIN.Equals(other._MIN));
+                return _MAX.Equals(other._MAX) && _MIN.Equals(other._MIN);
+            }
+
+            public readonly override bool Equals(object obj)
+            {
+                return (obj is Grid other) && Equals(other);
+            }
+
+            public readonly override int GetHashCode()
+            {
+                return base.GetHashCode();
             }
 
         }
@@ -156,9 +177,9 @@ namespace PhysicsEngine
         private readonly Table<Cell, Tree<PhysicsObject>> _CELL_TO_OBJECTS = new();  // Disposable
         private readonly Table<PhysicsObject, Grid> _OBJECT_TO_GRID = new();  // Disposable
 
-        public abstract BoundingVolume[] GetTerrainBoundingVolumes(BoundingVolume volume);
+        public abstract IBoundingVolume[] GetTerrainBoundingVolumes(IBoundingVolume volume);
 
-        public Tree<PhysicsObject> GetPhysicsObjects(BoundingVolume volume)
+        public Tree<PhysicsObject> GetPhysicsObjects(IBoundingVolume volume)
         {
             throw new System.NotImplementedException();
         }
@@ -265,10 +286,10 @@ namespace PhysicsEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            (BoundingVolume volumeMoving, Vector v) = obj.Integrate();
+            (IBoundingVolume volumeMoving, Vector v) = obj.Integrate();
 
-            BoundingVolume volumeTotal = volumeMoving.GetMinBoundingVolume(v);
-            BoundingVolume[] fixedVolumes = GetTerrainBoundingVolumes(volumeTotal);
+            IBoundingVolume volumeTotal = volumeMoving.GetMinBoundingVolume(v);
+            IBoundingVolume[] fixedVolumes = GetTerrainBoundingVolumes(volumeTotal);
 
             int i;
 
@@ -276,13 +297,13 @@ namespace PhysicsEngine
             {
                 for (i = 0; i < fixedVolumes.Length; ++i)
                 {
-                    BoundingVolume volumeFixed = fixedVolumes[i];
+                    IBoundingVolume volumeFixed = fixedVolumes[i];
                     vPrime1 = volumeFixed.AdjustMovingVolumeSideToSide(volumeMoving, vPrime1);
                 }
 
                 for (i = 0; i < fixedVolumes.Length; ++i)
                 {
-                    BoundingVolume volumeFixed = fixedVolumes[i];
+                    IBoundingVolume volumeFixed = fixedVolumes[i];
                     vPrime1 = volumeFixed.AdjustMovingVolumeUpAndDown(volumeMoving, vPrime1);
                 }
             }
@@ -291,13 +312,13 @@ namespace PhysicsEngine
             {
                 for (i = 0; i < fixedVolumes.Length; ++i)
                 {
-                    BoundingVolume volumeFixed = fixedVolumes[i];
+                    IBoundingVolume volumeFixed = fixedVolumes[i];
                     vPrime2 = volumeFixed.AdjustMovingVolumeUpAndDown(volumeMoving, vPrime2);
                 }
 
                 for (i = 0; i < fixedVolumes.Length; ++i)
                 {
-                    BoundingVolume volumeFixed = fixedVolumes[i];
+                    IBoundingVolume volumeFixed = fixedVolumes[i];
                     vPrime2 = volumeFixed.AdjustMovingVolumeSideToSide(volumeMoving, vPrime2);
                 }
             }

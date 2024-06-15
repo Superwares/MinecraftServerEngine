@@ -1,10 +1,81 @@
 ﻿
-using System;
-using System.Diagnostics;
 
 namespace MinecraftServerEngine
 {
-    public sealed class Item : IEquatable<Item>
+    public readonly struct Item : System.IEquatable<Item>
+    {
+        public enum Types : int
+        {
+            Stone,
+            Grass,
+            Dirt,
+            Cobbestone,
+
+            IronSword,
+            WoodenSword,
+
+            StoneSword,
+
+            DiamondSword,
+
+            GoldenSword,
+
+            LeatherHelmet,
+
+            ChainmailHelmet,
+
+            IronHelmet,
+
+            DiamondHelmet,
+
+            GoldenHelmet,
+        }
+
+        private readonly Types _TYPE;
+        public Types Type => _TYPE;
+
+        private readonly int _COUNT;
+        public int Count => _COUNT;
+
+        public Item(Types type, int count)
+        {
+            _TYPE = type;
+            _COUNT = count;
+        }
+
+        public readonly override string ToString()
+        {
+            return $"( Type: {_TYPE}, Count: {_COUNT} )";
+        }
+
+        public static bool operator ==(Item left, Item right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Item left, Item right)
+        {
+            return !left.Equals(right);
+        }
+
+        public readonly bool Equals(Item other)
+        {
+            return (_TYPE == other._TYPE) && (_COUNT == other._COUNT);
+        }
+
+        public readonly override bool Equals(object obj)
+        {
+            return (obj is Item other) && Equals(other);
+        }
+
+        public readonly override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+    }
+
+    /* public sealed class Item : System.IEquatable<Item>
     {
         public enum Types : uint
         {
@@ -278,7 +349,7 @@ namespace MinecraftServerEngine
 
             return (_type == other._type) && (_count == other._count);
         }
-    }
+    }*/
 
 
 }

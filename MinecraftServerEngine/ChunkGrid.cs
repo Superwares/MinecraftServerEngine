@@ -93,19 +93,19 @@ namespace MinecraftServerEngine
             _MAX = max; _MIN = min;
         }
 
-        public bool Contains(ChunkLocation p)
+        public readonly bool Contains(ChunkLocation p)
         {
             return (
                 p.X <= _MAX.X && p.X >= _MIN.X &&
                 p.Z <= _MAX.Z && p.Z >= _MIN.Z);
         }
 
-        public BoundingVolume GetMinBoundingVolume()
+        public readonly IBoundingVolume GetMinBoundingVolume()
         {
             throw new System.NotImplementedException();
         }
 
-        public System.Collections.Generic.IEnumerable<ChunkLocation> GetLocations()
+        public readonly System.Collections.Generic.IEnumerable<ChunkLocation> GetLocations()
         {
             if (_MAX.X == _MIN.X && _MAX.Z == _MIN.Z)
             {
@@ -124,7 +124,7 @@ namespace MinecraftServerEngine
 
         }
 
-        public override string ToString()
+        public readonly override string ToString()
         {
             return $"( Max: ({_MAX.X}, {_MAX.Z}), Min: ({_MIN.X}, {_MIN.Z}) )";
         }

@@ -1,6 +1,6 @@
 ﻿using MinecraftServerEngine;
 
-namespace TestServer
+namespace TestServerApplication
 {
     internal sealed class SuperWorld : World
     {

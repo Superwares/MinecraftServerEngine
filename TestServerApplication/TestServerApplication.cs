@@ -1,6 +1,6 @@
 ﻿using MinecraftServerEngine;
 
-namespace TestServer
+namespace TestServerApplication
 {
     public static class TestServerApplication
     {
@@ -13,10 +13,8 @@ namespace TestServer
             using ServerFramework framework = new(world);
             framework.Run();
 
-            
+
         }
 
     }
-
 }
-

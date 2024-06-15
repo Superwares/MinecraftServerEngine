@@ -20,8 +20,8 @@ namespace PhysicsEngine
 
         private bool _onGround;
 
-        private BoundingVolume _volume;
-        public BoundingVolume BOUNDING_VOLUME => _volume;
+        private IBoundingVolume _volume;
+        public IBoundingVolume BOUNDING_VOLUME => _volume;
 
 
         public PhysicsObject(double m, double maxStepLevel)
@@ -37,9 +37,9 @@ namespace PhysicsEngine
             _FORCES.Enqueue(v);
         }
 
-        protected abstract BoundingVolume GenerateBoundingVolume();
+        protected abstract IBoundingVolume GenerateBoundingVolume();
 
-        internal (BoundingVolume, Vector) Integrate()
+        internal (IBoundingVolume, Vector) Integrate()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -52,11 +52,11 @@ namespace PhysicsEngine
                 v += (force / _MASS);
             }
 
-            BoundingVolume volume = GenerateBoundingVolume();
+            IBoundingVolume volume = GenerateBoundingVolume();
             return (volume, v);
         }
 
-        public virtual void Move(BoundingVolume volume, Vector v, bool onGround)
+        public virtual void Move(IBoundingVolume volume, Vector v, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

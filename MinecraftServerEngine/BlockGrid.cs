@@ -4,34 +4,34 @@ using PhysicsEngine;
 
 namespace MinecraftServerEngine
 {
-    internal sealed class BlockGrid : System.IEquatable<BlockGrid>
+    internal readonly struct BlockGrid : System.IEquatable<BlockGrid>
     {
         public readonly BlockLocation Max, Min;
 
         public static BlockGrid Generate(Vector max, Vector min)
         {
-            BlockLocation max = BlockLocation.Generate(bb.Max),
-                   min = BlockLocation.Generate(bb.Min);
+            BlockLocation maxBlock = BlockLocation.Generate(max),
+                          minBlock = BlockLocation.Generate(min);
 
-            int xMin = min.X, yMin = min.Y, zMin = min.Z;
+            int xMinBlock = minBlock.X, yMinBlock = minBlock.Y, zMinBlock = minBlock.Z;
 
-            double r1 = bb.Min.X % 1.0D,
-                   r2 = bb.Min.Y % 1.0D,
-                   r3 = bb.Min.Z % 1.0D;
+            double r1 = min.X % BlockLocation.WIDTH,
+                   r2 = min.Y % BlockLocation.HEIGHT,
+                   r3 = min.Z % BlockLocation.WIDTH;
             if (r1 == 0.0D)
             {
-                --xMin;
+                --xMinBlock;
             }
             if (r2 == 0.0D)
             {
-                --yMin;
+                --yMinBlock;
             }
             if (r3 == 0.0D)
             {
-                --zMin;
+                --zMinBlock;
             }
 
-            return new(max, new(xMin, yMin, zMin));
+            return new(maxBlock, new(xMinBlock, yMinBlock, zMinBlock));
         }
 
         /*public static BlockGrid Generate(Vector p, BoundingBox bb)
@@ -81,7 +81,7 @@ namespace MinecraftServerEngine
             Max = max; Min = min;
         }
 
-        public bool Contains(BlockLocation p)
+        public readonly bool Contains(BlockLocation p)
         {
             return (
                 p.X <= Max.X && p.X >= Min.X &&
@@ -89,7 +89,7 @@ namespace MinecraftServerEngine
                 p.Z <= Max.Z && p.Z >= Min.Z);
         }
 
-        public int GetCount()
+        public readonly int GetCount()
         {
             System.Diagnostics.Debug.Assert(Max.X >= Min.X);
             System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
@@ -101,7 +101,7 @@ namespace MinecraftServerEngine
             return l1 * l2 * l3;
         }
 
-        public System.Collections.Generic.IEnumerable<BlockLocation> GetLocations()
+        public readonly System.Collections.Generic.IEnumerable<BlockLocation> GetLocations()
         {
             if (Max.X == Min.X && Max.Y == Min.Y && Max.Z == Min.Z)
             {
@@ -123,19 +123,13 @@ namespace MinecraftServerEngine
 
         }
 
-        public override string? ToString()
+        public readonly override string ToString()
         {
             return $"( Max: ({Max.X}, {Max.Z}), Min: ({Min.X}, {Min.Z}) )";
         }
 
-        public bool Equals(BlockGrid? other)
+        public readonly bool Equals(BlockGrid other)
         {
-            if (other == null)
-            {
-                return false;
-            }
-
-            System.Diagnostics.Debug.Assert(other != null);
             return (other.Max.Equals(Max) && other.Min.Equals(Min));
         }
 

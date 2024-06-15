@@ -271,7 +271,7 @@ namespace MinecraftServerEngine
 
         public abstract void StartRoutine(long serverTicks, World world);
 
-        protected override BoundingVolume GenerateBoundingVolume()
+        protected override IBoundingVolume GenerateBoundingVolume()
         {
             Hitbox hitbox = GetHitbox();
             BoundingBox bb = hitbox.Convert(_p);
@@ -298,7 +298,7 @@ namespace MinecraftServerEngine
             return (bb, v);
         }*/
 
-        public override void Move(BoundingVolume volume, Vector v, bool onGround)
+        public override void Move(IBoundingVolume volume, Vector v, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

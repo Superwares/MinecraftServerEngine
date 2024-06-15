@@ -44,7 +44,7 @@ namespace MinecraftServerEngine
 
         ~World() => System.Diagnostics.Debug.Assert(false);
 
-        public override BoundingVolume[] GetTerrainBoundingVolumes(BoundingVolume volume)
+        public override IBoundingVolume[] GetTerrainBoundingVolumes(IBoundingVolume volume)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

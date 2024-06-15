@@ -1,6 +1,6 @@
 ﻿using MinecraftServerEngine;
 
-namespace TestServer
+namespace TestServerApplication
 {
     public sealed class SuperPlayer : Player
     {

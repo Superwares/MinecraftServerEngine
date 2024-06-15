@@ -2,35 +2,92 @@
 
 namespace PhysicsEngine
 {
-    public interface BoundingVolume
+    public interface IBoundingVolume
     {
-        BoundingVolume Extend(Vector v);
-        BoundingVolume Move(Vector v);
-
-        BoundingVolume GetMinBoundingVolume();
-        BoundingVolume GetMinBoundingVolume(Vector v);
+        IBoundingVolume Extend(Vector v);
+        IBoundingVolume Move(Vector v);
 
         Vector GetCenter();
         Vector GetBottomCenter();
 
-        bool TestIntersection(BoundingVolume volume);
-        bool TestIntersection(BoundingVolume volumeMoving, Vector v);
+        IBoundingVolume GetMinBoundingVolume();
+        IBoundingVolume GetMinBoundingVolume(Vector v);
 
-        Vector AdjustMovingVolumeUpAndDown(BoundingVolume volumeMoving, Vector v);
-        Vector AdjustMovingVolumeSideToSide(BoundingVolume volumeMoving, Vector v);
+        bool TestIntersection(IBoundingVolume volume);
+        bool TestIntersection(IBoundingVolume volumeMoving, Vector v);
+
+        Vector AdjustMovingVolumeUpAndDown(IBoundingVolume volumeMoving, Vector v);
+        Vector AdjustMovingVolumeSideToSide(IBoundingVolume volumeMoving, Vector v);
 
     }
 
-    public readonly struct EmptyBoundingVolume 
-        : BoundingVolume, System.IEquatable<EmptyBoundingVolume>
+    public readonly struct EmptyBoundingVolume : IBoundingVolume
     {
         public EmptyBoundingVolume() { }
 
+        public readonly IBoundingVolume Extend(Vector v)
+        {
+            return this;
+        }
+
+        public readonly IBoundingVolume Move(Vector v)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public readonly Vector GetCenter()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public readonly Vector GetBottomCenter()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public readonly IBoundingVolume GetMinBoundingVolume()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public readonly IBoundingVolume GetMinBoundingVolume(Vector v)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public readonly bool TestIntersection(IBoundingVolume volume)
+        {
+            return false;
+        }
+
+        public readonly bool TestIntersection(IBoundingVolume volumeMoving, Vector v)
+        {
+            return false;
+        }
+
+        public readonly Vector AdjustMovingVolumeSideToSide(IBoundingVolume volumeMoving, Vector v)
+        {
+            if (!TestIntersection(volumeMoving))
+            {
+                return v;
+            }
+
+            return v;
+        }
+
+        public readonly Vector AdjustMovingVolumeUpAndDown(IBoundingVolume volumeMoving, Vector v)
+        {
+            if (!TestIntersection(volumeMoving))
+            {
+                return v;
+            }
+
+            return v;
+        }
 
     }
 
-    public readonly struct AxisAlignedBoundingBox 
-        : BoundingVolume, System.IEquatable<AxisAlignedBoundingBox>
+    public readonly struct AxisAlignedBoundingBox : IBoundingVolume
     {
         private readonly Vector _MAX, _MIN;
         public Vector Max => _MAX;
@@ -46,7 +103,37 @@ namespace PhysicsEngine
             _MIN = Min;
         }
 
-        public readonly bool TestIntersection(BoundingVolume other)
+        public readonly IBoundingVolume Extend(Vector v)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public readonly IBoundingVolume Move(Vector v)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public readonly Vector GetCenter()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public readonly Vector GetBottomCenter()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public readonly IBoundingVolume GetMinBoundingVolume()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public readonly IBoundingVolume GetMinBoundingVolume(Vector v)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public readonly bool TestIntersection(IBoundingVolume other)
         {
             switch (other)
             {
@@ -64,17 +151,41 @@ namespace PhysicsEngine
             throw new System.NotImplementedException();
         }
 
-        
+        public readonly bool TestIntersection(IBoundingVolume volumeMoving, Vector v)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public readonly Vector AdjustMovingVolumeSideToSide(IBoundingVolume volumeMoving, Vector v)
+        {
+            if (!TestIntersection(volumeMoving))
+            {
+                return v;
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public readonly Vector AdjustMovingVolumeUpAndDown(IBoundingVolume volumeMoving, Vector v)
+        {
+            if (!TestIntersection(volumeMoving))
+            {
+                return v;
+            }
+
+            throw new System.NotImplementedException();
+        }
+
     }
 
     /*public readonly struct OrientedBoundingBox 
-     * : BoundingVolume, System.IEquatable<EmptyBoundingVolume>
+     * : BoundingVolume
     {
 
     }*/
 
     /*public readonly struct BoundingSphere 
-     * : BoundingVolume, System.IEquatable<EmptyBoundingVolume>
+     * : BoundingVolume
     {
         private readonly Vector _CENTER;
         private readonly double _RADIUS;
@@ -110,27 +221,51 @@ namespace PhysicsEngine
 
     }*/
 
-    public readonly struct CompoundBoundingVolume 
-        : BoundingVolume, System.IEquatable<EmptyBoundingVolume>
+    public readonly struct CompoundBoundingVolume : IBoundingVolume
     {
-        private readonly BoundingVolume[] _VOLUMES;
+        private readonly IBoundingVolume[] _VOLUMES;
 
-        public CompoundBoundingVolume(params BoundingVolume[] volumes)
+        public CompoundBoundingVolume(params IBoundingVolume[] volumes)
         {
             // TODO: Assert all volumes are attached.
             _VOLUMES = volumes;
         }
 
-        public readonly BoundingVolume Extend(Vector v)
+        public readonly IBoundingVolume Extend(Vector v)
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly bool TestIntersection(BoundingVolume other)
+        public readonly IBoundingVolume Move(Vector v)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public readonly Vector GetCenter()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public readonly Vector GetBottomCenter()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public readonly IBoundingVolume GetMinBoundingVolume()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public readonly IBoundingVolume GetMinBoundingVolume(Vector v)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public readonly bool TestIntersection(IBoundingVolume other)
         {
             for (int i = 0; i < _VOLUMES.Length; ++i)
             {
-                BoundingVolume volume = _VOLUMES[i];
+                IBoundingVolume volume = _VOLUMES[i];
 
                 if (volume.TestIntersection(other))
                 {
@@ -140,7 +275,31 @@ namespace PhysicsEngine
 
             return false;
         }
-        
+
+        public readonly bool TestIntersection(IBoundingVolume volumeMoving, Vector v)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public readonly Vector AdjustMovingVolumeSideToSide(IBoundingVolume volumeMoving, Vector v)
+        {
+            if (!TestIntersection(volumeMoving))
+            {
+                return v;
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public readonly Vector AdjustMovingVolumeUpAndDown(IBoundingVolume volumeMoving, Vector v)
+        {
+            if (!TestIntersection(volumeMoving))
+            {
+                return v;
+            }
+
+            throw new System.NotImplementedException();
+        }
 
     }
 
