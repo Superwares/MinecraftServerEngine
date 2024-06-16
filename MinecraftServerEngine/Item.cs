@@ -2,7 +2,34 @@
 
 namespace MinecraftServerEngine
 {
-    public readonly struct Item : System.IEquatable<Item>
+    public enum Items : int
+    {
+        Stone,
+        Grass,
+        Dirt,
+        Cobbestone,
+
+        IronSword,
+        WoodenSword,
+
+        StoneSword,
+
+        DiamondSword,
+
+        GoldenSword,
+
+        LeatherHelmet,
+
+        ChainmailHelmet,
+
+        IronHelmet,
+
+        DiamondHelmet,
+
+        GoldenHelmet,
+    }
+
+    /*public readonly struct Item : System.IEquatable<Item>
     {
         public enum Types : int
         {
@@ -73,7 +100,7 @@ namespace MinecraftServerEngine
             return base.GetHashCode();
         }
 
-    }
+    }*/
 
     /* public sealed class Item : System.IEquatable<Item>
     {
@@ -200,8 +227,6 @@ namespace MinecraftServerEngine
 
                 case Types.GoldenHelmet:
                     return 1;
-
-
             }
         }
         public int MaxCount => GetItemMaxCountByType(_type);

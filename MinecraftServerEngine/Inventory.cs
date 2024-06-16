@@ -1,44 +1,46 @@
-﻿
+﻿using Common;
 using Containers;
 
 namespace MinecraftServerEngine
 {
-    public abstract class Inventory : System.IDisposable
+    
+
+    internal abstract class Inventory : System.IDisposable
     {
         private bool _disposed = false;
 
-        public readonly int TotalSlotCount;
+        public readonly int TOTAL_SLOT_COUNT;
 
-        private int _count = 0;
-        public int Count => _count;
-        protected readonly Item?[] _items;
-        public System.Collections.Generic.IEnumerable<Item?> Items
+        protected readonly ItemSlot[] _slots;
+
+        public System.Collections.Generic.IEnumerable<ItemSlot> AllSlots
         {
             get
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
-                return _items;
+                return _slots;
             }
         }
 
-        public Inventory(int totalCount)
+        public Inventory(int totalSlotCount)
         {
-            TotalSlotCount = totalCount;
+            TOTAL_SLOT_COUNT = totalSlotCount;
 
-            _items = new Item?[totalCount];
-            System.Array.Fill(_items, null);
+            _slots = new ItemSlot[TOTAL_SLOT_COUNT];
+            System.Diagnostics.Debug.Assert((ItemSlot)default == null);
+            Array<ItemSlot>.Fill(_slots, default);
         }
 
         ~Inventory() => System.Diagnostics.Debug.Assert(false);
 
-        internal virtual (bool, Item?) TakeAll(int index, SlotData slotData)
+        internal virtual (bool, ItemSlot) TakeAll(int index, SlotData slotData)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(_count >= 0);
-            System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
+            System.Diagnostics.Debug.Assert(_count <= TOTAL_SLOT_COUNT);
             System.Diagnostics.Debug.Assert(index >= 0);
-            System.Diagnostics.Debug.Assert(index < TotalSlotCount);
+            System.Diagnostics.Debug.Assert(index < TOTAL_SLOT_COUNT);
 
             bool f;
 
@@ -59,14 +61,14 @@ namespace MinecraftServerEngine
             return (f, itemTaked);
         }
 
-        internal virtual (bool, Item?) PutAll(int index, Item itemCursor, SlotData slotData)
+        internal virtual (bool, ItemSlot) PutAll(int index, ItemSlot cursor, SlotData slotData)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(_count >= 0);
-            System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
+            System.Diagnostics.Debug.Assert(_count <= TOTAL_SLOT_COUNT);
             System.Diagnostics.Debug.Assert(index >= 0);
-            System.Diagnostics.Debug.Assert(index < TotalSlotCount);
+            System.Diagnostics.Debug.Assert(index < TOTAL_SLOT_COUNT);
 
             bool f;
 
@@ -74,15 +76,15 @@ namespace MinecraftServerEngine
 
             if (itemTaked != null)
             {
-                System.Diagnostics.Debug.Assert(!ReferenceEquals(itemTaked, itemCursor));
+                System.Diagnostics.Debug.Assert(!ReferenceEquals(itemTaked, cursor));
 
                 f = itemTaked.CompareWithPacketFormat(slotData);
 
-                _items[index] = itemCursor;
+                _items[index] = cursor;
 
-                if (itemCursor.Type == itemTaked.Type)
+                if (cursor.Type == itemTaked.Type)
                 {
-                    int spend = itemCursor.Stack(itemTaked.Count);
+                    int spend = cursor.Stack(itemTaked.Count);
 
                     if (spend == itemTaked.Count)
                     {
@@ -90,7 +92,7 @@ namespace MinecraftServerEngine
                     }
                     else
                     {
-                        System.Diagnostics.Debug.Assert(spend < itemCursor.Count);
+                        System.Diagnostics.Debug.Assert(spend < cursor.Count);
                         itemTaked.Spend(spend);
                     }
                 }
@@ -101,7 +103,7 @@ namespace MinecraftServerEngine
             }
             else
             {
-                _items[index] = itemCursor;
+                _items[index] = cursor;
 
                 _count++;
 
@@ -111,14 +113,14 @@ namespace MinecraftServerEngine
             return (f, itemTaked);
         }
 
-        internal virtual (bool, Item?) TakeHalf(int index, SlotData slotData)
+        internal virtual (bool, ItemSlot) TakeHalf(int index, SlotData slotData)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(_count >= 0);
-            System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
+            System.Diagnostics.Debug.Assert(_count <= TOTAL_SLOT_COUNT);
             System.Diagnostics.Debug.Assert(index >= 0);
-            System.Diagnostics.Debug.Assert(index < TotalSlotCount);
+            System.Diagnostics.Debug.Assert(index < TOTAL_SLOT_COUNT);
 
             bool f;
 
@@ -149,14 +151,14 @@ namespace MinecraftServerEngine
             return (f, itemTaked);
         }
 
-        internal virtual (bool, Item?) PutOne(int index, Item itemCursor, SlotData slotData)
+        internal virtual (bool, ItemSlot) PutOne(int index, ItemSlot cursor, SlotData slotData)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(_count >= 0);
-            System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
+            System.Diagnostics.Debug.Assert(_count <= TOTAL_SLOT_COUNT);
             System.Diagnostics.Debug.Assert(index >= 0);
-            System.Diagnostics.Debug.Assert(index < TotalSlotCount);
+            System.Diagnostics.Debug.Assert(index < TOTAL_SLOT_COUNT);
 
             bool f;
 
@@ -247,7 +249,7 @@ namespace MinecraftServerEngine
         public void Print()
         {
             System.Console.WriteLine($"Count: {_count}");
-            for (int i = 0; i < TotalSlotCount; ++i)
+            for (int i = 0; i < TOTAL_SLOT_COUNT; ++i)
             {
                 if (i % 9 == 0)
                 {
@@ -282,7 +284,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class SelfInventory : Inventory
+    internal sealed class PlayerInventory : Inventory
     {
         private bool _disposed = false;
 
@@ -317,7 +319,7 @@ namespace MinecraftServerEngine
             }
         }
 
-        public SelfInventory() : base(46) 
+        public PlayerInventory() : base(46) 
         {
          /*   PutAll(15, new Item(Item.Types.Stone, 64), new(-1, 0));
             PutAll(16, new Item(Item.Types.Stone, 1), new(-1, 0));
@@ -325,9 +327,9 @@ namespace MinecraftServerEngine
 
         }
 
-        ~SelfInventory() => System.Diagnostics.Debug.Assert(false);
+        ~PlayerInventory() => System.Diagnostics.Debug.Assert(false);
 
-        internal override (bool, Item?) TakeAll(int index, SlotData slotData)
+        internal override (bool, ItemSlot) TakeAll(int index, SlotData slotData)
         {
             if (index == 0)
             {
@@ -347,7 +349,7 @@ namespace MinecraftServerEngine
             }
         }
 
-        internal override (bool, Item?) PutAll(int index, Item itemCursor, SlotData slotData)
+        internal override (bool, ItemSlot) PutAll(int index, Item itemCursor, SlotData slotData)
         {
             if (index == 0)
             {
@@ -390,269 +392,6 @@ namespace MinecraftServerEngine
         {
             throw new System.NotImplementedException();
         }
-
-        public override void Dispose()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            // Assertion.
-
-            // Release resources.
-
-            // Finish.
-            base.Dispose();
-            _disposed = true;
-        }
-
-    }
-
-    public abstract class PublicInventory : Inventory
-    {
-        private bool _disposed = false;
-
-        internal abstract string WindowType { get; }
-        /*public abstract string WindowTitle { get; }*/
-
-        private readonly object _SharedObject = new();
-
-        private readonly Numlist _IdList = new();  // Disposable
-        private readonly PublicInventoryRenderer _Renderer = new();  // Disposable
-
-        public PublicInventory(int count) : base(count) { }
-
-        ~PublicInventory() => System.Diagnostics.Debug.Assert(false);
-
-        internal int Open(
-            int windowId, Queue<ClientboundPlayingPacket> outPackets,
-            SelfInventory selfInventory)
-        {
-
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            {
-                int n = 9;
-                var arr = new SlotData[n];
-
-                for (int i = 0; i < n; ++i)
-                {
-                    Item? item = _items[i];
-
-                    if (item == null)
-                    {
-                        arr[i] = new();
-                        continue;
-                    }
-
-                    arr[i] = item.ConventToPacketFormat();
-                }
-
-                outPackets.Enqueue(new SetWindowItemsPacket(0, arr));
-
-                Item? offHandItem = selfInventory.OffhandItem;
-                if (offHandItem == null)
-                {
-                    outPackets.Enqueue(new SetSlotPacket(0, 45, new()));
-                }
-                else
-                {
-                    outPackets.Enqueue(new SetSlotPacket(0, 45, offHandItem.ConventToPacketFormat()));
-                }
-            }
-
-            lock (_SharedObject)
-            {
-
-                System.Diagnostics.Debug.Assert(windowId >= byte.MinValue);
-                System.Diagnostics.Debug.Assert(windowId <= byte.MaxValue);
-                System.Diagnostics.Debug.Assert(TotalSlotCount >= byte.MinValue);
-                System.Diagnostics.Debug.Assert(TotalSlotCount <= byte.MaxValue);
-                outPackets.Enqueue(new OpenWindowPacket(
-                    (byte)windowId, WindowType, "", (byte)TotalSlotCount));
-
-                int count = selfInventory.PrimarySlotCount + TotalSlotCount;
-
-                int i = 0;
-                var arr = new SlotData[count];
-
-                foreach (Item? item in Items)
-                {
-                    if (item == null)
-                    {
-                        arr[i++] = new();
-                        continue;
-                    }
-
-                    arr[i++] = item.ConventToPacketFormat();
-                }
-
-                foreach (Item? item in selfInventory.PrimaryItems)
-                {
-                    if (item == null)
-                    {
-                        arr[i++] = new();
-                        continue;
-                    }
-
-                    arr[i++] = item.ConventToPacketFormat();
-                }
-
-                System.Diagnostics.Debug.Assert(windowId >= byte.MinValue);
-                System.Diagnostics.Debug.Assert(windowId <= byte.MaxValue);
-                outPackets.Enqueue(new SetWindowItemsPacket((byte)windowId, arr));
-
-                System.Diagnostics.Debug.Assert(i == count);
-
-                int id = _IdList.Alloc();
-                _Renderer.Add(id, windowId, outPackets);
-
-                return id;
-            }
-
-        }
-
-        internal void Close(int id, int _windowId)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            lock (_SharedObject)
-            {
-                int windowId = _Renderer.Remove(id);
-                System.Diagnostics.Debug.Assert(_windowId == windowId);
-            }
-        }
-
-        internal override (bool, Item?) TakeAll(int index, SlotData slotData)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            lock (_SharedObject)
-            {
-                (bool f, Item? item) = base.TakeAll(index, slotData);
-
-                System.Diagnostics.Debug.Assert(_items[index] is null);
-                _Renderer.RenderToEmpty(index);
-
-                return (f, item);
-            }
-        }
-
-        internal override (bool, Item?) PutAll(int index, Item itemCursor, SlotData slotData)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            lock (_SharedObject)
-            {
-                (bool f, Item? result) = base.PutAll(index, itemCursor, slotData);
-
-                {
-                    Item? item = _items[index];
-                    System.Diagnostics.Debug.Assert(item != null);
-                    _Renderer.RenderToSet(index, item);
-                }
-
-                return (f, result);
-            }
-        }
-
-        internal override (bool, Item?) TakeHalf(int index, SlotData slotData)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            lock (_SharedObject)
-            {
-                (bool f, Item? result) = base.TakeHalf(index, slotData);
-
-                {
-                    Item? item = _items[index];
-                    if (item == null)
-                    {
-                        _Renderer.RenderToEmpty(index);
-                    }
-                    else
-                    {
-                        _Renderer.RenderToSet(index, item);
-                    }
-                }
-
-                return (f, result);
-            }
-        }
-
-        internal override (bool, Item?) PutOne(int index, Item itemCursor, SlotData slotData)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            lock (_SharedObject)
-            {
-                (bool f, Item? result) = base.PutOne(index, itemCursor, slotData);
-
-                {
-                    Item? item = _items[index];
-                    System.Diagnostics.Debug.Assert(item != null);
-                    _Renderer.RenderToSet(index, item);
-                }
-
-                return (f, result);
-            }
-        }
-
-        internal virtual void DistributeItem(
-            int[] indexes, Item item, SelfInventory privateInventory)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            throw new System.NotImplementedException();
-        }
-
-        public virtual void CollectItems()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            throw new System.NotImplementedException();
-        }
-
-        public void CloseForcibly()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            lock (_SharedObject)
-            {
-                int[] ids = _Renderer.CloseForciblyAndFlush();
-                for (int i = 0; i < ids.Length; ++i)
-                {
-                    _IdList.Dealloc(ids[i]);
-                }
-            }
-
-        }
-
-        public override void Dispose()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            // Assertion.
-            System.Diagnostics.Debug.Assert(_IdList.Empty);
-
-            // Release resources.
-            _IdList.Dispose();
-            _Renderer.Dispose();
-
-            // Finish.
-            base.Dispose();
-            _disposed = true;
-        }
-
-    }
-
-    public sealed class ChestInventory : PublicInventory
-    {
-        private bool _disposed = false;
-
-        internal override string WindowType => "minecraft:chest";
-
-        public ChestInventory() : base(27) { }
-
-        ~ChestInventory() => System.Diagnostics.Debug.Assert(false);
 
         public override void Dispose()
         {

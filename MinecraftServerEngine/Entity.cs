@@ -531,7 +531,7 @@ namespace MinecraftServerEngine
 
 
 
-        internal readonly SelfInventory _selfInventory = new();
+        internal readonly PlayerInventory _selfInventory = new();
 
 
         private Connection? _CONN;

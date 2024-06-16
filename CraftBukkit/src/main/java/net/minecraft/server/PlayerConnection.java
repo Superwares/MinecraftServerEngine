@@ -1605,10 +1605,25 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
     }
 
     public void a(PacketPlayInWindowClick packetplayinwindowclick) {
+
+        System.out.println("PacketPlayInWindowClick: ");
+        System.out.println("WindowId: " + packetplayinwindowclick.a()); 
+        System.out.println("ActionNumber: " + packetplayinwindowclick.d());
+        System.out.println("SlotNumber: " + packetplayinwindowclick.b());
+        System.out.println("ClickType: " + packetplayinwindowclick.f());
+        System.out.println("Button: " + packetplayinwindowclick.c());
+        System.out.println("Item: " + packetplayinwindowclick.e());
+        
+
+        if (true) return;
+
         PlayerConnectionUtils.ensureMainThread(packetplayinwindowclick, this, this.player.x());
+        
         if (this.player.isFrozen()) return; // CraftBukkit
         this.player.resetIdleTimer();
+
         if (this.player.activeContainer.windowId == packetplayinwindowclick.a() && this.player.activeContainer.c(this.player) && this.player.activeContainer.canUse(this.player)) { // CraftBukkit
+
             boolean cancelled = this.player.isSpectator(); // CraftBukkit - see below if
             if (false/*this.player.isSpectator()*/) { // CraftBukkit
                 NonNullList nonnulllist = NonNullList.a();
