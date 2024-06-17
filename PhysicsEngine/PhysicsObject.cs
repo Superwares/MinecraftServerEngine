@@ -10,13 +10,14 @@ namespace PhysicsEngine
 
         private readonly RWLock _LOCK = new();  // Disposable
 
-        private readonly double _MASS;
+        public readonly double MASS;
 
         private readonly double _MAX_STEP_LEVEL;
 
         private readonly Queue<Vector> _FORCES = new();  // Disposable
 
         private Vector _v;
+        public Vector VELOCITY => _v;
 
         private bool _onGround;
 
@@ -24,10 +25,10 @@ namespace PhysicsEngine
         public IBoundingVolume BOUNDING_VOLUME => _volume;
 
 
-        public PhysicsObject(double m, double maxStepLevel)
+        public PhysicsObject(IBoundingVolume volume, double m/*, double maxStepLevel*/)
         {
-            _MASS = m;
-            _MAX_STEP_LEVEL = maxStepLevel;
+            MASS = m;
+            /*_MAX_STEP_LEVEL = maxStepLevel;*/
         }
 
         public virtual void ApplyForce(Vector v)
@@ -49,11 +50,16 @@ namespace PhysicsEngine
             {
                 Vector force = _FORCES.Dequeue();
 
-                v += (force / _MASS);
+                v += (force / MASS);
             }
 
             IBoundingVolume volume = GenerateBoundingVolume();
             return (volume, v);
+        }
+
+        public virtual void Create()
+        {
+            _create = true;
         }
 
         public virtual void Move(IBoundingVolume volume, Vector v, bool onGround)

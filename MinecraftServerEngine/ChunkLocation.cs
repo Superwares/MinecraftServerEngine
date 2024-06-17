@@ -56,7 +56,7 @@ namespace MinecraftServerEngine
             X = x; Z = z;
         }
 
-        public override readonly string? ToString()
+        public override readonly string ToString()
         {
             return $"( X: {X}, Z: {Z} )";
         }

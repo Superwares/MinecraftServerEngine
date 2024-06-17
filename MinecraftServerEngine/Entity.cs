@@ -8,190 +8,106 @@ namespace MinecraftServerEngine
     public abstract class Entity : PhysicsObject
     {
 
-        public readonly struct Hitbox
+        internal readonly struct Hitbox : System.IEquatable<Hitbox>
         {
-            public readonly double _W, _H;
-            public double Width => _W;
-            public double Height => _H;
+            private readonly double _WIDTH, _HEIGHT;
             /*public readonly double EyeHeight, MaxStepHeight;*/
 
             public Hitbox(double w, double h)
             {
-                _W = w;
-                _H = h;
+                _WIDTH = w;
+                _HEIGHT = h;
             }
 
-            public BoundingBox Convert(Vector p)
+            public readonly IBoundingVolume Convert(Vector p)
             {
-                System.Diagnostics.Debug.Assert(_W > 0.0D);
-                System.Diagnostics.Debug.Assert(_H > 0.0D);
+                System.Diagnostics.Debug.Assert(_WIDTH > 0.0D);
+                System.Diagnostics.Debug.Assert(_HEIGHT > 0.0D);
 
-                double w = _W / 2.0D;
+                double w = _WIDTH / 2.0D;
 
-                Vector max = new(p.X + w, p.Y + _H, p.Z + w),
+                Vector max = new(p.X + w, p.Y + _HEIGHT, p.Z + w),
                        min = new(p.X - w, p.Y, p.Z - w);
-                return new(max, min);
-            }
-        }
-
-        public readonly struct Position : System.IEquatable<Position>
-        {
-            public readonly double X, Y, Z;
-
-            public Position(double x, double y, double z)
-            {
-                X = x; Y = y; Z = z;
+                return new AxisAlignedBoundingBox(max, min);
             }
 
-
-        }
-
-        public readonly struct Angles : System.IEquatable<Angles>
-        {
-            internal const float MaxYaw = 180, MinYaw = -180;
-            internal const float MaxPitch = 90, MinPitch = -90;
-
-            public readonly float Yaw, Pitch;
-
-            private static float Frem(float angle)
-            {
-                float y = 360.0f;
-                return angle - (y * (float)System.Math.Floor(angle / y));
-            }
-
-            public Angles(float yaw, float pitch)
-            {
-                // TODO: map yaw from 180 to -180.
-                System.Diagnostics.Debug.Assert(pitch >= MinPitch);
-                System.Diagnostics.Debug.Assert(pitch <= MaxPitch);
-
-                Yaw = Frem(yaw);
-                Pitch = pitch;
-            }
-
-            internal (byte, byte) ConvertToPacketFormat()
-            {
-                System.Diagnostics.Debug.Assert(Pitch >= MinPitch);
-                System.Diagnostics.Debug.Assert(Pitch <= MaxPitch);
-                
-                float x = Frem(Yaw);
-                float y = Frem(Pitch);
-
-                return (
-                    (byte)((byte.MaxValue * x) / 360),
-                    (byte)((byte.MaxValue * y) / 360));
-            }
-
-            public override readonly string ToString()
+            public readonly override string ToString()
             {
                 throw new System.NotImplementedException();
             }
 
-            public bool Equals(Angles other)
+            public readonly bool Equals(Hitbox other)
             {
-                return (Yaw == other.Yaw) && (Pitch == other.Pitch);
+                throw new System.NotImplementedException();
             }
-
         }
 
         private bool _disposed = false;
 
-        private bool _created = false;
 
-
-        private int _id;
-        internal int Id
+        private int _ID;
+        internal int ID
         {
             get
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
-                System.Diagnostics.Debug.Assert(_created);
-                return _id;
+                
+                return _ID;
             }
         }
 
-        private System.Guid _uniqueId;
-        internal System.Guid UniqueId
+        private System.Guid _UNIQUE_ID;
+        internal System.Guid UNIQUE_ID
         {
             get
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
-                System.Diagnostics.Debug.Assert(_created);
-                return _uniqueId;
-            }
-        }
-
-
-        public abstract double GetMass();
-
-        public abstract Hitbox GetHitbox();
-
-
-        private readonly ConcurrentQueue<Vector> _FORCES = new();
-
-        private Vector _v = new Vector(0, 0, 0);
-        public Vector Velocity
-        {
-            get
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-                System.Diagnostics.Debug.Assert(_created);
-                return _v;
-            }
-        }
-
-        private BoundingBox _bb;
-        public BoundingBox BB
-        {
-            get
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-                System.Diagnostics.Debug.Assert(_created);
-                return _bb;
+                
+                return _UNIQUE_ID;
             }
         }
 
         private Vector _p;
-        internal Vector Position
+        internal Vector POSITION
         {
             get
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
-                System.Diagnostics.Debug.Assert(_created);
+                
                 return _p;
             }
         }
 
 
         private bool _rotated = false;
-        private Angles _look;
-        public Angles Look
+        private Look _look;
+        public Look LOOK
         {
             get
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
-                System.Diagnostics.Debug.Assert(_created);
+                
                 return _look;
             }
         }
 
 
-        protected bool _sneaking = false, _sprinting = false;
-        public bool Sneaking
+        protected bool _sneaking, _sprinting = false;
+        public bool SNEAKING
         {
             get
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
-                System.Diagnostics.Debug.Assert(_created);
+                
                 return _sneaking;
             }
         }
-        public bool Sprinting
+        public bool SPRINTING
         {
             get
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
-                System.Diagnostics.Debug.Assert(_created);
+                
                 return _sprinting;
             }
         }
@@ -202,32 +118,33 @@ namespace MinecraftServerEngine
         protected Angles _lookTeleport;*/
 
 
-        private EntityRendererManager? _MANAGER = null;  // Disposable
+        private EntityRendererManager _MANAGER;  // Disposable
 
-        internal Entity() { }
 
-        ~Entity() => System.Diagnostics.Debug.Assert(false);
-
-        public void Create(
-            int id, System.Guid uniqueId, 
-            Vector p, Angles look)
+        internal Entity(
+            System.Guid uniqueId,
+            Vector p, Look look,
+            Hitbox hitbox,
+            double m)
+            : base(hitbox.Convert(p), m)
         {
-            System.Diagnostics.Debug.Assert(!_created);
-
-            _id = id;
-            _uniqueId = uniqueId;
-
-            Hitbox hitbox = GetHitbox();
-            _bb = hitbox.Convert(p);
+            _ID = EntityIdAllocator.Alloc();
+            _UNIQUE_ID = uniqueId;
 
             _p = p;
 
+            System.Diagnostics.Debug.Assert(!_rotated);
             _look = look;
 
-            _MANAGER = new(id);
+            System.Diagnostics.Debug.Assert(!_sneaking);
+            System.Diagnostics.Debug.Assert(!_sprinting);
 
-            _created = true;
+            _MANAGER = new(ID);
         }
+
+        ~Entity() => System.Diagnostics.Debug.Assert(false);
+
+        private protected abstract Hitbox GetHitbox();
 
         private protected abstract void RenderSpawning(EntityRenderer renderer);
 
@@ -242,20 +159,6 @@ namespace MinecraftServerEngine
             }
         }
 
-        public virtual void ApplyForce(Vector force)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            _FORCES.Enqueue(force);
-        }
-
-        public virtual void ApplyGlobalForce(Vector force)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            _FORCES.Enqueue(force);
-        }
-
         public virtual bool IsDead()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -263,40 +166,15 @@ namespace MinecraftServerEngine
             return false;
         }
 
-        public virtual void StartInternalRoutine(long serverTicks, World world)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
+        public virtual void StartInternalRoutine(long serverTicks, World world) { }
 
-        }
-
-        public abstract void StartRoutine(long serverTicks, World world);
+        public virtual void StartRoutine(long serverTicks, World world) { }
 
         protected override IBoundingVolume GenerateBoundingVolume()
         {
             Hitbox hitbox = GetHitbox();
-            BoundingBox bb = hitbox.Convert(_p);
-
-            throw new System.NotImplementedException();
+            return hitbox.Convert(_p);
         }
-
-        /*internal (BoundingBox, Vector) Integrate()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Vector v = _v;
-
-            while (!_FORCES.Empty)
-            {
-                Vector force = _FORCES.Dequeue();
-
-                v += (force / GetMass());
-            }
-
-            Hitbox hitbox = GetHitbox();
-            BoundingBox bb = hitbox.Convert(_p);
-
-            return (bb, v);
-        }*/
 
         public override void Move(IBoundingVolume volume, Vector v, bool onGround)
         {
@@ -347,7 +225,7 @@ namespace MinecraftServerEngine
             _lookTeleport = look;
         }*/
 
-        public void Rotate(Angles look)
+        public void Rotate(Look look)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -464,7 +342,7 @@ namespace MinecraftServerEngine
             outPackets.Enqueue(new EntityMetadataPacket(
                 Id, metadata.WriteData()));*/
 
-            renderer.SpawnItemEntity(Id);
+            renderer.SpawnItemEntity(ID);
         }
 
         public override void Dispose()
@@ -517,7 +395,7 @@ namespace MinecraftServerEngine
         public override Hitbox GetHitbox()
         {
             double w = 0.6D, h;
-            if (Sneaking)
+            if (SNEAKING)
             {
                 h = 1.65D;
             }
@@ -551,9 +429,9 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             renderer.SpawnPlayer(
-                Id, UniqueId,
+                ID, UNIQUE_ID,
                 Position, Look,
-                Sneaking, Sprinting);
+                SNEAKING, SPRINTING);
         }
 
         internal void Connect(Client client, World world, System.Guid userId)
@@ -562,7 +440,7 @@ namespace MinecraftServerEngine
 
             _p = Position;
 
-            _CONN = new Connection(client, world, Id, userId, _p, _selfInventory);
+            _CONN = new Connection(client, world, ID, userId, _p, _selfInventory);
         }
 
         public override void ApplyForce(Vector force)
@@ -572,23 +450,13 @@ namespace MinecraftServerEngine
             if (Connected)
             {
                 System.Diagnostics.Debug.Assert(_CONN != null);
-                Vector v = force / GetMass();
-                _CONN.ApplyVelocity(Id, v);
+                Vector v = force / MASS;
+                _CONN.ApplyVelocity(ID, v);
             }
-
-            base.ApplyForce(force);
-        }
-
-        public override void ApplyGlobalForce(Vector force)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            if (Connected)
+            else
             {
-                
+                base.ApplyForce(force);
             }
-
-            base.ApplyGlobalForce(force);
         }
 
         /*public override void Teleport(Vector pos, Angles look)
@@ -653,23 +521,17 @@ namespace MinecraftServerEngine
             switch (control)
             {
                 default:
-                    System.Diagnostics.Debug.Assert(false);
-                    break;
+                    throw new System.NotImplementedException();
                 case PlayerPacket:
                     throw new System.NotImplementedException();
-                    break;
                 case PlayerPositionPacket:
                     throw new System.NotImplementedException();
-                    break;
                 case PlayerPosAndLookPacket:
                     throw new System.NotImplementedException();
-                    break;
                 case PlayerLookPacket:
                     throw new System.NotImplementedException();
-                    break;
                 case EntityActionPacket:
                     throw new System.NotImplementedException();
-                    break;
             }
         }
 
@@ -683,7 +545,7 @@ namespace MinecraftServerEngine
 
                 using Queue<ServerboundPlayingPacket> controls = new();
 
-                _CONN.Control(controls, world, UniqueId, Sneaking, Sprinting, _selfInventory);
+                _CONN.Control(controls, world, UNIQUE_ID, SNEAKING, SPRINTING, _selfInventory);
 
                 while (!controls.Empty)
                 {
@@ -707,7 +569,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_CONN != null);
             if (_CONN.Disconnected)
             {
-                _CONN.Flush(world, UniqueId);
+                _CONN.Flush(world, UNIQUE_ID);
                 _CONN.Dispose();
 
                 _CONN = null;
@@ -730,7 +592,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_CONN != null);
             _CONN.Render(
                 world, 
-                Id, 
+                ID, 
                 Position, Look, 
                 _selfInventory);
         }

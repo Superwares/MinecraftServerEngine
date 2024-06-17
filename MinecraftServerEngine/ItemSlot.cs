@@ -8,11 +8,6 @@ namespace MinecraftServerEngine
 
     internal sealed class ItemSlot
     {
-        private enum ItemTypes : int
-        {
-            Normal,
-            Armor,
-        }
 
         // TODO: Replace as IReadOnlyTable
         // TODO: 프로그램이 종료되었을 때 자원 해제하기. static destructor?

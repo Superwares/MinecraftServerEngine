@@ -133,7 +133,7 @@ namespace MinecraftServerEngine
 
         public void MoveAndRotate(
             int id, 
-            Vector p, Vector pPrev, Entity.Angles look, bool onGround)
+            Vector p, Vector pPrev, Entity.Look look, bool onGround)
         {
             System.Diagnostics.Debug.Assert(id != Id);
 
@@ -176,7 +176,7 @@ namespace MinecraftServerEngine
 
         }
 
-        public void Rotate(int id, Entity.Angles look, bool onGround)
+        public void Rotate(int id, Entity.Look look, bool onGround)
         {
             System.Diagnostics.Debug.Assert(id != Id);
 
@@ -232,7 +232,7 @@ namespace MinecraftServerEngine
 
         public void SpawnPlayer(
             int id, System.Guid uniqueId, 
-            Vector p, Entity.Angles look, 
+            Vector p, Entity.Look look, 
             bool sneaking, bool sprinting)
         {
             System.Diagnostics.Debug.Assert(id != Id);
@@ -292,7 +292,7 @@ namespace MinecraftServerEngine
             _CLIENT = client;
         }
 
-        public void Init(int entityId, Vector p, Entity.Angles look)
+        public void Init(int entityId, Vector p, Entity.Look look)
         {
             
 

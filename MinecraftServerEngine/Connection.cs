@@ -1328,7 +1328,7 @@ namespace MinecraftServerEngine
         internal void Render(
             World world, 
             int id,
-            Vector p, Entity.Angles look, 
+            Vector p, Entity.Look look, 
             PlayerInventory inv)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -1346,7 +1346,7 @@ namespace MinecraftServerEngine
 
                     _OUT_PACKETS.Enqueue(new TeleportSelfPlayerPacket(
                         p.X, p.Y, p.Z,
-                        look.Yaw, look.Pitch,
+                        look._YAW, look._PITCH,
                         false, false, false, false, false,
                         new System.Random().Next()));
 

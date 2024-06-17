@@ -8,12 +8,7 @@ namespace MinecraftServerEngine
     {
         private bool _disposed = false;
 
-        private readonly Vector _P_SPAWE;
-        private readonly Entity.Angles _LOOK_SPAWE;
-
         internal readonly PlayerList _PLAYER_LIST = new();  // Disposable
-
-        private readonly Numlist _ENTITY_ID_LIST = new();  // Disposable
 
         private readonly Queue<Entity> _ENTITY_SPAWNING_POOL = new();  // Disposable
         internal readonly SwapQueue<Entity> _ENTITIES = new();  // Disposable
@@ -25,10 +20,8 @@ namespace MinecraftServerEngine
 
         /*internal PublicInventory _Inventory = new ChestInventory();*/
 
-        public World(Vector pSpawe, Entity.Angles lookSpawe)
+        public World()
         {
-            _P_SPAWE = pSpawe; _LOOK_SPAWE = lookSpawe;
-
             // Dummy code.
             for (int z = -10; z <= 10; ++z)
             {
@@ -80,9 +73,21 @@ namespace MinecraftServerEngine
             }*/
         }
 
-        public void StartEntityRoutine(long serverTicks, Entity entity)
+        public void StartEntityRoutine(long serverTicks, Entity entity, bool serversidePhysics)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            // TODO: Resolve Collisions with other entities.
+            // TODO: Add Global Forces with OnGround flag. (Gravity, Damping Force, ...)
+            if (serversidePhysics) 
+            {
+                entity.ApplyForce(
+                        -1.0D * new Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
+                        entity.VELOCITY);  // Damping Force
+                entity.ApplyForce(entity.MASS * 0.08D * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
+
+                /*entity.ApplyForce(entity.GetMass() * 0.001D * new Entity.Vector(0, -1, 0));  // Gravity*/
+            }
 
             entity.StartInternalRoutine(serverTicks, this);
             entity.StartRoutine(serverTicks, this);
@@ -100,18 +105,7 @@ namespace MinecraftServerEngine
 
                     System.Diagnostics.Debug.Assert(entity is not Player);
 
-                    // TODO: Resolve Collisions with other entities.
-                    // TODO: Add Global Forces with OnGround flag. (Gravity, Damping Force, ...)
-                    {
-                        entity.ApplyGlobalForce(
-                                -1.0D * new Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
-                                entity.Velocity);  // Damping Force
-                        entity.ApplyGlobalForce(entity.GetMass() * 0.08D * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
-
-                        /*entity.ApplyForce(entity.GetMass() * 0.001D * new Entity.Vector(0, -1, 0));  // Gravity*/
-                    }
-
-                    StartEntityRoutine(serverTicks, entity);
+                    StartEntityRoutine(serverTicks, entity, true);
 
                     _ENTITIES.Enqueue(entity);
                 } while (true);
@@ -120,6 +114,8 @@ namespace MinecraftServerEngine
             {
 
             }
+
+            System.Diagnostics.Debug.Assert(_ENTITIES.Empty);
         }
 
         public void StartPlayerRoutines(long serverTicks)
@@ -132,7 +128,7 @@ namespace MinecraftServerEngine
                 {
                     Player player = _PLAYERS.Dequeue();
 
-                    StartEntityRoutine(serverTicks, player);
+                    StartEntityRoutine(serverTicks, player, !player.Connected);
 
                     _PLAYERS.Enqueue(player);
                 } while (true);
@@ -142,7 +138,8 @@ namespace MinecraftServerEngine
             {
 
             }
-            
+
+            System.Diagnostics.Debug.Assert(_PLAYERS.Empty);
         }
 
         public void HandlePlayerConnections(long serverTicks)
@@ -157,7 +154,7 @@ namespace MinecraftServerEngine
 
                     if (player.HandlePlayerConnection(this))
                     {
-                        System.Guid userId = player.UniqueId;
+                        System.Guid userId = player.UNIQUE_ID;
 
                         System.Diagnostics.Debug.Assert(!_DISCONNECTED_PLAYERS.Contains(userId));
                         _DISCONNECTED_PLAYERS.Insert(userId, player);
@@ -173,6 +170,7 @@ namespace MinecraftServerEngine
 
             }
 
+            System.Diagnostics.Debug.Assert(_PLAYERS.Empty);
         }
 
         private void DestroyEntity(Entity entity)
@@ -181,15 +179,15 @@ namespace MinecraftServerEngine
 
             if (entity is Player player)
             {
-                _PLAYER_LIST.Remove(player.UniqueId);
+                _PLAYER_LIST.Remove(player.UNIQUE_ID);
 
-                Player playerExtracted = _DISCONNECTED_PLAYERS.Extract(player.UniqueId);
+                Player playerExtracted = _DISCONNECTED_PLAYERS.Extract(player.UNIQUE_ID);
                 System.Diagnostics.Debug.Assert(ReferenceEquals(playerExtracted, player));
             }
 
             CloseObjectMapping(entity);
 
-            _ENTITY_ID_LIST.Dealloc(entity.Id);
+            _ENTITY_ID_LIST.Dealloc(entity.ID);
 
             entity.Flush();
             entity.Dispose();
@@ -222,6 +220,8 @@ namespace MinecraftServerEngine
             {
 
             }
+
+            System.Diagnostics.Debug.Assert(_ENTITIES.Empty);
         }
 
         public void DestroyPlayers()
@@ -237,7 +237,7 @@ namespace MinecraftServerEngine
                     if (!player.Connected)
                     {
                         System.Diagnostics.Debug.Assert(
-                            _DISCONNECTED_PLAYERS.Contains(player.UniqueId));
+                            _DISCONNECTED_PLAYERS.Contains(player.UNIQUE_ID));
 
                         if (DetermineToDespawnPlayerOnDisconnect())
                         {
@@ -256,6 +256,7 @@ namespace MinecraftServerEngine
 
             }
 
+            System.Diagnostics.Debug.Assert(_PLAYERS.Empty);
         }
 
         public void MoveEntities()
@@ -278,6 +279,7 @@ namespace MinecraftServerEngine
 
             }
 
+            System.Diagnostics.Debug.Assert(_ENTITIES.Empty);
         }
 
         public void MovePlayers()
@@ -290,7 +292,10 @@ namespace MinecraftServerEngine
                 {
                     Player player = _PLAYERS.Dequeue();
 
-                    MoveObject(player);
+                    if (!player.Connected)
+                    {
+                        MoveObject(player);
+                    }
 
                     _PLAYERS.Enqueue(player);
                 } while (true);
@@ -300,6 +305,8 @@ namespace MinecraftServerEngine
             {
 
             }
+
+            System.Diagnostics.Debug.Assert(_PLAYERS.Empty);
         }
 
         public void CreateEntities()
@@ -328,6 +335,8 @@ namespace MinecraftServerEngine
             {
 
             }
+
+            System.Diagnostics.Debug.Assert(_ENTITY_SPAWNING_POOL.Empty);
         }
 
         protected abstract Player CreatePlayer();
@@ -408,8 +417,6 @@ namespace MinecraftServerEngine
             _DISCONNECTED_PLAYERS.Dispose();
 
             _BLOCK_CTX.Dispose();
-
-            _ENTITY_CTX.Dispose();
 
             // Finish.
             base.Dispose();

@@ -12,6 +12,58 @@ namespace Containers
         private readonly Queue<T> _QUEUE1 = new();
         private readonly Queue<T> _QUEUE2 = new();
 
+        private Queue<T> GetQueueForDequeue()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (dequeue == 1)
+            {
+                return _QUEUE1;
+            }
+            else if (dequeue == 2)
+            {
+                return _QUEUE2;
+            }
+            else
+            {
+                System.Diagnostics.Debug.Assert(false);
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        private Queue<T> GetQueueForEnqueue()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (dequeue == 1)
+            {
+                return _QUEUE2;
+            }
+            else if (dequeue == 2)
+            {
+                return _QUEUE1;
+            }
+            else
+            {
+                System.Diagnostics.Debug.Assert(false);
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public int Count
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                Queue<T> queue = GetQueueForDequeue();
+                return queue.Count;
+            }
+        }
+        public bool Empty => (Count == 0);
+
         public SwapQueue() { }
 
         ~SwapQueue() => System.Diagnostics.Debug.Assert(false);
@@ -38,31 +90,11 @@ namespace Containers
             }
         }
 
-        private Queue<T> GetQueue()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            if (dequeue == 1)
-            {
-                return _QUEUE2;
-            }
-            else if (dequeue == 2)
-            {
-                return _QUEUE1;
-            }
-            else
-            {
-                System.Diagnostics.Debug.Assert(false);
-            }
-
-            throw new System.NotImplementedException();
-        }
-
         public virtual void Enqueue(T value)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Queue<T> queue = GetQueue();
+            Queue<T> queue = GetQueueForEnqueue();
             queue.Enqueue(value);
         }
 
@@ -75,7 +107,7 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Queue<T> queue = GetQueue();
+            Queue<T> queue = GetQueueForDequeue();
             T value = queue.Dequeue();
 
             return value;
