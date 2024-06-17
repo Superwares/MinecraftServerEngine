@@ -8,7 +8,7 @@ namespace MinecraftServerEngine
     public abstract class Entity : PhysicsObject
     {
 
-        internal readonly struct Hitbox : System.IEquatable<Hitbox>
+        private protected readonly struct Hitbox : System.IEquatable<Hitbox>
         {
             private readonly double _WIDTH, _HEIGHT;
             /*public readonly double EyeHeight, MaxStepHeight;*/
@@ -48,47 +48,15 @@ namespace MinecraftServerEngine
         public readonly System.Guid UNIQUE_ID;
 
         private Vector _p;
-        internal Vector POSITION
-        {
-            get
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-                
-                return _p;
-            }
-        }
+        internal Vector POSITION => _p;
 
         private bool _rotated = false;
         private Look _look;
-        public Look LOOK
-        {
-            get
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-                
-                return _look;
-            }
-        }
+        internal Look LOOK => _look;
 
         protected bool _sneaking, _sprinting = false;
-        public bool SNEAKING
-        {
-            get
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-                
-                return _sneaking;
-            }
-        }
-        public bool SPRINTING
-        {
-            get
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-                
-                return _sprinting;
-            }
-        }
+        public bool SNEAKING => _sneaking;
+        public bool SPRINTING => _sprinting;
 
 
         /*protected bool _teleported = false;
@@ -99,7 +67,7 @@ namespace MinecraftServerEngine
         private EntityRendererManager _MANAGER;  // Disposable
 
 
-        internal Entity(
+        private protected Entity(
             System.Guid uniqueId,
             Vector p, Look look,
             Hitbox hitbox,
@@ -359,10 +327,24 @@ namespace MinecraftServerEngine
 
 
         public const double MASS = 1.0D;
-        public override double GetMass() => MASS;
+
+        
+        internal readonly PlayerInventory _selfInventory = new();
 
 
-        public override Hitbox GetHitbox()
+        private Connection _CONN;
+        public bool Connected => (_CONN != null);
+
+
+        private Vector _p;
+        private bool _onGround;
+
+
+        public Player() : base() { }
+
+        ~Player() => System.Diagnostics.Debug.Assert(false);
+
+        private protected override Hitbox GetHitbox()
         {
             double w = 0.6D, h;
             if (SNEAKING)
@@ -377,30 +359,13 @@ namespace MinecraftServerEngine
             return new(w, h);
         }
 
-
-
-        internal readonly PlayerInventory _selfInventory = new();
-
-
-        private Connection? _CONN;
-        public bool Connected => (_CONN != null);
-
-
-        private Vector _p;
-        private bool _onGround;
-
-
-        public Player() : base() { }
-
-        ~Player() => System.Diagnostics.Debug.Assert(false);
-
         private protected override void RenderSpawning(EntityRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             renderer.SpawnPlayer(
                 ID, UNIQUE_ID,
-                Position, Look,
+                POSITION, LOOK,
                 SNEAKING, SPRINTING);
         }
 
@@ -408,7 +373,8 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _p = Position;
+            _p = POSITION;
+            _onGround = ON_GROUND;
 
             _CONN = new Connection(client, world, ID, userId, _p, _selfInventory);
         }
@@ -563,7 +529,7 @@ namespace MinecraftServerEngine
             _CONN.Render(
                 world, 
                 ID, 
-                Position, Look, 
+                POSITION, LOOK, 
                 _selfInventory);
         }
         

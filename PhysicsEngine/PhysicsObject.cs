@@ -21,7 +21,7 @@ namespace PhysicsEngine
         public Vector VELOCITY;
 
         private bool _onGround;
-        public bool OnGround => _onGround;
+        public bool ON_GROUND => _onGround;
 
         private IBoundingVolume _volume;
         public IBoundingVolume BOUNDING_VOLUME => _volume;

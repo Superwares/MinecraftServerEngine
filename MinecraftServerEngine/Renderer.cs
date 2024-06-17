@@ -133,7 +133,7 @@ namespace MinecraftServerEngine
 
         public void MoveAndRotate(
             int id, 
-            Vector p, Vector pPrev, Entity.Look look, bool onGround)
+            Vector p, Vector pPrev, Look look, bool onGround)
         {
             System.Diagnostics.Debug.Assert(id != Id);
 
@@ -146,7 +146,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(dy >= short.MinValue && dy <= short.MaxValue);
             System.Diagnostics.Debug.Assert(dz >= short.MinValue && dz <= short.MaxValue);
 
-            (byte x, byte y) = look.ConvertToPacketFormat();
+            (byte x, byte y) = look.ConvertToProtocolFormat();
             Render(new EntityLookAndRelMovePacket(
                 id,
                 (short)dx, (short)dy, (short)dz,
@@ -176,13 +176,13 @@ namespace MinecraftServerEngine
 
         }
 
-        public void Rotate(int id, Entity.Look look, bool onGround)
+        public void Rotate(int id, Look look, bool onGround)
         {
             System.Diagnostics.Debug.Assert(id != Id);
 
             System.Diagnostics.Debug.Assert(!_disconnected);
 
-            (byte x, byte y) = look.ConvertToPacketFormat();
+            (byte x, byte y) = look.ConvertToProtocolFormat();
             Render(new EntityLookPacket(id, x, y, onGround));
             Render(new EntityHeadLookPacket(id, x));
         }
@@ -232,7 +232,7 @@ namespace MinecraftServerEngine
 
         public void SpawnPlayer(
             int id, System.Guid uniqueId, 
-            Vector p, Entity.Look look, 
+            Vector p, Look look, 
             bool sneaking, bool sprinting)
         {
             System.Diagnostics.Debug.Assert(id != Id);
@@ -253,7 +253,7 @@ namespace MinecraftServerEngine
             using EntityMetadata metadata = new();
             metadata.AddByte(0, flags);
 
-            (byte x, byte y) = look.ConvertToPacketFormat();
+            (byte x, byte y) = look.ConvertToProtocolFormat();
             Render(new SpawnNamedEntityPacket(
                 id, uniqueId,
                 p.X, p.Y, p.Z,
@@ -279,56 +279,6 @@ namespace MinecraftServerEngine
             Render(new DestroyEntitiesPacket(id));
         }
 
-    }
-
-    internal sealed class SelfPlayerRenderer : WorldRenderer
-    {
-        private readonly Client _CLIENT;
-
-        public SelfPlayerRenderer(
-            ConcurrentQueue<ClientboundPlayingPacket> outPackets, Client client) 
-            : base(outPackets)
-        {
-            _CLIENT = client;
-        }
-
-        public void Init(int entityId, Vector p, Entity.Look look)
-        {
-            
-
-            /*{
-                Render(new EntityVelocityPacket(
-                    entityId,
-                    Conversions.ToShort(v.X * 8000),
-                    Conversions.ToShort(v.Y * 8000),
-                    Conversions.ToShort(v.Z * 8000)));
-            }*/
-
-        }
-
-        /*public void Teleport(Entity.Vector p, Entity.Angles look)
-        {
-            int payload = new System.Random().Next();
-            Render(new TeleportSelfPlayerPacket(
-                p.X, p.Y, p.Z,
-                look.Yaw, look.Pitch,
-                false, false, false, false, false,
-                payload));
-        }*/
-
-        public void ApplyVelocity(int entityId, Vector v)
-        {
-            using Buffer buffer = new();
-
-            var packet = new EntityVelocityPacket(
-                entityId,
-                (short)(v.X * 8000),
-                (short)(v.Y * 8000),
-                (short)(v.Z * 8000));
-            packet.Write(buffer);
-            _CLIENT.Send(buffer);
-        }
-        
     }
 
 }
