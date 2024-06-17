@@ -84,7 +84,7 @@ namespace MinecraftServerEngine
                 entity.ApplyForce(
                         -1.0D * new Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
                         entity.VELOCITY);  // Damping Force
-                entity.ApplyForce(entity.MASS * 0.08D * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
+                entity.ApplyForce(entity._m * 0.08D * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
 
                 /*entity.ApplyForce(entity.GetMass() * 0.001D * new Entity.Vector(0, -1, 0));  // Gravity*/
             }
@@ -397,8 +397,6 @@ namespace MinecraftServerEngine
             // Assertion.
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_ENTITY_ID_LIST.Empty);
-
             System.Diagnostics.Debug.Assert(_ENTITY_SPAWNING_POOL.Empty);
             System.Diagnostics.Debug.Assert(_ENTITIES.Empty);
             System.Diagnostics.Debug.Assert(_PLAYERS.Empty);
@@ -407,8 +405,6 @@ namespace MinecraftServerEngine
 
             // Release resources.
             _PLAYER_LIST.Dispose();
-
-            _ENTITY_ID_LIST.Dispose();
 
             _ENTITY_SPAWNING_POOL.Dispose();
             _ENTITIES.Dispose();

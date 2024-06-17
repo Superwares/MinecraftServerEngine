@@ -44,28 +44,8 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
-
-        private int _ID;
-        internal int ID
-        {
-            get
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-                
-                return _ID;
-            }
-        }
-
-        private System.Guid _UNIQUE_ID;
-        internal System.Guid UNIQUE_ID
-        {
-            get
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-                
-                return _UNIQUE_ID;
-            }
-        }
+        public readonly int ID;
+        public readonly System.Guid UNIQUE_ID;
 
         private Vector _p;
         internal Vector POSITION
@@ -78,7 +58,6 @@ namespace MinecraftServerEngine
             }
         }
 
-
         private bool _rotated = false;
         private Look _look;
         public Look LOOK
@@ -90,7 +69,6 @@ namespace MinecraftServerEngine
                 return _look;
             }
         }
-
 
         protected bool _sneaking, _sprinting = false;
         public bool SNEAKING
@@ -128,8 +106,8 @@ namespace MinecraftServerEngine
             double m)
             : base(hitbox.Convert(p), m)
         {
-            _ID = EntityIdAllocator.Alloc();
-            _UNIQUE_ID = uniqueId;
+            ID = EntityIdAllocator.Alloc();
+            UNIQUE_ID = uniqueId;
 
             _p = p;
 
@@ -310,20 +288,14 @@ namespace MinecraftServerEngine
 
         
         public const double MASS = 0.1D;
-        public override double GetMass()
-        {
-            return MASS;
-        }
 
 
-        public static readonly Hitbox HITBOX = new(0.25D, 0.25D);
-        public override Hitbox GetHitbox()
-        {
-            return HITBOX;
-        }
+        private static readonly Hitbox HITBOX = new(0.25D, 0.25D);
 
 
-        public ItemEntity() : base() { }
+        public ItemEntity(Vector p, Look look)
+            : base(System.Guid.NewGuid(), p, look, HITBOX, MASS) 
+        { }
 
         ~ItemEntity() => System.Diagnostics.Debug.Assert(false);
 
