@@ -17,10 +17,11 @@ namespace PhysicsEngine
 
         private readonly Queue<Vector> _FORCES = new();  // Disposable
 
-        private Vector _v;
-        public Vector VELOCITY => _v;
+        private Vector _v = new(0, 0, 0);
+        public Vector VELOCITY;
 
         private bool _onGround;
+        public bool OnGround => _onGround;
 
         private IBoundingVolume _volume;
         public IBoundingVolume BOUNDING_VOLUME => _volume;
@@ -28,7 +29,12 @@ namespace PhysicsEngine
 
         public PhysicsObject(IBoundingVolume volume, double m/*, double maxStepLevel*/)
         {
+            _v = new(0.0D, 0.0D, 0.0D);
+
+            _onGround = false;
+
             _m = m;
+
             /*_MAX_STEP_LEVEL = maxStepLevel;*/
         }
 
@@ -56,11 +62,6 @@ namespace PhysicsEngine
 
             IBoundingVolume volume = GenerateBoundingVolume();
             return (volume, v);
-        }
-
-        public virtual void Create()
-        {
-            _create = true;
         }
 
         public virtual void Move(IBoundingVolume volume, Vector v, bool onGround)

@@ -185,7 +185,7 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(ReferenceEquals(playerExtracted, player));
             }
 
-            CloseObjectMapping(entity);
+            CloseMapping(entity);
 
             _ENTITY_ID_LIST.Dealloc(entity.ID);
 
@@ -269,7 +269,7 @@ namespace MinecraftServerEngine
                 {
                     Entity entity = _ENTITIES.Dequeue();
 
-                    MoveObject(entity);
+                    Move(entity);
 
                     _ENTITIES.Enqueue(entity);
                 } while (true);
@@ -294,7 +294,7 @@ namespace MinecraftServerEngine
 
                     if (!player.Connected)
                     {
-                        MoveObject(player);
+                        Move(player);
                     }
 
                     _PLAYERS.Enqueue(player);
@@ -326,7 +326,7 @@ namespace MinecraftServerEngine
 
                     entity.Create(id, uniqueId, _P_SPAWE, _LOOK_SPAWE);
 
-                    InitObjectMapping(entity);
+                    InitMapping(entity);
 
                     _ENTITIES.Enqueue(entity);
                 } while (true);
@@ -360,7 +360,7 @@ namespace MinecraftServerEngine
                     id, userId, 
                     _P_SPAWE, _LOOK_SPAWE);
 
-                InitObjectMapping(player);
+                InitMapping(player);
 
                 _PLAYER_LIST.Add(userId, username);
             }

@@ -70,7 +70,7 @@ namespace MinecraftServerEngine
         }
 
         public void MoveAndRotate(
-            Vector p, Vector pPrev, Entity.Look look, bool onGround)
+            Vector p, Vector pPrev, Look look, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -102,7 +102,7 @@ namespace MinecraftServerEngine
             _movement = true;
         }
 
-        public void Rotate(Entity.Look look, bool onGround)
+        public void Rotate(Look look, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

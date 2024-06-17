@@ -1295,7 +1295,14 @@ namespace MinecraftServerEngine
             }
 
         }
-        
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="packet"></param>
+        /// <exception cref="DisconnectedClientException"></exception>
+        /// <exception cref="TryAgainException"></exception>
         private void SendPacket(Buffer buffer, ClientboundPlayingPacket packet)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -1307,13 +1314,6 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(buffer.Empty);
         }
 
-        private void SendPacket(ClientboundPlayingPacket packet)
-        {
-            using Buffer buffer = new();
-
-            SendPacket(buffer, packet);
-        }
-
         public void ApplyVelocity(int id, Vector v)
         {
             EntityVelocityPacket packet = new(
@@ -1322,13 +1322,40 @@ namespace MinecraftServerEngine
                 (short)(v.Y * 8000),
                 (short)(v.Z * 8000));
 
-            SendPacket(packet);
+            using Buffer buffer = new();
+
+            bool tryAgain;
+
+            do
+            {
+                tryAgain = false;
+
+                try
+                {
+                    SendPacket(buffer, packet);
+                }
+                catch (DisconnectedClientException)
+                {
+                    buffer.Flush();
+
+                    _disconnected = true;
+
+                    System.Diagnostics.Debug.Assert(!tryAgain);
+                }
+                catch (TryAgainException)
+                {
+                    tryAgain = true;
+                }
+
+            } while (tryAgain);
+
+            System.Diagnostics.Debug.Assert(buffer.Empty);
         }
 
         internal void Render(
             World world, 
             int id,
-            Vector p, Entity.Look look, 
+            Vector p, Look look, 
             PlayerInventory inv)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -1346,7 +1373,7 @@ namespace MinecraftServerEngine
 
                     _OUT_PACKETS.Enqueue(new TeleportSelfPlayerPacket(
                         p.X, p.Y, p.Z,
-                        look._YAW, look._PITCH,
+                        look.YAW, look.PITCH,
                         false, false, false, false, false,
                         new System.Random().Next()));
 

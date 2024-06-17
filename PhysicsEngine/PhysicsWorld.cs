@@ -184,7 +184,7 @@ namespace PhysicsEngine
             throw new System.NotImplementedException();
         }
 
-        private void InsertObjectToCell(Cell cell, PhysicsObject obj)
+        private void InsertToCell(Cell cell, PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -202,7 +202,7 @@ namespace PhysicsEngine
             objs.Insert(obj);
         }
 
-        private void ExtractObjectToCell(Cell cell, PhysicsObject obj)
+        private void ExtractToCell(Cell cell, PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -218,21 +218,21 @@ namespace PhysicsEngine
             }
         }
 
-        public void InitObjectMapping(PhysicsObject obj)
+        public void InitMapping(PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Grid grid = Grid.Generate(obj.BOUNDING_VOLUME);
             foreach (Cell cell in grid.GetCells())
             {
-                InsertObjectToCell(cell, obj);
+                InsertToCell(cell, obj);
             }
 
             System.Diagnostics.Debug.Assert(!_OBJECT_TO_GRID.Contains(obj));
             _OBJECT_TO_GRID.Insert(obj, grid);
         }
 
-        public void CloseObjectMapping(PhysicsObject obj)
+        public void CloseMapping(PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -241,11 +241,11 @@ namespace PhysicsEngine
 
             foreach (Cell cell in grid.GetCells())
             {
-                ExtractObjectToCell(cell, obj);
+                ExtractToCell(cell, obj);
             }
         }
 
-        private void UpdateObjectMapping(PhysicsObject obj)
+        private void UpdateMapping(PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -264,7 +264,7 @@ namespace PhysicsEngine
                         continue;
                     }
 
-                    ExtractObjectToCell(cell, obj);
+                    ExtractToCell(cell, obj);
 
                 }
 
@@ -275,14 +275,14 @@ namespace PhysicsEngine
                         continue;
                     }
 
-                    InsertObjectToCell(cell, obj);
+                    InsertToCell(cell, obj);
                 }
             }
 
             _OBJECT_TO_GRID.Insert(obj, grid);
         }
 
-        public void MoveObject(PhysicsObject obj)
+        public void Move(PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -342,7 +342,7 @@ namespace PhysicsEngine
 
             obj.Move(volumeMoving, v, onGround);
 
-            UpdateObjectMapping(obj);
+            UpdateMapping(obj);
         }
 
         public virtual void Dispose()

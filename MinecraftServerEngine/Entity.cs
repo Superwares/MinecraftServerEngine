@@ -109,7 +109,6 @@ namespace MinecraftServerEngine
             ID = EntityIdAllocator.Alloc();
             UNIQUE_ID = uniqueId;
 
-            _p = p;
 
             System.Diagnostics.Debug.Assert(!_rotated);
             _look = look;
@@ -272,7 +271,6 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
-            _FORCES.Dispose();
             _MANAGER.Dispose();
 
             // Finish.
@@ -442,7 +440,7 @@ namespace MinecraftServerEngine
             // TODO: Check the velocity was reset in client when teleported.
         }*/
 
-        public override void Move(BoundingBox bb, Vector v, bool onGround)
+        public override void Move(IBoundingVolume volume, Vector v, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -460,11 +458,11 @@ namespace MinecraftServerEngine
                 double length = Vector.GetLength(v1, v2);
                 System.Console.WriteLine($"length: {length}");*/
 
-                bb = GetHitbox().Convert(_p);
+                volume = GetHitbox().Convert(_p);
                 onGround = _onGround;
             }
             
-            base.Move(bb, v, onGround);
+            base.Move(volume, v, onGround);
         }
 
         internal void Control(Vector p, bool onGround)
