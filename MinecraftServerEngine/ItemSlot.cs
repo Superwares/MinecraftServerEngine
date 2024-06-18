@@ -141,31 +141,100 @@ namespace MinecraftServerEngine
         }
 
 
-        private readonly Items _ITEM;
+        public readonly Items Item;
 
 
         private int _count;
+        public int Count => _count;
 
-        private readonly int _MAX_COUNT;
-        public int MIN_COUNT => 1;
-        public int MAX_COUNT => _MAX_COUNT;
+
+        public readonly int MaxCount;
+        public int MinCount => 1;
 
 
         public ItemSlot(Items item, int count)
         {
-            _ITEM = item;
+            Item = item;
             _count = count;
 
-            _MAX_COUNT = GetMaxItemCount(item);
-            System.Diagnostics.Debug.Assert(MAX_COUNT >= MIN_COUNT);
+            MaxCount = GetMaxItemCount(item);
+            System.Diagnostics.Debug.Assert(MaxCount >= MinCount);
         }
 
-        internal SlotData ConventToPacketFormat()
+        public int Stack(int count)
         {
-            System.Diagnostics.Debug.Assert(_count >= MIN_COUNT);
-            System.Diagnostics.Debug.Assert(_count <= MAX_COUNT);
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
+            System.Diagnostics.Debug.Assert(count >= MinCount);
+            System.Diagnostics.Debug.Assert(count <= MaxCount);
 
-            int id = _ITEM_ENUM_TO_ID_MAP.Lookup(_ITEM);
+            int rest;
+            _count += count;
+
+            if (_count > MaxCount)
+            {
+                rest = _count - MaxCount;
+                _count = MaxCount;
+            }
+            else
+            {
+                rest = 0;
+            }
+
+            return count - rest;  // spend
+        }
+
+        public void Spend(int count)
+        {
+            System.Diagnostics.Debug.Assert(count >= 0);
+
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
+
+            if (count == 0)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(count < _count);
+            _count -= count;
+            System.Diagnostics.Debug.Assert(_count > 0);
+        }
+
+        public ItemSlot DivideHalf()
+        {
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
+
+            int count = (_count / 2) + (_count % 2);
+            _count /= 2;
+
+            System.Diagnostics.Debug.Assert(count >= MinCount);
+            System.Diagnostics.Debug.Assert(count <= MaxCount);
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
+
+            return new ItemSlot(Item, count);
+        }
+
+        public ItemSlot DivideOne()
+        {
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
+
+            --_count;
+
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+
+            return new ItemSlot(Item, 1);
+        }
+
+        public SlotData ConventToProtocolFormat()
+        {
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
+
+            int id = _ITEM_ENUM_TO_ID_MAP.Lookup(Item);
 
             System.Diagnostics.Debug.Assert(id >= short.MinValue);
             System.Diagnostics.Debug.Assert(id <= short.MaxValue);
@@ -175,17 +244,17 @@ namespace MinecraftServerEngine
             return new((short)id, (byte)_count);
         }
 
-        internal bool CompareWithPacketFormat(SlotData slotData)
+        public bool CompareWithProtocolFormat(SlotData slotData)
         {
-            System.Diagnostics.Debug.Assert(_count >= MIN_COUNT);
-            System.Diagnostics.Debug.Assert(_count <= MAX_COUNT);
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
 
             if (slotData.Id == -1)
             {
                 return false;
             }
 
-            int id = _ITEM_ENUM_TO_ID_MAP.Lookup(_ITEM);
+            int id = _ITEM_ENUM_TO_ID_MAP.Lookup(Item);
             if (slotData.Id != id)
             {
                 return false;

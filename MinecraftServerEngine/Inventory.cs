@@ -33,217 +33,202 @@ namespace MinecraftServerEngine
 
         ~Inventory() => System.Diagnostics.Debug.Assert(false);
 
-        internal virtual (bool, ItemSlot) TakeAll(int index, SlotData slotData)
+        public virtual bool TakeAll(int index, ref ItemSlot cursor, SlotData slotData)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_count >= 0);
-            System.Diagnostics.Debug.Assert(_count <= TOTAL_SLOT_COUNT);
+            System.Diagnostics.Debug.Assert(cursor == null);
+
             System.Diagnostics.Debug.Assert(index >= 0);
             System.Diagnostics.Debug.Assert(index < TOTAL_SLOT_COUNT);
 
             bool f;
 
-            Item? itemTaked = _items[index];
-            _items[index] = null;
+            ItemSlot slotTaked = _slots[index];
+            _slots[index] = null;
 
-            if (itemTaked != null)
+            if (slotTaked != null)
             {
-                _count--;
+                f = slotTaked.CompareWithProtocolFormat(slotData);
 
-                f = itemTaked.CompareWithPacketFormat(slotData);
+                cursor = slotTaked;
             }
             else
             {
                 f = (slotData.Id == -1);
+
+                System.Diagnostics.Debug.Assert(cursor == null);
             }
 
-            return (f, itemTaked);
+            return f;
         }
 
-        internal virtual (bool, ItemSlot) PutAll(int index, ItemSlot cursor, SlotData slotData)
+        public virtual bool PutAll(int index, ref ItemSlot cursor, SlotData slotData)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_count >= 0);
-            System.Diagnostics.Debug.Assert(_count <= TOTAL_SLOT_COUNT);
+            System.Diagnostics.Debug.Assert(cursor != null);
+
             System.Diagnostics.Debug.Assert(index >= 0);
             System.Diagnostics.Debug.Assert(index < TOTAL_SLOT_COUNT);
 
             bool f;
 
-            Item? itemTaked = _items[index];
+            ItemSlot slotTaked = _slots[index];
 
-            if (itemTaked != null)
+            if (slotTaked != null)
             {
-                System.Diagnostics.Debug.Assert(!ReferenceEquals(itemTaked, cursor));
+                System.Diagnostics.Debug.Assert(!ReferenceEquals(slotTaked, cursor));
 
-                f = itemTaked.CompareWithPacketFormat(slotData);
+                f = slotTaked.CompareWithProtocolFormat(slotData);
 
-                _items[index] = cursor;
-
-                if (cursor.Type == itemTaked.Type)
+                if (cursor.Item == slotTaked.Item)
                 {
-                    int spend = cursor.Stack(itemTaked.Count);
-
-                    if (spend == itemTaked.Count)
+                    int spend = slotTaked.Stack(cursor.Count);
+                    if (spend == cursor.Count)
                     {
-                        itemTaked = null;
+                        cursor = null;
                     }
                     else
                     {
                         System.Diagnostics.Debug.Assert(spend < cursor.Count);
-                        itemTaked.Spend(spend);
+                        cursor.Spend(spend);
                     }
                 }
                 else
                 {
-                    
+                    // Swap
+                    _slots[index] = cursor;
+                    cursor = slotTaked;
                 }
             }
             else
             {
-                _items[index] = cursor;
-
-                _count++;
+                _slots[index] = cursor;
+                cursor = null;
 
                 f = (slotData.Id == -1);
             }
-            
-            return (f, itemTaked);
+
+            return f;
         }
 
-        internal virtual (bool, ItemSlot) TakeHalf(int index, SlotData slotData)
+        public virtual bool TakeHalf(int index, ref ItemSlot cursor, SlotData slotData)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_count >= 0);
-            System.Diagnostics.Debug.Assert(_count <= TOTAL_SLOT_COUNT);
+            System.Diagnostics.Debug.Assert(cursor == null);
+
             System.Diagnostics.Debug.Assert(index >= 0);
             System.Diagnostics.Debug.Assert(index < TOTAL_SLOT_COUNT);
 
             bool f;
 
-            Item? itemTaked = _items[index];
+            ItemSlot slotTaked = _slots[index];
 
-            if (itemTaked == null)
+            if (slotTaked == null)
             {
                 f = (slotData.Id == -1);
+
+                cursor = null;
             }
             else
             {
-                f = itemTaked.CompareWithPacketFormat(slotData);
+                f = slotTaked.CompareWithProtocolFormat(slotData);
 
-                if (itemTaked.Count == 1)
+                if (slotTaked.Count == 1)
                 {
-                    _items[index] = null;
-                    _count--;
+                    _slots[index] = null;
+
+                    cursor = slotTaked;
+                    System.Diagnostics.Debug.Assert(cursor.Count == 1);
                 }
                 else
                 {
-                    System.Diagnostics.Debug.Assert(itemTaked.Count > 1);
+                    System.Diagnostics.Debug.Assert(slotTaked.Count > 1);
 
-                    itemTaked = itemTaked.DivideHalf();
-                    System.Diagnostics.Debug.Assert(itemTaked != null);
+                    cursor = slotTaked.DivideHalf();
+                    System.Diagnostics.Debug.Assert(cursor != null);
                 }
             }
 
-            return (f, itemTaked);
+            return f;
         }
 
-        internal virtual (bool, ItemSlot) PutOne(int index, ItemSlot cursor, SlotData slotData)
+        public virtual bool PutOne(int index, ref ItemSlot cursor, SlotData slotData)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_count >= 0);
-            System.Diagnostics.Debug.Assert(_count <= TOTAL_SLOT_COUNT);
+            System.Diagnostics.Debug.Assert(cursor != null);
+
             System.Diagnostics.Debug.Assert(index >= 0);
             System.Diagnostics.Debug.Assert(index < TOTAL_SLOT_COUNT);
 
             bool f;
 
-            Item? itemTaked = _items[index];
+            ItemSlot slotTaked = _slots[index];
 
-            if (itemTaked != null)
+            if (slotTaked != null)
             {
-                System.Diagnostics.Debug.Assert(!ReferenceEquals(itemTaked, itemCursor));
+                System.Diagnostics.Debug.Assert(!ReferenceEquals(slotTaked, cursor));
 
-                f = itemTaked.CompareWithPacketFormat(slotData);
+                f = slotTaked.CompareWithProtocolFormat(slotData);
 
-                _items[index] = itemCursor;
-
-                if (itemCursor.Type == itemTaked.Type)
+                if (cursor.Item == slotTaked.Item)
                 {
-                    if (itemCursor.Count == 1)
+                    if (cursor.Count == 1)
                     {
-                        int spend = itemTaked.Stack(1);
+                        int spend = slotTaked.Stack(1);
                         if (spend == 1)
                         {
-                            itemCursor.SetCount(itemTaked.Count);
-                            itemTaked = null;
+                            cursor = null;
                         }
                         else
                         {
-                            System.Diagnostics.Debug.Assert(spend == 0);
-
-                            int temp = itemCursor.Count;
-                            itemCursor.SetCount(itemTaked.Count);
-                            itemTaked.SetCount(temp);
+                            System.Diagnostics.Debug.Assert(cursor.Count == 1);
+                            System.Diagnostics.Debug.Assert(slotTaked.Count == slotTaked.MaxCount);
                         }
                     }
                     else
                     {
-                        System.Diagnostics.Debug.Assert(itemCursor.Count > 1);
+                        System.Diagnostics.Debug.Assert(cursor.Count > 1);
 
-                        int spend = itemTaked.Stack(1);
+                        int spend = slotTaked.Stack(1);
                         if (spend == 1)
                         {
-                            itemCursor.Spend(1);
+                            cursor.Spend(1);
                         }
-                        else
-                        {
-                            System.Diagnostics.Debug.Assert(spend == 0);
-
-                        }
-
-                        int temp = itemCursor.Count;
-                        itemCursor.SetCount(itemTaked.Count);
-                        itemTaked.SetCount(temp);
                     }
 
-                    /*int temp = itemCursor.Count;
-                    itemCursor.SetCount(itemTaked.Count);
-                    itemTaked.SetCount(temp);*/
                 }
                 else
                 {
+                    // Swap
 
+                    _slots[index] = cursor;
+                    cursor = slotTaked;
                 }
 
-                return (f, itemTaked);
             }
             else
             {
-                _items[index] = itemCursor;
-
-                if (itemCursor.Count > 1)
+                if (cursor.Count > 1)
                 {
-                    itemTaked = itemCursor.DivideExceptOne();
+                    _slots[index] = cursor.DivideOne();
                 }
                 else
                 {
-                    System.Diagnostics.Debug.Assert(itemCursor.Count == 1);
-                    System.Diagnostics.Debug.Assert(itemTaked == null);
+                    System.Diagnostics.Debug.Assert(cursor.Count == 1);
+                    System.Diagnostics.Debug.Assert(slotTaked == null);
+
+                    _slots[index] = cursor;
+                    cursor = null;
                 }
 
-                _count++;
-
                 f = (slotData.Id == -1);
-
-                
             }
 
-            return (f, itemTaked);
+            return f;
         }
 
         public void Print()

@@ -6,7 +6,7 @@ namespace MinecraftServerEngine
     {
         public static int GetLocalPort(System.Net.Sockets.Socket socket)
         {
-            System.Net.IPEndPoint? localEndPoint = (System.Net.IPEndPoint?)socket.LocalEndPoint;
+            System.Net.IPEndPoint localEndPoint = (System.Net.IPEndPoint)socket.LocalEndPoint;
             System.Diagnostics.Debug.Assert(localEndPoint != null);
             return localEndPoint.Port;
         }
@@ -160,7 +160,7 @@ namespace MinecraftServerEngine
         private const byte _CONTINUE_BIT = 0x80;
 
         private int _x = 0, _y = 0;
-        private byte[]? _data = null;
+        private byte[] _data = null;
 
         private System.Net.Sockets.Socket _socket;
 
@@ -585,7 +585,7 @@ namespace MinecraftServerEngine
                         using System.IO.Stream stream = response.Content.ReadAsStream();
                         using System.IO.StreamReader reader = new(stream);
                         string str = reader.ReadToEnd();
-                        System.Collections.Generic.Dictionary<string, string>? dictionary =
+                        System.Collections.Generic.Dictionary<string, string> dictionary =
                             System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, string>>(str);
                         System.Diagnostics.Debug.Assert(dictionary != null);
 

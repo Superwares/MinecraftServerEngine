@@ -43,7 +43,7 @@ namespace MinecraftServerEngine
                         continue;
                     }
 
-                    arr[i++] = slot.ConventToPacketFormat();
+                    arr[i++] = slot.ConventToProtocolFormat();
                 }
                 System.Diagnostics.Debug.Assert(i == inv.TOTAL_SLOT_COUNT);
 
@@ -224,11 +224,11 @@ namespace MinecraftServerEngine
 
                 if (_cursor == null)
                 {
-                    (f, _cursor) = selfInventory.TakeAll(index, slotData);
+                    f = selfInventory.TakeAll(index, ref _cursor, slotData);
                 }
                 else
                 {
-                    (f, _cursor) = selfInventory.PutAll(index, _cursor, slotData);
+                    f = selfInventory.PutAll(index, ref _cursor, slotData);
                 }
 
                 if (!f)
@@ -343,11 +343,11 @@ namespace MinecraftServerEngine
 
                 if (_cursor == null)
                 {
-                    (f, _cursor) = selfInventory.TakeHalf(index, slotData);
+                    f = selfInventory.TakeHalf(index, ref _cursor, slotData);
                 }
                 else
                 {
-                    (f, _cursor) = selfInventory.PutOne(index, _cursor, slotData);
+                    f = selfInventory.PutOne(index, ref _cursor, slotData);
                 }
 
                 if (!f)

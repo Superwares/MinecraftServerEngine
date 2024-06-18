@@ -446,6 +446,7 @@ namespace MinecraftServerEngine
             if (Connected)
             {
                 _CONN.Teleport(p, look);
+
                 _pControl = p;
                 _onGroundControl = false;
             }
