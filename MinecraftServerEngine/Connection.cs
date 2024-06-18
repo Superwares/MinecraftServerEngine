@@ -86,7 +86,7 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(_id == -1);
                 System.Diagnostics.Debug.Assert(_publicInventory == null);
 
-                _windowId = (new System.Random().Next() % 100) + 1;
+                _windowId = (Random.NextInt() % 100) + 1;
 
                 _id = publicInventory.Open(_windowId, outPackets, selfInventory);
                 if (_itemCursor != null)
@@ -848,7 +848,7 @@ namespace MinecraftServerEngine
             {
                 if (_ticks == -1)
                 {
-                    long payload = new System.Random().NextInt64();
+                    long payload = Random.NextLong();
                     renderer.Enqueue(new RequestKeepAlivePacket(payload));
                     _payload = payload;
                 }
@@ -1370,7 +1370,7 @@ namespace MinecraftServerEngine
                 return;
             }*/
 
-            int payload = new System.Random().Next();
+            int payload = Random.NextInt();
             TeleportSelfPlayerPacket packet = new(
                 p.X, p.Y, p.Z, look.Yaw, look.Pitch,
                 false, false, false, false, false,
@@ -1428,11 +1428,15 @@ namespace MinecraftServerEngine
                     JoinGamePacket packet = new(id, 0, 0, 0, "default", false);
                     SendPacket(buffer, packet);
 
+                    int payload = Random.NextInt();
                     _OUT_PACKETS.Enqueue(new TeleportSelfPlayerPacket(
                         p.X, p.Y, p.Z,
                         look.Yaw, look.Pitch,
                         false, false, false, false, false,
-                        new System.Random().Next()));
+                        payload));
+
+                    TeleportationRecord report = new(payload, p);
+                    _TELEPORTATION_RECORDS.Enqueue(report);
 
                     _OUT_PACKETS.Enqueue(new SetPlayerAbilitiesPacket(
                             false, false, true, false, 0.1F, 0.0F));
