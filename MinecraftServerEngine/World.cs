@@ -337,7 +337,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(EntitySpawningPool.Empty);
         }
 
-        protected abstract Player CreatePlayer();
+        protected abstract Player CreatePlayer(System.Guid userId);
 
         internal void CreateOrConnectPlayer(Client client, string username, System.Guid userId)
         {
@@ -351,7 +351,7 @@ namespace MinecraftServerEngine
             }
             else
             {
-                player = CreatePlayer();
+                player = CreatePlayer(userId);
 
                 InitObjectMapping(player);
 

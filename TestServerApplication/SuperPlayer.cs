@@ -1,4 +1,5 @@
 ﻿using MinecraftServerEngine;
+using PhysicsEngine;
 
 namespace TestServerApplication
 {
@@ -6,7 +7,8 @@ namespace TestServerApplication
     {
         private bool _disposed = false;
 
-        public SuperPlayer() : base() { }
+        public SuperPlayer(System.Guid userId, Vector p, Look look) 
+            : base(userId, p, look) { }
 
         ~SuperPlayer() => System.Diagnostics.Debug.Assert(false);
 

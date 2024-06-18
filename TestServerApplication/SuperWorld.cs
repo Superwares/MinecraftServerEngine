@@ -1,4 +1,5 @@
 ﻿using MinecraftServerEngine;
+using PhysicsEngine;
 
 namespace TestServerApplication
 {
@@ -6,7 +7,10 @@ namespace TestServerApplication
     {
         private bool _disposed = false;
 
-        public SuperWorld() : base(new(0, 101, 0), new(0,0)) { }
+        private readonly Vector PosSpawning = new(0.0D, 101.0D, 0.0D);
+        private readonly Look LookSpawning = new(0.0F, 0.0F);
+
+        public SuperWorld() : base() { }
 
         ~SuperWorld() => System.Diagnostics.Debug.Assert(false);
 
@@ -24,9 +28,9 @@ namespace TestServerApplication
             return false;
         }
 
-        protected override Player CreatePlayer()
+        protected override Player CreatePlayer(System.Guid userId)
         {
-            return new SuperPlayer();
+            return new SuperPlayer(userId, PosSpawning, LookSpawning);
         }
 
         public override void Dispose()

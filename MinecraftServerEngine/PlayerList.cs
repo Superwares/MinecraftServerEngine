@@ -1,7 +1,7 @@
 ﻿
 
 using Containers;
-using Threading;
+using Sync;
 
 namespace MinecraftServerEngine
 {

@@ -364,8 +364,8 @@ namespace MinecraftServerEngine
             return new Hitbox(w, h);
         }
 
-        public Player(System.Guid uniqueId, Vector p, Look look) 
-            : base(uniqueId, p, look, GetHitbox(false), MASS) 
+        public Player(System.Guid userId, Vector p, Look look) 
+            : base(userId, p, look, GetHitbox(false), MASS) 
         {
             System.Diagnostics.Debug.Assert(!Sneaking);
             System.Diagnostics.Debug.Assert(!Sprinting);

@@ -654,6 +654,8 @@ namespace MinecraftServerEngine
 
                     section = new SectionData(defaultId);
                     _sections[ySection] = section;
+
+                    _count++;
                 }
 
                 section.SetId(x, yPrime, z, id);

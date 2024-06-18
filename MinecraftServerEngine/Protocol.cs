@@ -43,7 +43,7 @@ namespace MinecraftServerEngine
                 throw;
             }
 
-            System.Diagnostics.Debug.Assert(false);
+            /*System.Diagnostics.Debug.Assert(false);*/
         }
 
         public static bool Poll(System.Net.Sockets.Socket socket, System.TimeSpan span)  
@@ -378,9 +378,9 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            User? user = null;
-            while (_USERS.Dequeue(ref user))
+            do
             {
+                User user = _USERS.Dequeue();
                 System.Diagnostics.Debug.Assert(user != null);
 
                 if (!world.CanJoinWorld())
@@ -391,7 +391,7 @@ namespace MinecraftServerEngine
                 }
 
                 world.CreateOrConnectPlayer(user.CLIENT, user.USERNAME, user.USER_ID);
-            }
+            } while (true);
 
         }
 

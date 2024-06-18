@@ -33,7 +33,7 @@ namespace MinecraftServerEngine
                 outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));
 
                 int i = 0;
-                var arr = new SlotData[inv.TOTAL_SLOT_COUNT];
+                var arr = new SlotData[inv.TotalSlotCount];
 
                 foreach (ItemSlot slot in inv.AllSlots)
                 {
@@ -45,7 +45,7 @@ namespace MinecraftServerEngine
 
                     arr[i++] = slot.ConventToProtocolFormat();
                 }
-                System.Diagnostics.Debug.Assert(i == inv.TOTAL_SLOT_COUNT);
+                System.Diagnostics.Debug.Assert(i == inv.TotalSlotCount);
 
                 System.Diagnostics.Debug.Assert(_windowId >= byte.MinValue);
                 System.Diagnostics.Debug.Assert(_windowId <= byte.MaxValue);
@@ -215,7 +215,7 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                if (index >= selfInventory.TOTAL_SLOT_COUNT)
+                if (index >= selfInventory.TotalSlotCount)
                 {
                     throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
                 }
@@ -334,7 +334,7 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                if (index >= selfInventory.TOTAL_SLOT_COUNT)
+                if (index >= selfInventory.TotalSlotCount)
                 {
                     throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
                 }
@@ -452,7 +452,7 @@ namespace MinecraftServerEngine
                 World world,
                 PlayerInventory inv,
                 int windowId, int mode, int button, int index, SlotData slotData,
-                ConcurrentQueue<ClientboundPlayingPacket> outPackets)
+                ConcurrentQueue<ClientboundPlayingPacket> outPackets)   
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -487,7 +487,7 @@ namespace MinecraftServerEngine
                             throw new UnexpectedValueException("ClickWindowPacket.WindowId");
                         }
                     }
-                    else if (_windowId != windowId)
+                    else if (_windowId != windowId)  // TODO: Check it is correct condition.
                     {
                         throw new UnexpectedValueException("ClickWindowPacket.WindowId");
                     }

@@ -1,8 +1,8 @@
 ﻿using Containers;
 
-namespace MinecraftServerEngine
+namespace MinecraftServerEngine.Trash
 {
-    internal sealed class PublicInventoryRenderer : System.IDisposable
+    /*internal sealed class PublicInventoryRenderer : System.IDisposable
     {
         private bool _disposed = false;
 
@@ -120,6 +120,6 @@ namespace MinecraftServerEngine
 
         public void Close() => Dispose();
 
-    }
+    }*/
 
 }
