@@ -1,22 +1,21 @@
 ﻿
 
 using Common;
-using Containers;
 
 namespace PhysicsEngine
 {
     internal static class IntersectionTests
     {
-        private const double MinTime = 0.0D, MaxTime = 1.0D;
 
         public static bool TestFixedAndFixed(
             AxisAlignedBoundingBox aabb1, AxisAlignedBoundingBox aabb2)
         {
-            if (aabb1.Max.X < aabb2.Min.X || aabb1.Min.X > aabb2.Max.X) return false;
-            if (aabb1.Max.Y < aabb2.Min.Y || aabb1.Min.Y > aabb2.Max.Y) return false;
-            if (aabb1.Max.Z < aabb2.Min.Z || aabb1.Min.Z > aabb2.Max.Z) return false;
-
-            return true;
+            return !PhysicsEquations.IsNonOverlappingRanges(
+                    aabb1.Max.X, aabb1.Min.X, aabb2.Max.X, aabb2.Min.X) &&
+                !PhysicsEquations.IsNonOverlappingRanges(
+                    aabb1.Max.Y, aabb1.Min.Y, aabb2.Max.Y, aabb2.Min.Y) &&
+                !PhysicsEquations.IsNonOverlappingRanges(
+                    aabb1.Max.Z, aabb1.Min.Z, aabb2.Max.Z, aabb2.Min.Z);
         }
 
         public static bool TestFixedAndFixed(
@@ -53,62 +52,6 @@ namespace PhysicsEngine
             return false;
         }
 
-        private static bool CheckAxis(
-            double max1, double min1, 
-            double max2, double min2, double v,
-            ref double t, ref double tPrime)
-        {
-            System.Diagnostics.Debug.Assert(max1 > min1);
-            System.Diagnostics.Debug.Assert(max2 > min2);
-            System.Diagnostics.Debug.Assert(t <= tPrime);
-
-            if (v < 0.0D)
-            {
-                if (max2 < min1)
-                {
-                    return false;
-                }
-
-                if (max1 < min2)
-                {
-                    t = System.Math.Max((max1 - min2) / v, t);
-                    System.Diagnostics.Debug.Assert(t >= MinTime);
-                }
-                if (min1 < max2)
-                {
-                    tPrime = System.Math.Min((min1 - max2) / v, tPrime);
-                    System.Diagnostics.Debug.Assert(tPrime <= MaxTime);
-                }
-            }
-            else if (v > 0.0D)
-            {
-                if (max1 < min2)
-                {
-                    return false;
-                }
-
-                if (max2 < min1)
-                {
-                    t = System.Math.Max((min1 - max2) / v, t);
-                    System.Diagnostics.Debug.Assert(t >= MinTime);
-                }
-                if (min2 < max1)
-                {
-                    tPrime = System.Math.Min((max1 - min2) / v, tPrime);
-                    System.Diagnostics.Debug.Assert(tPrime <= MaxTime);
-                }
-            }
-            else
-            {
-                if (max2 < min1 || min2 > max1)
-                {
-                    return false;
-                }
-            }
-
-            return t <= tPrime;
-        }
-
         public static bool TestFixedAndMoving(
             AxisAlignedBoundingBox aabb1,
             AxisAlignedBoundingBox aabb2, Vector v)
@@ -118,17 +61,17 @@ namespace PhysicsEngine
                 return true;
             }
             
-            double t = MinTime, tPrime = MaxTime;
+            double t = 0.0D, tPrime = 1.0D;
 
-            return CheckAxis(
+            return PhysicsEquations.FindOverlapInterval(
                     aabb1.Max.X, aabb1.Min.X, 
                     aabb2.Max.X, aabb2.Min.X, v.X,
                     ref t, ref tPrime) &&
-                CheckAxis(
+                PhysicsEquations.FindOverlapInterval(
                     aabb1.Max.Y, aabb1.Min.Y, 
                     aabb2.Max.Y, aabb2.Min.Y, v.Y,
                     ref t, ref tPrime) && 
-                CheckAxis(
+                PhysicsEquations.FindOverlapInterval(
                     aabb1.Max.Z, aabb1.Min.Z, 
                     aabb2.Max.Z, aabb2.Min.Z, v.Z,
                     ref t, ref tPrime);
