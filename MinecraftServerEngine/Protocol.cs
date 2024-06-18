@@ -1,4 +1,6 @@
-﻿using Containers;
+﻿
+using Common;
+using Containers;
 
 namespace MinecraftServerEngine
 {
@@ -570,13 +572,13 @@ namespace MinecraftServerEngine
 
                         // TODO: Check username is empty or invalid.
 
-                        System.Console.Write("Start http request!");
+                        Console.Print("Start http request!");
 
                         // TODO: Use own http client in common library.
                         using System.Net.Http.HttpClient httpClient = new();
                         string url = string.Format("https://api.mojang.com/users/profiles/minecraft/{0}", inPacket.Username);
-                        System.Console.WriteLine(inPacket.Username);
-                        System.Console.WriteLine($"url: {url}");
+                        Console.Printl(inPacket.Username);
+                        Console.Printl($"url: {url}");
                         using System.Net.Http.HttpRequestMessage request = new(System.Net.Http.HttpMethod.Get, url);
 
                         // TODO: handle HttpRequestException
@@ -591,13 +593,13 @@ namespace MinecraftServerEngine
 
                         System.Guid userId = System.Guid.Parse(dictionary["id"]);
                         string username = dictionary["name"];  // TODO: check username is valid
-                        System.Console.WriteLine($"userId: {userId}");
-                        System.Console.WriteLine($"username: {username}");
+                        Console.Printl($"userId: {userId}");
+                        Console.Printl($"username: {username}");
 
                         // TODO: Handle to throw exception
                         System.Diagnostics.Debug.Assert(inPacket.Username == username);
 
-                        System.Console.Write("Finish http request!");
+                        Console.Print("Finish http request!");
 
                         LoginSuccessPacket outPacket1 = new(userId, username);
                         outPacket1.Write(buffer);
@@ -679,7 +681,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Console.Write(">");
+            Console.Print(">");
 
             try
             {

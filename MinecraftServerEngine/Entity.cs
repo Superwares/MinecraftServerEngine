@@ -421,8 +421,8 @@ namespace MinecraftServerEngine
             if (Connected)
             {
                 // TODO: Check the difference between _p and p. and predict movement....
-                /*System.Console.WriteLine($"p: {p}, _p: {_p}, ");
-                System.Console.WriteLine($"Length: {Vector.GetLength(p, _p)}");
+                /*Console.Printl($"p: {p}, _p: {_p}, ");
+                Console.Printl($"Length: {Vector.GetLength(p, _p)}");
                 if (Vector.GetLength(p, _p) > k)
                 {
                 }
@@ -430,7 +430,7 @@ namespace MinecraftServerEngine
 
                 /*Vector v1 = bb.GetBottomCenter(), v2 = _p;
                 double length = Vector.GetLength(v1, v2);
-                System.Console.WriteLine($"length: {length}");*/
+                Console.Printl($"length: {length}");*/
 
                 volume = GetHitbox().Convert(_pControl);
                 onGround = _onGroundControl;

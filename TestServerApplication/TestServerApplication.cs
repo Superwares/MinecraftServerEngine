@@ -1,4 +1,5 @@
-﻿using MinecraftServerEngine;
+﻿using Common;
+using MinecraftServerEngine;
 
 namespace TestServerApplication
 {
@@ -6,7 +7,7 @@ namespace TestServerApplication
     {
         public static void Main()
         {
-            System.Console.WriteLine("Hello, World!");
+            Console.Printl("Hello, World!");
 
             using World world = new SuperWorld();
 

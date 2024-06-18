@@ -266,27 +266,27 @@ namespace MinecraftServerEngine
 
         public void Print()
         {
-            System.Console.WriteLine($"Inventory: ");
-            System.Console.WriteLine($"\tCount: {_count}");
+            Console.Printl($"Inventory: ");
+            Console.Printl($"\tCount: {_count}");
             for (int i = 0; i < TotalSlotCount; ++i)
             {
                 if (i % 9 == 0)
                 {
-                    System.Console.WriteLine();
-                    System.Console.Write("\t");
+                    Console.NewLine();
+                    Console.NewTab();
                 }
 
                 ItemSlot item = _slots[i];
                 if (item == null)
                 {
-                    System.Console.Write($"[None]");
+                    Console.Print($"[None]");
                     continue;
                 }
 
-                System.Console.Write($"[{item.Item}x{item.Count}]");
+                Console.Print($"[{item.Item}x{item.Count}]");
                 System.Diagnostics.Debug.Assert(item.Count >= item.MinCount);
             }
-            System.Console.WriteLine();
+            Console.NewLine();
         }
 
         public virtual void Dispose()

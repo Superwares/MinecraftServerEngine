@@ -8,22 +8,22 @@ namespace Common
 
         public static void Print(string msg)
         {
-            throw new System.NotImplementedException();
+            System.Console.Write(msg);
         }
 
         public static void Printl(string msg)
         {
-            throw new System.NotImplementedException();
+            System.Console.WriteLine(msg);
         }
 
         public static void NewLine()
         {
-            throw new System.NotImplementedException();
+            System.Console.WriteLine();
         }
 
         public static void NewTab()
         {
-            throw new System.NotImplementedException();
+            System.Console.Write("\t");
         }
 
         public static void HandleCancelEvent(StartRoutine f)

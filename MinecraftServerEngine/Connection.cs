@@ -1,4 +1,4 @@
-﻿
+﻿using Common;
 using Containers;
 using PhysicsEngine;
 using Sync;
@@ -567,7 +567,7 @@ namespace MinecraftServerEngine
 
                     if (_cursor != null)
                     {
-                        System.Console.WriteLine($"Cursor: {_cursor}");
+                        Console.Printl($"Cursor: {_cursor}");
                     }
                 }
 
@@ -944,7 +944,7 @@ namespace MinecraftServerEngine
             switch (packetId)
             {
                 default:
-                    System.Console.WriteLine($"packetId: 0x{packetId:X}");
+                    Console.Printl($"packetId: 0x{packetId:X}");
                     /*throw new NotImplementedException();*/
                     buffer.Flush();
                     break;
@@ -987,7 +987,7 @@ namespace MinecraftServerEngine
                         ServerboundConfirmTransactionPacket packet =
                             ServerboundConfirmTransactionPacket.Read(buffer);
 
-                        System.Console.WriteLine(
+                        Console.Printl(
                             $"WindowId: {packet.WindowId}, " +
                             $"ActionNumber: {packet.ActionNumber}, " +
                             $"Accepted: {packet.Accepted}, ");
@@ -1000,8 +1000,8 @@ namespace MinecraftServerEngine
                         ClickWindowPacket packet = ClickWindowPacket.Read(buffer);
 
                         {
-                            System.Console.WriteLine();
-                            System.Console.WriteLine(
+                            Console.Printl();
+                            Console.Printl(
                                 $"WindowId: {packet.WINDOW_ID}, " +
                                 $"SlotNumber: {packet.SLOT}, " +
                                 $"ButtonNumber: {packet.BUTTON}, " +
@@ -1128,7 +1128,7 @@ namespace MinecraftServerEngine
                             default:
                                 throw new UnexpectedValueException("EntityAction.ActoinId");
                             case 0:
-                                /*System.Console.Write("Seanking!");*/
+                                /*Console.Print("Seanking!");*/
                                 if (sneaking)
                                 {
                                     throw new UnexpectedValueException("EntityActionPacket.ActionId");
@@ -1137,7 +1137,7 @@ namespace MinecraftServerEngine
                                 sneaking = true;
                                 break;
                             case 1:
-                                /*System.Console.Write("Unseanking!");*/
+                                /*Console.Print("Unseanking!");*/
                                 if (!sneaking)
                                 {
                                     throw new UnexpectedValueException("EntityActionPacket.ActionId");
@@ -1230,7 +1230,7 @@ namespace MinecraftServerEngine
                 {
                     // TODO: send disconnected message to client.
 
-                    System.Console.WriteLine(e.Message);
+                    Console.Printl(e.Message);
 
                     throw new DisconnectedClientException();
                 }

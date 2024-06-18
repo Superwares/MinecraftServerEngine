@@ -44,7 +44,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(_ticks >= 0);
 
-            System.Console.Write(".");
+            Console.Print(".");
 
 
             barrier.ReachAndWait();
@@ -273,8 +273,8 @@ namespace MinecraftServerEngine
 
                     if (elapsed > interval)
                     {
-                        System.Console.WriteLine();
-                        System.Console.WriteLine($"The task is taking longer than expected, ElapsedTime: {elapsed}.");
+                        Console.NewLine();
+                        Console.Printl($"The task is taking longer than expected, ElapsedTime: {elapsed}.");
                     }
                 }
             }
@@ -290,7 +290,7 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(!_running);
             }
 
-            System.Console.Write("Terminated!!");
+            Console.Print("Terminated!!");
 
         }
 
