@@ -20,7 +20,7 @@ namespace MinecraftServerEngine
                 Height = h;
             }
 
-            public readonly IBoundingVolume Convert(Vector p)
+            public readonly BoundingVolume Convert(Vector p)
             {
                 System.Diagnostics.Debug.Assert(Width > 0.0D);
                 System.Diagnostics.Debug.Assert(Height > 0.0D);
@@ -116,14 +116,14 @@ namespace MinecraftServerEngine
 
         public virtual void StartRoutine(long serverTicks, World world) { }
 
-        protected override IBoundingVolume GenerateBoundingVolume()
+        protected override BoundingVolume GenerateBoundingVolume()
         {
             Hitbox hitbox = GetHitbox();
 
             return _teleported ? hitbox.Convert(_pTeleport) : hitbox.Convert(_p);
         }
 
-        public override void Move(IBoundingVolume volume, Vector v, bool onGround)
+        public override void Move(BoundingVolume volume, Vector v, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -418,7 +418,7 @@ namespace MinecraftServerEngine
             base.ApplyForce(force);
         }
 
-        public override void Move(IBoundingVolume volume, Vector v, bool onGround)
+        public override void Move(BoundingVolume volume, Vector v, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

@@ -800,7 +800,7 @@ namespace MinecraftServerEngine
             return GetBlock(locPrime);
         }
 
-        private IBoundingVolume GenerateCube(BlockLocation loc)
+        private BoundingVolume GenerateCube(BlockLocation loc)
         {
             Vector min = loc.GetMinVector(),
                    max = new(
@@ -879,14 +879,14 @@ namespace MinecraftServerEngine
             return (d, bottom, 0);
         }
 
-        private IBoundingVolume GenerateStairs(BlockLocation loc, Blocks block)
+        private BoundingVolume GenerateStairs(BlockLocation loc, Blocks block)
         {
             (Directions d, bool bottom, int b) = DetermineStairsShape(loc, block);
 
             throw new System.NotImplementedException();
         }
 
-        private IBoundingVolume Generate(BlockLocation loc)
+        private BoundingVolume Generate(BlockLocation loc)
         {
             Blocks block = GetBlock(loc);
 
@@ -932,14 +932,14 @@ namespace MinecraftServerEngine
             }
         }
 
-        public IBoundingVolume[] GetBlockBoundingVolumes(Vector max, Vector min)
+        public BoundingVolume[] GetBlockBoundingVolumes(Vector max, Vector min)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             BlockGrid grid = BlockGrid.Generate(max, min);
 
             int count = grid.GetCount(), i = 0;
-            var volumes = new IBoundingVolume[count];
+            var volumes = new BoundingVolume[count];
 
             for (int y = grid.Min.Y; y <= grid.Max.Y; ++y)
             {
@@ -949,7 +949,7 @@ namespace MinecraftServerEngine
                     {
                         BlockLocation loc = new(x, y, z);
 
-                        IBoundingVolume volume = Generate(loc);
+                        BoundingVolume volume = Generate(loc);
                         volumes[i++] = volume;
                     }
                 }

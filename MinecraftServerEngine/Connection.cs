@@ -908,7 +908,6 @@ namespace MinecraftServerEngine
         {
             _CLIENT = client;
 
-
             System.Diagnostics.Debug.Assert(_MAX_ENTITY_RENDER_DISTANCE >= _MIN_RENDER_DISTANCE);
             System.Diagnostics.Debug.Assert(_MAX_RENDER_DISTANCE >= _MAX_ENTITY_RENDER_DISTANCE);
 

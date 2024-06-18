@@ -72,7 +72,7 @@ namespace PhysicsEngine
                 return new(max, min);
             }
 
-            public static Grid Generate(IBoundingVolume volume)
+            public static Grid Generate(BoundingVolume volume)
             {
                 switch (volume)
                 {
@@ -177,9 +177,9 @@ namespace PhysicsEngine
         private readonly Table<Cell, Tree<PhysicsObject>> _CELL_TO_OBJECTS = new();  // Disposable
         private readonly Table<PhysicsObject, Grid> _OBJECT_TO_GRID = new();  // Disposable
 
-        public abstract IBoundingVolume[] GetTerrainBoundingVolumes(IBoundingVolume volume);
+        public abstract BoundingVolume[] GetTerrainBoundingVolumes(BoundingVolume volume);
 
-        public Tree<PhysicsObject> GetPhysicsObjects(IBoundingVolume volume)
+        public Tree<PhysicsObject> GetPhysicsObjects(BoundingVolume volume)
         {
             throw new System.NotImplementedException();
         }
@@ -286,10 +286,10 @@ namespace PhysicsEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            (IBoundingVolume volumeMoving, Vector v) = obj.Integrate();
+            (BoundingVolume volumeMoving, Vector v) = obj.Integrate();
 
-            IBoundingVolume volumeTotal = volumeMoving.GetMinBoundingVolume(v);
-            IBoundingVolume[] fixedVolumes = GetTerrainBoundingVolumes(volumeTotal);
+            BoundingVolume volumeTotal = volumeMoving.GetMinBoundingVolume(v);
+            BoundingVolume[] fixedVolumes = GetTerrainBoundingVolumes(volumeTotal);
 
             int i;
 
@@ -297,13 +297,13 @@ namespace PhysicsEngine
             {
                 for (i = 0; i < fixedVolumes.Length; ++i)
                 {
-                    IBoundingVolume volumeFixed = fixedVolumes[i];
+                    BoundingVolume volumeFixed = fixedVolumes[i];
                     vPrime1 = volumeFixed.AdjustMovingVolumeSideToSide(volumeMoving, vPrime1);
                 }
 
                 for (i = 0; i < fixedVolumes.Length; ++i)
                 {
-                    IBoundingVolume volumeFixed = fixedVolumes[i];
+                    BoundingVolume volumeFixed = fixedVolumes[i];
                     vPrime1 = volumeFixed.AdjustMovingVolumeUpAndDown(volumeMoving, vPrime1);
                 }
             }
@@ -312,13 +312,13 @@ namespace PhysicsEngine
             {
                 for (i = 0; i < fixedVolumes.Length; ++i)
                 {
-                    IBoundingVolume volumeFixed = fixedVolumes[i];
+                    BoundingVolume volumeFixed = fixedVolumes[i];
                     vPrime2 = volumeFixed.AdjustMovingVolumeUpAndDown(volumeMoving, vPrime2);
                 }
 
                 for (i = 0; i < fixedVolumes.Length; ++i)
                 {
-                    IBoundingVolume volumeFixed = fixedVolumes[i];
+                    BoundingVolume volumeFixed = fixedVolumes[i];
                     vPrime2 = volumeFixed.AdjustMovingVolumeSideToSide(volumeMoving, vPrime2);
                 }
             }

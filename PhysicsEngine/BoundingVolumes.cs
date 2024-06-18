@@ -2,35 +2,37 @@
 
 namespace PhysicsEngine
 {
-    public interface IBoundingVolume
+    
+
+    public interface BoundingVolume
     {
-        IBoundingVolume Extend(Vector v);
-        IBoundingVolume Move(Vector v);
+        BoundingVolume Extend(Vector v);
+        BoundingVolume Move(Vector v);
 
         Vector GetCenter();
         Vector GetBottomCenter();
 
-        IBoundingVolume GetMinBoundingVolume();
-        IBoundingVolume GetMinBoundingVolume(Vector v);
+        BoundingVolume GetMinBoundingVolume();
+        BoundingVolume GetMinBoundingVolume(Vector v);
 
-        bool TestIntersection(IBoundingVolume volume);
-        bool TestIntersection(IBoundingVolume volumeMoving, Vector v);
+        bool TestIntersection(BoundingVolume volume);
+        bool TestIntersection(BoundingVolume volumeMoving, Vector v);
 
-        Vector AdjustMovingVolumeUpAndDown(IBoundingVolume volumeMoving, Vector v);
-        Vector AdjustMovingVolumeSideToSide(IBoundingVolume volumeMoving, Vector v);
+        Vector AdjustMovingVolumeUpAndDown(BoundingVolume volume, Vector v);
+        Vector AdjustMovingVolumeSideToSide(BoundingVolume volume, Vector v);
 
     }
 
-    public readonly struct EmptyBoundingVolume : IBoundingVolume
+    public readonly struct EmptyBoundingVolume : BoundingVolume
     {
         public EmptyBoundingVolume() { }
 
-        public readonly IBoundingVolume Extend(Vector v)
+        public readonly BoundingVolume Extend(Vector v)
         {
             return this;
         }
 
-        public readonly IBoundingVolume Move(Vector v)
+        public readonly BoundingVolume Move(Vector v)
         {
             throw new System.NotImplementedException();
         }
@@ -45,29 +47,29 @@ namespace PhysicsEngine
             throw new System.NotImplementedException();
         }
 
-        public readonly IBoundingVolume GetMinBoundingVolume()
+        public readonly BoundingVolume GetMinBoundingVolume()
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly IBoundingVolume GetMinBoundingVolume(Vector v)
+        public readonly BoundingVolume GetMinBoundingVolume(Vector v)
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly bool TestIntersection(IBoundingVolume volume)
+        public readonly bool TestIntersection(BoundingVolume volume)
         {
             return false;
         }
 
-        public readonly bool TestIntersection(IBoundingVolume volumeMoving, Vector v)
+        public readonly bool TestIntersection(BoundingVolume volume, Vector v)
         {
             return false;
         }
 
-        public readonly Vector AdjustMovingVolumeSideToSide(IBoundingVolume volumeMoving, Vector v)
+        public readonly Vector AdjustMovingVolumeSideToSide(BoundingVolume volume, Vector v)
         {
-            if (!TestIntersection(volumeMoving))
+            if (!TestIntersection(volume))
             {
                 return v;
             }
@@ -75,9 +77,9 @@ namespace PhysicsEngine
             return v;
         }
 
-        public readonly Vector AdjustMovingVolumeUpAndDown(IBoundingVolume volumeMoving, Vector v)
+        public readonly Vector AdjustMovingVolumeUpAndDown(BoundingVolume volume, Vector v)
         {
-            if (!TestIntersection(volumeMoving))
+            if (!TestIntersection(volume))
             {
                 return v;
             }
@@ -87,28 +89,27 @@ namespace PhysicsEngine
 
     }
 
-    public readonly struct AxisAlignedBoundingBox : IBoundingVolume
+    public readonly struct AxisAlignedBoundingBox : BoundingVolume
     {
-        private readonly Vector _MAX, _MIN;
-        public Vector Max => _MAX;
-        public Vector Min => _MIN;
 
-        public AxisAlignedBoundingBox(Vector Max, Vector Min)
+        public readonly Vector Max, Min;
+
+        public AxisAlignedBoundingBox(Vector max, Vector min)
         {
-            System.Diagnostics.Debug.Assert(Max.X >= Min.X);
-            System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
-            System.Diagnostics.Debug.Assert(Max.Z >= Min.Z);
+            System.Diagnostics.Debug.Assert(max.X >= min.X);
+            System.Diagnostics.Debug.Assert(max.Y >= min.Y);
+            System.Diagnostics.Debug.Assert(max.Z >= min.Z);
 
-            _MAX = Max;
-            _MIN = Min;
+            this.Max = max;
+            this.Min = min;
         }
 
-        public readonly IBoundingVolume Extend(Vector v)
+        public readonly BoundingVolume Extend(Vector v)
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly IBoundingVolume Move(Vector v)
+        public readonly BoundingVolume Move(Vector v)
         {
             throw new System.NotImplementedException();
         }
@@ -123,42 +124,47 @@ namespace PhysicsEngine
             throw new System.NotImplementedException();
         }
 
-        public readonly IBoundingVolume GetMinBoundingVolume()
+        public readonly BoundingVolume GetMinBoundingVolume()
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly IBoundingVolume GetMinBoundingVolume(Vector v)
+        public readonly BoundingVolume GetMinBoundingVolume(Vector v)
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly bool TestIntersection(IBoundingVolume other)
+        public readonly bool TestIntersection(BoundingVolume volume)
         {
-            switch (other)
+            if (volume is AxisAlignedBoundingBox aabb)
             {
-                default:
-                    System.Diagnostics.Debug.Assert(false);
-                    break;
-                case AxisAlignedBoundingBox aabb:
-                    throw new System.NotImplementedException();
-                /*case BoundingSphere sphere:
-                    throw new System.NotImplementedException();*/
-                case CompoundBoundingVolume compound:
-                    return compound.TestIntersection(this);
+                return IntersectionTests.TestFixedAndFixed(this, aabb);
+            }
+            else if (volume is CompoundBoundingVolume cbv)
+            {
+                return IntersectionTests.TestFixedAndFixed(this, cbv);
             }
 
             throw new System.NotImplementedException();
         }
 
-        public readonly bool TestIntersection(IBoundingVolume volumeMoving, Vector v)
+        public readonly bool TestIntersection(BoundingVolume volume, Vector v)
         {
+            if (volume is AxisAlignedBoundingBox aabb)
+            {
+                return IntersectionTests.TestFixedAndMoving(this, aabb, v);
+            }
+            else if (volume is CompoundBoundingVolume cbv)
+            {
+                return IntersectionTests.TestFixedAndMoving(this, cbv, v);
+            }
+
             throw new System.NotImplementedException();
         }
 
-        public readonly Vector AdjustMovingVolumeSideToSide(IBoundingVolume volumeMoving, Vector v)
+        internal readonly Vector AdjustMovingVolumeSideToSide(BoundingVolume other, Vector v)
         {
-            if (!TestIntersection(volumeMoving))
+            if (!TestIntersection(other))
             {
                 return v;
             }
@@ -166,9 +172,9 @@ namespace PhysicsEngine
             throw new System.NotImplementedException();
         }
 
-        public readonly Vector AdjustMovingVolumeUpAndDown(IBoundingVolume volumeMoving, Vector v)
+        internal readonly Vector AdjustMovingVolumeUpAndDown(BoundingVolume other, Vector v)
         {
-            if (!TestIntersection(volumeMoving))
+            if (!TestIntersection(other))
             {
                 return v;
             }
@@ -187,13 +193,18 @@ namespace PhysicsEngine
     /*public readonly struct BoundingSphere 
      * : BoundingVolume
     {
-        private readonly Vector _CENTER;
-        private readonly double _RADIUS;
 
-        public BoundingSphere(Vector c, double r)
+    }*/
+
+    public readonly struct CompoundBoundingVolume : BoundingVolume
+    {
+
+        public readonly BoundingVolume[] Volumes;
+
+        public CompoundBoundingVolume(params BoundingVolume[] volumes)
         {
-            _CENTER = c;
-            _RADIUS = r;
+            // TODO: Assert all volumes are attached.
+            Volumes = volumes;
         }
 
         public readonly BoundingVolume Extend(Vector v)
@@ -201,42 +212,7 @@ namespace PhysicsEngine
             throw new System.NotImplementedException();
         }
 
-        public readonly bool TestIntersection(BoundingVolume other)
-        {
-            switch (other)
-            {
-                default:
-                    System.Diagnostics.Debug.Assert(false);
-                    break;
-                case AxisAlignedBoundingBox aabb:
-                    throw new System.NotImplementedException();
-                case BoundingSphere sphere:
-                    throw new System.NotImplementedException();
-                case CompoundBoundingVolume compound:
-                    return compound.TestIntersection(this);
-            }
-
-            throw new System.NotImplementedException();
-        }
-
-    }*/
-
-    public readonly struct CompoundBoundingVolume : IBoundingVolume
-    {
-        private readonly IBoundingVolume[] _VOLUMES;
-
-        public CompoundBoundingVolume(params IBoundingVolume[] volumes)
-        {
-            // TODO: Assert all volumes are attached.
-            _VOLUMES = volumes;
-        }
-
-        public readonly IBoundingVolume Extend(Vector v)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public readonly IBoundingVolume Move(Vector v)
+        public readonly BoundingVolume Move(Vector v)
         {
             throw new System.NotImplementedException();
         }
@@ -251,37 +227,45 @@ namespace PhysicsEngine
             throw new System.NotImplementedException();
         }
 
-        public readonly IBoundingVolume GetMinBoundingVolume()
+        public readonly BoundingVolume GetMinBoundingVolume()
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly IBoundingVolume GetMinBoundingVolume(Vector v)
+        public readonly BoundingVolume GetMinBoundingVolume(Vector v)
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly bool TestIntersection(IBoundingVolume other)
+        public readonly bool TestIntersection(BoundingVolume volume)
         {
-            for (int i = 0; i < _VOLUMES.Length; ++i)
+            if (volume is AxisAlignedBoundingBox aabb)
             {
-                IBoundingVolume volume = _VOLUMES[i];
-
-                if (volume.TestIntersection(other))
-                {
-                    return true;
-                }
+                return IntersectionTests.TestFixedAndFixed(this, aabb);
+            }
+            else if (volume is CompoundBoundingVolume cbv)
+            {
+                return IntersectionTests.TestFixedAndFixed(this, cbv);
             }
 
-            return false;
+            throw new System.NotImplementedException();     
         }
 
-        public readonly bool TestIntersection(IBoundingVolume volumeMoving, Vector v)
+        public readonly bool TestIntersection(BoundingVolume volume, Vector v)
         {
+            if (volume is AxisAlignedBoundingBox aabb)
+            {
+                return IntersectionTests.TestFixedAndMoving(this, aabb, v);
+            }
+            else if (volume is CompoundBoundingVolume cbv)
+            {
+                return IntersectionTests.TestFixedAndMoving(this, cbv, v);
+            }
+
             throw new System.NotImplementedException();
         }
 
-        public readonly Vector AdjustMovingVolumeSideToSide(IBoundingVolume volumeMoving, Vector v)
+        internal readonly Vector AdjustMovingVolumeSideToSide(BoundingVolume volumeMoving, Vector v)
         {
             if (!TestIntersection(volumeMoving))
             {
@@ -291,7 +275,7 @@ namespace PhysicsEngine
             throw new System.NotImplementedException();
         }
 
-        public readonly Vector AdjustMovingVolumeUpAndDown(IBoundingVolume volumeMoving, Vector v)
+        internal readonly Vector AdjustMovingVolumeUpAndDown(BoundingVolume volumeMoving, Vector v)
         {
             if (!TestIntersection(volumeMoving))
             {

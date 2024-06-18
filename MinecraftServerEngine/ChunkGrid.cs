@@ -100,7 +100,7 @@ namespace MinecraftServerEngine
                 p.Z <= _MAX.Z && p.Z >= _MIN.Z);
         }
 
-        public readonly IBoundingVolume GetMinBoundingVolume()
+        public readonly BoundingVolume GetMinBoundingVolume()
         {
             throw new System.NotImplementedException();
         }

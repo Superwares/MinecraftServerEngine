@@ -13,5 +13,6 @@ namespace Common
         {
             return System.Math.Abs(s);
         }
+
     }
 }
