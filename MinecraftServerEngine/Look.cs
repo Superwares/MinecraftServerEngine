@@ -6,7 +6,7 @@ namespace MinecraftServerEngine
         internal const float MaxYaw = 180, MinYaw = -180;
         internal const float MaxPitch = 90, MinPitch = -90;
 
-        public readonly float YAW, PITCH;
+        public readonly float Yaw, Pitch;
 
         private static float Frem(float angle)
         {
@@ -20,17 +20,17 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(pitch >= MinPitch);
             System.Diagnostics.Debug.Assert(pitch <= MaxPitch);
 
-            YAW = yaw;
-            PITCH = pitch;
+            Yaw = yaw;
+            Pitch = pitch;
         }
 
         internal readonly (byte, byte) ConvertToProtocolFormat()
         {
-            System.Diagnostics.Debug.Assert(PITCH >= MinPitch);
-            System.Diagnostics.Debug.Assert(PITCH <= MaxPitch);
+            System.Diagnostics.Debug.Assert(Pitch >= MinPitch);
+            System.Diagnostics.Debug.Assert(Pitch <= MaxPitch);
 
-            float x = Frem(YAW);
-            float y = Frem(PITCH);
+            float x = Frem(Yaw);
+            float y = Frem(Pitch);
 
             return (
                 (byte)((byte.MaxValue * x) / 360),
@@ -44,7 +44,7 @@ namespace MinecraftServerEngine
 
         public readonly bool Equals(Look other)
         {
-            return (YAW == other.YAW) && (PITCH == other.PITCH);
+            return (Yaw == other.Yaw) && (Pitch == other.Pitch);
         }
 
     }

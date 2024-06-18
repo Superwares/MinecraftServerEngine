@@ -12,8 +12,8 @@ namespace MinecraftServerEngine
         private readonly int _id;
         public int Id => _id;
 
-        private readonly ConcurrentSet<int> _IDS = new();  // Disposable
-        private readonly ConcurrentQueue<EntityRenderer> _RENDERERS = new();  // Disposable
+        private readonly ConcurrentSet<int> IDS = new();  // Disposable
+        private readonly ConcurrentQueue<EntityRenderer> RENDERERS = new();  // Disposable
 
         public EntityRendererManager(int id) 
         {
@@ -30,13 +30,13 @@ namespace MinecraftServerEngine
             {
                 return false;
             }
-            if (_IDS.Contains(renderer.Id))
+            if (IDS.Contains(renderer.Id))
             {
                 return false;
             }
 
-            _IDS.Insert(renderer.Id);
-            _RENDERERS.Enqueue(renderer);
+            IDS.Insert(renderer.Id);
+            RENDERERS.Enqueue(renderer);
             return true;
         }
 
@@ -46,25 +46,25 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_movement);
 
-            for (int i = 0; i < _RENDERERS.Count; ++i)
+            for (int i = 0; i < RENDERERS.Count; ++i)
             {
-                EntityRenderer renderer = _RENDERERS.Dequeue();
+                EntityRenderer renderer = RENDERERS.Dequeue();
 
-                if (renderer.IsDisconnected)
+                if (renderer.Disconnected)
                 {
-                    _IDS.Extract(renderer.Id);
+                    IDS.Extract(renderer.Id);
 
                     continue;
                 }
                 else if (!renderer.CanRender(p))
                 {
-                    _IDS.Extract(renderer.Id);
+                    IDS.Extract(renderer.Id);
                     renderer.DestroyEntity(Id);
 
                     continue;
                 }
 
-                _RENDERERS.Enqueue(renderer);
+                RENDERERS.Enqueue(renderer);
             }
 
         }
@@ -76,9 +76,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_movement);
 
-            System.Diagnostics.Debug.Assert(!_IDS.Contains(id));
-
-            foreach (EntityRenderer renderer in _RENDERERS.GetValues())
+            foreach (EntityRenderer renderer in RENDERERS.GetValues())
             {
                 renderer.MoveAndRotate(Id, p, pPrev, look, onGround);
             }
@@ -92,9 +90,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_movement);
 
-            System.Diagnostics.Debug.Assert(!_IDS.Contains(id));
-
-            foreach (EntityRenderer renderer in _RENDERERS.GetValues())
+            foreach (EntityRenderer renderer in RENDERERS.GetValues())
             {
                 renderer.Move(Id, p, pPrev, onGround);
             }
@@ -108,9 +104,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_movement);
 
-            System.Diagnostics.Debug.Assert(!_IDS.Contains(id));
-
-            foreach (EntityRenderer renderer in _RENDERERS.GetValues())
+            foreach (EntityRenderer renderer in RENDERERS.GetValues())
             {
                 renderer.Rotate(Id, look, onGround);
             }
@@ -124,9 +118,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_movement);
 
-            System.Diagnostics.Debug.Assert(!_IDS.Contains(id));
-
-            foreach (EntityRenderer renderer in _RENDERERS.GetValues())
+            foreach (EntityRenderer renderer in RENDERERS.GetValues())
             {
                 renderer.Stand(Id);
             }
@@ -147,44 +139,39 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(!_IDS.Contains(id));
-
-            foreach (var renderer in _RENDERERS.GetValues())
+            foreach (var renderer in RENDERERS.GetValues())
             {
                 renderer.ChangeForms(Id, sneaking, sprinting);
             }
         }
 
-        /*public void Teleport(
-            int entityId, Entity.Vector pos, Entity.Angles look, bool onGround)
+        public void Teleport(Vector p, Look look, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(!_IDENTIFIERS.Contains(entityId));
-
-            foreach (var renderer in _RENDERERS.GetValues())
+            foreach (var renderer in RENDERERS.GetValues())
             {
-                renderer.Teleport(entityId, pos, look, onGround);
+                renderer.Teleport(Id, p, look, onGround);
             }
-        }*/
+        }
 
         public void Flush()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(!_IDS.Contains(Id));
+            System.Diagnostics.Debug.Assert(!IDS.Contains(Id));
 
-            while (!_RENDERERS.Empty)
+            while (!RENDERERS.Empty)
             {
-                EntityRenderer renderer = _RENDERERS.Dequeue();
-                if (renderer.IsDisconnected)
+                EntityRenderer renderer = RENDERERS.Dequeue();
+                if (renderer.Disconnected)
                 {
                     continue;
                 }
 
                 renderer.DestroyEntity(Id);
 
-                System.Diagnostics.Debug.Assert(_IDS.Contains(renderer.Id));
+                System.Diagnostics.Debug.Assert(IDS.Contains(renderer.Id));
             }
         }
 
@@ -194,11 +181,11 @@ namespace MinecraftServerEngine
 
             // Assertion
             System.Diagnostics.Debug.Assert(!_movement);
-            System.Diagnostics.Debug.Assert(_RENDERERS.Empty);
+            System.Diagnostics.Debug.Assert(RENDERERS.Empty);
 
             // Release  resources.
-            _IDS.Dispose();
-            _RENDERERS.Dispose();
+            IDS.Dispose();
+            RENDERERS.Dispose();
 
             // Finish
             System.GC.SuppressFinalize(this);

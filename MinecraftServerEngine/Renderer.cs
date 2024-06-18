@@ -75,7 +75,7 @@ namespace MinecraftServerEngine
     internal sealed class EntityRenderer : WorldRenderer
     {
         private bool _disconnected = false;
-        public bool IsDisconnected => _disconnected;
+        public bool Disconnected => _disconnected;
 
 
         private readonly int _id;
@@ -196,16 +196,18 @@ namespace MinecraftServerEngine
             Render(new EntityPacket(id));
         }
 
-        /*public void Teleport(
-            int entityId, Entity.Vector pos, Entity.Angles look, bool onGround)
+        public void Teleport(int id, Vector p, Look look, bool onGround)
         {
-            
+            System.Diagnostics.Debug.Assert(id != Id);
+
+            System.Diagnostics.Debug.Assert(!_disconnected);
+
             Render(new EntityTeleportPacket(
-                entityId,
-                pos.X, pos.Y, pos.Z,
+                id,
+                p.X, p.Y, p.Z,
                 look.Yaw, look.Pitch,
                 onGround));
-        }*/
+        }
 
         public void ChangeForms(int id, bool sneaking, bool sprinting)
         {

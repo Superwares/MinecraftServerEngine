@@ -920,7 +920,7 @@ namespace MinecraftServerEngine
             _window = new Window(_OUT_PACKETS, inv);
 
             PlayerListRenderer plRenderer = new(_OUT_PACKETS);
-            world._PLAYER_LIST.Connect(userId, plRenderer);
+            world.PlayerList.Connect(userId, plRenderer);
         }
 
         ~Connection() => System.Diagnostics.Debug.Assert(false);
@@ -1055,7 +1055,7 @@ namespace MinecraftServerEngine
                         }
 
                         long ticks = _keepAliveRecord.Confirm(packet.Payload);
-                        world._PLAYER_LIST.UpdateLaytency(userId, ticks);
+                        world.PlayerList.UpdateLaytency(userId, ticks);
                     }
                     break;
                 case ServerboundPlayingPacket.PlayerPacketId:
@@ -1281,7 +1281,7 @@ namespace MinecraftServerEngine
             {
                 ChunkLocation locChunk = newChunkPositions.Dequeue();
 
-                (mask, data) = world._BLOCK_CTX.GetChunkData(locChunk);
+                (mask, data) = world.BlockContext.GetChunkData(locChunk);
 
                 _CHUNK_LOAD_PACKETS.Enqueue(new LoadChunkPacket(
                     locChunk.X, locChunk.Z, true, mask, data));
@@ -1316,6 +1316,14 @@ namespace MinecraftServerEngine
 
         public void ApplyVelocity(int id, Vector v)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(!_disconnected);
+            /*if (_disconnected)
+            {
+                return;
+            }*/
+
             EntityVelocityPacket packet = new(
                 id,
                 (short)(v.X * 8000),
@@ -1333,6 +1341,55 @@ namespace MinecraftServerEngine
                 try
                 {
                     SendPacket(buffer, packet);
+                }
+                catch (DisconnectedClientException)
+                {
+                    buffer.Flush();
+
+                    _disconnected = true;
+
+                    System.Diagnostics.Debug.Assert(!tryAgain);
+                }
+                catch (TryAgainException)
+                {
+                    tryAgain = true;
+                }
+
+            } while (tryAgain);
+
+            System.Diagnostics.Debug.Assert(buffer.Empty);
+        }
+
+        public void Teleport(Vector p, Look look)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(!_disconnected);
+            /*if (_disconnected)
+            {
+                return;
+            }*/
+
+            int payload = new System.Random().Next();
+            TeleportSelfPlayerPacket packet = new(
+                p.X, p.Y, p.Z, look.Yaw, look.Pitch,
+                false, false, false, false, false,
+                payload);
+
+            using Buffer buffer = new();
+
+            bool tryAgain;
+
+            do
+            {
+                tryAgain = false;
+
+                try
+                {
+                    SendPacket(buffer, packet);
+
+                    TeleportationRecord report = new(payload, p);
+                    _TELEPORTATION_RECORDS.Enqueue(report);
                 }
                 catch (DisconnectedClientException)
                 {
@@ -1373,7 +1430,7 @@ namespace MinecraftServerEngine
 
                     _OUT_PACKETS.Enqueue(new TeleportSelfPlayerPacket(
                         p.X, p.Y, p.Z,
-                        look.YAW, look.PITCH,
+                        look.Yaw, look.Pitch,
                         false, false, false, false, false,
                         new System.Random().Next()));
 
@@ -1397,13 +1454,10 @@ namespace MinecraftServerEngine
                 {
                     ClientboundPlayingPacket packet = _OUT_PACKETS.Dequeue();
 
-                    if (packet is TeleportSelfPlayerPacket teleportPacket)
+                    /*if (packet is TeleportSelfPlayerPacket teleportPacket)
                     {
-                        Vector pTeleport = new(teleportPacket.X, teleportPacket.Y, teleportPacket.Z);
-
-                        TeleportationRecord report = new(teleportPacket.Payload, pTeleport);
-                        _TELEPORTATION_RECORDS.Enqueue(report);
-                    }
+                        
+                    }*/
                     /*else if (packet is ClientboundCloseWindowPacket)
                     {
                         throw new System.NotImplementedException();
@@ -1439,7 +1493,7 @@ namespace MinecraftServerEngine
 
             _window.Flush(world);
 
-            world._PLAYER_LIST.Disconnect(userId);
+            world.PlayerList.Disconnect(userId);
         }
 
         public void Dispose()

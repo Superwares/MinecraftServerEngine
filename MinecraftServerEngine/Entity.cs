@@ -10,23 +10,23 @@ namespace MinecraftServerEngine
 
         private protected readonly struct Hitbox : System.IEquatable<Hitbox>
         {
-            private readonly double _WIDTH, _HEIGHT;
+            private readonly double Width, Height;
             /*public readonly double EyeHeight, MaxStepHeight;*/
 
             public Hitbox(double w, double h)
             {
-                _WIDTH = w;
-                _HEIGHT = h;
+                Width = w;
+                Height = h;
             }
 
             public readonly IBoundingVolume Convert(Vector p)
             {
-                System.Diagnostics.Debug.Assert(_WIDTH > 0.0D);
-                System.Diagnostics.Debug.Assert(_HEIGHT > 0.0D);
+                System.Diagnostics.Debug.Assert(Width > 0.0D);
+                System.Diagnostics.Debug.Assert(Height > 0.0D);
 
-                double w = _WIDTH / 2.0D;
+                double w = Width / 2.0D;
 
-                Vector max = new(p.X + w, p.Y + _HEIGHT, p.Z + w),
+                Vector max = new(p.X + w, p.Y + Height, p.Z + w),
                        min = new(p.X - w, p.Y, p.Z - w);
                 return new AxisAlignedBoundingBox(max, min);
             }
@@ -44,24 +44,24 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
-        public readonly int ID;
-        public readonly System.Guid UNIQUE_ID;
+        internal readonly int Id;
+        internal readonly System.Guid UniqueId;
 
         private Vector _p;
-        internal Vector POSITION => _p;
+        internal Vector Position => _p;
 
         private bool _rotated = false;
         private Look _look;
         internal Look LOOK => _look;
 
         protected bool _sneaking, _sprinting = false;
-        public bool SNEAKING => _sneaking;
-        public bool SPRINTING => _sprinting;
+        public bool Sneaking => _sneaking;
+        public bool Sprinting => _sprinting;
 
 
-        /*protected bool _teleported = false;
-        protected Vector _posTeleport;
-        protected Angles _lookTeleport;*/
+        private protected bool _teleported = false;
+        private protected Vector _pTeleport;
+        private protected Look _lookTeleport;
 
 
         private EntityRendererManager _MANAGER;  // Disposable
@@ -74,8 +74,8 @@ namespace MinecraftServerEngine
             double m)
             : base(hitbox.Convert(p), m)
         {
-            ID = EntityIdAllocator.Alloc();
-            UNIQUE_ID = uniqueId;
+            Id = EntityIdAllocator.Alloc();
+            UniqueId = uniqueId;
 
 
             System.Diagnostics.Debug.Assert(!_rotated);
@@ -84,7 +84,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_sneaking);
             System.Diagnostics.Debug.Assert(!_sprinting);
 
-            _MANAGER = new(ID);
+            _MANAGER = new(Id);
         }
 
         ~Entity() => System.Diagnostics.Debug.Assert(false);
@@ -118,12 +118,22 @@ namespace MinecraftServerEngine
         protected override IBoundingVolume GenerateBoundingVolume()
         {
             Hitbox hitbox = GetHitbox();
-            return hitbox.Convert(_p);
+
+            return _teleported ? hitbox.Convert(_pTeleport) : hitbox.Convert(_p);
         }
 
         public override void Move(IBoundingVolume volume, Vector v, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (_teleported)
+            {
+                _MANAGER.Teleport(_pTeleport, _lookTeleport, false);
+
+                _p = _pTeleport;
+                _look = _lookTeleport;
+                _rotated = false;
+            }
 
             Vector p = volume.GetBottomCenter();
 
@@ -155,20 +165,23 @@ namespace MinecraftServerEngine
                 _MANAGER.Stand();
             }
 
-            _p = p;
-            _rotated = false;
-
             _MANAGER.FinishMovementRenderring();
 
             base.Move(volume, v, onGround);
+
+            _p = p;
+            _rotated = false;
+            _teleported = false;
         }
 
-        /*public virtual void Teleport(Vector pos, Angles look)
+        public virtual void Teleport(Vector p, Look look)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             _teleported = true;
-            _posTeleport = pos;
+            _pTeleport = p;
             _lookTeleport = look;
-        }*/
+        }
 
         public void Rotate(Look look)
         {
@@ -239,6 +252,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
+            EntityIdAllocator.Dealloc(Id);
             _MANAGER.Dispose();
 
             // Finish.
@@ -251,13 +265,10 @@ namespace MinecraftServerEngine
     public abstract class ItemEntity : Entity
     {
         private bool _disposed = false;
-
         
         public const double MASS = 0.1D;
 
-
         private static readonly Hitbox HITBOX = new(0.25D, 0.25D);
-
 
         public ItemEntity(Vector p, Look look)
             : base(System.Guid.NewGuid(), p, look, HITBOX, MASS) 
@@ -280,7 +291,7 @@ namespace MinecraftServerEngine
             outPackets.Enqueue(new EntityMetadataPacket(
                 Id, metadata.WriteData()));*/
 
-            renderer.SpawnItemEntity(ID);
+            renderer.SpawnItemEntity(Id);
         }
 
         public override void Dispose()
@@ -302,7 +313,10 @@ namespace MinecraftServerEngine
     {
         private bool _disposed = false;
 
-        internal LivingEntity() : base() { }
+        private protected LivingEntity(System.Guid uniqueId,
+            Vector p, Look look,
+            Hitbox hitbox,
+            double m) : base(uniqueId, p, look, hitbox, m) { }
 
         ~LivingEntity() => System.Diagnostics.Debug.Assert(false);
 
@@ -325,29 +339,20 @@ namespace MinecraftServerEngine
     {
         private bool _disposed = false;
 
-
         public const double MASS = 1.0D;
 
-        
         internal readonly PlayerInventory _selfInventory = new();
 
-
         private Connection _CONN;
-        public bool Connected => (_CONN != null);
+        public bool Connected => (_CONN != null) || !_CONN.Disconnected;
 
+        private Vector _pControl;
+        private bool _onGroundControl;
 
-        private Vector _p;
-        private bool _onGround;
-
-
-        public Player() : base() { }
-
-        ~Player() => System.Diagnostics.Debug.Assert(false);
-
-        private protected override Hitbox GetHitbox()
+        private static Hitbox GetHitbox(bool sneaking)
         {
             double w = 0.6D, h;
-            if (SNEAKING)
+            if (sneaking)
             {
                 h = 1.65D;
             }
@@ -356,7 +361,23 @@ namespace MinecraftServerEngine
                 h = 1.8D;
             }
 
-            return new(w, h);
+            return new Hitbox(w, h);
+        }
+
+        public Player(System.Guid uniqueId, Vector p, Look look) 
+            : base(uniqueId, p, look, GetHitbox(false), MASS) 
+        {
+            System.Diagnostics.Debug.Assert(!Sneaking);
+            System.Diagnostics.Debug.Assert(!Sprinting);
+        }
+
+        ~Player() => System.Diagnostics.Debug.Assert(false);
+
+        private protected override Hitbox GetHitbox()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            return GetHitbox(Sneaking);
         }
 
         private protected override void RenderSpawning(EntityRenderer renderer)
@@ -364,19 +385,19 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             renderer.SpawnPlayer(
-                ID, UNIQUE_ID,
-                POSITION, LOOK,
-                SNEAKING, SPRINTING);
+                Id, UniqueId,
+                Position, LOOK,
+                Sneaking, Sprinting);
         }
 
         internal void Connect(Client client, World world, System.Guid userId)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _p = POSITION;
-            _onGround = ON_GROUND;
+            _pControl = Position;
+            _onGroundControl = OnGround;
 
-            _CONN = new Connection(client, world, ID, userId, _p, _selfInventory);
+            _CONN = new Connection(client, world, Id, userId, _pControl, _selfInventory);
         }
 
         public override void ApplyForce(Vector force)
@@ -387,24 +408,11 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(_CONN != null);
                 Vector v = force / MASS;
-                _CONN.ApplyVelocity(ID, v);
+                _CONN.ApplyVelocity(Id, v);
             }
-            else
-            {
-                base.ApplyForce(force);
-            }
+
+            base.ApplyForce(force);
         }
-
-        /*public override void Teleport(Vector pos, Angles look)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            base.Teleport(pos, look);
-
-            System.Diagnostics.Debug.Assert(_selfRenderer != null);
-            _selfRenderer.Teleport(pos, look);
-            // TODO: Check the velocity was reset in client when teleported.
-        }*/
 
         public override void Move(IBoundingVolume volume, Vector v, bool onGround)
         {
@@ -424,30 +432,44 @@ namespace MinecraftServerEngine
                 double length = Vector.GetLength(v1, v2);
                 System.Console.WriteLine($"length: {length}");*/
 
-                volume = GetHitbox().Convert(_p);
-                onGround = _onGround;
+                volume = GetHitbox().Convert(_pControl);
+                onGround = _onGroundControl;
             }
             
             base.Move(volume, v, onGround);
+        }
+
+        public override void Teleport(Vector p, Look look)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (Connected)
+            {
+                _CONN.Teleport(p, look);
+                _pControl = p;
+                _onGroundControl = false;
+            }
+
+            base.Teleport(p, look);
         }
 
         internal void Control(Vector p, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(Connected);
+            System.Diagnostics.Debug.Assert(!_teleported);
 
-            _p = p;
-            _onGround = onGround;
+            _pControl = p;
+            _onGroundControl = onGround;
         }
 
         internal void Control(bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(Connected);
+            System.Diagnostics.Debug.Assert(!_teleported);
 
-            _onGround = onGround;
+            _onGroundControl = onGround;
         }
 
         private void HandleControl(ServerboundPlayingPacket control)
@@ -481,7 +503,7 @@ namespace MinecraftServerEngine
 
                 using Queue<ServerboundPlayingPacket> controls = new();
 
-                _CONN.Control(controls, world, UNIQUE_ID, SNEAKING, SPRINTING, _selfInventory);
+                _CONN.Control(controls, world, UniqueId, Sneaking, Sprinting, _selfInventory);
 
                 while (!controls.Empty)
                 {
@@ -505,7 +527,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_CONN != null);
             if (_CONN.Disconnected)
             {
-                _CONN.Flush(world, UNIQUE_ID);
+                _CONN.Flush(world, UniqueId);
                 _CONN.Dispose();
 
                 _CONN = null;
@@ -528,8 +550,8 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_CONN != null);
             _CONN.Render(
                 world, 
-                ID, 
-                POSITION, LOOK, 
+                Id, 
+                Position, LOOK, 
                 _selfInventory);
         }
         

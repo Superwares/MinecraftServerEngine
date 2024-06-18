@@ -8,23 +8,23 @@ namespace PhysicsEngine
     {
         private bool _disposed = false;
 
-        private readonly RWLock _LOCK = new();  // Disposable
+        private readonly RWLock Lock = new();  // Disposable
 
         private readonly double _m;
         public double GetMass() => _m;
 
-        private readonly double _MAX_STEP_LEVEL;
+        /*private readonly double MaxStepLevel;*/
 
-        private readonly Queue<Vector> _FORCES = new();  // Disposable
+        private readonly Queue<Vector> Forces = new();  // Disposable
 
         private Vector _v = new(0, 0, 0);
-        public Vector VELOCITY;
+        public Vector Velocity;
 
         private bool _onGround;
-        public bool ON_GROUND => _onGround;
+        public bool OnGround => _onGround;
 
         private IBoundingVolume _volume;
-        public IBoundingVolume BOUNDING_VOLUME => _volume;
+        public IBoundingVolume BoundingVolume => _volume;
 
 
         public PhysicsObject(IBoundingVolume volume, double m/*, double maxStepLevel*/)
@@ -42,7 +42,7 @@ namespace PhysicsEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _FORCES.Enqueue(v);
+            Forces.Enqueue(v);
         }
 
         protected abstract IBoundingVolume GenerateBoundingVolume();
@@ -53,9 +53,9 @@ namespace PhysicsEngine
 
             Vector v = _v;
 
-            while (!_FORCES.Empty)
+            while (!Forces.Empty)
             {
-                Vector force = _FORCES.Dequeue();
+                Vector force = Forces.Dequeue();
 
                 v += (force / _m);
             }
@@ -68,7 +68,7 @@ namespace PhysicsEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_FORCES.Empty);
+            System.Diagnostics.Debug.Assert(Forces.Empty);
 
             _volume = volume;
             _v = v;
@@ -81,8 +81,8 @@ namespace PhysicsEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
-            _LOCK.Dispose();
-            _FORCES.Dispose();
+            Lock.Dispose();
+            Forces.Dispose();
 
             // Finish.
             System.GC.SuppressFinalize(this);

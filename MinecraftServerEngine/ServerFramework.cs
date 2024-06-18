@@ -109,7 +109,7 @@ namespace MinecraftServerEngine
 
             barrier.WaitAllReach();
 
-            _WORLD._PLAYERS.Swap();
+            _WORLD.Players.Swap();
 
             barrier.Broadcast();
 
@@ -118,7 +118,7 @@ namespace MinecraftServerEngine
 
             barrier.WaitAllReach();
 
-            _WORLD._PLAYERS.Swap();
+            _WORLD.Players.Swap();
 
             barrier.Broadcast();
 
@@ -127,7 +127,7 @@ namespace MinecraftServerEngine
 
             barrier.WaitAllReach();
 
-            _WORLD._ENTITIES.Swap();
+            _WORLD.Entities.Swap();
 
             barrier.Broadcast();
 
@@ -136,7 +136,7 @@ namespace MinecraftServerEngine
 
             barrier.WaitAllReach();
 
-            _WORLD._PLAYERS.Swap();
+            _WORLD.Players.Swap();
 
             barrier.Broadcast();
 
@@ -145,7 +145,7 @@ namespace MinecraftServerEngine
 
             barrier.WaitAllReach();
 
-            _WORLD._ENTITIES.Swap();
+            _WORLD.Entities.Swap();
 
             barrier.Broadcast();
 
@@ -154,7 +154,7 @@ namespace MinecraftServerEngine
 
             barrier.WaitAllReach();
 
-            _WORLD._PLAYERS.Swap();
+            _WORLD.Players.Swap();
 
             barrier.Broadcast();
 
@@ -177,7 +177,7 @@ namespace MinecraftServerEngine
 
             barrier.WaitAllReach();
 
-            _WORLD._PLAYERS.Swap();
+            _WORLD.Players.Swap();
 
             barrier.Broadcast();
 
@@ -193,7 +193,7 @@ namespace MinecraftServerEngine
 
             barrier.WaitAllReach();
 
-            _WORLD._ENTITIES.Swap();
+            _WORLD.Entities.Swap();
 
             barrier.Broadcast();
 
