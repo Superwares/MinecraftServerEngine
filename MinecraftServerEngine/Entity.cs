@@ -2,6 +2,7 @@
 using Common;
 using Containers;
 using PhysicsEngine;
+using System.Net.Sockets;
 
 namespace MinecraftServerEngine
 {
@@ -131,8 +132,13 @@ namespace MinecraftServerEngine
                 _MANAGER.Teleport(_pTeleport, _lookTeleport, false);
 
                 _p = _pTeleport;
-                _look = _lookTeleport;
-                _rotated = false;
+
+                if (!_rotated)
+                {
+                    _look = _lookTeleport;
+                }
+
+                _teleported = false;
             }
 
             Vector p = volume.GetBottomCenter();
@@ -171,12 +177,13 @@ namespace MinecraftServerEngine
 
             _p = p;
             _rotated = false;
-            _teleported = false;
         }
 
         public virtual void Teleport(Vector p, Look look)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            _rotated = false;
 
             _teleported = true;
             _pTeleport = p;
@@ -202,7 +209,6 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
             
-            System.Diagnostics.Debug.Assert(!_sneaking);
             _sneaking = true;
 
             RanderFormChanging();
@@ -212,7 +218,6 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
             
-            System.Diagnostics.Debug.Assert(_sneaking);
             _sneaking = false;
 
             RanderFormChanging();
@@ -222,7 +227,6 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
             
-            System.Diagnostics.Debug.Assert(!_sprinting);
             _sprinting = true;
 
             RanderFormChanging();
@@ -232,7 +236,6 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
             
-            System.Diagnostics.Debug.Assert(_sprinting);
             _sprinting = false;
 
             RanderFormChanging();
@@ -346,6 +349,7 @@ namespace MinecraftServerEngine
         private Connection _CONN;
         public bool Connected => (_CONN != null) || !_CONN.Disconnected;
 
+        private bool _controled = false;
         private Vector _pControl;
         private bool _onGroundControl;
 
@@ -418,7 +422,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (Connected)
+            if (_controled)
             {
                 // TODO: Check the difference between _p and p. and predict movement....
                 /*Console.Printl($"p: {p}, _p: {_p}, ");
@@ -434,6 +438,8 @@ namespace MinecraftServerEngine
 
                 volume = GetHitbox().Convert(_pControl);
                 onGround = _onGroundControl;
+
+                _controled = false;
             }
             
             base.Move(volume, v, onGround);
@@ -447,6 +453,7 @@ namespace MinecraftServerEngine
             {
                 _CONN.Teleport(p, look);
 
+                _controled = true;
                 _pControl = p;
                 _onGroundControl = false;
             }
@@ -460,8 +467,10 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_teleported);
 
+            _controled = true;
             _pControl = p;
             _onGroundControl = onGround;
+
         }
 
         internal void Control(bool onGround)
@@ -470,7 +479,9 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_teleported);
 
+            _controled = true;
             _onGroundControl = onGround;
+
         }
 
         private void HandleControl(ServerboundPlayingPacket control)
@@ -481,16 +492,59 @@ namespace MinecraftServerEngine
             {
                 default:
                     throw new System.NotImplementedException();
-                case PlayerPacket:
-                    throw new System.NotImplementedException();
-                case PlayerPositionPacket:
-                    throw new System.NotImplementedException();
-                case PlayerPosAndLookPacket:
-                    throw new System.NotImplementedException();
-                case PlayerLookPacket:
-                    throw new System.NotImplementedException();
-                case EntityActionPacket:
-                    throw new System.NotImplementedException();
+                case PlayerPacket playerPacket:
+                    {
+                        Control(playerPacket.OnGround);
+                    }
+                    break;
+                case PlayerPositionPacket playerPositionPacket:
+                    {
+                        Vector p = new(
+                            playerPositionPacket.X, 
+                            playerPositionPacket.Y, 
+                            playerPositionPacket.Z);
+                        Control(p, playerPositionPacket.OnGround);
+                    }
+                    break;
+                case PlayerPosAndLookPacket playerPosAndLookPacket:
+                    {
+                        Vector p = new(
+                            playerPosAndLookPacket.X,
+                            playerPosAndLookPacket.Y,
+                            playerPosAndLookPacket.Z);
+                        Look look = new Look(playerPosAndLookPacket.Yaw, playerPosAndLookPacket.Pitch);
+
+                        Control(p, playerPosAndLookPacket.OnGround);
+                        Rotate(look);
+                    }
+                    break;
+                case PlayerLookPacket playerLookPacket:
+                    {
+                        Look look = new Look(playerLookPacket.Yaw, playerLookPacket.Pitch);
+                        
+                        Control(playerLookPacket.OnGround);
+                        Rotate(look);
+                    }
+                    break;
+                case EntityActionPacket entityActionPacket:
+                    switch (entityActionPacket.ActionId)
+                    {
+                        default:
+                            throw new System.NotImplementedException();
+                        case 0:
+                            Sneak();
+                            break;
+                        case 1:
+                            Unsneak();
+                            break;
+                        case 3:
+                            Sprint();
+                            break;
+                        case 4:
+                            Unsprint();
+                            break;
+                    }
+                    break;
             }
         }
 
@@ -504,7 +558,10 @@ namespace MinecraftServerEngine
 
                 using Queue<ServerboundPlayingPacket> controls = new();
 
-                _CONN.Control(controls, world, UniqueId, Sneaking, Sprinting, _selfInventory);
+                _CONN.Control(
+                    controls, 
+                    world, 
+                    UniqueId, Sneaking, Sprinting, _selfInventory);
 
                 while (!controls.Empty)
                 {

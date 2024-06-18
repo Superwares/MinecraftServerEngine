@@ -1000,7 +1000,7 @@ namespace MinecraftServerEngine
                         ClickWindowPacket packet = ClickWindowPacket.Read(buffer);
 
                         {
-                            Console.Printl();
+                            Console.NewLine();
                             Console.Printl(
                                 $"WindowId: {packet.WINDOW_ID}, " +
                                 $"SlotNumber: {packet.SLOT}, " +
@@ -1230,7 +1230,7 @@ namespace MinecraftServerEngine
                 {
                     // TODO: send disconnected message to client.
 
-                    Console.Printl(e.Message);
+                    Console.Printl($"UnexpectedClientBehaviorExecption's Message: {e.Message}");
 
                     throw new DisconnectedClientException();
                 }
