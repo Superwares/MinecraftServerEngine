@@ -67,8 +67,8 @@ namespace MinecraftPhysicsEngine
         {
             private static Grid Generate(AxisAlignedBoundingBox aabb)
             {
-                Cell max = Cell.Generate(aabb._max),
-                     min = Cell.Generate(aabb._min);
+                Cell max = Cell.Generate(aabb.Max),
+                     min = Cell.Generate(aabb.Min);
 
                 return new(max, min);
             }
@@ -172,11 +172,14 @@ namespace MinecraftPhysicsEngine
 
         }
 
-
         private bool _disposed = false;
 
         private readonly Table<Cell, Tree<PhysicsObject>> _CELL_TO_OBJECTS = new();  // Disposable
         private readonly Table<PhysicsObject, Grid> _OBJECT_TO_GRID = new();  // Disposable
+
+        public PhysicsWorld() { }
+
+        ~PhysicsWorld() => System.Diagnostics.Debug.Assert(false);
 
         public abstract void GetTerrain(Terrain terrain);
 
