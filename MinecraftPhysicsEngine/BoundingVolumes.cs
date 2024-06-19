@@ -2,72 +2,70 @@
 
 namespace PhysicsEngine
 {
-    
-
-    public interface BoundingVolume
+    public abstract class BoundingVolume
     {
-        BoundingVolume Extend(Vector v);
-        BoundingVolume Move(Vector v);
+        internal abstract BoundingVolume Extend(Vector v);
+        internal abstract BoundingVolume Move(Vector v);
 
-        Vector GetCenter();
-        Vector GetBottomCenter();
+        internal abstract Vector GetCenter();
+        internal abstract Vector GetBottomCenter();
 
-        BoundingVolume GetMinBoundingVolume();
-        BoundingVolume GetMinBoundingVolume(Vector v);
+        internal abstract BoundingVolume GetMinBoundingVolume();
+        internal abstract BoundingVolume GetMinBoundingVolume(Vector v);
 
-        bool TestIntersection(BoundingVolume volume);
-        bool TestIntersection(BoundingVolume volumeMoving, Vector v);
+        internal abstract bool TestIntersection(BoundingVolume volume);
+        internal abstract bool TestIntersection(BoundingVolume volume, Vector v);
 
-        Vector AdjustMovingVolumeUpAndDown(BoundingVolume volume, Vector v);
-        Vector AdjustMovingVolumeSideToSide(BoundingVolume volume, Vector v);
+        internal abstract Vector AdjustMovingVolumeUpAndDown(BoundingVolume volume, Vector v);
+        internal abstract Vector AdjustMovingVolumeSideToSide(BoundingVolume volume, Vector v);
 
     }
 
-    public readonly struct EmptyBoundingVolume : BoundingVolume
+    public sealed class EmptyBoundingVolume : BoundingVolume
     {
         public EmptyBoundingVolume() { }
 
-        public readonly BoundingVolume Extend(Vector v)
+        internal override BoundingVolume Extend(Vector v)
         {
             return this;
         }
 
-        public readonly BoundingVolume Move(Vector v)
+        internal override BoundingVolume Move(Vector v)
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly Vector GetCenter()
+        internal override Vector GetCenter()
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly Vector GetBottomCenter()
+        internal override Vector GetBottomCenter()
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly BoundingVolume GetMinBoundingVolume()
+        internal override BoundingVolume GetMinBoundingVolume()
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly BoundingVolume GetMinBoundingVolume(Vector v)
+        internal override  BoundingVolume GetMinBoundingVolume(Vector v)
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly bool TestIntersection(BoundingVolume volume)
+        internal override  bool TestIntersection(BoundingVolume volume)
         {
             return false;
         }
 
-        public readonly bool TestIntersection(BoundingVolume volume, Vector v)
+        internal override bool TestIntersection(BoundingVolume volume, Vector v)
         {
             return false;
         }
 
-        public readonly Vector AdjustMovingVolumeSideToSide(BoundingVolume volume, Vector v)
+        internal override Vector AdjustMovingVolumeUpAndDown(BoundingVolume volume, Vector v)
         {
             if (!TestIntersection(volume))
             {
@@ -77,7 +75,7 @@ namespace PhysicsEngine
             return v;
         }
 
-        public readonly Vector AdjustMovingVolumeUpAndDown(BoundingVolume volume, Vector v)
+        internal override Vector AdjustMovingVolumeSideToSide(BoundingVolume volume, Vector v)
         {
             if (!TestIntersection(volume))
             {
@@ -89,7 +87,7 @@ namespace PhysicsEngine
 
     }
 
-    public readonly struct AxisAlignedBoundingBox : BoundingVolume
+    public sealed class AxisAlignedBoundingBox : BoundingVolume
     {
 
         public readonly Vector Max, Min;
@@ -104,37 +102,37 @@ namespace PhysicsEngine
             this.Min = min;
         }
 
-        public readonly BoundingVolume Extend(Vector v)
+        internal override BoundingVolume Extend(Vector v)
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly BoundingVolume Move(Vector v)
+        internal override BoundingVolume Move(Vector v)
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly Vector GetCenter()
+        internal override Vector GetCenter()
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly Vector GetBottomCenter()
+        internal override Vector GetBottomCenter()
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly BoundingVolume GetMinBoundingVolume()
+        internal override BoundingVolume GetMinBoundingVolume()
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly BoundingVolume GetMinBoundingVolume(Vector v)
+        internal override BoundingVolume GetMinBoundingVolume(Vector v)
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly bool TestIntersection(BoundingVolume volume)
+        internal override bool TestIntersection(BoundingVolume volume)
         {
             if (volume is AxisAlignedBoundingBox aabb)
             {
@@ -148,7 +146,7 @@ namespace PhysicsEngine
             throw new System.NotImplementedException();
         }
 
-        public readonly bool TestIntersection(BoundingVolume volume, Vector v)
+        internal override bool TestIntersection(BoundingVolume volume, Vector v)
         {
             if (volume is AxisAlignedBoundingBox aabb)
             {
@@ -162,9 +160,9 @@ namespace PhysicsEngine
             throw new System.NotImplementedException();
         }
 
-        internal readonly Vector AdjustMovingVolumeSideToSide(BoundingVolume other, Vector v)
+        internal override Vector AdjustMovingVolumeUpAndDown(BoundingVolume volume, Vector v)
         {
-            if (!TestIntersection(other))
+            if (!TestIntersection(volume, v))
             {
                 return v;
             }
@@ -172,9 +170,9 @@ namespace PhysicsEngine
             throw new System.NotImplementedException();
         }
 
-        internal readonly Vector AdjustMovingVolumeUpAndDown(BoundingVolume other, Vector v)
+        internal override Vector AdjustMovingVolumeSideToSide(BoundingVolume volume, Vector v)
         {
-            if (!TestIntersection(other))
+            if (!TestIntersection(volume, v))
             {
                 return v;
             }
@@ -184,19 +182,17 @@ namespace PhysicsEngine
 
     }
 
-    /*public readonly struct OrientedBoundingBox 
-     * : BoundingVolume
+    /*public sealed class OrientedBoundingBox : BoundingVolume
     {
 
     }*/
 
-    /*public readonly struct BoundingSphere 
-     * : BoundingVolume
+    /*public sealed class BoundingSphere : BoundingVolume
     {
 
     }*/
 
-    public readonly struct CompoundBoundingVolume : BoundingVolume
+    public sealed class CompoundBoundingVolume : BoundingVolume
     {
 
         public readonly BoundingVolume[] Volumes;
@@ -207,37 +203,37 @@ namespace PhysicsEngine
             Volumes = volumes;
         }
 
-        public readonly BoundingVolume Extend(Vector v)
+        internal override  BoundingVolume Extend(Vector v)
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly BoundingVolume Move(Vector v)
+        internal override  BoundingVolume Move(Vector v)
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly Vector GetCenter()
+        internal override  Vector GetCenter()
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly Vector GetBottomCenter()
+        internal override  Vector GetBottomCenter()
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly BoundingVolume GetMinBoundingVolume()
+        internal override  BoundingVolume GetMinBoundingVolume()
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly BoundingVolume GetMinBoundingVolume(Vector v)
+        internal override  BoundingVolume GetMinBoundingVolume(Vector v)
         {
             throw new System.NotImplementedException();
         }
 
-        public readonly bool TestIntersection(BoundingVolume volume)
+        internal override  bool TestIntersection(BoundingVolume volume)
         {
             if (volume is AxisAlignedBoundingBox aabb)
             {
@@ -251,7 +247,7 @@ namespace PhysicsEngine
             throw new System.NotImplementedException();     
         }
 
-        public readonly bool TestIntersection(BoundingVolume volume, Vector v)
+        internal override  bool TestIntersection(BoundingVolume volume, Vector v)
         {
             if (volume is AxisAlignedBoundingBox aabb)
             {
@@ -265,9 +261,9 @@ namespace PhysicsEngine
             throw new System.NotImplementedException();
         }
 
-        internal readonly Vector AdjustMovingVolumeSideToSide(BoundingVolume volumeMoving, Vector v)
+        internal override  Vector AdjustMovingVolumeUpAndDown(BoundingVolume volume, Vector v)
         {
-            if (!TestIntersection(volumeMoving))
+            if (!TestIntersection(volume, v))
             {
                 return v;
             }
@@ -275,9 +271,9 @@ namespace PhysicsEngine
             throw new System.NotImplementedException();
         }
 
-        internal readonly Vector AdjustMovingVolumeUpAndDown(BoundingVolume volumeMoving, Vector v)
+        internal override  Vector AdjustMovingVolumeSideToSide(BoundingVolume volume, Vector v)
         {
-            if (!TestIntersection(volumeMoving))
+            if (!TestIntersection(volume, v))
             {
                 return v;
             }

@@ -18,11 +18,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinecraftServerEngine", "MinecraftServerEngine\MinecraftServerEngine.csproj", "{B3EE03EE-628A-49B7-B423-D1D659DDDBE0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestServerApplication", "TestServerApplication\TestServerApplication.csproj", "{EFB87400-0C04-47AE-9714-188293F097BD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestMinecraftServerApplication", "TestServerApplication\TestMinecraftServerApplication.csproj", "{EFB87400-0C04-47AE-9714-188293F097BD}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sync", "Sync\Sync.csproj", "{93AE19C4-CF9B-4F07-933C-41365EEB3A59}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhysicsEngine", "PhysicsEngine\PhysicsEngine.csproj", "{6FCB6E08-15BB-481D-BA19-836D91E3069A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinecraftPhysicsEngine", "MinecraftPhysicsEngine\MinecraftPhysicsEngine.csproj", "{D93AE714-0714-41A3-9246-69A9333F0E39}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -54,10 +54,10 @@ Global
 		{93AE19C4-CF9B-4F07-933C-41365EEB3A59}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{93AE19C4-CF9B-4F07-933C-41365EEB3A59}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{93AE19C4-CF9B-4F07-933C-41365EEB3A59}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6FCB6E08-15BB-481D-BA19-836D91E3069A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6FCB6E08-15BB-481D-BA19-836D91E3069A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6FCB6E08-15BB-481D-BA19-836D91E3069A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6FCB6E08-15BB-481D-BA19-836D91E3069A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D93AE714-0714-41A3-9246-69A9333F0E39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D93AE714-0714-41A3-9246-69A9333F0E39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D93AE714-0714-41A3-9246-69A9333F0E39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D93AE714-0714-41A3-9246-69A9333F0E39}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

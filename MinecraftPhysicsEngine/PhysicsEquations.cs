@@ -3,7 +3,8 @@ namespace PhysicsEngine
 {
     internal static class PhysicsEquations
     {
-        public static bool IsNonOverlappingRanges(double max1, double min1, double max2, double min2)
+        public static bool IsNonOverlappingRanges(
+            double max1, double min1, double max2, double min2)
         {
             System.Diagnostics.Debug.Assert(max1 > min1);
             System.Diagnostics.Debug.Assert(max2 > min2);
