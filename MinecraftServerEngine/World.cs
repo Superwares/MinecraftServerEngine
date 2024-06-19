@@ -1,6 +1,6 @@
 ﻿using Common;
 using Containers;
-using PhysicsEngine;
+using MinecraftPhysicsEngine;
 
 namespace MinecraftServerEngine
 {
@@ -185,7 +185,7 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(ReferenceEquals(playerExtracted, player));
             }
 
-            CloseObjectMapping(entity);
+            CloseObject(entity);
 
             entity.Flush();
             entity.Dispose();
@@ -262,7 +262,6 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             MoveObject(entity);
-            UpdateObjectMapping(entity);
         }
 
         public void MoveEntities()
@@ -324,7 +323,7 @@ namespace MinecraftServerEngine
 
                     System.Diagnostics.Debug.Assert(entity is not Player);
 
-                    InitObjectMapping(entity);
+                    InitObject(entity);
 
                     Entities.Enqueue(entity);
                 } while (true);
@@ -353,7 +352,7 @@ namespace MinecraftServerEngine
             {
                 player = CreatePlayer(userId);
 
-                InitObjectMapping(player);
+                InitObject(player);
 
                 PlayerList.Add(userId, username);
             }

@@ -1,6 +1,6 @@
 ﻿using Common;
 
-namespace PhysicsEngine
+namespace MinecraftPhysicsEngine
 {
     public readonly struct Vector : System.IEquatable<Vector>
     {

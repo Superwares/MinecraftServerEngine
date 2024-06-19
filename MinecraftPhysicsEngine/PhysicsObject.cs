@@ -2,7 +2,7 @@
 using Containers;
 using Sync;
 
-namespace PhysicsEngine
+namespace MinecraftPhysicsEngine
 {
     public abstract class PhysicsObject : System.IDisposable
     {

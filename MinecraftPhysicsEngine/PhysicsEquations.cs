@@ -1,5 +1,5 @@
 ﻿
-namespace PhysicsEngine
+namespace MinecraftPhysicsEngine
 {
     internal static class PhysicsEquations
     {

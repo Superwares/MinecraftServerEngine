@@ -2,7 +2,7 @@
 
 using Common;
 
-namespace PhysicsEngine
+namespace PhysicMinecraftPhysicsEnginesEngine
 {
     internal static class IntersectionTests
     {

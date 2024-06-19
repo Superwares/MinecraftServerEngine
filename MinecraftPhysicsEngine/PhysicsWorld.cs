@@ -1,9 +1,10 @@
 ﻿
 
 using Containers;
+using MinecraftPhysicsEngine;
 using Sync;
 
-namespace PhysicsEngine
+namespace MinecraftPhysicsEngine
 {
     public abstract class PhysicsWorld : System.IDisposable
     {
@@ -66,8 +67,8 @@ namespace PhysicsEngine
         {
             private static Grid Generate(AxisAlignedBoundingBox aabb)
             {
-                Cell max = Cell.Generate(aabb.Max),
-                     min = Cell.Generate(aabb.Min);
+                Cell max = Cell.Generate(aabb._max),
+                     min = Cell.Generate(aabb._min);
 
                 return new(max, min);
             }
@@ -177,7 +178,7 @@ namespace PhysicsEngine
         private readonly Table<Cell, Tree<PhysicsObject>> _CELL_TO_OBJECTS = new();  // Disposable
         private readonly Table<PhysicsObject, Grid> _OBJECT_TO_GRID = new();  // Disposable
 
-        public abstract BoundingVolume[] GetTerrainBoundingVolumes(BoundingVolume volume);
+        public abstract void GetTerrain(Terrain terrain);
 
         public Tree<PhysicsObject> GetPhysicsObjects(BoundingVolume volume)
         {
@@ -218,7 +219,7 @@ namespace PhysicsEngine
             }
         }
 
-        public void InitObjectMapping(PhysicsObject obj)
+        private void InitObjectMapping(PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -232,7 +233,7 @@ namespace PhysicsEngine
             _OBJECT_TO_GRID.Insert(obj, grid);
         }
 
-        public void CloseObjectMapping(PhysicsObject obj)
+        private void CloseObjectMapping(PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -245,7 +246,7 @@ namespace PhysicsEngine
             }
         }
 
-        public void UpdateObjectMapping(PhysicsObject obj)
+        private void UpdateObjectMapping(PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -282,65 +283,37 @@ namespace PhysicsEngine
             _OBJECT_TO_GRID.Insert(obj, grid);
         }
 
+        public void InitObject(PhysicsObject obj)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            InitObjectMapping(obj);
+        }
+
+        public void CloseObject(PhysicsObject obj)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            CloseObjectMapping(obj);
+        }
+
         public void MoveObject(PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            (BoundingVolume volumeMoving, Vector v) = obj.Integrate();
+            (BoundingVolume volume, Vector v) = obj.Integrate();
 
-            BoundingVolume volumeTotal = volumeMoving.GetMinBoundingVolume(v);
-            BoundingVolume[] fixedVolumes = GetTerrainBoundingVolumes(volumeTotal);
+            AxisAlignedBoundingBox minBoundingBox = volume.GetMinBoundingBox();
+            minBoundingBox.Extend(v);
 
-            int i;
+            using Terrain terrain = new(minBoundingBox);
+            GetTerrain(terrain);
 
-            Vector vPrime1 = v;
-            {
-                for (i = 0; i < fixedVolumes.Length; ++i)
-                {
-                    BoundingVolume volumeFixed = fixedVolumes[i];
-                    vPrime1 = volumeFixed.AdjustMovingVolumeSideToSide(volumeMoving, vPrime1);
-                }
+            (v, bool onGround) = terrain.AdjustVolumeMovement(volume, v);
 
-                for (i = 0; i < fixedVolumes.Length; ++i)
-                {
-                    BoundingVolume volumeFixed = fixedVolumes[i];
-                    vPrime1 = volumeFixed.AdjustMovingVolumeUpAndDown(volumeMoving, vPrime1);
-                }
-            }
+            obj.Move(volume, v, onGround);
 
-            Vector vPrime2 = v;
-            {
-                for (i = 0; i < fixedVolumes.Length; ++i)
-                {
-                    BoundingVolume volumeFixed = fixedVolumes[i];
-                    vPrime2 = volumeFixed.AdjustMovingVolumeUpAndDown(volumeMoving, vPrime2);
-                }
-
-                for (i = 0; i < fixedVolumes.Length; ++i)
-                {
-                    BoundingVolume volumeFixed = fixedVolumes[i];
-                    vPrime2 = volumeFixed.AdjustMovingVolumeSideToSide(volumeMoving, vPrime2);
-                }
-            }
-
-            Vector vPrime3 = new(vPrime1.X, 0.0D, vPrime1.Z), 
-                   vPrime4 = new(vPrime2.X, 0.0D, vPrime2.Z);
-
-            double lenSquared3 = vPrime3.GetLengthSquared(), lenSquared4 = vPrime4.GetLengthSquared();
-            System.Diagnostics.Debug.Assert(lenSquared3 <= lenSquared4);
-            Vector vPrime5 = (lenSquared3 == lenSquared4) ? vPrime1 : vPrime2;
-
-            bool movedUpAndDown = vPrime5.Y != v.Y;
-            bool onGround = v.Y < 0.0D && movedUpAndDown;
-
-            volumeMoving = volumeMoving.Move(vPrime5);
-
-            v = new(
-                vPrime5.X != v.X ? 0.0D : vPrime5.X,
-                movedUpAndDown ? 0.0D : vPrime5.Y,
-                vPrime5.Z != v.Z ? 0.0D : vPrime5.Z);
-
-            obj.Move(volumeMoving, v, onGround);
+            UpdateObjectMapping(obj);
         }
 
         public virtual void Dispose()
