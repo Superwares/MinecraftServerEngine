@@ -1,5 +1,4 @@
 ﻿
-using PhysicsEngine;
 using Containers;
 
 namespace MinecraftPhysicsEngine
@@ -27,57 +26,76 @@ namespace MinecraftPhysicsEngine
             BoundingBoxes.Enqueue(aabb);
         }
 
-        internal (Vector, bool) AdjustVolumeMovement(BoundingVolume volume, Vector v)
+        private (Vector, bool) ResolveCollisions(BoundingVolume volume, Vector v, bool onGround)
         {
+            int axis = -1;
+            double t = double.PositiveInfinity;
 
-            Vector vPrime1 = v;
-            foreach (AxisAlignedBoundingBox aabbFixed in BoundingBoxes.GetValues())
+            int a;
+            double b;
+            foreach (AxisAlignedBoundingBox aabb in BoundingBoxes.GetValues())
             {
-                vPrime1 = aabbFixed.AdjustMovingVolumeSideToSide(volume, vPrime1);
+                (a, b) = aabb.ResolveCollision(volume, v);
+
+                System.Diagnostics.Debug.Assert(t >= 0.0D);
+                if (a > -1 && b < t)
+                {
+                    System.Diagnostics.Debug.Assert(b <= 1.0D);
+                    System.Diagnostics.Debug.Assert(b >= 0.0D);
+                    System.Diagnostics.Debug.Assert(a < 3);
+
+                    axis = a;
+                    t = b;
+                }
             }
 
-            foreach (AxisAlignedBoundingBox aabbFixed in BoundingBoxes.GetValues())
+            if (axis == -1)
             {
-                vPrime1 = aabbFixed.AdjustMovingVolumeUpAndDown(volume, vPrime1);
+                volume.Move(v);
+                return (v, onGround);
             }
 
-            Vector vPrime2 = v;
-            foreach (AxisAlignedBoundingBox aabbFixed in BoundingBoxes.GetValues())
+            bool movedDown = v.Y < 0.0D;
+
+            System.Diagnostics.Debug.Assert(axis < 3);
+            System.Diagnostics.Debug.Assert(t <= 1.0D);
+            System.Diagnostics.Debug.Assert(t >= 0.0D);
+            Vector vPrime = v * (1 - t);
+
+            v = v * t;
+            volume.Move(v);
+
+            if (axis == 0)  // X
             {
-                vPrime2 = aabbFixed.AdjustMovingVolumeUpAndDown(volume, vPrime2);
+                vPrime = new Vector(0.0D, vPrime.Y, vPrime.Z);
+            }
+            else if (axis == 1)  // Y
+            {
+                if (movedDown)
+                {
+                    onGround = true;
+                }
+
+                vPrime = new Vector(vPrime.X, 0.0D, vPrime.Z);
+            }
+            else if (axis == 2)  // Z
+            {
+                vPrime = new Vector(vPrime.X, vPrime.Y, 0.0D);
+            }
+            else
+            {
+                System.Diagnostics.Debug.Assert(false);
             }
 
-            foreach (AxisAlignedBoundingBox aabbFixed in BoundingBoxes.GetValues())
-            {
-                vPrime2 = aabbFixed.AdjustMovingVolumeUpAndDown(volume, vPrime2);
-            }
-
-            Vector vPrime3 = new(vPrime1.X, 0.0D, vPrime1.Z),
-                   vPrime4 = new(vPrime2.X, 0.0D, vPrime2.Z);
-
-            double lenSquared3 = vPrime3.GetLengthSquared(), lenSquared4 = vPrime4.GetLengthSquared();
-            System.Diagnostics.Debug.Assert(lenSquared3 <= lenSquared4);
-            Vector vPrime5 = (lenSquared3 == lenSquared4) ? vPrime1 : vPrime2;
-
-            bool movedUpAndDown = vPrime5.Y != v.Y;
-            bool onGround = v.Y < 0.0D && movedUpAndDown;
-
-            volume.Move(vPrime5);
-
-            v = new(
-                vPrime5.X != v.X ? 0.0D : vPrime5.X,
-                movedUpAndDown ? 0.0D : vPrime5.Y,
-                vPrime5.Z != v.Z ? 0.0D : vPrime5.Z);
-
-            return (v, onGround);
+            return ResolveCollisions(volume, vPrime, onGround);
         }
 
-        public Vector AdjustMovingVolumeUpAndDown(BoundingVolume volume, Vector v)
+        internal (Vector, bool) ResolveCollisions(BoundingVolume volume, Vector v)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
 
+            return ResolveCollisions(volume, v, false);
         }
-
-        internal abstract Vector AdjustMovingVolumeSideToSide(BoundingVolume volume, Vector v);
 
         public void Dispose()
         {
@@ -91,5 +109,6 @@ namespace MinecraftPhysicsEngine
             System.GC.SuppressFinalize(this);
             _disposed = true;
         }
+
     }
 }

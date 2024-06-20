@@ -2,7 +2,7 @@
 
 using Common;
 
-namespace PhysicMinecraftPhysicsEnginesEngine
+namespace MinecraftPhysicsEngine
 {
     internal static class IntersectionTests
     {
@@ -10,11 +10,11 @@ namespace PhysicMinecraftPhysicsEnginesEngine
         public static bool TestFixedAndFixed(
             AxisAlignedBoundingBox aabb1, AxisAlignedBoundingBox aabb2)
         {
-            return !PhysicsEquations.IsNonOverlappingRanges(
+            return !Equations.IsNonOverlappingRanges(
                     aabb1.Max.X, aabb1.Min.X, aabb2.Max.X, aabb2.Min.X) &&
-                !PhysicsEquations.IsNonOverlappingRanges(
+                !Equations.IsNonOverlappingRanges(
                     aabb1.Max.Y, aabb1.Min.Y, aabb2.Max.Y, aabb2.Min.Y) &&
-                !PhysicsEquations.IsNonOverlappingRanges(
+                !Equations.IsNonOverlappingRanges(
                     aabb1.Max.Z, aabb1.Min.Z, aabb2.Max.Z, aabb2.Min.Z);
         }
 
@@ -52,7 +52,7 @@ namespace PhysicMinecraftPhysicsEnginesEngine
             return false;
         }
 
-        public static bool TestFixedAndMoving(
+        /*public static bool TestFixedAndMoving(
             AxisAlignedBoundingBox aabb1,
             AxisAlignedBoundingBox aabb2, Vector v)
         {
@@ -63,15 +63,15 @@ namespace PhysicMinecraftPhysicsEnginesEngine
             
             double t = 0.0D, tPrime = 1.0D;
 
-            return PhysicsEquations.FindOverlapInterval(
+            return Equations.F1(
                     aabb1.Max.X, aabb1.Min.X, 
                     aabb2.Max.X, aabb2.Min.X, v.X,
                     ref t, ref tPrime) &&
-                PhysicsEquations.FindOverlapInterval(
+                Equations.F1(
                     aabb1.Max.Y, aabb1.Min.Y, 
                     aabb2.Max.Y, aabb2.Min.Y, v.Y,
                     ref t, ref tPrime) && 
-                PhysicsEquations.FindOverlapInterval(
+                Equations.F1(
                     aabb1.Max.Z, aabb1.Min.Z, 
                     aabb2.Max.Z, aabb2.Min.Z, v.Z,
                     ref t, ref tPrime);
@@ -120,6 +120,6 @@ namespace PhysicMinecraftPhysicsEnginesEngine
             }
 
             return false;
-        }
+        }*/
     }
 }

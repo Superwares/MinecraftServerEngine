@@ -13,6 +13,7 @@ namespace MinecraftPhysicsEngine
         public abstract AxisAlignedBoundingBox GetMinBoundingBox();
 
         public abstract bool TestIntersection(BoundingVolume volume);
+        public abstract bool TestIntersection(BoundingVolume volume, Vector v);
 
     }
 
@@ -71,7 +72,7 @@ namespace MinecraftPhysicsEngine
             throw new System.NotImplementedException();
         }
 
-        /*public override bool TestIntersection(BoundingVolume volume, Vector v)
+        public override bool TestIntersection(BoundingVolume volume, Vector v)
         {
             if (volume is AxisAlignedBoundingBox aabb)
             {
@@ -83,7 +84,21 @@ namespace MinecraftPhysicsEngine
             }
 
             throw new System.NotImplementedException();
-        }*/
+        }
+
+        internal (int, double) ResolveCollision(BoundingVolume volume, Vector v)
+        {
+            if (volume is AxisAlignedBoundingBox aabb)
+            {
+                return Collisions.Resolve(this, aabb, v);
+            }
+            else if (volume is CompoundBoundingVolume cbv)
+            {
+                return Collisions.Resolve(this, cbv, v);
+            }
+
+            throw new System.NotImplementedException();
+        }
 
     }
 
@@ -146,7 +161,7 @@ namespace MinecraftPhysicsEngine
             throw new System.NotImplementedException();     
         }
 
-        /*public override  bool TestIntersection(BoundingVolume volume, Vector v)
+        public override bool TestIntersection(BoundingVolume volume, Vector v)
         {
             if (volume is AxisAlignedBoundingBox aabb)
             {
@@ -158,7 +173,7 @@ namespace MinecraftPhysicsEngine
             }
 
             throw new System.NotImplementedException();
-        }*/
+        }
 
     }
 

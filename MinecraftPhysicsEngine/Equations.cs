@@ -1,7 +1,7 @@
 ﻿
 namespace MinecraftPhysicsEngine
 {
-    internal static class PhysicsEquations
+    internal static class Equations
     {
         public static bool IsNonOverlappingRanges(
             double max1, double min1, double max2, double min2)
@@ -12,7 +12,69 @@ namespace MinecraftPhysicsEngine
             return (max1 < min2 || max2 < min1);
         }
 
-        public static bool FindOverlapInterval(
+        public static (bool, bool) F1(
+            double max1, double min1,
+            double max2, double min2, double v,
+            ref double t, ref double tPrime)
+        {
+            System.Diagnostics.Debug.Assert(max1 > min1);
+            System.Diagnostics.Debug.Assert(max2 > min2);
+
+            System.Diagnostics.Debug.Assert(t <= tPrime);
+
+            bool changed = false;
+            double x;
+            if (v < 0.0D)
+            {
+                if (max2 <= min1)
+                {
+                    return (false, false);
+                }
+
+                x = (max1 - min2) / v;
+                if (x > t)
+                {
+                    t = x;
+
+                    changed = true;
+                }
+
+                tPrime = System.Math.Min((min1 - max2) / v, tPrime);
+            }
+            else if (v > 0.0D)
+            {
+                if (max1 <= min2)
+                {
+                    return (false, false);
+                }
+
+                x = (min1 - max2) / v;
+                if (x > t)
+                {
+                    t = x;
+
+                    changed = true;
+                }
+
+                tPrime = System.Math.Min((max1 - min2) / v, tPrime);
+            }
+            else
+            {
+                System.Diagnostics.Debug.Assert(!changed);
+                if (max1 <= min2 || max2 <= min1)
+                {
+                    return (false, false);
+                }
+                else
+                {
+                    return (true, false);
+                }
+            }
+
+            return (t <= tPrime, changed);
+        }
+
+        /*public static bool FindOverlapInterval(
             double max1, double min1,
             double max2, double min2, double v,
             ref double t, ref double tPrime)
@@ -63,6 +125,6 @@ namespace MinecraftPhysicsEngine
             }
 
             return (t <= tPrime);
-        }
+        }*/
     }
 }

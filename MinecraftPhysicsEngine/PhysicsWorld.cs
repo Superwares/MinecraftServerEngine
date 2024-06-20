@@ -312,7 +312,7 @@ namespace MinecraftPhysicsEngine
             using Terrain terrain = new(minBoundingBox);
             GetTerrain(terrain);
 
-            (v, bool onGround) = terrain.AdjustVolumeMovement(volume, v);
+            (v, bool onGround) = terrain.ResolveCollisions(volume, v);
 
             obj.Move(volume, v, onGround);
 
