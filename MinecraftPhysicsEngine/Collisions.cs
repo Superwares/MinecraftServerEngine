@@ -21,8 +21,8 @@ namespace MinecraftPhysicsEngine
 
             int axis = -1;
 
-            bool collided, changed;
-            (collided, changed) = Equations.F1(
+            bool collided, updated;
+            (collided, updated) = Equations.FindCollisionInterval(
                 aabb1.Max.X, aabb1.Min.X,
                 aabb2.Max.X, aabb2.Min.X, v.X,
                 ref t, ref tPrime);
@@ -34,12 +34,12 @@ namespace MinecraftPhysicsEngine
 
             System.Diagnostics.Debug.Assert(t <= tPrime);
 
-            if (changed)
+            if (updated)
             {
                 axis = 0;
             }
 
-            (collided, changed) = Equations.F1(
+            (collided, updated) = Equations.FindCollisionInterval(
                 aabb1.Max.Y, aabb1.Min.Y,
                 aabb2.Max.Y, aabb2.Min.Y, v.Y,
                 ref t, ref tPrime);
@@ -51,12 +51,12 @@ namespace MinecraftPhysicsEngine
 
             System.Diagnostics.Debug.Assert(t <= tPrime);
 
-            if (changed)
+            if (updated)
             {
                 axis = 1;
             }
 
-            (collided, changed) = Equations.F1(
+            (collided, updated) = Equations.FindCollisionInterval(
                 aabb1.Max.Z, aabb1.Min.Z,
                 aabb2.Max.Z, aabb2.Min.Z, v.Z,
                 ref t, ref tPrime);
@@ -68,7 +68,7 @@ namespace MinecraftPhysicsEngine
 
             System.Diagnostics.Debug.Assert(t <= tPrime);
 
-            if (changed)
+            if (updated)
             {
                 axis = 2;
             }

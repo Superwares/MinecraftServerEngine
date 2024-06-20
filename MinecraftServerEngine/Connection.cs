@@ -1,6 +1,6 @@
 ﻿using Common;
 using Containers;
-using PhysicsEngine;
+using MinecraftPhysicsEngine;
 using Sync;
 
 namespace MinecraftServerEngine

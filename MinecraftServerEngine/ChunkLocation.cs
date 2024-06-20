@@ -1,7 +1,7 @@
 ﻿
 
 using Common;
-using PhysicsEngine;
+using MinecraftPhysicsEngine;
 
 namespace MinecraftServerEngine
 {

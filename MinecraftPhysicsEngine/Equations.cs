@@ -12,7 +12,7 @@ namespace MinecraftPhysicsEngine
             return (max1 < min2 || max2 < min1);
         }
 
-        public static (bool, bool) F1(
+        public static (bool, bool) FindCollisionInterval(
             double max1, double min1,
             double max2, double min2, double v,
             ref double t, ref double tPrime)
@@ -22,7 +22,7 @@ namespace MinecraftPhysicsEngine
 
             System.Diagnostics.Debug.Assert(t <= tPrime);
 
-            bool changed = false;
+            bool updated = false;
             double x;
             if (v < 0.0D)
             {
@@ -36,7 +36,7 @@ namespace MinecraftPhysicsEngine
                 {
                     t = x;
 
-                    changed = true;
+                    updated = true;
                 }
 
                 tPrime = System.Math.Min((min1 - max2) / v, tPrime);
@@ -53,14 +53,14 @@ namespace MinecraftPhysicsEngine
                 {
                     t = x;
 
-                    changed = true;
+                    updated = true;
                 }
 
                 tPrime = System.Math.Min((max1 - min2) / v, tPrime);
             }
             else
             {
-                System.Diagnostics.Debug.Assert(!changed);
+                System.Diagnostics.Debug.Assert(!updated);
                 if (max1 <= min2 || max2 <= min1)
                 {
                     return (false, false);
@@ -71,7 +71,7 @@ namespace MinecraftPhysicsEngine
                 }
             }
 
-            return (t <= tPrime, changed);
+            return (t <= tPrime, updated);
         }
 
         /*public static bool FindOverlapInterval(
