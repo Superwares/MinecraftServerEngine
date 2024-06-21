@@ -199,9 +199,15 @@ namespace Containers
 
             Locker.Hold();
 
-            T v = base.Dequeue();
-
-            Locker.Release();
+            T v;
+            try
+            {
+                v = base.Dequeue();
+            }
+            finally
+            {
+                Locker.Release();
+            }
 
             return v;
         }

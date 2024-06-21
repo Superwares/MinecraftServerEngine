@@ -507,7 +507,7 @@ namespace Containers
     {
         private bool _disposed = false;
 
-        private readonly ReadLocker _MUTEX = new();
+        private readonly ReadLocker Locker = new();
 
         public ConcurrentMap() { }
 
@@ -523,11 +523,17 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Hold();
+            Locker.Hold();
 
-            base.Insert(key, value);
+            try
+            {
+                base.Insert(key, value);
+            }
+            finally
+            {
+                Locker.Release();
+            }
 
-            _MUTEX.Release();
         }
 
         /// <summary>
@@ -540,11 +546,17 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Hold();
+            Locker.Hold();
 
-            T v = base.Extract(key);
-
-            _MUTEX.Release();
+            T v;
+            try
+            {
+                v = base.Extract(key);
+            }
+            finally
+            {
+                Locker.Release();
+            }
 
             return v;
         }
@@ -559,11 +571,17 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Read();
+            Locker.Read();
 
-            T v = base.Lookup(key);
-
-            _MUTEX.Release();
+            T v;
+            try
+            {
+                v = base.Lookup(key);
+            }
+            finally
+            {
+                Locker.Release();
+            }
 
             return v;
         }
@@ -572,11 +590,11 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Read();
+            Locker.Read();
 
             bool f = base.Contains(key);
 
-            _MUTEX.Release();
+            Locker.Release();
 
             return f;
         }
@@ -585,11 +603,11 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Hold();
+            Locker.Hold();
 
             var ret = base.Flush();
 
-            _MUTEX.Release();
+            Locker.Release();
 
             return ret;
         }
@@ -604,7 +622,7 @@ namespace Containers
             System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
-            _MUTEX.Read();
+            Locker.Read();
 
             if (!Empty)
             {
@@ -625,7 +643,7 @@ namespace Containers
                 }
             }
 
-            _MUTEX.Release();
+            Locker.Release();
         }
 
         public new System.Collections.Generic.IEnumerable<K> GetKeys()
@@ -638,7 +656,7 @@ namespace Containers
             System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
-            _MUTEX.Read();
+            Locker.Read();
 
             if (!Empty)
             {
@@ -659,7 +677,7 @@ namespace Containers
                 }
             }
 
-            _MUTEX.Release();
+            Locker.Release();
         }
 
         public new System.Collections.Generic.IEnumerable<T> GetValues()
@@ -672,7 +690,7 @@ namespace Containers
             System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
-            _MUTEX.Read();
+            Locker.Read();
 
             if (!Empty)
             {
@@ -693,7 +711,7 @@ namespace Containers
                 }
             }
 
-            _MUTEX.Release();
+            Locker.Release();
         }
 
         public override void Dispose()
@@ -702,7 +720,7 @@ namespace Containers
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
-            _MUTEX.Dispose();
+            Locker.Dispose();
 
             // Finish.
             base.Dispose();

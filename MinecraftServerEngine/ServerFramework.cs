@@ -49,37 +49,37 @@ namespace MinecraftServerEngine
 
             Console.Print(".");
 
-            Console.Printl("StartPlayerRoutines!");
+            /*Console.Printl("StartPlayerRoutines!");*/
             _WORLD.StartPlayerRoutines(locker, cond, barrier, _ticks);
 
-            Console.Printl("HandlePlayerConnections!");
+            /*Console.Printl("HandlePlayerConnections!");*/
             _WORLD.HandlePlayerConnections(locker, cond, barrier, _ticks);
 
-            Console.Printl("DestroyEntities!");
+            /*Console.Printl("DestroyEntities!");*/
             _WORLD.DestroyEntities(locker, cond, barrier);
 
-            Console.Printl("DestroyPlayers!");
+            /*Console.Printl("DestroyPlayers!");*/
             _WORLD.DestroyPlayers(locker, cond, barrier);
 
-            Console.Printl("MoveEntities!");
+            /*Console.Printl("MoveEntities!");*/
             _WORLD.MoveEntities(locker, cond, barrier);
 
-            Console.Printl("MovePlayers");
+            /*Console.Printl("MovePlayers");*/
             _WORLD.MovePlayers(locker, cond, barrier);
 
-            Console.Printl("CreateEntities!");
+            /*Console.Printl("CreateEntities!");*/
             _WORLD.CreateEntities(locker, cond, barrier);
 
-            Console.Printl("Accept New Connections!");
+            /*Console.Printl("Create or Connect Players!");*/
             connListener.Accept(locker, cond, barrier, _WORLD);
                    
-            Console.Printl("HandlePlayerRenders!");
+            /*Console.Printl("HandlePlayerRenders!");*/
             _WORLD.HandlePlayerRenders(locker, cond, barrier);
 
-            Console.Printl("StartRoutine!");
+            /*Console.Printl("StartRoutine!");*/
             _WORLD.StartRoutine(locker, cond, barrier, _ticks);
 
-            Console.Printl("StartEntityRoutines!");
+            /*Console.Printl("StartEntityRoutines!");*/
             _WORLD.StartEntityRoutines(locker, cond, barrier, _ticks);
         }        
         
