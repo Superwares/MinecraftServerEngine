@@ -18,27 +18,21 @@ namespace Sync
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Locker.Hold();
             System.Threading.Monitor.Wait(Locker.Object);
-            Locker.Release();
         }
 
         public void Signal()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Locker.Hold();
             System.Threading.Monitor.Pulse(Locker.Object);
-            Locker.Release();
         }
 
         public void Broadcast()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Locker.Hold();
             System.Threading.Monitor.PulseAll(Locker.Object);
-            Locker.Release();
         }
 
         public void Dispose()

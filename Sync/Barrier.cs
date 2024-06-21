@@ -5,28 +5,16 @@ namespace Sync
     {
         private bool _disposed = false;
 
+        public readonly int Count;
+
         public Barrier(int n)
         {
-            throw new System.NotImplementedException();
+            Count = n;
         }
 
         ~Barrier() => System.Diagnostics.Debug.Assert(false);
 
-        public void ReachAndWait()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            throw new System.NotImplementedException();
-        }
-
-        public void WaitAllReach()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            throw new System.NotImplementedException();
-        }
-
-        public void Broadcast()
+        public void SignalAndWait()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

@@ -1,6 +1,7 @@
 ﻿
 using Common;
 using Containers;
+using Sync;
 
 namespace MinecraftServerEngine
 {
@@ -376,25 +377,34 @@ namespace MinecraftServerEngine
             _USERS.Enqueue(new User(client, userId, username));
         }
 
-        public void Accept(World world)
+        public void Accept(Locker locker, Cond cond, Barrier barrier, World world)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            do
+            locker.Hold();
+            cond.Wait();
+            locker.Release();
+
+            try
             {
-                User user = _USERS.Dequeue();
-                System.Diagnostics.Debug.Assert(user != null);
-
-                if (!world.CanJoinWorld())
+                do
                 {
-                    // TODO: Send message why disconnected.
-                    user.CLIENT.Dispose();
-                    continue;
-                }
+                    User user = _USERS.Dequeue();
+                    System.Diagnostics.Debug.Assert(user != null);
 
-                world.CreateOrConnectPlayer(user.CLIENT, user.USERNAME, user.USER_ID);
-            } while (true);
+                    if (!world.CanJoinWorld())
+                    {
+                        // TODO: Send message why disconnected.
+                        user.CLIENT.Dispose();
+                        continue;
+                    }
 
+                    world.CreateOrConnectPlayer(user.CLIENT, user.USERNAME, user.USER_ID);
+                } while (true);
+            }
+            catch (EmptyContainerException) { }
+
+            barrier.SignalAndWait();
         }
 
         public void Dispose()

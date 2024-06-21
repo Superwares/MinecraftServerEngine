@@ -1,6 +1,7 @@
 ﻿using Common;
 using Containers;
 using MinecraftPhysicsEngine;
+using Sync;
 
 namespace MinecraftServerEngine
 {
@@ -20,11 +21,7 @@ namespace MinecraftServerEngine
 
         /*internal PublicInventory _Inventory = new ChestInventory();*/
 
-        public World()
-        {
-            
-
-        }
+        public World() { }
 
         ~World() => System.Diagnostics.Debug.Assert(false);
 
@@ -41,14 +38,21 @@ namespace MinecraftServerEngine
 
         protected abstract bool DetermineToDespawnPlayerOnDisconnect();
 
-        public void StartRoutine(long serverTicks)
+        public void StartRoutine(
+            Locker locker, Cond cond, Barrier barrier, long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            locker.Hold();
+            cond.Wait();
+            locker.Release();
 
             /*if (serverTicks == 20 * 5)
             {
                 SpawnItemEntity();
             }*/
+
+            barrier.SignalAndWait();
         }
 
         public void StartEntityRoutine(long serverTicks, Entity entity, bool serversidePhysics)
@@ -71,9 +75,14 @@ namespace MinecraftServerEngine
             entity.StartRoutine(serverTicks, this);
         }
 
-        public void StartEntityRoutines(long serverTicks)
+        public void StartEntityRoutines(
+            Locker locker, Cond cond, Barrier barrier, long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            locker.Hold();
+            cond.Wait();
+            locker.Release();
 
             try
             {
@@ -88,17 +97,21 @@ namespace MinecraftServerEngine
                     Entities.Enqueue(entity);
                 } while (true);
             }
-            catch (EmptyContainerException)
-            {
-
-            }
+            catch (EmptyContainerException) { }
 
             System.Diagnostics.Debug.Assert(Entities.Empty);
+
+            barrier.SignalAndWait();
         }
 
-        public void StartPlayerRoutines(long serverTicks)
+        public void StartPlayerRoutines(
+            Locker locker, Cond cond, Barrier barrier, long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            locker.Hold();
+            cond.Wait();
+            locker.Release();
 
             try
             {
@@ -112,17 +125,21 @@ namespace MinecraftServerEngine
                 } while (true);
 
             }
-            catch (EmptyContainerException)
-            {
-
-            }
+            catch (EmptyContainerException) { }
 
             System.Diagnostics.Debug.Assert(Players.Empty);
+
+            barrier.SignalAndWait();
         }
 
-        public void HandlePlayerConnections(long serverTicks)
+        public void HandlePlayerConnections(
+            Locker locker, Cond cond, Barrier barrier, long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            locker.Hold();
+            cond.Wait();
+            locker.Release();
 
             try
             {
@@ -143,12 +160,11 @@ namespace MinecraftServerEngine
                 } while (true);
 
             }
-            catch (EmptyContainerException)
-            {
-
-            }
+            catch (EmptyContainerException) { }
 
             System.Diagnostics.Debug.Assert(Players.Empty);
+
+            barrier.SignalAndWait();
         }
 
         private void DestroyEntity(Entity entity)
@@ -169,9 +185,14 @@ namespace MinecraftServerEngine
             entity.Dispose();
         }
 
-        public void DestroyEntities()
+        public void DestroyEntities(
+            Locker locker, Cond cond, Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            locker.Hold();
+            cond.Wait();
+            locker.Release();
 
             try
             {
@@ -192,17 +213,21 @@ namespace MinecraftServerEngine
 
                 } while (true);
             }
-            catch (EmptyContainerException)
-            {
-
-            }
+            catch (EmptyContainerException) { }
 
             System.Diagnostics.Debug.Assert(Entities.Empty);
+
+            barrier.SignalAndWait();
         }
 
-        public void DestroyPlayers()
+        public void DestroyPlayers(
+            Locker locker, Cond cond, Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            locker.Hold();
+            cond.Wait();
+            locker.Release();
 
             try
             {
@@ -227,12 +252,11 @@ namespace MinecraftServerEngine
                 } while (true);
 
             }
-            catch (EmptyContainerException)
-            {
-
-            }
+            catch (EmptyContainerException) { }
 
             System.Diagnostics.Debug.Assert(Players.Empty);
+
+            barrier.SignalAndWait();
         }
 
         public void MoveEntity(Entity entity)
@@ -242,9 +266,14 @@ namespace MinecraftServerEngine
             MoveObject(BlockContext, entity);
         }
 
-        public void MoveEntities()
+        public void MoveEntities(
+            Locker locker, Cond cond, Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            locker.Hold();
+            cond.Wait();
+            locker.Release();
 
             try
             {
@@ -257,17 +286,21 @@ namespace MinecraftServerEngine
                     Entities.Enqueue(entity);
                 } while (true);
             }
-            catch (EmptyContainerException)
-            {
-
-            }
+            catch (EmptyContainerException) { }
 
             System.Diagnostics.Debug.Assert(Entities.Empty);
+
+            barrier.SignalAndWait();
         }
 
-        public void MovePlayers()
+        public void MovePlayers(
+            Locker locker, Cond cond, Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            locker.Hold();
+            cond.Wait();
+            locker.Release();
 
             try
             {
@@ -281,17 +314,21 @@ namespace MinecraftServerEngine
                 } while (true);
 
             }
-            catch (EmptyContainerException)
-            {
-
-            }
+            catch (EmptyContainerException) { }
 
             System.Diagnostics.Debug.Assert(Players.Empty);
+
+            barrier.SignalAndWait();
         }
 
-        public void CreateEntities()
+        public void CreateEntities(
+            Locker locker, Cond cond, Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            locker.Hold();
+            cond.Wait();
+            locker.Release();
 
             try
             {
@@ -306,12 +343,11 @@ namespace MinecraftServerEngine
                     Entities.Enqueue(entity);
                 } while (true);
             }
-            catch (EmptyContainerException)
-            {
-
-            }
+            catch (EmptyContainerException) { }
 
             System.Diagnostics.Debug.Assert(EntitySpawningPool.Empty);
+
+            barrier.SignalAndWait();
         }
 
         protected abstract Player CreatePlayer(System.Guid userId);
@@ -340,9 +376,14 @@ namespace MinecraftServerEngine
             Players.Enqueue(player);
         }
 
-        public void HandlePlayerRenders()
+        public void HandlePlayerRenders(
+            Locker locker, Cond cond, Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            locker.Hold();
+            cond.Wait();
+            locker.Release();
 
             try
             {
@@ -356,10 +397,9 @@ namespace MinecraftServerEngine
                 } while (true);
 
             }
-            catch (EmptyContainerException)
-            {
+            catch (EmptyContainerException) { }
 
-            }
+            barrier.SignalAndWait();
         }
 
         public override void Dispose()

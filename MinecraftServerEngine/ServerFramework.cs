@@ -39,7 +39,9 @@ namespace MinecraftServerEngine
             ++_ticks;
         }
 
-        private void StartCoreRoutine(Barrier barrier, ConnectionListener connListener)
+        private void StartCoreRoutine(
+            Locker locker, Cond cond, 
+            Barrier barrier, ConnectionListener connListener)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -47,159 +49,136 @@ namespace MinecraftServerEngine
 
             Console.Print(".");
 
+            _WORLD.StartPlayerRoutines(locker, cond, barrier, _ticks);
 
-            barrier.ReachAndWait();
+            _WORLD.HandlePlayerConnections(locker, cond, barrier, _ticks);
 
-            _WORLD.StartPlayerRoutines(_ticks);
+            _WORLD.DestroyEntities(locker, cond, barrier);
 
+            _WORLD.DestroyPlayers(locker, cond, barrier);
 
-            barrier.ReachAndWait();
+            _WORLD.MoveEntities(locker, cond, barrier);
 
-            _WORLD.HandlePlayerConnections(_ticks);
+            _WORLD.MovePlayers(locker, cond, barrier);
 
+            _WORLD.CreateEntities(locker, cond, barrier);
+                                   
+            connListener.Accept(locker, cond, barrier, _WORLD);
+                                   
+            _WORLD.HandlePlayerRenders(locker, cond, barrier);
 
-            barrier.ReachAndWait();
+            _WORLD.StartRoutine(locker, cond, barrier, _ticks);
 
-            _WORLD.DestroyEntities();
-
-
-            barrier.ReachAndWait();
-
-            _WORLD.DestroyPlayers();
-
-
-            barrier.ReachAndWait();
-
-            _WORLD.MoveEntities();
-
-
-            barrier.ReachAndWait();
-
-            _WORLD.MovePlayers();
-
-
-            barrier.ReachAndWait();
-
-            _WORLD.CreateEntities();
-
-
-            barrier.ReachAndWait();
-
-            connListener.Accept(_WORLD);
-
-
-            barrier.ReachAndWait();
-
-            _WORLD.HandlePlayerRenders();
-
-
-            barrier.ReachAndWait();
-
-            _WORLD.StartRoutine(_ticks);
-
-
-            barrier.ReachAndWait();
-
-            _WORLD.StartEntityRoutines(_ticks);
-
-        }
-
-        private void StartMainRoutine(Barrier barrier)
+            _WORLD.StartEntityRoutines(locker, cond, barrier, _ticks);
+        }        
+        
+        private void StartMainRoutine(Locker locker, Cond cond, Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            barrier.WaitAllReach();
-
             _WORLD.Players.Swap();
 
-            barrier.Broadcast();
+            locker.Hold();
+            cond.Broadcast();
+            locker.Release();
 
             // Start player routines.
 
-
-            barrier.WaitAllReach();
+            barrier.SignalAndWait();
 
             _WORLD.Players.Swap();
 
-            barrier.Broadcast();
+            locker.Hold();
+            cond.Broadcast();
+            locker.Release();
 
             // Handle player connections.
 
-
-            barrier.WaitAllReach();
+            barrier.SignalAndWait();
 
             _WORLD.Entities.Swap();
 
-            barrier.Broadcast();
+            locker.Hold();
+            cond.Broadcast();
+            locker.Release();
 
             // Destroy entities.
 
-
-            barrier.WaitAllReach();
+            barrier.SignalAndWait();
 
             _WORLD.Players.Swap();
 
-            barrier.Broadcast();
+            locker.Hold();
+            cond.Broadcast();
+            locker.Release();
 
             // Destroy players.
 
-
-            barrier.WaitAllReach();
+            barrier.SignalAndWait();
 
             _WORLD.Entities.Swap();
 
-            barrier.Broadcast();
+            locker.Hold();
+            cond.Broadcast();
+            locker.Release();
 
             // Move entities.
 
-
-            barrier.WaitAllReach();
+            barrier.SignalAndWait();
 
             _WORLD.Players.Swap();
 
-            barrier.Broadcast();
+            locker.Hold();
+            cond.Broadcast();
+            locker.Release();
 
             // Move players.
 
+            barrier.SignalAndWait();
 
-            barrier.WaitAllReach();
-
-            barrier.Broadcast();
+            locker.Hold();
+            cond.Broadcast();
+            locker.Release();
 
             // Create entities.
 
+            barrier.SignalAndWait();
 
-            barrier.WaitAllReach();
-
-            barrier.Broadcast();
+            locker.Hold();
+            cond.Broadcast();
+            locker.Release();
 
             // Create or connect players.
 
-
-            barrier.WaitAllReach();
+            barrier.SignalAndWait();
 
             _WORLD.Players.Swap();
 
-            barrier.Broadcast();
+            locker.Hold();
+            cond.Broadcast();
+            locker.Release();
 
             // Handle player renders.
 
+            barrier.SignalAndWait();
 
-            barrier.WaitAllReach();
-
-            barrier.Broadcast();
+            locker.Hold();
+            cond.Broadcast();
+            locker.Release();
 
             // Start world routine.
 
-
-            barrier.WaitAllReach();
+            barrier.SignalAndWait();
 
             _WORLD.Entities.Swap();
 
-            barrier.Broadcast();
+            locker.Hold();
+            cond.Broadcast();
+            locker.Release();
 
             // Start entity routines.
 
+            barrier.SignalAndWait();
         }
 
         private void StartCancelRoutine()
@@ -226,6 +205,8 @@ namespace MinecraftServerEngine
 
             int n = 1;  // TODO: Determine using number of processor.
 
+            using Locker locker = new();
+            using Cond cond = new(locker);
             using Barrier barrier = new(n);
             using ConnectionListener connListener = new();
 
@@ -235,7 +216,7 @@ namespace MinecraftServerEngine
                 {
                     while (_running)
                     {
-                        StartCoreRoutine(barrier, connListener);
+                        StartCoreRoutine(locker, cond, barrier, connListener);
                     }
                 });
 
@@ -270,7 +251,7 @@ namespace MinecraftServerEngine
                         accumulated -= interval;
 
                         System.Diagnostics.Debug.Assert(_ticks >= 0);
-                        StartMainRoutine(barrier);
+                        StartMainRoutine(locker, cond, barrier);
                         CountTicks();
                     }
 
