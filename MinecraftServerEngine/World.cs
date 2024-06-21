@@ -16,22 +16,13 @@ namespace MinecraftServerEngine
 
         private readonly Table<System.Guid, Player> DisconnectedPlayers = new(); // Disposable
 
-        private readonly BlockContext BlockContext = new();  // Disposable
+        internal readonly BlockContext BlockContext = new();  // Disposable
 
         /*internal PublicInventory _Inventory = new ChestInventory();*/
 
         public World()
         {
-            // Dummy code.
-            for (int z = -10; z <= 10; ++z)
-            {
-                for (int x = -10; x <= 10; ++x)
-                {
-                    BlockLocation loc = new(x, 100, z);
-
-                    BlockContext.SetBlock(loc, Blocks.Stone);
-                }
-            }
+            
 
         }
 
