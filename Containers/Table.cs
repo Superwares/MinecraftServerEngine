@@ -8,17 +8,17 @@ namespace Containers
     {
         private bool _disposed = false;
 
-        protected const int _MIN_LENGTH = 16;
-        protected const int _EXPANSION_FACTOR = 2;
-        protected const float _LOAD_FACTOR = 0.75F;
-        protected const int _C = 5;
+        protected const int MinLength = 16;
+        protected const int ExpansionFactor = 2;
+        protected const float LoadFactor = 0.75F;
+        protected const int Constant = 5;
 
-        private readonly System.Collections.Generic.IEqualityComparer<K> _COMPARER;
+        private readonly System.Collections.Generic.IEqualityComparer<K> Comparer;
 
-        protected bool[] _flags = new bool[_MIN_LENGTH];
-        protected K[] _keys = new K[_MIN_LENGTH];
-        protected T[] _values = new T[_MIN_LENGTH];
-        protected int _length = _MIN_LENGTH;
+        protected bool[] _flags = new bool[MinLength];
+        protected K[] _keys = new K[MinLength];
+        protected T[] _values = new T[MinLength];
+        protected int _length = MinLength;
         protected int _count = 0;
 
         public int Count
@@ -34,12 +34,12 @@ namespace Containers
 
         public Table()
         {
-            _COMPARER = System.Collections.Generic.EqualityComparer<K>.Default;
+            Comparer = System.Collections.Generic.EqualityComparer<K>.Default;
         }
 
         public Table(System.Collections.Generic.IEqualityComparer<K> comparer)
         {
-            _COMPARER = comparer;
+            Comparer = comparer;
         }
 
         ~Table() => System.Diagnostics.Debug.Assert(false);
@@ -48,17 +48,17 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            return System.Math.Abs(key.GetHashCode() * _C);
+            return System.Math.Abs(key.GetHashCode() * Constant);
         }
 
         private void Resize(int newLength)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_flags.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_keys.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_values.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_values.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_length >= MinLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
             bool[] oldFlags = _flags;
@@ -118,10 +118,10 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_flags.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_keys.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_values.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_values.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_length >= MinLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
             int index = -1;
@@ -133,7 +133,7 @@ namespace Containers
 
                 if (_flags[index])
                 {
-                    if (_COMPARER.Equals(_keys[index], key))
+                    if (Comparer.Equals(_keys[index], key))
                     {
                         throw new DuplicateKeyException();
                     }
@@ -151,9 +151,9 @@ namespace Containers
             _count++;
 
             float factor = (float)_count / (float)_length;
-            if (factor >= _LOAD_FACTOR)
+            if (factor >= LoadFactor)
             {
-                Resize(_length * _EXPANSION_FACTOR);
+                Resize(_length * ExpansionFactor);
             }
         }
 
@@ -175,10 +175,10 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_flags.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_keys.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_values.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_values.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_length >= MinLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
             if (_count == 0)
@@ -200,7 +200,7 @@ namespace Containers
                     throw new KeyNotFoundException();
                 }
 
-                if (!_COMPARER.Equals(_keys[index], key))
+                if (!Comparer.Equals(_keys[index], key))
                 {
                     continue;
                 }
@@ -210,11 +210,11 @@ namespace Containers
 
             --_count;
 
-            if (_MIN_LENGTH < _length)
+            if (MinLength < _length)
             {
-                int lenReduced = _length / _EXPANSION_FACTOR;
+                int lenReduced = _length / ExpansionFactor;
                 float factor = (float)_count / (float)lenReduced;
-                if (factor < _LOAD_FACTOR)
+                if (factor < LoadFactor)
                 {
                     System.Diagnostics.Debug.Assert(index >= 0);
                     T v = _values[index];
@@ -271,10 +271,10 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_flags.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_keys.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_values.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_values.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_length >= MinLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
             if (_count == 0)
@@ -294,7 +294,7 @@ namespace Containers
                     throw new KeyNotFoundException();
                 }
 
-                if (!_COMPARER.Equals(_keys[index], key))
+                if (!Comparer.Equals(_keys[index], key))
                 {
                     continue;
                 }
@@ -310,10 +310,10 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_flags.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_keys.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_values.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_values.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_length >= MinLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
             if (_count == 0)
@@ -333,7 +333,7 @@ namespace Containers
                     return false;
                 }
 
-                if (!_COMPARER.Equals(_keys[index], key))
+                if (!Comparer.Equals(_keys[index], key))
                 {
                     continue;
                 }
@@ -348,10 +348,10 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_flags.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_keys.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_values.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_values.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_length >= MinLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
             if (_count == 0)
@@ -377,10 +377,10 @@ namespace Containers
                 }
             }
 
-            _flags = new bool[_MIN_LENGTH];
-            _keys = new K[_MIN_LENGTH];
-            _values = new T[_MIN_LENGTH];
-            _length = _MIN_LENGTH;
+            _flags = new bool[MinLength];
+            _keys = new K[MinLength];
+            _values = new T[MinLength];
+            _length = MinLength;
             _count = 0;
 
             return elements;
@@ -390,10 +390,10 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_flags.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_keys.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_values.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_values.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_length >= MinLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
             if (_count == 0)
@@ -423,10 +423,10 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_flags.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_keys.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_values.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_values.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_length >= MinLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
             if (_count == 0)
@@ -456,10 +456,10 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_flags.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_keys.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_values.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_values.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_length >= MinLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
             if (_count == 0)
@@ -617,10 +617,10 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_flags.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_keys.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_values.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_values.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_length >= MinLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
             Locker.Read();
@@ -651,10 +651,10 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_flags.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_keys.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_values.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_values.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_length >= MinLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
             Locker.Read();
@@ -685,10 +685,10 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_flags.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_keys.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_values.Length >= _MIN_LENGTH);
-            System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
+            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_values.Length >= MinLength);
+            System.Diagnostics.Debug.Assert(_length >= MinLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
             Locker.Read();
