@@ -7,16 +7,16 @@ namespace MinecraftServerEngine
 {
     internal readonly struct ChunkLocation : System.IEquatable<ChunkLocation>
     {
-        public const int BLOCKS_PER_WIDTH = 16;
-        public const double WIDTH = BlockLocation.WIDTH * BLOCKS_PER_WIDTH;
+        public const int BlocksPerWidth = 16;
+        public const double Width = Terrain.BlockWidth * BlocksPerWidth;
 
         public static ChunkLocation Generate(Vector p)
         {
-            int x = (int)(p.X / WIDTH),
-                z = (int)(p.Z / WIDTH);
+            int x = (int)(p.X / Width),
+                z = (int)(p.Z / Width);
 
-            double r1 = p.X % WIDTH,
-                   r2 = p.Z % WIDTH;
+            double r1 = p.X % Width,
+                   r2 = p.Z % Width;
             if (r1 < 0.0D)
             {
                 --x;
@@ -30,13 +30,13 @@ namespace MinecraftServerEngine
             return new(x, z);
         }
 
-        public static ChunkLocation Generate(BlockLocation loc)
+        /*public static ChunkLocation Generate(BlockLocation loc)
         {
-            int x = loc.X / BLOCKS_PER_WIDTH,
-                z = loc.Z / BLOCKS_PER_WIDTH;
+            int x = loc.X / BlocksPerWidth,
+                z = loc.Z / BlocksPerWidth;
 
-            double r1 = (double)loc.X % (double)BLOCKS_PER_WIDTH,
-                   r2 = (double)loc.Z % (double)BLOCKS_PER_WIDTH;
+            double r1 = (double)loc.X % (double)BlocksPerWidth,
+                   r2 = (double)loc.Z % (double)BlocksPerWidth;
             if (r1 < 0.0D)
             {
                 --x;
@@ -47,7 +47,7 @@ namespace MinecraftServerEngine
             }
 
             return new(x, z);
-        }
+        }*/
 
         public readonly int X, Z;
 

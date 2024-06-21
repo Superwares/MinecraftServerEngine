@@ -4,26 +4,26 @@ namespace Common
     public static class Random
     {
         // TODO: Static destructor
-        private readonly static System.Random Random = new();
+        private readonly static System.Random SystemRandom = new();
 
         public static int NextInt()
         {
-            return Random.Next();
+            return SystemRandom.Next();
         }
 
         public static uint NextUint()
         {
-            return (uint)Random.Next();
+            return (uint)SystemRandom.Next();
         }
 
         public static long NextLong()
         {
-            return Random.NextInt64();
+            return SystemRandom.NextInt64();
         }
 
         public static ulong NextUlong()
         {
-            return (ulong)Random.NextInt64();
+            return (ulong)SystemRandom.NextInt64();
         }
     }
 }

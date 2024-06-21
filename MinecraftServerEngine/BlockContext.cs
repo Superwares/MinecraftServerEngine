@@ -7,7 +7,7 @@ using MinecraftPhysicsEngine;
 namespace MinecraftServerEngine
 {
     
-    internal sealed class BlockContext : System.IDisposable
+    internal sealed class BlockContext : Terrain
     {
         private enum Directions : int
         {
@@ -574,7 +574,7 @@ namespace MinecraftServerEngine
 
             }
 
-            public const int BLOCKS_PER_WIDTH = ChunkLocation.BLOCKS_PER_WIDTH;
+            public const int BLOCKS_PER_WIDTH = ChunkLocation.BlocksPerWidth;
             public const int SECTION_COUNT = 16;
 
             public static (int, byte[]) Write(ChunkData chunkData)
@@ -724,13 +724,34 @@ namespace MinecraftServerEngine
 
         public BlockContext() { }
 
-        public void SetBlock(BlockLocation loc, Blocks block)
+        private ChunkLocation BlockToChunk(BlockLocation loc)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            int x = loc.X / ChunkLocation.BlocksPerWidth,
+                z = loc.Z / ChunkLocation.BlocksPerWidth;
+
+            double r1 = (double)loc.X % (double)ChunkLocation.BlocksPerWidth,
+                   r2 = (double)loc.Z % (double)ChunkLocation.BlocksPerWidth;
+            if (r1 < 0.0D)
+            {
+                --x;
+            }
+            if (r2 < 0.0D)
+            {
+                --z;
+            }
+
+            return new ChunkLocation(x, z);
+        }
+
+        private void SetBlock(BlockLocation loc, Blocks block)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             ChunkData chunk;
 
-            ChunkLocation locChunk = ChunkLocation.Generate(loc);
+            ChunkLocation locChunk = BlockToChunk(loc);
             if (!_CHUNKS.Contains(locChunk))
             {
                 if (block == _DEFAULT_BLOCK)
@@ -746,26 +767,26 @@ namespace MinecraftServerEngine
                 chunk = _CHUNKS.Lookup(locChunk);
             }
 
-            int x = loc.X - (locChunk.X * ChunkLocation.BLOCKS_PER_WIDTH),
+            int x = loc.X - (locChunk.X * ChunkLocation.BlocksPerWidth),
                 y = loc.Y,
-                z = loc.Z - (locChunk.Z * ChunkLocation.BLOCKS_PER_WIDTH);
+                z = loc.Z - (locChunk.Z * ChunkLocation.BlocksPerWidth);
             chunk.SetId(_DEFAULT_BLOCK.GetId(), x, y, z, block.GetId());
         }
 
-        public Blocks GetBlock(BlockLocation loc)
+        private Blocks GetBlock(BlockLocation loc)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            ChunkLocation locChunk = ChunkLocation.Generate(loc);
+            ChunkLocation locChunk = BlockToChunk(loc);
             if (!_CHUNKS.Contains(locChunk))
             {
                 return _DEFAULT_BLOCK;
             }
 
             ChunkData chunk = _CHUNKS.Lookup(locChunk);
-            int x = loc.X - (locChunk.X * ChunkLocation.BLOCKS_PER_WIDTH),
+            int x = loc.X - (locChunk.X * ChunkLocation.BlocksPerWidth),
                 y = loc.Y,
-                z = loc.Z - (locChunk.Z * ChunkLocation.BLOCKS_PER_WIDTH);
+                z = loc.Z - (locChunk.Z * ChunkLocation.BlocksPerWidth);
             int id = chunk.GetId(_DEFAULT_BLOCK.GetId(), x, y, z);
             return BlockExtensions.ToBlock(id);
         }
@@ -800,18 +821,18 @@ namespace MinecraftServerEngine
             return GetBlock(locPrime);
         }
 
-        private BoundingVolume GenerateCube(BlockLocation loc)
+        private void GenerateBoundingBoxForCubeBlock(
+            Queue<AxisAlignedBoundingBox> queue, BlockLocation loc)
         {
             Vector min = loc.GetMinVector(),
-                   max = new(
-                       min.X + BlockLocation.WIDTH, 
-                       min.Y + BlockLocation.HEIGHT, 
-                       min.Z + BlockLocation.WIDTH);
+                   max = loc.GetMaxVector();
             AxisAlignedBoundingBox aabb = new(max, min);
-            return aabb;
+
+            queue.Enqueue(aabb);
+            return;
         }
 
-        private (Directions, bool, int) DetermineStairsShape(
+        private (Directions, bool, int) DetermineStairsBlockShape(
             BlockLocation loc, Blocks block)
         {
             System.Diagnostics.Debug.Assert(IsStairsBlock(block));
@@ -879,14 +900,16 @@ namespace MinecraftServerEngine
             return (d, bottom, 0);
         }
 
-        private BoundingVolume GenerateStairs(BlockLocation loc, Blocks block)
+        private void GenerateBoundingBoxForStairsBlock(
+            Queue<AxisAlignedBoundingBox> queue, BlockLocation loc, Blocks block)
         {
-            (Directions d, bool bottom, int b) = DetermineStairsShape(loc, block);
+            (Directions d, bool bottom, int b) = DetermineStairsBlockShape(loc, block);
 
             throw new System.NotImplementedException();
         }
 
-        private BoundingVolume Generate(BlockLocation loc)
+        protected override void GenerateBoundingBoxForBlock(
+            Queue<AxisAlignedBoundingBox> queue, BlockLocation loc)
         {
             Blocks block = GetBlock(loc);
 
@@ -895,7 +918,7 @@ namespace MinecraftServerEngine
              * 1: Cube
              * 2: Slab
              * 3: Stairs
-             */ 
+             */
             int a = 0;
 
             switch (block)
@@ -924,39 +947,14 @@ namespace MinecraftServerEngine
                 default:
                     throw new System.NotImplementedException();
                 case 0:
-                    return new EmptyBoundingVolume();
+                    break;
                 case 1:
-                    return GenerateCube(loc);
+                    GenerateBoundingBoxForCubeBlock(queue, loc);
+                    break;
                 case 3:
-                    return GenerateStairs(loc, block);
+                    GenerateBoundingBoxForStairsBlock(queue, loc, block);
+                    break;
             }
-        }
-
-        public BoundingVolume[] GetBlockBoundingVolumes(Vector max, Vector min)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            BlockGrid grid = BlockGrid.Generate(max, min);
-
-            int count = grid.GetCount(), i = 0;
-            var volumes = new BoundingVolume[count];
-
-            for (int y = grid.Min.Y; y <= grid.Max.Y; ++y)
-            {
-                for (int z = grid.Min.Z; z <= grid.Max.Z; ++z)
-                {
-                    for (int x = grid.Min.X; x <= grid.Max.X; ++x)
-                    {
-                        BlockLocation loc = new(x, y, z);
-
-                        BoundingVolume volume = Generate(loc);
-                        volumes[i++] = volume;
-                    }
-                }
-            }
-            System.Diagnostics.Debug.Assert(i == count);
-
-            return volumes;
         }
 
         internal (int, byte[]) GetChunkData(ChunkLocation loc)
@@ -974,7 +972,7 @@ namespace MinecraftServerEngine
             }
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             // Assertion.
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -989,7 +987,7 @@ namespace MinecraftServerEngine
             _CHUNKS.Dispose();
 
             // Finish.
-            System.GC.SuppressFinalize(this);
+            base.Dispose();
             _disposed = true;
         }
 

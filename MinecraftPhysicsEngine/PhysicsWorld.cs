@@ -174,14 +174,17 @@ namespace MinecraftPhysicsEngine
 
         private bool _disposed = false;
 
-        private readonly Table<Cell, Tree<PhysicsObject>> _CELL_TO_OBJECTS = new();  // Disposable
-        private readonly Table<PhysicsObject, Grid> _OBJECT_TO_GRID = new();  // Disposable
+        private readonly Terrain Terrain;
 
-        public PhysicsWorld() { }
+        private readonly Table<Cell, Tree<PhysicsObject>> CellToObjects = new();  // Disposable
+        private readonly Table<PhysicsObject, Grid> ObjectToGrid = new();  // Disposable
+
+        public PhysicsWorld(Terrain terrain) 
+        {
+            Terrain = terrain;
+        }
 
         ~PhysicsWorld() => System.Diagnostics.Debug.Assert(false);
-
-        public abstract void GetTerrain(Terrain terrain);
 
         public Tree<PhysicsObject> GetPhysicsObjects(BoundingVolume volume)
         {
@@ -193,14 +196,14 @@ namespace MinecraftPhysicsEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Tree<PhysicsObject> objs;
-            if (!_CELL_TO_OBJECTS.Contains(cell))
+            if (!CellToObjects.Contains(cell))
             {
                 objs = new();
-                _CELL_TO_OBJECTS.Insert(cell, objs);
+                CellToObjects.Insert(cell, objs);
             }
             else
             {
-                objs = _CELL_TO_OBJECTS.Lookup(cell);
+                objs = CellToObjects.Lookup(cell);
             }
 
             objs.Insert(obj);
@@ -210,14 +213,14 @@ namespace MinecraftPhysicsEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_CELL_TO_OBJECTS.Contains(cell));
-            Tree<PhysicsObject> objs = _CELL_TO_OBJECTS.Lookup(cell);
+            System.Diagnostics.Debug.Assert(CellToObjects.Contains(cell));
+            Tree<PhysicsObject> objs = CellToObjects.Lookup(cell);
 
             objs.Extract(obj);
 
             if (objs.Empty)
             {
-                _CELL_TO_OBJECTS.Extract(cell);
+                CellToObjects.Extract(cell);
                 objs.Dispose();
             }
         }
@@ -232,16 +235,16 @@ namespace MinecraftPhysicsEngine
                 InsertObjectToCell(cell, obj);
             }
 
-            System.Diagnostics.Debug.Assert(!_OBJECT_TO_GRID.Contains(obj));
-            _OBJECT_TO_GRID.Insert(obj, grid);
+            System.Diagnostics.Debug.Assert(!ObjectToGrid.Contains(obj));
+            ObjectToGrid.Insert(obj, grid);
         }
 
         private void CloseObjectMapping(PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_OBJECT_TO_GRID.Contains(obj));
-            Grid grid = _OBJECT_TO_GRID.Extract(obj);
+            System.Diagnostics.Debug.Assert(ObjectToGrid.Contains(obj));
+            Grid grid = ObjectToGrid.Extract(obj);
 
             foreach (Cell cell in grid.GetCells())
             {
@@ -253,8 +256,8 @@ namespace MinecraftPhysicsEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_OBJECT_TO_GRID.Contains(obj));
-            Grid gridPrev = _OBJECT_TO_GRID.Extract(obj);
+            System.Diagnostics.Debug.Assert(ObjectToGrid.Contains(obj));
+            Grid gridPrev = ObjectToGrid.Extract(obj);
             Grid grid = Grid.Generate(obj.BoundingVolume);
 
             if (!gridPrev.Equals(grid))
@@ -283,7 +286,7 @@ namespace MinecraftPhysicsEngine
                 }
             }
 
-            _OBJECT_TO_GRID.Insert(obj, grid);
+            ObjectToGrid.Insert(obj, grid);
         }
 
         public void InitObject(PhysicsObject obj)
@@ -309,10 +312,7 @@ namespace MinecraftPhysicsEngine
             AxisAlignedBoundingBox minBoundingBox = volume.GetMinBoundingBox();
             minBoundingBox.Extend(v);
 
-            using Terrain terrain = new(minBoundingBox);
-            GetTerrain(terrain);
-
-            (v, bool onGround) = terrain.ResolveCollisions(volume, v);
+            (v, bool onGround) = Terrain.ResolveCollisions(volume, v);
 
             obj.Move(volume, v, onGround);
 

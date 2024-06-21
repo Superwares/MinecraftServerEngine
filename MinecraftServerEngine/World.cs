@@ -16,11 +16,9 @@ namespace MinecraftServerEngine
 
         private readonly Table<System.Guid, Player> DisconnectedPlayers = new(); // Disposable
 
-        internal readonly BlockContext BlockContext = new();  // Disposable
-
         /*internal PublicInventory _Inventory = new ChestInventory();*/
 
-        public World()
+        public World() : base(new BlockContext())
         {
             // Dummy code.
             for (int z = -10; z <= 10; ++z)
@@ -36,19 +34,6 @@ namespace MinecraftServerEngine
         }
 
         ~World() => System.Diagnostics.Debug.Assert(false);
-
-        public override void GetTerrain(Terrain terrain)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            switch (volume)
-            {
-                default:
-                    throw new System.NotImplementedException();
-                case AxisAlignedBoundingBox aabb:
-                    return BlockContext.GetBlockBoundingVolumes(aabb.Max, aabb.Min);
-            }
-        }
 
         public abstract bool CanJoinWorld();
 
@@ -403,8 +388,6 @@ namespace MinecraftServerEngine
             Players.Dispose();
 
             DisconnectedPlayers.Dispose();
-
-            BlockContext.Dispose();
 
             // Finish.
             base.Dispose();

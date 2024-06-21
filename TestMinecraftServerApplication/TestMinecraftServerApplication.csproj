@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Containers\Containers.csproj" />
+    <ProjectReference Include="..\MinecraftPhysicsEngine\MinecraftPhysicsEngine.csproj" />
     <ProjectReference Include="..\MinecraftServerEngine\MinecraftServerEngine.csproj" />
   </ItemGroup>
 
