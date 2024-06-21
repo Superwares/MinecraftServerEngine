@@ -81,7 +81,17 @@ namespace Sync
     {
         private bool _disposed = false;
 
-        public ReadLocker() { }
+        private readonly Locker Locker;
+        private readonly Cond Cond;
+
+        private int _read = 0;
+        private int _write = 0;
+
+        public ReadLocker() 
+        {
+            Locker = new Locker();
+            Cond = new Cond(Locker);
+        }
 
         ~ReadLocker() => System.Diagnostics.Debug.Assert(false);
 
@@ -89,19 +99,64 @@ namespace Sync
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            throw new System.NotImplementedException();
+            Locker.Hold();
+
+            while (_read > 0 || _write > 0)
+            {
+                Cond.Wait();
+            }
+
+            System.Diagnostics.Debug.Assert(_read == 0);
+            System.Diagnostics.Debug.Assert(_write == 0);
+
+            ++_write;
+
+            Locker.Release();
         }
 
         public void Read()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-            throw new System.NotImplementedException();
+
+            Locker.Hold();
+
+            while (_write > 0)
+            {
+                Cond.Wait();
+            }
+
+            System.Diagnostics.Debug.Assert(_write == 0);
+
+            ++_read;
+
+            Locker.Release();
         }
 
         public override void Release()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-            throw new System.NotImplementedException();
+
+            Locker.Hold();
+
+            if (_write > 0)
+            {
+                System.Diagnostics.Debug.Assert(_read == 0);
+
+                --_write;
+
+                System.Diagnostics.Debug.Assert(_write == 0);
+            }
+            else if (_read > 0)
+            {
+                System.Diagnostics.Debug.Assert(_read >= 0);
+                System.Diagnostics.Debug.Assert(_write == 0);
+
+                --_read;
+            }
+
+            Cond.Broadcast();
+
+            Locker.Release();
         }
 
         public override void Dispose()
@@ -110,6 +165,8 @@ namespace Sync
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release reousrces.
+            Locker.Dispose();
+            Cond.Dispose();
 
             // Finish.
             base.Dispose();

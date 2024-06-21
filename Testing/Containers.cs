@@ -2,11 +2,11 @@
 {
     internal class NumListTests
     {
-        private const int N = 10_000;
-
         [Test]
         public void Test1()
         {
+            const int N = 10_000;
+
             using Numlist numlist = new();
 
             for (int i = 0; i < N; ++i)
@@ -32,6 +32,8 @@
         [Test]
         public void Test2()
         {
+            const int N = 10_000;
+
             using Numlist numlist = new();
 
             for (int i = 0; i < N; ++i)
@@ -64,11 +66,12 @@
 
     internal class QueueTests
     {
-        private const int N = 1_000_000;
 
         [Test]
         public void Test1()
         {
+            const int N = 1_000_000;
+
             using Queue<int> queue = new();
 
             for (int i = 0; i < N; ++i)
@@ -79,7 +82,7 @@
             for (int i = 0; i < N; ++i)
             {
                 int v = queue.Dequeue();
-                Assert.That(i, Is.EqualTo(v));
+                Assert.That(v, Is.EqualTo(i));
             }
 
         }

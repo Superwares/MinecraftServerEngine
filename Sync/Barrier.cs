@@ -49,7 +49,7 @@ namespace Sync
         public void Dispose()
         {
             // Assertions.
-            System.Diagnostics.Debug.Assert(false);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
             Locker.Dispose();
