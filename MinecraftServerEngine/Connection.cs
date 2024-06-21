@@ -1257,7 +1257,7 @@ namespace MinecraftServerEngine
 
             ChunkLocation loc = ChunkLocation.Generate(p);
 
-            ChunkGrid grid = ChunkGrid.Generate(loc, _dEntityRendering);
+            /*ChunkGrid grid = ChunkGrid.Generate(loc, _dEntityRendering);
             foreach (PhysicsObject obj in world.GetPhysicsObjects(grid.GetMinBoundingVolume()).GetKeys())
             {
                 switch (obj)
@@ -1269,7 +1269,7 @@ namespace MinecraftServerEngine
                         break;
                 }    
             }
-
+*/
             using Queue<ChunkLocation> newChunkPositions = new();
             using Queue<ChunkLocation> outOfRangeChunks = new();
 

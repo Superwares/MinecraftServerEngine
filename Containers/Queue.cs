@@ -171,7 +171,7 @@ namespace Containers
     {
         private bool _disposed = false;
 
-        private readonly RWLocker _MUTEX = new();
+        private readonly ReadLocker Locker = new();
 
         public ConcurrentQueue() { }
 
@@ -181,11 +181,11 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Hold();
+            Locker.Hold();
 
             base.Enqueue(value);
 
-            _MUTEX.Release();
+            Locker.Release();
         }
 
         /// <summary>
@@ -197,11 +197,11 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Hold();
+            Locker.Hold();
 
             T v = base.Dequeue();
 
-            _MUTEX.Release();
+            Locker.Release();
 
             return v;
         }
@@ -210,11 +210,11 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Hold();
+            Locker.Hold();
 
             T[] arr = base.Flush();
 
-            _MUTEX.Release();
+            Locker.Release();
 
             return arr;
         }
@@ -223,7 +223,7 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.HoldForRead();
+            Locker.Read();
 
             if (!Empty)
             {
@@ -241,7 +241,7 @@ namespace Containers
                 } while (current != null);
             }
 
-            _MUTEX.Release();
+            Locker.Release();
         }
 
         public override void Dispose()
@@ -250,7 +250,7 @@ namespace Containers
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
-            _MUTEX.Dispose();
+            Locker.Dispose();
 
             // Finish.
             base.Dispose();

@@ -38,19 +38,12 @@ namespace Sync
             {
                 System.Diagnostics.Debug.Assert(_count == 1);
 
-                _count = 0;
+                _count = N;
                 Cond.Broadcast();
             }
 
+            System.Diagnostics.Debug.Assert(_count > 0);
             Locker.Release();
-        }
-
-        public void Reset()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(_count == 0);
-            _count = N;
         }
 
         public void Dispose()

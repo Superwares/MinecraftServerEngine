@@ -11,10 +11,7 @@
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\Containers\Containers.csproj" />
     <ProjectReference Include="..\MinecraftPhysicsEngine\MinecraftPhysicsEngine.csproj" />
-    <ProjectReference Include="..\PhysicsEngine\MinecraftPhysicsEngine.csproj" />
-    <ProjectReference Include="..\Physics\PhysicsEngine.csproj" />
     <ProjectReference Include="..\Sync\Sync.csproj" />
-    <ProjectReference Include="..\Threading\Sync.csproj" />
   </ItemGroup>
 
 </Project>

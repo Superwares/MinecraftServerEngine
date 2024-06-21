@@ -374,7 +374,7 @@ namespace Containers
     {
         private bool _disposed = false;
 
-        private readonly RWLocker _MUTEX = new();
+        private readonly ReadLocker _MUTEX = new();
 
         public ConcurrentTree() { }
 
@@ -418,7 +418,7 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.HoldForRead();
+            _MUTEX.Read();
 
             bool f = base.Contains(key);
 
@@ -449,7 +449,7 @@ namespace Containers
             System.Diagnostics.Debug.Assert(_length >= _MIN_LENGTH);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
-            _MUTEX.HoldForRead();
+            _MUTEX.Read();
 
             if (!Empty)
             {

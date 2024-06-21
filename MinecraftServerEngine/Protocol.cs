@@ -381,9 +381,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            locker.Hold();
-            cond.Wait();
-            locker.Release();
+            barrier.SignalAndWait();
 
             try
             {

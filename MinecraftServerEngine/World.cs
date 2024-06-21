@@ -43,9 +43,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            locker.Hold();
-            cond.Wait();
-            locker.Release();
+            barrier.SignalAndWait();
 
             /*if (serverTicks == 20 * 5)
             {
@@ -80,9 +78,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            locker.Hold();
-            cond.Wait();
-            locker.Release();
+            barrier.SignalAndWait();
 
             try
             {
@@ -109,9 +105,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            locker.Hold();
-            cond.Wait();
-            locker.Release();
+            barrier.SignalAndWait();
 
             try
             {
@@ -137,9 +131,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            locker.Hold();
-            cond.Wait();
-            locker.Release();
+            barrier.SignalAndWait();
 
             try
             {
@@ -190,9 +182,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            locker.Hold();
-            cond.Wait();
-            locker.Release();
+            barrier.SignalAndWait();
 
             try
             {
@@ -225,9 +215,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            locker.Hold();
-            cond.Wait();
-            locker.Release();
+            barrier.SignalAndWait();
 
             try
             {
@@ -271,9 +259,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            locker.Hold();
-            cond.Wait();
-            locker.Release();
+            barrier.SignalAndWait();
 
             try
             {
@@ -298,9 +284,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            locker.Hold();
-            cond.Wait();
-            locker.Release();
+            barrier.SignalAndWait();
 
             try
             {
@@ -326,9 +310,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            locker.Hold();
-            cond.Wait();
-            locker.Release();
+            barrier.SignalAndWait();
 
             try
             {
@@ -381,9 +363,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            locker.Hold();
-            cond.Wait();
-            locker.Release();
+            barrier.SignalAndWait();
 
             try
             {

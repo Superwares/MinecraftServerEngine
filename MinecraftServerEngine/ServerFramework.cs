@@ -13,7 +13,7 @@ namespace MinecraftServerEngine
 
         private bool _running = true;
 
-        private static System.Threading.Thread MainThread = null;
+        private static Thread MainThread = null;
         private readonly Queue<Thread> Threads = new();  // Disposable
 
 
@@ -49,26 +49,37 @@ namespace MinecraftServerEngine
 
             Console.Print(".");
 
+            Console.Printl("StartPlayerRoutines!");
             _WORLD.StartPlayerRoutines(locker, cond, barrier, _ticks);
 
+            Console.Printl("HandlePlayerConnections!");
             _WORLD.HandlePlayerConnections(locker, cond, barrier, _ticks);
 
+            Console.Printl("DestroyEntities!");
             _WORLD.DestroyEntities(locker, cond, barrier);
 
+            Console.Printl("DestroyPlayers!");
             _WORLD.DestroyPlayers(locker, cond, barrier);
 
+            Console.Printl("MoveEntities!");
             _WORLD.MoveEntities(locker, cond, barrier);
 
+            Console.Printl("MovePlayers");
             _WORLD.MovePlayers(locker, cond, barrier);
 
+            Console.Printl("CreateEntities!");
             _WORLD.CreateEntities(locker, cond, barrier);
-                                   
+
+            Console.Printl("Accept New Connections!");
             connListener.Accept(locker, cond, barrier, _WORLD);
-                                   
+                   
+            Console.Printl("HandlePlayerRenders!");
             _WORLD.HandlePlayerRenders(locker, cond, barrier);
 
+            Console.Printl("StartRoutine!");
             _WORLD.StartRoutine(locker, cond, barrier, _ticks);
 
+            Console.Printl("StartEntityRoutines!");
             _WORLD.StartEntityRoutines(locker, cond, barrier, _ticks);
         }        
         
@@ -78,118 +89,85 @@ namespace MinecraftServerEngine
 
             _WORLD.Players.Swap();
 
-            locker.Hold();
-            cond.Broadcast();
-            locker.Release();
+            barrier.SignalAndWait();
 
             // Start player routines.
 
             barrier.SignalAndWait();
-            barrier.Reset();
 
             _WORLD.Players.Swap();
 
-            locker.Hold();
-            cond.Broadcast();
-            locker.Release();
+            barrier.SignalAndWait();
 
             // Handle player connections.
 
             barrier.SignalAndWait();
-            barrier.Reset();
 
             _WORLD.Entities.Swap();
 
-            locker.Hold();
-            cond.Broadcast();
-            locker.Release();
+            barrier.SignalAndWait();
 
             // Destroy entities.
 
             barrier.SignalAndWait();
-            barrier.Reset();
 
             _WORLD.Players.Swap();
 
-            locker.Hold();
-            cond.Broadcast();
-            locker.Release();
+            barrier.SignalAndWait();
 
             // Destroy players.
 
             barrier.SignalAndWait();
-            barrier.Reset();
 
             _WORLD.Entities.Swap();
 
-            locker.Hold();
-            cond.Broadcast();
-            locker.Release();
+            barrier.SignalAndWait();
 
             // Move entities.
 
             barrier.SignalAndWait();
-            barrier.Reset();
 
             _WORLD.Players.Swap();
 
-            locker.Hold();
-            cond.Broadcast();
-            locker.Release();
+            barrier.SignalAndWait();
 
             // Move players.
 
             barrier.SignalAndWait();
-            barrier.Reset();
 
-            locker.Hold();
-            cond.Broadcast();
-            locker.Release();
+            barrier.SignalAndWait();
 
             // Create entities.
 
             barrier.SignalAndWait();
-            barrier.Reset();
 
-            locker.Hold();
-            cond.Broadcast();
-            locker.Release();
+            barrier.SignalAndWait();
 
             // Create or connect players.
 
             barrier.SignalAndWait();
-            barrier.Reset();
 
             _WORLD.Players.Swap();
 
-            locker.Hold();
-            cond.Broadcast();
-            locker.Release();
+            barrier.SignalAndWait();
 
             // Handle player renders.
 
             barrier.SignalAndWait();
-            barrier.Reset();
 
-            locker.Hold();
-            cond.Broadcast();
-            locker.Release();
+            barrier.SignalAndWait();
 
             // Start world routine.
 
             barrier.SignalAndWait();
-            barrier.Reset();
 
             _WORLD.Entities.Swap();
 
-            locker.Hold();
-            cond.Broadcast();
-            locker.Release();
+            barrier.SignalAndWait();
 
             // Start entity routines.
 
             barrier.SignalAndWait();
-            barrier.Reset();
         }
 
         private void StartCancelRoutine()
@@ -203,7 +181,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            MainThread = System.Threading.Thread.CurrentThread;
+            MainThread = Thread.GetCurrent();
             Console.HandleTerminatin(() =>
             {
                 _running = false;
@@ -214,14 +192,15 @@ namespace MinecraftServerEngine
 
             ushort port = 25565;
 
-            int n = 1;  // TODO: Determine using number of processor.
+            int n = 2;  // TODO: Determine using number of processor.
 
             using Locker locker = new();
             using Cond cond = new(locker);
             using Barrier barrier = new(n);
             using ConnectionListener connListener = new();
 
-            for (int i = 0; i < n; ++i)
+            System.Diagnostics.Debug.Assert(n > 1);
+            for (int i = 0; i < n - 1; ++i)
             {
                 var coreThread = Thread.New(() =>
                 {

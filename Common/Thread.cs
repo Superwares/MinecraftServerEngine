@@ -3,23 +3,29 @@ namespace Common
 {
     public sealed class Thread
     {
-        public static Thread New(VoidMethod startRoutine)
+        public static Thread GetCurrent()
         {
-            // TODO: Check it is created in main thread.
-
-            throw new System.NotImplementedException();
+            return new(System.Threading.Thread.CurrentThread);
         }
 
-        private readonly ulong _ID;
-
-        private Thread(ulong id) 
+        public static Thread New(VoidMethod startRoutine)
         {
-            _ID = id;
+            System.Threading.Thread t = new(new System.Threading.ThreadStart(startRoutine));
+            t.Start();
+
+            return new(t);
+        }
+
+        private readonly System.Threading.Thread SystemThread = null;
+
+        private Thread(System.Threading.Thread t) 
+        {
+            SystemThread = t;
         }
 
         public void Join()
         {
-            throw new System.NotImplementedException();
+            SystemThread.Join();
         }
 
     }

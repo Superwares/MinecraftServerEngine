@@ -77,13 +77,13 @@ namespace Sync
         }
     }
 
-    public sealed class RWLocker : Locker
+    public sealed class ReadLocker : Locker
     {
         private bool _disposed = false;
 
-        public RWLocker() { }
+        public ReadLocker() { }
 
-        ~RWLocker() => System.Diagnostics.Debug.Assert(false);
+        ~ReadLocker() => System.Diagnostics.Debug.Assert(false);
 
         public override void Hold()
         {
@@ -92,7 +92,7 @@ namespace Sync
             throw new System.NotImplementedException();
         }
 
-        public void HoldForRead()
+        public void Read()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
             throw new System.NotImplementedException();
