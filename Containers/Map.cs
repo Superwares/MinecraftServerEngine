@@ -507,7 +507,7 @@ namespace Containers
     {
         private bool _disposed = false;
 
-        private readonly RWLock _MUTEX = new();
+        private readonly RWLocker _MUTEX = new();
 
         public ConcurrentMap() { }
 

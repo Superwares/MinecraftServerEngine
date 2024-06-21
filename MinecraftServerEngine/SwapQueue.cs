@@ -1,16 +1,16 @@
 ﻿
-
+using Containers;
 using Sync;
 
-namespace Containers
+namespace MinecraftServerEngine
 {
-    public class SwapQueue<T> : System.IDisposable
+    internal class SwapQueue<T> : System.IDisposable
     {
         private bool _disposed = false;
 
         private int dequeue = 1;
-        private readonly Queue<T> _QUEUE1 = new();
-        private readonly Queue<T> _QUEUE2 = new();
+        private readonly Queue<T> Queue1 = new();
+        private readonly Queue<T> Queue2 = new();
 
         private Queue<T> GetQueueForDequeue()
         {
@@ -18,11 +18,11 @@ namespace Containers
 
             if (dequeue == 1)
             {
-                return _QUEUE1;
+                return Queue1;
             }
             else if (dequeue == 2)
             {
-                return _QUEUE2;
+                return Queue2;
             }
             else
             {
@@ -38,11 +38,11 @@ namespace Containers
 
             if (dequeue == 1)
             {
-                return _QUEUE2;
+                return Queue2;
             }
             else if (dequeue == 2)
             {
-                return _QUEUE1;
+                return Queue1;
             }
             else
             {
@@ -74,13 +74,13 @@ namespace Containers
 
             if (dequeue == 1)
             {
-                System.Diagnostics.Debug.Assert(_QUEUE1.Empty);
+                System.Diagnostics.Debug.Assert(Queue1.Empty);
 
                 dequeue = 2;
             }
             else if (dequeue == 2)
             {
-                System.Diagnostics.Debug.Assert(_QUEUE2.Empty);
+                System.Diagnostics.Debug.Assert(Queue2.Empty);
 
                 dequeue = 1;
             }
@@ -119,8 +119,8 @@ namespace Containers
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
-            _QUEUE1.Dispose();
-            _QUEUE2.Dispose();
+            Queue1.Dispose();
+            Queue2.Dispose();
 
             // Finish.
             System.GC.SuppressFinalize(this);
@@ -128,11 +128,11 @@ namespace Containers
         }
     }
 
-    public sealed class ConcurrentSwapQueue<T> : SwapQueue<T>
+    internal sealed class ConcurrentSwapQueue<T> : SwapQueue<T>
     {
         private bool _disposed = false;
 
-        private readonly Lock _MUTEX = new();
+        private readonly Locker Lock = new();
 
         public ConcurrentSwapQueue() { }
 
@@ -142,22 +142,22 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Hold();
+            Lock.Hold();
 
             base.Swap();
 
-            _MUTEX.Release();
+            Lock.Release();
         }
 
         public override void Enqueue(T value)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Hold();
+            Lock.Hold();
 
             base.Enqueue(value);
 
-            _MUTEX.Release();
+            Lock.Release();
         }
 
         /// <summary>
@@ -169,11 +169,11 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Hold();
+            Lock.Hold();
 
             T value = base.Dequeue();
 
-            _MUTEX.Release();
+            Lock.Release();
 
             return value;
         }
@@ -184,7 +184,7 @@ namespace Containers
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
-            _MUTEX.Dispose();
+            Lock.Dispose();
 
             // Finish.
             base.Dispose();

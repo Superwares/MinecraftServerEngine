@@ -8,7 +8,7 @@ namespace MinecraftPhysicsEngine
     {
         private bool _disposed = false;
 
-        private readonly RWLock Lock = new();  // Disposable
+        private readonly RWLocker Lock = new();  // Disposable
 
         private readonly double _m;
         public double GetMass() => _m;

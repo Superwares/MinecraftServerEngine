@@ -1,5 +1,5 @@
 ﻿
 namespace Common
 {
-    public delegate void StartRoutine();
+    public delegate void VoidMethod();
 }

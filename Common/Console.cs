@@ -5,6 +5,22 @@ namespace Common
 
     public static class Console
     {
+        private static VoidMethod startCancelRoutine = null;
+
+        private static System.ConsoleCancelEventHandler OnCancelKeyPress()
+        {
+            return new System.ConsoleCancelEventHandler((_, _) =>
+            {
+                System.Diagnostics.Debug.Assert(startCancelRoutine != null);
+                startCancelRoutine();
+            });
+        }
+
+        static Console()
+        {
+            System.Console.CancelKeyPress += OnCancelKeyPress();
+
+        }
 
         public static void Print(string msg)
         {
@@ -26,9 +42,9 @@ namespace Common
             System.Console.Write("\t");
         }
 
-        public static void HandleCancelEvent(StartRoutine f)
+        public static void HandleTerminatin(VoidMethod startRoutine)
         {
-            throw new System.NotImplementedException();
+            startCancelRoutine = startRoutine;
         }
 
     }

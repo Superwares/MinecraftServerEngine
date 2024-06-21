@@ -13,7 +13,8 @@ namespace MinecraftServerEngine
 
         private bool _running = true;
 
-        private readonly Queue<Thread> _THREADS = new();  // Disposable
+        private static System.Threading.Thread MainThread = null;
+        private readonly Queue<Thread> Threads = new();  // Disposable
 
 
         private readonly World _WORLD;
@@ -212,7 +213,14 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Console.HandleCancelEvent(StartCancelRoutine);
+            MainThread = System.Threading.Thread.CurrentThread;
+            Console.HandleTerminatin(() =>
+            {
+                _running = false;
+
+                System.Diagnostics.Debug.Assert(MainThread != null);
+                MainThread.Join();
+            });
 
             ushort port = 25565;
 
@@ -231,7 +239,7 @@ namespace MinecraftServerEngine
                     }
                 });
 
-                _THREADS.Enqueue(coreThread);
+                Threads.Enqueue(coreThread);
             }
 
 
@@ -247,7 +255,7 @@ namespace MinecraftServerEngine
                 clientListener.Flush();
             });
 
-            _THREADS.Enqueue(subThread1);
+            Threads.Enqueue(subThread1);
 
             {
                 Time interval, accumulated, start, end, elapsed;
@@ -281,16 +289,16 @@ namespace MinecraftServerEngine
 
             {
                 // Handle close routine.
-                while (!_THREADS.Empty)
+                while (!Threads.Empty)
                 {
-                    Thread t = _THREADS.Dequeue();
+                    Thread t = Threads.Dequeue();
                     t.Join();
                 }
 
                 System.Diagnostics.Debug.Assert(!_running);
             }
 
-            Console.Print("Terminated!!");
+            Console.Print("Finish!!");
 
         }
 
@@ -299,10 +307,10 @@ namespace MinecraftServerEngine
             // Assertiong
             System.Diagnostics.Debug.Assert(!_disposed);
             System.Diagnostics.Debug.Assert(!_running);
-            System.Diagnostics.Debug.Assert(_THREADS.Empty);
+            System.Diagnostics.Debug.Assert(Threads.Empty);
 
             // Release resources.
-            _THREADS.Dispose();
+            Threads.Dispose();
             _WORLD.Dispose();
 
             // Finish

@@ -1,26 +1,28 @@
 ﻿
 namespace Sync
 {
-    public class Lock : System.IDisposable
+    public class Locker : System.IDisposable
     {
         private bool _disposed = false;
 
-        public Lock() { }
+        internal readonly object Object = new();  // Disposable
 
-        ~Lock() => System.Diagnostics.Debug.Assert(false);
+        public Locker() { }
+
+        ~Locker() => System.Diagnostics.Debug.Assert(false);
 
         public virtual void Hold()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            throw new System.NotImplementedException();
+            System.Threading.Monitor.Enter(Object);
         }
 
         public virtual void Release()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            throw new System.NotImplementedException();
+            System.Threading.Monitor.Exit(Object);
         }
 
         public virtual void Dispose()
@@ -29,6 +31,7 @@ namespace Sync
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
+            
 
             // Finish.
             System.GC.SuppressFinalize(this);
@@ -37,13 +40,15 @@ namespace Sync
 
     }
 
-    public sealed class RecurLock : Lock
+    // SpinLocker
+
+    public sealed class RecurLocker : Locker
     {
         private bool _disposed = false;
 
-        public RecurLock() { }
+        public RecurLocker() { }
 
-        ~RecurLock() => System.Diagnostics.Debug.Assert(false);
+        ~RecurLocker() => System.Diagnostics.Debug.Assert(false);
 
         public override void Hold()
         {
@@ -72,13 +77,13 @@ namespace Sync
         }
     }
 
-    public sealed class RWLock : Lock
+    public sealed class RWLocker : Locker
     {
         private bool _disposed = false;
 
-        public RWLock() { }
+        public RWLocker() { }
 
-        ~RWLock() => System.Diagnostics.Debug.Assert(false);
+        ~RWLocker() => System.Diagnostics.Debug.Assert(false);
 
         public override void Hold()
         {

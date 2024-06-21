@@ -161,7 +161,7 @@ namespace Containers
     {
         private bool _disposed = false;
 
-        private readonly Lock _MUTEX = new();
+        private readonly Locker _MUTEX = new();
 
         public ConcurrentNumList() { }
 

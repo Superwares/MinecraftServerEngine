@@ -5,7 +5,7 @@ namespace Sync
     {
         private bool _disposed = false;
 
-        public Barrier(int n) 
+        public Barrier(int n)
         {
             throw new System.NotImplementedException();
         }

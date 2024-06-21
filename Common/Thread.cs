@@ -3,7 +3,7 @@ namespace Common
 {
     public sealed class Thread
     {
-        public static Thread New(StartRoutine f)
+        public static Thread New(VoidMethod startRoutine)
         {
             // TODO: Check it is created in main thread.
 

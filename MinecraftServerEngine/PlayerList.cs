@@ -43,7 +43,7 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
-        private readonly Lock _MUTEX = new();  // Disposable
+        private readonly Locker _MUTEX = new();  // Disposable
         private readonly ConcurrentTable<System.Guid, Info> _INFORS = new();  // Disposable
         private readonly PlayerListRendererManager _MANAGER = new();  // Disposable
 
