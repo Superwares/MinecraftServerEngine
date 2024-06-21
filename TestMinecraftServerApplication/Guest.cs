@@ -3,14 +3,14 @@ using MinecraftPhysicsEngine;
 
 namespace TestServerApplication
 {
-    public sealed class SuperPlayer : Player
+    public sealed class Guest : Player
     {
         private bool _disposed = false;
 
-        public SuperPlayer(System.Guid userId, Vector p, Look look) 
+        public Guest(System.Guid userId, Vector p, Look look) 
             : base(userId, p, look) { }
 
-        ~SuperPlayer() => System.Diagnostics.Debug.Assert(false);
+        ~Guest() => System.Diagnostics.Debug.Assert(false);
 
         public override void StartRoutine(long serverTicks, World world)
         {

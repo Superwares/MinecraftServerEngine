@@ -9,7 +9,7 @@ namespace TestServerApplication
         {
             Console.Printl("Hello, World!");
 
-            using World world = new SuperWorld();
+            using World world = new Lobby();
 
             using ServerFramework framework = new(world);
             framework.Run();

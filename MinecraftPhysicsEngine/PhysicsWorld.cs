@@ -174,15 +174,10 @@ namespace MinecraftPhysicsEngine
 
         private bool _disposed = false;
 
-        private readonly Terrain Terrain;
-
         private readonly Table<Cell, Tree<PhysicsObject>> CellToObjects = new();  // Disposable
         private readonly Table<PhysicsObject, Grid> ObjectToGrid = new();  // Disposable
 
-        public PhysicsWorld(Terrain terrain) 
-        {
-            Terrain = terrain;
-        }
+        public PhysicsWorld() { }
 
         ~PhysicsWorld() => System.Diagnostics.Debug.Assert(false);
 
@@ -303,7 +298,7 @@ namespace MinecraftPhysicsEngine
             CloseObjectMapping(obj);
         }
 
-        public void MoveObject(PhysicsObject obj)
+        public void MoveObject(Terrain terrain, PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -312,7 +307,7 @@ namespace MinecraftPhysicsEngine
             AxisAlignedBoundingBox minBoundingBox = volume.GetMinBoundingBox();
             minBoundingBox.Extend(v);
 
-            (v, bool onGround) = Terrain.ResolveCollisions(volume, v);
+            (v, bool onGround) = terrain.ResolveCollisions(volume, v);
 
             obj.Move(volume, v, onGround);
 

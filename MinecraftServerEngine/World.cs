@@ -16,9 +16,11 @@ namespace MinecraftServerEngine
 
         private readonly Table<System.Guid, Player> DisconnectedPlayers = new(); // Disposable
 
+        private readonly BlockContext BlockContext = new();  // Disposable
+
         /*internal PublicInventory _Inventory = new ChestInventory();*/
 
-        public World() : base(new BlockContext())
+        public World()
         {
             // Dummy code.
             for (int z = -10; z <= 10; ++z)
@@ -246,7 +248,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            MoveObject(entity);
+            MoveObject(BlockContext, entity);
         }
 
         public void MoveEntities()
@@ -388,6 +390,8 @@ namespace MinecraftServerEngine
             Players.Dispose();
 
             DisconnectedPlayers.Dispose();
+
+            BlockContext.Dispose();
 
             // Finish.
             base.Dispose();

@@ -3,16 +3,16 @@ using MinecraftPhysicsEngine;
 
 namespace TestServerApplication
 {
-    internal sealed class SuperWorld : World
+    internal sealed class Lobby : World
     {
         private bool _disposed = false;
 
         private readonly Vector PosSpawning = new(0.0D, 101.0D, 0.0D);
         private readonly Look LookSpawning = new(0.0F, 0.0F);
 
-        public SuperWorld() : base() { }
+        public Lobby() : base() { }
 
-        ~SuperWorld() => System.Diagnostics.Debug.Assert(false);
+        ~Lobby() => System.Diagnostics.Debug.Assert(false);
 
         public override bool CanJoinWorld()
         {
@@ -30,7 +30,7 @@ namespace TestServerApplication
 
         protected override Player CreatePlayer(System.Guid userId)
         {
-            return new SuperPlayer(userId, PosSpawning, LookSpawning);
+            return new Guest(userId, PosSpawning, LookSpawning);
         }
 
         public override void Dispose()
