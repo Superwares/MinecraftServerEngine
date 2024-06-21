@@ -167,23 +167,24 @@ namespace MinecraftServerEngine
             // Start entity routines.
 
             barrier.SignalAndWait();
-        }
 
-        private void StartCancelRoutine()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            _running = false;
         }
 
         public void Run()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            using ReadLocker rLocker = new();
+
             MainThread = Thread.GetCurrent();
             Console.HandleTerminatin(() =>
             {
-                _running = false;
+                {
+                    rLocker.Hold();
+                    /*Console.Printl("Stop Running!");*/
+                    _running = false;
+                    rLocker.Release();
+                }
 
                 System.Diagnostics.Debug.Assert(MainThread != null);
                 MainThread.Join();
@@ -201,10 +202,26 @@ namespace MinecraftServerEngine
             {
                 var coreThread = Thread.New(() =>
                 {
-                    while (_running)
+                    do
                     {
-                        StartCoreRoutine(barrier, connListener);
-                    }
+                        barrier.SignalAndWait();
+
+                        rLocker.Read();
+
+                        try
+                        {
+                            if (!_running)
+                            {
+                                break;
+                            }
+
+                            StartCoreRoutine(barrier, connListener);
+                        }
+                        finally
+                        {
+                            rLocker.Release();
+                        }
+                    } while(true);
                 });
 
                 Threads.Enqueue(coreThread);
@@ -231,15 +248,33 @@ namespace MinecraftServerEngine
                 interval = accumulated = Time.FromMilliseconds(50);
                 start = Time.Now();
 
-                while (_running)
+                do
                 {
+
                     if (accumulated >= interval)
                     {
                         accumulated -= interval;
 
                         System.Diagnostics.Debug.Assert(_ticks >= 0);
-                        StartMainRoutine(barrier);
-                        CountTicks();
+
+                        barrier.SignalAndWait();
+
+                        rLocker.Read();
+
+                        try
+                        {
+                            if (!_running)
+                            {
+                                break;
+                            }
+
+                            StartMainRoutine(barrier);
+                            CountTicks();
+                        }
+                        finally
+                        {
+                            rLocker.Release();
+                        }
                     }
 
                     end = Time.Now();
@@ -252,7 +287,8 @@ namespace MinecraftServerEngine
                         Console.NewLine();
                         Console.Printl($"The task is taking longer than expected, ElapsedTime: {elapsed}.");
                     }
-                }
+
+                } while (true);
             }
 
             {
@@ -266,7 +302,7 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(!_running);
             }
 
-            Console.Print("Finish!!");
+            Console.Print("Finish!");
 
         }
 
@@ -279,7 +315,6 @@ namespace MinecraftServerEngine
 
             // Release resources.
             Threads.Dispose();
-            _WORLD.Dispose();
 
             // Finish
             System.GC.SuppressFinalize(this);

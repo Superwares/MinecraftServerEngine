@@ -355,18 +355,18 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class User(Client client, System.Guid userId, string username)
+    internal readonly struct User(Client client, System.Guid userId, string username)
     {
-        public readonly Client CLIENT = client;
-        public readonly System.Guid USER_ID = userId;
-        public readonly string USERNAME = username;
+        public readonly Client Client = client;
+        public readonly System.Guid UserId = userId;
+        public readonly string Username = username;
     }
 
     public sealed class ConnectionListener : System.IDisposable
     {
         private bool _disposed = false;
 
-        private readonly ConcurrentQueue<User> _USERS = new();
+        private readonly ConcurrentQueue<User> Users = new();
 
         ~ConnectionListener() => System.Diagnostics.Debug.Assert(false);
 
@@ -374,7 +374,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _USERS.Enqueue(new User(client, userId, username));
+            Users.Enqueue(new User(client, userId, username));
         }
 
         public void Accept(Barrier barrier, World world)
@@ -387,17 +387,16 @@ namespace MinecraftServerEngine
             {
                 do
                 {
-                    User user = _USERS.Dequeue();
-                    System.Diagnostics.Debug.Assert(user != null);
+                    User user = Users.Dequeue();
 
                     if (!world.CanJoinWorld())
                     {
                         // TODO: Send message why disconnected.
-                        user.CLIENT.Dispose();
+                        user.Client.Dispose();
                         continue;
                     }
 
-                    world.CreateOrConnectPlayer(user.CLIENT, user.USERNAME, user.USER_ID);
+                    world.CreateOrConnectPlayer(user.Client, user.Username, user.UserId);
                 } while (true);
             }
             catch (EmptyContainerException) { }
@@ -580,13 +579,13 @@ namespace MinecraftServerEngine
 
                         // TODO: Check username is empty or invalid.
 
-                        Console.Print("Start http request!");
+                        /*Console.Print("Start http request!");*/
 
                         // TODO: Use own http client in common library.
                         using System.Net.Http.HttpClient httpClient = new();
                         string url = string.Format("https://api.mojang.com/users/profiles/minecraft/{0}", inPacket.Username);
-                        Console.Printl(inPacket.Username);
-                        Console.Printl($"url: {url}");
+                        /*Console.Printl(inPacket.Username);
+                        Console.Printl($"url: {url}");*/
                         using System.Net.Http.HttpRequestMessage request = new(System.Net.Http.HttpMethod.Get, url);
 
                         // TODO: handle HttpRequestException
@@ -601,13 +600,13 @@ namespace MinecraftServerEngine
 
                         System.Guid userId = System.Guid.Parse(dictionary["id"]);
                         string username = dictionary["name"];  // TODO: check username is valid
-                        Console.Printl($"userId: {userId}");
-                        Console.Printl($"username: {username}");
+                        /*Console.Printl($"userId: {userId}");
+                        Console.Printl($"username: {username}");*/
 
                         // TODO: Handle to throw exception
                         System.Diagnostics.Debug.Assert(inPacket.Username == username);
 
-                        Console.Print("Finish http request!");
+                        /*Console.Print("Finish http request!");*/
 
                         LoginSuccessPacket outPacket1 = new(userId, username);
                         outPacket1.Write(buffer);
@@ -689,7 +688,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Console.Print(">");
+            /*Console.Print(">");*/
 
             try
             {

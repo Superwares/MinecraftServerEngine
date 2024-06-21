@@ -7,43 +7,43 @@ namespace Common
         public static Time operator +(Time t1, Time t2)
         {
             // TODO: Assertion of value range
-            return new(t1._AMOUNT + t2._AMOUNT);
+            return new(t1.Amount + t2.Amount);
         }
 
         public static Time operator -(Time t1, Time t2)
         {
             // TODO: Assertion of value range
-            return new(t1._AMOUNT - t2._AMOUNT);
+            return new(t1.Amount - t2.Amount);
         }
 
         public static bool operator !=(Time t1, Time t2)
         {
-            return t1._AMOUNT != t2._AMOUNT;
+            return t1.Amount != t2.Amount;
         }
 
         public static bool operator ==(Time t1, Time t2)
         {
-            return t1._AMOUNT == t2._AMOUNT;
+            return t1.Amount == t2.Amount;
         }
 
         public static bool operator <(Time t1, Time t2)
         {
-            return t1._AMOUNT < t2._AMOUNT;
+            return t1.Amount < t2.Amount;
         }
 
         public static bool operator >(Time t1, Time t2)
         {
-            return t1._AMOUNT > t2._AMOUNT;
+            return t1.Amount > t2.Amount;
         }
 
         public static bool operator <=(Time t1, Time t2)
         {
-            return t1._AMOUNT <= t2._AMOUNT;
+            return t1.Amount <= t2.Amount;
         }
 
         public static bool operator >=(Time t1, Time t2)
         {
-            return t1._AMOUNT >= t2._AMOUNT;
+            return t1.Amount >= t2.Amount;
         }
 
         public static Time Now()
@@ -67,14 +67,16 @@ namespace Common
             return new(sec * 1_000_000);
         }
 
-        private readonly long _AMOUNT;
+        public static string Symbol => "μs";
+
+        private readonly long Amount;
 
         private Time(long amount)
         {
-            _AMOUNT = amount;
+            Amount = amount;
         }
 
-        public override bool Equals(object obj)
+        public readonly override bool Equals(object obj)
         {
             if (obj == null)
             {
@@ -84,16 +86,21 @@ namespace Common
             return (obj is Time t) && Equals(t);
         }
 
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
             // TODO: Check this conversion.
             /*return base.GetHashCode();*/
-            return (int) _AMOUNT;
+            return (int) Amount;
         }
 
-        public bool Equals(Time other)
+        public readonly bool Equals(Time other)
         {
             return this == other;
+        }
+
+        public readonly override string ToString()
+        {
+            return $"{Amount}{Symbol}";
         }
     }
 }
