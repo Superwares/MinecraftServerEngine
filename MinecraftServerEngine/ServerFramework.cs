@@ -85,6 +85,7 @@ namespace MinecraftServerEngine
             // Start player routines.
 
             barrier.SignalAndWait();
+            barrier.Reset();
 
             _WORLD.Players.Swap();
 
@@ -95,6 +96,7 @@ namespace MinecraftServerEngine
             // Handle player connections.
 
             barrier.SignalAndWait();
+            barrier.Reset();
 
             _WORLD.Entities.Swap();
 
@@ -105,6 +107,7 @@ namespace MinecraftServerEngine
             // Destroy entities.
 
             barrier.SignalAndWait();
+            barrier.Reset();
 
             _WORLD.Players.Swap();
 
@@ -115,6 +118,7 @@ namespace MinecraftServerEngine
             // Destroy players.
 
             barrier.SignalAndWait();
+            barrier.Reset();
 
             _WORLD.Entities.Swap();
 
@@ -125,6 +129,7 @@ namespace MinecraftServerEngine
             // Move entities.
 
             barrier.SignalAndWait();
+            barrier.Reset();
 
             _WORLD.Players.Swap();
 
@@ -135,6 +140,7 @@ namespace MinecraftServerEngine
             // Move players.
 
             barrier.SignalAndWait();
+            barrier.Reset();
 
             locker.Hold();
             cond.Broadcast();
@@ -143,6 +149,7 @@ namespace MinecraftServerEngine
             // Create entities.
 
             barrier.SignalAndWait();
+            barrier.Reset();
 
             locker.Hold();
             cond.Broadcast();
@@ -151,6 +158,7 @@ namespace MinecraftServerEngine
             // Create or connect players.
 
             barrier.SignalAndWait();
+            barrier.Reset();
 
             _WORLD.Players.Swap();
 
@@ -161,6 +169,7 @@ namespace MinecraftServerEngine
             // Handle player renders.
 
             barrier.SignalAndWait();
+            barrier.Reset();
 
             locker.Hold();
             cond.Broadcast();
@@ -169,6 +178,7 @@ namespace MinecraftServerEngine
             // Start world routine.
 
             barrier.SignalAndWait();
+            barrier.Reset();
 
             _WORLD.Entities.Swap();
 
@@ -179,6 +189,7 @@ namespace MinecraftServerEngine
             // Start entity routines.
 
             barrier.SignalAndWait();
+            barrier.Reset();
         }
 
         private void StartCancelRoutine()
