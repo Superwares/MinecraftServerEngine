@@ -75,6 +75,8 @@ namespace MinecraftPhysicsEngine
 
             public static Grid Generate(BoundingVolume volume)
             {
+                System.Diagnostics.Debug.Assert(volume != null);
+
                 switch (volume)
                 {
                     default:

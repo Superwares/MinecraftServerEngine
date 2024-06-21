@@ -39,7 +39,7 @@ namespace MinecraftServerEngine
         protected abstract bool DetermineToDespawnPlayerOnDisconnect();
 
         public void StartRoutine(
-            Locker locker, Cond cond, Barrier barrier, long serverTicks)
+            Barrier barrier, long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -74,7 +74,7 @@ namespace MinecraftServerEngine
         }
 
         public void StartEntityRoutines(
-            Locker locker, Cond cond, Barrier barrier, long serverTicks)
+            Barrier barrier, long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -101,7 +101,7 @@ namespace MinecraftServerEngine
         }
 
         public void StartPlayerRoutines(
-            Locker locker, Cond cond, Barrier barrier, long serverTicks)
+            Barrier barrier, long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -127,7 +127,7 @@ namespace MinecraftServerEngine
         }
 
         public void HandlePlayerConnections(
-            Locker locker, Cond cond, Barrier barrier, long serverTicks)
+            Barrier barrier, long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -178,7 +178,7 @@ namespace MinecraftServerEngine
         }
 
         public void DestroyEntities(
-            Locker locker, Cond cond, Barrier barrier)
+            Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -211,7 +211,7 @@ namespace MinecraftServerEngine
         }
 
         public void DestroyPlayers(
-            Locker locker, Cond cond, Barrier barrier)
+            Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -255,7 +255,7 @@ namespace MinecraftServerEngine
         }
 
         public void MoveEntities(
-            Locker locker, Cond cond, Barrier barrier)
+            Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -280,7 +280,7 @@ namespace MinecraftServerEngine
         }
 
         public void MovePlayers(
-            Locker locker, Cond cond, Barrier barrier)
+            Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -306,7 +306,7 @@ namespace MinecraftServerEngine
         }
 
         public void CreateEntities(
-            Locker locker, Cond cond, Barrier barrier)
+            Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -359,7 +359,7 @@ namespace MinecraftServerEngine
         }
 
         public void HandlePlayerRenders(
-            Locker locker, Cond cond, Barrier barrier)
+            Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

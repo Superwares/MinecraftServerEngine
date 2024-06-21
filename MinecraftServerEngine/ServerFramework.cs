@@ -40,7 +40,6 @@ namespace MinecraftServerEngine
         }
 
         private void StartCoreRoutine(
-            Locker locker, Cond cond, 
             Barrier barrier, ConnectionListener connListener)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -50,40 +49,40 @@ namespace MinecraftServerEngine
             Console.Print(".");
 
             /*Console.Printl("StartPlayerRoutines!");*/
-            _WORLD.StartPlayerRoutines(locker, cond, barrier, _ticks);
+            _WORLD.StartPlayerRoutines(barrier, _ticks);
 
             /*Console.Printl("HandlePlayerConnections!");*/
-            _WORLD.HandlePlayerConnections(locker, cond, barrier, _ticks);
+            _WORLD.HandlePlayerConnections(barrier, _ticks);
 
             /*Console.Printl("DestroyEntities!");*/
-            _WORLD.DestroyEntities(locker, cond, barrier);
+            _WORLD.DestroyEntities(barrier);
 
             /*Console.Printl("DestroyPlayers!");*/
-            _WORLD.DestroyPlayers(locker, cond, barrier);
+            _WORLD.DestroyPlayers(barrier);
 
             /*Console.Printl("MoveEntities!");*/
-            _WORLD.MoveEntities(locker, cond, barrier);
+            _WORLD.MoveEntities(barrier);
 
             /*Console.Printl("MovePlayers");*/
-            _WORLD.MovePlayers(locker, cond, barrier);
+            _WORLD.MovePlayers(barrier);
 
             /*Console.Printl("CreateEntities!");*/
-            _WORLD.CreateEntities(locker, cond, barrier);
+            _WORLD.CreateEntities(barrier);
 
             /*Console.Printl("Create or Connect Players!");*/
-            connListener.Accept(locker, cond, barrier, _WORLD);
+            connListener.Accept(barrier, _WORLD);
                    
             /*Console.Printl("HandlePlayerRenders!");*/
-            _WORLD.HandlePlayerRenders(locker, cond, barrier);
+            _WORLD.HandlePlayerRenders(barrier);
 
             /*Console.Printl("StartRoutine!");*/
-            _WORLD.StartRoutine(locker, cond, barrier, _ticks);
+            _WORLD.StartRoutine(barrier, _ticks);
 
             /*Console.Printl("StartEntityRoutines!");*/
-            _WORLD.StartEntityRoutines(locker, cond, barrier, _ticks);
+            _WORLD.StartEntityRoutines(barrier, _ticks);
         }        
         
-        private void StartMainRoutine(Locker locker, Cond cond, Barrier barrier)
+        private void StartMainRoutine(Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -194,8 +193,6 @@ namespace MinecraftServerEngine
 
             int n = 2;  // TODO: Determine using number of processor.
 
-            using Locker locker = new();
-            using Cond cond = new(locker);
             using Barrier barrier = new(n);
             using ConnectionListener connListener = new();
 
@@ -206,7 +203,7 @@ namespace MinecraftServerEngine
                 {
                     while (_running)
                     {
-                        StartCoreRoutine(locker, cond, barrier, connListener);
+                        StartCoreRoutine(barrier, connListener);
                     }
                 });
 
@@ -241,7 +238,7 @@ namespace MinecraftServerEngine
                         accumulated -= interval;
 
                         System.Diagnostics.Debug.Assert(_ticks >= 0);
-                        StartMainRoutine(locker, cond, barrier);
+                        StartMainRoutine(barrier);
                         CountTicks();
                     }
 

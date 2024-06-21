@@ -377,7 +377,7 @@ namespace MinecraftServerEngine
             _USERS.Enqueue(new User(client, userId, username));
         }
 
-        public void Accept(Locker locker, Cond cond, Barrier barrier, World world)
+        public void Accept(Barrier barrier, World world)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

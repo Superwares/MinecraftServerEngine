@@ -29,12 +29,13 @@ namespace MinecraftPhysicsEngine
 
         public PhysicsObject(BoundingVolume volume, double m/*, double maxStepLevel*/)
         {
+            _m = m;
+
             _v = new(0.0D, 0.0D, 0.0D);
 
             _onGround = false;
 
-            _m = m;
-
+            _volume = volume;
             /*_MAX_STEP_LEVEL = maxStepLevel;*/
         }
 
