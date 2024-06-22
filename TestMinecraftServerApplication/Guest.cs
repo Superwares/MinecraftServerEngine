@@ -1,7 +1,7 @@
 ﻿using MinecraftServerEngine;
 using MinecraftPhysicsEngine;
 
-namespace TestServerApplication
+namespace TestMinecraftServerApplication
 {
     public sealed class Guest : Player
     {

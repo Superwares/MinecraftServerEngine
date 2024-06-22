@@ -63,10 +63,12 @@ namespace MinecraftPhysicsEngine
 
         }
 
-        private readonly struct Grid : System.IEquatable<Grid>
+        private class Grid : System.IEquatable<Grid>
         {
             private static Grid Generate(AxisAlignedBoundingBox aabb)
             {
+                System.Diagnostics.Debug.Assert(aabb != null);
+
                 Cell max = Cell.Generate(aabb.Max),
                      min = Cell.Generate(aabb.Min);
 
@@ -89,29 +91,32 @@ namespace MinecraftPhysicsEngine
 
             public static Grid Generate(Grid g1, Grid g2)
             {
-                int temp;
+                if (g1 == null)
+                {
+                    return null;
+                }    
+                if (g2 == null)
+                {
+                    return null;
+                }
 
                 int xMax = System.Math.Min(g1._MAX.X, g2._MAX.X),
                     xMin = System.Math.Max(g1._MIN.X, g2._MIN.X);
 
                 if (xMax < xMin)
                 {
-                    temp = xMax;
-                    xMax = --xMin;
-                    xMin = ++temp;
+                    return null;
                 }
 
-                int zMin = System.Math.Max(g1._MIN.Z, g2._MIN.Z),
-                    zMax = System.Math.Min(g1._MAX.Z, g2._MAX.Z);
+                int zMax = System.Math.Min(g1._MAX.Z, g2._MAX.Z),
+                    zMin = System.Math.Max(g1._MIN.Z, g2._MIN.Z);
 
                 if (zMax < zMin)
                 {
-                    temp = zMax;
-                    zMax = --zMin;
-                    zMin = ++temp;
+                    return null;
                 }
 
-                return new(new(xMax, zMax), new(xMin, zMin));
+                return new Grid(new Cell(xMax, zMax), new Cell(xMin, zMin));
             }
 
             private readonly Cell _MAX, _MIN;
@@ -157,17 +162,22 @@ namespace MinecraftPhysicsEngine
                 return $"( Max: {_MAX}, Min: {_MIN} )";
             }
 
-            public readonly bool Equals(Grid other)
+            public bool Equals(Grid other)
             {
+                if (other == null)
+                {
+                    return false;
+                }
+
                 return _MAX.Equals(other._MAX) && _MIN.Equals(other._MIN);
             }
 
-            public readonly override bool Equals(object obj)
+            public override bool Equals(object obj)
             {
                 return (obj is Grid other) && Equals(other);
             }
 
-            public readonly override int GetHashCode()
+            public override int GetHashCode()
             {
                 return base.GetHashCode();
             }
@@ -257,13 +267,16 @@ namespace MinecraftPhysicsEngine
             Grid gridPrev = ObjectToGrid.Extract(obj);
             Grid grid = Grid.Generate(obj.BoundingVolume);
 
+            System.Diagnostics.Debug.Assert(gridPrev != null);
+            System.Diagnostics.Debug.Assert(grid != null);
+
             if (!gridPrev.Equals(grid))
             {
                 Grid gridBetween = Grid.Generate(grid, gridPrev);
 
                 foreach (Cell cell in gridPrev.GetCells())
                 {
-                    if (gridBetween.Contains(cell))
+                    if (gridBetween != null && gridBetween.Contains(cell))
                     {
                         continue;
                     }
@@ -274,7 +287,7 @@ namespace MinecraftPhysicsEngine
 
                 foreach (Cell cell in grid.GetCells())
                 {
-                    if (gridBetween.Contains(cell))
+                    if (gridBetween != null && gridBetween.Contains(cell))
                     {
                         continue;
                     }

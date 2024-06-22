@@ -2,7 +2,7 @@
 using MinecraftPhysicsEngine;
 using Common;
 
-namespace TestServerApplication
+namespace TestMinecraftServerApplication
 {
     internal sealed class Lobby : World
     {

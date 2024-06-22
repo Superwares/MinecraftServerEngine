@@ -77,6 +77,7 @@ namespace MinecraftServerEngine
             Id = EntityIdAllocator.Alloc();
             UniqueId = uniqueId;
 
+            _p = p;
 
             System.Diagnostics.Debug.Assert(!_rotated);
             _look = look;
@@ -315,7 +316,8 @@ namespace MinecraftServerEngine
     {
         private bool _disposed = false;
 
-        private protected LivingEntity(System.Guid uniqueId,
+        private protected LivingEntity(
+            System.Guid uniqueId,
             Vector p, Look look,
             Hitbox hitbox,
             double m) : base(uniqueId, p, look, hitbox, m) { }
@@ -339,14 +341,14 @@ namespace MinecraftServerEngine
 
     public abstract class Player : LivingEntity
     {
-        private bool _disposed = false;
+        public const double Mass = 1.0D;
 
-        public const double MASS = 1.0D;
+        private bool _disposed = false;
 
         internal readonly PlayerInventory _selfInventory = new();
 
-        private Connection _CONN;
-        public bool Connected => (_CONN != null) || !_CONN.Disconnected;
+        private Connection Conn;
+        public bool Connected => (Conn != null) && !Conn.Disconnected;
 
         private bool _controled = false;
         private Vector _pControl;
@@ -368,7 +370,7 @@ namespace MinecraftServerEngine
         }
 
         public Player(System.Guid userId, Vector p, Look look) 
-            : base(userId, p, look, GetHitbox(false), MASS) 
+            : base(userId, p, look, GetHitbox(false), Mass) 
         {
             System.Diagnostics.Debug.Assert(!Sneaking);
             System.Diagnostics.Debug.Assert(!Sprinting);
@@ -400,7 +402,7 @@ namespace MinecraftServerEngine
             _pControl = Position;
             _onGroundControl = OnGround;
 
-            _CONN = new Connection(client, world, Id, userId, _pControl, _selfInventory);
+            Conn = new Connection(client, world, Id, userId, _pControl, _selfInventory);
         }
 
         public override void ApplyForce(Vector force)
@@ -409,9 +411,9 @@ namespace MinecraftServerEngine
 
             if (Connected)
             {
-                System.Diagnostics.Debug.Assert(_CONN != null);
-                Vector v = force / MASS;
-                _CONN.ApplyVelocity(Id, v);
+                System.Diagnostics.Debug.Assert(Conn != null);
+                Vector v = force / Mass;
+                Conn.ApplyVelocity(Id, v);
             }
 
             base.ApplyForce(force);
@@ -450,7 +452,7 @@ namespace MinecraftServerEngine
 
             if (Connected)
             {
-                _CONN.Teleport(p, look);
+                Conn.Teleport(p, look);
 
                 _controled = true;
                 _pControl = p;
@@ -553,11 +555,11 @@ namespace MinecraftServerEngine
 
             if (Connected)
             {
-                System.Diagnostics.Debug.Assert(_CONN != null);
+                System.Diagnostics.Debug.Assert(Conn != null);
 
                 using Queue<ServerboundPlayingPacket> controls = new();
 
-                _CONN.Control(
+                Conn.Control(
                     controls, 
                     world, 
                     UniqueId, Sneaking, Sprinting, _selfInventory);
@@ -576,18 +578,18 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (_CONN == null)
+            if (Conn == null)
             {
                 return false;
             }
 
-            System.Diagnostics.Debug.Assert(_CONN != null);
-            if (_CONN.Disconnected)
+            System.Diagnostics.Debug.Assert(Conn != null);
+            if (Conn.Disconnected)
             {
-                _CONN.Flush(world, UniqueId);
-                _CONN.Dispose();
+                Conn.Flush(world, UniqueId);
+                Conn.Dispose();
 
-                _CONN = null;
+                Conn = null;
 
                 return true;
             }
@@ -604,8 +606,8 @@ namespace MinecraftServerEngine
                 return;
             }
 
-            System.Diagnostics.Debug.Assert(_CONN != null);
-            _CONN.Render(
+            System.Diagnostics.Debug.Assert(Conn != null);
+            Conn.Render(
                 world, 
                 Id, 
                 Position, LOOK, 

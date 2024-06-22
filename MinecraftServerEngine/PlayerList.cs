@@ -28,7 +28,7 @@ namespace MinecraftServerEngine
 
             public void UpdateLaytency(long ticks)
             {
-                System.Diagnostics.Debug.Assert(ticks > 0);
+                System.Diagnostics.Debug.Assert(ticks >= 0);
                 System.Diagnostics.Debug.Assert(_laytency >= 0);
                 _laytency = ticks;
             }

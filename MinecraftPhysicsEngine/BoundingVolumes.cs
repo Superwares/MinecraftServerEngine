@@ -35,27 +35,87 @@ namespace MinecraftPhysicsEngine
 
         public override void Extend(Vector v)
         {
-            throw new System.NotImplementedException();
+            System.Diagnostics.Debug.Assert(Max.X >= Min.X);
+            System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
+            System.Diagnostics.Debug.Assert(Max.Z >= Min.Z);
+
+            double xMax = Max.X, yMax = Max.Y, zMax = Max.Z,
+                xMin = Min.X, yMin = Min.Y, zMin = Min.Z;
+            if (v.X > 0.0D)
+            {
+                xMax += v.X;
+            }
+            else if (v.X < 0.0D)
+            {
+                xMin += v.X;
+            }
+
+            if (v.Y > 0.0D)
+            {
+                yMax += v.Y;
+            }
+            else if (v.Y < 0.0D)
+            {
+                yMin += v.Y;
+            }
+
+            if (v.Z > 0.0D)
+            {
+                zMax += v.Z;
+            }
+            else if (v.Z < 0.0D)
+            {
+                zMin += v.Z;
+            }
+
+            _max = new Vector(xMax, yMax, zMax);
+            _min = new Vector(xMin, yMin, zMin);
+
+            System.Diagnostics.Debug.Assert(Max.X >= Min.X);
+            System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
+            System.Diagnostics.Debug.Assert(Max.Z >= Min.Z);
         }
 
         public override void Move(Vector v)
         {
-            throw new System.NotImplementedException();
+            System.Diagnostics.Debug.Assert(Max.X >= Min.X);
+            System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
+            System.Diagnostics.Debug.Assert(Max.Z >= Min.Z);
+
+            _max = _max + v; _min = _min + v;
         }
 
         public override Vector GetCenter()
         {
-            throw new System.NotImplementedException();
+            System.Diagnostics.Debug.Assert(Max.X >= Min.X);
+            System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
+            System.Diagnostics.Debug.Assert(Max.Z >= Min.Z);
+
+            double x = (Max.X + Min.X) / 2.0D,
+                y = (Max.Y + Min.Y) / 2.0D,
+                z = (Max.Z + Min.Z) / 2.0D;
+            return new(x, y, z);
         }
 
         public override Vector GetBottomCenter()
         {
-            throw new System.NotImplementedException();
+            System.Diagnostics.Debug.Assert(Max.X >= Min.X);
+            System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
+            System.Diagnostics.Debug.Assert(Max.Z >= Min.Z);
+
+            double x = (Max.X + Min.X) / 2.0D,
+                y = Min.Y,
+                z = (Max.Z + Min.Z) / 2.0D;
+            return new(x, y, z);
         }
 
         public override AxisAlignedBoundingBox GetMinBoundingBox()
         {
-            throw new System.NotImplementedException();
+            System.Diagnostics.Debug.Assert(Max.X >= Min.X);
+            System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
+            System.Diagnostics.Debug.Assert(Max.Z >= Min.Z);
+
+            return new(Max, Min);
         }
 
         public override bool TestIntersection(BoundingVolume volume)
