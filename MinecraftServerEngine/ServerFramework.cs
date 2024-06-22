@@ -39,7 +39,7 @@ namespace MinecraftServerEngine
             ++_ticks;
         }
 
-        private void StartCoreRoutine(
+        private void StartServerRoutine(
             Barrier barrier, ConnectionListener connListener)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -82,7 +82,7 @@ namespace MinecraftServerEngine
             _WORLD.StartEntityRoutines(barrier, _ticks);
         }        
         
-        private void StartMainRoutine(Barrier barrier)
+        /*private void StartMainRoutine(Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -168,7 +168,8 @@ namespace MinecraftServerEngine
 
             barrier.SignalAndWait();
 
-        }
+        }*/
+
 
         public void Run()
         {
@@ -181,8 +182,10 @@ namespace MinecraftServerEngine
             {
                 {
                     rLocker.Hold();
-                    /*Console.Printl("Stop Running!");*/
+
+                    /*Console.Print("Cancel Running!");*/
                     _running = false;
+
                     rLocker.Release();
                 }
 
@@ -192,12 +195,12 @@ namespace MinecraftServerEngine
 
             ushort port = 25565;
 
-            int n = 2;  // TODO: Determine using number of processor.
+            int n = 1;  // TODO: Determine using number of processor.
 
             using Barrier barrier = new(n);
             using ConnectionListener connListener = new();
 
-            System.Diagnostics.Debug.Assert(n > 1);
+            /*System.Diagnostics.Debug.Assert(n > 1);
             for (int i = 0; i < n - 1; ++i)
             {
                 var coreThread = Thread.New(() =>
@@ -215,7 +218,7 @@ namespace MinecraftServerEngine
                                 break;
                             }
 
-                            StartCoreRoutine(barrier, connListener);
+                            StartServerRoutine(barrier, connListener);
                         }
                         finally
                         {
@@ -225,7 +228,7 @@ namespace MinecraftServerEngine
                 });
 
                 Threads.Enqueue(coreThread);
-            }
+            }*/
 
 
             var subThread1 = Thread.New(() =>
@@ -268,7 +271,7 @@ namespace MinecraftServerEngine
                                 break;
                             }
 
-                            StartMainRoutine(barrier);
+                            StartServerRoutine(barrier, connListener);
                             CountTicks();
                         }
                         finally
@@ -285,7 +288,7 @@ namespace MinecraftServerEngine
                     if (elapsed > interval)
                     {
                         Console.NewLine();
-                        Console.Printl($"The task is taking longer than expected, ElapsedTime: {elapsed}.");
+                        Console.Print($"The task is taking longer, Elapsed: {elapsed}!");
                     }
 
                 } while (true);

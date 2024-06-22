@@ -617,7 +617,7 @@ namespace MinecraftServerEngine
             }
 
         }
-        private sealed class LoadingHelper : System.IDisposable
+        private sealed class ChunkingHelper : System.IDisposable
         {
             private const int _MAX_LOAD_COUNT = 7;
             private const int _MAX_SEARCH_COUNT = 103;
@@ -632,7 +632,7 @@ namespace MinecraftServerEngine
 
             private int _x, _z, _layer, _n;
 
-            public LoadingHelper(ChunkLocation loc, int d) 
+            public ChunkingHelper(ChunkLocation loc, int d) 
             {
                 _loc = loc;
                 _d = d;
@@ -642,7 +642,7 @@ namespace MinecraftServerEngine
                 _n = 0;
             }
 
-            ~LoadingHelper() => System.Diagnostics.Debug.Assert(false);
+            ~ChunkingHelper() => System.Diagnostics.Debug.Assert(false);
 
             public void Load(
                 Queue<ChunkLocation> newChunks, Queue<ChunkLocation> outOfRangeChunks, 
@@ -892,7 +892,7 @@ namespace MinecraftServerEngine
         private readonly EntityRenderer _ENTITY_RENDERER;
 
 
-        private readonly LoadingHelper _LOADING_HELPER;  // Dispoasble
+        private readonly ChunkingHelper _LOADING_HELPER;  // Dispoasble
         private readonly Queue<TeleportationRecord> _TELEPORTATION_RECORDS = new();  // Dispoasble
         private KeepAliveRecord _keepAliveRecord = new();  // Disposable
 
@@ -914,7 +914,7 @@ namespace MinecraftServerEngine
             ChunkLocation loc = ChunkLocation.Generate(p);
             _ENTITY_RENDERER = new EntityRenderer(_OUT_PACKETS, id, loc, _dEntityRendering);
 
-            _LOADING_HELPER = new LoadingHelper(loc, _dChunkRendering);
+            _LOADING_HELPER = new ChunkingHelper(loc, _dChunkRendering);
 
             _window = new Window(_OUT_PACKETS, inv);
 

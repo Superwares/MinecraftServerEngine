@@ -348,7 +348,8 @@ namespace MinecraftServerEngine
         internal readonly PlayerInventory _selfInventory = new();
 
         private Connection Conn;
-        public bool Connected => (Conn != null) && !Conn.Disconnected;
+        public bool Disconnected => (Conn == null) || Conn.Disconnected;
+        public bool Connected => !Disconnected;
 
         private bool _controled = false;
         private Vector _pControl;

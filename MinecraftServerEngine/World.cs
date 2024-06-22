@@ -38,12 +38,9 @@ namespace MinecraftServerEngine
 
         protected abstract bool DetermineToDespawnPlayerOnDisconnect();
 
-        public void StartRoutine(
-            Barrier barrier, long serverTicks)
+        public void StartRoutine(Barrier barrier, long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-
-            barrier.SignalAndWait();
 
             /*if (serverTicks == 20 * 5)
             {
@@ -78,6 +75,8 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            Entities.Swap();
+
             barrier.SignalAndWait();
 
             try
@@ -100,10 +99,11 @@ namespace MinecraftServerEngine
             barrier.SignalAndWait();
         }
 
-        public void StartPlayerRoutines(
-            Barrier barrier, long serverTicks)
+        public void StartPlayerRoutines(Barrier barrier, long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            Players.Swap();
 
             barrier.SignalAndWait();
 
@@ -126,10 +126,11 @@ namespace MinecraftServerEngine
             barrier.SignalAndWait();
         }
 
-        public void HandlePlayerConnections(
-            Barrier barrier, long serverTicks)
+        public void HandlePlayerConnections(Barrier barrier, long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            Players.Swap();
 
             barrier.SignalAndWait();
 
@@ -163,24 +164,17 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (entity is Player player)
-            {
-                PlayerList.Remove(player.UniqueId);
-
-                Player playerExtracted = DisconnectedPlayers.Extract(player.UniqueId);
-                System.Diagnostics.Debug.Assert(ReferenceEquals(playerExtracted, player));
-            }
-
             CloseObject(entity);
 
             entity.Flush();
             entity.Dispose();
         }
 
-        public void DestroyEntities(
-            Barrier barrier)
+        public void DestroyEntities(Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            Entities.Swap();
 
             barrier.SignalAndWait();
 
@@ -195,11 +189,11 @@ namespace MinecraftServerEngine
                     if (entity.IsDead())
                     {
                         DestroyEntity(entity);
+
+                        continue;
                     }
-                    else
-                    {
-                        Entities.Enqueue(entity);
-                    }
+
+                    Entities.Enqueue(entity);
 
                 } while (true);
             }
@@ -210,10 +204,11 @@ namespace MinecraftServerEngine
             barrier.SignalAndWait();
         }
 
-        public void DestroyPlayers(
-            Barrier barrier)
+        public void DestroyPlayers(Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            Players.Swap();
 
             barrier.SignalAndWait();
 
@@ -230,69 +225,16 @@ namespace MinecraftServerEngine
 
                         if (DetermineToDespawnPlayerOnDisconnect())
                         {
+                            PlayerList.Remove(player.UniqueId);
+
+                            Player playerExtracted = DisconnectedPlayers.Extract(player.UniqueId);
+                            System.Diagnostics.Debug.Assert(ReferenceEquals(playerExtracted, player));
+
                             DestroyEntity(player);
+
+                            continue;
                         }
                     }
-                    else
-                    {
-                        Players.Enqueue(player);
-                    }
-                } while (true);
-
-            }
-            catch (EmptyContainerException) { }
-
-            System.Diagnostics.Debug.Assert(Players.Empty);
-
-            barrier.SignalAndWait();
-        }
-
-        public void MoveEntity(Entity entity)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            MoveObject(BlockContext, entity);
-        }
-
-        public void MoveEntities(
-            Barrier barrier)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            barrier.SignalAndWait();
-
-            try
-            {
-                do
-                {
-                    Entity entity = Entities.Dequeue();
-
-                    MoveEntity(entity);
-
-                    Entities.Enqueue(entity);
-                } while (true);
-            }
-            catch (EmptyContainerException) { }
-
-            System.Diagnostics.Debug.Assert(Entities.Empty);
-
-            barrier.SignalAndWait();
-        }
-
-        public void MovePlayers(
-            Barrier barrier)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            barrier.SignalAndWait();
-
-            try
-            {
-                do
-                {
-                    Player player = Players.Dequeue();
-
-                    MoveEntity(player);
 
                     Players.Enqueue(player);
                 } while (true);
@@ -305,12 +247,62 @@ namespace MinecraftServerEngine
             barrier.SignalAndWait();
         }
 
-        public void CreateEntities(
-            Barrier barrier)
+        public void MoveEntities(Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            Entities.Swap();
+
             barrier.SignalAndWait();
+
+            try
+            {
+                do
+                {
+                    Entity entity = Entities.Dequeue();
+
+                    MoveObject(BlockContext, entity);
+
+                    Entities.Enqueue(entity);
+                } while (true);
+            }
+            catch (EmptyContainerException) { }
+
+            System.Diagnostics.Debug.Assert(Entities.Empty);
+
+            barrier.SignalAndWait();
+        }
+
+        public void MovePlayers(Barrier barrier)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            Players.Swap();
+
+            barrier.SignalAndWait();
+
+            try
+            {
+                do
+                {
+                    Player player = Players.Dequeue();
+
+                    MoveObject(BlockContext, player);
+
+                    Players.Enqueue(player);
+                } while (true);
+
+            }
+            catch (EmptyContainerException) { }
+
+            System.Diagnostics.Debug.Assert(Players.Empty);
+
+            barrier.SignalAndWait();
+        }
+
+        public void CreateEntities(Barrier barrier)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             try
             {
@@ -358,10 +350,11 @@ namespace MinecraftServerEngine
             Players.Enqueue(player);
         }
 
-        public void HandlePlayerRenders(
-            Barrier barrier)
+        public void HandlePlayerRenders(Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            Players.Swap();
 
             barrier.SignalAndWait();
 
