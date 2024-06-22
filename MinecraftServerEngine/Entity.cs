@@ -577,6 +577,8 @@ namespace MinecraftServerEngine
 
         public bool HandlePlayerConnection(World world)
         {
+            System.Diagnostics.Debug.Assert(world != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             if (Conn == null)

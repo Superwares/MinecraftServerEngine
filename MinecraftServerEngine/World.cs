@@ -139,6 +139,7 @@ namespace MinecraftServerEngine
                 do
                 {
                     Player player = Players.Dequeue();
+                    System.Diagnostics.Debug.Assert(player != null);
 
                     if (player.HandlePlayerConnection(this))
                     {
@@ -206,6 +207,8 @@ namespace MinecraftServerEngine
 
         public void DestroyPlayers(Barrier barrier)
         {
+            System.Diagnostics.Debug.Assert(barrier != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Players.Swap();
@@ -217,6 +220,7 @@ namespace MinecraftServerEngine
                 do
                 {
                     Player player = Players.Dequeue();
+                    System.Diagnostics.Debug.Assert(player != null);
 
                     if (!player.Connected)
                     {
@@ -343,11 +347,12 @@ namespace MinecraftServerEngine
                 InitObject(player);
 
                 PlayerList.Add(userId, username);
+
+                Players.Enqueue(player);
             }
             
             player.Connect(client, this, userId);
 
-            Players.Enqueue(player);
         }
 
         public void HandlePlayerRenders(Barrier barrier)

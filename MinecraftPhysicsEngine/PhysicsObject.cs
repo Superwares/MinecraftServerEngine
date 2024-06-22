@@ -1,4 +1,5 @@
 ﻿
+using Common;
 using Containers;
 using Sync;
 
@@ -74,6 +75,8 @@ namespace MinecraftPhysicsEngine
             _volume = volume;
             _v = v;
             _onGround = onGround;
+
+            Console.Printl($"v: {v}");
         }
 
         public virtual void Dispose()

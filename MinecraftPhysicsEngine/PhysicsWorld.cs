@@ -317,14 +317,14 @@ namespace MinecraftPhysicsEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            (BoundingVolume volume, Vector v) = obj.Integrate();
+            (BoundingVolume volumeObject, Vector v) = obj.Integrate();
 
-            AxisAlignedBoundingBox minBoundingBox = volume.GetMinBoundingBox();
-            minBoundingBox.Extend(v);
+            AxisAlignedBoundingBox volumeTotal = volumeObject.GetMinBoundingBox();
+            volumeTotal.Extend(v);
 
-            (v, bool onGround) = terrain.ResolveCollisions(minBoundingBox, volume, v);
+            (v, bool onGround) = terrain.ResolveCollisions(volumeTotal, volumeObject, v);
 
-            obj.Move(volume, v, onGround);
+            obj.Move(volumeObject, v, onGround);
 
             UpdateObjectMapping(obj);
         }

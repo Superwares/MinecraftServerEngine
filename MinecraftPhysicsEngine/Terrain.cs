@@ -244,7 +244,7 @@ namespace MinecraftPhysicsEngine
         }
 
         internal (Vector, bool) ResolveCollisions(
-            BoundingVolume volumeTotal, BoundingVolume volume, Vector v)
+            BoundingVolume volumeTotal, BoundingVolume volumeObject, Vector v)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -266,7 +266,7 @@ namespace MinecraftPhysicsEngine
                 GenerateBoundingBoxForBlock(queue, loc);
             }
 
-            return ResolveCollisions(queue, volume, v, false);
+            return ResolveCollisions(queue, volumeObject, v, false);
         }
 
         public virtual void Dispose()
