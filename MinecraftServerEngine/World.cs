@@ -59,7 +59,8 @@ namespace MinecraftServerEngine
             if (serversidePhysics) 
             {
                 entity.ApplyForce(
-                        -1.0D * new Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
+                        -1.0D * 
+                        new Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
                         entity.Velocity);  // Damping Force
                 entity.ApplyForce(entity.GetMass() * 0.08D * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
 
@@ -113,7 +114,7 @@ namespace MinecraftServerEngine
                 {
                     Player player = Players.Dequeue();
 
-                    StartEntityRoutine(serverTicks, player, !player.Connected);
+                    StartEntityRoutine(serverTicks, player, player.Disconnected);
 
                     Players.Enqueue(player);
                 } while (true);
@@ -332,6 +333,10 @@ namespace MinecraftServerEngine
 
         internal void CreateOrConnectPlayer(Client client, string username, System.Guid userId)
         {
+            System.Diagnostics.Debug.Assert(client != null);
+            System.Diagnostics.Debug.Assert(username != "");
+            System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Player player;
@@ -339,10 +344,12 @@ namespace MinecraftServerEngine
             if (DisconnectedPlayers.Contains(userId))
             {
                 player = DisconnectedPlayers.Extract(userId);
+                System.Diagnostics.Debug.Assert(player != null);
             }
             else
             {
                 player = CreatePlayer(userId);
+                System.Diagnostics.Debug.Assert(player != null);
 
                 InitObject(player);
 
@@ -357,6 +364,8 @@ namespace MinecraftServerEngine
 
         public void HandlePlayerRenders(Barrier barrier)
         {
+            System.Diagnostics.Debug.Assert(barrier != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Players.Swap();

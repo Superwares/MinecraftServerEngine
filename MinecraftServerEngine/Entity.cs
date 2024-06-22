@@ -348,10 +348,9 @@ namespace MinecraftServerEngine
         internal readonly PlayerInventory _selfInventory = new();
 
         private Connection Conn;
-        public bool Disconnected => (Conn == null) || Conn.Disconnected;
+        public bool Disconnected => (Conn == null);
         public bool Connected => !Disconnected;
 
-        private bool _controled = false;
         private Vector _pControl;
         private bool _onGroundControl;
 
@@ -424,7 +423,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (_controled)
+            if (Connected)
             {
                 // TODO: Check the difference between _p and p. and predict movement....
                 /*Console.Printl($"p: {p}, _p: {_p}, ");
@@ -440,8 +439,6 @@ namespace MinecraftServerEngine
 
                 volume = GetHitbox().Convert(_pControl);
                 onGround = _onGroundControl;
-
-                _controled = false;
             }
             
             base.Move(volume, v, onGround);
@@ -455,7 +452,6 @@ namespace MinecraftServerEngine
             {
                 Conn.Teleport(p, look);
 
-                _controled = true;
                 _pControl = p;
                 _onGroundControl = false;
             }
@@ -469,7 +465,6 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_teleported);
 
-            _controled = true;
             _pControl = p;
             _onGroundControl = onGround;
 
@@ -481,8 +476,8 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_teleported);
 
-            _controled = true;
             _onGroundControl = onGround;
+            /*Console.Printl($"OnGround: {onGround}");*/
 
         }
 
@@ -496,11 +491,15 @@ namespace MinecraftServerEngine
                     throw new System.NotImplementedException();
                 case PlayerPacket playerPacket:
                     {
+                        /*Console.Printl("PlayerPacket!");*/
+
                         Control(playerPacket.OnGround);
                     }
                     break;
                 case PlayerPositionPacket playerPositionPacket:
                     {
+                        /*Console.Printl("PlayerPositionPacket!");*/
+
                         Vector p = new(
                             playerPositionPacket.X, 
                             playerPositionPacket.Y, 
@@ -510,6 +509,8 @@ namespace MinecraftServerEngine
                     break;
                 case PlayerPosAndLookPacket playerPosAndLookPacket:
                     {
+                        /*Console.Printl("PlayerPosAndLookPacket!");*/
+
                         Vector p = new(
                             playerPosAndLookPacket.X,
                             playerPosAndLookPacket.Y,
@@ -522,6 +523,8 @@ namespace MinecraftServerEngine
                     break;
                 case PlayerLookPacket playerLookPacket:
                     {
+                        /*Console.Printl("PlayerLookPacket!");*/
+
                         Look look = new Look(playerLookPacket.Yaw, playerLookPacket.Pitch);
                         
                         Control(playerLookPacket.OnGround);

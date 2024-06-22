@@ -9,8 +9,6 @@ namespace MinecraftPhysicsEngine
     {
         private bool _disposed = false;
 
-        private readonly ReadLocker Lock = new();  // Disposable
-
         private readonly double _m;
         public double GetMass() => _m;
 
@@ -18,7 +16,7 @@ namespace MinecraftPhysicsEngine
 
         private readonly Queue<Vector> Forces = new();  // Disposable
 
-        private Vector _v = new(0, 0, 0);
+        private Vector _v;
         public Vector Velocity;
 
         private bool _onGround;
@@ -76,7 +74,7 @@ namespace MinecraftPhysicsEngine
             _v = v;
             _onGround = onGround;
 
-            Console.Printl($"v: {v}");
+            Console.Printl($"Velocity: {v}, OnGround: {onGround}");
         }
 
         public virtual void Dispose()
@@ -85,7 +83,6 @@ namespace MinecraftPhysicsEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
-            Lock.Dispose();
             Forces.Dispose();
 
             // Finish.
