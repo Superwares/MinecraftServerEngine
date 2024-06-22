@@ -64,7 +64,7 @@ namespace MinecraftServerEngine
         private protected Look _lookTeleport;
 
 
-        private EntityRendererManager _MANAGER;  // Disposable
+        private EntityRendererManager Manager;  // Disposable
 
 
         private protected Entity(
@@ -85,7 +85,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_sneaking);
             System.Diagnostics.Debug.Assert(!_sprinting);
 
-            _MANAGER = new(Id);
+            Manager = new(Id);
         }
 
         ~Entity() => System.Diagnostics.Debug.Assert(false);
@@ -98,8 +98,8 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_MANAGER != null);
-            if (_MANAGER.Apply(renderer))
+            System.Diagnostics.Debug.Assert(Manager != null);
+            if (Manager.Apply(renderer))
             {
                 RenderSpawning(renderer);
             }
@@ -129,7 +129,7 @@ namespace MinecraftServerEngine
 
             if (_teleported)
             {
-                _MANAGER.Teleport(_pTeleport, _lookTeleport, false);
+                Manager.Teleport(_pTeleport, _lookTeleport, false);
 
                 _p = _pTeleport;
 
@@ -143,35 +143,35 @@ namespace MinecraftServerEngine
 
             Vector p = volume.GetBottomCenter();
 
-            System.Diagnostics.Debug.Assert(_MANAGER != null);
-            _MANAGER.HandleRendering(p);
+            System.Diagnostics.Debug.Assert(Manager != null);
+            Manager.HandleRendering(p);
 
             bool moved = !p.Equals(_p);  // TODO: Compare with machine epsilon.
             if (moved && _rotated)
             {
-                _MANAGER.MoveAndRotate(p, _p, _look, onGround);
+                Manager.MoveAndRotate(p, _p, _look, onGround);
             }
             else if (moved)
             {
                 System.Diagnostics.Debug.Assert(!_rotated);
 
-                _MANAGER.Move(p, _p, onGround);
+                Manager.Move(p, _p, onGround);
             }
             else if (_rotated)
             {
                 System.Diagnostics.Debug.Assert(!moved);
 
-                _MANAGER.Rotate(_look, onGround);
+                Manager.Rotate(_look, onGround);
             }
             else
             {
                 System.Diagnostics.Debug.Assert(!moved);
                 System.Diagnostics.Debug.Assert(!_rotated);
 
-                _MANAGER.Stand();
+                Manager.Stand();
             }
 
-            _MANAGER.FinishMovementRenderring();
+            Manager.FinishMovementRenderring();
 
             base.Move(volume, v, onGround);
 
@@ -202,7 +202,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
             
-            _MANAGER.ChangeForms(_sneaking, _sprinting);
+            Manager.ChangeForms(_sneaking, _sprinting);
         }
 
         public void Sneak()
@@ -245,8 +245,8 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_MANAGER != null);
-            _MANAGER.Flush();
+            System.Diagnostics.Debug.Assert(Manager != null);
+            Manager.Flush();
         }
 
         public override void Dispose()
@@ -256,7 +256,7 @@ namespace MinecraftServerEngine
 
             // Release resources.
             EntityIdAllocator.Dealloc(Id);
-            _MANAGER.Dispose();
+            Manager.Dispose();
 
             // Finish.
             base.Dispose();
@@ -345,7 +345,7 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
-        internal readonly PlayerInventory _selfInventory = new();
+        internal readonly PlayerInventory SelfInventory = new();
 
         private Connection Conn;
         public bool Disconnected => (Conn == null);
@@ -402,7 +402,7 @@ namespace MinecraftServerEngine
             _pControl = Position;
             _onGroundControl = OnGround;
 
-            Conn = new Connection(client, world, Id, userId, _pControl, _selfInventory);
+            Conn = new Connection(client, world, Id, userId, _pControl, SelfInventory);
         }
 
         public override void ApplyForce(Vector force)
@@ -450,10 +450,10 @@ namespace MinecraftServerEngine
 
             if (Connected)
             {
-                Conn.Teleport(p, look);
-
                 _pControl = p;
                 _onGroundControl = false;
+
+                Conn.Teleport(p, look);
             }
 
             base.Teleport(p, look);
@@ -566,7 +566,7 @@ namespace MinecraftServerEngine
                 Conn.Control(
                     controls, 
                     world, 
-                    UniqueId, Sneaking, Sprinting, _selfInventory);
+                    UniqueId, Sneaking, Sprinting, SelfInventory);
 
                 while (!controls.Empty)
                 {
@@ -584,7 +584,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (Conn == null)
+            if (Disconnected)
             {
                 return false;
             }
@@ -617,7 +617,7 @@ namespace MinecraftServerEngine
                 world, 
                 Id, 
                 Position, LOOK, 
-                _selfInventory);
+                SelfInventory);
         }
         
         public override void Dispose()

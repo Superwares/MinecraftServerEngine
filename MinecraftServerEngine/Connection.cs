@@ -1318,11 +1318,10 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(!_disconnected);
-            /*if (_disconnected)
+            if (_disconnected)
             {
                 return;
-            }*/
+            }
 
             EntityVelocityPacket packet = new(
                 id,
@@ -1364,11 +1363,10 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(!_disconnected);
-            /*if (_disconnected)
+            if (_disconnected)
             {
                 return;
-            }*/
+            }
 
             int payload = Random.NextInt();
             TeleportSelfPlayerPacket packet = new(

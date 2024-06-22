@@ -50,22 +50,19 @@ namespace MinecraftServerEngine
             barrier.SignalAndWait();
         }
 
-        public void StartEntityRoutine(long serverTicks, Entity entity, bool serversidePhysics)
+        public void StartEntityRoutine(long serverTicks, Entity entity)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // TODO: Resolve Collisions with other entities.
             // TODO: Add Global Forces with OnGround flag. (Gravity, Damping Force, ...)
-            if (serversidePhysics) 
-            {
-                entity.ApplyForce(
-                        -1.0D * 
-                        new Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
-                        entity.Velocity);  // Damping Force
-                entity.ApplyForce(entity.GetMass() * 0.08D * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
+            entity.ApplyForce(
+                -1.0D *
+                new Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
+                entity.Velocity);  // Damping Force
+            entity.ApplyForce(entity.GetMass() * 0.08D * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
 
-                /*entity.ApplyForce(entity.GetMass() * 0.001D * new Entity.Vector(0, -1, 0));  // Gravity*/
-            }
+            /*entity.ApplyForce(entity.GetMass() * 0.001D * new Entity.Vector(0, -1, 0));  // Gravity*/
 
             entity.StartInternalRoutine(serverTicks, this);
             entity.StartRoutine(serverTicks, this);
@@ -88,7 +85,7 @@ namespace MinecraftServerEngine
 
                     System.Diagnostics.Debug.Assert(entity is not Player);
 
-                    StartEntityRoutine(serverTicks, entity, true);
+                    StartEntityRoutine(serverTicks, entity);
 
                     Entities.Enqueue(entity);
                 } while (true);
@@ -114,7 +111,7 @@ namespace MinecraftServerEngine
                 {
                     Player player = Players.Dequeue();
 
-                    StartEntityRoutine(serverTicks, player, player.Disconnected);
+                    StartEntityRoutine(serverTicks, player);
 
                     Players.Enqueue(player);
                 } while (true);
