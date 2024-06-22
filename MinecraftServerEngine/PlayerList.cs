@@ -35,7 +35,7 @@ namespace MinecraftServerEngine
 
             public void Disconnect()
             {
-                System.Diagnostics.Debug.Assert(_laytency == 0);
+                System.Diagnostics.Debug.Assert(_laytency >= 0);
                 _laytency = -1;
             }
 

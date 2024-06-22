@@ -322,7 +322,7 @@ namespace MinecraftPhysicsEngine
             AxisAlignedBoundingBox minBoundingBox = volume.GetMinBoundingBox();
             minBoundingBox.Extend(v);
 
-            (v, bool onGround) = terrain.ResolveCollisions(volume, v);
+            (v, bool onGround) = terrain.ResolveCollisions(minBoundingBox, volume, v);
 
             obj.Move(volume, v, onGround);
 

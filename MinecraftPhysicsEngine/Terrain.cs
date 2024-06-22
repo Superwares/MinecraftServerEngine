@@ -243,7 +243,8 @@ namespace MinecraftPhysicsEngine
             return ResolveCollisions(queue, volume, vPrime, onGround);
         }
 
-        internal (Vector, bool) ResolveCollisions(BoundingVolume volume, Vector v)
+        internal (Vector, bool) ResolveCollisions(
+            BoundingVolume volumeTotal, BoundingVolume volume, Vector v)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -251,7 +252,7 @@ namespace MinecraftPhysicsEngine
 
             Grid grid;
 
-            if (volume is AxisAlignedBoundingBox aabb)
+            if (volumeTotal is AxisAlignedBoundingBox aabb)
             {
                 grid = Grid.Generate(aabb.Max, aabb.Min);
             }

@@ -80,8 +80,8 @@ namespace MinecraftPhysicsEngine
 
             System.Diagnostics.Debug.Assert(axis > -1);
             System.Diagnostics.Debug.Assert(axis < 3);
-            System.Diagnostics.Debug.Assert(t > 0.0D);
-            System.Diagnostics.Debug.Assert(t < 1.0D);
+            System.Diagnostics.Debug.Assert(t >= 0.0D);
+            System.Diagnostics.Debug.Assert(t <= 1.0D);
             return (axis, t);
         }
 

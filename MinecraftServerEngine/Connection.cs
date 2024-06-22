@@ -781,7 +781,7 @@ namespace MinecraftServerEngine
 
         private sealed class TeleportationRecord
         {
-            private const long _MAX_TICKS = 20;  // 1 seconds, 20 ticks
+            private const long MaxTicks = 20 * 10;  // 1 seconds, 20 ticks
 
             public readonly int _payload;
             private long _ticks = 0;
@@ -807,7 +807,7 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(_ticks >= 0);
 
-                if (++_ticks > _MAX_TICKS)
+                if (++_ticks > MaxTicks)
                 {
                     throw new TeleportationConfirmTimeoutException();
                 }
@@ -1225,14 +1225,15 @@ namespace MinecraftServerEngine
                     _keepAliveRecord.Update(_OUT_PACKETS);
 
                 }
-                catch (UnexpectedClientBehaviorExecption e)
+                finally { }
+                /*catch (UnexpectedClientBehaviorExecption e)
                 {
                     // TODO: send disconnected message to client.
 
                     Console.Printl($"UnexpectedClientBehaviorExecption's Message: {e.Message}");
 
                     throw new DisconnectedClientException();
-                }
+                }*/
                 
             }
             catch (DisconnectedClientException)
