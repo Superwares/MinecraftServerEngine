@@ -10,6 +10,9 @@ namespace MinecraftServerEngine
         public const int BlocksPerWidth = 16;
         public const double Width = Terrain.BlockWidth * BlocksPerWidth;
 
+        public const int BlocksPerHeight = 16 * 16;
+        public const double Height = Terrain.BlockHeight * BlocksPerHeight;
+
         public static ChunkLocation Generate(Vector p)
         {
             int x = (int)(p.X / Width),
@@ -54,6 +57,22 @@ namespace MinecraftServerEngine
         public ChunkLocation(int x, int z)
         {
             X = x; Z = z;
+        }
+
+        public readonly Vector GetMinVector()
+        {
+            double x = (double)X,
+                y = 0.0D,
+                z = (double)Z;
+            return new(x, y, z);
+        }
+
+        public readonly Vector GetMaxVector()
+        {
+            double x = (double)X + Width,
+                y = (double)Height,
+                z = (double)Z + Width;
+            return new(x, y, z);
         }
 
         public override readonly string ToString()

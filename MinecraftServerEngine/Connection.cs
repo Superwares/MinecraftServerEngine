@@ -879,21 +879,21 @@ namespace MinecraftServerEngine
         public bool Disconnected => _disconnected;
 
 
-        private readonly Queue<LoadChunkPacket> _CHUNK_LOAD_PACKETS = new();  // Dispoasble
-        private readonly ConcurrentQueue<ClientboundPlayingPacket> _OUT_PACKETS = new();  // Dispoasble
+        private readonly Queue<LoadChunkPacket> LoadChunkPackets = new();  // Dispoasble
+        private readonly ConcurrentQueue<ClientboundPlayingPacket> OutPackets = new();  // Dispoasble
 
 
-        private const int _MAX_ENTITY_RENDER_DISTANCE = 7;
-        private const int _MIN_RENDER_DISTANCE = 2, _MAX_RENDER_DISTANCE = 32;
-        private int _dEntityRendering = _MIN_RENDER_DISTANCE;
-        private int _dChunkRendering = _MIN_RENDER_DISTANCE;
+        private const int MAxEntityRanderDistance = 7;
+        private const int MinRenderDistance = 2, MaxRenderDistance = 32;
+        private int _dEntityRendering = MinRenderDistance;
+        private int _dChunkRendering = MinRenderDistance;
 
 
-        private readonly EntityRenderer _ENTITY_RENDERER;
+        private readonly EntityRenderer EntityRenderer;
 
 
-        private readonly ChunkingHelper _LOADING_HELPER;  // Dispoasble
-        private readonly Queue<TeleportationRecord> _TELEPORTATION_RECORDS = new();  // Dispoasble
+        private readonly ChunkingHelper ChunkingHelprt;  // Dispoasble
+        private readonly Queue<TeleportationRecord> TeleportationRecords = new();  // Dispoasble
         private KeepAliveRecord _keepAliveRecord = new();  // Disposable
 
 
@@ -908,17 +908,17 @@ namespace MinecraftServerEngine
         {
             Client = client;
 
-            System.Diagnostics.Debug.Assert(_MAX_ENTITY_RENDER_DISTANCE >= _MIN_RENDER_DISTANCE);
-            System.Diagnostics.Debug.Assert(_MAX_RENDER_DISTANCE >= _MAX_ENTITY_RENDER_DISTANCE);
+            System.Diagnostics.Debug.Assert(MAxEntityRanderDistance >= MinRenderDistance);
+            System.Diagnostics.Debug.Assert(MaxRenderDistance >= MAxEntityRanderDistance);
 
             ChunkLocation loc = ChunkLocation.Generate(p);
-            _ENTITY_RENDERER = new EntityRenderer(_OUT_PACKETS, id, loc, _dEntityRendering);
+            EntityRenderer = new EntityRenderer(OutPackets, id, loc, _dEntityRendering);
 
-            _LOADING_HELPER = new ChunkingHelper(loc, _dChunkRendering);
+            ChunkingHelprt = new ChunkingHelper(loc, _dChunkRendering);
 
-            _window = new Window(_OUT_PACKETS, inv);
+            _window = new Window(OutPackets, inv);
 
-            PlayerListRenderer plRenderer = new(_OUT_PACKETS);
+            PlayerListRenderer plRenderer = new(OutPackets);
             world.PlayerList.Connect(userId, plRenderer);
         }
 
@@ -932,6 +932,11 @@ namespace MinecraftServerEngine
             bool sneaking, bool sprinting,
             PlayerInventory inv)
         {
+            System.Diagnostics.Debug.Assert(controls != null);
+            System.Diagnostics.Debug.Assert(buffer != null);
+            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(inv != null);
+
             if (_disconnected)
             {
                 throw new DisconnectedClientException();
@@ -951,17 +956,17 @@ namespace MinecraftServerEngine
                     {
                         ConfirmSelfPlayerTeleportationPacket packet = ConfirmSelfPlayerTeleportationPacket.Read(buffer);
 
-                        if (_TELEPORTATION_RECORDS.Empty)
+                        if (TeleportationRecords.Empty)
                         {
                             throw new UnexpectedPacketException();
                         }
 
-                        TeleportationRecord record = _TELEPORTATION_RECORDS.Dequeue();
+                        TeleportationRecord record = TeleportationRecords.Dequeue();
                         record.Confirm(packet.Payload);
 
                         Vector p = new(record.Position.X, record.Position.Y, record.Position.Z);
                         ChunkLocation locChunk = ChunkLocation.Generate(p);
-                        _ENTITY_RENDERER.Update(locChunk);
+                        EntityRenderer.Update(locChunk);
                     }
                     break;
                 case ServerboundPlayingPacket.SetClientSettingsPacketId:
@@ -970,15 +975,15 @@ namespace MinecraftServerEngine
 
                         int d = packet.RenderDistance;
                         
-                        if (d < _MIN_RENDER_DISTANCE || d > _MAX_RENDER_DISTANCE)
+                        if (d < MinRenderDistance || d > MaxRenderDistance)
                         {
                             throw new UnexpectedValueException("SetClientSettingsPacket.RenderDistance");
                         }
 
                         _dChunkRendering = d;
-                        _dEntityRendering = System.Math.Min(d, _MAX_ENTITY_RENDER_DISTANCE);
+                        _dEntityRendering = System.Math.Min(d, MAxEntityRanderDistance);
 
-                        _ENTITY_RENDERER.Update(_dEntityRendering);
+                        EntityRenderer.Update(_dEntityRendering);
                     }
                     break;
                 case ServerboundPlayingPacket.ServerboundConfirmTransactionPacketId:
@@ -1019,9 +1024,9 @@ namespace MinecraftServerEngine
                             packet.BUTTON,
                             packet.SLOT,
                             packet.SLOT_DATA,
-                            _OUT_PACKETS);
+                            OutPackets);
 
-                        _OUT_PACKETS.Enqueue(new ClientboundConfirmTransactionPacket(
+                        OutPackets.Enqueue(new ClientboundConfirmTransactionPacket(
                                 (sbyte)packet.WINDOW_ID, packet.ACTION, true));
                     }
                     break;
@@ -1036,7 +1041,7 @@ namespace MinecraftServerEngine
                         }
 
                         System.Diagnostics.Debug.Assert(_window != null);
-                        _window.ResetWindow(world, packet.WindowId, _OUT_PACKETS);
+                        _window.ResetWindow(world, packet.WindowId, OutPackets);
                     }
                     break;
                 case 0x09:
@@ -1061,7 +1066,7 @@ namespace MinecraftServerEngine
                     {
                         PlayerPacket packet = PlayerPacket.Read(buffer);
 
-                        if (_TELEPORTATION_RECORDS.Empty)
+                        if (TeleportationRecords.Empty)
                         {
                             StandControl control = new(packet.OnGround);
                             controls.Enqueue(control);
@@ -1073,7 +1078,7 @@ namespace MinecraftServerEngine
                     {
                         PlayerPositionPacket packet = PlayerPositionPacket.Read(buffer);
                 
-                        if (_TELEPORTATION_RECORDS.Empty)
+                        if (TeleportationRecords.Empty)
                         {
                             Vector p = new(packet.X, packet.Y, packet.Z);
 
@@ -1081,7 +1086,7 @@ namespace MinecraftServerEngine
                             controls.Enqueue(new StandControl(packet.OnGround));
 
                             ChunkLocation locChunk = ChunkLocation.Generate(p);
-                            _ENTITY_RENDERER.Update(locChunk);
+                            EntityRenderer.Update(locChunk);
                         }
 
                     }
@@ -1090,7 +1095,7 @@ namespace MinecraftServerEngine
                     {
                         PlayerPosAndLookPacket packet = PlayerPosAndLookPacket.Read(buffer);
 
-                        if (_TELEPORTATION_RECORDS.Empty)
+                        if (TeleportationRecords.Empty)
                         {
                             Vector p = new(packet.X, packet.Y, packet.Z);
                             Look look = new(packet.Yaw, packet.Pitch);
@@ -1100,7 +1105,7 @@ namespace MinecraftServerEngine
                             controls.Enqueue(new StandControl(packet.OnGround));
 
                             ChunkLocation locChunk = ChunkLocation.Generate(p);
-                            _ENTITY_RENDERER.Update(locChunk);
+                            EntityRenderer.Update(locChunk);
                         }
 
                     }
@@ -1109,7 +1114,7 @@ namespace MinecraftServerEngine
                     {
                         PlayerLookPacket packet = PlayerLookPacket.Read(buffer);
 
-                        if (_TELEPORTATION_RECORDS.Empty)
+                        if (TeleportationRecords.Empty)
                         {
                             Look look = new(packet.Yaw, packet.Pitch);
 
@@ -1185,10 +1190,14 @@ namespace MinecraftServerEngine
         internal void Control(
             Queue<Control> controls,
             World world,
-            System.Guid id,
+            System.Guid userId,
             bool sneaking, bool sprinting,
             PlayerInventory inv)
         {
+            System.Diagnostics.Debug.Assert(controls != null);
+            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(inv != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             /*if (serverTicks == 200)  // 10 seconds
@@ -1214,7 +1223,7 @@ namespace MinecraftServerEngine
                                 controls,
                                 buffer, 
                                 world,
-                                id,
+                                userId,
                                 sneaking, sprinting,
                                 inv);
                         }
@@ -1224,12 +1233,12 @@ namespace MinecraftServerEngine
 
                     }
 
-                    foreach (TeleportationRecord record in _TELEPORTATION_RECORDS.GetValues())
+                    foreach (TeleportationRecord record in TeleportationRecords.GetValues())
                     {
                         record.Update();
                     }
 
-                    _keepAliveRecord.Update(_OUT_PACKETS);
+                    _keepAliveRecord.Update(OutPackets);
 
                 }
                 catch (UnexpectedClientBehaviorExecption e)
@@ -1247,7 +1256,7 @@ namespace MinecraftServerEngine
                 buffer.Flush();
 
                 _disconnected = true;
-                Console.Print("Disconnect!");
+                /*Console.Print("Disconnect!");*/
             }
             
         }
@@ -1258,30 +1267,35 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_disconnected);
 
-            System.Diagnostics.Debug.Assert(_dChunkRendering >= _MIN_RENDER_DISTANCE);
-            System.Diagnostics.Debug.Assert(_dChunkRendering <= _MAX_RENDER_DISTANCE);
-            System.Diagnostics.Debug.Assert(_dEntityRendering >= _MIN_RENDER_DISTANCE);
-            System.Diagnostics.Debug.Assert(_dEntityRendering <= _MAX_ENTITY_RENDER_DISTANCE);
+            System.Diagnostics.Debug.Assert(_dChunkRendering >= MinRenderDistance);
+            System.Diagnostics.Debug.Assert(_dChunkRendering <= MaxRenderDistance);
+            System.Diagnostics.Debug.Assert(_dEntityRendering >= MinRenderDistance);
+            System.Diagnostics.Debug.Assert(_dEntityRendering <= MAxEntityRanderDistance);
 
             ChunkLocation loc = ChunkLocation.Generate(p);
 
-            /*ChunkGrid grid = ChunkGrid.Generate(loc, _dEntityRendering);
-            foreach (PhysicsObject obj in world.GetPhysicsObjects(grid.GetMinBoundingVolume()).GetKeys())
+            ChunkGrid grid = ChunkGrid.Generate(loc, _dEntityRendering);
+
+            using Queue<PhysicsObject> objects = new();
+            world.GetObjects(objects, grid.GetMinBoundingBox());
+            while (!objects.Empty)
             {
+                PhysicsObject obj = objects.Dequeue();
+
                 switch (obj)
                 {
                     default:
                         throw new System.NotImplementedException();
                     case Entity entity:
-                        entity.ApplyRenderer(_ENTITY_RENDERER);
+                        entity.ApplyRenderer(EntityRenderer);
                         break;
-                }    
+                }
             }
-*/
+
             using Queue<ChunkLocation> newChunkPositions = new();
             using Queue<ChunkLocation> outOfRangeChunks = new();
 
-            _LOADING_HELPER.Load(newChunkPositions, outOfRangeChunks, loc, _dChunkRendering);
+            ChunkingHelprt.Load(newChunkPositions, outOfRangeChunks, loc, _dChunkRendering);
 
             int mask; byte[] data;
             while (!newChunkPositions.Empty)
@@ -1290,7 +1304,7 @@ namespace MinecraftServerEngine
 
                 (mask, data) = world.BlockContext.GetChunkData(locChunk);
 
-                _CHUNK_LOAD_PACKETS.Enqueue(new LoadChunkPacket(
+                LoadChunkPackets.Enqueue(new LoadChunkPacket(
                     locChunk.X, locChunk.Z, true, mask, data));
             }
 
@@ -1298,7 +1312,7 @@ namespace MinecraftServerEngine
             {
                 ChunkLocation locOut = outOfRangeChunks.Dequeue();
 
-                _OUT_PACKETS.Enqueue(new UnloadChunkPacket(locOut.X, locOut.Z));
+                OutPackets.Enqueue(new UnloadChunkPacket(locOut.X, locOut.Z));
             }
 
         }
@@ -1354,7 +1368,7 @@ namespace MinecraftServerEngine
 
                     _disconnected = true;
 
-                    Console.Print("Disconnect!");
+                    /*Console.Print("Disconnect!");*/
 
                     System.Diagnostics.Debug.Assert(!tryAgain);
                 }
@@ -1396,14 +1410,14 @@ namespace MinecraftServerEngine
                     SendPacket(buffer, packet);
 
                     TeleportationRecord report = new(payload, p);
-                    _TELEPORTATION_RECORDS.Enqueue(report);
+                    TeleportationRecords.Enqueue(report);
                 }
                 catch (DisconnectedClientException)
                 {
                     buffer.Flush();
 
                     _disconnected = true;
-                    Console.Print("Disconnect!");
+                    /*Console.Print("Disconnect!");*/
 
                     System.Diagnostics.Debug.Assert(!tryAgain);
                 }
@@ -1437,16 +1451,16 @@ namespace MinecraftServerEngine
                     SendPacket(buffer, packet);
 
                     int payload = Random.NextInt();
-                    _OUT_PACKETS.Enqueue(new TeleportSelfPlayerPacket(
+                    OutPackets.Enqueue(new TeleportSelfPlayerPacket(
                         p.X, p.Y, p.Z,
                         look.Yaw, look.Pitch,
                         false, false, false, false, false,
                         payload));
 
                     TeleportationRecord report = new(payload, p);
-                    _TELEPORTATION_RECORDS.Enqueue(report);
+                    TeleportationRecords.Enqueue(report);
 
-                    _OUT_PACKETS.Enqueue(new SetPlayerAbilitiesPacket(
+                    OutPackets.Enqueue(new SetPlayerAbilitiesPacket(
                             false, false, true, false, 0.1F, 0.0F));
 
                     _init = true;
@@ -1454,17 +1468,17 @@ namespace MinecraftServerEngine
 
                 LoadWorld(world, p);
 
-                while (!_CHUNK_LOAD_PACKETS.Empty)
+                while (!LoadChunkPackets.Empty)
                 {
-                    LoadChunkPacket packet = _CHUNK_LOAD_PACKETS.Dequeue();
+                    LoadChunkPacket packet = LoadChunkPackets.Dequeue();
                     SendPacket(buffer, packet);
 
                     System.Diagnostics.Debug.Assert(buffer.Empty);
                 }
 
-                while (!_OUT_PACKETS.Empty)
+                while (!OutPackets.Empty)
                 {
-                    ClientboundPlayingPacket packet = _OUT_PACKETS.Dequeue();
+                    ClientboundPlayingPacket packet = OutPackets.Dequeue();
 
                     /*if (packet is TeleportSelfPlayerPacket teleportPacket)
                     {
@@ -1482,15 +1496,15 @@ namespace MinecraftServerEngine
                     System.Diagnostics.Debug.Assert(buffer.Empty);
                 }
 
-                System.Diagnostics.Debug.Assert(_CHUNK_LOAD_PACKETS.Empty);
-                System.Diagnostics.Debug.Assert(_OUT_PACKETS.Empty);
+                System.Diagnostics.Debug.Assert(LoadChunkPackets.Empty);
+                System.Diagnostics.Debug.Assert(OutPackets.Empty);
             }
             catch (DisconnectedClientException)
             {
                 buffer.Flush();
 
                 _disconnected = true;
-                Console.Print("Disconnect!");
+                /*Console.Print("Disconnect!");*/
             }
 
         }
@@ -1502,7 +1516,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
             System.Diagnostics.Debug.Assert(_disconnected);
 
-            _ENTITY_RENDERER.Disconnect();
+            EntityRenderer.Disconnect();
 
             _window.Flush(world);
 
@@ -1518,11 +1532,11 @@ namespace MinecraftServerEngine
             // Release Resources.
             Client.Dispose();
 
-            _CHUNK_LOAD_PACKETS.Dispose();
-            _OUT_PACKETS.Dispose();
+            LoadChunkPackets.Dispose();
+            OutPackets.Dispose();
 
-            _LOADING_HELPER.Dispose();
-            _TELEPORTATION_RECORDS.Dispose();
+            ChunkingHelprt.Dispose();
+            TeleportationRecords.Dispose();
 
             _window.Dispose();
 

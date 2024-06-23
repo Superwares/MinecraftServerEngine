@@ -11,16 +11,16 @@ namespace MinecraftPhysicsEngine
 
         private readonly struct Cell : System.IEquatable<Cell>
         {
-            public const double WIDTH = 5.0D;
+            public const double Width = 5.0D;
 
             public static Cell Generate(Vector p)
             {
                 // TODO: Assertion
-                int x = (int)(p.X / WIDTH),
-                    z = (int)(p.Z / WIDTH);
+                int x = (int)(p.X / Width),
+                    z = (int)(p.Z / Width);
 
-                double r1 = p.X % WIDTH,
-                       r3 = p.Z % WIDTH;
+                double r1 = p.X % Width,
+                       r3 = p.Z % Width;
                 if (r1 < 0.0D)
                 {
                     --x;
@@ -138,6 +138,16 @@ namespace MinecraftPhysicsEngine
                     cell.Z <= _MAX.Z && cell.Z >= _MIN.Z;
             }
 
+            public int GetCount()
+            {
+                System.Diagnostics.Debug.Assert(Max.X >= Min.X);
+                System.Diagnostics.Debug.Assert(Max.Z >= Min.Z);
+
+                int l1 = (Max.X - Min.X) + 1,
+                    l3 = (Max.Z - Min.Z) + 1;
+                return l1 * l3;
+            }
+
             public System.Collections.Generic.IEnumerable<Cell> GetCells()
             {
                 if (_MAX.X == _MIN.X && _MAX.Z == _MIN.Z)
@@ -193,9 +203,30 @@ namespace MinecraftPhysicsEngine
 
         ~PhysicsWorld() => System.Diagnostics.Debug.Assert(false);
 
-        public Tree<PhysicsObject> GetPhysicsObjects(BoundingVolume volume)
+        public void GetObjects(
+            Queue<PhysicsObject> objects, AxisAlignedBoundingBox minBoundingBox)
         {
-            throw new System.NotImplementedException();
+            System.Diagnostics.Debug.Assert(objects != null);
+            System.Diagnostics.Debug.Assert(minBoundingBox != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            Grid grid = Grid.Generate(minBoundingBox);
+
+            foreach (Cell cell in grid.GetCells())
+            {
+                if (!CellToObjects.Contains(cell))
+                {
+                    continue;
+                }
+
+                Tree<PhysicsObject> objectsInCell = CellToObjects.Lookup(cell);
+                foreach (PhysicsObject objInCell in objectsInCell.GetKeys())
+                {
+                    objects.Enqueue(objInCell);
+                }
+            }
+
         }
 
         private void InsertObjectToCell(Cell cell, PhysicsObject obj)

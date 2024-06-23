@@ -94,7 +94,7 @@ namespace MinecraftPhysicsEngine
             _v = v;
             _onGround = onGround;
 
-            Console.Printl($"Velocity: {v}, OnGround: {onGround}");
+            /*Console.Printl($"Velocity: {v}, OnGround: {onGround}");*/
         }
 
         public virtual void Dispose()

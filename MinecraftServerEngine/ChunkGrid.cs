@@ -36,18 +36,15 @@ namespace MinecraftServerEngine
             return new(new(xMax, zMax), new(xMin, zMin));
         }
 
-        public static ChunkGrid Generate(ChunkGrid g1, ChunkGrid g2)
+        /*public static ChunkGrid Generate(ChunkGrid g1, ChunkGrid g2)
         {
-            int temp;
 
             int xMax = System.Math.Min(g1._MAX.X, g2._MAX.X),
                 xMin = System.Math.Max(g1._MIN.X, g2._MIN.X);
 
             if (xMax < xMin)
             {
-                temp = xMax;
-                xMax = --xMin;
-                xMin = ++temp;
+                return null;
             }
 
             int zMax = System.Math.Min(g1._MAX.Z, g2._MAX.Z),
@@ -55,13 +52,11 @@ namespace MinecraftServerEngine
                 
             if (zMax < zMin)
             {
-                temp = zMax;
-                zMax = --zMin;
-                zMin = ++temp;
+                return null
             }
 
             return new(new(xMax, zMax), new(xMin, zMin));
-        }
+        }*/
 
         /*public static ChunkGrid Generate(BoundingBox bb)
         {
@@ -83,39 +78,42 @@ namespace MinecraftServerEngine
             return new(max, new(xMin, zMin));
         }*/
 
-        private readonly ChunkLocation _MAX, _MIN;
+        private readonly ChunkLocation Max, Min;
 
         public ChunkGrid(ChunkLocation max, ChunkLocation min)
         {
             System.Diagnostics.Debug.Assert(max.X >= min.X);
             System.Diagnostics.Debug.Assert(max.Z >= min.Z);
 
-            _MAX = max; _MIN = min;
+            Max = max; Min = min;
         }
 
         public readonly bool Contains(ChunkLocation p)
         {
             return (
-                p.X <= _MAX.X && p.X >= _MIN.X &&
-                p.Z <= _MAX.Z && p.Z >= _MIN.Z);
+                p.X <= Max.X && p.X >= Min.X &&
+                p.Z <= Max.Z && p.Z >= Min.Z);
         }
 
-        public readonly BoundingVolume GetMinBoundingVolume()
+        public readonly AxisAlignedBoundingBox GetMinBoundingBox()
         {
-            throw new System.NotImplementedException();
+            Vector max = Max.GetMaxVector(),
+                min = Min.GetMinVector();
+
+            return new AxisAlignedBoundingBox(max, min);
         }
 
         public readonly System.Collections.Generic.IEnumerable<ChunkLocation> GetLocations()
         {
-            if (_MAX.X == _MIN.X && _MAX.Z == _MIN.Z)
+            if (Max.X == Min.X && Max.Z == Min.Z)
             {
-                yield return new(_MAX.X, _MIN.Z);
+                yield return new(Max.X, Min.Z);
             }
             else
             {
-                for (int z = _MIN.Z; z <= _MAX.Z; ++z)
+                for (int z = Min.Z; z <= Max.Z; ++z)
                 {
-                    for (int x = _MIN.X; x <= _MAX.X; ++x)
+                    for (int x = Min.X; x <= Max.X; ++x)
                     {
                         yield return new(x, z);
                     }
@@ -126,12 +124,12 @@ namespace MinecraftServerEngine
 
         public readonly override string ToString()
         {
-            return $"( Max: ({_MAX.X}, {_MAX.Z}), Min: ({_MIN.X}, {_MIN.Z}) )";
+            return $"( Max: ({Max.X}, {Max.Z}), Min: ({Min.X}, {Min.Z}) )";
         }
 
         public readonly bool Equals(ChunkGrid other)
         {
-            return (_MAX.Equals(other._MAX) && _MIN.Equals(other._MIN));
+            return (Max.Equals(other.Max) && Min.Equals(other.Min));
         }
 
     }
