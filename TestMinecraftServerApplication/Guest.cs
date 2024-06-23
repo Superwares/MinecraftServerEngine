@@ -12,13 +12,6 @@ namespace TestMinecraftServerApplication
 
         ~Guest() => System.Diagnostics.Debug.Assert(false);
 
-        public override void StartRoutine(long serverTicks, World world)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            base.StartRoutine(serverTicks, world);
-        }
-
         public override void Dispose()
         {
             // Assertions.

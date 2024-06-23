@@ -28,7 +28,7 @@ namespace MinecraftServerEngine
         internal readonly PlayerList PlayerList = new();  // Disposable
 
         private readonly ConcurrentQueue<Entity> EntitySpawningPool = new();  // Disposable
-        internal readonly SwapQueue<Entity> Entities = new();  // Disposable
+        internal readonly SwapQueue<Entity> NonPlayers = new();  // Disposable
         internal readonly SwapQueue<Player> Players = new();
 
         private readonly ConcurrentTable<System.Guid, Player> DisconnectedPlayers = new(); // Disposable
@@ -72,7 +72,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Entities.Swap();
+            NonPlayers.Swap();
 
             barrier.SignalAndWait();
 
@@ -80,23 +80,42 @@ namespace MinecraftServerEngine
             {
                 do
                 {
-                    Entity entity = Entities.Dequeue();
-
+                    Entity entity = NonPlayers.Dequeue();
                     System.Diagnostics.Debug.Assert(entity is not Player);
 
                     entity.StartRoutine(serverTicks, this);
 
-                    Entities.Enqueue(entity);
+                    NonPlayers.Enqueue(entity);
                 } while (true);
             }
             catch (EmptyContainerException) { }
 
-            System.Diagnostics.Debug.Assert(Entities.Empty);
+            System.Diagnostics.Debug.Assert(NonPlayers.Empty);
+
+            Players.Swap();
+
+            barrier.SignalAndWait();
+
+            try
+            {
+                do
+                {
+                    Player player = Players.Dequeue();
+                    System.Diagnostics.Debug.Assert(player != null);
+
+                    player.StartRoutine(serverTicks, this);
+
+                    Players.Enqueue(player);
+                } while (true);
+            }
+            catch (EmptyContainerException) { }
+
+            System.Diagnostics.Debug.Assert(Players.Empty);
 
             barrier.SignalAndWait();
         }
 
-        public void StartPlayerRoutines(Barrier barrier, long serverTicks)
+        public void StartPlayerControls(Barrier barrier, long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -111,7 +130,7 @@ namespace MinecraftServerEngine
                     Player player = Players.Dequeue();
                     System.Diagnostics.Debug.Assert(player != null);
 
-                    player.StartRoutine(serverTicks, this);
+                    player.Control(serverTicks, this);
 
                     Players.Enqueue(player);
                 } while (true);
@@ -142,7 +161,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Entities.Swap();
+            NonPlayers.Swap();
 
             barrier.SignalAndWait();
 
@@ -150,7 +169,7 @@ namespace MinecraftServerEngine
             {
                 do
                 {
-                    Entity entity = Entities.Dequeue();
+                    Entity entity = NonPlayers.Dequeue();
 
                     System.Diagnostics.Debug.Assert(entity is not Player);
 
@@ -161,13 +180,13 @@ namespace MinecraftServerEngine
                         continue;
                     }
 
-                    Entities.Enqueue(entity);
+                    NonPlayers.Enqueue(entity);
 
                 } while (true);
             }
             catch (EmptyContainerException) { }
 
-            System.Diagnostics.Debug.Assert(Entities.Empty);
+            System.Diagnostics.Debug.Assert(NonPlayers.Empty);
 
             Players.Swap();
 
@@ -218,7 +237,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Entities.Swap();
+            NonPlayers.Swap();
 
             barrier.SignalAndWait();
 
@@ -226,18 +245,18 @@ namespace MinecraftServerEngine
             {
                 do
                 {
-                    Entity entity = Entities.Dequeue();
+                    Entity entity = NonPlayers.Dequeue();
 
                     (BoundingVolume volume, Vector v, bool f) =
                         IntegrateObject(BlockContext, entity);
                     IntegrationResults.Insert(entity, new IntegrationResult(volume, v, f));
 
-                    Entities.Enqueue(entity);
+                    NonPlayers.Enqueue(entity);
                 } while (true);
             }
             catch (EmptyContainerException) { }
 
-            System.Diagnostics.Debug.Assert(Entities.Empty);
+            System.Diagnostics.Debug.Assert(NonPlayers.Empty);
 
             Players.Swap();
 
@@ -261,7 +280,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(Players.Empty);
 
-            Entities.Swap();
+            NonPlayers.Swap();
 
             barrier.SignalAndWait();
 
@@ -269,7 +288,7 @@ namespace MinecraftServerEngine
             {
                 do
                 {
-                    Entity entity = Entities.Dequeue();
+                    Entity entity = NonPlayers.Dequeue();
 
                     IntegrationResult result = IntegrationResults.Extract(entity);
 
@@ -277,12 +296,12 @@ namespace MinecraftServerEngine
 
                     UpdateObjectMapping(entity);
 
-                    Entities.Enqueue(entity);
+                    NonPlayers.Enqueue(entity);
                 } while (true);
             }
             catch (EmptyContainerException) { }
 
-            System.Diagnostics.Debug.Assert(Entities.Empty);
+            System.Diagnostics.Debug.Assert(NonPlayers.Empty);
 
             Players.Swap();
 
@@ -325,7 +344,7 @@ namespace MinecraftServerEngine
 
                     InitObjectMapping(entity);
 
-                    Entities.Enqueue(entity);
+                    NonPlayers.Enqueue(entity);
                 } while (true);
             }
             catch (EmptyContainerException) { }
@@ -401,7 +420,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(EntitySpawningPool.Empty);
-            System.Diagnostics.Debug.Assert(Entities.Empty);
+            System.Diagnostics.Debug.Assert(NonPlayers.Empty);
             System.Diagnostics.Debug.Assert(Players.Empty);
 
             System.Diagnostics.Debug.Assert(DisconnectedPlayers.Empty);
@@ -412,7 +431,7 @@ namespace MinecraftServerEngine
             PlayerList.Dispose();
 
             EntitySpawningPool.Dispose();
-            Entities.Dispose();
+            NonPlayers.Dispose();
             Players.Dispose();
 
             DisconnectedPlayers.Dispose();

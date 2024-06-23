@@ -62,7 +62,7 @@ namespace MinecraftServerEngine
             Console.Print(".");
 
             /*Console.Printl("StartPlayerRoutines!");*/
-            _WORLD.StartPlayerRoutines(barrier, _ticks);
+            _WORLD.StartPlayerControls(barrier, _ticks);
 
             /*Console.Printl("DestroyEntities!");*/
             _WORLD.DestroyEntities(barrier);

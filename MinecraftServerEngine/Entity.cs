@@ -28,6 +28,8 @@ namespace MinecraftServerEngine
 
             public bool Apply(EntityRenderer renderer)
             {
+                System.Diagnostics.Debug.Assert(renderer != null);
+
                 System.Diagnostics.Debug.Assert(!_disposed);
 
                 if (renderer.Id == Id)
@@ -317,7 +319,7 @@ namespace MinecraftServerEngine
             return _teleported ? hitbox.Convert(_pTeleport) : hitbox.Convert(_p);
         }
 
-        public override void Move(BoundingVolume volume, Vector v, bool onGround)
+        internal override void Move(BoundingVolume volume, Vector v, bool onGround)
         {
             System.Diagnostics.Debug.Assert(volume != null);
 
@@ -401,7 +403,7 @@ namespace MinecraftServerEngine
             Manager.ChangeForms(_sneaking, _sprinting);
         }
 
-        public void Sneak()
+        private protected void Sneak()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -412,7 +414,7 @@ namespace MinecraftServerEngine
             RanderFormChanging();
         }
 
-        public void Unsneak()
+        private protected void Unsneak()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -423,7 +425,7 @@ namespace MinecraftServerEngine
             RanderFormChanging();
         }
 
-        public void Sprint()
+        private protected void Sprint()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -434,7 +436,7 @@ namespace MinecraftServerEngine
             RanderFormChanging();
         }
 
-        public void Unsprint()
+        private protected void Unsprint()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -603,6 +605,10 @@ namespace MinecraftServerEngine
 
         internal void Connect(Client client, World world, System.Guid userId)
         {
+            System.Diagnostics.Debug.Assert(client != null);
+            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             _pControl = Position;
@@ -625,7 +631,7 @@ namespace MinecraftServerEngine
             base.ApplyForce(force);
         }
 
-        public override void Move(BoundingVolume volume, Vector v, bool onGround)
+        internal override void Move(BoundingVolume volume, Vector v, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -699,7 +705,7 @@ namespace MinecraftServerEngine
             }
         }
 
-        public override void StartRoutine(long serverTicks, World world)
+        internal void Control(long serverTicks, World world)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -721,7 +727,6 @@ namespace MinecraftServerEngine
                 }
             }
 
-            base.StartRoutine(serverTicks, world);
         }
 
         public bool HandleConnection(World world)
