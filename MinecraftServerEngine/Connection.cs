@@ -619,8 +619,8 @@ namespace MinecraftServerEngine
         }
         private sealed class ChunkingHelper : System.IDisposable
         {
-            private const int _MAX_LOAD_COUNT = 7;
-            private const int _MAX_SEARCH_COUNT = 103;
+            private const int MaxLoadCount = 7;
+            private const int MaxSearchCount = 103;
 
             private bool _disposed = false;
 
@@ -651,8 +651,8 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(!_disposed);
 
                 System.Diagnostics.Debug.Assert(d > 0);
-                System.Diagnostics.Debug.Assert(_MAX_LOAD_COUNT > 0);
-                System.Diagnostics.Debug.Assert(_MAX_SEARCH_COUNT >= _MAX_LOAD_COUNT);
+                System.Diagnostics.Debug.Assert(MaxLoadCount > 0);
+                System.Diagnostics.Debug.Assert(MaxSearchCount >= MaxLoadCount);
 
                 if (!loc.Equals(_loc) || (d != _d))
                 {
@@ -752,13 +752,13 @@ namespace MinecraftServerEngine
                             break;
                         }
 
-                        System.Diagnostics.Debug.Assert(j <= _MAX_SEARCH_COUNT);
-                        if (++j == _MAX_SEARCH_COUNT)
+                        System.Diagnostics.Debug.Assert(j <= MaxSearchCount);
+                        if (++j == MaxSearchCount)
                         {
                             break;
                         }
 
-                    } while (i < _MAX_LOAD_COUNT);
+                    } while (i < MaxLoadCount);
                 }
 
                 System.Diagnostics.Debug.Assert(_LOADED_CHUNKS.Count <= (d + d + 1) * (d + d + 1));
@@ -781,7 +781,7 @@ namespace MinecraftServerEngine
 
         private sealed class TeleportationRecord
         {
-            private const long MaxTicks = 20 * 10;  // 1 seconds, 20 ticks
+            private const long Timeout = 20 * 10;  // 10 seconds, 20 * 10 ticks
 
             public readonly int _payload;
             private long _ticks = 0;
@@ -807,7 +807,7 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(_ticks >= 0);
 
-                if (++_ticks > MaxTicks)
+                if (++_ticks > Timeout)
                 {
                     throw new TeleportationConfirmTimeoutException();
                 }
@@ -818,7 +818,7 @@ namespace MinecraftServerEngine
 
         private sealed class KeepAliveRecord
         {
-            private const long _MAX_TICKS = 20 * 30;  // 30 seconds, 20 * 30 ticks
+            private const long Timeout = 20 * 30;  // 30 seconds, 20 * 30 ticks
 
             private long _payload;
             private long _ticks = -1;
@@ -858,7 +858,7 @@ namespace MinecraftServerEngine
                 }
 
                 System.Diagnostics.Debug.Assert(_ticks < long.MaxValue);
-                if (++_ticks > _MAX_TICKS)
+                if (++_ticks > Timeout)
                 {
                     throw new ResponseKeepAliveTimeoutException();
                 }
@@ -1225,16 +1225,15 @@ namespace MinecraftServerEngine
                     _keepAliveRecord.Update(_OUT_PACKETS);
 
                 }
-                finally { }
-                /*catch (UnexpectedClientBehaviorExecption e)
+                catch (UnexpectedClientBehaviorExecption e)
                 {
                     // TODO: send disconnected message to client.
 
-                    Console.Printl($"UnexpectedClientBehaviorExecption's Message: {e.Message}");
+                    Console.Printl($"UnexpectedClientBehavior: {e.Message}!");
 
                     throw new DisconnectedClientException();
-                }*/
-                
+                }
+
             }
             catch (DisconnectedClientException)
             {

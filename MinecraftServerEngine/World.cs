@@ -50,24 +50,6 @@ namespace MinecraftServerEngine
             barrier.SignalAndWait();
         }
 
-        public void StartEntityRoutine(long serverTicks, Entity entity)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            // TODO: Resolve Collisions with other entities.
-            // TODO: Add Global Forces with OnGround flag. (Gravity, Damping Force, ...)
-            entity.ApplyForce(
-                -1.0D *
-                new Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
-                entity.Velocity);  // Damping Force
-            entity.ApplyForce(entity.GetMass() * 0.08D * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
-
-            /*entity.ApplyForce(entity.GetMass() * 0.001D * new Entity.Vector(0, -1, 0));  // Gravity*/
-
-            entity.StartInternalRoutine(serverTicks, this);
-            entity.StartRoutine(serverTicks, this);
-        }
-
         public void StartEntityRoutines(
             Barrier barrier, long serverTicks)
         {
@@ -85,7 +67,7 @@ namespace MinecraftServerEngine
 
                     System.Diagnostics.Debug.Assert(entity is not Player);
 
-                    StartEntityRoutine(serverTicks, entity);
+                    entity.StartRoutine(serverTicks, this);
 
                     Entities.Enqueue(entity);
                 } while (true);
@@ -111,42 +93,7 @@ namespace MinecraftServerEngine
                 {
                     Player player = Players.Dequeue();
 
-                    StartEntityRoutine(serverTicks, player);
-
-                    Players.Enqueue(player);
-                } while (true);
-
-            }
-            catch (EmptyContainerException) { }
-
-            System.Diagnostics.Debug.Assert(Players.Empty);
-
-            barrier.SignalAndWait();
-        }
-
-        public void HandlePlayerConnections(Barrier barrier, long serverTicks)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Players.Swap();
-
-            barrier.SignalAndWait();
-
-            try
-            {
-                do
-                {
-                    Player player = Players.Dequeue();
-                    System.Diagnostics.Debug.Assert(player != null);
-
-                    if (player.HandlePlayerConnection(this))
-                    {
-                        System.Guid userId = player.UniqueId;
-
-                        System.Diagnostics.Debug.Assert(!DisconnectedPlayers.Contains(userId));
-                        DisconnectedPlayers.Insert(userId, player);
-
-                    }
+                    player.StartRoutine(serverTicks, this);
 
                     Players.Enqueue(player);
                 } while (true);
@@ -161,6 +108,8 @@ namespace MinecraftServerEngine
 
         private void DestroyEntity(Entity entity)
         {
+            System.Diagnostics.Debug.Assert(entity != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             CloseObject(entity);
@@ -171,6 +120,8 @@ namespace MinecraftServerEngine
 
         public void DestroyEntities(Barrier barrier)
         {
+            System.Diagnostics.Debug.Assert(barrier != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Entities.Swap();
@@ -200,15 +151,6 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(Entities.Empty);
 
-            barrier.SignalAndWait();
-        }
-
-        public void DestroyPlayers(Barrier barrier)
-        {
-            System.Diagnostics.Debug.Assert(barrier != null);
-
-            System.Diagnostics.Debug.Assert(!_disposed);
-
             Players.Swap();
 
             barrier.SignalAndWait();
@@ -220,8 +162,13 @@ namespace MinecraftServerEngine
                     Player player = Players.Dequeue();
                     System.Diagnostics.Debug.Assert(player != null);
 
-                    if (!player.Connected)
+                    if (player.HandlePlayerConnection(this))
                     {
+                        System.Guid userId = player.UniqueId;
+
+                        System.Diagnostics.Debug.Assert(!DisconnectedPlayers.Contains(userId));
+                        DisconnectedPlayers.Insert(userId, player);
+
                         System.Diagnostics.Debug.Assert(
                             DisconnectedPlayers.Contains(player.UniqueId));
 
@@ -271,13 +218,6 @@ namespace MinecraftServerEngine
             catch (EmptyContainerException) { }
 
             System.Diagnostics.Debug.Assert(Entities.Empty);
-
-            barrier.SignalAndWait();
-        }
-
-        public void MovePlayers(Barrier barrier)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
 
             Players.Swap();
 

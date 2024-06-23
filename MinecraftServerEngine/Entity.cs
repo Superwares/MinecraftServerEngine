@@ -112,8 +112,6 @@ namespace MinecraftServerEngine
             return false;
         }
 
-        public virtual void StartInternalRoutine(long serverTicks, World world) { }
-
         public virtual void StartRoutine(long serverTicks, World world) { }
 
         protected override BoundingVolume GenerateBoundingVolume()
@@ -553,7 +551,7 @@ namespace MinecraftServerEngine
             }
         }
 
-        public override void StartInternalRoutine(long serverTicks, World world)
+        public override void StartRoutine(long serverTicks, World world)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -575,7 +573,7 @@ namespace MinecraftServerEngine
                 }
             }
 
-            base.StartInternalRoutine(serverTicks, world);
+            base.StartRoutine(serverTicks, world);
         }
 
         public bool HandlePlayerConnection(World world)

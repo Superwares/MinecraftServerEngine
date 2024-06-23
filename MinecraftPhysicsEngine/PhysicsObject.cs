@@ -19,6 +19,9 @@ namespace MinecraftPhysicsEngine
         private Vector _v;
         public Vector Velocity;
 
+        private readonly bool _noGravity;
+        public bool NoGravity => _noGravity;
+
         private bool _onGround;
         public bool OnGround => _onGround;
 
@@ -31,6 +34,8 @@ namespace MinecraftPhysicsEngine
             _m = m;
 
             _v = new(0.0D, 0.0D, 0.0D);
+
+            _noGravity = false;
 
             _onGround = false;
 
@@ -50,6 +55,16 @@ namespace MinecraftPhysicsEngine
         internal (BoundingVolume, Vector) Integrate()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            Forces.Enqueue(
+                -1.0D *
+                new Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
+                Velocity);  // Damping Force
+
+            if (!NoGravity)
+            {
+                Forces.Enqueue(GetMass() * 0.08D * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
+            }
 
             Vector v = _v;
 
@@ -74,7 +89,7 @@ namespace MinecraftPhysicsEngine
             _v = v;
             _onGround = onGround;
 
-            Console.Printl($"Velocity: {v}, OnGround: {onGround}");
+            /*Console.Printl($"Velocity: {v}, OnGround: {onGround}");*/
         }
 
         public virtual void Dispose()

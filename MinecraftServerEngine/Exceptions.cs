@@ -44,17 +44,20 @@ namespace MinecraftServerEngine
 
     internal class TeleportationConfirmTimeoutException : UnexpectedClientBehaviorExecption
     {
-        public TeleportationConfirmTimeoutException() : base("TODO: Add description.") { }
+        // TODO: Add description.
+        public TeleportationConfirmTimeoutException() : base("TeleportationConfirmTimeoutException") { }
     }
 
     internal class ResponseKeepAliveTimeoutException : UnexpectedClientBehaviorExecption
     {
-        public ResponseKeepAliveTimeoutException() : base("TODO: Add description.") { }
+        // TODO: Add description.
+        public ResponseKeepAliveTimeoutException() : base("ResponseKeepAliveTimeoutException") { }
     }
 
     internal class KeepaliveTimeoutException : UnexpectedClientBehaviorExecption
     {
-        public KeepaliveTimeoutException() : base("TODO: Add description.") { }
+        // TODO: Add description.
+        public KeepaliveTimeoutException() : base("KeepaliveTimeoutException") { }
     }
 
     public class DisconnectedClientException : ProtocolException
