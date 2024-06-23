@@ -24,10 +24,20 @@ namespace MinecraftServerEngine
 
         public ServerFramework(World world)
         {
+            System.Diagnostics.Debug.Assert(world != null);
             _WORLD = world;
         }
 
         ~ServerFramework() => System.Diagnostics.Debug.Assert(false);
+
+        private void NewThread(VoidMethod startRoutine)
+        {
+            System.Diagnostics.Debug.Assert(startRoutine != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            Threads.Enqueue(Thread.New(startRoutine));
+        }
 
         private void CountTicks()
         {
@@ -73,7 +83,7 @@ namespace MinecraftServerEngine
             _WORLD.StartEntityRoutines(barrier, _ticks);
         }        
 
-        public void Run()
+        public void Run(ushort port)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -95,17 +105,29 @@ namespace MinecraftServerEngine
                 MainThread.Join();
             });
 
-            ushort port = 25565;
+            using ConnectionListener connListener = new();
+
+            NewThread(() =>
+            {
+                using ClientListener clientListener = new(connListener, port);
+
+                while (_running)
+                {
+                    clientListener.StartRoutine();
+                }
+
+                clientListener.Flush();
+            });
+
 
             int n = 2;  // TODO: Determine using number of processor.
 
             using Barrier barrier = new(n);
-            using ConnectionListener connListener = new();
 
             System.Diagnostics.Debug.Assert(n > 1);
             for (int i = 0; i < n - 1; ++i)
             {
-                var coreThread = Thread.New(() =>
+                NewThread(() =>
                 {
                     do
                     {
@@ -129,23 +151,7 @@ namespace MinecraftServerEngine
                     } while (true);
                 });
 
-                Threads.Enqueue(coreThread);
             }
-
-
-            var subThread1 = Thread.New(() =>
-            {
-                using ClientListener clientListener = new(connListener, port);
-
-                while (_running)
-                {
-                    clientListener.StartRoutine();
-                }
-
-                clientListener.Flush();
-            });
-
-            Threads.Enqueue(subThread1);
 
             {
                 Time interval, accumulated, start, end, elapsed;

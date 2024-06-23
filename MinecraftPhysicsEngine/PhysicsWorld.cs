@@ -225,8 +225,10 @@ namespace MinecraftPhysicsEngine
                 }
 
                 Tree<PhysicsObject> objectsInCell = CellToObjects.Lookup(cell);
+                System.Diagnostics.Debug.Assert(objectsInCell != null);
                 foreach (PhysicsObject objInCell in objectsInCell.GetKeys())
                 {
+                    System.Diagnostics.Debug.Assert(objInCell != null);
                     objects.Enqueue(objInCell);
                 }
             }
