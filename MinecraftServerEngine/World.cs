@@ -26,15 +26,15 @@ namespace MinecraftServerEngine
 
         internal readonly PlayerList PlayerList = new();  // Disposable
 
-        private readonly Queue<Entity> EntitySpawningPool = new();  // Disposable
+        private readonly ConcurrentQueue<Entity> EntitySpawningPool = new();  // Disposable
         internal readonly SwapQueue<Entity> Entities = new();  // Disposable
         internal readonly SwapQueue<Player> Players = new();
 
-        private readonly Table<System.Guid, Player> DisconnectedPlayers = new(); // Disposable
+        private readonly ConcurrentTable<System.Guid, Player> DisconnectedPlayers = new(); // Disposable
 
         internal readonly BlockContext BlockContext = new();  // Disposable
 
-        private readonly Table<Entity, IntegrationResult> IntegrationResults = new();  // Disposable
+        private readonly ConcurrentTable<Entity, IntegrationResult> IntegrationResults = new();  // Disposable
 
         /*internal PublicInventory _Inventory = new ChestInventory();*/
 
@@ -404,6 +404,8 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(Players.Empty);
 
             System.Diagnostics.Debug.Assert(DisconnectedPlayers.Empty);
+
+            System.Diagnostics.Debug.Assert(IntegrationResults.Empty);
 
             // Release resources.
             PlayerList.Dispose();

@@ -4,7 +4,8 @@ using Sync;
 namespace Containers
 {
 
-    public class Tree<K> : System.IDisposable where K : notnull
+    public class Tree<K> : System.IDisposable 
+        where K : notnull
     {
         private bool _disposed = false;
 
@@ -370,7 +371,7 @@ namespace Containers
     }
 
     public sealed class ConcurrentTree<K> : Tree<K>
-        where K : System.IEquatable<K>
+        where K : notnull
     {
         private bool _disposed = false;
 

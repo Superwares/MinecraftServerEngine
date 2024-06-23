@@ -7,6 +7,99 @@ namespace MinecraftServerEngine
 {
     internal class PlayerList : System.IDisposable
     {
+        private class RendererManager : System.IDisposable
+        {
+            private bool _disposed = false;
+
+            private readonly Table<System.Guid, PlayerListRenderer> Renderers = new();
+
+            public RendererManager() { }
+
+            ~RendererManager() => System.Diagnostics.Debug.Assert(false);
+
+            public void Apply(System.Guid userId, PlayerListRenderer renderer)
+            {
+                System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+                System.Diagnostics.Debug.Assert(renderer != null);
+
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                System.Diagnostics.Debug.Assert(!Renderers.Contains(userId));
+                Renderers.Insert(userId, renderer);
+            }
+
+            public void Cancel(System.Guid userId)
+            {
+                System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                System.Diagnostics.Debug.Assert(Renderers.Contains(userId));
+                Renderers.Extract(userId);
+            }
+
+            public bool Contains(System.Guid userId)
+            {
+                System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                return Renderers.Contains(userId);
+            }
+
+            public void AddPlayerWithLaytency(System.Guid userId, string username, long ticks)
+            {
+                System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+                System.Diagnostics.Debug.Assert(username != null && !string.IsNullOrEmpty(username));
+
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                foreach (PlayerListRenderer renderer in Renderers.GetValues())
+                {
+                    renderer.AddPlayerWithLaytency(userId, username, ticks);
+                }
+            }
+
+            public void RemovePlayer(System.Guid userId)
+            {
+                System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                foreach (PlayerListRenderer renderer in Renderers.GetValues())
+                {
+                    renderer.RemovePlayer(userId);
+                }
+            }
+
+            public void UpdatePlayerLatency(System.Guid userId, long ticks)
+            {
+                System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                foreach (PlayerListRenderer renderer in Renderers.GetValues())
+                {
+                    renderer.UpdatePlayerLatency(userId, ticks);
+                }
+            }
+
+            public virtual void Dispose()
+            {
+                // Assertion.
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                System.Diagnostics.Debug.Assert(Renderers.Empty);
+
+                // Release resources.
+                Renderers.Dispose();
+
+                // Finish.
+                System.GC.SuppressFinalize(this);
+                _disposed = true;
+            }
+        }
+
         private class Info
         {
             public readonly System.Guid UserId;
@@ -14,9 +107,12 @@ namespace MinecraftServerEngine
             private long _laytency = -1;
             public long Laytency => _laytency;
 
-            public Info(System.Guid uniqueId, string username)
+            public Info(System.Guid userId, string username)
             {
-                UserId = uniqueId;
+                System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+                System.Diagnostics.Debug.Assert(username != null && !string.IsNullOrEmpty(username));
+
+                UserId = userId;
                 Username = username;
             }
 
@@ -45,7 +141,7 @@ namespace MinecraftServerEngine
 
         private readonly Locker Locker = new();  // Disposable
         private readonly ConcurrentTable<System.Guid, Info> Infos = new();  // Disposable
-        private readonly PlayerListRendererManager Manager = new();  // Disposable
+        private readonly RendererManager Manager = new();  // Disposable
 
         internal PlayerList() { }
 
@@ -53,6 +149,8 @@ namespace MinecraftServerEngine
 
         private bool IsDisconnected(System.Guid userId)
         {
+            System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             return !Manager.Contains(userId);
@@ -60,6 +158,9 @@ namespace MinecraftServerEngine
 
         public void Add(System.Guid userId, string username)
         {
+            System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+            System.Diagnostics.Debug.Assert(username != null && !string.IsNullOrEmpty(username));
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(IsDisconnected(userId));
@@ -73,6 +174,9 @@ namespace MinecraftServerEngine
 
         public void Connect(System.Guid userId, PlayerListRenderer renderer)
         {
+            System.Diagnostics.Debug.Assert(renderer != null);
+            System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Locker.Hold();
@@ -98,6 +202,9 @@ namespace MinecraftServerEngine
 
         public void UpdateLaytency(System.Guid userId, long ticks)
         {
+            System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+            System.Diagnostics.Debug.Assert(ticks >= 0);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(Infos.Contains(userId));
@@ -110,6 +217,8 @@ namespace MinecraftServerEngine
 
         public void Disconnect(System.Guid userId)
         {
+            System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Locker.Hold();
@@ -133,6 +242,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(IsDisconnected(userId));
 
+            System.Diagnostics.Debug.Assert(Infos.Contains(userId));
             Info info = Infos.Extract(userId);
             System.Diagnostics.Debug.Assert(info.UserId == userId);
 

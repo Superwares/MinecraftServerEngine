@@ -4,7 +4,8 @@ using Sync;
 namespace Containers
 {
 
-    public class Map<K, T> : System.IDisposable where K : notnull
+    public class Map<K, T> : System.IDisposable 
+        where K : notnull
     {
         private bool _disposed = false;
 
@@ -503,7 +504,7 @@ namespace Containers
     }
 
     public sealed class ConcurrentMap<K, T> : Map<K, T>
-        where K : System.IEquatable<K>
+        where K : notnull
     {
         private bool _disposed = false;
 

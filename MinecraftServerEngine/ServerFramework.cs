@@ -72,95 +72,6 @@ namespace MinecraftServerEngine
             /*Console.Printl("StartEntityRoutines!");*/
             _WORLD.StartEntityRoutines(barrier, _ticks);
         }        
-        
-        /*private void StartMainRoutine(Barrier barrier)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            _WORLD.Players.Swap();
-
-            barrier.SignalAndWait();
-
-            // Start player routines.
-
-            barrier.SignalAndWait();
-
-            _WORLD.Players.Swap();
-
-            barrier.SignalAndWait();
-
-            // Handle player connections.
-
-            barrier.SignalAndWait();
-
-            _WORLD.Entities.Swap();
-
-            barrier.SignalAndWait();
-
-            // Destroy entities.
-
-            barrier.SignalAndWait();
-
-            _WORLD.Players.Swap();
-
-            barrier.SignalAndWait();
-
-            // Destroy players.
-
-            barrier.SignalAndWait();
-
-            _WORLD.Entities.Swap();
-
-            barrier.SignalAndWait();
-
-            // Move entities.
-
-            barrier.SignalAndWait();
-
-            _WORLD.Players.Swap();
-
-            barrier.SignalAndWait();
-
-            // Move players.
-
-            barrier.SignalAndWait();
-
-            barrier.SignalAndWait();
-
-            // Create entities.
-
-            barrier.SignalAndWait();
-
-            barrier.SignalAndWait();
-
-            // Create or connect players.
-
-            barrier.SignalAndWait();
-
-            _WORLD.Players.Swap();
-
-            barrier.SignalAndWait();
-
-            // Handle player renders.
-
-            barrier.SignalAndWait();
-
-            barrier.SignalAndWait();
-
-            // Start world routine.
-
-            barrier.SignalAndWait();
-
-            _WORLD.Entities.Swap();
-
-            barrier.SignalAndWait();
-
-            // Start entity routines.
-
-            barrier.SignalAndWait();
-
-        }*/
-
 
         public void Run()
         {
@@ -186,12 +97,12 @@ namespace MinecraftServerEngine
 
             ushort port = 25565;
 
-            int n = 1;  // TODO: Determine using number of processor.
+            int n = 2;  // TODO: Determine using number of processor.
 
             using Barrier barrier = new(n);
             using ConnectionListener connListener = new();
 
-            /*System.Diagnostics.Debug.Assert(n > 1);
+            System.Diagnostics.Debug.Assert(n > 1);
             for (int i = 0; i < n - 1; ++i)
             {
                 var coreThread = Thread.New(() =>
@@ -215,11 +126,11 @@ namespace MinecraftServerEngine
                         {
                             rLocker.Release();
                         }
-                    } while(true);
+                    } while (true);
                 });
 
                 Threads.Enqueue(coreThread);
-            }*/
+            }
 
 
             var subThread1 = Thread.New(() =>

@@ -196,8 +196,10 @@ namespace MinecraftPhysicsEngine
 
         private bool _disposed = false;
 
+        private readonly Locker Locker = new();  // Disposable
         private readonly Table<Cell, Tree<PhysicsObject>> CellToObjects = new();  // Disposable
-        private readonly Table<PhysicsObject, Grid> ObjectToGrid = new();  // Disposable
+
+        private readonly ConcurrentTable<PhysicsObject, Grid> ObjectToGrid = new();  // Disposable
 
         public PhysicsWorld() { }
 
@@ -231,12 +233,16 @@ namespace MinecraftPhysicsEngine
 
         private void InsertObjectToCell(Cell cell, PhysicsObject obj)
         {
+            System.Diagnostics.Debug.Assert(obj != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            Locker.Hold();
 
             Tree<PhysicsObject> objs;
             if (!CellToObjects.Contains(cell))
             {
-                objs = new();
+                objs = new Tree<PhysicsObject>();
                 CellToObjects.Insert(cell, objs);
             }
             else
@@ -245,11 +251,17 @@ namespace MinecraftPhysicsEngine
             }
 
             objs.Insert(obj);
+
+            Locker.Release();
         }
 
         private void ExtractObjectToCell(Cell cell, PhysicsObject obj)
         {
+            System.Diagnostics.Debug.Assert(obj != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            Locker.Hold();
 
             System.Diagnostics.Debug.Assert(CellToObjects.Contains(cell));
             Tree<PhysicsObject> objs = CellToObjects.Lookup(cell);
@@ -261,10 +273,14 @@ namespace MinecraftPhysicsEngine
                 CellToObjects.Extract(cell);
                 objs.Dispose();
             }
+
+            Locker.Release();
         }
 
         public void InitObjectMapping(PhysicsObject obj)
         {
+            System.Diagnostics.Debug.Assert(obj != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Grid grid = Grid.Generate(obj.BoundingVolume);
@@ -279,6 +295,8 @@ namespace MinecraftPhysicsEngine
 
         public void CloseObjectMapping(PhysicsObject obj)
         {
+            System.Diagnostics.Debug.Assert(obj != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(ObjectToGrid.Contains(obj));
@@ -292,6 +310,8 @@ namespace MinecraftPhysicsEngine
 
         public void UpdateObjectMapping(PhysicsObject obj)
         {
+            System.Diagnostics.Debug.Assert(obj != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(ObjectToGrid.Contains(obj));
@@ -333,6 +353,9 @@ namespace MinecraftPhysicsEngine
         public (BoundingVolume, Vector, bool) IntegrateObject(
             Terrain terrain, PhysicsObject obj)
         {
+            System.Diagnostics.Debug.Assert(terrain != null);
+            System.Diagnostics.Debug.Assert(obj != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             (BoundingVolume volumeObject, Vector v) = obj.Integrate();
@@ -351,6 +374,10 @@ namespace MinecraftPhysicsEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
+            Locker.Dispose();
+
+            CellToObjects.Dispose();
+            ObjectToGrid.Dispose();
 
             // Finish.
             System.GC.SuppressFinalize(this);

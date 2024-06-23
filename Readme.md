@@ -7,14 +7,6 @@ The Minecraft Server Engine is a powerful and versatile game engine designed to 
 * Not ECS
 * Not Event Handler
 
-### Comprehensive Customization of Game Objects
-The Minecraft Server Engine offers extensive customization options for game objects, 
-allowing server developers to tailor the game to their specific needs. 
-
-* World: TODO description
-* Entities: TODO description
-* Skill Objects: TODO description
-
 ### Parallel Computing
 One of the standout features of the Minecraft Server Engine is its support for parallel computing, 
 which significantly enhances server performance and scalability.
@@ -24,6 +16,7 @@ which significantly enhances server performance and scalability.
 
 ### Single World
 
+### Dynamic Entity Appearance
 
 ## Code Conventions
 

@@ -839,6 +839,10 @@ namespace MinecraftServerEngine
         private void GenerateBoundingBoxForCubeBlock(
             Queue<AxisAlignedBoundingBox> queue, BlockLocation loc)
         {
+            System.Diagnostics.Debug.Assert(queue != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             Vector min = loc.GetMinVector(),
                    max = loc.GetMaxVector();
             AxisAlignedBoundingBox aabb = new(max, min);
@@ -918,6 +922,10 @@ namespace MinecraftServerEngine
         private void GenerateBoundingBoxForStairsBlock(
             Queue<AxisAlignedBoundingBox> queue, BlockLocation loc, Blocks block)
         {
+            System.Diagnostics.Debug.Assert(queue != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             (Directions d, bool bottom, int b) = DetermineStairsBlockShape(loc, block);
 
             throw new System.NotImplementedException();
@@ -926,6 +934,10 @@ namespace MinecraftServerEngine
         protected override void GenerateBoundingBoxForBlock(
             Queue<AxisAlignedBoundingBox> queue, BlockLocation loc)
         {
+            System.Diagnostics.Debug.Assert(queue != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             Blocks block = GetBlock(loc);
 
             /**

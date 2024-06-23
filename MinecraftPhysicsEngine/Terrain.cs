@@ -180,6 +180,9 @@ namespace MinecraftPhysicsEngine
             Queue<AxisAlignedBoundingBox> queue,
             BoundingVolume volume, Vector v, bool onGround)
         {
+            System.Diagnostics.Debug.Assert(queue != null);
+            System.Diagnostics.Debug.Assert(volume != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             int axis = -1;
@@ -247,6 +250,9 @@ namespace MinecraftPhysicsEngine
         internal (Vector, bool) ResolveCollisions(
             BoundingVolume volumeTotal, BoundingVolume volumeObject, Vector v)
         {
+            System.Diagnostics.Debug.Assert(volumeTotal != null);
+            System.Diagnostics.Debug.Assert(volumeObject != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             using Queue<AxisAlignedBoundingBox> queue = new();

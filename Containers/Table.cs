@@ -4,7 +4,8 @@ using Sync;
 namespace Containers
 {
 
-    public class Table<K, T> : System.IDisposable where K : notnull
+    public class Table<K, T> : System.IDisposable 
+        where K : notnull
     {
         private bool _disposed = false;
 
@@ -502,8 +503,8 @@ namespace Containers
 
     }
 
-    public sealed class ConcurrentTable<K, T> : Table<K, T> 
-        where K : System.IEquatable<K>
+    public sealed class ConcurrentTable<K, T> : Table<K, T>
+        where K : notnull
     {
         private bool _disposed = false;
 
