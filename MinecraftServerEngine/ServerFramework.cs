@@ -13,7 +13,7 @@ namespace MinecraftServerEngine
 
         private bool _running = true;
 
-        private static Thread MainThread = null;
+        private static Thread CurrentRunningThread = null;
         private readonly Queue<Thread> Threads = new();  // Disposable
 
 
@@ -52,6 +52,9 @@ namespace MinecraftServerEngine
         private void StartServerRoutine(
             Barrier barrier, ConnectionListener connListener)
         {
+            System.Diagnostics.Debug.Assert(barrier != null);
+            System.Diagnostics.Debug.Assert(connListener != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(_ticks >= 0);
@@ -89,7 +92,7 @@ namespace MinecraftServerEngine
 
             using ReadLocker rLocker = new();
 
-            MainThread = Thread.GetCurrent();
+            CurrentRunningThread = Thread.GetCurrent();
             Console.HandleTerminatin(() =>
             {
                 {
@@ -101,8 +104,8 @@ namespace MinecraftServerEngine
                     rLocker.Release();
                 }
 
-                System.Diagnostics.Debug.Assert(MainThread != null);
-                MainThread.Join();
+                System.Diagnostics.Debug.Assert(CurrentRunningThread != null);
+                CurrentRunningThread.Join();
             });
 
             using ConnectionListener connListener = new();
