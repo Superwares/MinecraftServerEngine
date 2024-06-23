@@ -925,7 +925,7 @@ namespace MinecraftServerEngine
         ~Connection() => System.Diagnostics.Debug.Assert(false);
 
         private void RecvDataAndHandle(
-            Queue<ServerboundPlayingPacket> controls,
+            Queue<Control> controls,
             Buffer buffer, 
             World world, 
             System.Guid userId, 
@@ -1063,8 +1063,8 @@ namespace MinecraftServerEngine
 
                         if (_TELEPORTATION_RECORDS.Empty)
                         {
-                            controls.Enqueue(packet);
-                            /*_PLAYER.Control(packet.OnGround);*/
+                            StandControl control = new(packet.OnGround);
+                            controls.Enqueue(control);
                         }
 
                     }
@@ -1077,8 +1077,8 @@ namespace MinecraftServerEngine
                         {
                             Vector p = new(packet.X, packet.Y, packet.Z);
 
-                            controls.Enqueue(packet);
-                            /*_PLAYER.Control(p, packet.OnGround);*/
+                            controls.Enqueue(new MoveControl(p));
+                            controls.Enqueue(new StandControl(packet.OnGround));
 
                             ChunkLocation locChunk = ChunkLocation.Generate(p);
                             _ENTITY_RENDERER.Update(locChunk);
@@ -1093,11 +1093,11 @@ namespace MinecraftServerEngine
                         if (_TELEPORTATION_RECORDS.Empty)
                         {
                             Vector p = new(packet.X, packet.Y, packet.Z);
+                            Look look = new(packet.Yaw, packet.Pitch);
 
-                            controls.Enqueue(packet);
-                            /*
-                            _PLAYER.Control(p, packet.OnGround);
-                            _PLAYER.Rotate(new(packet.Yaw, packet.Pitch));*/
+                            controls.Enqueue(new MoveControl(p));
+                            controls.Enqueue(new RotControl(look));
+                            controls.Enqueue(new StandControl(packet.OnGround));
 
                             ChunkLocation locChunk = ChunkLocation.Generate(p);
                             _ENTITY_RENDERER.Update(locChunk);
@@ -1111,9 +1111,10 @@ namespace MinecraftServerEngine
 
                         if (_TELEPORTATION_RECORDS.Empty)
                         {
-                            controls.Enqueue(packet);
-                            /*_PLAYER.Control(packet.OnGround);
-                            _PLAYER.Rotate(new(packet.Yaw, packet.Pitch));*/
+                            Look look = new(packet.Yaw, packet.Pitch);
+
+                            controls.Enqueue(new RotControl(look));
+                            controls.Enqueue(new StandControl(packet.OnGround));
                         }
 
                     }
@@ -1133,6 +1134,8 @@ namespace MinecraftServerEngine
                                     throw new UnexpectedValueException("EntityActionPacket.ActionId");
                                 }
 
+                                controls.Enqueue(new SneakControl());
+
                                 sneaking = true;
                                 break;
                             case 1:
@@ -1142,6 +1145,8 @@ namespace MinecraftServerEngine
                                     throw new UnexpectedValueException("EntityActionPacket.ActionId");
                                 }
 
+                                controls.Enqueue(new UnsneakControl());
+
                                 sneaking = false;
                                 break;
                             case 3:
@@ -1150,6 +1155,8 @@ namespace MinecraftServerEngine
                                     throw new UnexpectedValueException("EntityActionPacket.ActionId");
                                 }
 
+                                controls.Enqueue(new SprintControl());
+
                                 sprinting = true;
                                 break;
                             case 4:
@@ -1157,6 +1164,8 @@ namespace MinecraftServerEngine
                                 {
                                     throw new UnexpectedValueException("EntityActionPacket.ActionId");
                                 }
+
+                                controls.Enqueue(new UnsprintControl());
 
                                 sprinting = false;
                                 break;
@@ -1167,8 +1176,6 @@ namespace MinecraftServerEngine
                             throw new UnexpectedValueException("EntityActionPacket.JumpBoost");
                         }
 
-                        controls.Enqueue(packet);
-
                     }
                     break;
             }
@@ -1176,7 +1183,7 @@ namespace MinecraftServerEngine
         }
 
         internal void Control(
-            Queue<ServerboundPlayingPacket> controls,
+            Queue<Control> controls,
             World world,
             System.Guid id,
             bool sneaking, bool sprinting,

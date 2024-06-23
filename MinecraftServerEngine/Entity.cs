@@ -206,7 +206,9 @@ namespace MinecraftServerEngine
         public void Sneak()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-            
+
+            System.Diagnostics.Debug.Assert(!Sneaking);
+
             _sneaking = true;
 
             RanderFormChanging();
@@ -215,7 +217,9 @@ namespace MinecraftServerEngine
         public void Unsneak()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-            
+
+            System.Diagnostics.Debug.Assert(Sneaking);
+
             _sneaking = false;
 
             RanderFormChanging();
@@ -224,7 +228,9 @@ namespace MinecraftServerEngine
         public void Sprint()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-            
+
+            System.Diagnostics.Debug.Assert(!Sprinting);
+
             _sprinting = true;
 
             RanderFormChanging();
@@ -233,7 +239,9 @@ namespace MinecraftServerEngine
         public void Unsprint()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-            
+
+            System.Diagnostics.Debug.Assert(Sprinting);
+
             _sprinting = false;
 
             RanderFormChanging();
@@ -457,96 +465,36 @@ namespace MinecraftServerEngine
             base.Teleport(p, look);
         }
 
-        internal void Control(Vector p, bool onGround)
+        private void HandleControl(Control control)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(control != null);
 
-            System.Diagnostics.Debug.Assert(!_teleported);
-
-            _pControl = p;
-            _onGroundControl = onGround;
-
-        }
-
-        internal void Control(bool onGround)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(!_teleported);
-
-            _onGroundControl = onGround;
-            /*Console.Printl($"OnGround: {onGround}");*/
-
-        }
-
-        private void HandleControl(ServerboundPlayingPacket control)
-        {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             switch (control)
             {
                 default:
                     throw new System.NotImplementedException();
-                case PlayerPacket playerPacket:
-                    {
-                        /*Console.Printl("PlayerPacket!");*/
-
-                        Control(playerPacket.OnGround);
-                    }
+                case MoveControl moveControl:
+                    _pControl = moveControl.Position;
                     break;
-                case PlayerPositionPacket playerPositionPacket:
-                    {
-                        /*Console.Printl("PlayerPositionPacket!");*/
-
-                        Vector p = new(
-                            playerPositionPacket.X, 
-                            playerPositionPacket.Y, 
-                            playerPositionPacket.Z);
-                        Control(p, playerPositionPacket.OnGround);
-                    }
+                case RotControl rotControl:
+                    Rotate(rotControl.Look);
                     break;
-                case PlayerPosAndLookPacket playerPosAndLookPacket:
-                    {
-                        /*Console.Printl("PlayerPosAndLookPacket!");*/
-
-                        Vector p = new(
-                            playerPosAndLookPacket.X,
-                            playerPosAndLookPacket.Y,
-                            playerPosAndLookPacket.Z);
-                        Look look = new Look(playerPosAndLookPacket.Yaw, playerPosAndLookPacket.Pitch);
-
-                        Control(p, playerPosAndLookPacket.OnGround);
-                        Rotate(look);
-                    }
+                case StandControl standControl:
+                    _onGroundControl = standControl.OnGround;
                     break;
-                case PlayerLookPacket playerLookPacket:
-                    {
-                        /*Console.Printl("PlayerLookPacket!");*/
-
-                        Look look = new Look(playerLookPacket.Yaw, playerLookPacket.Pitch);
-                        
-                        Control(playerLookPacket.OnGround);
-                        Rotate(look);
-                    }
+                case SneakControl:
+                    Sneak();
                     break;
-                case EntityActionPacket entityActionPacket:
-                    switch (entityActionPacket.ActionId)
-                    {
-                        default:
-                            throw new System.NotImplementedException();
-                        case 0:
-                            Sneak();
-                            break;
-                        case 1:
-                            Unsneak();
-                            break;
-                        case 3:
-                            Sprint();
-                            break;
-                        case 4:
-                            Unsprint();
-                            break;
-                    }
+                case UnsneakControl:
+                    Unsneak();
+                    break;
+                case SprintControl:
+                    Sprint();
+                    break;
+                case UnsprintControl:
+                    Unsprint();
                     break;
             }
         }
@@ -559,7 +507,7 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(Conn != null);
 
-                using Queue<ServerboundPlayingPacket> controls = new();
+                using Queue<Control> controls = new();
 
                 Conn.Control(
                     controls, 
@@ -568,7 +516,7 @@ namespace MinecraftServerEngine
 
                 while (!controls.Empty)
                 {
-                    ServerboundPlayingPacket control = controls.Dequeue();
+                    Control control = controls.Dequeue();
                     HandleControl(control);
                 }
             }

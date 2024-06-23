@@ -106,6 +106,52 @@ namespace MinecraftServerEngine
             barrier.SignalAndWait();
         }
 
+        public void MoveEntities(Barrier barrier)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            Entities.Swap();
+
+            barrier.SignalAndWait();
+
+            try
+            {
+                do
+                {
+                    Entity entity = Entities.Dequeue();
+
+                    MoveObject(BlockContext, entity);
+
+                    Entities.Enqueue(entity);
+                } while (true);
+            }
+            catch (EmptyContainerException) { }
+
+            System.Diagnostics.Debug.Assert(Entities.Empty);
+
+            Players.Swap();
+
+            barrier.SignalAndWait();
+
+            try
+            {
+                do
+                {
+                    Player player = Players.Dequeue();
+
+                    MoveObject(BlockContext, player);
+
+                    Players.Enqueue(player);
+                } while (true);
+
+            }
+            catch (EmptyContainerException) { }
+
+            System.Diagnostics.Debug.Assert(Players.Empty);
+
+            barrier.SignalAndWait();
+        }
+
         private void DestroyEntity(Entity entity)
         {
             System.Diagnostics.Debug.Assert(entity != null);
@@ -184,52 +230,6 @@ namespace MinecraftServerEngine
                             continue;
                         }
                     }
-
-                    Players.Enqueue(player);
-                } while (true);
-
-            }
-            catch (EmptyContainerException) { }
-
-            System.Diagnostics.Debug.Assert(Players.Empty);
-
-            barrier.SignalAndWait();
-        }
-
-        public void MoveEntities(Barrier barrier)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Entities.Swap();
-
-            barrier.SignalAndWait();
-
-            try
-            {
-                do
-                {
-                    Entity entity = Entities.Dequeue();
-
-                    MoveObject(BlockContext, entity);
-
-                    Entities.Enqueue(entity);
-                } while (true);
-            }
-            catch (EmptyContainerException) { }
-
-            System.Diagnostics.Debug.Assert(Entities.Empty);
-
-            Players.Swap();
-
-            barrier.SignalAndWait();
-
-            try
-            {
-                do
-                {
-                    Player player = Players.Dequeue();
-
-                    MoveObject(BlockContext, player);
 
                     Players.Enqueue(player);
                 } while (true);
