@@ -196,7 +196,7 @@ namespace MinecraftPhysicsEngine
 
         private bool _disposed = false;
 
-        private readonly Locker Locker = new();  // Disposable
+        private readonly ReadLocker RLocker = new();  // Disposable
         private readonly Table<Cell, Tree<PhysicsObject>> CellToObjects = new();  // Disposable
 
         private readonly ConcurrentTable<PhysicsObject, Grid> ObjectToGrid = new();  // Disposable
@@ -212,6 +212,8 @@ namespace MinecraftPhysicsEngine
             System.Diagnostics.Debug.Assert(minBoundingBox != null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            RLocker.Read();
 
             Grid grid = Grid.Generate(minBoundingBox);
 
@@ -229,6 +231,7 @@ namespace MinecraftPhysicsEngine
                 }
             }
 
+            RLocker.Release();
         }
 
         private void InsertObjectToCell(Cell cell, PhysicsObject obj)
@@ -237,7 +240,7 @@ namespace MinecraftPhysicsEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Locker.Hold();
+            RLocker.Hold();
 
             Tree<PhysicsObject> objs;
             if (!CellToObjects.Contains(cell))
@@ -250,9 +253,10 @@ namespace MinecraftPhysicsEngine
                 objs = CellToObjects.Lookup(cell);
             }
 
+            System.Diagnostics.Debug.Assert(objs != null);
             objs.Insert(obj);
 
-            Locker.Release();
+            RLocker.Release();
         }
 
         private void ExtractObjectToCell(Cell cell, PhysicsObject obj)
@@ -261,11 +265,12 @@ namespace MinecraftPhysicsEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Locker.Hold();
+            RLocker.Hold();
 
             System.Diagnostics.Debug.Assert(CellToObjects.Contains(cell));
             Tree<PhysicsObject> objs = CellToObjects.Lookup(cell);
 
+            System.Diagnostics.Debug.Assert(objs != null);
             objs.Extract(obj);
 
             if (objs.Empty)
@@ -274,7 +279,7 @@ namespace MinecraftPhysicsEngine
                 objs.Dispose();
             }
 
-            Locker.Release();
+            RLocker.Release();
         }
 
         public void InitObjectMapping(PhysicsObject obj)
@@ -374,7 +379,7 @@ namespace MinecraftPhysicsEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
-            Locker.Dispose();
+            RLocker.Dispose();
 
             CellToObjects.Dispose();
             ObjectToGrid.Dispose();
