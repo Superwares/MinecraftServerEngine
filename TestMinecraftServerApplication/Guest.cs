@@ -15,7 +15,8 @@ namespace TestMinecraftServerApplication
         public override void StartRoutine(long serverTicks, World world)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-            
+
+            base.StartRoutine(serverTicks, world);
         }
 
         public override void Dispose()

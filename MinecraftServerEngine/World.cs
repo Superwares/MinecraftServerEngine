@@ -7,6 +7,21 @@ namespace MinecraftServerEngine
 {
     public abstract class World : PhysicsWorld
     {
+        private readonly struct IntegrationResult
+        {
+            public readonly BoundingVolume Volume;
+            public readonly Vector Velocity;
+            public readonly bool OnGround;
+
+            public IntegrationResult(
+                BoundingVolume volume, Vector v, bool onGround)
+            {
+                Volume = volume;
+                Velocity = v;
+                OnGround = onGround;
+            }
+        }
+
         private bool _disposed = false;
 
         internal readonly PlayerList PlayerList = new();  // Disposable
@@ -18,6 +33,8 @@ namespace MinecraftServerEngine
         private readonly Table<System.Guid, Player> DisconnectedPlayers = new(); // Disposable
 
         internal readonly BlockContext BlockContext = new();  // Disposable
+
+        private readonly Table<Entity, IntegrationResult> IntegrationResults = new();  // Disposable
 
         /*internal PublicInventory _Inventory = new ChestInventory();*/
 
@@ -50,8 +67,7 @@ namespace MinecraftServerEngine
             barrier.SignalAndWait();
         }
 
-        public void StartEntityRoutines(
-            Barrier barrier, long serverTicks)
+        public void StartEntityRoutines(Barrier barrier, long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -92,54 +108,9 @@ namespace MinecraftServerEngine
                 do
                 {
                     Player player = Players.Dequeue();
+                    System.Diagnostics.Debug.Assert(player != null);
 
                     player.StartRoutine(serverTicks, this);
-
-                    Players.Enqueue(player);
-                } while (true);
-
-            }
-            catch (EmptyContainerException) { }
-
-            System.Diagnostics.Debug.Assert(Players.Empty);
-
-            barrier.SignalAndWait();
-        }
-
-        public void MoveEntities(Barrier barrier)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Entities.Swap();
-
-            barrier.SignalAndWait();
-
-            try
-            {
-                do
-                {
-                    Entity entity = Entities.Dequeue();
-
-                    MoveObject(BlockContext, entity);
-
-                    Entities.Enqueue(entity);
-                } while (true);
-            }
-            catch (EmptyContainerException) { }
-
-            System.Diagnostics.Debug.Assert(Entities.Empty);
-
-            Players.Swap();
-
-            barrier.SignalAndWait();
-
-            try
-            {
-                do
-                {
-                    Player player = Players.Dequeue();
-
-                    MoveObject(BlockContext, player);
 
                     Players.Enqueue(player);
                 } while (true);
@@ -158,7 +129,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            CloseObject(entity);
+            CloseObjectMapping(entity);
 
             entity.Flush();
             entity.Dispose();
@@ -208,7 +179,7 @@ namespace MinecraftServerEngine
                     Player player = Players.Dequeue();
                     System.Diagnostics.Debug.Assert(player != null);
 
-                    if (player.HandlePlayerConnection(this))
+                    if (player.HandleConnection(this))
                     {
                         System.Guid userId = player.UniqueId;
 
@@ -242,6 +213,103 @@ namespace MinecraftServerEngine
             barrier.SignalAndWait();
         }
 
+        public void MoveEntities(Barrier barrier)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            Entities.Swap();
+
+            barrier.SignalAndWait();
+
+            try
+            {
+                do
+                {
+                    Entity entity = Entities.Dequeue();
+
+                    (BoundingVolume volume, Vector v, bool f) =
+                        IntegrateObject(BlockContext, entity);
+                    IntegrationResults.Insert(entity, new IntegrationResult(volume, v, f));
+
+                    Entities.Enqueue(entity);
+                } while (true);
+            }
+            catch (EmptyContainerException) { }
+
+            System.Diagnostics.Debug.Assert(Entities.Empty);
+
+            Players.Swap();
+
+            barrier.SignalAndWait();
+
+            try
+            {
+                do
+                {
+                    Player player = Players.Dequeue();
+
+                    (BoundingVolume volume, Vector v, bool f) =
+                        IntegrateObject(BlockContext, player);
+                    IntegrationResults.Insert(player, new IntegrationResult(volume, v, f));
+
+                    Players.Enqueue(player);
+                } while (true);
+
+            }
+            catch (EmptyContainerException) { }
+
+            System.Diagnostics.Debug.Assert(Players.Empty);
+
+            Entities.Swap();
+
+            barrier.SignalAndWait();
+
+            try
+            {
+                do
+                {
+                    Entity entity = Entities.Dequeue();
+
+                    IntegrationResult result = IntegrationResults.Extract(entity);
+
+                    entity.Move(result.Volume, result.Velocity, result.OnGround);
+
+                    UpdateObjectMapping(entity);
+
+                    Entities.Enqueue(entity);
+                } while (true);
+            }
+            catch (EmptyContainerException) { }
+
+            System.Diagnostics.Debug.Assert(Entities.Empty);
+
+            Players.Swap();
+
+            barrier.SignalAndWait();
+
+            try
+            {
+                do
+                {
+                    Player player = Players.Dequeue();
+
+                    IntegrationResult result = IntegrationResults.Extract(player);
+
+                    player.Move(result.Volume, result.Velocity, result.OnGround);
+
+                    UpdateObjectMapping(player);
+
+                    Players.Enqueue(player);
+                } while (true);
+
+            }
+            catch (EmptyContainerException) { }
+
+            System.Diagnostics.Debug.Assert(Players.Empty);
+
+            barrier.SignalAndWait();
+        }
+
         public void CreateEntities(Barrier barrier)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -254,7 +322,7 @@ namespace MinecraftServerEngine
 
                     System.Diagnostics.Debug.Assert(entity is not Player);
 
-                    InitObject(entity);
+                    InitObjectMapping(entity);
 
                     Entities.Enqueue(entity);
                 } while (true);
@@ -288,7 +356,7 @@ namespace MinecraftServerEngine
                 player = CreatePlayer(userId);
                 System.Diagnostics.Debug.Assert(player != null);
 
-                InitObject(player);
+                InitObjectMapping(player);
 
                 PlayerList.Add(userId, username);
 
@@ -347,6 +415,8 @@ namespace MinecraftServerEngine
             DisconnectedPlayers.Dispose();
 
             BlockContext.Dispose();
+
+            IntegrationResults.Dispose();
 
             // Finish.
             base.Dispose();

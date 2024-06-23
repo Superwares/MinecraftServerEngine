@@ -869,7 +869,7 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
-        private readonly Client _CLIENT;  // Dispoasble
+        private readonly Client Client;  // Dispoasble
 
         
         private bool _init = false;
@@ -906,7 +906,7 @@ namespace MinecraftServerEngine
             Vector p, 
             PlayerInventory inv)
         {
-            _CLIENT = client;
+            Client = client;
 
             System.Diagnostics.Debug.Assert(_MAX_ENTITY_RENDER_DISTANCE >= _MIN_RENDER_DISTANCE);
             System.Diagnostics.Debug.Assert(_MAX_RENDER_DISTANCE >= _MAX_ENTITY_RENDER_DISTANCE);
@@ -937,7 +937,7 @@ namespace MinecraftServerEngine
                 throw new DisconnectedClientException();
             }
 
-            _CLIENT.Recv(buffer);
+            Client.Recv(buffer);
 
             int packetId = buffer.ReadInt(true);
             switch (packetId)
@@ -1247,6 +1247,7 @@ namespace MinecraftServerEngine
                 buffer.Flush();
 
                 _disconnected = true;
+                Console.Print("Disconnect!");
             }
             
         }
@@ -1315,7 +1316,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disconnected);
 
             packet.Write(buffer);
-            _CLIENT.Send(buffer);
+            Client.Send(buffer);
 
             System.Diagnostics.Debug.Assert(buffer.Empty);
         }
@@ -1352,6 +1353,8 @@ namespace MinecraftServerEngine
                     buffer.Flush();
 
                     _disconnected = true;
+
+                    Console.Print("Disconnect!");
 
                     System.Diagnostics.Debug.Assert(!tryAgain);
                 }
@@ -1400,6 +1403,7 @@ namespace MinecraftServerEngine
                     buffer.Flush();
 
                     _disconnected = true;
+                    Console.Print("Disconnect!");
 
                     System.Diagnostics.Debug.Assert(!tryAgain);
                 }
@@ -1486,6 +1490,7 @@ namespace MinecraftServerEngine
                 buffer.Flush();
 
                 _disconnected = true;
+                Console.Print("Disconnect!");
             }
 
         }
@@ -1511,7 +1516,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_disconnected);
 
             // Release Resources.
-            _CLIENT.Dispose();
+            Client.Dispose();
 
             _CHUNK_LOAD_PACKETS.Dispose();
             _OUT_PACKETS.Dispose();

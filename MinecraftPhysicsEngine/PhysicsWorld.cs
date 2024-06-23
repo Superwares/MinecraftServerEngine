@@ -232,7 +232,7 @@ namespace MinecraftPhysicsEngine
             }
         }
 
-        private void InitObjectMapping(PhysicsObject obj)
+        public void InitObjectMapping(PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -246,7 +246,7 @@ namespace MinecraftPhysicsEngine
             ObjectToGrid.Insert(obj, grid);
         }
 
-        private void CloseObjectMapping(PhysicsObject obj)
+        public void CloseObjectMapping(PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -259,7 +259,7 @@ namespace MinecraftPhysicsEngine
             }
         }
 
-        private void UpdateObjectMapping(PhysicsObject obj)
+        public void UpdateObjectMapping(PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -299,21 +299,8 @@ namespace MinecraftPhysicsEngine
             ObjectToGrid.Insert(obj, grid);
         }
 
-        public void InitObject(PhysicsObject obj)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            InitObjectMapping(obj);
-        }
-
-        public void CloseObject(PhysicsObject obj)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            CloseObjectMapping(obj);
-        }
-
-        public void MoveObject(Terrain terrain, PhysicsObject obj)
+        public (BoundingVolume, Vector, bool) IntegrateObject(
+            Terrain terrain, PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -324,9 +311,7 @@ namespace MinecraftPhysicsEngine
 
             (v, bool onGround) = terrain.ResolveCollisions(volumeTotal, volumeObject, v);
 
-            obj.Move(volumeObject, v, onGround);
-
-            UpdateObjectMapping(obj);
+            return (volumeObject, v, onGround);
         }
 
         public virtual void Dispose()

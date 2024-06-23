@@ -9,6 +9,8 @@ namespace MinecraftServerEngine
     {
         public static int GetLocalPort(System.Net.Sockets.Socket socket)
         {
+            System.Diagnostics.Debug.Assert(socket != null);
+
             System.Net.IPEndPoint localEndPoint = (System.Net.IPEndPoint)socket.LocalEndPoint;
             System.Diagnostics.Debug.Assert(localEndPoint != null);
             return localEndPoint.Port;
@@ -30,6 +32,8 @@ namespace MinecraftServerEngine
         /// <exception cref="TryAgainException"></exception>
         public static System.Net.Sockets.Socket Accept(System.Net.Sockets.Socket socket)
         {
+            System.Diagnostics.Debug.Assert(socket != null);
+
             try
             {
                 System.Net.Sockets.Socket newSocket = socket.Accept();
@@ -51,6 +55,8 @@ namespace MinecraftServerEngine
 
         public static bool Poll(System.Net.Sockets.Socket socket, System.TimeSpan span)  
         {
+            System.Diagnostics.Debug.Assert(socket != null);
+
             // TODO: check the socket is binding and listening.
 
             if (IsBlocking(socket) &&
@@ -65,12 +71,16 @@ namespace MinecraftServerEngine
         public static void SetBlocking(
             System.Net.Sockets.Socket socket, bool f)
         {
+            System.Diagnostics.Debug.Assert(socket != null);
+
             socket.Blocking = f;
         }
 
         public static bool IsBlocking(
             System.Net.Sockets.Socket socket)
         {
+            System.Diagnostics.Debug.Assert(socket != null);
+
             return socket.Blocking;
         }
 
@@ -80,6 +90,16 @@ namespace MinecraftServerEngine
             System.Net.Sockets.Socket socket, 
             byte[] buffer, int offset, int size)
         {
+            System.Diagnostics.Debug.Assert(socket != null);
+
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            System.Diagnostics.Debug.Assert(offset <= buffer.Length);
+            System.Diagnostics.Debug.Assert(offset >= 0);
+
+            System.Diagnostics.Debug.Assert(offset + size == buffer.Length);
+            System.Diagnostics.Debug.Assert(size >= 0);
+
             try
             {
                 int n = socket.Receive(buffer, offset, size, System.Net.Sockets.SocketFlags.None);
@@ -108,6 +128,8 @@ namespace MinecraftServerEngine
         /// <exception cref="TryAgainException"></exception>
         public static byte RecvByte(System.Net.Sockets.Socket socket)
         {
+            System.Diagnostics.Debug.Assert(socket != null);
+
             byte[] buffer = new byte[1];
 
             int n = RecvBytes(socket, buffer, 0, 1);
@@ -120,6 +142,9 @@ namespace MinecraftServerEngine
         /// <exception cref="TryAgainException"></exception>
         public static void SendBytes(System.Net.Sockets.Socket socket, byte[] data)
         {
+            System.Diagnostics.Debug.Assert(socket != null);
+            System.Diagnostics.Debug.Assert(data != null);
+
             try
             {
                 System.Diagnostics.Debug.Assert(data != null);
@@ -147,6 +172,8 @@ namespace MinecraftServerEngine
         /// <exception cref="TryAgainException"></exception>
         public static void SendByte(System.Net.Sockets.Socket socket, byte v)
         {
+            System.Diagnostics.Debug.Assert(socket != null);
+
             SendBytes(socket, [v]);
         }
 
@@ -156,18 +183,18 @@ namespace MinecraftServerEngine
     {
         private bool _disposed = false;
 
-        private const int _TimeoutLimit = 100;
+        private const int Timeout = 100;
         private int _tryAgainCount = 0;
 
-        private const byte _SEGMENT_BITS = 0x7F;
-        private const byte _CONTINUE_BIT = 0x80;
+        private const byte SegmentBits = 0x7F;
+        private const byte ContinueBit = 0x80;
 
         private int _x = 0, _y = 0;
         private byte[] _data = null;
 
-        private System.Net.Sockets.Socket _socket;
+        private readonly System.Net.Sockets.Socket Socket;
 
-        public int LocalPort => SocketMethods.GetLocalPort(_socket);
+        public int LocalPort => SocketMethods.GetLocalPort(Socket);
 
         /// <exception cref="TryAgainException"></exception>
         internal static Client Accept(System.Net.Sockets.Socket socket)
@@ -186,10 +213,11 @@ namespace MinecraftServerEngine
         private Client(System.Net.Sockets.Socket socket)
         {
             System.Diagnostics.Debug.Assert(SocketMethods.IsBlocking(socket) == false);
-            _socket = socket;
+            Socket = socket;
         }
 
         ~Client() => System.Diagnostics.Debug.Assert(false);
+
 
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
         /// <exception cref="DisconnectedClientException"></exception>
@@ -198,7 +226,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(SocketMethods.IsBlocking(_socket) == false);
+            System.Diagnostics.Debug.Assert(SocketMethods.IsBlocking(Socket) == false);
 
             int size = _x;
             int position = _y;
@@ -209,10 +237,10 @@ namespace MinecraftServerEngine
             {
                 while (true)
                 {
-                    byte v = SocketMethods.RecvByte(_socket);
+                    byte v = SocketMethods.RecvByte(Socket);
 
-                    size |= (v & _SEGMENT_BITS) << position;
-                    if ((v & _CONTINUE_BIT) == 0)
+                    size |= (v & SegmentBits) << position;
+                    if ((v & ContinueBit) == 0)
                     {
                         break;
                     }
@@ -246,17 +274,17 @@ namespace MinecraftServerEngine
 
             while (true)
             {
-                if ((size & ~_SEGMENT_BITS) == 0)
+                if ((size & ~SegmentBits) == 0)
                 {
                     System.Diagnostics.Debug.Assert(size <= 0b_00000000_00000000_00000000_11111111);
-                    SocketMethods.SendByte(_socket, (byte)size);
+                    SocketMethods.SendByte(Socket, (byte)size);
                     break;
                 }
 
-                int v = (size & _SEGMENT_BITS) | _CONTINUE_BIT;
+                int v = (size & SegmentBits) | ContinueBit;
                 System.Diagnostics.Debug.Assert(v <= 0b_00000000_00000000_00000000_11111111);
                 System.Diagnostics.Debug.Assert(((uint)255 ^ (byte)0b_11111111U) == 0);
-                SocketMethods.SendByte(_socket, (byte)v);
+                SocketMethods.SendByte(Socket, (byte)v);
 
                 size >>= 7;
             }
@@ -270,7 +298,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(SocketMethods.IsBlocking(_socket) == false);
+            System.Diagnostics.Debug.Assert(SocketMethods.IsBlocking(Socket) == false);
 
             try
             {
@@ -293,7 +321,7 @@ namespace MinecraftServerEngine
                 {
                     try
                     {
-                        int n = SocketMethods.RecvBytes(_socket, _data, offset, availSize);
+                        int n = SocketMethods.RecvBytes(Socket, _data, offset, availSize);
                         System.Diagnostics.Debug.Assert(n <= availSize);
 
                         availSize -= n;
@@ -318,7 +346,7 @@ namespace MinecraftServerEngine
             catch (TryAgainException)
             {
                 /*Console.WriteLine($"count: {_count}");*/
-                if (_TimeoutLimit < _tryAgainCount++)
+                if (Timeout < _tryAgainCount++)
                 {
                     throw new DataRecvTimeoutException();
                 }
@@ -336,7 +364,7 @@ namespace MinecraftServerEngine
 
             byte[] data = buffer.ReadData();
             SendSize(data.Length);
-            SocketMethods.SendBytes(_socket, data);
+            SocketMethods.SendBytes(Socket, data);
         }
 
         public void Dispose()
@@ -345,7 +373,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
-            _socket.Dispose();
+            Socket.Dispose();
             _data = null;
 
             // Finish.

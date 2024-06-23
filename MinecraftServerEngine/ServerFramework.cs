@@ -51,11 +51,11 @@ namespace MinecraftServerEngine
             /*Console.Printl("StartPlayerRoutines!");*/
             _WORLD.StartPlayerRoutines(barrier, _ticks);
 
-            /*Console.Printl("MoveEntities!");*/
-            _WORLD.MoveEntities(barrier);
-
             /*Console.Printl("DestroyEntities!");*/
             _WORLD.DestroyEntities(barrier);
+
+            /*Console.Printl("MoveEntities!");*/
+            _WORLD.MoveEntities(barrier);
 
             /*Console.Printl("CreateEntities!");*/
             _WORLD.CreateEntities(barrier);

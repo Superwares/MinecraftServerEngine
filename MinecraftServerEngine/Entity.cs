@@ -524,7 +524,7 @@ namespace MinecraftServerEngine
             base.StartRoutine(serverTicks, world);
         }
 
-        public bool HandlePlayerConnection(World world)
+        public bool HandleConnection(World world)
         {
             System.Diagnostics.Debug.Assert(world != null);
 
@@ -553,7 +553,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (!Connected)
+            if (Disconnected)
             {
                 return;
             }

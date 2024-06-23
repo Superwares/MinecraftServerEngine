@@ -43,9 +43,9 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
-        private readonly Locker _MUTEX = new();  // Disposable
-        private readonly ConcurrentTable<System.Guid, Info> _INFORS = new();  // Disposable
-        private readonly PlayerListRendererManager _MANAGER = new();  // Disposable
+        private readonly Locker Locker = new();  // Disposable
+        private readonly ConcurrentTable<System.Guid, Info> Infos = new();  // Disposable
+        private readonly PlayerListRendererManager Manager = new();  // Disposable
 
         internal PlayerList() { }
 
@@ -55,7 +55,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            return !_MANAGER.Contains(userId);
+            return !Manager.Contains(userId);
         }
 
         public void Add(System.Guid userId, string username)
@@ -65,66 +65,66 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(IsDisconnected(userId));
 
             Info info = new(userId, username);
-            System.Diagnostics.Debug.Assert(!_INFORS.Contains(userId));
-            _INFORS.Insert(userId, info);
+            System.Diagnostics.Debug.Assert(!Infos.Contains(userId));
+            Infos.Insert(userId, info);
 
-            _MANAGER.AddPlayerWithLaytency(userId, username, info.Laytency);
+            Manager.AddPlayerWithLaytency(userId, username, info.Laytency);
         }
 
         public void Connect(System.Guid userId, PlayerListRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Hold();
+            Locker.Hold();
 
-            foreach (Info info in _INFORS.GetValues())
+            foreach (Info info in Infos.GetValues())
             {
                 renderer.AddPlayerWithLaytency(info.UserId, info.Username, info.Laytency);
             }
 
-            System.Diagnostics.Debug.Assert(_INFORS.Contains(userId));
-            Info infoSelf = _INFORS.Lookup(userId);
+            System.Diagnostics.Debug.Assert(Infos.Contains(userId));
+            Info infoSelf = Infos.Lookup(userId);
 
             System.Diagnostics.Debug.Assert(userId == infoSelf.UserId);
             infoSelf.Connect();
 
             System.Diagnostics.Debug.Assert(IsDisconnected(userId));
-            _MANAGER.Apply(userId, renderer);
+            Manager.Apply(userId, renderer);
 
-            _MANAGER.UpdatePlayerLatency(infoSelf.UserId, infoSelf.Laytency);
+            Manager.UpdatePlayerLatency(infoSelf.UserId, infoSelf.Laytency);
 
-            _MUTEX.Release();
+            Locker.Release();
         }
 
         public void UpdateLaytency(System.Guid userId, long ticks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_INFORS.Contains(userId));
-            Info info = _INFORS.Lookup(userId);
+            System.Diagnostics.Debug.Assert(Infos.Contains(userId));
+            Info info = Infos.Lookup(userId);
             info.UpdateLaytency(ticks);
 
             System.Diagnostics.Debug.Assert(userId == info.UserId);
-            _MANAGER.UpdatePlayerLatency(info.UserId, ticks);
+            Manager.UpdatePlayerLatency(info.UserId, ticks);
         }
 
         public void Disconnect(System.Guid userId)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Hold();
+            Locker.Hold();
 
             System.Diagnostics.Debug.Assert(!IsDisconnected(userId));
-            _MANAGER.Cancel(userId);
+            Manager.Cancel(userId);
 
-            System.Diagnostics.Debug.Assert(_INFORS.Contains(userId));
-            Info info = _INFORS.Lookup(userId);
+            System.Diagnostics.Debug.Assert(Infos.Contains(userId));
+            Info info = Infos.Lookup(userId);
             info.Disconnect();
 
             System.Diagnostics.Debug.Assert(userId == info.UserId);
-            _MANAGER.UpdatePlayerLatency(info.UserId, info.Laytency);
+            Manager.UpdatePlayerLatency(info.UserId, info.Laytency);
 
-            _MUTEX.Release();
+            Locker.Release();
         }
 
         public void Remove(System.Guid userId)
@@ -133,10 +133,10 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(IsDisconnected(userId));
 
-            Info info = _INFORS.Extract(userId);
+            Info info = Infos.Extract(userId);
             System.Diagnostics.Debug.Assert(info.UserId == userId);
 
-            _MANAGER.RemovePlayer(userId);
+            Manager.RemovePlayer(userId);
         }
 
         public void Dispose()
@@ -144,12 +144,12 @@ namespace MinecraftServerEngine
             // Assertion.
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_INFORS.Empty);
+            System.Diagnostics.Debug.Assert(Infos.Empty);
 
             // Release resources.
-            _MUTEX.Dispose();
-            _INFORS.Dispose();
-            _MANAGER.Dispose();
+            Locker.Dispose();
+            Infos.Dispose();
+            Manager.Dispose();
 
             // Finish.
             System.GC.SuppressFinalize(this);
