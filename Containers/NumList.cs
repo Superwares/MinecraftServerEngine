@@ -161,7 +161,7 @@ namespace Containers
     {
         private bool _disposed = false;
 
-        private readonly Locker _MUTEX = new();
+        private readonly Locker Locker = new();
 
         public ConcurrentNumList() { }
 
@@ -171,11 +171,11 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Hold();
+            Locker.Hold();
 
             int n = base.Alloc();
 
-            _MUTEX.Release();
+            Locker.Release();
 
             return n;
         }
@@ -183,11 +183,11 @@ namespace Containers
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _MUTEX.Hold();
+            Locker.Hold();
 
             base.Dealloc(n);
 
-            _MUTEX.Release();
+            Locker.Release();
         }
 
 
@@ -197,7 +197,7 @@ namespace Containers
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
-            _MUTEX.Dispose();
+            Locker.Dispose();
 
             // Finish.
             base.Dispose();

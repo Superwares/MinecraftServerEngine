@@ -16,8 +16,8 @@ namespace MinecraftServerEngine
             private readonly int _id;
             public int Id => _id;
 
-            private readonly ConcurrentSet<int> IDS = new();  // Disposable
-            private readonly ConcurrentQueue<EntityRenderer> RENDERERS = new();  // Disposable
+            private readonly ConcurrentSet<int> Ids = new();  // Disposable
+            private readonly ConcurrentQueue<EntityRenderer> Renderers = new();  // Disposable
 
             public RendererManager(int id)
             {
@@ -34,13 +34,14 @@ namespace MinecraftServerEngine
                 {
                     return false;
                 }
-                if (IDS.Contains(renderer.Id))
+                if (Ids.Contains(renderer.Id))
                 {
                     return false;
                 }
 
-                IDS.Insert(renderer.Id);
-                RENDERERS.Enqueue(renderer);
+                Ids.Insert(renderer.Id);
+                Renderers.Enqueue(renderer);
+
                 return true;
             }
 
@@ -50,25 +51,25 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(!_movement);
 
-                for (int i = 0; i < RENDERERS.Count; ++i)
+                for (int i = 0; i < Renderers.Count; ++i)
                 {
-                    EntityRenderer renderer = RENDERERS.Dequeue();
+                    EntityRenderer renderer = Renderers.Dequeue();
 
                     if (renderer.Disconnected)
                     {
-                        IDS.Extract(renderer.Id);
+                        Ids.Extract(renderer.Id);
 
                         continue;
                     }
                     else if (!renderer.CanRender(p))
                     {
-                        IDS.Extract(renderer.Id);
+                        Ids.Extract(renderer.Id);
                         renderer.DestroyEntity(Id);
 
                         continue;
                     }
 
-                    RENDERERS.Enqueue(renderer);
+                    Renderers.Enqueue(renderer);
                 }
 
             }
@@ -80,7 +81,7 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(!_movement);
 
-                foreach (EntityRenderer renderer in RENDERERS.GetValues())
+                foreach (EntityRenderer renderer in Renderers.GetValues())
                 {
                     renderer.MoveAndRotate(Id, p, pPrev, look, onGround);
                 }
@@ -94,7 +95,7 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(!_movement);
 
-                foreach (EntityRenderer renderer in RENDERERS.GetValues())
+                foreach (EntityRenderer renderer in Renderers.GetValues())
                 {
                     renderer.Move(Id, p, pPrev, onGround);
                 }
@@ -108,7 +109,7 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(!_movement);
 
-                foreach (EntityRenderer renderer in RENDERERS.GetValues())
+                foreach (EntityRenderer renderer in Renderers.GetValues())
                 {
                     renderer.Rotate(Id, look, onGround);
                 }
@@ -122,7 +123,7 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(!_movement);
 
-                foreach (EntityRenderer renderer in RENDERERS.GetValues())
+                foreach (EntityRenderer renderer in Renderers.GetValues())
                 {
                     renderer.Stand(Id);
                 }
@@ -143,7 +144,7 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                foreach (var renderer in RENDERERS.GetValues())
+                foreach (EntityRenderer renderer in Renderers.GetValues())
                 {
                     renderer.ChangeForms(Id, sneaking, sprinting);
                 }
@@ -153,7 +154,7 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                foreach (var renderer in RENDERERS.GetValues())
+                foreach (EntityRenderer renderer in Renderers.GetValues())
                 {
                     renderer.Teleport(Id, p, look, onGround);
                 }
@@ -163,11 +164,11 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                System.Diagnostics.Debug.Assert(!IDS.Contains(Id));
+                System.Diagnostics.Debug.Assert(!Ids.Contains(Id));
 
-                while (!RENDERERS.Empty)
+                while (!Renderers.Empty)
                 {
-                    EntityRenderer renderer = RENDERERS.Dequeue();
+                    EntityRenderer renderer = Renderers.Dequeue();
                     if (renderer.Disconnected)
                     {
                         continue;
@@ -175,7 +176,7 @@ namespace MinecraftServerEngine
 
                     renderer.DestroyEntity(Id);
 
-                    System.Diagnostics.Debug.Assert(IDS.Contains(renderer.Id));
+                    System.Diagnostics.Debug.Assert(Ids.Contains(renderer.Id));
                 }
             }
 
@@ -185,11 +186,11 @@ namespace MinecraftServerEngine
 
                 // Assertion
                 System.Diagnostics.Debug.Assert(!_movement);
-                System.Diagnostics.Debug.Assert(RENDERERS.Empty);
+                System.Diagnostics.Debug.Assert(Renderers.Empty);
 
                 // Release  resources.
-                IDS.Dispose();
-                RENDERERS.Dispose();
+                Ids.Dispose();
+                Renderers.Dispose();
 
                 // Finish
                 System.GC.SuppressFinalize(this);
@@ -205,6 +206,9 @@ namespace MinecraftServerEngine
 
             public Hitbox(double w, double h)
             {
+                System.Diagnostics.Debug.Assert(w > 0.0D);
+                System.Diagnostics.Debug.Assert(h > 0.0D);
+
                 Width = w;
                 Height = h;
             }
@@ -242,7 +246,7 @@ namespace MinecraftServerEngine
 
         private bool _rotated = false;
         private Look _look;
-        internal Look LOOK => _look;
+        internal Look Look => _look;
 
         protected bool _sneaking, _sprinting = false;
         public bool Sneaking => _sneaking;
@@ -286,6 +290,8 @@ namespace MinecraftServerEngine
 
         internal void ApplyRenderer(EntityRenderer renderer)
         {
+            System.Diagnostics.Debug.Assert(renderer != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(Manager != null);
@@ -313,6 +319,8 @@ namespace MinecraftServerEngine
 
         public override void Move(BoundingVolume volume, Vector v, bool onGround)
         {
+            System.Diagnostics.Debug.Assert(volume != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             if (_teleported)
@@ -589,7 +597,7 @@ namespace MinecraftServerEngine
 
             renderer.SpawnPlayer(
                 Id, UniqueId,
-                Position, LOOK,
+                Position, Look,
                 Sneaking, Sprinting);
         }
 
@@ -754,7 +762,7 @@ namespace MinecraftServerEngine
             Conn.Render(
                 world, 
                 Id, 
-                Position, LOOK, 
+                Position, Look, 
                 SelfInventory);
         }
         

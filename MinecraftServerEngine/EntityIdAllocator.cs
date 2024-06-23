@@ -5,16 +5,16 @@ namespace MinecraftServerEngine
     internal static class EntityIdAllocator
     {
         // TODO: make static destructor to dispose.
-        private readonly static Numlist _ENTITY_ID_LIST = new();  // Disposable
+        private readonly static ConcurrentNumList IdList = new();  // Disposable
 
         public static int Alloc()
         {
-            return _ENTITY_ID_LIST.Alloc();
+            return IdList.Alloc();
         }
 
         public static void Dealloc(int id)
         {
-            _ENTITY_ID_LIST.Dealloc(id);
+            IdList.Dealloc(id);
         }
 
     }
