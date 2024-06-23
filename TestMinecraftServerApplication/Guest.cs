@@ -1,5 +1,5 @@
 ﻿using MinecraftServerEngine;
-using MinecraftPhysicsEngine;
+using MinecraftServerEngine.PhysicsEngine;
 
 namespace TestMinecraftServerApplication
 {
