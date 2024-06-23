@@ -273,14 +273,14 @@ namespace MinecraftServerEngine
 
     public abstract class ItemEntity : Entity
     {
-        private bool _disposed = false;
-        
-        public const double MASS = 0.1D;
+        private static readonly Hitbox DefaultHitbox = new(0.25D, 0.25D);
 
-        private static readonly Hitbox HITBOX = new(0.25D, 0.25D);
+        public const double DefaultMass = 1.0D;
+
+        private bool _disposed = false;
 
         public ItemEntity(Vector p, Look look)
-            : base(System.Guid.NewGuid(), p, look, HITBOX, MASS) 
+            : base(System.Guid.NewGuid(), p, look, DefaultHitbox, DefaultMass) 
         { }
 
         ~ItemEntity() => System.Diagnostics.Debug.Assert(false);
@@ -347,19 +347,6 @@ namespace MinecraftServerEngine
 
     public abstract class Player : LivingEntity
     {
-        public const double Mass = 1.0D;
-
-        private bool _disposed = false;
-
-        internal readonly PlayerInventory SelfInventory = new();
-
-        private Connection Conn;
-        public bool Disconnected => (Conn == null);
-        public bool Connected => !Disconnected;
-
-        private Vector _pControl;
-        private bool _onGroundControl;
-
         private static Hitbox GetHitbox(bool sneaking)
         {
             double w = 0.6D, h;
@@ -375,8 +362,23 @@ namespace MinecraftServerEngine
             return new Hitbox(w, h);
         }
 
+        private static Hitbox DefaultHitbox = GetHitbox(false);
+
+        public const double DefaultMass = 1.0D;
+
+        private bool _disposed = false;
+
+        internal readonly PlayerInventory SelfInventory = new();
+
+        private Connection Conn;
+        public bool Disconnected => (Conn == null);
+        public bool Connected => !Disconnected;
+
+        private Vector _pControl;
+        private bool _onGroundControl;
+
         public Player(System.Guid userId, Vector p, Look look) 
-            : base(userId, p, look, GetHitbox(false), Mass) 
+            : base(userId, p, look, DefaultHitbox, DefaultMass) 
         {
             System.Diagnostics.Debug.Assert(!Sneaking);
             System.Diagnostics.Debug.Assert(!Sprinting);

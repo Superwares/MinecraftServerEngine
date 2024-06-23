@@ -10,14 +10,14 @@ namespace MinecraftPhysicsEngine
         private bool _disposed = false;
 
         private readonly double _m;
-        public double GetMass() => _m;
+        public double Mass => _m;
 
         /*private readonly double MaxStepLevel;*/
 
         private readonly Queue<Vector> Forces = new();  // Disposable
 
         private Vector _v;
-        public Vector Velocity;
+        public Vector Velocity => _v;
 
         private readonly bool _noGravity;
         public bool NoGravity => _noGravity;
@@ -31,6 +31,9 @@ namespace MinecraftPhysicsEngine
 
         public PhysicsObject(BoundingVolume volume, double m/*, double maxStepLevel*/)
         {
+            System.Diagnostics.Debug.Assert(volume != null);
+            System.Diagnostics.Debug.Assert(m > 0.0D);
+
             _m = m;
 
             _v = new(0.0D, 0.0D, 0.0D);
@@ -47,6 +50,7 @@ namespace MinecraftPhysicsEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(Forces != null);
             Forces.Enqueue(v);
         }
 
@@ -63,7 +67,7 @@ namespace MinecraftPhysicsEngine
 
             if (!NoGravity)
             {
-                Forces.Enqueue(GetMass() * 0.08D * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
+                Forces.Enqueue(Mass * 0.08D * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
             }
 
             Vector v = _v;
@@ -72,6 +76,7 @@ namespace MinecraftPhysicsEngine
             {
                 Vector force = Forces.Dequeue();
 
+                System.Diagnostics.Debug.Assert(_m > 0.0D);
                 v += (force / _m);
             }
 
