@@ -1,10 +1,11 @@
 ﻿using Common;
 using Containers;
-using MinecraftServerEngine.PhysicsEngine;
 using Sync;
 
 namespace MinecraftServerEngine
 {
+    using PhysicsEngine;
+
     public abstract class World : PhysicsWorld
     {
         private readonly struct IntegrationResult

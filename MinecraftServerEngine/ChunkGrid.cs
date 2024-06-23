@@ -4,6 +4,7 @@ using MinecraftServerEngine.PhysicsEngine;
 
 namespace MinecraftServerEngine
 {
+
     internal readonly struct ChunkGrid : System.IEquatable<ChunkGrid>
     {
         public static ChunkGrid Generate(ChunkLocation c, int d)
