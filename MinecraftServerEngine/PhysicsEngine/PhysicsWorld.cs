@@ -1,5 +1,6 @@
 ﻿
 
+using Common;
 using Containers;
 using MinecraftServerEngine.PhysicsEngine;
 using Sync;
@@ -216,6 +217,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             RLocker.Read();
 
             Grid grid = Grid.Generate(minBoundingBox);
+            /*Console.Printl($"grid: {grid}");*/
 
             foreach (Cell cell in grid.GetCells())
             {

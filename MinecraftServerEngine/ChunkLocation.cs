@@ -61,17 +61,17 @@ namespace MinecraftServerEngine
 
         public readonly Vector GetMinVector()
         {
-            double x = (double)X,
+            double x = (double)X * Width,
                 y = 0.0D,
-                z = (double)Z;
+                z = (double)Z * Width;
             return new(x, y, z);
         }
 
         public readonly Vector GetMaxVector()
         {
-            double x = (double)X + Width,
+            double x = ((double)X * Width) + Width,
                 y = (double)Height,
-                z = (double)Z + Width;
+                z = ((double)Z * Width) + Width;
             return new(x, y, z);
         }
 

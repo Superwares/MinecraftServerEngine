@@ -59,8 +59,6 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(_ticks >= 0);
 
-            Console.Print(".");
-
             /*Console.Printl("StartPlayerRoutines!");*/
             _WORLD.StartPlayerControls(barrier, _ticks);
 
@@ -181,6 +179,8 @@ namespace MinecraftServerEngine
                             {
                                 break;
                             }
+
+                            Console.Print(".");
 
                             StartServerRoutine(barrier, connListener);
                             CountTicks();

@@ -15,6 +15,10 @@ namespace MinecraftServerEngine.PhysicsEngine
         public abstract bool TestIntersection(BoundingVolume volume);
         /*public abstract bool TestIntersection(BoundingVolume volume, Vector v);*/
 
+        /*public override string ToString()
+        {
+            return base.ToString();
+        }*/
     }
 
     public sealed class AxisAlignedBoundingBox : BoundingVolume
@@ -159,6 +163,11 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             throw new System.NotImplementedException();
         }
+
+        /*public override string ToString()
+        {
+            return $"";
+        }*/
 
     }
 

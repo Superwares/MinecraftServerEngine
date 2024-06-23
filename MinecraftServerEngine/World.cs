@@ -8,6 +8,249 @@ namespace MinecraftServerEngine
 
     public abstract class World : PhysicsWorld
     {
+        private sealed class EntityQueue : System.IDisposable
+        {
+            private class SwapQueue<T> : System.IDisposable
+            {
+                private bool _disposed = false;
+
+                private int dequeue = 1;
+                private readonly ConcurrentQueue<T> Queue1 = new();  // Disposable
+                private readonly ConcurrentQueue<T> Queue2 = new();  // Disposable
+
+                private ConcurrentQueue<T> GetQueueForDequeue()
+                {
+                    System.Diagnostics.Debug.Assert(!_disposed);
+
+                    if (dequeue == 1)
+                    {
+                        return Queue1;
+                    }
+                    else if (dequeue == 2)
+                    {
+                        return Queue2;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.Assert(false);
+                    }
+
+                    throw new System.NotImplementedException();
+                }
+
+                private ConcurrentQueue<T> GetQueueForEnqueue()
+                {
+                    System.Diagnostics.Debug.Assert(!_disposed);
+
+                    if (dequeue == 1)
+                    {
+                        return Queue2;
+                    }
+                    else if (dequeue == 2)
+                    {
+                        return Queue1;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.Assert(false);
+                    }
+
+                    throw new System.NotImplementedException();
+                }
+
+                public int Count
+                {
+                    get
+                    {
+                        System.Diagnostics.Debug.Assert(!_disposed);
+
+                        ConcurrentQueue<T> queue = GetQueueForDequeue();
+                        return queue.Count;
+                    }
+                }
+                public bool Empty => (Count == 0);
+
+                public SwapQueue() { }
+
+                ~SwapQueue() => System.Diagnostics.Debug.Assert(false);
+
+                public virtual void Swap()
+                {
+                    System.Diagnostics.Debug.Assert(!_disposed);
+
+                    ConcurrentQueue<T> queue = GetQueueForDequeue();
+
+                    if (queue.Empty)
+                    {
+                        if (dequeue == 1)
+                        {
+                            System.Diagnostics.Debug.Assert(Queue1.Empty);
+
+                            dequeue = 2;
+                        }
+                        else if (dequeue == 2)
+                        {
+                            System.Diagnostics.Debug.Assert(Queue2.Empty);
+
+                            dequeue = 1;
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.Assert(false);
+                        }
+                    }
+                }
+
+                /// <summary>
+                /// 
+                /// </summary>
+                /// <returns></returns>
+                /// <exception cref="EmptyContainerException"></exception>
+                public virtual T Dequeue()
+                {
+                    System.Diagnostics.Debug.Assert(!_disposed);
+
+                    ConcurrentQueue<T> queue = GetQueueForDequeue();
+                    T value = queue.Dequeue();
+
+                    return value;
+                }
+
+                public virtual void Enqueue(T value)
+                {
+                    System.Diagnostics.Debug.Assert(value != null);
+
+                    System.Diagnostics.Debug.Assert(!_disposed);
+
+                    ConcurrentQueue<T> queue = GetQueueForEnqueue();
+                    queue.Enqueue(value);
+                }
+
+                public virtual void Dispose()
+                {
+                    // Assertions.
+                    System.Diagnostics.Debug.Assert(!_disposed);
+
+                    // Release resources.
+                    Queue1.Dispose();
+                    Queue2.Dispose();
+
+                    // Finish.
+                    System.GC.SuppressFinalize(this);
+                    _disposed = true;
+                }
+            }
+
+            private bool _disposed = false;
+
+            private readonly Locker Locker = new();  // Disposable
+
+            private readonly SwapQueue<Entity> NonPlayers = new();  // Disposable
+            private readonly SwapQueue<Player> Players = new();
+
+            ~EntityQueue() => System.Diagnostics.Debug.Assert(false);
+            
+            public void Swap()
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                Locker.Hold();
+
+                NonPlayers.Swap();
+                Players.Swap();
+
+                Locker.Release();
+            }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <returns></returns>
+            /// <exception cref="EmptyContainerException" />
+            public Entity Dequeue()
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                Locker.Hold();
+
+                try
+                {
+                    if (!NonPlayers.Empty)
+                    {
+                        return NonPlayers.Dequeue();
+                    }
+                    else
+                    {
+                        return Players.Dequeue();
+                    }
+                }
+                finally
+                {
+                    Locker.Release();
+                }
+            }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <returns></returns>
+            /// <exception cref="EmptyContainerException" />
+            public Player DequeuePlayer()
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                return Players.Dequeue();
+            }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <returns></returns>
+            /// <exception cref="EmptyContainerException" />
+            public Entity DequeueNonPlayer()
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                return NonPlayers.Dequeue();
+            }
+
+            public void Enqueue(Entity entity)
+            {
+                System.Diagnostics.Debug.Assert(entity != null);
+
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                if (entity is Player player)
+                {
+                    Players.Enqueue(player);
+                }
+                else
+                {
+                    NonPlayers.Enqueue(entity);
+                }
+            }
+
+            public void Dispose()
+            {
+                // Assertions.
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                System.Diagnostics.Debug.Assert(NonPlayers.Empty);
+                System.Diagnostics.Debug.Assert(Players.Empty);
+
+                // Release resources.
+                Locker.Dispose();
+
+                NonPlayers.Dispose();
+                Players.Dispose();
+
+                // Finish.
+                System.GC.SuppressFinalize(this);
+                _disposed = true;
+            }
+
+        }
+
         private readonly struct IntegrationResult
         {
             public readonly BoundingVolume Volume;
@@ -28,8 +271,8 @@ namespace MinecraftServerEngine
         internal readonly PlayerList PlayerList = new();  // Disposable
 
         private readonly ConcurrentQueue<Entity> EntitySpawningPool = new();  // Disposable
-        internal readonly SwapQueue<Entity> NonPlayers = new();  // Disposable
-        internal readonly SwapQueue<Player> Players = new();
+
+        private readonly EntityQueue Entities = new();  // Disposable
 
         private readonly ConcurrentTable<System.Guid, Player> DisconnectedPlayers = new(); // Disposable
 
@@ -72,7 +315,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            NonPlayers.Swap();
+            Entities.Swap();
 
             barrier.SignalAndWait();
 
@@ -80,37 +323,14 @@ namespace MinecraftServerEngine
             {
                 do
                 {
-                    Entity entity = NonPlayers.Dequeue();
-                    System.Diagnostics.Debug.Assert(entity is not Player);
+                    Entity entity = Entities.Dequeue();
 
                     entity.StartRoutine(serverTicks, this);
 
-                    NonPlayers.Enqueue(entity);
+                    Entities.Enqueue(entity);
                 } while (true);
             }
             catch (EmptyContainerException) { }
-
-            System.Diagnostics.Debug.Assert(NonPlayers.Empty);
-
-            Players.Swap();
-
-            barrier.SignalAndWait();
-
-            try
-            {
-                do
-                {
-                    Player player = Players.Dequeue();
-                    System.Diagnostics.Debug.Assert(player != null);
-
-                    player.StartRoutine(serverTicks, this);
-
-                    Players.Enqueue(player);
-                } while (true);
-            }
-            catch (EmptyContainerException) { }
-
-            System.Diagnostics.Debug.Assert(Players.Empty);
 
             barrier.SignalAndWait();
         }
@@ -119,7 +339,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Players.Swap();
+            Entities.Swap();
 
             barrier.SignalAndWait();
 
@@ -127,18 +347,16 @@ namespace MinecraftServerEngine
             {
                 do
                 {
-                    Player player = Players.Dequeue();
+                    Player player = Entities.DequeuePlayer();
                     System.Diagnostics.Debug.Assert(player != null);
 
                     player.Control(serverTicks, this);
 
-                    Players.Enqueue(player);
+                    Entities.Enqueue(player);
                 } while (true);
 
             }
             catch (EmptyContainerException) { }
-
-            System.Diagnostics.Debug.Assert(Players.Empty);
 
             barrier.SignalAndWait();
         }
@@ -161,7 +379,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            NonPlayers.Swap();
+            Entities.Swap();
 
             barrier.SignalAndWait();
 
@@ -169,37 +387,10 @@ namespace MinecraftServerEngine
             {
                 do
                 {
-                    Entity entity = NonPlayers.Dequeue();
+                    Entity entity = Entities.Dequeue();
+                    System.Diagnostics.Debug.Assert(entity != null);
 
-                    System.Diagnostics.Debug.Assert(entity is not Player);
-
-                    if (entity.IsDead())
-                    {
-                        DestroyEntity(entity);
-
-                        continue;
-                    }
-
-                    NonPlayers.Enqueue(entity);
-
-                } while (true);
-            }
-            catch (EmptyContainerException) { }
-
-            System.Diagnostics.Debug.Assert(NonPlayers.Empty);
-
-            Players.Swap();
-
-            barrier.SignalAndWait();
-
-            try
-            {
-                do
-                {
-                    Player player = Players.Dequeue();
-                    System.Diagnostics.Debug.Assert(player != null);
-
-                    if (player.HandleConnection(this))
+                    if (entity is Player player && player.HandleConnection(this))
                     {
                         System.Guid userId = player.UniqueId;
 
@@ -221,14 +412,21 @@ namespace MinecraftServerEngine
                             continue;
                         }
                     }
+                    else
+                    {
+                        if (entity.IsDead())
+                        {
+                            DestroyEntity(entity);
 
-                    Players.Enqueue(player);
+                            continue;
+                        }
+                    }
+
+                    Entities.Enqueue(entity);
+
                 } while (true);
-
             }
             catch (EmptyContainerException) { }
-
-            System.Diagnostics.Debug.Assert(Players.Empty);
 
             barrier.SignalAndWait();
         }
@@ -237,7 +435,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            NonPlayers.Swap();
+            Entities.Swap();
 
             barrier.SignalAndWait();
 
@@ -245,20 +443,20 @@ namespace MinecraftServerEngine
             {
                 do
                 {
-                    Entity entity = NonPlayers.Dequeue();
+                    Entity entity = Entities.Dequeue();
 
                     (BoundingVolume volume, Vector v, bool f) =
                         IntegrateObject(BlockContext, entity);
                     IntegrationResults.Insert(entity, new IntegrationResult(volume, v, f));
 
-                    NonPlayers.Enqueue(entity);
+                    Entities.Enqueue(entity);
                 } while (true);
             }
             catch (EmptyContainerException) { }
 
-            System.Diagnostics.Debug.Assert(NonPlayers.Empty);
+            barrier.SignalAndWait();
 
-            Players.Swap();
+            Entities.Swap();
 
             barrier.SignalAndWait();
 
@@ -266,29 +464,7 @@ namespace MinecraftServerEngine
             {
                 do
                 {
-                    Player player = Players.Dequeue();
-
-                    (BoundingVolume volume, Vector v, bool f) =
-                        IntegrateObject(BlockContext, player);
-                    IntegrationResults.Insert(player, new IntegrationResult(volume, v, f));
-
-                    Players.Enqueue(player);
-                } while (true);
-
-            }
-            catch (EmptyContainerException) { }
-
-            System.Diagnostics.Debug.Assert(Players.Empty);
-
-            NonPlayers.Swap();
-
-            barrier.SignalAndWait();
-
-            try
-            {
-                do
-                {
-                    Entity entity = NonPlayers.Dequeue();
+                    Entity entity = Entities.Dequeue();
 
                     IntegrationResult result = IntegrationResults.Extract(entity);
 
@@ -296,36 +472,10 @@ namespace MinecraftServerEngine
 
                     UpdateObjectMapping(entity);
 
-                    NonPlayers.Enqueue(entity);
+                    Entities.Enqueue(entity);
                 } while (true);
             }
             catch (EmptyContainerException) { }
-
-            System.Diagnostics.Debug.Assert(NonPlayers.Empty);
-
-            Players.Swap();
-
-            barrier.SignalAndWait();
-
-            try
-            {
-                do
-                {
-                    Player player = Players.Dequeue();
-
-                    IntegrationResult result = IntegrationResults.Extract(player);
-
-                    player.Move(result.Volume, result.Velocity, result.OnGround);
-
-                    UpdateObjectMapping(player);
-
-                    Players.Enqueue(player);
-                } while (true);
-
-            }
-            catch (EmptyContainerException) { }
-
-            System.Diagnostics.Debug.Assert(Players.Empty);
 
             barrier.SignalAndWait();
         }
@@ -344,7 +494,7 @@ namespace MinecraftServerEngine
 
                     InitObjectMapping(entity);
 
-                    NonPlayers.Enqueue(entity);
+                    Entities.Enqueue(entity);
                 } while (true);
             }
             catch (EmptyContainerException) { }
@@ -380,7 +530,7 @@ namespace MinecraftServerEngine
 
                 PlayerList.Add(userId, username);
 
-                Players.Enqueue(player);
+                Entities.Enqueue(player);
             }
             
             player.Connect(client, this, userId);
@@ -393,7 +543,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Players.Swap();
+            Entities.Swap();
 
             barrier.SignalAndWait();
 
@@ -401,11 +551,12 @@ namespace MinecraftServerEngine
             {
                 do
                 {
-                    Player player = Players.Dequeue();
+                    Player player = Entities.DequeuePlayer();
+                    System.Diagnostics.Debug.Assert(player != null);
 
                     player.Render(this);
 
-                    Players.Enqueue(player);
+                    Entities.Enqueue(player);
                 } while (true);
 
             }
@@ -420,8 +571,6 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(EntitySpawningPool.Empty);
-            System.Diagnostics.Debug.Assert(NonPlayers.Empty);
-            System.Diagnostics.Debug.Assert(Players.Empty);
 
             System.Diagnostics.Debug.Assert(DisconnectedPlayers.Empty);
 
@@ -431,8 +580,7 @@ namespace MinecraftServerEngine
             PlayerList.Dispose();
 
             EntitySpawningPool.Dispose();
-            NonPlayers.Dispose();
-            Players.Dispose();
+            Entities.Dispose();
 
             DisconnectedPlayers.Dispose();
 

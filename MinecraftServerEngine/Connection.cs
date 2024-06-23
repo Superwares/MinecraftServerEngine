@@ -1274,10 +1274,13 @@ namespace MinecraftServerEngine
 
             ChunkLocation loc = ChunkLocation.Generate(p);
 
+            /*Console.Printl($"_dEntityRendering: {_dEntityRendering}");*/
             ChunkGrid grid = ChunkGrid.Generate(loc, _dEntityRendering);
+            /*Console.Printl($"grid: {grid}");*/
 
             using Queue<PhysicsObject> objects = new();
-            world.GetObjects(objects, grid.GetMinBoundingBox());
+            AxisAlignedBoundingBox aabbTotal = grid.GetMinBoundingBox();
+            world.GetObjects(objects, aabbTotal);
             while (!objects.Empty)
             {
                 PhysicsObject obj = objects.Dequeue();

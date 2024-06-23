@@ -100,6 +100,7 @@ namespace MinecraftServerEngine
         {
             Vector max = Max.GetMaxVector(),
                 min = Min.GetMinVector();
+            /*Console.Printl($"max: {max}, min: {min}");*/
 
             return new AxisAlignedBoundingBox(max, min);
         }
