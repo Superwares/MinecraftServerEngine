@@ -1278,13 +1278,9 @@ namespace MinecraftServerEngine
             ChunkGrid grid = ChunkGrid.Generate(loc, _dEntityRendering);
             /*Console.Printl($"grid: {grid}");*/
 
-            using Queue<PhysicsObject> objects = new();
             AxisAlignedBoundingBox aabbTotal = grid.GetMinBoundingBox();
-            world.GetObjects(objects, aabbTotal);
-            while (!objects.Empty)
+            foreach (PhysicsObject obj in world.GetObjects(aabbTotal))
             {
-                PhysicsObject obj = objects.Dequeue();
-
                 switch (obj)
                 {
                     default:

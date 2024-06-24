@@ -50,6 +50,7 @@ namespace MinecraftServerEngine
         }
 
         private void StartServerRoutine(
+            bool print,
             Barrier barrier, ConnectionListener connListener)
         {
             System.Diagnostics.Debug.Assert(barrier != null);
@@ -59,29 +60,103 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(_ticks >= 0);
 
+            Time start = Time.Now(), end, elapsed;
+
             /*Console.Printl("StartPlayerRoutines!");*/
             _WORLD.StartPlayerControls(barrier, _ticks);
+
+            if (print)
+            {
+                end = Time.Now();
+                elapsed = end - start;
+                start = end;
+                Console.Print($"1: {elapsed}, ");
+            }
 
             /*Console.Printl("DestroyEntities!");*/
             _WORLD.DestroyEntities(barrier);
 
+            if (print)
+            {
+                end = Time.Now();
+                elapsed = end - start;
+                start = end;
+
+                Console.Print($"2: {elapsed}, ");
+            }
+
             /*Console.Printl("MoveEntities!");*/
             _WORLD.MoveEntities(barrier);
+
+            if (print)
+            {
+                end = Time.Now();
+                elapsed = end - start;
+                start = end;
+
+                Console.Print($"3: {elapsed}, ");
+            }
 
             /*Console.Printl("CreateEntities!");*/
             _WORLD.CreateEntities(barrier);
 
+            if (print)
+            {
+                end = Time.Now();
+                elapsed = end - start;
+                start = end;
+
+                Console.Print($"4: {elapsed}, ");
+            }
+
             /*Console.Printl("Create or Connect Players!");*/
             connListener.Accept(barrier, _WORLD);
-                   
+
+            if (print)
+            {
+                end = Time.Now();
+                elapsed = end - start;
+                start = end;
+
+                Console.Print($"5: {elapsed}, ");
+            }
+
             /*Console.Printl("HandlePlayerRenders!");*/
             _WORLD.HandlePlayerRenders(barrier);
+
+            if (print)
+            {
+                end = Time.Now();
+                elapsed = end - start;
+                start = end;
+
+                Console.Print($"6: {elapsed}, ");
+            }
 
             /*Console.Printl("StartRoutine!");*/
             _WORLD.StartRoutine(barrier, _ticks);
 
+            if (print)
+            {
+                end = Time.Now();
+                elapsed = end - start;
+                start = end;
+
+                Console.Print($"7: {elapsed}, ");
+            }
+
             /*Console.Printl("StartEntityRoutines!");*/
             _WORLD.StartEntityRoutines(barrier, _ticks);
+
+            if (print)
+            {
+                end = Time.Now();
+                elapsed = end - start;
+                start = end;
+
+                Console.Print($"8: {elapsed}");
+                Console.NewLine();
+            }
         }        
 
         public void Run(ushort port)
@@ -121,11 +196,11 @@ namespace MinecraftServerEngine
             });
 
 
-            int n = 2;  // TODO: Determine using number of processor.
+            const int n = 2;  // TODO: Determine using number of processor.
 
             using Barrier barrier = new(n);
 
-            System.Diagnostics.Debug.Assert(n > 1);
+            System.Diagnostics.Debug.Assert(n > 0);
             for (int i = 0; i < n - 1; ++i)
             {
                 NewThread(() =>
@@ -143,7 +218,7 @@ namespace MinecraftServerEngine
                                 break;
                             }
 
-                            StartServerRoutine(barrier, connListener);
+                            StartServerRoutine(false, barrier, connListener);
                         }
                         finally
                         {
@@ -182,7 +257,7 @@ namespace MinecraftServerEngine
 
                             Console.Print(".");
 
-                            StartServerRoutine(barrier, connListener);
+                            StartServerRoutine(false, barrier, connListener);
                             CountTicks();
                         }
                         finally

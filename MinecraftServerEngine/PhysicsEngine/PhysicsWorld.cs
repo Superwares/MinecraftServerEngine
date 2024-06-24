@@ -198,7 +198,7 @@ namespace MinecraftServerEngine.PhysicsEngine
         private bool _disposed = false;
 
         private readonly ReadLocker RLocker = new();  // Disposable
-        private readonly Table<Cell, Tree<PhysicsObject>> CellToObjects = new();  // Disposable
+        private readonly Table<Cell, ConcurrentTree<PhysicsObject>> CellToObjects = new();  // Disposable
 
         private readonly ConcurrentTable<PhysicsObject, Grid> ObjectToGrid = new();  // Disposable
 
@@ -206,18 +206,14 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         ~PhysicsWorld() => System.Diagnostics.Debug.Assert(false);
 
-        public void GetObjects(
-            Queue<PhysicsObject> objects, AxisAlignedBoundingBox minBoundingBox)
+        public System.Collections.Generic.IEnumerable<PhysicsObject> GetObjects(
+            AxisAlignedBoundingBox minBoundingBox)
         {
-            System.Diagnostics.Debug.Assert(objects != null);
             System.Diagnostics.Debug.Assert(minBoundingBox != null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            RLocker.Read();
-
             Grid grid = Grid.Generate(minBoundingBox);
-            /*Console.Printl($"grid: {grid}");*/
 
             foreach (Cell cell in grid.GetCells())
             {
@@ -231,11 +227,9 @@ namespace MinecraftServerEngine.PhysicsEngine
                 foreach (PhysicsObject objInCell in objectsInCell.GetKeys())
                 {
                     System.Diagnostics.Debug.Assert(objInCell != null);
-                    objects.Enqueue(objInCell);
+                    yield return objInCell;
                 }
             }
-
-            RLocker.Release();
         }
 
         private void InsertObjectToCell(Cell cell, PhysicsObject obj)
@@ -246,10 +240,10 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             RLocker.Hold();
 
-            Tree<PhysicsObject> objs;
+            ConcurrentTree<PhysicsObject> objs;
             if (!CellToObjects.Contains(cell))
             {
-                objs = new Tree<PhysicsObject>();
+                objs = new ConcurrentTree<PhysicsObject>();
                 CellToObjects.Insert(cell, objs);
             }
             else
@@ -257,10 +251,10 @@ namespace MinecraftServerEngine.PhysicsEngine
                 objs = CellToObjects.Lookup(cell);
             }
 
+            RLocker.Release();
+
             System.Diagnostics.Debug.Assert(objs != null);
             objs.Insert(obj);
-
-            RLocker.Release();
         }
 
         private void ExtractObjectToCell(Cell cell, PhysicsObject obj)
@@ -269,21 +263,17 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            RLocker.Hold();
-
             System.Diagnostics.Debug.Assert(CellToObjects.Contains(cell));
             Tree<PhysicsObject> objs = CellToObjects.Lookup(cell);
 
             System.Diagnostics.Debug.Assert(objs != null);
             objs.Extract(obj);
 
-            if (objs.Empty)
+            /*if (objs.Empty)
             {
                 CellToObjects.Extract(cell);
                 objs.Dispose();
-            }
-
-            RLocker.Release();
+            }*/
         }
 
         public void InitObjectMapping(PhysicsObject obj)

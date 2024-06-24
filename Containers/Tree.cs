@@ -198,7 +198,7 @@ namespace Containers
 
             --_count;
 
-            if (MinLength < _length)
+            /*if (MinLength < _length)
             {
                 int lenReduced = _length / ExpansionFactor;
                 float factor = (float)_count / (float)lenReduced;
@@ -211,7 +211,7 @@ namespace Containers
 
                     return;
                 }
-            }
+            }*/
 
             {
                 System.Diagnostics.Debug.Assert(index >= 0);

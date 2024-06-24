@@ -175,14 +175,7 @@ namespace MinecraftServerEngine
 
                 try
                 {
-                    if (!NonPlayers.Empty)
-                    {
-                        return NonPlayers.Dequeue();
-                    }
-                    else
-                    {
-                        return Players.Dequeue();
-                    }
+                    return !NonPlayers.Empty ? NonPlayers.Dequeue() : Players.Dequeue();
                 }
                 finally
                 {
@@ -433,6 +426,8 @@ namespace MinecraftServerEngine
 
         public void MoveEntities(Barrier barrier)
         {
+            System.Diagnostics.Debug.Assert(barrier != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Entities.Swap();

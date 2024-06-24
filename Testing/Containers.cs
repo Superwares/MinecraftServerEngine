@@ -11,12 +11,13 @@
 
             using Queue<int> queue = new();
 
-            for (int i = 0; i < N; ++i)
+            int i;
+            for (i = 0; i < N; ++i)
             {
                 queue.Enqueue(i);
             }
 
-            for (int i = 0; i < N; ++i)
+            for (i = 0; i < N; ++i)
             {
                 int v = queue.Dequeue();
                 Assert.That(v, Is.EqualTo(i));
