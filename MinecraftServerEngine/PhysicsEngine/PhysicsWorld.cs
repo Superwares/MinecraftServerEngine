@@ -12,7 +12,7 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         private readonly struct Cell : System.IEquatable<Cell>
         {
-            public const double Width = 5.0D;
+            public const double Width = 16.0D;
 
             public static Cell Generate(Vector p)
             {
