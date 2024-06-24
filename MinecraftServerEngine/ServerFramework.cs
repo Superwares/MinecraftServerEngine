@@ -47,117 +47,24 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_ticks <= long.MaxValue);
 
             ++_ticks;
-        }
+        }   
 
-        private void StartServerRoutine(
-            bool print,
-            Barrier barrier, ConnectionListener connListener)
+        private void Parallel(int i, int n, VoidMethod startRoutine)
         {
-            System.Diagnostics.Debug.Assert(barrier != null);
-            System.Diagnostics.Debug.Assert(connListener != null);
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(n > 0);
+            System.Diagnostics.Debug.Assert(startRoutine != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Threading.Tasks.ParallelLoopResult result;
 
-            System.Diagnostics.Debug.Assert(_ticks >= 0);
+            Time start = Time.Now(), end;
 
-            Time start = Time.Now(), end, elapsed;
+            result = System.Threading.Tasks.Parallel.For(0, n, (_) => startRoutine());
+            System.Diagnostics.Debug.Assert(result.IsCompleted);
 
-            /*Console.Printl("StartPlayerRoutines!");*/
-            _WORLD.StartPlayerControls(barrier, _ticks);
-
-            if (print)
-            {
-                end = Time.Now();
-                elapsed = end - start;
-                start = end;
-                Console.Print($"1: {elapsed}, ");
-            }
-
-            /*Console.Printl("DestroyEntities!");*/
-            _WORLD.DestroyEntities(barrier);
-
-            if (print)
-            {
-                end = Time.Now();
-                elapsed = end - start;
-                start = end;
-
-                Console.Print($"2: {elapsed}, ");
-            }
-
-            /*Console.Printl("MoveEntities!");*/
-            _WORLD.MoveEntities(barrier);
-
-            if (print)
-            {
-                end = Time.Now();
-                elapsed = end - start;
-                start = end;
-
-                Console.Print($"3: {elapsed}, ");
-            }
-
-            /*Console.Printl("CreateEntities!");*/
-            _WORLD.CreateEntities(barrier);
-
-            if (print)
-            {
-                end = Time.Now();
-                elapsed = end - start;
-                start = end;
-
-                Console.Print($"4: {elapsed}, ");
-            }
-
-            /*Console.Printl("Create or Connect Players!");*/
-            connListener.Accept(barrier, _WORLD);
-
-            if (print)
-            {
-                end = Time.Now();
-                elapsed = end - start;
-                start = end;
-
-                Console.Print($"5: {elapsed}, ");
-            }
-
-            /*Console.Printl("HandlePlayerRenders!");*/
-            _WORLD.HandlePlayerRenders(barrier);
-
-            if (print)
-            {
-                end = Time.Now();
-                elapsed = end - start;
-                start = end;
-
-                Console.Print($"6: {elapsed}, ");
-            }
-
-            /*Console.Printl("StartRoutine!");*/
-            _WORLD.StartRoutine(barrier, _ticks);
-
-            if (print)
-            {
-                end = Time.Now();
-                elapsed = end - start;
-                start = end;
-
-                Console.Print($"7: {elapsed}, ");
-            }
-
-            /*Console.Printl("StartEntityRoutines!");*/
-            _WORLD.StartEntityRoutines(barrier, _ticks);
-
-            if (print)
-            {
-                end = Time.Now();
-                elapsed = end - start;
-                start = end;
-
-                Console.Print($"8: {elapsed}");
-                Console.NewLine();
-            }
-        }        
+            end = Time.Now();
+            Console.Print($"{i}: {end - start}, ");
+        }
 
         public void Run(ushort port)
         {
@@ -195,75 +102,72 @@ namespace MinecraftServerEngine
                 clientListener.Flush();
             });
 
-
-            const int n = 2;  // TODO: Determine using number of processor.
-
-            using Barrier barrier = new(n);
-
-            System.Diagnostics.Debug.Assert(n > 0);
-            for (int i = 0; i < n - 1; ++i)
             {
-                NewThread(() =>
-                {
-                    do
-                    {
-                        barrier.SignalAndWait();
+                int n = System.Environment.ProcessorCount;
 
-                        rLocker.Read();
+                using Barrier barrier = new(n);
 
-                        try
-                        {
-                            if (!_running)
-                            {
-                                break;
-                            }
+                int i;
 
-                            StartServerRoutine(false, barrier, connListener);
-                        }
-                        finally
-                        {
-                            rLocker.Release();
-                        }
-                    } while (true);
-                });
-
-            }
-
-            {
                 Time interval, accumulated, start, end, elapsed;
 
                 interval = accumulated = Time.FromMilliseconds(50);
                 start = Time.Now();
 
-                do
+                while (_running)
                 {
-
+                    i = 0;
                     if (accumulated >= interval)
                     {
                         accumulated -= interval;
 
                         System.Diagnostics.Debug.Assert(_ticks >= 0);
 
-                        barrier.SignalAndWait();
+                        Console.Print(".");
 
-                        rLocker.Read();
-
-                        try
+                        Parallel(i++, n, () =>
                         {
-                            if (!_running)
-                            {
-                                break;
-                            }
+                            _WORLD.StartPlayerControls(barrier, _ticks);
+                        });
 
-                            Console.Print(".");
-
-                            StartServerRoutine(false, barrier, connListener);
-                            CountTicks();
-                        }
-                        finally
+                        Parallel(i++, n, () =>
                         {
-                            rLocker.Release();
-                        }
+                            _WORLD.DestroyEntities(barrier);
+                        });
+
+                        Parallel(i++, n, () =>
+                        {
+                            _WORLD.MoveEntities(barrier);
+                        });
+
+                        Parallel(i++, n, () =>
+                        {
+                            _WORLD.CreateEntities(barrier);
+                        });
+
+                        Parallel(i++, n, () =>
+                        {
+                            connListener.Accept(barrier, _WORLD);
+                        });
+
+                        Parallel(i++, n, () =>
+                        {
+                            _WORLD.HandlePlayerRenders(barrier);
+                        });
+
+                        Parallel(i++, n, () =>
+                        {
+                            _WORLD.StartRoutine(barrier, _ticks);
+                        });
+
+                        Parallel(i++, n, () =>
+                        {
+                            _WORLD.StartEntityRoutines(barrier, _ticks);
+                        });
+
+                        CountTicks();
+
+                        Console.NewLine();
                     }
 
                     end = Time.Now();
@@ -277,7 +181,7 @@ namespace MinecraftServerEngine
                         Console.Print($"The task is taking longer, Elapsed: {elapsed}!");
                     }
 
-                } while (true);
+                }
             }
 
             {

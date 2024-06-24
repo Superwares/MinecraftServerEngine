@@ -300,8 +300,6 @@ namespace MinecraftServerEngine
             {
                 SpawnItemEntity();
             }*/
-
-            barrier.SignalAndWait();
         }
 
         public void StartEntityRoutines(Barrier barrier, long serverTicks)
@@ -324,8 +322,6 @@ namespace MinecraftServerEngine
                 } while (true);
             }
             catch (EmptyContainerException) { }
-
-            barrier.SignalAndWait();
         }
 
         public void StartPlayerControls(Barrier barrier, long serverTicks)
@@ -350,8 +346,6 @@ namespace MinecraftServerEngine
 
             }
             catch (EmptyContainerException) { }
-
-            barrier.SignalAndWait();
         }
 
         private void DestroyEntity(Entity entity)
@@ -420,8 +414,6 @@ namespace MinecraftServerEngine
                 } while (true);
             }
             catch (EmptyContainerException) { }
-
-            barrier.SignalAndWait();
         }
 
         public void MoveEntities(Barrier barrier)
@@ -471,8 +463,6 @@ namespace MinecraftServerEngine
                 } while (true);
             }
             catch (EmptyContainerException) { }
-
-            barrier.SignalAndWait();
         }
 
         public void CreateEntities(Barrier barrier)
@@ -495,8 +485,6 @@ namespace MinecraftServerEngine
             catch (EmptyContainerException) { }
 
             System.Diagnostics.Debug.Assert(EntitySpawningPool.Empty);
-
-            barrier.SignalAndWait();
         }
 
         protected abstract Player CreatePlayer(System.Guid userId);
@@ -556,8 +544,6 @@ namespace MinecraftServerEngine
 
             }
             catch (EmptyContainerException) { }
-
-            barrier.SignalAndWait();
         }
 
         public override void Dispose()

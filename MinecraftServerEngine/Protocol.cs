@@ -409,8 +409,6 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            barrier.SignalAndWait();
-
             try
             {
                 do
@@ -428,8 +426,6 @@ namespace MinecraftServerEngine
                 } while (true);
             }
             catch (EmptyContainerException) { }
-
-            barrier.SignalAndWait();
         }
 
         public void Dispose()
