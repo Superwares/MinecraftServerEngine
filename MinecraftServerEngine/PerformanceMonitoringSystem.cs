@@ -1,7 +1,0 @@
-﻿
-using Common;
-
-namespace MinecraftServerEngine
-{
-    
-}

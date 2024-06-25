@@ -771,6 +771,13 @@ namespace MinecraftServerEngine
                 SelfInventory);
         }
         
+        public bool GiveItem(Items item, int count)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            throw new System.NotImplementedException();
+        }
+
         public override void Dispose()
         {
             // Assertion.

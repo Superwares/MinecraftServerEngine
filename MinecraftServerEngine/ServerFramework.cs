@@ -196,7 +196,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_ticks < long.MaxValue);
 
             ++_ticks;
-        }   
+        }
 
         public void Run(ushort port)
         {
