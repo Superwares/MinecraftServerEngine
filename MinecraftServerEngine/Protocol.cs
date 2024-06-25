@@ -405,27 +405,22 @@ namespace MinecraftServerEngine
             Users.Enqueue(new User(client, userId, username));
         }
 
-        public void Accept(Barrier barrier, World world)
+        public void Accept(World world)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            try
+            User user;
+            while (Users.Dequeue(out user))
             {
-                do
+                if (!world.CanJoinWorld())
                 {
-                    User user = Users.Dequeue();
+                    // TODO: Send message why disconnected.
+                    user.Client.Dispose();
+                    continue;
+                }
 
-                    if (!world.CanJoinWorld())
-                    {
-                        // TODO: Send message why disconnected.
-                        user.Client.Dispose();
-                        continue;
-                    }
-
-                    world.CreateOrConnectPlayer(user.Client, user.Username, user.UserId);
-                } while (true);
-            }
-            catch (EmptyContainerException) { }
+                world.CreateOrConnectPlayer(user.Client, user.Username, user.UserId);
+            } 
         }
 
         public void Dispose()

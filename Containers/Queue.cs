@@ -91,10 +91,40 @@ namespace Containers
                 _outNode = _outNode.NextNode;
             }
 
-            _count--;
+            --_count;
 
             System.Diagnostics.Debug.Assert(value != null);
             return value;
+        }
+
+        public virtual bool Dequeue(out T value)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (_count == 0)
+            {
+                value = default;
+                return false;
+            }
+
+            System.Diagnostics.Debug.Assert(_inNode != null);
+            System.Diagnostics.Debug.Assert(_outNode != null);
+            value = _outNode.Value;
+
+            if (_count == 1)
+            {
+                _inNode = _outNode = null;
+            }
+            else
+            {
+                System.Diagnostics.Debug.Assert(_count > 1);
+                _outNode = _outNode.NextNode;
+            }
+
+            --_count;
+
+            System.Diagnostics.Debug.Assert(value != null);
+            return true;
         }
 
         public virtual T[] Flush()
@@ -210,6 +240,17 @@ namespace Containers
             }
 
             return v;
+        }
+
+        public override bool Dequeue(out T value)
+        {
+            Locker.Hold();
+
+            bool f = base.Dequeue(out value);
+
+            Locker.Release();
+
+            return f;
         }
 
         public override T[] Flush()

@@ -16,6 +16,18 @@ namespace Common
             return new(t1.Amount - t2.Amount);
         }
 
+        public static Time operator *(Time t, int amount)
+        {
+            // TODO: Assertion of value range
+            return new(t.Amount * amount);
+        }
+
+        public static Time operator /(Time t, int amount)
+        {
+            // TODO: Assertion of value range
+            return new(t.Amount / amount);
+        }
+
         public static bool operator !=(Time t1, Time t2)
         {
             return t1.Amount != t2.Amount;
@@ -44,6 +56,11 @@ namespace Common
         public static bool operator >=(Time t1, Time t2)
         {
             return t1.Amount >= t2.Amount;
+        }
+
+        public static Time Zero()
+        {
+            return new(0);
         }
 
         public static Time Now()

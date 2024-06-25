@@ -7,6 +7,153 @@ namespace MinecraftServerEngine
 {
     public class ServerFramework : System.IDisposable
     {
+        internal sealed class PerformanceMonitoringSystem
+        {
+            private readonly int N;
+            private int _i = 0;
+
+            private int _count = 0;
+            private Time[] _totalTimes;
+
+            public PerformanceMonitoringSystem(int n)
+            {
+                System.Diagnostics.Debug.Assert(n > 0);
+                N = n;
+                _totalTimes = new Time[N + 1];
+
+                for (int i = 0; i <= N; ++i)
+                {
+                    _totalTimes[i] = Time.Zero();
+                }
+            }
+
+            public void Record(Time elapsed)
+            {
+                System.Diagnostics.Debug.Assert(_i >= 0);
+                System.Diagnostics.Debug.Assert(_i <= N);
+
+                System.Diagnostics.Debug.Assert(_count >= 0);
+                if (_i == 0)
+                {
+                    ++_count;
+                }
+
+                /*Console.Printl($"i: {_i}");*/
+                _totalTimes[_i++] += elapsed;
+
+                if (_i > N)
+                {
+                    _i = 0;
+                }
+            }
+
+            public void Monitor()
+            {
+                System.Diagnostics.Debug.Assert(_i == 0);
+                System.Diagnostics.Debug.Assert(_count > 0);
+
+                string msg = "";
+                msg += "[Performance] ";
+
+                for (int i = 0; i < N; ++i)
+                {
+                    Time average = _totalTimes[i] / _count;
+                    msg += $"{i}: {average}, ";
+
+                    _totalTimes[i] = Time.Zero();
+                }
+
+                {
+                    Time average = _totalTimes[N] / _count;
+                    msg += $"Total: {average}";
+
+                    _totalTimes[N] = Time.Zero();
+                }
+
+                Console.Printl(msg);
+
+                _count = 0;
+            }
+        }
+
+        private sealed class Task
+        {
+            private readonly VoidMethod InitRoutine = null;
+            private readonly VoidMethod StartRoutine = null;
+
+            public Task(VoidMethod initRoutine, VoidMethod startRoutine)
+            {
+                System.Diagnostics.Debug.Assert(initRoutine != null);
+                System.Diagnostics.Debug.Assert(startRoutine != null);
+
+                InitRoutine = initRoutine; StartRoutine = startRoutine;
+            }
+
+            public Task(VoidMethod startRoutine)
+            {
+                System.Diagnostics.Debug.Assert(startRoutine != null);
+
+                StartRoutine = startRoutine;
+            }
+
+            public void Init()
+            {
+                if (InitRoutine == null)
+                {
+                    return;
+                }
+
+                InitRoutine();
+            }
+
+            public void Start()
+            {
+                System.Diagnostics.Debug.Assert(StartRoutine != null);
+
+                StartRoutine();
+            }
+        }
+
+        private sealed class TaskManager
+        {
+            private readonly int ProcessorCount = System.Environment.ProcessorCount;
+
+            public readonly int TotalTaskCount;
+            private readonly Task[] Tasks;
+
+            public TaskManager(params Task[] tasks)
+            {
+                System.Diagnostics.Debug.Assert(tasks != null);
+
+                TotalTaskCount = tasks.Length;
+                Tasks = tasks;
+            }
+
+            public void Start(PerformanceMonitoringSystem sys)
+            {
+                System.Diagnostics.Debug.Assert(sys != null);
+
+                System.Diagnostics.Debug.Assert(Tasks != null);
+
+                System.Threading.Tasks.ParallelLoopResult result;
+                for (int i = 0; i < TotalTaskCount; ++i)
+                {
+                    Task task = Tasks[i];
+
+                    Time start = Time.Now(), end;
+
+                    task.Init();
+
+                    result = System.Threading.Tasks.Parallel.For(
+                        0, ProcessorCount, (_) => task.Start());
+
+                    end = Time.Now();
+                    sys.Record(end - start);
+
+                    System.Diagnostics.Debug.Assert(result.IsCompleted);
+                }
+            }
+        }
 
         private bool _disposed = false;
 
@@ -17,7 +164,7 @@ namespace MinecraftServerEngine
         private readonly Queue<Thread> Threads = new();  // Disposable
 
 
-        private readonly World _WORLD;
+        private readonly World World;
 
         private long _ticks = 0;
 
@@ -25,7 +172,7 @@ namespace MinecraftServerEngine
         public ServerFramework(World world)
         {
             System.Diagnostics.Debug.Assert(world != null);
-            _WORLD = world;
+            World = world;
         }
 
         ~ServerFramework() => System.Diagnostics.Debug.Assert(false);
@@ -49,40 +196,15 @@ namespace MinecraftServerEngine
             ++_ticks;
         }   
 
-        private void Parallel(int i, int n, VoidMethod startRoutine)
-        {
-            System.Diagnostics.Debug.Assert(i >= 0);
-            System.Diagnostics.Debug.Assert(n > 0);
-            System.Diagnostics.Debug.Assert(startRoutine != null);
-
-            System.Threading.Tasks.ParallelLoopResult result;
-
-            Time start = Time.Now(), end;
-
-            result = System.Threading.Tasks.Parallel.For(0, n, (_) => startRoutine());
-            System.Diagnostics.Debug.Assert(result.IsCompleted);
-
-            end = Time.Now();
-            Console.Print($"{i}: {end - start}, ");
-        }
-
         public void Run(ushort port)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            using ReadLocker rLocker = new();
-
             CurrentRunningThread = Thread.GetCurrent();
             Console.HandleTerminatin(() =>
             {
-                {
-                    rLocker.Hold();
-
-                    /*Console.Print("Cancel Running!");*/
-                    _running = false;
-
-                    rLocker.Release();
-                }
+                /*Console.Print("Cancel Running!");*/
+                _running = false;
 
                 System.Diagnostics.Debug.Assert(CurrentRunningThread != null);
                 CurrentRunningThread.Join();
@@ -102,12 +224,36 @@ namespace MinecraftServerEngine
                 clientListener.Flush();
             });
 
+            TaskManager manager = new(
+                new Task(  // 0
+                    () => World.SwapQueues(),
+                    () => World.StartPlayerControls(_ticks)),
+                new Task(  // 1
+                    () => World.SwapQueues(),
+                    () => World.DestroyEntities()),
+                new Task(  // 2
+                    () => World.SwapQueues(),
+                    () => World.IntegrateEntityMovements()),
+                new Task(  // 3
+                    () => World.SwapQueues(),
+                    () => World.MoveEntities()),
+                new Task(  // 4
+                    () => World.CreateEntities()),
+                new Task(  // 5
+                    () => connListener.Accept(World)),
+                new Task(  // 6
+                    () => World.SwapQueues(),
+                    () => World.HandlePlayerRenders()),
+                new Task(  // 7
+                    () => World.StartRoutine(_ticks)),
+                new Task(  // 8
+                    () => World.SwapQueues(),
+                    () => World.StartEntityRoutines(_ticks)));
+
+            PerformanceMonitoringSystem sys = new(manager.TotalTaskCount);
+
             {
-                int n = System.Environment.ProcessorCount;
-
-                using Barrier barrier = new(n);
-
-                int i;
+                bool f;
 
                 Time interval, accumulated, start, end, elapsed;
 
@@ -116,71 +262,39 @@ namespace MinecraftServerEngine
 
                 while (_running)
                 {
-                    i = 0;
-                    if (accumulated >= interval)
+                    f = accumulated >= interval;
+                    if (f)
                     {
-                        accumulated -= interval;
-
                         System.Diagnostics.Debug.Assert(_ticks >= 0);
 
-                        Console.Print(".");
-
-                        Parallel(i++, n, () =>
-                        {
-                            _WORLD.StartPlayerControls(barrier, _ticks);
-                        });
-
-                        Parallel(i++, n, () =>
-                        {
-                            _WORLD.DestroyEntities(barrier);
-                        });
-
-                        Parallel(i++, n, () =>
-                        {
-                            _WORLD.MoveEntities(barrier);
-                        });
-
-                        Parallel(i++, n, () =>
-                        {
-                            _WORLD.CreateEntities(barrier);
-                        });
-
-                        Parallel(i++, n, () =>
-                        {
-                            connListener.Accept(barrier, _WORLD);
-                        });
-
-                        Parallel(i++, n, () =>
-                        {
-                            _WORLD.HandlePlayerRenders(barrier);
-                        });
-
-                        Parallel(i++, n, () =>
-                        {
-                            _WORLD.StartRoutine(barrier, _ticks);
-                        });
-
-                        Parallel(i++, n, () =>
-                        {
-                            _WORLD.StartEntityRoutines(barrier, _ticks);
-                        });
-
-                        CountTicks();
-
-                        Console.NewLine();
+                        manager.Start(sys);
                     }
 
                     end = Time.Now();
                     elapsed = end - start;
+
+                    if (f)
+                    {
+                        accumulated -= interval;
+                        CountTicks();
+
+                        sys.Record(elapsed);
+
+                        if (_ticks % 20 == 0)
+                        {
+                            sys.Monitor();
+                        }
+                    }
+
                     start = end;
                     accumulated += elapsed;
 
                     if (elapsed > interval)
                     {
-                        Console.NewLine();
-                        Console.Print($"The task is taking longer, Elapsed: {elapsed}!");
+                        Console.Printl($"[Warning] The task is taking longer, Elapsed: {elapsed}!");
                     }
 
+                    
                 }
             }
 
@@ -195,7 +309,7 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(!_running);
             }
 
-            Console.Print("Finish!");
+            Console.Printl("Finish!");
 
         }
 
