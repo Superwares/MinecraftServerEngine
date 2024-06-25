@@ -55,17 +55,18 @@ namespace MinecraftServerEngine
                 string msg = "";
                 msg += "[Performance] ";
 
+                Time average;
                 for (int i = 0; i < N; ++i)
                 {
-                    Time average = _totalTimes[i] / _count;
-                    msg += $"{i}: {average}, ";
+                    average = _totalTimes[i] / _count;
+                    msg += $"{i}:{average}, ";
 
                     _totalTimes[i] = Time.Zero();
                 }
 
                 {
-                    Time average = _totalTimes[N] / _count;
-                    msg += $"Total: {average}";
+                    average = _totalTimes[N] / _count;
+                    msg += $"T:{average}";
 
                     _totalTimes[N] = Time.Zero();
                 }
@@ -183,6 +184,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(Threads != null);
             Threads.Enqueue(Thread.New(startRoutine));
         }
 
@@ -191,7 +193,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(_ticks >= 0);
-            System.Diagnostics.Debug.Assert(_ticks <= long.MaxValue);
+            System.Diagnostics.Debug.Assert(_ticks < long.MaxValue);
 
             ++_ticks;
         }   
@@ -214,14 +216,14 @@ namespace MinecraftServerEngine
 
             NewThread(() =>
             {
-                using ClientListener clientListener = new(connListener, port);
+                using ClientListener clntListener = new(connListener, port);
 
                 while (_running)
                 {
-                    clientListener.StartRoutine();
+                    clntListener.StartRoutine();
                 }
 
-                clientListener.Flush();
+                clntListener.Flush();
             });
 
             TaskManager manager = new(
@@ -252,57 +254,56 @@ namespace MinecraftServerEngine
 
             PerformanceMonitoringSystem sys = new(manager.TotalTaskCount);
 
+            bool f;
+
+            Time interval, accumulated, start, end, elapsed;
+
+            interval = accumulated = Time.FromMilliseconds(50);
+            start = Time.Now();
+
+            while (_running)
             {
-                bool f;
-
-                Time interval, accumulated, start, end, elapsed;
-
-                interval = accumulated = Time.FromMilliseconds(50);
-                start = Time.Now();
-
-                while (_running)
+                f = accumulated >= interval;
+                if (f)
                 {
-                    f = accumulated >= interval;
-                    if (f)
-                    {
-                        System.Diagnostics.Debug.Assert(_ticks >= 0);
+                    System.Diagnostics.Debug.Assert(_ticks >= 0);
 
-                        manager.Start(sys);
-                    }
-
-                    end = Time.Now();
-                    elapsed = end - start;
-
-                    if (f)
-                    {
-                        accumulated -= interval;
-                        CountTicks();
-
-                        sys.Record(elapsed);
-
-                        if (_ticks % 20 == 0)
-                        {
-                            sys.Monitor();
-                        }
-                    }
-
-                    start = end;
-                    accumulated += elapsed;
-
-                    if (elapsed > interval)
-                    {
-                        Console.Printl($"[Warning] The task is taking longer, Elapsed: {elapsed}!");
-                    }
-
-                    
+                    manager.Start(sys);
                 }
+
+                end = Time.Now();
+                elapsed = end - start;
+
+                start = end;
+                accumulated += elapsed;
+
+                if (elapsed > interval)
+                {
+                    Console.Printl($"[Warning] The task is taking longer, Elapsed: {elapsed}!");
+                }
+
+                if (f)
+                {
+                    accumulated -= interval;
+                    CountTicks();
+
+                    sys.Record(elapsed);
+
+                    if (_ticks % (20 * 5) == 0)
+                    {
+                        sys.Monitor();
+                    }
+                }
+
             }
 
             {
-                // Handle close routine.
+                Thread t;
                 while (!Threads.Empty)
                 {
-                    Thread t = Threads.Dequeue();
+                    t = Threads.Dequeue();
+
+                    System.Diagnostics.Debug.Assert(t != null);
                     t.Join();
                 }
 
@@ -310,7 +311,6 @@ namespace MinecraftServerEngine
             }
 
             Console.Printl("Finish!");
-
         }
 
         public void Dispose()
