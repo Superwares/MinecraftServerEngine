@@ -568,6 +568,8 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
+        public System.Guid UserId => UniqueId;
+
         internal readonly PlayerInventory SelfInventory = new();
 
         private Connection Conn;
@@ -743,7 +745,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(Conn != null);
             if (Conn.Disconnected)
             {
-                Conn.Flush(world, UniqueId);
+                Conn.Flush(world, UserId, SelfInventory);
                 Conn.Dispose();
 
                 Conn = null;
@@ -776,6 +778,19 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             throw new System.NotImplementedException();
+        }
+
+        public bool OpenPublicInventory(PublicInventory invPublic)
+        {
+            System.Diagnostics.Debug.Assert(invPublic != null);
+
+            if (Disconnected)
+            {
+                return false;
+            }
+
+            System.Diagnostics.Debug.Assert(Conn != null);
+            return Conn.OpenPublicInventory(SelfInventory, invPublic);
         }
 
         public override void Dispose()

@@ -7,7 +7,7 @@ namespace MinecraftServerEngine
 {
     public class ServerFramework : System.IDisposable
     {
-        internal sealed class PerformanceMonitoringSystem
+        internal sealed class PerformanceMonitor
         {
             private readonly int N;
             private int _i = 0;
@@ -15,7 +15,7 @@ namespace MinecraftServerEngine
             private int _count = 0;
             private Time[] _totalTimes;
 
-            public PerformanceMonitoringSystem(int n)
+            public PerformanceMonitor(int n)
             {
                 System.Diagnostics.Debug.Assert(n > 0);
                 N = n;
@@ -47,7 +47,7 @@ namespace MinecraftServerEngine
                 }
             }
 
-            public void Monitor()
+            public void Print()
             {
                 System.Diagnostics.Debug.Assert(_i == 0);
                 System.Diagnostics.Debug.Assert(_count > 0);
@@ -130,7 +130,7 @@ namespace MinecraftServerEngine
                 Tasks = tasks;
             }
 
-            public void Start(PerformanceMonitoringSystem sys)
+            public void Start(PerformanceMonitor sys)
             {
                 System.Diagnostics.Debug.Assert(sys != null);
 
@@ -252,7 +252,7 @@ namespace MinecraftServerEngine
                     () => World.SwapQueues(),
                     () => World.StartEntityRoutines(_ticks)));
 
-            PerformanceMonitoringSystem sys = new(manager.TotalTaskCount);
+            PerformanceMonitor sys = new(manager.TotalTaskCount);
 
             bool f;
 
@@ -291,7 +291,7 @@ namespace MinecraftServerEngine
 
                     if (_ticks % (20 * 5) == 0)
                     {
-                        sys.Monitor();
+                        sys.Print();
                     }
                 }
 

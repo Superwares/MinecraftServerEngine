@@ -1,21 +1,22 @@
 ﻿using Common;
 using Containers;
 using MinecraftServerEngine.PhysicsEngine;
+using static System.Reflection.Metadata.BlobBuilder;
 
 namespace MinecraftServerEngine
 {
     internal abstract class Renderer
     {
-        private readonly ConcurrentQueue<ClientboundPlayingPacket> _OUT_PACKETS;
+        private readonly ConcurrentQueue<ClientboundPlayingPacket> OutPackets;
 
         public Renderer(ConcurrentQueue<ClientboundPlayingPacket> outPackets)
         {
-            _OUT_PACKETS = outPackets;
+            OutPackets = outPackets;
         }
 
         protected void Render(ClientboundPlayingPacket packet)
         {
-            _OUT_PACKETS.Enqueue(packet);
+            OutPackets.Enqueue(packet);
         }
         
     }
@@ -53,12 +54,77 @@ namespace MinecraftServerEngine
         }
     }
 
-    /*internal sealed class InventoryRenderer : Renderer
+    internal sealed class InventoryRenderer : Renderer
     {
+        private readonly int WindowId;
 
+        public InventoryRenderer(
+            int idWindow, ConcurrentQueue<ClientboundPlayingPacket> outPackets) 
+            : base(outPackets) 
+        {
+            System.Diagnostics.Debug.Assert(idWindow >= 0);
+            WindowId = idWindow;
+        }
+
+        public void SetSlots(ItemSlot[] slots)
+        {
+            System.Diagnostics.Debug.Assert(slots != null);
+
+            int n = slots.Length;
+
+            int i = 0;
+            var arr = new SlotData[n];
+
+            foreach (ItemSlot slot in slots)
+            {
+                if (slot == null)
+                {
+                    arr[i++] = new SlotData();
+                    continue;
+                }
+
+                arr[i++] = slot.ConventToProtocolFormat();
+            }
+            System.Diagnostics.Debug.Assert(i == n);
+
+            System.Diagnostics.Debug.Assert(WindowId >= byte.MinValue);
+            System.Diagnostics.Debug.Assert(WindowId <= byte.MaxValue);
+            Render(new SetWindowItemsPacket((byte)WindowId, arr));
+        }
+
+        public void SetCursorSlot(ItemSlot slot)
+        {
+            if (slot == null)
+            {
+                Render(new SetSlotPacket(-1, 0, new SlotData()));
+            }
+            else
+            {
+                Render(new SetSlotPacket(-1, 0, slot.ConventToProtocolFormat()));
+            }
+            
+        }
+
+        public void EmptyCursorSlot()
+        {
+            Render(new SetSlotPacket(-1, 0, new SlotData()));
+        }
+
+        public void OpenWindow(int countSlot)
+        {
+            System.Diagnostics.Debug.Assert(WindowId > 0);
+            System.Diagnostics.Debug.Assert(countSlot >= 0);
+
+            System.Diagnostics.Debug.Assert(WindowId >= byte.MinValue);
+            System.Diagnostics.Debug.Assert(WindowId <= byte.MaxValue);
+            System.Diagnostics.Debug.Assert(countSlot >= byte.MinValue);
+            System.Diagnostics.Debug.Assert(countSlot <= byte.MaxValue);
+            Render(new OpenWindowPacket(
+                (byte)WindowId, "minecraft:chest", "EmptyTItle!", (byte)countSlot));
+        }
     }
 
-    internal sealed class ChunkRenderer : Renderer
+    /*internal sealed class ChunkRenderer : Renderer
     {
 
     }*/

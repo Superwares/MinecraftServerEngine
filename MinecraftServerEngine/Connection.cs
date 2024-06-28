@@ -1,505 +1,233 @@
 ﻿using Common;
 using Containers;
-using MinecraftServerEngine.PhysicsEngine;
 using Sync;
 
 namespace MinecraftServerEngine
 {
-    public sealed class Connection : System.IDisposable
+    using PhysicsEngine;
+
+    internal sealed class Connection : System.IDisposable
     {
         private sealed class Window : System.IDisposable
         {
             private bool _disposed = false;
 
-            private bool _ambiguous = false;
+            private readonly Locker Locker = new();  // Disposable
 
-            /**
-             *  -1: Window is closed.
-             *   0: Window is opened with only self inventory.
-             * > 0: Window is opened with self and public inventory.
-             */
-            private int _windowId = -1;
-            private int _id = -1;
+            private int _idWindow;
+
+            private InventoryRenderer Renderer;
+
+            private PublicInventory _invPublic = null;
 
             private ItemSlot _cursor = null;
 
             public Window(
                 ConcurrentQueue<ClientboundPlayingPacket> outPackets,
-                PlayerInventory inv)
+                PlayerInventory invPlayer)
             {
-                _windowId = 0;
+                System.Diagnostics.Debug.Assert(outPackets != null);
+                System.Diagnostics.Debug.Assert(invPlayer != null);
+
+                _idWindow = 0;
+
+                Renderer = new InventoryRenderer(_idWindow, outPackets);
+
+                invPlayer.Open(Renderer);
 
                 System.Diagnostics.Debug.Assert(_cursor == null);
-                outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));
-
-                int i = 0;
-                var arr = new SlotData[inv.TotalSlotCount];
-
-                foreach (ItemSlot slot in inv.AllSlots)
-                {
-                    if (slot == null)
-                    {
-                        arr[i++] = new SlotData();
-                        continue;
-                    }
-
-                    arr[i++] = slot.ConventToProtocolFormat();
-                }
-                System.Diagnostics.Debug.Assert(i == inv.TotalSlotCount);
-
-                System.Diagnostics.Debug.Assert(_windowId >= byte.MinValue);
-                System.Diagnostics.Debug.Assert(_windowId <= byte.MaxValue);
-                outPackets.Enqueue(new SetWindowItemsPacket((byte)_windowId, arr));
-
+                Renderer.EmptyCursorSlot();
             }
 
             ~Window() => System.Diagnostics.Debug.Assert(false);
 
-            /*public int GetWindowId()
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                System.Diagnostics.Debug.Assert(_windowId >= 0);
-                System.Diagnostics.Debug.Assert(_windowId > 0 ?
-                    _publicInventory != null : _publicInventory == null);
-
-                return _windowId;
-            }*/
-
-            /*public bool IsOpenedWithPublicInventory()
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                return _windowId > 0;
-            }*/
-
-            /*public void OpenWindowWithPublicInventory(
+            public bool OpenPublicInventory(
                 ConcurrentQueue<ClientboundPlayingPacket> outPackets,
-                PlayerInventory selfInventory,
-                PublicInventory publicInventory)
+                PrivateInventory invPrivate, PublicInventory invPublic)
             {
+                System.Diagnostics.Debug.Assert(outPackets != null);
+
+                System.Diagnostics.Debug.Assert(invPrivate != null);
+                System.Diagnostics.Debug.Assert(invPublic != null);
+
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                _ambiguous = true;
+                Locker.Hold();
 
-                System.Diagnostics.Debug.Assert(_windowId == 0);
-                System.Diagnostics.Debug.Assert(_id == -1);
-                System.Diagnostics.Debug.Assert(_publicInventory == null);
-
-                _windowId = (Random.NextInt() % 100) + 1;
-
-                _id = publicInventory.Open(_windowId, outPackets, selfInventory);
-                if (_itemCursor != null)
+                try
                 {
-                    outPackets.Enqueue(new SetSlotPacket(-1, 0, _itemCursor.ConventToPacketFormat()));
-                }
-
-                _publicInventory = publicInventory;
-            }*/
-
-            public void ResetWindow(
-                World world,
-                int windowId, ConcurrentQueue<ClientboundPlayingPacket> outPackets)
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                System.Diagnostics.Debug.Assert(_windowId >= 0);
-
-                if (windowId != _windowId)
-                {
-                    if (_ambiguous)
+                    if (_idWindow == 1)
                     {
-                        _ambiguous = false;
+                        return false;
+                    }
+
+                    _idWindow = 1;
+
+                    Renderer = new InventoryRenderer(_idWindow, outPackets);
+
+                    invPublic.Open(invPrivate, Renderer);
+
+                    if (_cursor != null)
+                    {
+                        Renderer.SetCursorSlot(_cursor);
+                    }
+
+                    _invPublic = invPublic;
+
+                    return true;
+                }
+                finally
+                {
+                    Locker.Release();
+                }
+            }
+
+            public void Reset(
+                ConcurrentQueue<ClientboundPlayingPacket> outPackets,
+                World world, 
+                int idWindow, PlayerInventory invPlayer)
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                Locker.Hold();
+
+                try
+                {
+                    if (idWindow > 1 ||
+                        (_idWindow == 1 && idWindow == 0))
+                    {
+                        throw new UnexpectedValueException("ServerboundCloseWindowPacket.WindowId");
+                    }
+
+                    if (idWindow == 0)
+                    {
                         return;
                     }
-                    else
+
+                    _invPublic.Close(Renderer);
+
+                    System.Diagnostics.Debug.Assert(_idWindow == 1);
+                    _idWindow = 0;
+
+                    Renderer = new InventoryRenderer(_idWindow, outPackets);
+                    invPlayer.Open(Renderer);
+
+                    if (_cursor != null)
                     {
-                        throw new UnexpectedValueException("ClickWindowPacket.WindowId");
+                        throw new System.NotImplementedException();
+
+                        // TODO: Drop item if _iremCursor is not null.
+                        /*
+
+                        Renderer.EmptyCursorSlot(); 
+                        _cursor = null;
+
+                         */
                     }
+
+                    _invPublic = null;
+
+                    System.Diagnostics.Debug.Assert(_cursor == null);
                 }
-
-                _ambiguous = false;
-
-                if (_windowId == 0)
+                finally
                 {
-                    System.Diagnostics.Debug.Assert(_id == -1);
-                    /*System.Diagnostics.Debug.Assert(_publicInventory == null);*/
-
+                    Locker.Release();
                 }
-                else
-                {
-                    throw new System.NotImplementedException();
-
-                    /*System.Diagnostics.Debug.Assert(_windowId > 0);
-                    System.Diagnostics.Debug.Assert(_id >= 0);
-                    System.Diagnostics.Debug.Assert(_publicInventory != null);
-
-                    _publicInventory.Close(_id, _windowId);
-
-                    _windowId = 0;
-                    _id = -1;
-                    _publicInventory = null;*/
-
-
-                }
-
-                if (_cursor != null)
-                {
-                    throw new System.NotImplementedException();
-
-                    // TODO: Drop item if _iremCursor is not null.
-                    /*_cursor = null;
-
-                    outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));*/
-                }
-
-                System.Diagnostics.Debug.Assert(_cursor == null);
             }
 
-            /*internal void ResetWindowForcibly(
-                PlayerInventory selfInventory, 
-                ConcurrentQueue<ClientboundPlayingPacket> outPackets, bool f)
+            private void LeftClick(
+                PlayerInventory invPlayer, int index, SlotData slotData)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                if (f)
-                {
-                    System.Diagnostics.Debug.Assert(_windowId >= byte.MinValue);
-                    System.Diagnostics.Debug.Assert(_windowId <= byte.MaxValue);
-                    outPackets.Enqueue(new ClientboundCloseWindowPacket((byte)_windowId));
-                }
-
-                _ambiguous = true;
-
-                _windowId = 0;
-                _id = -1;
-                _publicInventory = null;
-
-                {
-                    int count = selfInventory.TOTAL_SLOT_COUNT;
-                    int i = 0;
-                    var arr = new SlotData[count];
-
-                    foreach (Item? item in selfInventory.Items)
-                    {
-                        if (item == null)
-                        {
-                            arr[i++] = new();
-                            continue;
-                        }
-
-                        arr[i++] = item.ConventToPacketFormat();
-                    }
-
-                    System.Diagnostics.Debug.Assert(_windowId == 0);
-                    System.Diagnostics.Debug.Assert(_windowId >= byte.MinValue);
-                    System.Diagnostics.Debug.Assert(_windowId <= byte.MaxValue);
-                    outPackets.Enqueue(new SetWindowItemsPacket((byte)_windowId, arr));
-
-                    System.Diagnostics.Debug.Assert(i == count);
-                }
-
-                *//*if (_itemCursor != null)
-                {
-                    // TODO: Drop item if _iremCursor is not null.
-                    _itemCursor = null;
-
-                    outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));
-                }*//*
-
-                System.Diagnostics.Debug.Assert(_itemCursor == null);
-            }*/
-
-            private void ClickLeftMouseButton(
-                PlayerInventory selfInventory, int index, SlotData slotData)
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                if (index >= selfInventory.TotalSlotCount)
+                if (index >= invPlayer.TotalSlotCount)
                 {
                     throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
                 }
 
-                bool f;
-
                 if (_cursor == null)
                 {
-                    f = selfInventory.TakeAll(index, ref _cursor, slotData);
+                    invPlayer.TakeAll(index, ref _cursor, slotData, Renderer);
                 }
                 else
                 {
-                    f = selfInventory.PutAll(index, ref _cursor, slotData);
+                    invPlayer.PutAll(index, ref _cursor, slotData, Renderer);
                 }
 
-                if (!f)
-                {
-                    /*SlotData slotDataInCursor = _itemCursor.ConventToPacketFormat();
-
-                    outPackets.Enqueue(new SetSlotPacket(-1, 0, slotDataInCursor));*/
-
-                    throw new UnexpectedValueException("ClickWindowPacket.SLOT_DATA");
-                }
             }
 
-            /*private void ClickLeftMouseButtonWithPublicInventory(
-                PlayerInventory selfInventory, int index, SlotData slotData,
-                ConcurrentQueue<ClientboundPlayingPacket> outPackets)
+            private void LeftClickWithPublicInv(
+                PlayerInventory invPlayer, int index, SlotData slotData)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                System.Diagnostics.Debug.Assert(_windowId > 0);
-                System.Diagnostics.Debug.Assert(_publicInventory != null);
+                System.Diagnostics.Debug.Assert(_invPublic != null);
 
-                bool f;
-
-                if (_itemCursor == null)
-                {
-                    if (index >= 0 && index < _publicInventory.TOTAL_SLOT_COUNT)
-                    {
-                        (f, _itemCursor) = _publicInventory.TakeAll(index, slotData);
-                    }
-                    else if (
-                        index >= _publicInventory.TOTAL_SLOT_COUNT &&
-                        index < _publicInventory.TOTAL_SLOT_COUNT + selfInventory.PrimarySlotCount)
-                    {
-                        int j = index + 9 - _publicInventory.TOTAL_SLOT_COUNT;
-                        (f, _itemCursor) = selfInventory.TakeAll(j, slotData);
-                    }
-                    else
-                    {
-                        throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
-                    }
-                }
-                else
-                {
-                    if (index >= 0 && index < _publicInventory.TOTAL_SLOT_COUNT)
-                    {
-                        (f, _itemCursor) = _publicInventory.PutAll(index, _itemCursor, slotData);
-                    }
-                    else if (
-                        index >= _publicInventory.TOTAL_SLOT_COUNT &&
-                        index < _publicInventory.TOTAL_SLOT_COUNT + selfInventory.PrimarySlotCount)
-                    {
-                        int j = index + 9 - _publicInventory.TOTAL_SLOT_COUNT;
-                        (f, _itemCursor) = selfInventory.PutAll(j, _itemCursor, slotData);
-                    }
-                    else
-                    {
-                        throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
-                    }
-                }
-
-                if (!f)
-                {
-                    if (_itemCursor == null)
-                    {
-                        if (index >= 0 && index < _publicInventory.TOTAL_SLOT_COUNT)
-                        {
-                            outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));
-                        }
-                        else if (
-                            index >= _publicInventory.TOTAL_SLOT_COUNT &&
-                            index < _publicInventory.TOTAL_SLOT_COUNT + selfInventory.PrimarySlotCount)
-                        {
-                            throw new UnexpectedValueException("ClickWindowPacket.SLOT_DATA");
-                        }
-                        else
-                        {
-                            throw new System.NotImplementedException();
-                        }
-                    }
-                    else
-                    {
-                        if (index >= 0 && index < _publicInventory.TOTAL_SLOT_COUNT)
-                        {
-                            outPackets.Enqueue(new SetSlotPacket(-1, 0, _itemCursor.ConventToPacketFormat()));
-                        }
-                        else if (
-                            index >= _publicInventory.TOTAL_SLOT_COUNT &&
-                            index < _publicInventory.TOTAL_SLOT_COUNT + selfInventory.PrimarySlotCount)
-                        {
-                            throw new UnexpectedValueException("ClickWindowPacket.SLOT_DATA");
-                        }
-                        else
-                        {
-                            throw new System.NotImplementedException();
-                        }
-                    }
-                }
-
-            }*/
-
-            private void ClickRightMouseButton(
-                PlayerInventory selfInventory, int index, SlotData slotData)
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                if (index >= selfInventory.TotalSlotCount)
+                if (index >= _invPublic.TotalSlotCount + invPlayer.PrimarySlotCount)
                 {
                     throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
                 }
 
-                bool f;
-
                 if (_cursor == null)
                 {
-                    f = selfInventory.TakeHalf(index, ref _cursor, slotData);
+                    _invPublic.TakeAll(invPlayer, index, ref _cursor, slotData, Renderer);
                 }
                 else
                 {
-                    f = selfInventory.PutOne(index, ref _cursor, slotData);
+                    _invPublic.PutAll(invPlayer, index, ref _cursor, slotData, Renderer);
                 }
 
-                if (!f)
-                {
-                    /*SlotData slotDataInCursor = _itemCursor.ConventToPacketFormat();
-
-                    outPackets.Enqueue(new SetSlotPacket(-1, 0, slotDataInCursor));*/
-
-                    throw new UnexpectedValueException("ClickWindowPacket.SLOT_DATA");
-                }
             }
 
-            /*private void ClickRightMouseButtonWithPublicInventory(
-                PlayerInventory selfInventory, int index, SlotData slotData,
-                ConcurrentQueue<ClientboundPlayingPacket> outPackets)
+            private void RightClick(
+                PlayerInventory invPlayer, int index, SlotData slotData)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                System.Diagnostics.Debug.Assert(_windowId > 0);
-                System.Diagnostics.Debug.Assert(_publicInventory != null);
-
-                bool f;
-
-                if (_itemCursor == null)
+                if (index >= invPlayer.TotalSlotCount)
                 {
-                    if (index >= 0 && index < _publicInventory.TOTAL_SLOT_COUNT)
-                    {
-                        (f, _itemCursor) = _publicInventory.TakeHalf(index, slotData);
-                    }
-                    else if (
-                        index >= _publicInventory.TOTAL_SLOT_COUNT &&
-                        index < _publicInventory.TOTAL_SLOT_COUNT + selfInventory.PrimarySlotCount)
-                    {
-                        int j = index + 9 - _publicInventory.TOTAL_SLOT_COUNT;
-                        (f, _itemCursor) = selfInventory.TakeHalf(j, slotData);
-                    }
-                    else
-                    {
-                        throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
-                    }
+                    throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
+                }
+
+                if (_cursor == null)
+                {
+                    invPlayer.TakeHalf(index, ref _cursor, slotData, Renderer);
                 }
                 else
                 {
-                    if (index >= 0 && index < _publicInventory.TOTAL_SLOT_COUNT)
-                    {
-                        (f, _itemCursor) = _publicInventory.PutOne(index, _itemCursor, slotData);
-                    }
-                    else if (
-                        index >= _publicInventory.TOTAL_SLOT_COUNT &&
-                        index < _publicInventory.TOTAL_SLOT_COUNT + selfInventory.PrimarySlotCount)
-                    {
-                        int j = index + 9 - _publicInventory.TOTAL_SLOT_COUNT;
-                        (f, _itemCursor) = selfInventory.PutOne(j, _itemCursor, slotData);
-                    }
-                    else
-                    {
-                        throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
-                    }
+                    invPlayer.PutOne(index, ref _cursor, slotData, Renderer);
                 }
+            }
 
-                if (!f)
+            private void RightClickWithPublicInv(
+                PlayerInventory invPlayer, int index, SlotData slotData)
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                System.Diagnostics.Debug.Assert(_invPublic != null);
+
+                if (index >= _invPublic.TotalSlotCount + invPlayer.PrimarySlotCount)
                 {
-                    if (_itemCursor == null)
-                    {
-                        if (index >= 0 && index < _publicInventory.TOTAL_SLOT_COUNT)
-                        {
-                            outPackets.Enqueue(new SetSlotPacket(-1, 0, new()));
-                        }
-                        else if (
-                            index >= _publicInventory.TOTAL_SLOT_COUNT &&
-                            index < _publicInventory.TOTAL_SLOT_COUNT + selfInventory.PrimarySlotCount)
-                        {
-                            throw new UnexpectedValueException("ClickWindowPacket.SLOT_DATA");
-                        }
-                        else
-                        {
-                            throw new System.NotImplementedException();
-                        }
-                    }
-                    else
-                    {
-                        if (index >= 0 && index < _publicInventory.TOTAL_SLOT_COUNT)
-                        {
-                            outPackets.Enqueue(new SetSlotPacket(-1, 0, _itemCursor.ConventToPacketFormat()));
-                        }
-                        else if (
-                            index >= _publicInventory.TOTAL_SLOT_COUNT &&
-                            index < _publicInventory.TOTAL_SLOT_COUNT + selfInventory.PrimarySlotCount)
-                        {
-                            throw new UnexpectedValueException("ClickWindowPacket.SLOT_DATA");
-                        }
-                        else
-                        {
-                            throw new System.NotImplementedException();
-                        }
-                    }
+                    throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
                 }
 
-            }*/
+                if (_cursor == null)
+                {
+                    _invPublic.TakeHalf(invPlayer, index, ref _cursor, slotData, Renderer);
+                }
+                else
+                {
+                    _invPublic.PutOne(invPlayer, index, ref _cursor, slotData, Renderer);
+                }
+
+            }
 
             public void Handle(
                 World world,
-                PlayerInventory inv,
-                int windowId, int mode, int button, int index, SlotData slotData,
-                ConcurrentQueue<ClientboundPlayingPacket> outPackets)   
+                PlayerInventory invPlayer,
+                int mode, int button, int index, SlotData slotData,
+                ConcurrentQueue<ClientboundPlayingPacket> outPackets)
             {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                System.Diagnostics.Debug.Assert(_windowId >= 0);
-
-                if (_windowId == 0)
-                {
-                    if (windowId > 0)
-                    {
-                        if (_ambiguous)
-                        {
-                            return;
-                        }
-                        else
-                        {
-                            throw new UnexpectedValueException("ClickWindowPacket.WindowId");
-                        }
-                    }
-                }
-                else
-                {
-                    System.Diagnostics.Debug.Assert(_windowId > 0);
-                    if (windowId == 0)
-                    {
-                        if (_ambiguous)
-                        {
-                            // Ignored...
-                            return;
-                        }
-                        else
-                        {
-                            throw new UnexpectedValueException("ClickWindowPacket.WindowId");
-                        }
-                    }
-                    else if (_windowId != windowId)  // TODO: Check it is correct condition.
-                    {
-                        throw new UnexpectedValueException("ClickWindowPacket.WindowId");
-                    }
-                }
-
-                _ambiguous = false;
-
-                if (index < 0)
-                {
-                    throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
-                }
-
                 switch (mode)
                 {
                     default:
@@ -510,29 +238,23 @@ namespace MinecraftServerEngine
                             default:
                                 throw new UnexpectedValueException("ClickWindowPacket.ButtonNumber");
                             case 0:
-                                if (_windowId == 0)
+                                if (_idWindow == 0)
                                 {
-                                    ClickLeftMouseButton(inv, index, slotData);
+                                    LeftClick(invPlayer, index, slotData);
                                 }
                                 else
                                 {
-                                    throw new System.NotImplementedException();
-                                    /*ClickLeftMouseButtonWithPublicInventory(
-                                        inv, index, slotData,
-                                        outPackets);*/
+                                    LeftClickWithPublicInv(invPlayer, index, slotData);
                                 }
                                 break;
                             case 1:
-                                if (_windowId == 0)
+                                if (_idWindow == 0)
                                 {
-                                    ClickRightMouseButton(inv, index, slotData);
+                                    RightClick(invPlayer, index, slotData);
                                 }
                                 else
                                 {
-                                    throw new System.NotImplementedException();
-                                    /*ClickRightMouseButtonWithPublicInventory(
-                                        inv, index, slotData,
-                                        outPackets);*/
+                                    RightClickWithPublicInv(invPlayer, index, slotData);
                                 }
                                 break;
                         }
@@ -552,17 +274,9 @@ namespace MinecraftServerEngine
                 }
 
                 {
-                    if (_windowId == 0)
+                    if (_idWindow == 0)
                     {
-                        inv.Print();
-                    }
-                    else
-                    {
-                        throw new System.NotImplementedException();
-
-                        /*System.Diagnostics.Debug.Assert(_publicInventory != null);
-                        _publicInventory.Print();
-                        inv.Print();*/
+                        invPlayer.Print();
                     }
 
                     if (_cursor != null)
@@ -571,6 +285,31 @@ namespace MinecraftServerEngine
                     }
                 }
 
+            }
+
+            public void Handle(
+                World world,
+                PlayerInventory invPlayer,
+                int idWindow, int mode, int button, int index, SlotData slotData,
+                ConcurrentQueue<ClientboundPlayingPacket> outPackets)
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                if (idWindow < 0 || idWindow > 1 || (_idWindow == 0 && idWindow == 1))
+                {
+                    throw new UnexpectedValueException("ClickWindowPacket.WindowId");
+                }
+                if (index < 0)
+                {
+                    throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
+                }
+
+                if (_idWindow != idWindow)
+                {
+                    return;
+                }
+
+                Handle(world, invPlayer, mode, button, index, slotData, outPackets);
             }
 
             public void Flush(World world)
@@ -583,19 +322,19 @@ namespace MinecraftServerEngine
                     throw new System.NotImplementedException();
 
                     /*_cursor = null;*/
-                }
+                    }
 
-                /*if (_publicInventory != null)
-                {
-                    System.Diagnostics.Debug.Assert(_windowId > 0);
-                    System.Diagnostics.Debug.Assert(_id >= 0);
+                    /*if (_publicInventory != null)
+                    {
+                        System.Diagnostics.Debug.Assert(_windowId > 0);
+                        System.Diagnostics.Debug.Assert(_id >= 0);
 
-                    _publicInventory.Close(_id, _windowId);
+                        _publicInventory.Close(_id, _windowId);
 
-                    _publicInventory = null;
-                }*/
+                        _publicInventory = null;
+                    }*/
 
-                _windowId = 0;
+                    _windowId = 0;
                 _id = -1;
 
             }
@@ -920,6 +659,8 @@ namespace MinecraftServerEngine
 
             PlayerListRenderer plRenderer = new(OutPackets);
             world.PlayerList.Connect(userId, plRenderer);
+
+            SelfInventory.Connect();
         }
 
         ~Connection() => System.Diagnostics.Debug.Assert(false);
@@ -1430,6 +1171,20 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(buffer.Empty);
         }
 
+        internal bool OpenPublicInventory(
+            PrivateInventory invPrivate, PublicInventory invPublic)
+        {
+            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(invPublic != null);
+
+            if (_disconnected)
+            {
+                return false;
+            }
+
+            return _window.OpenPublicInventory(OutPackets, invPrivate, invPublic);
+        }
+
         internal void Render(
             World world, 
             int id,
@@ -1510,7 +1265,8 @@ namespace MinecraftServerEngine
 
         public void Flush(
             World world, 
-            System.Guid userId)
+            System.Guid userId,
+            PlayerInventory selfInv)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
             System.Diagnostics.Debug.Assert(_disconnected);
@@ -1520,6 +1276,8 @@ namespace MinecraftServerEngine
             _window.Flush(world);
 
             world.PlayerList.Disconnect(userId);
+
+            SelfInventory.Disconnect();
         }
 
         public void Dispose()

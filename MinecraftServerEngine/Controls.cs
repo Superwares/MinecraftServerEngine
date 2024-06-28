@@ -59,4 +59,44 @@ namespace MinecraftServerEngine
         public UnsprintControl() { }
     }
 
+    internal abstract class InventoryControl : Control
+    {
+        public InventoryControl() { }
+    }
+
+    internal sealed class ClickLeftItem : InventoryControl
+    {
+
+    }
+
+    internal sealed class ClickRightItem : InventoryControl
+    {
+
+    }
+
+    internal sealed class ShiftClickItem : InventoryControl
+    {
+
+    }
+
+    internal sealed class DoubleClickItem : InventoryControl
+    {
+
+    }
+
+    internal sealed class HotbarSwapItems : InventoryControl
+    {
+
+    }
+
+    internal sealed class LeftDragItems : InventoryControl
+    {
+
+    }
+
+    internal sealed class RightDragItems : InventoryControl
+    {
+
+    }
+
 }

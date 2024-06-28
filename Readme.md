@@ -16,7 +16,11 @@ which significantly enhances server performance and scalability.
 
 ### Single World
 
-### Dynamic Entity Appearance
+### Dynamic Entity Appearance (yet)
+
+### Player Skin Morphing (yet)
+
+### Ghost Player
 
 ## Code Conventions
 

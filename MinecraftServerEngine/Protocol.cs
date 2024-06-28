@@ -623,7 +623,7 @@ namespace MinecraftServerEngine
                         Console.Printl($"username: {username}");*/
 
                         // TODO: Handle to throw exception
-                        System.Diagnostics.Debug.Assert(inPacket.Username == username);
+                        /*System.Diagnostics.Debug.Assert(inPacket.Username == username);*/
 
                         /*Console.Print("Finish http request!");*/
 
