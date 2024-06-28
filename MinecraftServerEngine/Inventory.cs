@@ -5,7 +5,6 @@ using Sync;
 namespace MinecraftServerEngine
 {
     
-
     public abstract class Inventory : System.IDisposable
     {
         private bool _disposed = false;
@@ -84,21 +83,20 @@ namespace MinecraftServerEngine
 
         ~PrivateInventory() => System.Diagnostics.Debug.Assert(false);
 
-        public void Open(InventoryRenderer renderer)
+        public void Open(WindowRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(renderer != null);
 
             renderer.SetSlots(Slots);
         }
 
-        protected void Refresh(InventoryRenderer renderer)
+        protected void Refresh(WindowRenderer renderer)
         {
 
         }
 
         internal virtual void TakeAll(
-            int index, ref ItemSlot cursor, SlotData slotData,
-            InventoryRenderer renderer)
+            int i, ref ItemSlot cursor, WindowRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -107,60 +105,46 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_count >= 0);
             System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
 
-            System.Diagnostics.Debug.Assert(index >= 0);
-            System.Diagnostics.Debug.Assert(index < TotalSlotCount);
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount);
 
-            bool f;
-
-            ItemSlot slotTaked = Slots[index];
+            ItemSlot slotTaked = Slots[i];
 
             if (slotTaked != null)
             {
-                f = slotTaked.CompareWithProtocolFormat(slotData);
-
                 cursor = slotTaked;
 
-                Slots[index] = null;
+                Slots[i] = null;
 
                 _count--;
                 System.Diagnostics.Debug.Assert(_count >= 0);
             }
             else
             {
-                f = (slotData.Id == -1);
-
                 System.Diagnostics.Debug.Assert(cursor == null);
             }
 
-            if (!f)
-            {
-                Refresh(renderer);
-            }
+            Refresh(renderer);
         }
 
         internal virtual void PutAll(
-            int index, ref ItemSlot cursor, SlotData slotData,
-            InventoryRenderer renderer)
+            int i, ref ItemSlot cursor, WindowRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(cursor != null);
 
             System.Diagnostics.Debug.Assert(_count >= 0);
             System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
 
-            System.Diagnostics.Debug.Assert(index >= 0);
-            System.Diagnostics.Debug.Assert(index < TotalSlotCount);
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount);
+            System.Diagnostics.Debug.Assert(cursor != null);
+            System.Diagnostics.Debug.Assert(renderer != null);
 
-            bool f;
-
-            ItemSlot slotTaked = Slots[index];
+            ItemSlot slotTaked = Slots[i];
 
             if (slotTaked != null)
             {
                 System.Diagnostics.Debug.Assert(!ReferenceEquals(slotTaked, cursor));
-
-                f = slotTaked.CompareWithProtocolFormat(slotData);
 
                 if (cursor.Item == slotTaked.Item)
                 {
@@ -178,31 +162,26 @@ namespace MinecraftServerEngine
                 else
                 {
                     // Swap
-                    Slots[index] = cursor;
+                    Slots[i] = cursor;
                     cursor = slotTaked;
                 }
             }
             else
             {
-                Slots[index] = cursor;
+                Slots[i] = cursor;
                 cursor = null;
 
                 ++_count;
                 System.Diagnostics.Debug.Assert(_count >= 0);
                 System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
 
-                f = (slotData.Id == -1);
             }
 
-            if (!f)
-            {
-                Refresh(renderer);
-            }
+            Refresh(renderer);
         }
 
         internal virtual void TakeHalf(
-            int index, ref ItemSlot cursor, SlotData slotData,
-            InventoryRenderer renderer)
+            int i, ref ItemSlot cursor, WindowRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -211,26 +190,21 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_count >= 0);
             System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
 
-            System.Diagnostics.Debug.Assert(index >= 0);
-            System.Diagnostics.Debug.Assert(index < TotalSlotCount);
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount);
 
-            bool f;
-
-            ItemSlot slotTaked = Slots[index];
+            ItemSlot slotTaked = Slots[i];
 
             if (slotTaked == null)
             {
                 System.Diagnostics.Debug.Assert(cursor == null);
 
-                f = (slotData.Id == -1);
             }
             else
             {
-                f = slotTaked.CompareWithProtocolFormat(slotData);
-
                 if (slotTaked.Count == 1)
                 {
-                    Slots[index] = null;
+                    Slots[i] = null;
 
                     --_count;
                     System.Diagnostics.Debug.Assert(_count >= 0);
@@ -249,35 +223,27 @@ namespace MinecraftServerEngine
                 }
             }
 
-            if (!f)
-            {
-                Refresh(renderer);
-            }
+            Refresh(renderer);
         }
 
         internal virtual void PutOne(
-            int index, ref ItemSlot cursor, SlotData slotData,
-            InventoryRenderer renderer)
+            int i, ref ItemSlot cursor, WindowRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(cursor != null);
 
             System.Diagnostics.Debug.Assert(_count >= 0);
             System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
 
-            System.Diagnostics.Debug.Assert(index >= 0);
-            System.Diagnostics.Debug.Assert(index < TotalSlotCount);
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount);
+            System.Diagnostics.Debug.Assert(cursor != null);
+            System.Diagnostics.Debug.Assert(renderer != null);
 
-            bool f;
-
-            ItemSlot slotTaked = Slots[index];
+            ItemSlot slotTaked = Slots[i];
 
             if (slotTaked != null)
             {
                 System.Diagnostics.Debug.Assert(!ReferenceEquals(slotTaked, cursor));
-
-                f = slotTaked.CompareWithProtocolFormat(slotData);
 
                 if (cursor.Item == slotTaked.Item)
                 {
@@ -310,7 +276,7 @@ namespace MinecraftServerEngine
                 {
                     // Swap
 
-                    Slots[index] = cursor;
+                    Slots[i] = cursor;
                     cursor = slotTaked;
                 }
 
@@ -319,7 +285,7 @@ namespace MinecraftServerEngine
             {
                 if (cursor.Count > 1)
                 {
-                    Slots[index] = cursor.DivideOne();
+                    Slots[i] = cursor.DivideOne();
                     System.Diagnostics.Debug.Assert(cursor.Count >= cursor.MinCount);
                 }
                 else
@@ -327,7 +293,7 @@ namespace MinecraftServerEngine
                     System.Diagnostics.Debug.Assert(cursor.Count == 1);
                     System.Diagnostics.Debug.Assert(slotTaked == null);
 
-                    Slots[index] = cursor;
+                    Slots[i] = cursor;
                     cursor = null;
                 }
 
@@ -335,13 +301,9 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(_count >= 0);
                 System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
 
-                f = (slotData.Id == -1);
             }
 
-            if (!f)
-            {
-                Refresh(renderer);
-            }
+            Refresh(renderer);
         }
 
         public override void Dispose()
@@ -432,78 +394,60 @@ namespace MinecraftServerEngine
         ~PlayerInventory() => System.Diagnostics.Debug.Assert(false);
 
         internal override void PutAll(
-            int index, ref ItemSlot cursor, SlotData slotData,
-            InventoryRenderer renderer)
+            int i, ref ItemSlot cursor, WindowRenderer renderer)
         {
-            if (index == 0)
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount);
+            System.Diagnostics.Debug.Assert(cursor != null);
+            System.Diagnostics.Debug.Assert(renderer != null);
+
+            if (i == 0)
             {
-                bool f;
-
-                ItemSlot slotTaked = Slots[index];
-                if (slotTaked != null)
-                {
-                    f = slotTaked.CompareWithProtocolFormat(slotData);
-                }
-                else
-                {
-                    f = (slotData.Id == -1);
-                }
-
-                if (!f)
-                {
-                    Refresh(renderer);
-                }
+                Refresh(renderer);
             }
-            else if (index > 0 && index <= 4)
+            else if (i > 0 && i <= 4)
             {
                 throw new System.NotImplementedException();
             }
-            else if (index > 4 && index <= 8)
+            else if (i > 4 && i <= 8)
             {
                 throw new System.NotImplementedException();
             }
             else
             {
-                System.Diagnostics.Debug.Assert(index > 8 && index < TotalSlotCount);
-                base.PutAll(index, ref cursor, slotData, renderer);
+                System.Diagnostics.Debug.Assert(i > 8 && i < TotalSlotCount);
+                base.PutAll(i, ref cursor, renderer);
             }
         }
 
         internal override void PutOne(
-            int index, ref ItemSlot cursor, SlotData slotData, 
-            InventoryRenderer renderer)
+            int i, ref ItemSlot cursor, WindowRenderer renderer)
         {
-            if (index == 0)
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount);
+            System.Diagnostics.Debug.Assert(cursor != null);
+            System.Diagnostics.Debug.Assert(renderer != null);
+
+            if (i == 0)
             {
-                bool f;
-
-                ItemSlot slotTaked = Slots[index];
-                if (slotTaked != null)
-                {
-                    f = slotTaked.CompareWithProtocolFormat(slotData);
-                }
-                else
-                {
-                    f = (slotData.Id == -1);
-                }
-
-                if (!f)
-                {
-                    Refresh(renderer);
-                }
+                Refresh(renderer);
             }
-            else if (index > 0 && index <= 4)
+            else if (i > 0 && i <= 4)
             {
                 throw new System.NotImplementedException();
             }
-            else if (index > 4 && index <= 8)
+            else if (i > 4 && i <= 8)
             {
                 throw new System.NotImplementedException();
             }
             else
             {
-                System.Diagnostics.Debug.Assert(index > 8 && index < TotalSlotCount);
-                base.PutOne(index, ref cursor, slotData, renderer);
+                System.Diagnostics.Debug.Assert(i > 8 && i < TotalSlotCount);
+                base.PutOne(i, ref cursor, renderer);
             }
             
         }
@@ -526,6 +470,8 @@ namespace MinecraftServerEngine
     {
         internal const int SlotCountPerLine = 9;
 
+        private protected readonly RecurLocker RecurLocker = new();  // Disposable
+
         private bool _disposed = false;
 
         internal PublicInventory(int totalSlotCount) : base(totalSlotCount) { }
@@ -533,7 +479,7 @@ namespace MinecraftServerEngine
         ~PublicInventory() => System.Diagnostics.Debug.Assert(false);
 
         private protected void Refresh(
-            PrivateInventory invPrivate, InventoryRenderer renderer)
+            PrivateInventory invPrivate, WindowRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(invPrivate != null);
             System.Diagnostics.Debug.Assert(renderer != null);
@@ -557,17 +503,23 @@ namespace MinecraftServerEngine
             renderer.SetSlots(slots);
         }
 
-        internal virtual void Open(
-            PrivateInventory invPrivate, InventoryRenderer renderer)
+        internal virtual bool Open(
+            PrivateInventory invPrivate, WindowRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(invPrivate != null);
             System.Diagnostics.Debug.Assert(renderer != null);
 
+            RecurLocker.Hold();
+
             renderer.OpenWindow(TotalSlotCount);
             Refresh(invPrivate, renderer);
+
+            RecurLocker.Release();
+
+            return true;
         }
 
-        internal abstract void Close(InventoryRenderer renderer);
+        internal abstract void Close(WindowRenderer renderer);
         
         private protected ItemSlot GetSlot(PrivateInventory invPrivate, int i)
         {
@@ -632,25 +584,26 @@ namespace MinecraftServerEngine
         }
 
         internal virtual void TakeAll(
-            PrivateInventory invPrivate,
-            int i, ref ItemSlot cursor, SlotData slotData,
-            InventoryRenderer renderer)
+            PrivateInventory invPrivate, int i, ref ItemSlot cursor,
+            WindowRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
             System.Diagnostics.Debug.Assert(cursor == null);
+            System.Diagnostics.Debug.Assert(renderer != null);
 
             System.Diagnostics.Debug.Assert(_count >= 0);
             System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
 
-            bool f;
+            RecurLocker.Hold();
 
             ItemSlot slotTaked = GetSlot(invPrivate, i);
 
             if (slotTaked != null)
             {
-                f = slotTaked.CompareWithProtocolFormat(slotData);
-
                 cursor = slotTaked;
 
                 EmptySlot(invPrivate, i);
@@ -662,38 +615,35 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(cursor == null);
 
-                f = (slotData.Id == -1);
-
             }
 
-            if (!f)
-            {
-                Refresh(invPrivate, renderer);
-            }
+            Refresh(invPrivate, renderer);
 
+            RecurLocker.Release();
         }
 
         internal virtual void PutAll(
-            PrivateInventory invPrivate,
-            int i, ref ItemSlot cursor, SlotData slotData,
-            InventoryRenderer renderer)
+            PrivateInventory invPrivate, int i, ref ItemSlot cursor,
+            WindowRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
             System.Diagnostics.Debug.Assert(cursor != null);
+            System.Diagnostics.Debug.Assert(renderer != null);
 
             System.Diagnostics.Debug.Assert(_count >= 0);
             System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
 
-            bool f;
+            RecurLocker.Hold();
 
             ItemSlot slotTaked = GetSlot(invPrivate, i);
 
             if (slotTaked != null)
             {
                 System.Diagnostics.Debug.Assert(!ReferenceEquals(slotTaked, cursor));
-
-                f = slotTaked.CompareWithProtocolFormat(slotData);
 
                 if (cursor.Item == slotTaked.Item)
                 {
@@ -725,28 +675,30 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(_count >= 0);
                 System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
 
-                f = (slotData.Id == -1);
             }
 
-            if (!f)
-            {
-                Refresh(invPrivate, renderer);
-            }
+            Refresh(invPrivate, renderer);
+
+            RecurLocker.Release();
+
         }
 
         internal virtual void TakeHalf(
-            PrivateInventory invPrivate,
-            int i, ref ItemSlot cursor, SlotData slotData,
-            InventoryRenderer renderer)
+            PrivateInventory invPrivate, int i, ref ItemSlot cursor,
+            WindowRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
             System.Diagnostics.Debug.Assert(cursor == null);
+            System.Diagnostics.Debug.Assert(renderer != null);
 
             System.Diagnostics.Debug.Assert(_count >= 0);
             System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
 
-            bool f;
+            RecurLocker.Hold();
 
             ItemSlot slotTaked = GetSlot(invPrivate, i);
 
@@ -754,12 +706,9 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(cursor == null);
 
-                f = (slotData.Id == -1);
             }
             else
             {
-                f = slotTaked.CompareWithProtocolFormat(slotData);
-
                 if (slotTaked.Count == 1)
                 {
                     EmptySlot(invPrivate, i);
@@ -781,33 +730,34 @@ namespace MinecraftServerEngine
                 }
             }
 
-            if (!f)
-            {
-                Refresh(invPrivate, renderer);
-            }
+            Refresh(invPrivate, renderer);
+
+            RecurLocker.Release();
+
         }
 
         internal virtual void PutOne(
-            PrivateInventory invPrivate,
-            int i, ref ItemSlot cursor, SlotData slotData,
-            InventoryRenderer renderer)
+            PrivateInventory invPrivate, int i, ref ItemSlot cursor, 
+            WindowRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
             System.Diagnostics.Debug.Assert(cursor != null);
+            System.Diagnostics.Debug.Assert(renderer != null);
 
             System.Diagnostics.Debug.Assert(_count >= 0);
             System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
 
-            bool f;
+            RecurLocker.Hold();
 
             ItemSlot slotTaked = GetSlot(invPrivate, i);
 
             if (slotTaked != null)
             {
                 System.Diagnostics.Debug.Assert(!ReferenceEquals(slotTaked, cursor));
-
-                f = slotTaked.CompareWithProtocolFormat(slotData);
 
                 if (cursor.Item == slotTaked.Item)
                 {
@@ -851,14 +801,12 @@ namespace MinecraftServerEngine
                 ++_count;
                 System.Diagnostics.Debug.Assert(_count >= 0);
                 System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
-
-                f = (slotData.Id == -1);
             }
 
-            if (!f)
-            {
-                Refresh(invPrivate, renderer);
-            }
+            Refresh(invPrivate, renderer);
+
+            RecurLocker.Release();
+
         }
 
         public override void Dispose()
@@ -867,6 +815,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
+            RecurLocker.Dispose();
 
             // Finish.
             base.Dispose();
@@ -883,8 +832,8 @@ namespace MinecraftServerEngine
 
         ~Chest() => System.Diagnostics.Debug.Assert(false);
 
-        internal override void Open(
-            PrivateInventory invPrivate, InventoryRenderer renderer)
+        internal override bool Open(
+            PrivateInventory invPrivate, WindowRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(invPrivate != null);
             System.Diagnostics.Debug.Assert(renderer != null);
@@ -894,7 +843,7 @@ namespace MinecraftServerEngine
             throw new System.NotImplementedException();
         }
 
-        internal override void Close(InventoryRenderer renderer)
+        internal override void Close(WindowRenderer renderer)
         {
             throw new System.NotImplementedException();
         }
@@ -905,6 +854,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
+            
 
             // Finish.
             base.Dispose();
@@ -914,14 +864,33 @@ namespace MinecraftServerEngine
 
     public abstract class ItemInterfaceInventory : PublicInventory
     {
+        protected abstract class ClickEvent
+        {
+
+        }
+
+        protected sealed class LeftClickEvent : ClickEvent
+        {
+
+        }
+
+        protected sealed class RightClickEvent : ClickEvent
+        {
+
+        }
+
+        protected sealed class MiddleClickEvent : ClickEvent
+        {
+
+        }
+
         private const int MaxLineCount = 6;
 
         private bool _disposed = false;
 
-        private Tree<InventoryRenderer> Renderers = new();
+        private Tree<WindowRenderer> Renderers = new();
 
-        public ItemInterfaceInventory(int countLine) : 
-            base(countLine * SlotCountPerLine) 
+        public ItemInterfaceInventory(int countLine) : base(countLine * SlotCountPerLine)
         {
             System.Diagnostics.Debug.Assert(countLine > 0);
             System.Diagnostics.Debug.Assert(countLine <= MaxLineCount);
@@ -929,24 +898,139 @@ namespace MinecraftServerEngine
 
         ~ItemInterfaceInventory() => System.Diagnostics.Debug.Assert(false);
 
-        internal override void Open(
-            PrivateInventory invPrivate, InventoryRenderer renderer)
+        internal override bool Open(
+            PrivateInventory invPrivate, WindowRenderer renderer)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(invPrivate != null);
             System.Diagnostics.Debug.Assert(renderer != null);
 
-            base.Open(invPrivate, renderer);
+            bool f;
 
-            throw new System.NotImplementedException();
+            RecurLocker.Hold();
+
+            if (Renderers.Contains(renderer))
+            {
+                f = false;    
+            }
+            else
+            {
+                base.Open(invPrivate, renderer);
+                Renderers.Insert(renderer);
+
+                f = true;
+            }
+
+            RecurLocker.Release();
+
+            return f;
         }
 
-        internal override void Close(InventoryRenderer renderer)
+        internal override void Close(WindowRenderer renderer)
         {
-            throw new System.NotImplementedException();
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(renderer != null);
+
+            RecurLocker.Hold();
+
+            System.Diagnostics.Debug.Assert(Renderers.Contains(renderer));
+            Renderers.Extract(renderer);
+
+            RecurLocker.Release();
+        }
+
+        internal override void TakeAll(
+            PrivateInventory invPrivate, int i, ref ItemSlot cursor, 
+            WindowRenderer renderer)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
+            System.Diagnostics.Debug.Assert(cursor == null);
+            System.Diagnostics.Debug.Assert(renderer != null);
+
+            RecurLocker.Hold();
+
+            System.Diagnostics.Debug.Assert(Renderers.Contains(renderer));
+            Refresh(invPrivate, renderer);
+
+            RecurLocker.Release();
+        }
+
+        internal override void PutAll(
+            PrivateInventory invPrivate, int i, ref ItemSlot cursor,  
+            WindowRenderer renderer)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
+            System.Diagnostics.Debug.Assert(cursor != null);
+            System.Diagnostics.Debug.Assert(renderer != null);
+
+            RecurLocker.Hold();
+
+            System.Diagnostics.Debug.Assert(Renderers.Contains(renderer));
+            Refresh(invPrivate, renderer);
+
+            RecurLocker.Release();
+        }
+
+        internal override void TakeHalf(
+            PrivateInventory invPrivate, int i, ref ItemSlot cursor, 
+            WindowRenderer renderer)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
+            System.Diagnostics.Debug.Assert(cursor == null);
+            System.Diagnostics.Debug.Assert(renderer != null);
+
+            RecurLocker.Hold();
+
+            System.Diagnostics.Debug.Assert(Renderers.Contains(renderer));
+            Refresh(invPrivate, renderer);
+
+            RecurLocker.Release();
+        }
+
+        internal override void PutOne(
+            PrivateInventory invPrivate, int i, ref ItemSlot cursor, 
+            WindowRenderer renderer)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
+            System.Diagnostics.Debug.Assert(cursor != null);
+            System.Diagnostics.Debug.Assert(renderer != null);
+
+            RecurLocker.Hold();
+
+            System.Diagnostics.Debug.Assert(Renderers.Contains(renderer));
+            Refresh(invPrivate, renderer);
+
+            RecurLocker.Release();
         }
 
         protected void Update(int i, Items item, int count)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount);
+            System.Diagnostics.Debug.Assert(count >= 0);  // TODO: Check it is correct.
+
+            // Render 로 PublicInventory 의 아이템만을 써준다
+
             throw new System.NotImplementedException();
         }
 

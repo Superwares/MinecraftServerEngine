@@ -54,16 +54,18 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal sealed class InventoryRenderer : Renderer
+    internal sealed class WindowRenderer : Renderer
     {
-        private readonly int WindowId;
+        public readonly int Id;
 
-        public InventoryRenderer(
+        public WindowRenderer(
             int idWindow, ConcurrentQueue<ClientboundPlayingPacket> outPackets) 
             : base(outPackets) 
         {
             System.Diagnostics.Debug.Assert(idWindow >= 0);
-            WindowId = idWindow;
+            System.Diagnostics.Debug.Assert(outPackets != null);
+
+            Id = idWindow;
         }
 
         public void SetSlots(ItemSlot[] slots)
@@ -87,9 +89,9 @@ namespace MinecraftServerEngine
             }
             System.Diagnostics.Debug.Assert(i == n);
 
-            System.Diagnostics.Debug.Assert(WindowId >= byte.MinValue);
-            System.Diagnostics.Debug.Assert(WindowId <= byte.MaxValue);
-            Render(new SetWindowItemsPacket((byte)WindowId, arr));
+            System.Diagnostics.Debug.Assert(Id >= byte.MinValue);
+            System.Diagnostics.Debug.Assert(Id <= byte.MaxValue);
+            Render(new SetWindowItemsPacket((byte)Id, arr));
         }
 
         public void SetCursorSlot(ItemSlot slot)
@@ -112,15 +114,15 @@ namespace MinecraftServerEngine
 
         public void OpenWindow(int countSlot)
         {
-            System.Diagnostics.Debug.Assert(WindowId > 0);
+            System.Diagnostics.Debug.Assert(Id > 0);
             System.Diagnostics.Debug.Assert(countSlot >= 0);
 
-            System.Diagnostics.Debug.Assert(WindowId >= byte.MinValue);
-            System.Diagnostics.Debug.Assert(WindowId <= byte.MaxValue);
+            System.Diagnostics.Debug.Assert(Id >= byte.MinValue);
+            System.Diagnostics.Debug.Assert(Id <= byte.MaxValue);
             System.Diagnostics.Debug.Assert(countSlot >= byte.MinValue);
             System.Diagnostics.Debug.Assert(countSlot <= byte.MaxValue);
             Render(new OpenWindowPacket(
-                (byte)WindowId, "minecraft:chest", "EmptyTItle!", (byte)countSlot));
+                (byte)Id, "minecraft:chest", "EmptyTItle!", (byte)countSlot));
         }
     }
 
@@ -131,6 +133,7 @@ namespace MinecraftServerEngine
 
     internal abstract class WorldRenderer : Renderer
     {
+
         public WorldRenderer(
             ConcurrentQueue<ClientboundPlayingPacket> outPackets) 
             : base(outPackets) { }
