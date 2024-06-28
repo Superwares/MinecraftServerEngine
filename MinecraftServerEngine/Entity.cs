@@ -570,7 +570,7 @@ namespace MinecraftServerEngine
 
         public System.Guid UserId => UniqueId;
 
-        internal readonly PlayerInventory SelfInventory = new();
+        internal readonly PlayerInventory Inventory = new();
 
         private Connection Conn;
         public bool Disconnected => (Conn == null);
@@ -599,6 +599,8 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(renderer != null);
+
             renderer.SpawnPlayer(
                 Id, UniqueId,
                 Position, Look,
@@ -607,16 +609,16 @@ namespace MinecraftServerEngine
 
         internal void Connect(Client client, World world, System.Guid userId)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(client != null);
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
-
             _pControl = Position;
             _onGroundControl = OnGround;
 
-            Conn = new Connection(client, world, Id, userId, _pControl, SelfInventory);
+            Conn = new Connection(client, world, Id, userId, _pControl, Inventory);
         }
 
         public override void ApplyForce(Vector force)
@@ -636,6 +638,8 @@ namespace MinecraftServerEngine
         internal override void Move(BoundingVolume volume, Vector v, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(volume != null);
 
             if (Connected)
             {
@@ -675,9 +679,9 @@ namespace MinecraftServerEngine
 
         private void HandleControl(Control control)
         {
-            System.Diagnostics.Debug.Assert(control != null);
-
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(control != null);
 
             switch (control)
             {
@@ -720,7 +724,7 @@ namespace MinecraftServerEngine
                 Conn.Control(
                     controls, 
                     world, 
-                    UniqueId, Sneaking, Sprinting, SelfInventory);
+                    UniqueId, Sneaking, Sprinting, Inventory);
 
                 while (!controls.Empty)
                 {
@@ -745,7 +749,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(Conn != null);
             if (Conn.Disconnected)
             {
-                Conn.Flush(world, UserId, SelfInventory);
+                Conn.Flush(world, UserId, Inventory);
                 Conn.Dispose();
 
                 Conn = null;
@@ -770,7 +774,7 @@ namespace MinecraftServerEngine
                 world, 
                 Id, 
                 Position, Look, 
-                SelfInventory);
+                Inventory);
         }
         
         public bool GiveItem(Items item, int count)
@@ -782,6 +786,8 @@ namespace MinecraftServerEngine
 
         public bool OpenPublicInventory(PublicInventory invPublic)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(invPublic != null);
 
             if (Disconnected)
@@ -790,7 +796,7 @@ namespace MinecraftServerEngine
             }
 
             System.Diagnostics.Debug.Assert(Conn != null);
-            return Conn.OpenPublicInventory(SelfInventory, invPublic);
+            return Conn.OpenPublicInventory(Inventory, invPublic);
         }
 
         public override void Dispose()
@@ -799,6 +805,11 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
+            Inventory.Dispose();
+            if (!Disconnected)
+            {
+                Conn.Dispose();
+            }
 
             // Finish.
             base.Dispose();

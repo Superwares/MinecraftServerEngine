@@ -32,12 +32,32 @@ namespace Sync
                 threads[i] = thread;
             }
             
-
             for (int i = 0; i < ThreadCount; ++i)
             {
                 thread = threads[i];
                 thread.Join();
             }
+        }
+    }
+
+    internal class LockerTests
+    {
+        [SetUp]
+        public void Setup()
+        {
+
+        }
+
+        [Test]
+        public void Test1()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        [Test]
+        public void TestRecursive()
+        {
+            throw new System.NotImplementedException();
         }
     }
 

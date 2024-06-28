@@ -42,41 +42,6 @@ namespace Sync
 
     // SpinLocker
 
-    public sealed class RecurLocker : Locker
-    {
-        private bool _disposed = false;
-
-        public RecurLocker() { }
-
-        ~RecurLocker() => System.Diagnostics.Debug.Assert(false);
-
-        public override void Hold()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            throw new System.NotImplementedException();
-        }
-
-        public override void Release()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            throw new System.NotImplementedException();
-        }
-
-        public override void Dispose()
-        {
-            // Assertions.
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            // Release resources.
-
-            // Finish.
-            base.Dispose();
-            _disposed = true;
-        }
-    }
-
     public sealed class ReadLocker : Locker
     {
         private bool _disposed = false;

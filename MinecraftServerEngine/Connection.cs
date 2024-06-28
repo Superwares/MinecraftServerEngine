@@ -131,18 +131,18 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                if (index >= invPlayer.TotalSlotCount)
+                if (index >= invPrivate.TotalSlotCount)
                 {
                     throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
                 }
 
                 if (_cursor == null)
                 {
-                    invPlayer.TakeAll(index, ref _cursor, Renderer);
+                    invPrivate.TakeAll(index, ref _cursor, Renderer);
                 }
                 else
                 {
-                    invPlayer.PutAll(index, ref _cursor, Renderer);
+                    invPrivate.PutAll(index, ref _cursor, Renderer);
                 }
 
             }
@@ -153,18 +153,18 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(_invPublic != null);
 
-                if (index >= _invPublic.TotalSlotCount + invPlayer.PrimarySlotCount)
+                if (index >= _invPublic.TotalSlotCount + invPrivate.PrimarySlotCount)
                 {
                     throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
                 }
 
                 if (_cursor == null)
                 {
-                    _invPublic.TakeAll(invPlayer, index, ref _cursor, Renderer);
+                    _invPublic.TakeAll(invPrivate, index, ref _cursor, Renderer);
                 }
                 else
                 {
-                    _invPublic.PutAll(invPlayer, index, ref _cursor, Renderer);
+                    _invPublic.PutAll(invPrivate, index, ref _cursor, Renderer);
                 }
 
             }
@@ -173,18 +173,18 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                if (index >= invPlayer.TotalSlotCount)
+                if (index >= invPrivate.TotalSlotCount)
                 {
                     throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
                 }
 
                 if (_cursor == null)
                 {
-                    invPlayer.TakeHalf(index, ref _cursor, Renderer);
+                    invPrivate.TakeHalf(index, ref _cursor, Renderer);
                 }
                 else
                 {
-                    invPlayer.PutOne(index, ref _cursor, Renderer);
+                    invPrivate.PutOne(index, ref _cursor, Renderer);
                 }
             }
 
@@ -194,18 +194,18 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(_invPublic != null);
 
-                if (index >= _invPublic.TotalSlotCount + invPlayer.PrimarySlotCount)
+                if (index >= _invPublic.TotalSlotCount + invPrivate.PrimarySlotCount)
                 {
                     throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
                 }
 
                 if (_cursor == null)
                 {
-                    _invPublic.TakeHalf(invPlayer, index, ref _cursor, Renderer);
+                    _invPublic.TakeHalf(invPrivate, index, ref _cursor, Renderer);
                 }
                 else
                 {
-                    _invPublic.PutOne(invPlayer, index, ref _cursor, Renderer);
+                    _invPublic.PutOne(invPrivate, index, ref _cursor, Renderer);
                 }
 
             }
@@ -288,21 +288,31 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                if (idWindow < 0 || idWindow > 1 || (Renderer.Id == 0 && idWindow == 1))
-                {
-                    throw new UnexpectedValueException("ClickWindowPacket.WindowId");
-                }
-                if (index < 0)
-                {
-                    throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
-                }
+                Locker.Hold();
 
-                if (Renderer.Id != idWindow)
+                try
                 {
-                    return;
-                }
+                    if (idWindow < 0 || idWindow > 1 || (Renderer.Id == 0 && idWindow == 1))
+                    {
+                        throw new UnexpectedValueException("ClickWindowPacket.WindowId");
+                    }
+                    if (index < 0)
+                    {
+                        throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
+                    }
 
-                Handle(world, invPrivate, mode, button, index);
+                    if (Renderer.Id != idWindow)
+                    {
+                        return;
+                    }
+
+                    Handle(world, invPrivate, mode, button, index);
+
+                }
+                finally
+                {
+                    Locker.Release();
+                }
             }
 
             public void Flush(World world)
@@ -646,8 +656,6 @@ namespace MinecraftServerEngine
 
             PlayerListRenderer plRenderer = new(OutPackets);
             world.PlayerList.Connect(userId, plRenderer);
-
-            SelfInventory.Connect();
         }
 
         ~Connection() => System.Diagnostics.Debug.Assert(false);
@@ -1252,8 +1260,6 @@ namespace MinecraftServerEngine
             _Window.Flush(world);
 
             world.PlayerList.Disconnect(userId);
-
-            SelfInventory.Disconnect();
         }
 
         public void Dispose()

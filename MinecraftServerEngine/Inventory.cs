@@ -470,7 +470,7 @@ namespace MinecraftServerEngine
     {
         internal const int SlotCountPerLine = 9;
 
-        private protected readonly RecurLocker RecurLocker = new();  // Disposable
+        private protected readonly Locker Locker = new();  // Disposable
 
         private bool _disposed = false;
 
@@ -509,12 +509,12 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(invPrivate != null);
             System.Diagnostics.Debug.Assert(renderer != null);
 
-            RecurLocker.Hold();
+            Locker.Hold();
 
             renderer.OpenWindow(TotalSlotCount);
             Refresh(invPrivate, renderer);
 
-            RecurLocker.Release();
+            Locker.Release();
 
             return true;
         }
@@ -598,7 +598,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_count >= 0);
             System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
 
-            RecurLocker.Hold();
+            Locker.Hold();
 
             ItemSlot slotTaked = GetSlot(invPrivate, i);
 
@@ -619,7 +619,7 @@ namespace MinecraftServerEngine
 
             Refresh(invPrivate, renderer);
 
-            RecurLocker.Release();
+            Locker.Release();
         }
 
         internal virtual void PutAll(
@@ -637,7 +637,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_count >= 0);
             System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
 
-            RecurLocker.Hold();
+            Locker.Hold();
 
             ItemSlot slotTaked = GetSlot(invPrivate, i);
 
@@ -679,7 +679,7 @@ namespace MinecraftServerEngine
 
             Refresh(invPrivate, renderer);
 
-            RecurLocker.Release();
+            Locker.Release();
 
         }
 
@@ -698,7 +698,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_count >= 0);
             System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
 
-            RecurLocker.Hold();
+            Locker.Hold();
 
             ItemSlot slotTaked = GetSlot(invPrivate, i);
 
@@ -732,7 +732,7 @@ namespace MinecraftServerEngine
 
             Refresh(invPrivate, renderer);
 
-            RecurLocker.Release();
+            Locker.Release();
 
         }
 
@@ -751,7 +751,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_count >= 0);
             System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
 
-            RecurLocker.Hold();
+            Locker.Hold();
 
             ItemSlot slotTaked = GetSlot(invPrivate, i);
 
@@ -805,7 +805,7 @@ namespace MinecraftServerEngine
 
             Refresh(invPrivate, renderer);
 
-            RecurLocker.Release();
+            Locker.Release();
 
         }
 
@@ -815,7 +815,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
-            RecurLocker.Dispose();
+            Locker.Dispose();
 
             // Finish.
             base.Dispose();
@@ -908,7 +908,7 @@ namespace MinecraftServerEngine
 
             bool f;
 
-            RecurLocker.Hold();
+            Locker.Hold();
 
             if (Renderers.Contains(renderer))
             {
@@ -922,7 +922,7 @@ namespace MinecraftServerEngine
                 f = true;
             }
 
-            RecurLocker.Release();
+            Locker.Release();
 
             return f;
         }
@@ -933,12 +933,12 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(renderer != null);
 
-            RecurLocker.Hold();
+            Locker.Hold();
 
             System.Diagnostics.Debug.Assert(Renderers.Contains(renderer));
             Renderers.Extract(renderer);
 
-            RecurLocker.Release();
+            Locker.Release();
         }
 
         internal override void TakeAll(
@@ -953,12 +953,15 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(cursor == null);
             System.Diagnostics.Debug.Assert(renderer != null);
 
-            RecurLocker.Hold();
+            Locker.Hold();
 
             System.Diagnostics.Debug.Assert(Renderers.Contains(renderer));
             Refresh(invPrivate, renderer);
 
-            RecurLocker.Release();
+            LeftClickEvent e = new();
+            LeftClick(e, i);
+
+            Locker.Release();
         }
 
         internal override void PutAll(
@@ -973,12 +976,15 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(cursor != null);
             System.Diagnostics.Debug.Assert(renderer != null);
 
-            RecurLocker.Hold();
+            Locker.Hold();
 
             System.Diagnostics.Debug.Assert(Renderers.Contains(renderer));
             Refresh(invPrivate, renderer);
 
-            RecurLocker.Release();
+            LeftClickEvent e = new();
+            LeftClick(e, i);
+
+            Locker.Release();
         }
 
         internal override void TakeHalf(
@@ -993,12 +999,15 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(cursor == null);
             System.Diagnostics.Debug.Assert(renderer != null);
 
-            RecurLocker.Hold();
+            Locker.Hold();
 
             System.Diagnostics.Debug.Assert(Renderers.Contains(renderer));
             Refresh(invPrivate, renderer);
 
-            RecurLocker.Release();
+            RightClickEvent e = new();
+            RightClick(e, i);
+
+            Locker.Release();
         }
 
         internal override void PutOne(
@@ -1013,12 +1022,15 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(cursor != null);
             System.Diagnostics.Debug.Assert(renderer != null);
 
-            RecurLocker.Hold();
+            Locker.Hold();
 
             System.Diagnostics.Debug.Assert(Renderers.Contains(renderer));
             Refresh(invPrivate, renderer);
 
-            RecurLocker.Release();
+            RightClickEvent e = new();
+            RightClick(e, i);
+
+            Locker.Release();
         }
 
         protected void Update(int i, Items item, int count)
@@ -1031,8 +1043,16 @@ namespace MinecraftServerEngine
 
             // Render 로 PublicInventory 의 아이템만을 써준다
 
+            Locker.Hold();
+
+            Locker.Release();
+
             throw new System.NotImplementedException();
         }
+
+        protected abstract void LeftClick(LeftClickEvent e, int i);
+
+        protected abstract void RightClick(RightClickEvent e, int i);
 
         public override void Dispose()
         {
