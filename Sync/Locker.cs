@@ -15,6 +15,7 @@ namespace Sync
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(Object != null);
             System.Threading.Monitor.Enter(Object);
         }
 
@@ -22,6 +23,7 @@ namespace Sync
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(Object != null);
             System.Threading.Monitor.Exit(Object);
         }
 
@@ -29,9 +31,10 @@ namespace Sync
         {
             // Assertions.
             System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(Object != null);
 
             // Release resources.
-            
+
 
             // Finish.
             System.GC.SuppressFinalize(this);
@@ -64,6 +67,9 @@ namespace Sync
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(Locker != null);
+            System.Diagnostics.Debug.Assert(Cond != null);
+
             Locker.Hold();
 
             while (_read > 0 || _write > 0)
@@ -83,6 +89,9 @@ namespace Sync
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(Locker != null);
+            System.Diagnostics.Debug.Assert(Cond != null);
+
             Locker.Hold();
 
             while (_write > 0)
@@ -100,6 +109,9 @@ namespace Sync
         public override void Release()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(Locker != null);
+            System.Diagnostics.Debug.Assert(Cond != null);
 
             Locker.Hold();
 
@@ -128,6 +140,8 @@ namespace Sync
         {
             // Assertions.
             System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(Locker != null);
+            System.Diagnostics.Debug.Assert(Cond != null);
 
             // Release reousrces.
             Locker.Dispose();

@@ -78,7 +78,7 @@ namespace MinecraftServerEngine
 
             public void Reset(
                 ConcurrentQueue<ClientboundPlayingPacket> outPackets,
-                World world, 
+                World world,
                 int idWindow, PrivateInventory invPrivate)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
@@ -127,36 +127,34 @@ namespace MinecraftServerEngine
                 }
             }
 
-            private void LeftClick(PrivateInventory invPrivate, int index)
+            private void LeftClick(PrivateInventory invPrivate, int i)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                if (index >= invPrivate.TotalSlotCount)
-                {
-                    throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
-                }
+                System.Diagnostics.Debug.Assert(invPrivate != null);
+                System.Diagnostics.Debug.Assert(i >= 0);
+                System.Diagnostics.Debug.Assert(i < invPrivate.TotalSlotCount);
 
                 if (_cursor == null)
                 {
-                    invPrivate.TakeAll(index, ref _cursor, Renderer);
+                    invPrivate.TakeAll(i, ref _cursor, Renderer);
                 }
                 else
                 {
-                    invPrivate.PutAll(index, ref _cursor, Renderer);
+                    invPrivate.PutAll(i, ref _cursor, Renderer);
                 }
 
             }
 
-            private void LeftClickWithPublicInv(PrivateInventory invPrivate, int index)
+            private void LeftClickWithPublic(PrivateInventory invPrivate, int index)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
                 System.Diagnostics.Debug.Assert(_invPublic != null);
 
-                if (index >= _invPublic.TotalSlotCount + invPrivate.PrimarySlotCount)
-                {
-                    throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
-                }
+                System.Diagnostics.Debug.Assert(invPrivate != null);
+                System.Diagnostics.Debug.Assert(i >= 0);
+                System.Diagnostics.Debug.Assert(i < invPrivate.PrimarySlotCount + _invPublic.TotalSlotCount);
 
                 if (_cursor == null)
                 {
@@ -169,43 +167,41 @@ namespace MinecraftServerEngine
 
             }
 
-            private void RightClick(PrivateInventory invPrivate, int index)
+            private void RightClick(PrivateInventory invPrivate, int i)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                if (index >= invPrivate.TotalSlotCount)
-                {
-                    throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
-                }
+                System.Diagnostics.Debug.Assert(invPrivate != null);
+                System.Diagnostics.Debug.Assert(i >= 0);
+                System.Diagnostics.Debug.Assert(i < invPrivate.TotalSlotCount);
 
                 if (_cursor == null)
                 {
-                    invPrivate.TakeHalf(index, ref _cursor, Renderer);
+                    invPrivate.TakeHalf(i, ref _cursor, Renderer);
                 }
                 else
                 {
-                    invPrivate.PutOne(index, ref _cursor, Renderer);
+                    invPrivate.PutOne(i, ref _cursor, Renderer);
                 }
             }
 
-            private void RightClickWithPublicInv(PrivateInventory invPrivate, int index)
+            private void RightClickWithPublic(PrivateInventory invPrivate, int i)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
                 System.Diagnostics.Debug.Assert(_invPublic != null);
 
-                if (index >= _invPublic.TotalSlotCount + invPrivate.PrimarySlotCount)
-                {
-                    throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
-                }
+                System.Diagnostics.Debug.Assert(invPrivate != null);
+                System.Diagnostics.Debug.Assert(i >= 0);
+                System.Diagnostics.Debug.Assert(i < invPrivate.PrimarySlotCount + _invPublic.TotalSlotCount);
 
                 if (_cursor == null)
                 {
-                    _invPublic.TakeHalf(invPrivate, index, ref _cursor, Renderer);
+                    _invPublic.TakeHalf(invPrivate, i, ref _cursor, Renderer);
                 }
                 else
                 {
-                    _invPublic.PutOne(invPrivate, index, ref _cursor, Renderer);
+                    _invPublic.PutOne(invPrivate, i, ref _cursor, Renderer);
                 }
 
             }
@@ -213,8 +209,13 @@ namespace MinecraftServerEngine
             public void Handle(
                 World world,
                 PrivateInventory invPrivate,
-                int mode, int button, int index)
+                int mode, int button, int i)
             {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                System.Diagnostics.Debug.Assert(world != null);
+                System.Diagnostics.Debug.Assert(invPrivate != null);
+
                 switch (mode)
                 {
                     default:
@@ -227,29 +228,60 @@ namespace MinecraftServerEngine
                             case 0:
                                 if (Renderer.Id == 0)
                                 {
-                                    LeftClick(invPrivate, index);
+                                    LeftClick(invPrivate, i);
                                 }
                                 else
                                 {
                                     System.Diagnostics.Debug.Assert(Renderer.Id == 1);
-                                    LeftClickWithPublicInv(invPrivate, index);
+                                    System.Diagnostics.Debug.Assert(_invPublic != null);
+                                    LeftClickWithPublic(invPrivate, i);
                                 }
                                 break;
                             case 1:
                                 if (Renderer.Id == 0)
                                 {
-                                    RightClick(invPrivate, index);
+                                    RightClick(invPrivate, i);
                                 }
                                 else
                                 {
                                     System.Diagnostics.Debug.Assert(Renderer.Id == 1);
-                                    RightClickWithPublicInv(invPrivate, index);
+                                    System.Diagnostics.Debug.Assert(_invPublic != null);
+                                    RightClickWithPublic(invPrivate, i);
                                 }
                                 break;
                         }
                         break;
                     case 1:
-                        throw new System.NotImplementedException();
+                        switch (button)
+                        {
+                            default:
+                                throw new UnexpectedValueException("ClickWindowPacket.ButtonNumber");
+                            case 0:
+                                if (Renderer.Id == 0)
+                                {
+                                    invPrivate.QuickMove(i);
+                                }
+                                else
+                                {
+                                    System.Diagnostics.Debug.Assert(Renderer.Id == 1);
+                                    System.Diagnostics.Debug.Assert(_invPublic != null);
+                                    _invPublic.QuickMove(invPrivate, i);
+                                }
+                                break;
+                            case 1:
+                                if (Renderer.Id == 0)
+                                {
+                                    invPrivate.QuickMove(i);
+                                }
+                                else
+                                {
+                                    System.Diagnostics.Debug.Assert(Renderer.Id == 1);
+                                    System.Diagnostics.Debug.Assert(_invPublic != null);
+                                    _invPublic.QuickMove(invPrivate, i);
+                                }
+                                break;
+                        }
+                        break;
                     case 2:
                         throw new System.NotImplementedException();
                     case 3:
@@ -296,9 +328,28 @@ namespace MinecraftServerEngine
                     {
                         throw new UnexpectedValueException("ClickWindowPacket.WindowId");
                     }
+
                     if (index < 0)
                     {
                         throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
+                    }
+
+                    if (Renderer.Id == 0)
+                    {
+                        if (i >= invPrivate.TotalSlotCount)
+                        {
+                            throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
+                        }
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.Assert(Renderer.Id == 1);
+                        System.Diagnostics.Debug.Assert(_invPublic != null);
+
+                        if (i >= _invPublic.TotalSlotCount + invPrivate.PrimarySlotCount)
+                        {
+                            throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
+                        }
                     }
 
                     if (Renderer.Id != idWindow)

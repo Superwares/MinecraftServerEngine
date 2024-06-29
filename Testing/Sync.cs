@@ -57,6 +57,10 @@ namespace Sync
         [Test]
         public void TestRecursive()
         {
+            /*const int N = 1_000_000;
+
+            using Locker Locker = new();*/
+
             throw new System.NotImplementedException();
         }
     }
