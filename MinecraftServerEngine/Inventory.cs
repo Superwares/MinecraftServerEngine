@@ -117,14 +117,13 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_count >= 0);
             System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
 
-            ItemSlot slotTaked = Slots[i];
-            System.Diagnostics.Debug.Assert(!ReferenceEquals(slotTaked, cursor));
+            ref ItemSlot slot = ref Slots[i];
 
-            if (slotTaked != null)
+            if (slot != null)
             {
-                cursor = slotTaked;
-
-                Slots[i] = null;
+                System.Diagnostics.Debug.Assert(!ReferenceEquals(slot, cursor));
+                cursor = slot;
+                slot = null;
 
                 _count--;
                 System.Diagnostics.Debug.Assert(_count >= 0);
@@ -150,14 +149,14 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_count >= 0);
             System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
             
-            ItemSlot slotTaked = Slots[i];
-            System.Diagnostics.Debug.Assert(!ReferenceEquals(slotTaked, cursor));
+            ref ItemSlot slot = ref Slots[i];
+            System.Diagnostics.Debug.Assert(!ReferenceEquals(slot, cursor));
 
-            if (slotTaked != null)
+            if (slot != null)
             {
-                if (cursor.Item == slotTaked.Item)
+                if (cursor.Item == slot.Item)
                 {
-                    int spend = slotTaked.Stack(cursor.Count);
+                    int spend = slot.Stack(cursor.Count);
                     System.Diagnostics.Debug.Assert(spend <= cursor.Count);
                     if (spend == cursor.Count)
                     {
@@ -171,13 +170,14 @@ namespace MinecraftServerEngine
                 else
                 {
                     // Swap
-                    Slots[i] = cursor;
-                    cursor = slotTaked;
+                    ItemSlot temp = cursor;
+                    cursor = slot;
+                    slot = temp;
                 }
             }
             else
             {
-                Slots[i] = cursor;
+                slot = cursor;
                 cursor = null;
 
                 ++_count;
@@ -202,33 +202,33 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(cursor == null);
             System.Diagnostics.Debug.Assert(renderer != null);
 
-            ItemSlot slotTaked = Slots[i];
-            System.Diagnostics.Debug.Assert(!ReferenceEquals(slotTaked, cursor));
+            ref ItemSlot slot = ref Slots[i];
 
-            if (slotTaked == null)
+            if (slot == null)
             {
                 System.Diagnostics.Debug.Assert(cursor == null);
 
             }
             else
             {
-                if (slotTaked.Count == 1)
-                {
-                    Slots[i] = null;
+                System.Diagnostics.Debug.Assert(!ReferenceEquals(slot, cursor));
 
+                if (slot.Count == 1)
+                {
                     --_count;
                     System.Diagnostics.Debug.Assert(_count >= 0);
                     System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
 
-                    cursor = slotTaked;
+                    cursor = slot;
+                    slot = null;
                     System.Diagnostics.Debug.Assert(cursor.Count == 1);
                 }
                 else
                 {
-                    System.Diagnostics.Debug.Assert(slotTaked.Count > 1);
+                    System.Diagnostics.Debug.Assert(slot.Count > 1);
 
-                    cursor = slotTaked.DivideHalf();
-                    System.Diagnostics.Debug.Assert(slotTaked.Count > 0);
+                    cursor = slot.DivideHalf();
+                    System.Diagnostics.Debug.Assert(slot.Count > 0);
                     System.Diagnostics.Debug.Assert(cursor != null);
                 }
             }
@@ -249,16 +249,16 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(cursor != null);
             System.Diagnostics.Debug.Assert(renderer != null);
 
-            ItemSlot slotTaked = Slots[i];
-            System.Diagnostics.Debug.Assert(!ReferenceEquals(slotTaked, cursor));
+            ref ItemSlot slot = ref Slots[i];
+            System.Diagnostics.Debug.Assert(!ReferenceEquals(slot, cursor));
 
-            if (slotTaked != null)
+            if (slot != null)
             {
-                if (cursor.Item == slotTaked.Item)
+                if (cursor.Item == slot.Item)
                 {
                     if (cursor.Count == 1)
                     {
-                        int spend = slotTaked.Stack(1);
+                        int spend = slot.Stack(1);
                         if (spend == 1)
                         {
                             cursor = null;
@@ -266,14 +266,14 @@ namespace MinecraftServerEngine
                         else
                         {
                             System.Diagnostics.Debug.Assert(cursor.Count == 1);
-                            System.Diagnostics.Debug.Assert(slotTaked.Count == slotTaked.MaxCount);
+                            System.Diagnostics.Debug.Assert(slot.Count == slot.MaxCount);
                         }
                     }
                     else
                     {
                         System.Diagnostics.Debug.Assert(cursor.Count > 1);
 
-                        int spend = slotTaked.Stack(1);
+                        int spend = slot.Stack(1);
                         if (spend == 1)
                         {
                             cursor.Spend(1);
@@ -284,9 +284,9 @@ namespace MinecraftServerEngine
                 else
                 {
                     // Swap
-
-                    Slots[i] = cursor;
-                    cursor = slotTaked;
+                    ItemSlot temp = cursor;
+                    cursor = slot;
+                    slot = temp;
                 }
 
             }
@@ -294,15 +294,15 @@ namespace MinecraftServerEngine
             {
                 if (cursor.Count > 1)
                 {
-                    Slots[i] = cursor.DivideOne();
+                    slot = cursor.DivideOne();
                     System.Diagnostics.Debug.Assert(cursor.Count >= cursor.MinCount);
                 }
                 else
                 {
                     System.Diagnostics.Debug.Assert(cursor.Count == 1);
-                    System.Diagnostics.Debug.Assert(slotTaked == null);
+                    System.Diagnostics.Debug.Assert(slot == null);
 
-                    Slots[i] = cursor;
+                    slot = cursor;
                     cursor = null;
                 }
 
@@ -933,12 +933,12 @@ namespace MinecraftServerEngine
             Locker.Hold();
 
             ref ItemSlot slot = ref GetSlot(invPrivate, j, isPublic);
-            System.Diagnostics.Debug.Assert(!ReferenceEquals(slot, cursor));
-
+            
             if (slot != null)
             {
-                cursor = slot;
+                System.Diagnostics.Debug.Assert(!ReferenceEquals(slot, cursor));
 
+                cursor = slot;
                 slot = null;
 
                 --_count;
@@ -981,7 +981,6 @@ namespace MinecraftServerEngine
             int j = isPublic ? i : i - TotalSlotCount;
 
             Locker.Hold();
-
             
             ref ItemSlot slot = ref GetSlot(invPrivate, j, isPublic);
             System.Diagnostics.Debug.Assert(!ReferenceEquals(slot, cursor));
@@ -1055,7 +1054,6 @@ namespace MinecraftServerEngine
             Locker.Hold();
 
             ref ItemSlot slot = ref GetSlot(invPrivate, j, isPublic);
-            System.Diagnostics.Debug.Assert(!ReferenceEquals(slot, cursor));
 
             if (slot == null)
             {
@@ -1064,6 +1062,8 @@ namespace MinecraftServerEngine
             }
             else
             {
+                System.Diagnostics.Debug.Assert(!ReferenceEquals(slot, cursor));
+
                 if (slot.Count == 1)
                 {
                     --_count;
