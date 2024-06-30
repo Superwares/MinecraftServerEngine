@@ -208,13 +208,15 @@ namespace MinecraftServerEngine
 
             public void Handle(
                 World world,
-                PrivateInventory invPrivate,
+                PlayerInventory invPlayer,
                 int mode, int button, int i)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
                 System.Diagnostics.Debug.Assert(world != null);
-                System.Diagnostics.Debug.Assert(invPrivate != null);
+                System.Diagnostics.Debug.Assert(invPlayer != null);
+
+                System.Diagnostics.Debug.Assert(Renderer != null);
 
                 switch (mode)
                 {
@@ -228,25 +230,25 @@ namespace MinecraftServerEngine
                             case 0:
                                 if (Renderer.Id == 0)
                                 {
-                                    LeftClick(invPrivate, i);
+                                    LeftClick(invPlayer, i);
                                 }
                                 else
                                 {
                                     System.Diagnostics.Debug.Assert(Renderer.Id == 1);
                                     System.Diagnostics.Debug.Assert(_invPublic != null);
-                                    LeftClickWithPublic(invPrivate, i);
+                                    LeftClickWithPublic(invPlayer, i);
                                 }
                                 break;
                             case 1:
                                 if (Renderer.Id == 0)
                                 {
-                                    RightClick(invPrivate, i);
+                                    RightClick(invPlayer, i);
                                 }
                                 else
                                 {
                                     System.Diagnostics.Debug.Assert(Renderer.Id == 1);
                                     System.Diagnostics.Debug.Assert(_invPublic != null);
-                                    RightClickWithPublic(invPrivate, i);
+                                    RightClickWithPublic(invPlayer, i);
                                 }
                                 break;
                         }
@@ -259,25 +261,25 @@ namespace MinecraftServerEngine
                             case 0:
                                 if (Renderer.Id == 0)
                                 {
-                                    invPrivate.QuickMove(i);
+                                    invPlayer.QuickMove(i, Renderer);
                                 }
                                 else
                                 {
                                     System.Diagnostics.Debug.Assert(Renderer.Id == 1);
                                     System.Diagnostics.Debug.Assert(_invPublic != null);
-                                    _invPublic.QuickMove(invPrivate, i);
+                                    _invPublic.QuickMove(invPlayer, i, Renderer);
                                 }
                                 break;
                             case 1:
                                 if (Renderer.Id == 0)
                                 {
-                                    invPrivate.QuickMove(i);
+                                    invPlayer.QuickMove(i, Renderer);
                                 }
                                 else
                                 {
                                     System.Diagnostics.Debug.Assert(Renderer.Id == 1);
                                     System.Diagnostics.Debug.Assert(_invPublic != null);
-                                    _invPublic.QuickMove(invPrivate, i);
+                                    _invPublic.QuickMove(invPlayer, i, Renderer);
                                 }
                                 break;
                         }
@@ -299,7 +301,7 @@ namespace MinecraftServerEngine
                 {
                     if (Renderer.Id == 0)
                     {
-                        invPrivate.Print();
+                        invPlayer.Print();
                     }
 
                     if (_cursor != null)
@@ -312,11 +314,11 @@ namespace MinecraftServerEngine
 
             public void Handle(
                 World world,
-                PrivateInventory invPrivate,
+                PlayerInventory invPlayer,
                 int idWindow, int mode, int button, int index)
             {
                 System.Diagnostics.Debug.Assert(world != null);
-                System.Diagnostics.Debug.Assert(invPrivate != null);
+                System.Diagnostics.Debug.Assert(invPlayer != null);
 
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -336,7 +338,7 @@ namespace MinecraftServerEngine
 
                     if (Renderer.Id == 0)
                     {
-                        if (i >= invPrivate.TotalSlotCount)
+                        if (i >= invPlayer.TotalSlotCount)
                         {
                             throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
                         }
@@ -346,7 +348,7 @@ namespace MinecraftServerEngine
                         System.Diagnostics.Debug.Assert(Renderer.Id == 1);
                         System.Diagnostics.Debug.Assert(_invPublic != null);
 
-                        if (i >= _invPublic.TotalSlotCount + invPrivate.PrimarySlotCount)
+                        if (i >= _invPublic.TotalSlotCount + invPlayer.PrimarySlotCount)
                         {
                             throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
                         }
@@ -357,7 +359,7 @@ namespace MinecraftServerEngine
                         return;
                     }
 
-                    Handle(world, invPrivate, mode, button, index);
+                    Handle(world, invPlayer, mode, button, index);
 
                 }
                 finally
