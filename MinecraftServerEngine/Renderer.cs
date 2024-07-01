@@ -34,12 +34,12 @@ namespace MinecraftServerEngine
             
             int ms = (int)ticks;
 
-            Render(new AddPlayerListItemPacket(userId, username, ms));
+            Render(new PlayerListItemAddPacket(userId, username, ms));
         }
 
         public void RemovePlayer(System.Guid userId)
         {
-            Render(new RemovePlayerListItemPacket(userId));
+            Render(new PlayerListItemRemovePacket(userId));
         }
 
         public void UpdatePlayerLatency(System.Guid userId, long ticks)
@@ -49,7 +49,7 @@ namespace MinecraftServerEngine
 
             int ms = (int)ticks;
 
-            Render(new UpdatePlayerListItemLatencyPacket(userId, (int)ms));
+            Render(new PlayerListItemUpdateLatencyPacket(userId, (int)ms));
         }
     }
 
@@ -87,7 +87,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(Id >= byte.MinValue);
             System.Diagnostics.Debug.Assert(Id <= byte.MaxValue);
             System.Diagnostics.Debug.Assert(slots.Length >= 0);
-            Render(new SetWindowItemsPacket(
+            Render(new WindowItemsPacket(
                 (byte)Id, slots.Length, buffer.ReadData()));
         }
 
@@ -218,7 +218,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(dz >= short.MinValue && dz <= short.MaxValue);
 
             (byte x, byte y) = look.ConvertToProtocolFormat();
-            Render(new EntityLookAndRelMovePacket(
+            Render(new EntityRelMoveLookPacket(
                 id,
                 (short)dx, (short)dy, (short)dz,
                 x, y,

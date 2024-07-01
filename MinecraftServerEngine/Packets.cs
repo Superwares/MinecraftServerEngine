@@ -172,26 +172,26 @@ namespace MinecraftServerEngine
 
     internal abstract class ClientboundPlayingPacket(int id) : PlayingPacket(id)
     {
-        public const int SpawnObjectPacketId = 0x00;
+        public const int SpawnEntityPacketId = 0x00;
         public const int SpawnNamedEntityPacketId = 0x05;
         public const int ClientboundConfirmTransactionPacketId = 0x11;
         public const int ClientboundCloseWindowPacketId = 0x12;
         public const int OpenWindowPacketId = 0x13;
-        public const int SetWindowItemsPacketId = 0x14;
+        public const int WindowItemsPacketId = 0x14;
         public const int SetSlotPacketId = 0x16;
         public const int UnloadChunkPacketId = 0x1D;
-        public const int RequestKeepAlivePacketId = 0x1F;
+        public const int ClientboundKeepAlivePacketId = 0x1F;
         public const int LoadChunkPacketId = 0x20;
         public const int JoinGamePacketId = 0x23;
         public const int EntityPacketId = 0x25;
-        public const int EntityRelativeMovePacketId = 0x26;
-        public const int EntityLookAndRelativeMovePacketId = 0x27;
+        public const int EntityRelMovePacketId = 0x26;
+        public const int EntityRelMoveLookPacketId = 0x27;
         public const int EntityLookPacketId = 0x28;
-        public const int SetPlayerAbilitiesId = 0x2C;
-        public const int AddPlayerListItemPacketId = 0x2E;
-        public const int UpdatePlayerListItemLatencyPacketId = 0x2E;
-        public const int RemovePlayerListItemPacketId = 0x2E;
-        public const int TeleportSelfPlayerPacketId = 0x2F;
+        public const int AbilitiesId = 0x2C;
+        public const int PlayerListItemAddPacketId = 0x2E;
+        public const int PlayerListItemUpdateLatencyPacketId = 0x2E;
+        public const int PlayerListItemRemovePacketId = 0x2E;
+        public const int TeleportPacketId = 0x2F;
         public const int DestroyEntitiesPacketId = 0x32;
         public const int EntityHeadLookPacketId = 0x36;
         public const int EntityMetadataPacketId = 0x3C;
@@ -205,18 +205,19 @@ namespace MinecraftServerEngine
 
     internal abstract class ServerboundPlayingPacket(int id) : PlayingPacket(id)
     {
-        public const int ConfirmSelfPlayerTeleportationPacketId = 0x00;
-        public const int SetClientSettingsPacketId = 0x04;
+        public const int TeleportAcceptPacketd = 0x00;
+        public const int SettingsPacketId = 0x04;
         public const int ServerboundConfirmTransactionPacketId = 0x05;
         public const int ClickWindowPacketId = 0x07;
         public const int ServerboundCloseWindowPacketId = 0x08;
-        public const int ResponseKeepAlivePacketId = 0x0B;
+        public const int ServerboundKeepAlivePacketId = 0x0B;
         public const int PlayerPacketId = 0x0C;
         public const int PlayerPositionPacketId = 0x0D;
         public const int PlayerPosAndLookPacketId = 0x0E;
         public const int PlayerLookPacketId = 0x0F;
         public const int PlayerDiggingPacketId = 0x14;
         public const int EntityActionPacketId = 0x15;
+        public const int ServerboundHeldItemSlotPacketId = 0x1A;
         public const int UseItemPacketId = 0x20;
 
         public override WhereBound BoundTo => WhereBound.Serverbound;
@@ -595,7 +596,7 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal sealed class SpawnObjectPacket : ClientboundPlayingPacket
+    internal sealed class SpawnEntityPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly System.Guid UniqueId;
@@ -605,19 +606,19 @@ namespace MinecraftServerEngine
         public readonly int Data;
         public readonly short VelocityX, VelocityY, VelocityZ;
 
-        public static SpawnObjectPacket Read(Buffer buffer)
+        public static SpawnEntityPacket Read(Buffer buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
             throw new System.NotImplementedException();
         }
         
-        public SpawnObjectPacket(
+        public SpawnEntityPacket(
             int entityId, System.Guid uniqueId,
             sbyte type, double x, double y, double z,
             byte yaw, byte pitch,
             int data,
-            short vx, short vy, short vz) : base(SpawnObjectPacketId)
+            short vx, short vy, short vz) : base(SpawnEntityPacketId)
         {
             EntityId = entityId;
             UniqueId = uniqueId;
@@ -787,21 +788,21 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class SetWindowItemsPacket : ClientboundPlayingPacket
+    internal sealed class WindowItemsPacket : ClientboundPlayingPacket
     {
         public readonly byte WindowId;
         public readonly int Count;
         public readonly byte[] Data;
 
-        public static SetWindowItemsPacket Read(Buffer buffer)
+        public static WindowItemsPacket Read(Buffer buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
             throw new System.NotImplementedException();
         }
 
-        public SetWindowItemsPacket(byte windowId, int count, byte[] data)
-            : base(SetWindowItemsPacketId)
+        public WindowItemsPacket(byte windowId, int count, byte[] data)
+            : base(WindowItemsPacketId)
         {
             System.Diagnostics.Debug.Assert(count > 0);
             System.Diagnostics.Debug.Assert(data != null);
@@ -896,18 +897,18 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class RequestKeepAlivePacket : ClientboundPlayingPacket
+    internal sealed class ClientboundKeepAlivePacket : ClientboundPlayingPacket
     {
         public readonly long Payload;
 
-        internal static RequestKeepAlivePacket Read(Buffer buffer)
+        internal static ClientboundKeepAlivePacket Read(Buffer buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
             throw new System.NotImplementedException();
         }
 
-        public RequestKeepAlivePacket(long payload) : base(RequestKeepAlivePacketId)
+        public ClientboundKeepAlivePacket(long payload) : base(ClientboundKeepAlivePacketId)
         {
             Payload = payload;
         }
@@ -1062,7 +1063,7 @@ namespace MinecraftServerEngine
         public EntityRelMovePacket(
             int entityId,
             short dx, short dy, short dz,
-            bool onGround) : base(EntityRelativeMovePacketId)
+            bool onGround) : base(EntityRelMovePacketId)
         {
             EntityId = entityId;
             DeltaX = dx; DeltaY = dy; DeltaZ = dz;
@@ -1080,25 +1081,25 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class EntityLookAndRelMovePacket : ClientboundPlayingPacket
+    internal sealed class EntityRelMoveLookPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly short DeltaX, DeltaY, DeltaZ;
         public readonly byte Yaw, Pitch;
         public readonly bool OnGround;
 
-        internal static EntityLookAndRelMovePacket Read(Buffer buffer)
+        internal static EntityRelMoveLookPacket Read(Buffer buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
             throw new System.NotImplementedException();
         }
 
-        public EntityLookAndRelMovePacket(
+        public EntityRelMoveLookPacket(
             int entityId,
             short dx, short dy, short dz,
             byte yaw, byte pitch,
-            bool onGround) : base(EntityLookAndRelativeMovePacketId)
+            bool onGround) : base(EntityRelMoveLookPacketId)
         {
             EntityId = entityId;
             DeltaX = dx; DeltaY = dy; DeltaZ = dz;
@@ -1153,7 +1154,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class SetPlayerAbilitiesPacket : ClientboundPlayingPacket
+    internal sealed class AbilitiesPacket : ClientboundPlayingPacket
     {
         private readonly byte _flags;
         private readonly float _flyingSpeed;
@@ -1163,7 +1164,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static SetPlayerAbilitiesPacket Read(Buffer buffer)
+        internal static AbilitiesPacket Read(Buffer buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1171,9 +1172,9 @@ namespace MinecraftServerEngine
             throw new System.NotImplementedException();
         }
 
-        public SetPlayerAbilitiesPacket(
+        public AbilitiesPacket(
             bool invulnerable, bool flying, bool allowFlying, bool creativeMode,
-            float flyingSpeed, float fovModifier) : base(SetPlayerAbilitiesId)
+            float flyingSpeed, float fovModifier) : base(AbilitiesId)
         {
             // TODO: Assert variables.
 
@@ -1203,22 +1204,22 @@ namespace MinecraftServerEngine
 
     }
     
-    internal sealed class AddPlayerListItemPacket : ClientboundPlayingPacket
+    internal sealed class PlayerListItemAddPacket : ClientboundPlayingPacket
     {
         public readonly System.Guid UniqueId;
         public readonly string Username;
         public readonly int Laytency;
 
-        internal static AddPlayerListItemPacket Read(Buffer buffer)
+        internal static PlayerListItemAddPacket Read(Buffer buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
             throw new System.NotImplementedException();
         }
 
-        public AddPlayerListItemPacket(
+        public PlayerListItemAddPacket(
             System.Guid uniqueId, string username, int laytency)
-            : base(AddPlayerListItemPacketId)
+            : base(PlayerListItemAddPacketId)
         {
             UniqueId = uniqueId;
             Username = username;
@@ -1241,20 +1242,20 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class UpdatePlayerListItemLatencyPacket : ClientboundPlayingPacket
+    internal sealed class PlayerListItemUpdateLatencyPacket : ClientboundPlayingPacket
     {
         public readonly System.Guid UniqueId;
         public readonly int Laytency;
 
-        internal static UpdatePlayerListItemLatencyPacket Read(Buffer buffer)
+        internal static PlayerListItemUpdateLatencyPacket Read(Buffer buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
             throw new System.NotImplementedException();
         }
 
-        public UpdatePlayerListItemLatencyPacket(System.Guid uniqueId, int laytency) 
-            : base(UpdatePlayerListItemLatencyPacketId)
+        public PlayerListItemUpdateLatencyPacket(System.Guid uniqueId, int laytency) 
+            : base(PlayerListItemUpdateLatencyPacketId)
         {
             UniqueId = uniqueId;
             Laytency = laytency;
@@ -1272,19 +1273,19 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class RemovePlayerListItemPacket : ClientboundPlayingPacket
+    internal sealed class PlayerListItemRemovePacket : ClientboundPlayingPacket
     {
         public readonly System.Guid UniqueId;
 
-        internal static RemovePlayerListItemPacket Read(Buffer buffer)
+        internal static PlayerListItemRemovePacket Read(Buffer buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
             throw new System.NotImplementedException();
         }
 
-        public RemovePlayerListItemPacket(System.Guid uniqueId)
-            : base(RemovePlayerListItemPacketId)
+        public PlayerListItemRemovePacket(System.Guid uniqueId)
+            : base(PlayerListItemRemovePacketId)
         {
             UniqueId = uniqueId;
         }
@@ -1299,7 +1300,7 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal sealed class TeleportSelfPlayerPacket : ClientboundPlayingPacket
+    internal sealed class TeleportPacket : ClientboundPlayingPacket
     {
         public readonly double X, Y, Z;
         public readonly float Yaw, Pitch;
@@ -1310,7 +1311,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static TeleportSelfPlayerPacket Read(Buffer buffer)
+        internal static TeleportPacket Read(Buffer buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1318,13 +1319,12 @@ namespace MinecraftServerEngine
             throw new System.NotImplementedException();
         }
 
-        public TeleportSelfPlayerPacket(
+        public TeleportPacket(
             double x, double y, double z, 
             float yaw, float pitch, 
             bool relativeX, bool relativeY, bool relativeZ,
             bool relativeYaw, bool relativePitch,
-            int payload)
-            : base(TeleportSelfPlayerPacketId)
+            int payload) : base(TeleportPacketId)
         {
             
 
@@ -1548,7 +1548,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class ConfirmSelfPlayerTeleportationPacket : ServerboundPlayingPacket
+    internal sealed class TeleportAcceptPacket : ServerboundPlayingPacket
     {
         public readonly int Payload;
 
@@ -1556,15 +1556,14 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static ConfirmSelfPlayerTeleportationPacket Read(Buffer buffer)
+        internal static TeleportAcceptPacket Read(Buffer buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
             return new(buffer.ReadInt(true));
         }
 
-        public ConfirmSelfPlayerTeleportationPacket(int payload) 
-            : base(ConfirmSelfPlayerTeleportationPacketId)
+        public TeleportAcceptPacket(int payload) : base(TeleportAcceptPacketd)
         {
             Payload = payload;
         }
@@ -1578,7 +1577,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class SetClientSettingsPacket : ServerboundPlayingPacket
+    internal sealed class SettingsPacket : ServerboundPlayingPacket
     {
         public readonly byte RenderDistance;
 
@@ -1586,7 +1585,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static SetClientSettingsPacket Read(Buffer buffer)
+        internal static SettingsPacket Read(Buffer buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1600,8 +1599,8 @@ namespace MinecraftServerEngine
             return new(renderDistance);
         }
 
-        private SetClientSettingsPacket(byte renderDistance)
-            : base(SetClientSettingsPacketId)
+        private SettingsPacket(byte renderDistance)
+            : base(SettingsPacketId)
         {
             RenderDistance = renderDistance;
         }
@@ -1712,7 +1711,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class ResponseKeepAlivePacket : ServerboundPlayingPacket
+    internal sealed class ServerboundKeepAlivePacket : ServerboundPlayingPacket
     {
         public readonly long Payload;
 
@@ -1720,14 +1719,14 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static ResponseKeepAlivePacket Read(Buffer buffer)
+        internal static ServerboundKeepAlivePacket Read(Buffer buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
             return new(buffer.ReadLong());
         }
 
-        private ResponseKeepAlivePacket(long payload) : base(ResponseKeepAlivePacketId)
+        private ServerboundKeepAlivePacket(long payload) : base(ServerboundKeepAlivePacketId)
         {
             Payload = payload;
         }
@@ -1940,6 +1939,30 @@ namespace MinecraftServerEngine
             throw new System.NotImplementedException();
         }
 
+    }
+
+    internal sealed class ServerboundHeldItemSlotPacket : ServerboundPlayingPacket
+    {
+        public readonly int Slot;
+
+        internal static ServerboundHeldItemSlotPacket Read(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            return new((int)buffer.ReadShort());
+        }
+
+        private ServerboundHeldItemSlotPacket(int slot) : base(ServerboundHeldItemSlotPacketId)
+        {
+            Slot = slot;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            throw new System.NotImplementedException();
+        }
     }
 
     internal sealed class UseItemPacket : ServerboundPlayingPacket

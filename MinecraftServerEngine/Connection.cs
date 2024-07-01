@@ -638,7 +638,7 @@ namespace MinecraftServerEngine
                 if (_ticks == -1)
                 {
                     long payload = Random.NextLong();
-                    renderer.Enqueue(new RequestKeepAlivePacket(payload));
+                    renderer.Enqueue(new ClientboundKeepAlivePacket(payload));
                     _payload = payload;
                 }
                 else
@@ -741,9 +741,9 @@ namespace MinecraftServerEngine
                     /*throw new NotImplementedException();*/
                     buffer.Flush();
                     break;
-                case ServerboundPlayingPacket.ConfirmSelfPlayerTeleportationPacketId:
+                case ServerboundPlayingPacket.TeleportAcceptPacketd:
                     {
-                        ConfirmSelfPlayerTeleportationPacket packet = ConfirmSelfPlayerTeleportationPacket.Read(buffer);
+                        TeleportAcceptPacket packet = TeleportAcceptPacket.Read(buffer);
 
                         if (TeleportationRecords.Empty)
                         {
@@ -758,9 +758,9 @@ namespace MinecraftServerEngine
                         EntityRenderer.Update(locChunk);
                     }
                     break;
-                case ServerboundPlayingPacket.SetClientSettingsPacketId:
+                case ServerboundPlayingPacket.SettingsPacketId:
                     {
-                        SetClientSettingsPacket packet = SetClientSettingsPacket.Read(buffer);
+                        SettingsPacket packet = SettingsPacket.Read(buffer);
 
                         int d = packet.RenderDistance;
                         
@@ -830,9 +830,9 @@ namespace MinecraftServerEngine
                         buffer.Flush();
                     }
                     break;
-                case ServerboundPlayingPacket.ResponseKeepAlivePacketId:
+                case ServerboundPlayingPacket.ServerboundKeepAlivePacketId:
                     {
-                        ResponseKeepAlivePacket packet = ResponseKeepAlivePacket.Read(buffer);
+                        ServerboundKeepAlivePacket packet = ServerboundKeepAlivePacket.Read(buffer);
 
                         long ticks = _KeepAliveRecord.Confirm(packet.Payload);
                         world.PlayerList.UpdateLaytency(userId, ticks);
@@ -1167,7 +1167,7 @@ namespace MinecraftServerEngine
             }
 
             int payload = Random.NextInt();
-            TeleportSelfPlayerPacket packet = new(
+            TeleportPacket packet = new(
                 p.X, p.Y, p.Z, look.Yaw, look.Pitch,
                 false, false, false, false, false,
                 payload);
@@ -1243,7 +1243,7 @@ namespace MinecraftServerEngine
                     SendPacket(buffer, packet);
 
                     int payload = Random.NextInt();
-                    OutPackets.Enqueue(new TeleportSelfPlayerPacket(
+                    OutPackets.Enqueue(new TeleportPacket(
                         p.X, p.Y, p.Z,
                         look.Yaw, look.Pitch,
                         false, false, false, false, false,
@@ -1252,7 +1252,7 @@ namespace MinecraftServerEngine
                     TeleportationRecord report = new(payload, p);
                     TeleportationRecords.Enqueue(report);
 
-                    OutPackets.Enqueue(new SetPlayerAbilitiesPacket(
+                    OutPackets.Enqueue(new AbilitiesPacket(
                             false, false, true, false, 0.1F, 0.0F));
 
                     _init = true;
