@@ -85,7 +85,7 @@ namespace MinecraftServerEngine
 
                 foreach (EntityRenderer renderer in Renderers.GetValues())
                 {
-                    renderer.MoveAndRotate(Id, p, pPrev, look, onGround);
+                    renderer.RelMoveAndRotate(Id, p, pPrev, look, onGround);
                 }
 
                 _movement = true;
@@ -99,7 +99,7 @@ namespace MinecraftServerEngine
 
                 foreach (EntityRenderer renderer in Renderers.GetValues())
                 {
-                    renderer.Move(Id, p, pPrev, onGround);
+                    renderer.RelMove(Id, p, pPrev, onGround);
                 }
 
                 _movement = true;

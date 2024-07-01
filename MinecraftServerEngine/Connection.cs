@@ -5,6 +5,7 @@ using Sync;
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
+    using System;
 
     internal sealed class Connection : System.IDisposable
     {
@@ -413,7 +414,7 @@ namespace MinecraftServerEngine
 
             private bool _disposed = false;
 
-            private readonly Set<ChunkLocation> _LOADED_CHUNKS = new();  // Disposable
+            private readonly Set<ChunkLocation> LoadedChunks = new();  // Disposable
 
             private ChunkGrid _grid;
             private ChunkLocation _loc;
@@ -457,9 +458,9 @@ namespace MinecraftServerEngine
                             continue;
                         }
 
-                        if (_LOADED_CHUNKS.Contains(locPrev))
+                        if (LoadedChunks.Contains(locPrev))
                         {
-                            _LOADED_CHUNKS.Extract(locPrev);
+                            LoadedChunks.Extract(locPrev);
                             outOfRangeChunks.Enqueue(locPrev);
                         }
                     }
@@ -520,10 +521,10 @@ namespace MinecraftServerEngine
                             ++_n;
                         }
 
-                        if (!_LOADED_CHUNKS.Contains(locTarget))
+                        if (!LoadedChunks.Contains(locTarget))
                         {
                             newChunks.Enqueue(locTarget);
-                            _LOADED_CHUNKS.Insert(locTarget);
+                            LoadedChunks.Insert(locTarget);
                             ++i;
                         }
 
@@ -550,7 +551,7 @@ namespace MinecraftServerEngine
                     } while (i < MaxLoadCount);
                 }
 
-                System.Diagnostics.Debug.Assert(_LOADED_CHUNKS.Count <= (d + d + 1) * (d + d + 1));
+                System.Diagnostics.Debug.Assert(LoadedChunks.Count <= (d + d + 1) * (d + d + 1));
             }
 
             public void Dispose()
@@ -559,7 +560,7 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(!_disposed);
 
                 // Release resources.
-                _LOADED_CHUNKS.Dispose();
+                LoadedChunks.Dispose();
 
                 // Finish.
                 System.GC.SuppressFinalize(this);
@@ -568,7 +569,7 @@ namespace MinecraftServerEngine
 
         }
 
-        private sealed class TeleportationRecord
+        private sealed class TeleportRecord
         {
             private const long Timeout = 20 * 10;  // 10 seconds, 20 * 10 ticks
 
@@ -578,7 +579,7 @@ namespace MinecraftServerEngine
             private readonly Vector _p;
             public Vector Position => _p;
 
-            public TeleportationRecord(int payload, Vector p)
+            public TeleportRecord(int payload, Vector p)
             {
                 _payload = payload;
                 _p = p;
@@ -682,7 +683,7 @@ namespace MinecraftServerEngine
 
 
         private readonly ChunkingHelper ChunkingHelprt;  // Dispoasble
-        private readonly Queue<TeleportationRecord> TeleportationRecords = new();  // Dispoasble
+        private readonly Queue<TeleportRecord> TeleportRecords = new();  // Dispoasble
         private KeepAliveRecord _KeepAliveRecord = new();  // Disposable
 
 
@@ -695,6 +696,11 @@ namespace MinecraftServerEngine
             Vector p, 
             PlayerInventory inv)
         {
+            System.Diagnostics.Debug.Assert(client != null);
+            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(userId != Guid.Empty);
+            System.Diagnostics.Debug.Assert(inv != null);
+
             Client = client;
 
             System.Diagnostics.Debug.Assert(MAxEntityRanderDistance >= MinRenderDistance);
@@ -745,12 +751,12 @@ namespace MinecraftServerEngine
                     {
                         TeleportAcceptPacket packet = TeleportAcceptPacket.Read(buffer);
 
-                        if (TeleportationRecords.Empty)
+                        if (TeleportRecords.Empty)
                         {
                             throw new UnexpectedPacketException();
                         }
 
-                        TeleportationRecord record = TeleportationRecords.Dequeue();
+                        TeleportRecord record = TeleportRecords.Dequeue();
                         record.Confirm(packet.Payload);
 
                         Vector p = new(record.Position.X, record.Position.Y, record.Position.Z);
@@ -842,7 +848,7 @@ namespace MinecraftServerEngine
                     {
                         PlayerPacket packet = PlayerPacket.Read(buffer);
 
-                        if (TeleportationRecords.Empty)
+                        if (TeleportRecords.Empty)
                         {
                             StandingControl control = new(packet.OnGround);
                             controls.Enqueue(control);
@@ -854,7 +860,7 @@ namespace MinecraftServerEngine
                     {
                         PlayerPositionPacket packet = PlayerPositionPacket.Read(buffer);
                 
-                        if (TeleportationRecords.Empty)
+                        if (TeleportRecords.Empty)
                         {
                             Vector p = new(packet.X, packet.Y, packet.Z);
 
@@ -871,7 +877,7 @@ namespace MinecraftServerEngine
                     {
                         PlayerPosAndLookPacket packet = PlayerPosAndLookPacket.Read(buffer);
 
-                        if (TeleportationRecords.Empty)
+                        if (TeleportRecords.Empty)
                         {
                             Vector p = new(packet.X, packet.Y, packet.Z);
                             Look look = new(packet.Yaw, packet.Pitch);
@@ -890,7 +896,7 @@ namespace MinecraftServerEngine
                     {
                         PlayerLookPacket packet = PlayerLookPacket.Read(buffer);
 
-                        if (TeleportationRecords.Empty)
+                        if (TeleportRecords.Empty)
                         {
                             Look look = new(packet.Yaw, packet.Pitch);
 
@@ -1009,7 +1015,7 @@ namespace MinecraftServerEngine
 
                     }
 
-                    foreach (TeleportationRecord record in TeleportationRecords.GetValues())
+                    foreach (TeleportRecord record in TeleportRecords.GetValues())
                     {
                         record.Update();
                     }
@@ -1101,6 +1107,9 @@ namespace MinecraftServerEngine
         /// <exception cref="TryAgainException"></exception>
         private void SendPacket(Buffer buffer, ClientboundPlayingPacket packet)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+            System.Diagnostics.Debug.Assert(packet != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
             System.Diagnostics.Debug.Assert(!_disconnected);
 
@@ -1184,8 +1193,8 @@ namespace MinecraftServerEngine
                 {
                     SendPacket(buffer, packet);
 
-                    TeleportationRecord report = new(payload, p);
-                    TeleportationRecords.Enqueue(report);
+                    TeleportRecord report = new(payload, p);
+                    TeleportRecords.Enqueue(report);
                 }
                 catch (DisconnectedClientException)
                 {
@@ -1209,6 +1218,9 @@ namespace MinecraftServerEngine
         internal bool OpenPublicInventory(
             PrivateInventory invPrivate, PublicInventory invPublic)
         {
+            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(invPublic != null);
+
             System.Diagnostics.Debug.Assert(invPrivate != null);
             System.Diagnostics.Debug.Assert(invPublic != null);
 
@@ -1249,8 +1261,8 @@ namespace MinecraftServerEngine
                         false, false, false, false, false,
                         payload));
 
-                    TeleportationRecord report = new(payload, p);
-                    TeleportationRecords.Enqueue(report);
+                    TeleportRecord report = new(payload, p);
+                    TeleportRecords.Enqueue(report);
 
                     OutPackets.Enqueue(new AbilitiesPacket(
                             false, false, true, false, 0.1F, 0.0F));
@@ -1329,7 +1341,7 @@ namespace MinecraftServerEngine
             OutPackets.Dispose();
 
             ChunkingHelprt.Dispose();
-            TeleportationRecords.Dispose();
+            TeleportRecords.Dispose();
 
             _Window.Dispose();
 

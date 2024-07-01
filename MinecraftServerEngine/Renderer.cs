@@ -202,7 +202,7 @@ namespace MinecraftServerEngine
             return grid.Contains(loc);
         }
 
-        public void MoveAndRotate(
+        public void RelMoveAndRotate(
             int id, 
             Vector p, Vector pPrev, Look look, bool onGround)
         {
@@ -227,7 +227,7 @@ namespace MinecraftServerEngine
         
         }
 
-        public void Move(int id, Vector p, Vector pPrev, bool onGround)
+        public void RelMove(int id, Vector p, Vector pPrev, bool onGround)
         {
             System.Diagnostics.Debug.Assert(id != Id);
 
@@ -303,10 +303,33 @@ namespace MinecraftServerEngine
             Render(new EntityMetadataPacket(id, metadata.WriteData()));
         }
 
+        public void SetMainHand(int id, byte[] data)
+        {
+            System.Diagnostics.Debug.Assert(data != null);
+
+            System.Diagnostics.Debug.Assert(id != Id);
+
+            System.Diagnostics.Debug.Assert(!_disconnected);
+
+            Render(new EntityEquipmentPacket(id, 0, data));
+        }
+
+        public void SetOffHand(int id, byte[] data)
+        {
+            System.Diagnostics.Debug.Assert(data != null);
+
+            System.Diagnostics.Debug.Assert(id != Id);
+
+            System.Diagnostics.Debug.Assert(!_disconnected);
+
+            Render(new EntityEquipmentPacket(id, 1, data));
+        }
+
         public void SpawnPlayer(
             int id, System.Guid uniqueId, 
             Vector p, Look look, 
-            bool sneaking, bool sprinting)
+            bool sneaking, bool sprinting,
+            byte[] mainHand, byte[] offHand)
         {
             System.Diagnostics.Debug.Assert(id != Id);
 
@@ -332,6 +355,9 @@ namespace MinecraftServerEngine
                 p.X, p.Y, p.Z,
                 x, y,
                 metadata.WriteData()));
+
+            SetMainHand(id, mainHand);
+            SetMainHand(id, offHand);
         }
 
         public void SpawnItemEntity(int id)
