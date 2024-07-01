@@ -36,6 +36,10 @@ namespace MinecraftServerEngine
 
             _ITEM_ENUM_TO_ID_MAP.Insert(Items.GoldenHelmet, 314);
 
+            _ITEM_ENUM_TO_ID_MAP.Insert(Items.Stick, 280);
+
+            _ITEM_ENUM_TO_ID_MAP.Insert(Items.Snowball, 332);
+
             foreach ((Items item, int id) in _ITEM_ENUM_TO_ID_MAP.GetElements())
             {
                 _ITEM_ID_TO_ENUM_MAP.Insert(id, item);
@@ -44,20 +48,56 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_ITEM_ENUM_TO_ID_MAP.Count == _ITEM_ID_TO_ENUM_MAP.Count);
         }
 
+        public static bool IsArmor(this Items item)
+        {
+            switch (item)
+            {
+                default:
+                    throw new System.NotImplementedException();
+
+                case Items.IronSword:
+                    return false;
+                case Items.WoodenSword:
+                    return false;
+
+                case Items.StoneSword:
+                    return false;
+
+                case Items.DiamondSword:
+                    return false;
+
+                case Items.GoldenSword:
+                    return false;
+
+                case Items.LeatherHelmet:
+                    return true;
+
+                case Items.ChainmailHelmet:
+                    return true;
+
+                case Items.IronHelmet:
+                    return true;
+
+                case Items.DiamondHelmet:
+                    return true;
+
+                case Items.GoldenHelmet:
+                    return true;
+
+                case Items.Stick:
+                    return false;
+
+                case Items.Snowball:
+                    return false;
+            }
+        }
+
         public static int GetMaxCount(this Items item)
         {
             switch (item)
             {
                 default:
                     throw new System.NotImplementedException();
-                case Items.Stone:
-                    return 64;
-                case Items.Grass:
-                    return 64;
-                case Items.Dirt:
-                    return 64;
-                case Items.Cobbestone:
-                    return 64;
 
                 case Items.IronSword:
                     return 1;
@@ -87,6 +127,12 @@ namespace MinecraftServerEngine
 
                 case Items.GoldenHelmet:
                     return 1;
+
+                case Items.Stick:
+                    return 64;
+
+                case Items.Snowball:
+                    return 16;
             }
         }
 

@@ -4,11 +4,6 @@ namespace MinecraftServerEngine
 {
     public enum Items : int
     {
-        Stone,
-        Grass,
-        Dirt,
-        Cobbestone,
-
         IronSword,
         WoodenSword,
 
@@ -27,6 +22,10 @@ namespace MinecraftServerEngine
         DiamondHelmet,
 
         GoldenHelmet,
+
+        Stick,
+        
+        Snowball,
     }
 
     /*public readonly struct Item : System.IEquatable<Item>

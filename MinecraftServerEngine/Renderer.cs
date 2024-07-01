@@ -1,7 +1,6 @@
 ﻿using Common;
 using Containers;
 using MinecraftServerEngine.PhysicsEngine;
-using static System.Reflection.Metadata.BlobBuilder;
 
 namespace MinecraftServerEngine
 {
@@ -72,48 +71,51 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(slots != null);
 
-            int n = slots.Length;
-
-            int i = 0;
-            var arr = new SlotData[n];
+            using Buffer buffer = new();
 
             foreach (ItemSlot slot in slots)
             {
                 if (slot == null)
                 {
-                    arr[i++] = new SlotData();
+                    buffer.WriteShort(-1);
                     continue;
                 }
 
-                arr[i++] = slot.ConventToProtocolFormat();
+                slot.WriteData(buffer);
             }
-            System.Diagnostics.Debug.Assert(i == n);
 
             System.Diagnostics.Debug.Assert(Id >= byte.MinValue);
             System.Diagnostics.Debug.Assert(Id <= byte.MaxValue);
-            Render(new SetWindowItemsPacket((byte)Id, arr));
+            System.Diagnostics.Debug.Assert(slots.Length >= 0);
+            Render(new SetWindowItemsPacket(
+                (byte)Id, slots.Length, buffer.ReadData()));
         }
 
         public void SetCursorSlot(ItemSlot slot)
         {
+            using Buffer buffer = new();
             if (slot == null)
             {
-                Render(new SetSlotPacket(-1, 0, new SlotData()));
+                buffer.WriteShort(-1);
             }
             else
             {
-                Render(new SetSlotPacket(-1, 0, slot.ConventToProtocolFormat()));
+                slot.WriteData(buffer);
             }
-            
+
+            Render(new SetSlotPacket(-1, 0, buffer.ReadData()));
+
         }
 
         public void EmptyCursorSlot()
         {
-            Render(new SetSlotPacket(-1, 0, new SlotData()));
+            SetCursorSlot(null);
         }
 
-        public void OpenWindow(int countSlot)
+        public void OpenWindow(string title, int countSlot)
         {
+            System.Diagnostics.Debug.Assert(title != null);
+
             System.Diagnostics.Debug.Assert(Id > 0);
             System.Diagnostics.Debug.Assert(countSlot >= 0);
 
@@ -122,7 +124,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(countSlot >= byte.MinValue);
             System.Diagnostics.Debug.Assert(countSlot <= byte.MaxValue);
             Render(new OpenWindowPacket(
-                (byte)Id, "minecraft:chest", "EmptyTItle!", (byte)countSlot));
+                (byte)Id, "minecraft:chest", title, (byte)countSlot));
         }
     }
 

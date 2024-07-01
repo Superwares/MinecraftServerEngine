@@ -582,6 +582,8 @@ namespace MinecraftServerEngine
         public Player(System.Guid userId, Vector p, Look look) 
             : base(userId, p, look, DefaultHitbox, DefaultMass) 
         {
+            System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+
             System.Diagnostics.Debug.Assert(!Sneaking);
             System.Diagnostics.Debug.Assert(!Sprinting);
         }
@@ -677,24 +679,39 @@ namespace MinecraftServerEngine
             base.Teleport(p, look);
         }
 
-        private void HandleControl(Control control)
+        private void ControlMovement(Vector p)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            _pControl = p;
+        }
+
+        private void ControlStanding(bool onGround)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            _onGroundControl = onGround;
+        }
+
+        private void HandleControl(World world, TransformationControl control)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(control != null);
 
             switch (control)
             {
                 default:
                     throw new System.NotImplementedException();
-                case MoveControl moveControl:
-                    _pControl = moveControl.Position;
+                case MovementControl moveControl:
+                    ControlMovement(moveControl.Position);
                     break;
-                case RotControl rotControl:
+                case RotatingControl rotControl:
                     Rotate(rotControl.Look);
                     break;
-                case StandControl standControl:
-                    _onGroundControl = standControl.OnGround;
+                case StandingControl standControl:
+                    ControlStanding(standControl.OnGround);
                     break;
                 case SneakControl:
                     Sneak();
@@ -719,7 +736,7 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(Conn != null);
 
-                using Queue<Control> controls = new();
+                using Queue<PlayerControl> controls = new();
 
                 Conn.Control(
                     controls, 
@@ -728,8 +745,16 @@ namespace MinecraftServerEngine
 
                 while (!controls.Empty)
                 {
-                    Control control = controls.Dequeue();
-                    HandleControl(control);
+                    PlayerControl control = controls.Dequeue();
+                    if (control is TransformationControl transformationControl)
+                    {
+                        HandleControl(world, transformationControl);
+                    }
+                    else
+                    {
+                        throw new System.NotImplementedException();
+                    }
+
                 }
             }
 
@@ -777,13 +802,6 @@ namespace MinecraftServerEngine
                 Inventory);
         }
         
-        public bool GiveItem(Items item, int count)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            throw new System.NotImplementedException();
-        }
-
         public bool OpenPublicInventory(PublicInventory invPublic)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -798,6 +816,14 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(Conn != null);
             return Conn.OpenPublicInventory(Inventory, invPublic);
         }
+
+        protected virtual void UserMainHand(World world) { }
+
+        protected virtual void UserOffHand(World world) { }
+
+        protected virtual void UserMainHand(World world, Items item, int count) { }
+
+        protected virtual void UserOffHand(World world, Items item, int count) { }
 
         public override void Dispose()
         {

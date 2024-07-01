@@ -1,11 +1,9 @@
-﻿using System;
-using System.Diagnostics;
-using Containers;
+﻿using Containers;
 
 namespace MinecraftServerEngine
 {
 
-    internal class SlotData
+    /*internal sealed class SlotData
     {
         public readonly short Id;
         public readonly byte Count;
@@ -56,172 +54,14 @@ namespace MinecraftServerEngine
             return buffer.ReadData();
         }
 
-    }
+    }*/
 
-    internal class EntityMetadata : IDisposable
-    {
-        private abstract class Item(byte index)
-        {
-            public readonly byte Index = index;
-
-            public void Write(Buffer buffer)
-            {
-                buffer.WriteByte(Index);
-                WriteData(buffer);
-            }
-
-            public abstract void WriteData(Buffer buffer);
-        }
-
-        private class ByteItem(byte index, byte value) : Item(index)
-        {
-            private readonly byte _value = value;
-
-            public override void WriteData(Buffer buffer)
-            {
-                buffer.WriteInt(0, true);
-                buffer.WriteByte(_value);
-            }
-
-        }
-
-        private class IntItem(byte index, int value) : Item(index)
-        {
-            private readonly int _value = value;
-
-            public override void WriteData(Buffer buffer)
-            {
-                buffer.WriteInt(1, true);
-                buffer.WriteInt(_value, true);
-            }
-
-        }
-
-        private class FloatItem(byte index, float value) : Item(index)
-        {
-            private readonly float _value = value;
-
-            public override void WriteData(Buffer buffer)
-            {
-                buffer.WriteInt(2, true);
-                buffer.WriteFloat(_value);
-            }
-
-        }
-
-        private class StringItem(byte index, string value) : Item(index)
-        {
-            private readonly string _value = value;
-
-            public override void WriteData(Buffer buffer)
-            {
-                buffer.WriteInt(3, true);
-                buffer.WriteString(_value);
-            }
-        }
-
-        private class SlotDataItem(byte index, SlotData value) : Item(index)
-        {
-            private readonly SlotData _VALUE = value;
-
-            public override void WriteData(Buffer buffer)
-            {
-                buffer.WriteInt(5, true);
-                buffer.WriteData(_VALUE.WriteData());
-            }
-        }
-
-        private class BoolItem(byte index, bool value) : Item(index)
-        {
-            private readonly bool _VALUE = value;
-
-            public override void WriteData(Buffer buffer)
-            {
-                buffer.WriteInt(6, true);
-                buffer.WriteBool(_VALUE);
-            }
-        }
-
-        private bool _disposed = false;
-
-        private readonly Queue<Item> _ITEMS = new();
-
-        ~EntityMetadata() => System.Diagnostics.Debug.Assert(false);
-
-        public void AddByte(byte index, byte value)
-        {
-            _ITEMS.Enqueue(new ByteItem(index, value));
-        }
-
-        public void AddInt(byte index, int value)
-        {
-            _ITEMS.Enqueue(new IntItem(index, value));
-        }
-
-        public void AddFloat(byte index, float value)
-        {
-            _ITEMS.Enqueue(new FloatItem(index, value));
-        }
-
-        public void AddString(byte index, string value)
-        {
-            _ITEMS.Enqueue(new StringItem(index, value));
-        }
-
-        public void AddSlotData(byte index, SlotData value)
-        {
-            _ITEMS.Enqueue(new SlotDataItem(index, value));
-        }
-
-        public void AddBool(byte index, bool value)
-        {
-            _ITEMS.Enqueue(new BoolItem(index, value));
-        }
-
-        public byte[] WriteData()
-        {
-            using Buffer buffer = new();
-
-            while (!_ITEMS.Empty)
-            {
-                Item item = _ITEMS.Dequeue();
-                item.Write(buffer);
-            }
-
-            buffer.WriteByte(0xff);
-
-            return buffer.ReadData();
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (_disposed) return;
-
-            if (disposing == true)
-            {
-                // Release managed resources.
-                _ITEMS.Dispose();
-            }
-
-            // Release unmanaged resources.
-
-            _disposed = true;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        public void Close() => Dispose();
-
-    }
+    
 
     internal abstract class Packet
     {
-        protected const string _MinecraftVersion = "1.12.2";
-        protected const int _ProtocolVersion = 340;
+        protected const string MinecraftVersion = "1.12.2";
+        protected const int ProtocolVersion = 340;
 
         public enum States
         {
@@ -242,12 +82,19 @@ namespace MinecraftServerEngine
 
         public readonly int Id;
 
-        public Packet(int id) { Id = id; }
+        internal Packet(int id) 
+        {
+            System.Diagnostics.Debug.Assert(id >= 0);
+
+            Id = id; 
+        }
 
         protected abstract void WriteData(Buffer buffer);
 
         internal void Write(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteInt(Id, true);
             WriteData(buffer);
         }
@@ -349,6 +196,7 @@ namespace MinecraftServerEngine
         public const int EntityHeadLookPacketId = 0x36;
         public const int EntityMetadataPacketId = 0x3C;
         public const int EntityVelocityPacketId = 0x3E;
+        public const int EntityEquipmentPacketId = 0x3F;
         public const int EntityTeleportPacketId = 0x4C;
 
         public override WhereBound BoundTo => WhereBound.Clientbound;
@@ -362,19 +210,20 @@ namespace MinecraftServerEngine
         public const int ServerboundConfirmTransactionPacketId = 0x05;
         public const int ClickWindowPacketId = 0x07;
         public const int ServerboundCloseWindowPacketId = 0x08;
-        
         public const int ResponseKeepAlivePacketId = 0x0B;
         public const int PlayerPacketId = 0x0C;
         public const int PlayerPositionPacketId = 0x0D;
         public const int PlayerPosAndLookPacketId = 0x0E;
         public const int PlayerLookPacketId = 0x0F;
+        public const int PlayerDiggingPacketId = 0x14;
         public const int EntityActionPacketId = 0x15;
+        public const int UseItemPacketId = 0x20;
 
         public override WhereBound BoundTo => WhereBound.Serverbound;
 
     }
 
-    internal class SetProtocolPacket : ServerboundHandshakingPacket
+    internal sealed class SetProtocolPacket : ServerboundHandshakingPacket
     {
         public readonly int Version;
         public readonly string Hostname;
@@ -383,6 +232,8 @@ namespace MinecraftServerEngine
 
         private static States ReadNextState(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             int a = buffer.ReadInt(true);
             States nextState = (a == 1 ? States.Status : States.Login);
             if (!(a == 1 || a == 2))
@@ -397,6 +248,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static SetProtocolPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             return new SetProtocolPacket(
                 buffer.ReadInt(true),
                 buffer.ReadString(), buffer.ReadUshort(),
@@ -408,9 +261,9 @@ namespace MinecraftServerEngine
             string hostname, ushort port,
             States nextState) : base(SetProtocolPacketId)
         {
-            Debug.Assert(version == _ProtocolVersion);
-            Debug.Assert(port > 0);
-            Debug.Assert(
+            System.Diagnostics.Debug.Assert(version == ProtocolVersion);
+            System.Diagnostics.Debug.Assert(port > 0);
+            System.Diagnostics.Debug.Assert(
                 nextState == States.Status ||
                 nextState == States.Login);
 
@@ -421,12 +274,15 @@ namespace MinecraftServerEngine
         }
 
         public SetProtocolPacket(string hostname, ushort port, States nextState)
-            : this(_ProtocolVersion, hostname, port, nextState) { }
+            : this(ProtocolVersion, hostname, port, nextState) 
+        { }
 
         protected override void WriteData(Buffer buffer)
         {
-            Debug.Assert(Id == SetProtocolPacketId);
-            Debug.Assert(
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            System.Diagnostics.Debug.Assert(Id == SetProtocolPacketId);
+            System.Diagnostics.Debug.Assert(
                 NextState == States.Status ||
                 NextState == States.Login);
 
@@ -439,7 +295,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal class ResponsePacket : ClientboundStatusPacket
+    internal sealed class ResponsePacket : ClientboundStatusPacket
     {
 
         public readonly int MaxPlayers;
@@ -449,6 +305,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static ResponsePacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             /*string jsonString = buffer.ReadString();*/
             // TODO
             throw new System.NotImplementedException();
@@ -457,7 +315,7 @@ namespace MinecraftServerEngine
         public ResponsePacket(int maxPlayers, int onlinePlayers, string description)
             : base(ResponsePacketId)
         {
-            Debug.Assert(maxPlayers >= onlinePlayers);
+            System.Diagnostics.Debug.Assert(maxPlayers >= onlinePlayers);
 
             MaxPlayers = maxPlayers;
             OnlinePlayers = onlinePlayers;
@@ -466,7 +324,9 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
-            // TODO
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            // TODO: Using json serialization.
             string jsonString = "{\"version\":{\"name\":\"1.12.2\",\"protocol\":340},\"players\":{\"max\":100,\"online\":0,\"sample\":[]},\"description\":{\"text\":\"Hello, World!\"},\"favicon\":\"data:image/png;base64,<data>\",\"enforcesSecureChat\":true,\"previewsChat\":true}";
 
             buffer.WriteString(jsonString);
@@ -474,7 +334,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal class PongPacket : ClientboundStatusPacket
+    internal sealed class PongPacket : ClientboundStatusPacket
     {
         public readonly long Payload;
 
@@ -484,6 +344,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static PongPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             return new(buffer.ReadLong());
         }
 
@@ -494,12 +356,14 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteLong(Payload);
         }
 
     }
 
-    internal class RequestPacket : ServerboundStatusPacket
+    internal sealed class RequestPacket : ServerboundStatusPacket
     {
         /// <summary>
         /// TODO: Add description.
@@ -507,16 +371,21 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static RequestPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             return new();
         }
 
         public RequestPacket() : base(RequestPacketId) { }
 
-        protected override void WriteData(Buffer buffer) { }
+        protected override void WriteData(Buffer buffer) 
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+        }
 
     }
 
-    internal class PingPacket : ServerboundStatusPacket
+    internal sealed class PingPacket : ServerboundStatusPacket
     {
         public readonly long Payload;
 
@@ -526,6 +395,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static PingPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             return new(buffer.ReadLong());
         }
 
@@ -534,16 +405,18 @@ namespace MinecraftServerEngine
             Payload = payload;
         }
 
-        public PingPacket() : this(DateTime.Now.Ticks) { }
+        public PingPacket() : this(System.DateTime.Now.Ticks) { }
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteLong(Payload);
         }
 
     }
 
-    internal class DisconnectPacket : ClientboundLoginPacket
+    internal sealed class DisconnectPacket : ClientboundLoginPacket
     {
         public readonly string Reason;
 
@@ -553,6 +426,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static DisconnectPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             return new(buffer.ReadString());
         }
 
@@ -563,12 +438,14 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteString(Reason);
         }
 
     }
 
-    internal class EncryptionRequestPacket : ClientboundLoginPacket
+    internal sealed class EncryptionRequestPacket : ClientboundLoginPacket
     {
         /// <summary>
         /// TODO: Add description.
@@ -576,6 +453,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static EncryptionRequestPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
@@ -586,14 +465,16 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
     }
 
-    internal class LoginSuccessPacket : ClientboundLoginPacket
+    internal sealed class LoginSuccessPacket : ClientboundLoginPacket
     {
-        public readonly Guid UserId;
+        public readonly System.Guid UserId;
         public readonly string Username;
 
         /// <summary>
@@ -602,12 +483,14 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static LoginSuccessPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             return new(
-                Guid.Parse(buffer.ReadString()),
+                System.Guid.Parse(buffer.ReadString()),
                 buffer.ReadString());
         }
 
-        public LoginSuccessPacket(Guid userId, string username)
+        public LoginSuccessPacket(System.Guid userId, string username)
             : base(LoginSuccessPacketId)
         {
             UserId = userId;
@@ -616,13 +499,15 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteString(UserId.ToString());
             buffer.WriteString(Username);
         }
 
     }
 
-    internal class SetCompressionPacket : ClientboundLoginPacket
+    internal sealed class SetCompressionPacket : ClientboundLoginPacket
     {
         public readonly int Threshold;
 
@@ -632,6 +517,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static SetCompressionPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             return new(buffer.ReadInt(true));
         }
 
@@ -643,12 +530,14 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteInt(Threshold, true);
         }
 
     }
 
-    internal class StartLoginPacket : ServerboundLoginPacket
+    internal sealed class StartLoginPacket : ServerboundLoginPacket
     {
         public readonly string Username;
 
@@ -658,6 +547,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static StartLoginPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             // TODO: Check the conditions of variables. If not correct, throw exception.
             return new(buffer.ReadString());
         }
@@ -670,11 +561,13 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteString(Username);
         }
     }
 
-    internal class EncryptionResponsePacket : ServerboundLoginPacket
+    internal sealed class EncryptionResponsePacket : ServerboundLoginPacket
     {
         /// <summary>
         /// TODO: Add description.
@@ -682,6 +575,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static EncryptionResponsePacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             // TODO: Check the conditions of variables. If not correct, throw exception.
             throw new System.NotImplementedException();
         }
@@ -694,11 +589,13 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
     }
 
-    internal class SpawnObjectPacket : ClientboundPlayingPacket
+    internal sealed class SpawnObjectPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly System.Guid UniqueId;
@@ -710,6 +607,8 @@ namespace MinecraftServerEngine
 
         public static SpawnObjectPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
         
@@ -731,6 +630,8 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteInt(EntityId, true);
             buffer.WriteGuid(UniqueId);
             buffer.WriteSbyte(Type);
@@ -747,22 +648,24 @@ namespace MinecraftServerEngine
 
     }
 
-    internal class SpawnNamedEntityPacket : ClientboundPlayingPacket
+    internal sealed class SpawnNamedEntityPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
-        public readonly Guid UniqueId;
+        public readonly System.Guid UniqueId;
         public readonly double X, Y, Z;
         public readonly byte Yaw, Pitch;
         public readonly byte[] Data;
 
         public static SpawnNamedEntityPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
         public SpawnNamedEntityPacket(
             int entityId, 
-            Guid uniqueId, 
+            System.Guid uniqueId, 
             double x, double y, double z, 
             byte yaw, byte pitch,
             byte[] data) : base(SpawnNamedEntityPacketId)
@@ -776,6 +679,8 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteInt(EntityId, true);
             buffer.WriteGuid(UniqueId);
             buffer.WriteDouble(X); buffer.WriteDouble(Y); buffer.WriteDouble(Z);
@@ -785,7 +690,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal class ClientboundConfirmTransactionPacket : ClientboundPlayingPacket
+    internal sealed class ClientboundConfirmTransactionPacket : ClientboundPlayingPacket
     {
         public readonly sbyte WindowId;
         public readonly short ActionNumber;
@@ -793,6 +698,8 @@ namespace MinecraftServerEngine
 
         public static ClientboundConfirmTransactionPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
@@ -807,6 +714,8 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteSbyte(WindowId);
             buffer.WriteShort(ActionNumber);
             buffer.WriteBool(Accepted);
@@ -814,12 +723,14 @@ namespace MinecraftServerEngine
 
     }
 
-    internal class ClientboundCloseWindowPacket : ClientboundPlayingPacket
+    internal sealed class ClientboundCloseWindowPacket : ClientboundPlayingPacket
     {
         public readonly byte WindowId;
 
         public static ClientboundCloseWindowPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
@@ -831,12 +742,14 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteByte(WindowId);
         }
 
     }
 
-    internal class OpenWindowPacket : ClientboundPlayingPacket
+    internal sealed class OpenWindowPacket : ClientboundPlayingPacket
     {
         public readonly byte WindowId;
         public readonly string WindowType;
@@ -845,6 +758,8 @@ namespace MinecraftServerEngine
         
         public static OpenWindowPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
@@ -861,7 +776,9 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
-            Debug.Assert(WindowId > 0);
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            System.Diagnostics.Debug.Assert(WindowId > 0);
             buffer.WriteByte(WindowId);
             buffer.WriteString(WindowType);
             buffer.WriteString("{\"text\":\"foo\"}");
@@ -870,53 +787,68 @@ namespace MinecraftServerEngine
 
     }
 
-    internal class SetWindowItemsPacket : ClientboundPlayingPacket
+    internal sealed class SetWindowItemsPacket : ClientboundPlayingPacket
     {
         public readonly byte WindowId;
-        public readonly SlotData[] Arr;
+        public readonly int Count;
+        public readonly byte[] Data;
 
         public static SetWindowItemsPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
-        public SetWindowItemsPacket(byte windowId, SlotData[] arr)
+        public SetWindowItemsPacket(byte windowId, int count, byte[] data)
             : base(SetWindowItemsPacketId)
         {
+            System.Diagnostics.Debug.Assert(count > 0);
+            System.Diagnostics.Debug.Assert(data != null);
+
             WindowId = windowId;
-            Arr = arr;
+
+            Count = count;
+            Data = data;
         }
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteByte(WindowId);
 
-            Debug.Assert(Arr.Length >= short.MinValue);
-            Debug.Assert(Arr.Length <= short.MaxValue);
-            buffer.WriteShort((short)Arr.Length);
+            System.Diagnostics.Debug.Assert(Count >= short.MinValue);
+            System.Diagnostics.Debug.Assert(Count <= short.MaxValue);
+            buffer.WriteShort((short)Count);
 
-            foreach (SlotData slotData in Arr)
-            {
-                buffer.WriteData(slotData.WriteData());
-            }
+            System.Diagnostics.Debug.Assert(Data != null);
+            buffer.WriteData(Data);
         }
 
     }
 
-    internal class SetSlotPacket : ClientboundPlayingPacket
+    internal sealed class SetSlotPacket : ClientboundPlayingPacket
     {
         public readonly sbyte WindowId;
         public readonly short SlotNumber;
-        public readonly SlotData Data;
+        public readonly byte[] Data;
 
         public static SetSlotPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
-        public SetSlotPacket(sbyte windowId, short slotNumber, SlotData data) 
+        public SetSlotPacket(sbyte windowId, short slotNumber, byte[] data) 
             : base(SetSlotPacketId)
         {
+            System.Diagnostics.Debug.Assert(slotNumber >= 0);
+            System.Diagnostics.Debug.Assert(data != null);
+
             WindowId = windowId;
             SlotNumber = slotNumber;
             Data = data;
@@ -924,14 +856,16 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteSbyte(WindowId);
             buffer.WriteShort(SlotNumber);
-            buffer.WriteData(Data.WriteData());
+            buffer.WriteData(Data);
         }
 
     }
 
-    internal class UnloadChunkPacket : ClientboundPlayingPacket
+    internal sealed class UnloadChunkPacket : ClientboundPlayingPacket
     {
         public readonly int XChunk, ZChunk;
 
@@ -941,6 +875,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static UnloadChunkPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
@@ -952,18 +888,22 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteInt(XChunk);
             buffer.WriteInt(ZChunk);
         }
 
     }
 
-    internal class RequestKeepAlivePacket : ClientboundPlayingPacket
+    internal sealed class RequestKeepAlivePacket : ClientboundPlayingPacket
     {
         public readonly long Payload;
 
         internal static RequestKeepAlivePacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
@@ -974,11 +914,13 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteLong(Payload);
         }
     }
 
-    internal class LoadChunkPacket : ClientboundPlayingPacket
+    internal sealed class LoadChunkPacket : ClientboundPlayingPacket
     {
         public readonly int XChunk, ZChunk;
         public readonly bool Continuous;
@@ -991,6 +933,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static LoadChunkPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             // TODO: Check the conditions of variables. If not correct, throw exception.
             throw new System.NotImplementedException();
         }
@@ -1011,6 +955,8 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteInt(XChunk);
             buffer.WriteInt(ZChunk);
             buffer.WriteBool(Continuous);
@@ -1022,7 +968,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal class JoinGamePacket : ClientboundPlayingPacket
+    internal sealed class JoinGamePacket : ClientboundPlayingPacket
     {
         private readonly int _entityId;
         private readonly byte _gamemode;
@@ -1037,6 +983,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static JoinGamePacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             // TODO: Check the conditions of variables. If not correct, throw exception.
             throw new System.NotImplementedException();
         }
@@ -1061,6 +1009,8 @@ namespace MinecraftServerEngine
         }
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteInt(_entityId);
             buffer.WriteByte(_gamemode);
             buffer.WriteInt(_dimension);
@@ -1071,12 +1021,14 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal class EntityPacket : ClientboundPlayingPacket
+    internal sealed class EntityPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
 
         internal static EntityPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
@@ -1087,12 +1039,14 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteInt(EntityId, true);
         }
 
     }
 
-    internal class EntityRelMovePacket : ClientboundPlayingPacket
+    internal sealed class EntityRelMovePacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly short DeltaX, DeltaY, DeltaZ;
@@ -1100,6 +1054,8 @@ namespace MinecraftServerEngine
 
         internal static EntityRelMovePacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
@@ -1115,6 +1071,8 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteInt(EntityId, true);
             buffer.WriteShort(DeltaX); buffer.WriteShort(DeltaY); buffer.WriteShort(DeltaZ);
             buffer.WriteBool(OnGround);
@@ -1122,7 +1080,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal class EntityLookAndRelMovePacket : ClientboundPlayingPacket
+    internal sealed class EntityLookAndRelMovePacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly short DeltaX, DeltaY, DeltaZ;
@@ -1131,6 +1089,8 @@ namespace MinecraftServerEngine
 
         internal static EntityLookAndRelMovePacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
@@ -1148,6 +1108,8 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteInt(EntityId, true);
             buffer.WriteShort(DeltaX); buffer.WriteShort(DeltaY); buffer.WriteShort(DeltaZ);
             buffer.WriteByte(Yaw); buffer.WriteByte(Pitch);
@@ -1156,7 +1118,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal class EntityLookPacket : ClientboundPlayingPacket
+    internal sealed class EntityLookPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly byte Yaw, Pitch;
@@ -1164,6 +1126,8 @@ namespace MinecraftServerEngine
 
         internal static EntityLookPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
@@ -1179,6 +1143,8 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             
             buffer.WriteInt(EntityId, true);
             buffer.WriteByte(Yaw); buffer.WriteByte(Pitch);
@@ -1187,7 +1153,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal class SetPlayerAbilitiesPacket : ClientboundPlayingPacket
+    internal sealed class SetPlayerAbilitiesPacket : ClientboundPlayingPacket
     {
         private readonly byte _flags;
         private readonly float _flyingSpeed;
@@ -1199,6 +1165,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static SetPlayerAbilitiesPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             // TODO: Check the conditions of variables. If not correct, throw exception.
             throw new System.NotImplementedException();
         }
@@ -1226,6 +1194,8 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteByte(_flags);
             buffer.WriteFloat(_flyingSpeed);
             buffer.WriteFloat(_fovModifier);
@@ -1233,19 +1203,21 @@ namespace MinecraftServerEngine
 
     }
     
-    internal class AddPlayerListItemPacket : ClientboundPlayingPacket
+    internal sealed class AddPlayerListItemPacket : ClientboundPlayingPacket
     {
-        public readonly Guid UniqueId;
+        public readonly System.Guid UniqueId;
         public readonly string Username;
         public readonly int Laytency;
 
         internal static AddPlayerListItemPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
         public AddPlayerListItemPacket(
-            Guid uniqueId, string username, int laytency)
+            System.Guid uniqueId, string username, int laytency)
             : base(AddPlayerListItemPacketId)
         {
             UniqueId = uniqueId;
@@ -1255,6 +1227,8 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteInt(0, true);
             buffer.WriteInt(1, true);
             buffer.WriteGuid(UniqueId);
@@ -1267,13 +1241,15 @@ namespace MinecraftServerEngine
 
     }
 
-    internal class UpdatePlayerListItemLatencyPacket : ClientboundPlayingPacket
+    internal sealed class UpdatePlayerListItemLatencyPacket : ClientboundPlayingPacket
     {
-        public readonly Guid UniqueId;
+        public readonly System.Guid UniqueId;
         public readonly int Laytency;
 
         internal static UpdatePlayerListItemLatencyPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
@@ -1286,6 +1262,8 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteInt(2, true);
             buffer.WriteInt(1, true);
             buffer.WriteGuid(UniqueId);
@@ -1294,16 +1272,18 @@ namespace MinecraftServerEngine
 
     }
 
-    internal class RemovePlayerListItemPacket : ClientboundPlayingPacket
+    internal sealed class RemovePlayerListItemPacket : ClientboundPlayingPacket
     {
-        public readonly Guid UniqueId;
+        public readonly System.Guid UniqueId;
 
         internal static RemovePlayerListItemPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
-        public RemovePlayerListItemPacket(Guid uniqueId)
+        public RemovePlayerListItemPacket(System.Guid uniqueId)
             : base(RemovePlayerListItemPacketId)
         {
             UniqueId = uniqueId;
@@ -1311,13 +1291,15 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteInt(4, true);
             buffer.WriteInt(1, true);
             buffer.WriteGuid(UniqueId);
         }
     }
 
-    internal class TeleportSelfPlayerPacket : ClientboundPlayingPacket
+    internal sealed class TeleportSelfPlayerPacket : ClientboundPlayingPacket
     {
         public readonly double X, Y, Z;
         public readonly float Yaw, Pitch;
@@ -1330,6 +1312,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static TeleportSelfPlayerPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             // TODO: Check the conditions of variables. If not correct, throw exception.
             throw new System.NotImplementedException();
         }
@@ -1365,6 +1349,8 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteDouble(X);
             buffer.WriteDouble(Y);
             buffer.WriteDouble(Z);
@@ -1377,12 +1363,14 @@ namespace MinecraftServerEngine
 
     }
 
-    internal class DestroyEntitiesPacket : ClientboundPlayingPacket
+    internal sealed class DestroyEntitiesPacket : ClientboundPlayingPacket
     {
         public readonly int[] EntityIds;
 
         internal static DestroyEntitiesPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
@@ -1393,6 +1381,8 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteInt(EntityIds.Length, true);
             foreach (int id in EntityIds)
                 buffer.WriteInt(id, true);
@@ -1400,13 +1390,15 @@ namespace MinecraftServerEngine
 
     }
 
-    internal class EntityHeadLookPacket : ClientboundPlayingPacket
+    internal sealed class EntityHeadLookPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly byte Yaw;
 
         internal static EntityHeadLookPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
@@ -1419,19 +1411,23 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteInt(EntityId, true);
             buffer.WriteByte(Yaw);
         }
 
     }
 
-    internal class EntityMetadataPacket : ClientboundPlayingPacket
+    internal sealed class EntityMetadataPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly byte[] Data;
 
         internal static EntityMetadataPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
@@ -1444,19 +1440,23 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteInt(EntityId, true);
             buffer.WriteData(Data);
         }
 
     }
 
-    internal class EntityVelocityPacket : ClientboundPlayingPacket
+    internal sealed class EntityVelocityPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly short X, Y, Z;
 
         internal static EntityVelocityPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
@@ -1469,13 +1469,48 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteInt(EntityId, true);
             buffer.WriteShort(X); buffer.WriteShort(Y); buffer.WriteShort(Z);
         }
 
     }
 
-    internal class EntityTeleportPacket : ClientboundPlayingPacket
+    internal sealed class EntityEquipmentPacket : ClientboundPlayingPacket
+    {
+        public readonly int EntityId;
+        public readonly int Slot;
+        public readonly byte[] Data;
+
+        internal static EntityEquipmentPacket Read(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            throw new System.NotImplementedException();
+        }
+
+        public EntityEquipmentPacket(int idEntity, int slot, byte[] data)
+            : base(EntityEquipmentPacketId)
+        {
+            System.Diagnostics.Debug.Assert(data != null);
+
+            EntityId = idEntity;
+            Slot = slot;
+            Data = data;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            buffer.WriteInt(EntityId, true);
+            buffer.WriteInt(Slot, true);
+            buffer.WriteData(Data);
+        }
+    }
+
+    internal sealed class EntityTeleportPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly double X, Y, Z;
@@ -1484,6 +1519,8 @@ namespace MinecraftServerEngine
 
         internal static EntityTeleportPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
@@ -1501,6 +1538,8 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.WriteInt(EntityId, true);
             buffer.WriteDouble(X); buffer.WriteDouble(Y); buffer.WriteDouble(Z);
             buffer.WriteFloat(Yaw); buffer.WriteFloat(Pitch);
@@ -1509,7 +1548,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal class ConfirmSelfPlayerTeleportationPacket : ServerboundPlayingPacket
+    internal sealed class ConfirmSelfPlayerTeleportationPacket : ServerboundPlayingPacket
     {
         public readonly int Payload;
 
@@ -1519,6 +1558,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static ConfirmSelfPlayerTeleportationPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             return new(buffer.ReadInt(true));
         }
 
@@ -1530,12 +1571,14 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
     }
 
-    internal class SetClientSettingsPacket : ServerboundPlayingPacket
+    internal sealed class SetClientSettingsPacket : ServerboundPlayingPacket
     {
         public readonly byte RenderDistance;
 
@@ -1545,6 +1588,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static SetClientSettingsPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             buffer.ReadString();  // TODO
             byte renderDistance = buffer.ReadByte(); 
             buffer.ReadInt(true);  // TODO
@@ -1563,11 +1608,13 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
     }
 
-    internal class ServerboundConfirmTransactionPacket : ServerboundPlayingPacket
+    internal sealed class ServerboundConfirmTransactionPacket : ServerboundPlayingPacket
     {
         public readonly sbyte WindowId;
         public readonly short ActionNumber;
@@ -1575,6 +1622,8 @@ namespace MinecraftServerEngine
 
         internal static ServerboundConfirmTransactionPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             return new(buffer.ReadSbyte(), buffer.ReadShort(), buffer.ReadBool());
         }
 
@@ -1589,22 +1638,26 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
     }
 
-    internal class ClickWindowPacket : ServerboundPlayingPacket
+    internal sealed class ClickWindowPacket : ServerboundPlayingPacket
     {
-        public readonly byte WINDOW_ID;
-        public readonly short SLOT;
-        public readonly sbyte BUTTON;
-        public readonly short ACTION;
-        public readonly int MODE;
-        public readonly SlotData SLOT_DATA;
+        public readonly byte WindowId;
+        public readonly short Slot;
+        public readonly sbyte Button;
+        public readonly short Action;
+        public readonly int Mode;
+        public readonly byte[] Data;
 
         internal static ClickWindowPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             return new(
                 buffer.ReadByte(),
                 buffer.ReadShort(), buffer.ReadSbyte(), buffer.ReadShort(), buffer.ReadInt(true),
@@ -1612,31 +1665,35 @@ namespace MinecraftServerEngine
         }
 
         private ClickWindowPacket(
-            byte windowId,
-            short slotNumber, sbyte buttonNumber, short actionNumber, int modeNumber,
+            byte idWindow,
+            short slot, sbyte button, short action, int mode,
             byte[] data) : base(ClickWindowPacketId)
         {
-            WINDOW_ID = windowId;
-            SLOT = slotNumber;
-            BUTTON = buttonNumber;
-            ACTION = actionNumber;
-            MODE = modeNumber;
-            SLOT_DATA = SlotData.Read(data);
+            WindowId = idWindow;
+            Slot = slot;
+            Button = button;
+            Action = action;
+            Mode = mode;
+            Data = data;
         }
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
     }
 
-    internal class ServerboundCloseWindowPacket : ServerboundPlayingPacket
+    internal sealed class ServerboundCloseWindowPacket : ServerboundPlayingPacket
     {
         public readonly byte WindowId;
 
         internal static ServerboundCloseWindowPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             return new(buffer.ReadByte());
         }
 
@@ -1648,12 +1705,14 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
     }
 
-    internal class ResponseKeepAlivePacket : ServerboundPlayingPacket
+    internal sealed class ResponseKeepAlivePacket : ServerboundPlayingPacket
     {
         public readonly long Payload;
 
@@ -1663,6 +1722,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static ResponseKeepAlivePacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             return new(buffer.ReadLong());
         }
 
@@ -1673,12 +1734,14 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
     }
 
-    internal class PlayerPacket : ServerboundPlayingPacket
+    internal sealed class PlayerPacket : ServerboundPlayingPacket
     {
         public readonly bool OnGround;
 
@@ -1688,6 +1751,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static PlayerPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             return new(buffer.ReadBool());
         }
 
@@ -1698,12 +1763,14 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
     }
 
-    internal class PlayerPositionPacket : ServerboundPlayingPacket
+    internal sealed class PlayerPositionPacket : ServerboundPlayingPacket
     {
         public readonly double X, Y, Z;
         public readonly bool OnGround;
@@ -1714,13 +1781,14 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static PlayerPositionPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             return new(
                 buffer.ReadDouble(), buffer.ReadDouble(), buffer.ReadDouble(), 
                 buffer.ReadBool());
         }
 
-        public PlayerPositionPacket(
-            double x, double y, double z, bool onGround)
+        public PlayerPositionPacket(double x, double y, double z, bool onGround)
             : base(PlayerPositionPacketId)
         {
             X = x; Y = y; Z = z;
@@ -1729,12 +1797,14 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
     }
 
-    internal class PlayerPosAndLookPacket : ServerboundPlayingPacket
+    internal sealed class PlayerPosAndLookPacket : ServerboundPlayingPacket
     {
         public readonly double X, Y, Z;
         public readonly float Yaw, Pitch;
@@ -1746,6 +1816,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static PlayerPosAndLookPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             return new(
                 buffer.ReadDouble(), buffer.ReadDouble(), buffer.ReadDouble(),
                 buffer.ReadFloat(), buffer.ReadFloat(), 
@@ -1765,12 +1837,14 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
     }
 
-    internal class PlayerLookPacket : ServerboundPlayingPacket
+    internal sealed class PlayerLookPacket : ServerboundPlayingPacket
     {
         public readonly float Yaw, Pitch;
         public readonly bool OnGround;
@@ -1781,6 +1855,8 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         internal static PlayerLookPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             return new(
                 buffer.ReadFloat(), buffer.ReadFloat(),
                 buffer.ReadBool());
@@ -1797,11 +1873,46 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
     }
 
-    internal class EntityActionPacket : ServerboundPlayingPacket
+    internal sealed class PlayerDiggingPacket : ServerboundPlayingPacket
+    {
+        public readonly int Status;
+        // TODO: Make x as a 26-bit integer,
+        // followed by z as a 26-bit integer,
+        // followed by y as a 12-bit integer
+        // (all signed, two's complement).
+        public readonly byte Position; 
+        public readonly byte Face;
+
+        internal static PlayerDiggingPacket Read(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            return new(buffer.ReadInt(true), buffer.ReadByte(), buffer.ReadByte());
+        }
+
+        private PlayerDiggingPacket(int status, byte p, byte face) 
+            : base(PlayerDiggingPacketId)
+        {
+            Status = status;
+            Position = p;
+            Face = face;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            throw new System.NotImplementedException();
+        }
+    }
+
+    internal sealed class EntityActionPacket : ServerboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly int ActionId;
@@ -1809,6 +1920,8 @@ namespace MinecraftServerEngine
 
         internal static EntityActionPacket Read(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             return new(buffer.ReadInt(true), buffer.ReadInt(true), buffer.ReadInt(true));
         }
 
@@ -1822,9 +1935,35 @@ namespace MinecraftServerEngine
 
         protected override void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             throw new System.NotImplementedException();
         }
 
+    }
+
+    internal sealed class UseItemPacket : ServerboundPlayingPacket
+    {
+        public readonly int Hand;
+
+        internal static UseItemPacket Read(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            return new(buffer.ReadInt(true));
+        }
+
+        private UseItemPacket(int hand) : base(UseItemPacketId)
+        {
+            Hand = hand;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            throw new System.NotImplementedException();
+        }
     }
 
 }

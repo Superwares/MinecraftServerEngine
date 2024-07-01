@@ -714,7 +714,7 @@ namespace MinecraftServerEngine
         ~Connection() => System.Diagnostics.Debug.Assert(false);
 
         private void RecvDataAndHandle(
-            Queue<Control> controls,
+            Queue<PlayerControl> controls,
             Buffer buffer, 
             World world, 
             System.Guid userId, 
@@ -781,7 +781,7 @@ namespace MinecraftServerEngine
                             ServerboundConfirmTransactionPacket.Read(buffer);
 
                         Console.Printl(
-                            $"WindowId: {packet.WindowId}, " +
+                            $"WindowId: {packet.WindowId}, " +  
                             $"ActionNumber: {packet.ActionNumber}, " +
                             $"Accepted: {packet.Accepted}, ");
 
@@ -795,22 +795,20 @@ namespace MinecraftServerEngine
                         {
                             Console.NewLine();
                             Console.Printl(
-                                $"WindowId: {packet.WINDOW_ID}, " +
-                                $"SlotNumber: {packet.SLOT}, " +
-                                $"ButtonNumber: {packet.BUTTON}, " +
-                                $"ActionNumber: {packet.ACTION}, " +
-                                $"ModeNumber: {packet.MODE}, " +
-                                $"SlotData.Id: {packet.SLOT_DATA.Id}, " +
-                                $"SlotData.Count: {packet.SLOT_DATA.Count}, ");
+                                $"WindowId: {packet.WindowId}, " +
+                                $"SlotNumber: {packet.Slot}, " +
+                                $"ButtonNumber: {packet.Button}, " +
+                                $"ActionNumber: {packet.Action}, " +
+                                $"ModeNumber: {packet.Mode}");
                         }
 
                         System.Diagnostics.Debug.Assert(_Window != null);
                         _Window.Handle(
                             world, invPlayer,
-                            packet.WINDOW_ID, packet.MODE, packet.BUTTON, packet.SLOT);
+                            packet.WindowId, packet.Mode, packet.Button, packet.Slot);
 
                         OutPackets.Enqueue(new ClientboundConfirmTransactionPacket(
-                                (sbyte)packet.WINDOW_ID, packet.ACTION, true));
+                                (sbyte)packet.WindowId, packet.Action, true));
                     }
                     break;
                 case ServerboundPlayingPacket.ServerboundCloseWindowPacketId:
@@ -846,7 +844,7 @@ namespace MinecraftServerEngine
 
                         if (TeleportationRecords.Empty)
                         {
-                            StandControl control = new(packet.OnGround);
+                            StandingControl control = new(packet.OnGround);
                             controls.Enqueue(control);
                         }
 
@@ -860,8 +858,8 @@ namespace MinecraftServerEngine
                         {
                             Vector p = new(packet.X, packet.Y, packet.Z);
 
-                            controls.Enqueue(new MoveControl(p));
-                            controls.Enqueue(new StandControl(packet.OnGround));
+                            controls.Enqueue(new MovementControl(p));
+                            controls.Enqueue(new StandingControl(packet.OnGround));
 
                             ChunkLocation locChunk = ChunkLocation.Generate(p);
                             EntityRenderer.Update(locChunk);
@@ -878,9 +876,9 @@ namespace MinecraftServerEngine
                             Vector p = new(packet.X, packet.Y, packet.Z);
                             Look look = new(packet.Yaw, packet.Pitch);
 
-                            controls.Enqueue(new MoveControl(p));
-                            controls.Enqueue(new RotControl(look));
-                            controls.Enqueue(new StandControl(packet.OnGround));
+                            controls.Enqueue(new MovementControl(p));
+                            controls.Enqueue(new RotatingControl(look));
+                            controls.Enqueue(new StandingControl(packet.OnGround));
 
                             ChunkLocation locChunk = ChunkLocation.Generate(p);
                             EntityRenderer.Update(locChunk);
@@ -896,8 +894,8 @@ namespace MinecraftServerEngine
                         {
                             Look look = new(packet.Yaw, packet.Pitch);
 
-                            controls.Enqueue(new RotControl(look));
-                            controls.Enqueue(new StandControl(packet.OnGround));
+                            controls.Enqueue(new RotatingControl(look));
+                            controls.Enqueue(new StandingControl(packet.OnGround));
                         }
 
                     }
@@ -966,7 +964,7 @@ namespace MinecraftServerEngine
         }
 
         internal void Control(
-            Queue<Control> controls,
+            Queue<PlayerControl> controls,
             World world,
             System.Guid userId,
             bool sneaking, bool sprinting,
@@ -1230,6 +1228,9 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
             System.Diagnostics.Debug.Assert(!_disconnected);
+
+            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(inv != null);
 
             using Buffer buffer = new();
 

@@ -47,7 +47,7 @@ namespace MinecraftServerEngine
                     continue;
                 }
 
-                Console.Print($"[{item.Item}x{item.Count}]");
+                Console.Print($"[{item.Item}*{item.Count}]");
                 System.Diagnostics.Debug.Assert(item.Count >= item.MinCount);
             }
             Console.NewLine();
@@ -92,6 +92,8 @@ namespace MinecraftServerEngine
 
         protected void Refresh(WindowRenderer renderer)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(renderer != null);
 
             renderer.SetSlots(Slots);
@@ -99,6 +101,8 @@ namespace MinecraftServerEngine
 
         public void Open(WindowRenderer renderer)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(renderer != null);
 
             renderer.SetSlots(Slots);
@@ -125,7 +129,7 @@ namespace MinecraftServerEngine
                 cursor = slot;
                 slot = null;
 
-                _count--;
+                --_count;
                 System.Diagnostics.Debug.Assert(_count >= 0);
             }
             else
@@ -318,6 +322,8 @@ namespace MinecraftServerEngine
         // TODO: Refactoring
         internal bool GiveFromLeftInMain(Items item, int count)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(count >= 0);
             if (count == 0)
             {
@@ -439,6 +445,10 @@ namespace MinecraftServerEngine
                     continue;
                 }
 
+                ++_count;
+                System.Diagnostics.Debug.Assert(_count > 0);
+                System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
+
                 if (count > countMax)
                 {
                     slotInMain = new ItemSlot(item, countMax);
@@ -458,7 +468,9 @@ namespace MinecraftServerEngine
         }
 
         internal void QuickMoveFromLeftInMain(ref ItemSlot slot)
-        { 
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             if (slot == null)
             {
                 return;
@@ -516,6 +528,10 @@ namespace MinecraftServerEngine
 
             if (slot != null && j >= 0)
             {
+                ++_count;
+                System.Diagnostics.Debug.Assert(_count > 0);
+                System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
+
                 ref ItemSlot slotEmpty = ref GetMainSlot(j);
                 System.Diagnostics.Debug.Assert(slotEmpty == null);
                 slotEmpty = slot;
@@ -526,16 +542,22 @@ namespace MinecraftServerEngine
 
         internal void QuickMoveFromLeftInHotbar(ref ItemSlot slot)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             throw new System.NotImplementedException();
         }
 
         internal void QuickMoveFromLeftInPrimary(ref ItemSlot slot)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             throw new System.NotImplementedException();
         }
 
         internal void QuickMoveFromRightInPrimary(ref ItemSlot slot)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             throw new System.NotImplementedException();
         }
 
@@ -625,7 +647,11 @@ namespace MinecraftServerEngine
             Slots[i + MainSlotsOffset] = null;
         }
 */
-        internal PlayerInventory() : base(46) { }
+        internal PlayerInventory() : base(46) 
+        {
+            GiveFromLeftInMain(Items.Stick, 100);
+            GiveFromLeftInMain(Items.Snowball, 100);
+        }
 
         ~PlayerInventory() => System.Diagnostics.Debug.Assert(false);
 
@@ -747,6 +773,8 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
+        protected abstract string Title { get; }
+
         private protected readonly Locker Locker = new();  // Disposable
 
         private readonly Tree<WindowRenderer> Renderers = new();
@@ -758,6 +786,8 @@ namespace MinecraftServerEngine
         private protected void Refresh(
             PrivateInventory invPrivate, WindowRenderer renderer)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(invPrivate != null);
             System.Diagnostics.Debug.Assert(renderer != null);
 
@@ -797,7 +827,7 @@ namespace MinecraftServerEngine
             }
             else
             {
-                renderer.OpenWindow(TotalSlotCount);
+                renderer.OpenWindow(Title, TotalSlotCount);
                 Refresh(invPrivate, renderer);
 
                 Renderers.Insert(renderer);
@@ -862,6 +892,8 @@ namespace MinecraftServerEngine
         private ref ItemSlot GetSlot(
             PrivateInventory invPrivate, int i, bool isPublic)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(invPrivate != null);
 
             System.Diagnostics.Debug.Assert(i >= 0);
@@ -1239,6 +1271,10 @@ namespace MinecraftServerEngine
 
             if (slot != null && j >= 0)
             {
+                ++_count;
+                System.Diagnostics.Debug.Assert(_count > 0);
+                System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
+
                 System.Diagnostics.Debug.Assert(Slots[j] == null);
                 Slots[j] = slot;
                 slot = null;
@@ -1298,6 +1334,8 @@ namespace MinecraftServerEngine
     public sealed class Chest : PublicInventory
     {
         private bool _disposed = false;
+
+        protected override string Title => "Chest";
 
         public Chest(int line) : base(3 * SlotCountPerLine) { }
 

@@ -4,62 +4,83 @@ using MinecraftServerEngine.PhysicsEngine;
 
 namespace MinecraftServerEngine
 {
-    internal abstract class Control
+    internal abstract class PlayerControl
     {
 
     }
 
-    internal sealed class MoveControl : Control
+
+    internal abstract class TransformationControl : PlayerControl
+    {
+
+    }
+
+    internal sealed class MovementControl : TransformationControl
     {
         public readonly Vector Position;
 
-        public MoveControl(Vector p)
+        public MovementControl(Vector p)
         {
             Position = p;
         }
     }
 
-    internal sealed class RotControl : Control
+    internal sealed class RotatingControl : TransformationControl
     {
         public readonly Look Look; 
 
-        public RotControl(Look look)
+        public RotatingControl(Look look)
         {
             Look = look;
         }
     }
 
-    internal sealed class StandControl : Control
+    internal sealed class StandingControl : TransformationControl
     {
         public readonly bool OnGround;
 
-        public StandControl(bool onGround)
+        public StandingControl(bool onGround)
         {
             OnGround = onGround;
         }
     }
 
-    internal sealed class SneakControl : Control
+    internal sealed class SneakControl : TransformationControl
     {
         public SneakControl() { }
     }
 
-    internal sealed class UnsneakControl : Control
+    internal sealed class UnsneakControl : TransformationControl
     {
         public UnsneakControl() { }
     }
 
-    internal sealed class SprintControl : Control
+    internal sealed class SprintControl : TransformationControl
     {
         public SprintControl() { }
     }
 
-    internal sealed class UnsprintControl : Control
+    internal sealed class UnsprintControl : TransformationControl
     {
         public UnsprintControl() { }
     }
 
-    internal abstract class InventoryControl : Control
+/*    internal sealed class SwingHandControl : PlayerControl
+    {
+
+    }
+
+    internal sealed class SwingMainHandControl : PlayerControl
+    {
+
+    }
+
+    internal sealed class SwingOffHandControl : PlayerControl
+    {
+        // item
+    }*/
+
+    /*internal abstract class InventoryControl : PlayerControl
     {
         public InventoryControl() { }
     }
@@ -97,6 +118,6 @@ namespace MinecraftServerEngine
     internal sealed class RightDragItems : InventoryControl
     {
 
-    }
+    }*/
 
 }

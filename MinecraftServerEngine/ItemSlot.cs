@@ -9,51 +9,7 @@ namespace MinecraftServerEngine
     internal sealed class ItemSlot
     {
 
-        private static bool IsArmorItem(Items item)
-        {
-            switch (item)
-            {
-                default:
-                    throw new System.NotImplementedException();
-                case Items.Stone:
-                    return false;
-                case Items.Grass:
-                    return false;
-                case Items.Dirt:
-                    return false;
-                case Items.Cobbestone:
-                    return false;
-
-                case Items.IronSword:
-                    return false;
-                case Items.WoodenSword:
-                    return false;
-
-                case Items.StoneSword:
-                    return false;
-
-                case Items.DiamondSword:
-                    return false;
-
-                case Items.GoldenSword:
-                    return false;
-
-                case Items.LeatherHelmet:
-                    return true;
-
-                case Items.ChainmailHelmet:
-                    return true;
-
-                case Items.IronHelmet:
-                    return true;
-
-                case Items.DiamondHelmet:
-                    return true;
-
-                case Items.GoldenHelmet:
-                    return true;
-            }
-        }
+        
         
         public readonly Items Item;
 
@@ -147,8 +103,10 @@ namespace MinecraftServerEngine
             return new ItemSlot(Item, 1);
         }
 
-        public SlotData ConventToProtocolFormat()
+        public void WriteData(Buffer buffer)
         {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
             System.Diagnostics.Debug.Assert(_count >= MinCount);
             System.Diagnostics.Debug.Assert(_count <= MaxCount);
 
@@ -156,10 +114,14 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(id >= short.MinValue);
             System.Diagnostics.Debug.Assert(id <= short.MaxValue);
+            buffer.WriteShort((short)id);
+
             System.Diagnostics.Debug.Assert(_count >= byte.MinValue);
             System.Diagnostics.Debug.Assert(_count <= byte.MaxValue);
+            buffer.WriteByte((byte)_count);
 
-            return new((short)id, (byte)_count);
+            buffer.WriteShort(0);  // damage
+            buffer.WriteByte(0x00);  // no NBT
         }
 
         /*public bool CompareWithProtocolFormat(SlotData slotData)
