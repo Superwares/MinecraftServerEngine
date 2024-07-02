@@ -11,7 +11,7 @@ namespace MinecraftServerEngine
 
         
         
-        public readonly Items Item;
+        public readonly ItemType Item;
 
         private int _count;
         public int Count => _count;
@@ -20,7 +20,7 @@ namespace MinecraftServerEngine
         public int RemainingCount => MaxCount - Count;
 
 
-        public ItemSlot(Items item, int count)
+        public ItemSlot(ItemType item, int count)
         {
             Item = item;
             _count = count;

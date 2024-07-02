@@ -7,12 +7,14 @@ namespace MinecraftServerEngine
     
     public abstract class Inventory : System.IDisposable
     {
+        internal const int SlotsPerLine = 9;
+
         private bool _disposed = false;
 
         public readonly int TotalSlotCount;
 
         private protected int _count = 0;
-        private protected readonly ItemSlot[] Slots;
+        private protected readonly InventorySlot[] Slots;
 
         internal Inventory(int totalSlotCount)
         {
@@ -21,9 +23,11 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(totalSlotCount > 0);
             System.Diagnostics.Debug.Assert(_count == 0);
 
-            Slots = new ItemSlot[TotalSlotCount];
-            System.Diagnostics.Debug.Assert((ItemSlot)default == null);
-            Array<ItemSlot>.Fill(Slots, default);
+            Slots = new InventorySlot[TotalSlotCount];
+            for (int i = 0; i < TotalSlotCount; ++i)
+            {
+                Slots[i] = new InventorySlot();
+            }
         }
 
         ~Inventory() => System.Diagnostics.Debug.Assert(false);
@@ -34,21 +38,16 @@ namespace MinecraftServerEngine
             Console.Printl($"\tCount: {_count}");
             for (int i = 0; i < TotalSlotCount; ++i)
             {
-                if (i % 9 == 0)
+                if (i % SlotsPerLine == 0)
                 {
                     Console.NewLine();
                     Console.NewTab();
                 }
 
-                ItemSlot item = Slots[i];
-                if (item == null)
-                {
-                    Console.Print($"[None]");
-                    continue;
-                }
+                InventorySlot slot = Slots[i];
+                System.Diagnostics.Debug.Assert(slot != null);
 
-                Console.Print($"[{item.Item}*{item.Count}]");
-                System.Diagnostics.Debug.Assert(item.Count >= item.MinCount);
+                Console.Print($"{i}:D2:[{slot}]");
             }
             Console.NewLine();
         }
@@ -320,7 +319,7 @@ namespace MinecraftServerEngine
         }
 
         // TODO: Refactoring
-        internal bool GiveFromLeftInMain(Items item, int count)
+        internal bool GiveFromLeftInMain(ItemType item, int count)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -649,8 +648,8 @@ namespace MinecraftServerEngine
 */
         internal PlayerInventory() : base(46) 
         {
-            GiveFromLeftInMain(Items.Stick, 100);
-            GiveFromLeftInMain(Items.Snowball, 100);
+            GiveFromLeftInMain(ItemType.Stick, 100);
+            GiveFromLeftInMain(ItemType.Snowball, 100);
         }
 
         ~PlayerInventory() => System.Diagnostics.Debug.Assert(false);
@@ -769,7 +768,7 @@ namespace MinecraftServerEngine
 
     public abstract class PublicInventory : Inventory
     {
-        internal const int SlotCountPerLine = 9;
+        
 
         private bool _disposed = false;
 
@@ -1337,7 +1336,7 @@ namespace MinecraftServerEngine
 
         protected override string Title => "Chest";
 
-        public Chest(int line) : base(3 * SlotCountPerLine) { }
+        public Chest(int line) : base(3 * SlotsPerLine) { }
 
         ~Chest() => System.Diagnostics.Debug.Assert(false);
 
@@ -1367,7 +1366,7 @@ namespace MinecraftServerEngine
                 Inventory = inv;
             }
 
-            public bool Give(Items item, int count)
+            public bool Give(ItemType item, int count)
             {
                 System.Diagnostics.Debug.Assert(count >= 0);
 
@@ -1405,7 +1404,7 @@ namespace MinecraftServerEngine
         private bool _disposed = false;
 
 
-        public ItemInterfaceInventory(int line) : base(line * SlotCountPerLine)
+        public ItemInterfaceInventory(int line) : base(line * SlotsPerLine)
         {
             System.Diagnostics.Debug.Assert(line > 0);
             System.Diagnostics.Debug.Assert(line <= MaxLineCount);

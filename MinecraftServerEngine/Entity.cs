@@ -821,9 +821,9 @@ namespace MinecraftServerEngine
 
         protected virtual void UserOffHand(World world) { }
 
-        protected virtual void UserMainHand(World world, Items item, int count) { }
+        protected virtual void UserMainHand(World world, ItemType item, int count) { }
 
-        protected virtual void UserOffHand(World world, Items item, int count) { }
+        protected virtual void UserOffHand(World world, ItemType item, int count) { }
 
         public override void Dispose()
         {

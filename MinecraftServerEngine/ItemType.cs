@@ -2,8 +2,10 @@
 
 namespace MinecraftServerEngine
 {
-    public enum Items : int
+    public enum ItemType : int
     {
+        Air,
+
         IronSword,
         WoodenSword,
 
