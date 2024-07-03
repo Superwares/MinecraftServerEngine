@@ -52,6 +52,7 @@ double doubleValue = 3.14D;
 <ImplicitUsings>disable</ImplicitUsings>
 <Nullable>disable</Nullable>
 <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+<WarningsNotAsErrors>0162</WarningsNotAsErrors>
 
 ###
 ? 또는 ! 를 사용하지 않습니다.

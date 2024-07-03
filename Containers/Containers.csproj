@@ -5,6 +5,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+	<WarningsNotAsErrors>0162</WarningsNotAsErrors>
   </PropertyGroup>
 
   <ItemGroup>

@@ -4,7 +4,6 @@ namespace MinecraftServerEngine
 {
     public enum ItemType : int
     {
-        Air,
 
         IronSword,
         WoodenSword,

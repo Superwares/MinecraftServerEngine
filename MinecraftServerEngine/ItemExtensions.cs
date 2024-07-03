@@ -12,8 +12,6 @@ namespace MinecraftServerEngine
 
         static ItemExtensions()
         {
-            _ITEM_ENUM_TO_ID_MAP.Insert(ItemType.Air, 0);
-
             _ITEM_ENUM_TO_ID_MAP.Insert(ItemType.IronSword, 267);
             _ITEM_ENUM_TO_ID_MAP.Insert(ItemType.WoodenSword, 268);
 
@@ -51,9 +49,6 @@ namespace MinecraftServerEngine
             {
                 default:
                     throw new System.NotImplementedException();
-
-                case ItemType.Air:
-                    return false;
 
                 case ItemType.IronSword:
                     return false;
@@ -98,9 +93,6 @@ namespace MinecraftServerEngine
             {
                 default:
                     throw new System.NotImplementedException();
-
-                case ItemType.Air:
-                    return 1;
 
                 case ItemType.IronSword:
                     return 1;

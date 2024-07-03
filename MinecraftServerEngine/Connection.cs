@@ -5,7 +5,6 @@ using Sync;
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
-    using System;
 
     internal sealed class Connection : System.IDisposable
     {
@@ -15,11 +14,13 @@ namespace MinecraftServerEngine
 
             private readonly Locker Locker = new();  // Disposable
 
-            private WindowRenderer Renderer;
+            private readonly WindowRenderer Renderer;
+            private readonly InventorySlot Cursor = new();
 
             private PublicInventory _invPublic = null;
 
-            private ItemSlot _cursor = null;
+            private bool _ambiguous = false;
+
 
             public Window(
                 ConcurrentQueue<ClientboundPlayingPacket> outPackets,
@@ -28,46 +29,36 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(outPackets != null);
                 System.Diagnostics.Debug.Assert(invPlayer != null);
 
-                Renderer = new WindowRenderer(0, outPackets);
-
-                invPlayer.Open(Renderer);
-
-                System.Diagnostics.Debug.Assert(_cursor == null);
-                Renderer.EmptyCursorSlot();
+                Renderer = new WindowRenderer(outPackets, invPlayer, Cursor);
             }
 
             ~Window() => System.Diagnostics.Debug.Assert(false);
 
-            public bool OpenPublicInventory(
+            public bool Open(
                 ConcurrentQueue<ClientboundPlayingPacket> outPackets,
                 PrivateInventory invPrivate, PublicInventory invPublic)
             {
-                System.Diagnostics.Debug.Assert(outPackets != null);
+                System.Diagnostics.Debug.Assert(!_disposed);
 
+                System.Diagnostics.Debug.Assert(outPackets != null);
                 System.Diagnostics.Debug.Assert(invPrivate != null);
                 System.Diagnostics.Debug.Assert(invPublic != null);
-
-                System.Diagnostics.Debug.Assert(!_disposed);
 
                 Locker.Hold();
 
                 try
                 {
-                    if (Renderer.Id == 1)
+                    if (_invPublic != null)
                     {
                         return false;
                     }
 
-                    Renderer = new WindowRenderer(1, outPackets);
-
-                    invPublic.Open(invPrivate, Renderer);
-
-                    if (_cursor != null)
-                    {
-                        Renderer.SetCursorSlot(_cursor);
-                    }
+                    invPublic.Open(invPrivate, outPackets);
+                    Renderer.Open(invPrivate, Cursor, invPublic.TotalSlotCount);
 
                     _invPublic = invPublic;
+
+                    _ambiguous = true;
 
                     return true;
                 }
@@ -84,12 +75,21 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
+                System.Diagnostics.Debug.Assert(outPackets != null);
+                System.Diagnostics.Debug.Assert(world != null);
+                System.Diagnostics.Debug.Assert(invPrivate != null);
+
                 Locker.Hold();
 
                 try
                 {
-                    if (idWindow > 1 ||
-                        (Renderer.Id == 1 && idWindow == 0))
+                    if (idWindow > 1 || idWindow < 0 ||
+                        (_invPublic != null && idWindow == 0))
+                    {
+                        throw new UnexpectedValueException("ServerboundCloseWindowPacket.WindowId");
+                    }
+
+                    if (!_ambiguous && idWindow == 0)
                     {
                         throw new UnexpectedValueException("ServerboundCloseWindowPacket.WindowId");
                     }
@@ -99,28 +99,19 @@ namespace MinecraftServerEngine
                         return;
                     }
 
-                    _invPublic.Close(Renderer);
+                    _invPublic.Close(invPrivate);
 
-                    System.Diagnostics.Debug.Assert(Renderer.Id == 1);
-                    Renderer = new WindowRenderer(0, outPackets);
-                    invPrivate.Open(Renderer);
-
-                    if (_cursor != null)
+                    if (!Cursor.Empty)
                     {
                         throw new System.NotImplementedException();
 
-                        // TODO: Drop item if _iremCursor is not null.
-                        /*
-
-                        Renderer.EmptyCursorSlot(); 
-                        _cursor = null;
-
-                         */
+                        // TODO: Drop item stack.
                     }
-
+                    
+                    Renderer.Reset(invPrivate, Cursor);
                     _invPublic = null;
 
-                    System.Diagnostics.Debug.Assert(_cursor == null);
+                    _ambiguous = false;
                 }
                 finally
                 {
@@ -128,7 +119,7 @@ namespace MinecraftServerEngine
                 }
             }
 
-            private void LeftClick(PrivateInventory invPrivate, int i)
+            /*private void LeftClick(PrivateInventory invPrivate, int i)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -138,11 +129,11 @@ namespace MinecraftServerEngine
 
                 if (_cursor == null)
                 {
-                    invPrivate.TakeAll(i, ref _cursor, Renderer);
+                    invPrivate.TakeAll(i, ref _cursor, _renderer);
                 }
                 else
                 {
-                    invPrivate.PutAll(i, ref _cursor, Renderer);
+                    invPrivate.PutAll(i, ref _cursor, _renderer);
                 }
 
             }
@@ -159,11 +150,11 @@ namespace MinecraftServerEngine
 
                 if (_cursor == null)
                 {
-                    _invPublic.TakeAll(invPrivate, i, ref _cursor, Renderer);
+                    _invPublic.TakeAll(invPrivate, i, ref _cursor, _renderer);
                 }
                 else
                 {
-                    _invPublic.PutAll(invPrivate, i, ref _cursor, Renderer);
+                    _invPublic.PutAll(invPrivate, i, ref _cursor, _renderer);
                 }
 
             }
@@ -178,11 +169,11 @@ namespace MinecraftServerEngine
 
                 if (_cursor == null)
                 {
-                    invPrivate.TakeHalf(i, ref _cursor, Renderer);
+                    invPrivate.TakeHalf(i, ref _cursor, _renderer);
                 }
                 else
                 {
-                    invPrivate.PutOne(i, ref _cursor, Renderer);
+                    invPrivate.PutOne(i, ref _cursor, _renderer);
                 }
             }
 
@@ -198,14 +189,14 @@ namespace MinecraftServerEngine
 
                 if (_cursor == null)
                 {
-                    _invPublic.TakeHalf(invPrivate, i, ref _cursor, Renderer);
+                    _invPublic.TakeHalf(invPrivate, i, ref _cursor, _renderer);
                 }
                 else
                 {
-                    _invPublic.PutOne(invPrivate, i, ref _cursor, Renderer);
+                    _invPublic.PutOne(invPrivate, i, ref _cursor, _renderer);
                 }
 
-            }
+            }*/
 
             public void Handle(
                 World world,
@@ -218,6 +209,8 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(invPlayer != null);
 
                 System.Diagnostics.Debug.Assert(Renderer != null);
+                System.Diagnostics.Debug.Assert(Cursor != null);
+                System.Diagnostics.Debug.Assert(!_ambiguous);
 
                 switch (mode)
                 {
@@ -229,27 +222,23 @@ namespace MinecraftServerEngine
                             default:
                                 throw new UnexpectedValueException("ClickWindowPacket.ButtonNumber");
                             case 0:
-                                if (Renderer.Id == 0)
+                                if (_invPublic == null)
                                 {
-                                    LeftClick(invPlayer, i);
+                                    invPlayer.LeftClick(i, Cursor);
                                 }
                                 else
                                 {
-                                    System.Diagnostics.Debug.Assert(Renderer.Id == 1);
-                                    System.Diagnostics.Debug.Assert(_invPublic != null);
-                                    LeftClickWithPublic(invPlayer, i);
+                                    _invPublic.LeftClick(i, Cursor, invPlayer);
                                 }
                                 break;
                             case 1:
-                                if (Renderer.Id == 0)
+                                if (_invPublic == null)
                                 {
-                                    RightClick(invPlayer, i);
+                                    invPlayer.RightClick(i, Cursor);
                                 }
                                 else
                                 {
-                                    System.Diagnostics.Debug.Assert(Renderer.Id == 1);
-                                    System.Diagnostics.Debug.Assert(_invPublic != null);
-                                    RightClickWithPublic(invPlayer, i);
+                                    _invPublic.RightClick(i, Cursor, invPlayer);
                                 }
                                 break;
                         }
@@ -260,27 +249,23 @@ namespace MinecraftServerEngine
                             default:
                                 throw new UnexpectedValueException("ClickWindowPacket.ButtonNumber");
                             case 0:
-                                if (Renderer.Id == 0)
+                                if (_invPublic == null)
                                 {
-                                    invPlayer.QuickMove(i, Renderer);
+                                    invPlayer.QuickMove(i);
                                 }
                                 else
                                 {
-                                    System.Diagnostics.Debug.Assert(Renderer.Id == 1);
-                                    System.Diagnostics.Debug.Assert(_invPublic != null);
-                                    _invPublic.QuickMove(invPlayer, i, Renderer);
+                                    _invPublic.QuickMove(invPlayer, i);
                                 }
                                 break;
                             case 1:
-                                if (Renderer.Id == 0)
+                                if (_invPublic == null)
                                 {
-                                    invPlayer.QuickMove(i, Renderer);
+                                    invPlayer.QuickMove(i);
                                 }
                                 else
                                 {
-                                    System.Diagnostics.Debug.Assert(Renderer.Id == 1);
-                                    System.Diagnostics.Debug.Assert(_invPublic != null);
-                                    _invPublic.QuickMove(invPlayer, i, Renderer);
+                                    _invPublic.QuickMove(invPlayer, i);
                                 }
                                 break;
                         }
@@ -297,18 +282,17 @@ namespace MinecraftServerEngine
                         throw new System.NotImplementedException();
                 }
 
-                Renderer.SetCursorSlot(_cursor);
+                int offset = _invPublic == null ? 0 : _invPublic.TotalSlotCount;
+                System.Diagnostics.Debug.Assert(offset >= 0);
+                Renderer.Update(invPlayer, Cursor, offset);
 
                 {
-                    if (Renderer.Id == 0)
+                    if (_invPublic == null)
                     {
                         invPlayer.Print();
                     }
 
-                    if (_cursor != null)
-                    {
-                        Console.Printl($"Cursor: {_cursor}");
-                    }
+                    Console.Printl($"Cursor: {Cursor}");
                 }
 
             }
@@ -327,7 +311,7 @@ namespace MinecraftServerEngine
 
                 try
                 {
-                    if (idWindow < 0 || idWindow > 1 || (Renderer.Id == 0 && idWindow == 1))
+                    if (idWindow < 0 || idWindow > 1)
                     {
                         throw new UnexpectedValueException("ClickWindowPacket.WindowId");
                     }
@@ -337,7 +321,7 @@ namespace MinecraftServerEngine
                         throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
                     }
 
-                    if (Renderer.Id == 0)
+                    if (_invPublic == null)
                     {
                         if (i >= invPlayer.TotalSlotCount)
                         {
@@ -346,7 +330,6 @@ namespace MinecraftServerEngine
                     }
                     else
                     {
-                        System.Diagnostics.Debug.Assert(Renderer.Id == 1);
                         System.Diagnostics.Debug.Assert(_invPublic != null);
 
                         if (i >= _invPublic.TotalSlotCount + invPlayer.PrimarySlotCount)
@@ -355,10 +338,35 @@ namespace MinecraftServerEngine
                         }
                     }
 
-                    if (Renderer.Id != idWindow)
+                    if (_invPublic == null)
                     {
-                        return;
+                        System.Diagnostics.Debug.Assert(!_ambiguous);
+                        if (idWindow == 1)
+                        {
+                            throw new UnexpectedValueException("ClickWindowPacket.WindowId");
+                        }
+
+                        System.Diagnostics.Debug.Assert(idWindow == 0);
                     }
+                    else
+                    {
+
+                        if (idWindow == 0)
+                        {
+                            if (!_ambiguous)
+                            {
+                                throw new UnexpectedValueException("ClickWindowPacket.WindowId");
+                            }
+                            else
+                            {
+                                return;
+                            }
+                        }
+
+                        System.Diagnostics.Debug.Assert(idWindow == 1);
+                    }
+
+                    _ambiguous = false;
 
                     Handle(world, invPlayer, mode, button, i);
 
@@ -369,25 +377,24 @@ namespace MinecraftServerEngine
                 }
             }
 
-            public void Flush(World world)
+            public void Flush(World world, PlayerInventory invPlayer)
             {
-                System.Diagnostics.Debug.Assert(world != null);
-
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                if (Renderer.Id == 1)
+                System.Diagnostics.Debug.Assert(world != null);
+                System.Diagnostics.Debug.Assert(invPlayer != null);
+
+                if (_invPublic != null)
                 {
-                    System.Diagnostics.Debug.Assert(_invPublic != null);
-                    _invPublic.Close(Renderer);
+                    _invPublic.Close(invPlayer);
                     _invPublic = null;
                 }
 
-                if (_cursor != null)
+                if (!Cursor.Empty)
                 {
                     // TODO: Drop Item.
-                    throw new System.NotImplementedException();
 
-                    /*_cursor = null;*/
+                    throw new System.NotImplementedException();
                 }
 
             }
@@ -397,7 +404,8 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(!_disposed);
 
                 // Assertion.
-                System.Diagnostics.Debug.Assert(_cursor == null);
+                System.Diagnostics.Debug.Assert(_invPublic == null);
+                System.Diagnostics.Debug.Assert(Cursor.Empty);
 
                 // Release Resources.
                 Locker.Dispose();
@@ -1316,14 +1324,18 @@ namespace MinecraftServerEngine
         public void Flush(
             World world, 
             System.Guid userId,
-            PlayerInventory selfInv)
+            PlayerInventory invPlayer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
             System.Diagnostics.Debug.Assert(_disconnected);
 
+            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+            System.Diagnostics.Debug.Assert(invPlayer != null);
+
             EntityRenderer.Disconnect();
 
-            _Window.Flush(world);
+            _Window.Flush(world, invPlayer);
 
             world.PlayerList.Disconnect(userId);
         }

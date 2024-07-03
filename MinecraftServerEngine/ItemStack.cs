@@ -30,19 +30,57 @@
             _count = MaxCount;
         }
 
-        internal void WriteData(Buffer buffer)
+        public int Stack(int count)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            System.Diagnostics.Debug.Assert(count >= 0);
 
             System.Diagnostics.Debug.Assert(_count >= MinCount);
             System.Diagnostics.Debug.Assert(_count <= MaxCount);
 
-            int id = Type.GetId();
-            if (id == -1)
+            if (count == 0)
             {
-                buffer.WriteShort(-1);
+                return 0;
+            }
+
+            int unused;
+            _count += count;
+
+            if (_count > MaxCount)
+            {
+                unused = _count - MaxCount;
+                _count = MaxCount;
+            }
+            else
+            {
+                unused = 0;
+            }
+
+            return count - unused;  // spend
+        }
+
+        public void Spend(int count)
+        {
+            System.Diagnostics.Debug.Assert(count >= 0);
+            System.Diagnostics.Debug.Assert(count < MaxCount);
+
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
+
+            if (count == 0)
+            {
                 return;
             }
+
+            System.Diagnostics.Debug.Assert(count < _count);
+            _count -= count;
+            System.Diagnostics.Debug.Assert(_count > 0);
+        }
+
+        internal void WriteData(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            int id = Type.GetId();
 
             System.Diagnostics.Debug.Assert(id >= short.MinValue);
             System.Diagnostics.Debug.Assert(id <= short.MaxValue);

@@ -1,12 +1,15 @@
 ﻿using Common;
 using Containers;
 using MinecraftServerEngine.PhysicsEngine;
+using System;
+using System.Security.Cryptography;
+using static System.Reflection.Metadata.BlobBuilder;
 
 namespace MinecraftServerEngine
 {
     internal abstract class Renderer
     {
-        private readonly ConcurrentQueue<ClientboundPlayingPacket> OutPackets;
+        private protected readonly ConcurrentQueue<ClientboundPlayingPacket> OutPackets;
 
         public Renderer(ConcurrentQueue<ClientboundPlayingPacket> outPackets)
         {
@@ -53,79 +56,141 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal sealed class WindowRenderer : Renderer
+    internal sealed class PublicInventoryRenderer : Renderer
     {
-        public readonly int Id;
+        private const byte WindowId = 1;
 
-        public WindowRenderer(
-            int idWindow, ConcurrentQueue<ClientboundPlayingPacket> outPackets) 
-            : base(outPackets) 
+        internal PublicInventoryRenderer(ConcurrentQueue<ClientboundPlayingPacket> outPackets) 
+            : base(outPackets)
         {
-            System.Diagnostics.Debug.Assert(idWindow >= 0);
             System.Diagnostics.Debug.Assert(outPackets != null);
-
-            Id = idWindow;
         }
 
-        public void SetSlots(ItemSlot[] slots)
+        public void Open(string title, InventorySlot[] slots)
         {
+            System.Diagnostics.Debug.Assert(title != null);
             System.Diagnostics.Debug.Assert(slots != null);
+
+            System.Diagnostics.Debug.Assert(slots.Length >= byte.MinValue);
+            System.Diagnostics.Debug.Assert(slots.Length <= byte.MaxValue);
+            Render(new OpenWindowPacket(WindowId, "minecraft:chest", title, (byte)slots.Length));
 
             using Buffer buffer = new();
 
-            foreach (ItemSlot slot in slots)
+            foreach (InventorySlot slot in slots)
             {
-                if (slot == null)
-                {
-                    buffer.WriteShort(-1);
-                    continue;
-                }
-
+                System.Diagnostics.Debug.Assert(slot != null);
                 slot.WriteData(buffer);
             }
 
-            System.Diagnostics.Debug.Assert(Id >= byte.MinValue);
-            System.Diagnostics.Debug.Assert(Id <= byte.MaxValue);
-            System.Diagnostics.Debug.Assert(slots.Length >= 0);
-            Render(new WindowItemsPacket(
-                (byte)Id, slots.Length, buffer.ReadData()));
+            System.Diagnostics.Debug.Assert(slots.Length > 0);
+            Render(new WindowItemsPacket(WindowId, slots.Length, buffer.ReadData()));
         }
+    }
 
-        public void SetCursorSlot(ItemSlot slot)
+    internal sealed class WindowRenderer : Renderer
+    {
+        private int _id;
+
+        // TODO: Remove offset parameter. offset value is only for to render private inventory when _id == -1;
+        public void Update(
+            int id, PrivateInventory invPrivate, InventorySlot cursor, int offset)
         {
+            System.Diagnostics.Debug.Assert(id >= 0);
+            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(cursor != null);
+            System.Diagnostics.Debug.Assert(offset >= 0);
+
             using Buffer buffer = new();
-            if (slot == null)
+
+            if (id == 0)
             {
-                buffer.WriteShort(-1);
+                System.Diagnostics.Debug.Assert(offset == 0);
+
+                foreach (InventorySlot slot in invPrivate.Slots)
+                {
+                    System.Diagnostics.Debug.Assert(slot != null);
+                    slot.WriteData(buffer);
+                }
+
+                System.Diagnostics.Debug.Assert(id >= byte.MinValue);
+                System.Diagnostics.Debug.Assert(id <= byte.MaxValue);
+                System.Diagnostics.Debug.Assert(invPrivate.TotalSlotCount > 0);
+                Render(new WindowItemsPacket(
+                    (byte)id, invPrivate.TotalSlotCount, buffer.ReadData()));
             }
             else
             {
-                slot.WriteData(buffer);
+                System.Diagnostics.Debug.Assert(offset > 0);
+
+                System.Diagnostics.Debug.Assert(id == 1);
+
+                for (int i = 0; i < invPrivate.PrimarySlotCount; ++i)
+                {
+                    InventorySlot slot = invPrivate.GetPrimarySlot(i);
+                    System.Diagnostics.Debug.Assert(slot != null);
+
+                    System.Diagnostics.Debug.Assert(id >= sbyte.MinValue);
+                    System.Diagnostics.Debug.Assert(id <= sbyte.MaxValue);
+                    int j = i + offset;
+                    System.Diagnostics.Debug.Assert(j >= short.MinValue);
+                    System.Diagnostics.Debug.Assert(j <= short.MaxValue);
+                    Render(new SetSlotPacket(
+                        (sbyte)id, j, buffer.ReadData()));
+                }
+
             }
 
+            cursor.WriteData(buffer);
+
             Render(new SetSlotPacket(-1, 0, buffer.ReadData()));
-
         }
 
-        public void EmptyCursorSlot()
+        public WindowRenderer(ConcurrentQueue<ClientboundPlayingPacket> outPackets, 
+            PrivateInventory invPrivate, InventorySlot cursor)
+            : base(outPackets)
         {
-            SetCursorSlot(null);
+            System.Diagnostics.Debug.Assert(outPackets != null);
+            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(cursor != null);
+
+            _id = 0;
+
+            Update(_id, invPrivate, cursor, 0);
         }
 
-        public void OpenWindow(string title, int countSlot)
+        internal void Open(PrivateInventory invPrivate, InventorySlot cursor, int offset)
         {
-            System.Diagnostics.Debug.Assert(title != null);
+            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(cursor != null);
+            System.Diagnostics.Debug.Assert(offset >= 0);
 
-            System.Diagnostics.Debug.Assert(Id > 0);
-            System.Diagnostics.Debug.Assert(countSlot >= 0);
+            _id = 1;
 
-            System.Diagnostics.Debug.Assert(Id >= byte.MinValue);
-            System.Diagnostics.Debug.Assert(Id <= byte.MaxValue);
-            System.Diagnostics.Debug.Assert(countSlot >= byte.MinValue);
-            System.Diagnostics.Debug.Assert(countSlot <= byte.MaxValue);
-            Render(new OpenWindowPacket(
-                (byte)Id, "minecraft:chest", title, (byte)countSlot));
+            Update(_id, invPrivate, cursor, offset);
         }
+
+        internal void Reset(PrivateInventory invPrivate, InventorySlot cursor)
+        {
+            System.Diagnostics.Debug.Assert(cursor.Empty);
+
+            using Buffer buffer = new();
+
+            _id = 0;
+
+            Update(invPrivate, cursor, 0);
+        }
+
+        public void Update(PrivateInventory invPrivate, InventorySlot cursor, int offset)
+        {
+            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(cursor != null);
+            System.Diagnostics.Debug.Assert(offset >= 0);
+
+            Update(_id, invPrivate, cursor, offset);
+        }
+
+        
     }
 
     /*internal sealed class ChunkRenderer : Renderer
