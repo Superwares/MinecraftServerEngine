@@ -63,7 +63,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(outPackets != null);
         }
 
-        public void Open(string title, InventorySlot[] slots)
+        public void Open(string title, Slot[] slots)
         {
             System.Diagnostics.Debug.Assert(title != null);
             System.Diagnostics.Debug.Assert(slots != null);
@@ -74,7 +74,7 @@ namespace MinecraftServerEngine
 
             using Buffer buffer = new();
 
-            foreach (InventorySlot slot in slots)
+            foreach (Slot slot in slots)
             {
                 System.Diagnostics.Debug.Assert(slot != null);
                 slot.WriteData(buffer);
@@ -99,7 +99,7 @@ namespace MinecraftServerEngine
 
         // TODO: Remove offset parameter. offset value is only for to render private inventory when _id == -1;
         public void Update(
-            int id, PlayerInventory invPrivate, InventorySlot cursor, int offset)
+            int id, PlayerInventory invPrivate, Slot cursor, int offset)
         {
             System.Diagnostics.Debug.Assert(id >= 0);
             System.Diagnostics.Debug.Assert(invPrivate != null);
@@ -112,7 +112,7 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(offset == 0);
 
-                foreach (InventorySlot slot in invPrivate.Slots)
+                foreach (Slot slot in invPrivate.Slots)
                 {
                     System.Diagnostics.Debug.Assert(slot != null);
                     slot.WriteData(buffer);
@@ -132,7 +132,7 @@ namespace MinecraftServerEngine
 
                 for (int i = 0; i < invPrivate.PrimarySlotCount; ++i)
                 {
-                    InventorySlot slot = invPrivate.GetPrimarySlot(i);
+                    Slot slot = invPrivate.GetPrimarySlot(i);
                     System.Diagnostics.Debug.Assert(slot != null);
 
                     System.Diagnostics.Debug.Assert(id >= sbyte.MinValue);
@@ -152,7 +152,7 @@ namespace MinecraftServerEngine
         }
 
         public WindowRenderer(ConcurrentQueue<ClientboundPlayingPacket> outPackets, 
-            PlayerInventory invPrivate, InventorySlot cursor)
+            PlayerInventory invPrivate, Slot cursor)
             : base(outPackets)
         {
             System.Diagnostics.Debug.Assert(outPackets != null);
@@ -164,7 +164,7 @@ namespace MinecraftServerEngine
             Update(_id, invPrivate, cursor, 0);
         }
 
-        internal void Open(PlayerInventory invPrivate, InventorySlot cursor, int offset)
+        internal void Open(PlayerInventory invPrivate, Slot cursor, int offset)
         {
             System.Diagnostics.Debug.Assert(invPrivate != null);
             System.Diagnostics.Debug.Assert(cursor != null);
@@ -175,7 +175,7 @@ namespace MinecraftServerEngine
             Update(_id, invPrivate, cursor, offset);
         }
 
-        internal void Reset(PlayerInventory invPrivate, InventorySlot cursor)
+        internal void Reset(PlayerInventory invPrivate, Slot cursor)
         {
             System.Diagnostics.Debug.Assert(cursor.Empty);
 
@@ -186,7 +186,7 @@ namespace MinecraftServerEngine
             Update(invPrivate, cursor, 0);
         }
 
-        public void Update(PlayerInventory invPrivate, InventorySlot cursor, int offset)
+        public void Update(PlayerInventory invPrivate, Slot cursor, int offset)
         {
             System.Diagnostics.Debug.Assert(invPrivate != null);
             System.Diagnostics.Debug.Assert(cursor != null);

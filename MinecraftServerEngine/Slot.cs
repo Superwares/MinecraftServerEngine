@@ -1,18 +1,26 @@
 ﻿
 
-using System;
 
 namespace MinecraftServerEngine
 {
-    internal sealed class InventorySlot
+    
+
+    internal sealed class Slot
     {
+        private readonly SlotRestriction Restriction;
+
         private ItemStack _stack = null;
         public ItemStack Stack => _stack;
         internal bool Empty => (_stack == null);
 
-        public InventorySlot()
+        public Slot()
         {
+            Restriction = SlotRestriction.None;
+        }
 
+        public Slot(SlotRestriction restriction)
+        {
+            Restriction = restriction;
         }
 
         internal void TakeAll(
@@ -100,49 +108,21 @@ namespace MinecraftServerEngine
             Refresh(renderer);
         }
 
-        internal void LeftClick(InventorySlot cursor, bool takeOnly)
-        {
-            System.Diagnostics.Debug.Assert(cursor != null);
-
-            if (cursor.Empty)
-            {
-                throw new System.NotImplementedException();
-            }
-            else
-            {
-                throw new System.NotImplementedException();
-            }
-        }
-
-        internal void LeftClick(InventorySlot cursor)
+        internal void LeftClick(Slot cursor)
         {
             System.Diagnostics.Debug.Assert(cursor != null);
 
             LeftClick(cursor, false);
         }
 
-        internal void RightClick(InventorySlot cursor, bool takeOnly)
-        {
-            System.Diagnostics.Debug.Assert(cursor != null);
-
-            if (cursor.Empty)
-            {
-                throw new System.NotImplementedException();
-            }
-            else
-            {
-                throw new System.NotImplementedException();
-            }
-        }
-
-        internal void RightClick(InventorySlot cursor)
+        internal void RightClick(Slot cursor)
         {
             System.Diagnostics.Debug.Assert(cursor != null);
 
             RightClick(cursor, false);
         }
 
-        internal void Move(InventorySlot from)
+        internal void Move(Slot from)
         {
             System.Diagnostics.Debug.Assert(from != null);
 
