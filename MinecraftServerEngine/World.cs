@@ -265,7 +265,7 @@ namespace MinecraftServerEngine
 
         private readonly EntityQueue Entities = new();  // Disposable
 
-        private readonly ConcurrentTable<System.Guid, Player> DisconnectedPlayers = new(); // Disposable
+        private readonly ConcurrentTable<UserId, Player> DisconnectedPlayers = new(); // Disposable
 
         internal readonly BlockContext BlockContext = new();  // Disposable
 
@@ -359,21 +359,18 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(entity != null);
 
-                if (entity is Player player && player.HandleConnection(this))
+                UserId id;
+                if (entity is Player player && player.HandleConnection(out id, this))
                 {
-                    System.Guid userId = player.UniqueId;
-
-                    System.Diagnostics.Debug.Assert(!DisconnectedPlayers.Contains(userId));
-                    DisconnectedPlayers.Insert(userId, player);
-
-                    System.Diagnostics.Debug.Assert(
-                        DisconnectedPlayers.Contains(player.UniqueId));
+                    System.Diagnostics.Debug.Assert(id != UserId.Null);
+                    System.Diagnostics.Debug.Assert(!DisconnectedPlayers.Contains(id));
+                    DisconnectedPlayers.Insert(id, player);
 
                     if (DetermineToDespawnPlayerOnDisconnect())
                     {
-                        PlayerList.Remove(player.UniqueId);
+                        PlayerList.Remove(id);
 
-                        Player playerExtracted = DisconnectedPlayers.Extract(player.UniqueId);
+                        Player playerExtracted = DisconnectedPlayers.Extract(id);
                         System.Diagnostics.Debug.Assert(ReferenceEquals(playerExtracted, player));
 
                         DestroyEntity(player);
@@ -449,36 +446,37 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(EntitySpawningPool.Empty);
         }
 
-        protected abstract Player CreatePlayer(System.Guid userId);
+        protected abstract Player CreatePlayer(UserId id);
 
-        internal void CreateOrConnectPlayer(Client client, string username, System.Guid userId)
+        internal void CreateOrConnectPlayer(
+            Client client, string username, UserId id)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(client != null);
             System.Diagnostics.Debug.Assert(username != "");
-            System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
-
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(id != UserId.Null);
 
             Player player;
 
-            if (DisconnectedPlayers.Contains(userId))
+            if (DisconnectedPlayers.Contains(id))
             {
-                player = DisconnectedPlayers.Extract(userId);
+                player = DisconnectedPlayers.Extract(id);
                 System.Diagnostics.Debug.Assert(player != null);
             }
             else
             {
-                player = CreatePlayer(userId);
+                player = CreatePlayer(id);
                 System.Diagnostics.Debug.Assert(player != null);
 
                 InitObjectMapping(player);
 
-                PlayerList.Add(userId, username);
+                PlayerList.Add(id, username);
 
                 Entities.Enqueue(player);
             }
             
-            player.Connect(client, this, userId);
+            player.Connect(client, this, id);
 
         }
 

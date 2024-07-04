@@ -7,8 +7,8 @@ namespace TestMinecraftServerApplication
     {
         private bool _disposed = false;
 
-        public Guest(System.Guid userId, Vector p, Look look) 
-            : base(userId, p, look) { }
+        public Guest(UserId id, Vector p, Look look) 
+            : base(id, p, look) { }
 
         ~Guest() => System.Diagnostics.Debug.Assert(false);
 

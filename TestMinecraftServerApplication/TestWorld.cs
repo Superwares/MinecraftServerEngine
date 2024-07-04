@@ -29,9 +29,13 @@ namespace TestMinecraftServerApplication
             return false;
         }
 
-        protected override Player CreatePlayer(System.Guid userId)
+        protected override Player CreatePlayer(UserId id)
         {
-            return new Guest(userId, PosSpawning, LookSpawning);
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(id != UserId.Null);
+
+            return new Guest(id, PosSpawning, LookSpawning);
         }
 
         public override void Dispose()

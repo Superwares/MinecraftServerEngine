@@ -24,7 +24,7 @@ namespace MinecraftServerEngine
 
             public Window(
                 ConcurrentQueue<ClientboundPlayingPacket> outPackets,
-                PlayerInventory invPlayer)
+                PlayerInventory2 invPlayer)
             {
                 System.Diagnostics.Debug.Assert(outPackets != null);
                 System.Diagnostics.Debug.Assert(invPlayer != null);
@@ -36,7 +36,7 @@ namespace MinecraftServerEngine
 
             public bool Open(
                 ConcurrentQueue<ClientboundPlayingPacket> outPackets,
-                PrivateInventory invPrivate, PublicInventory invPublic)
+                PlayerInventory invPrivate, PublicInventory invPublic)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -71,7 +71,7 @@ namespace MinecraftServerEngine
             public void Reset(
                 ConcurrentQueue<ClientboundPlayingPacket> outPackets,
                 World world,
-                int idWindow, PrivateInventory invPrivate)
+                int idWindow, PlayerInventory invPrivate)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -83,21 +83,44 @@ namespace MinecraftServerEngine
 
                 try
                 {
-                    if (idWindow > 1 || idWindow < 0 ||
-                        (_invPublic != null && idWindow == 0))
+                    if (idWindow < 0 || idWindow > 1)
                     {
                         throw new UnexpectedValueException("ServerboundCloseWindowPacket.WindowId");
                     }
 
-                    if (!_ambiguous && idWindow == 0)
+                    if (_invPublic == null)
                     {
-                        throw new UnexpectedValueException("ServerboundCloseWindowPacket.WindowId");
+                        System.Diagnostics.Debug.Assert(!_ambiguous);
+
+                        if (idWindow == 0)
+                        {
+                            return;
+                        }
+                        else if (idWindow == 1)
+                        {
+                            throw new UnexpectedValueException("ServerboundCloseWindowPacket.WindowId");
+                        }
+
+                        System.Diagnostics.Debug.Assert(false);
+                    }
+                    else
+                    {
+                        if (idWindow == 0)
+                        {
+                            if (!_ambiguous)
+                            {
+                                throw new UnexpectedValueException("ServerboundCloseWindowPacket.WindowId");
+                            }
+                            else
+                            {
+                                return;
+                            }
+                        }
+
+                        System.Diagnostics.Debug.Assert(idWindow == 1);
                     }
 
-                    if (idWindow == 0)
-                    {
-                        return;
-                    }
+                    System.Diagnostics.Debug.Assert(idWindow == 1);
 
                     _invPublic.Close(invPrivate);
 
@@ -199,13 +222,16 @@ namespace MinecraftServerEngine
             }*/
 
             public void Handle(
-                World world,
+                UserId id,
+                World world, Player player,
                 PlayerInventory invPlayer,
                 int mode, int button, int i)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
+                System.Diagnostics.Debug.Assert(id != UserId.Null);
                 System.Diagnostics.Debug.Assert(world != null);
+                System.Diagnostics.Debug.Assert(player != null);
                 System.Diagnostics.Debug.Assert(invPlayer != null);
 
                 System.Diagnostics.Debug.Assert(Renderer != null);
@@ -228,7 +254,7 @@ namespace MinecraftServerEngine
                                 }
                                 else
                                 {
-                                    _invPublic.LeftClick(i, Cursor, invPlayer);
+                                    _invPublic.LeftClick(id, i, Cursor, invPlayer);
                                 }
                                 break;
                             case 1:
@@ -238,7 +264,7 @@ namespace MinecraftServerEngine
                                 }
                                 else
                                 {
-                                    _invPublic.RightClick(i, Cursor, invPlayer);
+                                    _invPublic.RightClick(id, i, Cursor, invPlayer);
                                 }
                                 break;
                         }
@@ -255,7 +281,7 @@ namespace MinecraftServerEngine
                                 }
                                 else
                                 {
-                                    _invPublic.QuickMove(invPlayer, i);
+                                    _invPublic.QuickMove(id, i, invPlayer);
                                 }
                                 break;
                             case 1:
@@ -265,7 +291,7 @@ namespace MinecraftServerEngine
                                 }
                                 else
                                 {
-                                    _invPublic.QuickMove(invPlayer, i);
+                                    _invPublic.QuickMove(id, i, invPlayer);
                                 }
                                 break;
                         }
@@ -281,6 +307,8 @@ namespace MinecraftServerEngine
                     case 6:
                         throw new System.NotImplementedException();
                 }
+
+                player.UpdateEquipmentsRenderingData(invPlayer.Get);
 
                 int offset = _invPublic == null ? 0 : _invPublic.TotalSlotCount;
                 System.Diagnostics.Debug.Assert(offset >= 0);
@@ -298,14 +326,16 @@ namespace MinecraftServerEngine
             }
 
             public void Handle(
-                World world,
+                UserId id,
+                World world, Player player,
                 PlayerInventory invPlayer,
                 int idWindow, int mode, int button, int i)
             {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                System.Diagnostics.Debug.Assert(id != UserId.Null);
                 System.Diagnostics.Debug.Assert(world != null);
                 System.Diagnostics.Debug.Assert(invPlayer != null);
-
-                System.Diagnostics.Debug.Assert(!_disposed);
 
                 Locker.Hold();
 
@@ -368,7 +398,7 @@ namespace MinecraftServerEngine
 
                     _ambiguous = false;
 
-                    Handle(world, invPlayer, mode, button, i);
+                    Handle(id, world, player, invPlayer, mode, button, i);
 
                 }
                 finally
@@ -377,7 +407,7 @@ namespace MinecraftServerEngine
                 }
             }
 
-            public void Flush(World world, PlayerInventory invPlayer)
+            public void Flush(World world, PlayerInventory2 invPlayer)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -667,6 +697,8 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
+        private readonly UserId Id;
+
         private readonly Client Client;  // Dispoasble
 
         
@@ -698,16 +730,19 @@ namespace MinecraftServerEngine
         private readonly Window _Window;  // Disposable
 
         internal Connection(
+            UserId id,
             Client client, 
             World world, 
-            int id, System.Guid userId, 
+            int idEntity, 
             Vector p, 
-            PlayerInventory inv)
+            PlayerInventory2 invPlayer)
         {
+            System.Diagnostics.Debug.Assert(id != System.Guid.Empty);
             System.Diagnostics.Debug.Assert(client != null);
             System.Diagnostics.Debug.Assert(world != null);
-            System.Diagnostics.Debug.Assert(userId != Guid.Empty);
-            System.Diagnostics.Debug.Assert(inv != null);
+            System.Diagnostics.Debug.Assert(invPlayer != null);
+
+            Id = id;
 
             Client = client;
 
@@ -715,14 +750,14 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(MaxRenderDistance >= MAxEntityRanderDistance);
 
             ChunkLocation loc = ChunkLocation.Generate(p);
-            EntityRenderer = new EntityRenderer(OutPackets, id, loc, _dEntityRendering);
+            EntityRenderer = new EntityRenderer(OutPackets, idEntity, loc, _dEntityRendering);
 
             ChunkingHelprt = new ChunkingHelper(loc, _dChunkRendering);
 
-            _Window = new Window(OutPackets, inv);
+            _Window = new Window(OutPackets, invPlayer);
 
             PlayerListRenderer plRenderer = new(OutPackets);
-            world.PlayerList.Connect(userId, plRenderer);
+            world.PlayerList.Connect(id, plRenderer);
         }
 
         ~Connection() => System.Diagnostics.Debug.Assert(false);
@@ -731,9 +766,8 @@ namespace MinecraftServerEngine
             Queue<PlayerControl> controls,
             Buffer buffer, 
             World world, 
-            System.Guid userId, 
             bool sneaking, bool sprinting,
-            PlayerInventory invPlayer)
+            PlayerInventory2 invPlayer)
         {
             System.Diagnostics.Debug.Assert(controls != null);
             System.Diagnostics.Debug.Assert(buffer != null);
@@ -980,9 +1014,8 @@ namespace MinecraftServerEngine
         internal void Control(
             Queue<PlayerControl> controls,
             World world,
-            System.Guid userId,
             bool sneaking, bool sprinting,
-            PlayerInventory inv)
+            PlayerInventory2 inv)
         {
             System.Diagnostics.Debug.Assert(controls != null);
             System.Diagnostics.Debug.Assert(world != null);
@@ -1223,28 +1256,24 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(buffer.Empty);
         }
 
-        internal bool OpenPublicInventory(
-            PrivateInventory invPrivate, PublicInventory invPublic)
+        internal bool Open(PlayerInventory invPri, PublicInventory invPub)
         {
-            System.Diagnostics.Debug.Assert(invPrivate != null);
-            System.Diagnostics.Debug.Assert(invPublic != null);
-
-            System.Diagnostics.Debug.Assert(invPrivate != null);
-            System.Diagnostics.Debug.Assert(invPublic != null);
+            System.Diagnostics.Debug.Assert(invPri != null);
+            System.Diagnostics.Debug.Assert(invPub != null);
 
             if (_disconnected)
             {
                 return false;
             }
 
-            return _Window.OpenPublicInventory(OutPackets, invPrivate, invPublic);
+            return _Window.Open(OutPackets, invPri, invPub);
         }
 
         internal void Render(
             World world, 
             int id,
             Vector p, Look look, 
-            PlayerInventory inv)
+            PlayerInventory2 inv)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
             System.Diagnostics.Debug.Assert(!_disconnected);
@@ -1322,22 +1351,24 @@ namespace MinecraftServerEngine
         }
 
         public void Flush(
+            out UserId id,
             World world, 
-            System.Guid userId,
-            PlayerInventory invPlayer)
+            PlayerInventory2 invPlayer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
             System.Diagnostics.Debug.Assert(_disconnected);
 
             System.Diagnostics.Debug.Assert(world != null);
-            System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+            System.Diagnostics.Debug.Assert(id != UserId.Null);
             System.Diagnostics.Debug.Assert(invPlayer != null);
+
+            id = Id;
 
             EntityRenderer.Disconnect();
 
             _Window.Flush(world, invPlayer);
 
-            world.PlayerList.Disconnect(userId);
+            world.PlayerList.Disconnect(Id);
         }
 
         public void Dispose()

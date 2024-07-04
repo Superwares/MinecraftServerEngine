@@ -396,7 +396,7 @@ namespace MinecraftServerEngine
             _look = look;
         }
 
-        private void RanderFormChanging()
+        private void UpdateFormChangingRendering()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
             
@@ -411,7 +411,7 @@ namespace MinecraftServerEngine
 
             _sneaking = true;
 
-            RanderFormChanging();
+            UpdateFormChangingRendering();
         }
 
         private protected void Unsneak()
@@ -422,7 +422,7 @@ namespace MinecraftServerEngine
 
             _sneaking = false;
 
-            RanderFormChanging();
+            UpdateFormChangingRendering();
         }
 
         private protected void Sprint()
@@ -433,7 +433,7 @@ namespace MinecraftServerEngine
 
             _sprinting = true;
 
-            RanderFormChanging();
+            UpdateFormChangingRendering();
         }
 
         private protected void Unsprint()
@@ -444,9 +444,17 @@ namespace MinecraftServerEngine
 
             _sprinting = false;
 
-            RanderFormChanging();
+            UpdateFormChangingRendering();
         }
-        
+
+        internal void UpdateEquipmentsRenderingData(byte[] mainHand, byte[] offHand)
+        {
+            System.Diagnostics.Debug.Assert(mainHand != null);
+            System.Diagnostics.Debug.Assert(offHand != null);
+
+            throw new System.NotImplementedException();
+        }
+
         public virtual void Flush()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -568,9 +576,7 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
-        public System.Guid UserId => UniqueId;
-
-        internal readonly PlayerInventory Inventory = new();
+        protected readonly PlayerInventory2 Inventory = new();
 
         private Connection Conn;
         public bool Disconnected => (Conn == null);
@@ -579,10 +585,10 @@ namespace MinecraftServerEngine
         private Vector _pControl;
         private bool _onGroundControl;
 
-        public Player(System.Guid userId, Vector p, Look look) 
-            : base(userId, p, look, DefaultHitbox, DefaultMass) 
+        public Player(UserId id, Vector p, Look look) 
+            : base(id.Data, p, look, DefaultHitbox, DefaultMass) 
         {
-            System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+            System.Diagnostics.Debug.Assert(id != UserId.Null);
 
             System.Diagnostics.Debug.Assert(!Sneaking);
             System.Diagnostics.Debug.Assert(!Sprinting);
@@ -609,18 +615,18 @@ namespace MinecraftServerEngine
                 Sneaking, Sprinting);
         }
 
-        internal void Connect(Client client, World world, System.Guid userId)
+        internal void Connect(Client client, World world, UserId id)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(client != null);
             System.Diagnostics.Debug.Assert(world != null);
-            System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+            System.Diagnostics.Debug.Assert(id != UserId.Null);
 
             _pControl = Position;
             _onGroundControl = OnGround;
 
-            Conn = new Connection(client, world, Id, userId, _pControl, Inventory);
+            Conn = new Connection(id, client, world, Id, _pControl, Inventory);
         }
 
         public override void ApplyForce(Vector force)
@@ -741,7 +747,8 @@ namespace MinecraftServerEngine
                 Conn.Control(
                     controls, 
                     world, 
-                    UniqueId, Sneaking, Sprinting, Inventory);
+                    Sneaking, Sprinting, 
+                    Inventory);
 
                 while (!controls.Empty)
                 {
@@ -760,21 +767,22 @@ namespace MinecraftServerEngine
 
         }
 
-        public bool HandleConnection(World world)
+        public bool HandleConnection(out UserId id, World world)
         {
-            System.Diagnostics.Debug.Assert(world != null);
-
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(world != null);
 
             if (Disconnected)
             {
+                id = UserId.Null;
                 return false;
             }
 
             System.Diagnostics.Debug.Assert(Conn != null);
             if (Conn.Disconnected)
             {
-                Conn.Flush(world, UserId, Inventory);
+                Conn.Flush(out id, world, Inventory);
                 Conn.Dispose();
 
                 Conn = null;
@@ -782,6 +790,7 @@ namespace MinecraftServerEngine
                 return true;
             }
 
+            id = UserId.Null;
             return false;
         }
 
@@ -802,7 +811,7 @@ namespace MinecraftServerEngine
                 Inventory);
         }
         
-        public bool OpenPublicInventory(PublicInventory invPublic)
+        public bool Open(PublicInventory invPublic)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -814,16 +823,16 @@ namespace MinecraftServerEngine
             }
 
             System.Diagnostics.Debug.Assert(Conn != null);
-            return Conn.OpenPublicInventory(Inventory, invPublic);
+            return Conn.Open(Inventory, invPublic);
         }
 
-        protected virtual void UserMainHand(World world) { }
+        protected virtual void UseMainHand(World world) { }
 
-        protected virtual void UserOffHand(World world) { }
+        protected virtual void UseOffHand(World world) { }
 
-        protected virtual void UserMainHand(World world, ItemType item, int count) { }
+        protected virtual void UseMainHand(World world, ItemStack stack) { }
 
-        protected virtual void UserOffHand(World world, ItemType item, int count) { }
+        protected virtual void UseOffHand(World world, ItemStack stack) { }
 
         public override void Dispose()
         {

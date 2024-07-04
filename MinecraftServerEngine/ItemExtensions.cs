@@ -21,16 +21,6 @@ namespace MinecraftServerEngine
 
             _ITEM_ENUM_TO_ID_MAP.Insert(ItemType.GoldenSword, 283);
 
-            _ITEM_ENUM_TO_ID_MAP.Insert(ItemType.LeatherHelmet, 298);
-
-            _ITEM_ENUM_TO_ID_MAP.Insert(ItemType.ChainmailHelmet, 302);
-
-            _ITEM_ENUM_TO_ID_MAP.Insert(ItemType.IronHelmet, 306);
-
-            _ITEM_ENUM_TO_ID_MAP.Insert(ItemType.DiamondHelmet, 310);
-
-            _ITEM_ENUM_TO_ID_MAP.Insert(ItemType.GoldenHelmet, 314);
-
             _ITEM_ENUM_TO_ID_MAP.Insert(ItemType.Stick, 280);
 
             _ITEM_ENUM_TO_ID_MAP.Insert(ItemType.Snowball, 332);
@@ -41,50 +31,6 @@ namespace MinecraftServerEngine
             }
 
             System.Diagnostics.Debug.Assert(_ITEM_ENUM_TO_ID_MAP.Count == _ITEM_ID_TO_ENUM_MAP.Count);
-        }
-
-        public static bool IsArmor(this ItemType item)
-        {
-            switch (item)
-            {
-                default:
-                    throw new System.NotImplementedException();
-
-                case ItemType.IronSword:
-                    return false;
-                case ItemType.WoodenSword:
-                    return false;
-
-                case ItemType.StoneSword:
-                    return false;
-
-                case ItemType.DiamondSword:
-                    return false;
-
-                case ItemType.GoldenSword:
-                    return false;
-
-                case ItemType.LeatherHelmet:
-                    return true;
-
-                case ItemType.ChainmailHelmet:
-                    return true;
-
-                case ItemType.IronHelmet:
-                    return true;
-
-                case ItemType.DiamondHelmet:
-                    return true;
-
-                case ItemType.GoldenHelmet:
-                    return true;
-
-                case ItemType.Stick:
-                    return false;
-
-                case ItemType.Snowball:
-                    return false;
-            }
         }
 
         public static int GetMaxCount(this ItemType item)
@@ -106,21 +52,6 @@ namespace MinecraftServerEngine
                     return 1;
 
                 case ItemType.GoldenSword:
-                    return 1;
-
-                case ItemType.LeatherHelmet:
-                    return 1;
-
-                case ItemType.ChainmailHelmet:
-                    return 1;
-
-                case ItemType.IronHelmet:
-                    return 1;
-
-                case ItemType.DiamondHelmet:
-                    return 1;
-
-                case ItemType.GoldenHelmet:
                     return 1;
 
                 case ItemType.Stick:

@@ -1,10 +1,13 @@
 ﻿
 
+using System;
+
 namespace MinecraftServerEngine
 {
     internal sealed class InventorySlot
     {
         private ItemStack _stack = null;
+        public ItemStack Stack => _stack;
         internal bool Empty => (_stack == null);
 
         public InventorySlot()
@@ -176,6 +179,16 @@ namespace MinecraftServerEngine
             }
         }
 
+        internal void Give(ItemStack stack)
+        {
+            System.Diagnostics.Debug.Assert(stack != null);
+            System.Diagnostics.Debug.Assert(stack.Count >= ItemStack.MinCount);
+
+            System.Diagnostics.Debug.Assert(Empty);
+
+            _stack = stack;
+        }
+
         internal void WriteData(Buffer buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
@@ -187,6 +200,22 @@ namespace MinecraftServerEngine
             }
 
             _stack.WriteData(buffer);
+        }
+
+        internal byte[] WriteData()
+        {
+            using Buffer buffer = new();
+
+            if (_stack == null)
+            {
+                buffer.WriteShort(-1);
+            }
+            else
+            {
+                _stack.WriteData(buffer);
+            }
+
+            return buffer.ReadData();
         }
 
         public override string ToString()

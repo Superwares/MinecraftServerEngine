@@ -11,76 +11,76 @@ namespace MinecraftServerEngine
         {
             private bool _disposed = false;
 
-            private readonly Table<System.Guid, PlayerListRenderer> Renderers = new();
+            private readonly Table<UserId, PlayerListRenderer> Renderers = new();
 
-            public RendererManager() { }
+            internal RendererManager() { }
 
             ~RendererManager() => System.Diagnostics.Debug.Assert(false);
 
-            public void Apply(System.Guid userId, PlayerListRenderer renderer)
+            internal void Apply(UserId id, PlayerListRenderer renderer)
             {
-                System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+                System.Diagnostics.Debug.Assert(id != UserId.Null);
                 System.Diagnostics.Debug.Assert(renderer != null);
 
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                System.Diagnostics.Debug.Assert(!Renderers.Contains(userId));
-                Renderers.Insert(userId, renderer);
+                System.Diagnostics.Debug.Assert(!Renderers.Contains(id));
+                Renderers.Insert(id, renderer);
             }
 
-            public void Cancel(System.Guid userId)
+            internal void Cancel(UserId id)
             {
-                System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+                System.Diagnostics.Debug.Assert(id != UserId.Null);
 
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                System.Diagnostics.Debug.Assert(Renderers.Contains(userId));
-                Renderers.Extract(userId);
+                System.Diagnostics.Debug.Assert(Renderers.Contains(id));
+                Renderers.Extract(id);
             }
 
-            public bool Contains(System.Guid userId)
+            internal bool Contains(UserId id)
             {
-                System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+                System.Diagnostics.Debug.Assert(id != UserId.Null);
 
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                return Renderers.Contains(userId);
+                return Renderers.Contains(id);
             }
 
-            public void AddPlayerWithLaytency(System.Guid userId, string username, long ticks)
+            internal void AddPlayerWithLaytency(UserId id, string username, long ticks)
             {
-                System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+                System.Diagnostics.Debug.Assert(id != UserId.Null);
                 System.Diagnostics.Debug.Assert(username != null && !string.IsNullOrEmpty(username));
 
                 System.Diagnostics.Debug.Assert(!_disposed);
 
                 foreach (PlayerListRenderer renderer in Renderers.GetValues())
                 {
-                    renderer.AddPlayerWithLaytency(userId, username, ticks);
+                    renderer.AddPlayerWithLaytency(id, username, ticks);
                 }
             }
 
-            public void RemovePlayer(System.Guid userId)
+            internal void RemovePlayer(UserId id)
             {
-                System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+                System.Diagnostics.Debug.Assert(id != UserId.Null);
 
                 System.Diagnostics.Debug.Assert(!_disposed);
 
                 foreach (PlayerListRenderer renderer in Renderers.GetValues())
                 {
-                    renderer.RemovePlayer(userId);
+                    renderer.RemovePlayer(id);
                 }
             }
 
-            public void UpdatePlayerLatency(System.Guid userId, long ticks)
+            internal void UpdatePlayerLatency(UserId id, long ticks)
             {
-                System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+                System.Diagnostics.Debug.Assert(id != UserId.Null);
 
                 System.Diagnostics.Debug.Assert(!_disposed);
 
                 foreach (PlayerListRenderer renderer in Renderers.GetValues())
                 {
-                    renderer.UpdatePlayerLatency(userId, ticks);
+                    renderer.UpdatePlayerLatency(id, ticks);
                 }
             }
 
@@ -102,34 +102,34 @@ namespace MinecraftServerEngine
 
         private class Info
         {
-            public readonly System.Guid UserId;
+            public readonly UserId Id;
             public readonly string Username;
             private long _laytency = -1;
             public long Laytency => _laytency;
 
-            public Info(System.Guid userId, string username)
+            public Info(UserId id, string username)
             {
-                System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+                System.Diagnostics.Debug.Assert(id != UserId.Null);
                 System.Diagnostics.Debug.Assert(username != null && !string.IsNullOrEmpty(username));
 
-                UserId = userId;
+                Id = id;
                 Username = username;
             }
 
-            public void Connect()
+            internal void Connect()
             {
                 System.Diagnostics.Debug.Assert(_laytency == -1);
                 _laytency = 0;
             }
 
-            public void UpdateLaytency(long ticks)
+            internal void UpdateLaytency(long ticks)
             {
                 System.Diagnostics.Debug.Assert(ticks >= 0);
                 System.Diagnostics.Debug.Assert(_laytency >= 0);
                 _laytency = ticks;
             }
 
-            public void Disconnect()
+            internal void Disconnect()
             {
                 System.Diagnostics.Debug.Assert(_laytency >= 0);
                 _laytency = -1;
@@ -140,42 +140,42 @@ namespace MinecraftServerEngine
         private bool _disposed = false;
 
         private readonly Locker Locker = new();  // Disposable
-        private readonly ConcurrentTable<System.Guid, Info> Infos = new();  // Disposable
+        private readonly ConcurrentTable<UserId, Info> Infos = new();  // Disposable
         private readonly RendererManager Manager = new();  // Disposable
 
         internal PlayerList() { }
 
         ~PlayerList() => System.Diagnostics.Debug.Assert(false);
 
-        private bool IsDisconnected(System.Guid userId)
+        private bool IsDisconnected(UserId id)
         {
-            System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+            System.Diagnostics.Debug.Assert(id != UserId.Null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            return !Manager.Contains(userId);
+            return !Manager.Contains(id);
         }
 
-        public void Add(System.Guid userId, string username)
+        internal void Add(UserId id, string username)
         {
-            System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+            System.Diagnostics.Debug.Assert(id != UserId.Null);
             System.Diagnostics.Debug.Assert(username != null && !string.IsNullOrEmpty(username));
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(IsDisconnected(userId));
+            System.Diagnostics.Debug.Assert(IsDisconnected(id));
 
-            Info info = new(userId, username);
-            System.Diagnostics.Debug.Assert(!Infos.Contains(userId));
-            Infos.Insert(userId, info);
+            Info info = new(id, username);
+            System.Diagnostics.Debug.Assert(!Infos.Contains(id));
+            Infos.Insert(id, info);
 
-            Manager.AddPlayerWithLaytency(userId, username, info.Laytency);
+            Manager.AddPlayerWithLaytency(id, username, info.Laytency);
         }
 
-        public void Connect(System.Guid userId, PlayerListRenderer renderer)
+        internal void Connect(UserId id, PlayerListRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(renderer != null);
-            System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+            System.Diagnostics.Debug.Assert(id != UserId.Null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -183,70 +183,70 @@ namespace MinecraftServerEngine
 
             foreach (Info info in Infos.GetValues())
             {
-                renderer.AddPlayerWithLaytency(info.UserId, info.Username, info.Laytency);
+                renderer.AddPlayerWithLaytency(info.Id, info.Username, info.Laytency);
             }
 
-            System.Diagnostics.Debug.Assert(Infos.Contains(userId));
-            Info infoSelf = Infos.Lookup(userId);
+            System.Diagnostics.Debug.Assert(Infos.Contains(id));
+            Info infoSelf = Infos.Lookup(id);
 
-            System.Diagnostics.Debug.Assert(userId == infoSelf.UserId);
+            System.Diagnostics.Debug.Assert(id == infoSelf.Id);
             infoSelf.Connect();
 
-            System.Diagnostics.Debug.Assert(IsDisconnected(userId));
-            Manager.Apply(userId, renderer);
+            System.Diagnostics.Debug.Assert(IsDisconnected(id));
+            Manager.Apply(id, renderer);
 
-            Manager.UpdatePlayerLatency(infoSelf.UserId, infoSelf.Laytency);
+            Manager.UpdatePlayerLatency(infoSelf.Id, infoSelf.Laytency);
 
             Locker.Release();
         }
 
-        public void UpdateLaytency(System.Guid userId, long ticks)
+        internal void UpdateLaytency(UserId id, long ticks)
         {
-            System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+            System.Diagnostics.Debug.Assert(id != UserId.Null);
             System.Diagnostics.Debug.Assert(ticks >= 0);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(Infos.Contains(userId));
-            Info info = Infos.Lookup(userId);
+            System.Diagnostics.Debug.Assert(Infos.Contains(id));
+            Info info = Infos.Lookup(id);
             info.UpdateLaytency(ticks);
 
-            System.Diagnostics.Debug.Assert(userId == info.UserId);
-            Manager.UpdatePlayerLatency(info.UserId, ticks);
+            System.Diagnostics.Debug.Assert(id == info.Id);
+            Manager.UpdatePlayerLatency(info.Id, ticks);
         }
 
-        public void Disconnect(System.Guid userId)
+        internal void Disconnect(UserId id)
         {
-            System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+            System.Diagnostics.Debug.Assert(id != UserId.Null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Locker.Hold();
 
-            System.Diagnostics.Debug.Assert(!IsDisconnected(userId));
-            Manager.Cancel(userId);
+            System.Diagnostics.Debug.Assert(!IsDisconnected(id));
+            Manager.Cancel(id);
 
-            System.Diagnostics.Debug.Assert(Infos.Contains(userId));
-            Info info = Infos.Lookup(userId);
+            System.Diagnostics.Debug.Assert(Infos.Contains(id));
+            Info info = Infos.Lookup(id);
             info.Disconnect();
 
-            System.Diagnostics.Debug.Assert(userId == info.UserId);
-            Manager.UpdatePlayerLatency(info.UserId, info.Laytency);
+            System.Diagnostics.Debug.Assert(id == info.Id);
+            Manager.UpdatePlayerLatency(info.Id, info.Laytency);
 
             Locker.Release();
         }
 
-        public void Remove(System.Guid userId)
+        internal void Remove(UserId id)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(IsDisconnected(userId));
+            System.Diagnostics.Debug.Assert(IsDisconnected(id));
 
-            System.Diagnostics.Debug.Assert(Infos.Contains(userId));
-            Info info = Infos.Extract(userId);
-            System.Diagnostics.Debug.Assert(info.UserId == userId);
+            System.Diagnostics.Debug.Assert(Infos.Contains(id));
+            Info info = Infos.Extract(id);
+            System.Diagnostics.Debug.Assert(info.Id == id);
 
-            Manager.RemovePlayer(userId);
+            Manager.RemovePlayer(id);
         }
 
         public void Dispose()
