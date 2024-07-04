@@ -5,22 +5,32 @@ namespace MinecraftServerEngine
 {
     
 
-    internal sealed class Slot
+    internal sealed class InventorySlot
     {
-        private readonly SlotRestriction Restriction;
+        internal enum AccessLevel
+        {
+            None,
+            TakeOnly,
+            HelmetTakeOnly,
+            ChestplateTakeOnly,
+            LeggingsTakeOnly,
+            BootsTakeOnly,
+        }
+
+        private readonly AccessLevel Level;
 
         private ItemStack _stack = null;
         public ItemStack Stack => _stack;
         internal bool Empty => (_stack == null);
 
-        public Slot()
+        public InventorySlot()
         {
-            Restriction = SlotRestriction.None;
+            Level = AccessLevel.None;
         }
 
-        public Slot(SlotRestriction restriction)
+        public InventorySlot(AccessLevel level)
         {
-            Restriction = restriction;
+            Level = level;
         }
 
         internal void TakeAll(
@@ -108,21 +118,21 @@ namespace MinecraftServerEngine
             Refresh(renderer);
         }
 
-        internal void LeftClick(Slot cursor)
+        internal void LeftClick(InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(cursor != null);
 
             LeftClick(cursor, false);
         }
 
-        internal void RightClick(Slot cursor)
+        internal void RightClick(InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(cursor != null);
 
             RightClick(cursor, false);
         }
 
-        internal void Move(Slot from)
+        internal void Move(InventorySlot from)
         {
             System.Diagnostics.Debug.Assert(from != null);
 

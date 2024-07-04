@@ -15,7 +15,7 @@ namespace MinecraftServerEngine
             private readonly Locker Locker = new();  // Disposable
 
             private readonly WindowRenderer Renderer;
-            private readonly Slot Cursor = new();
+            private readonly InventorySlot Cursor = new();
 
             private PublicInventory _invPublic = null;
 
