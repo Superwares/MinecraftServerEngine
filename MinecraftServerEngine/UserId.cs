@@ -2,12 +2,12 @@
 {
     public readonly struct UserId : System.IEquatable<UserId>
     {
-        public static bool operator !=(UserId id1, UserId id2)
+        public static bool operator ==(UserId id1, UserId id2)
         {
             return id1.Equals(id2);
         }
 
-        public static bool operator ==(UserId id1, UserId id2)
+        public static bool operator !=(UserId id1, UserId id2)
         {
             return !id1.Equals(id2);
         }
@@ -31,7 +31,7 @@
             return Data.Equals(other.Data);
         }
 
-        public override bool Equals(object obj)
+        public readonly override bool Equals(object obj)
         {
             if (obj == null)
             {
@@ -41,12 +41,12 @@
             return obj is UserId idUser && Equals(idUser);
         }
 
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
             return base.GetHashCode();
         }
 
-        public override string ToString()
+        public readonly override string ToString()
         {
             return Data.ToString();
         }

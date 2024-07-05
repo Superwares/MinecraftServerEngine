@@ -1208,7 +1208,7 @@ namespace MinecraftServerEngine
     {
         public readonly System.Guid UniqueId;
         public readonly string Username;
-        public readonly int Laytency;
+        public readonly int Ping;
 
         internal static PlayerListItemAddPacket Read(Buffer buffer)
         {
@@ -1218,12 +1218,12 @@ namespace MinecraftServerEngine
         }
 
         public PlayerListItemAddPacket(
-            System.Guid uniqueId, string username, int laytency)
+            System.Guid uniqueId, string username, int ms)
             : base(PlayerListItemAddPacketId)
         {
             UniqueId = uniqueId;
             Username = username;
-            Laytency = laytency;
+            Ping = ms;
         }
 
         protected override void WriteData(Buffer buffer)
@@ -1236,7 +1236,7 @@ namespace MinecraftServerEngine
             buffer.WriteString(Username);
             buffer.WriteInt(0, true);  
             buffer.WriteInt(0, true);  // gamemode
-            buffer.WriteInt(Laytency, true);  // latency
+            buffer.WriteInt(Ping, true);  // latency
             buffer.WriteBool(false);
         }
 

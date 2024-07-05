@@ -48,10 +48,10 @@ namespace MinecraftServerEngine
         public TeleportationConfirmTimeoutException() : base("TeleportationConfirmTimeoutException") { }
     }
 
-    internal class ResponseKeepAliveTimeoutException : UnexpectedClientBehaviorExecption
+    internal class KeepAliveTimeoutException : UnexpectedClientBehaviorExecption
     {
         // TODO: Add description.
-        public ResponseKeepAliveTimeoutException() : base("ResponseKeepAliveTimeoutException") { }
+        public KeepAliveTimeoutException() : base("KeepAliveTimeoutException") { }
     }
 
     internal class KeepaliveTimeoutException : UnexpectedClientBehaviorExecption

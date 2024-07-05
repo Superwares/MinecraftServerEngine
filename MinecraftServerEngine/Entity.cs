@@ -28,9 +28,9 @@ namespace MinecraftServerEngine
 
             public bool Apply(EntityRenderer renderer)
             {
-                System.Diagnostics.Debug.Assert(renderer != null);
-
                 System.Diagnostics.Debug.Assert(!_disposed);
+
+                System.Diagnostics.Debug.Assert(renderer != null);
 
                 if (renderer.Id == Id)
                 {
@@ -42,6 +42,7 @@ namespace MinecraftServerEngine
                 }
 
                 Ids.Insert(renderer.Id);
+                System.Diagnostics.Debug.Assert(Renderers != null);
                 Renderers.Enqueue(renderer);
 
                 return true;
@@ -53,9 +54,11 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(!_movement);
 
+                System.Diagnostics.Debug.Assert(Renderers != null);
                 for (int i = 0; i < Renderers.Count; ++i)
                 {
                     EntityRenderer renderer = Renderers.Dequeue();
+                    System.Diagnostics.Debug.Assert(renderer != null);
 
                     if (renderer.Disconnected)
                     {
@@ -83,8 +86,10 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(!_movement);
 
+                System.Diagnostics.Debug.Assert(Renderers != null);
                 foreach (EntityRenderer renderer in Renderers.GetValues())
                 {
+                    System.Diagnostics.Debug.Assert(renderer != null);
                     renderer.RelMoveAndRotate(Id, p, pPrev, look, onGround);
                 }
 
@@ -97,8 +102,10 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(!_movement);
 
+                System.Diagnostics.Debug.Assert(Renderers != null);
                 foreach (EntityRenderer renderer in Renderers.GetValues())
                 {
+                    System.Diagnostics.Debug.Assert(renderer != null);
                     renderer.RelMove(Id, p, pPrev, onGround);
                 }
 
@@ -111,8 +118,10 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(!_movement);
 
+                System.Diagnostics.Debug.Assert(Renderers != null);
                 foreach (EntityRenderer renderer in Renderers.GetValues())
                 {
+                    System.Diagnostics.Debug.Assert(renderer != null);
                     renderer.Rotate(Id, look, onGround);
                 }
 
@@ -125,8 +134,10 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(!_movement);
 
+                System.Diagnostics.Debug.Assert(Renderers != null);
                 foreach (EntityRenderer renderer in Renderers.GetValues())
                 {
+                    System.Diagnostics.Debug.Assert(renderer != null);
                     renderer.Stand(Id);
                 }
 
@@ -146,8 +157,10 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
+                System.Diagnostics.Debug.Assert(Renderers != null);
                 foreach (EntityRenderer renderer in Renderers.GetValues())
                 {
+                    System.Diagnostics.Debug.Assert(renderer != null);
                     renderer.ChangeForms(Id, sneaking, sprinting);
                 }
             }
@@ -156,9 +169,26 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
+                System.Diagnostics.Debug.Assert(Renderers != null);
                 foreach (EntityRenderer renderer in Renderers.GetValues())
                 {
+                    System.Diagnostics.Debug.Assert(renderer != null);
                     renderer.Teleport(Id, p, look, onGround);
+                }
+            }
+
+            public void SetEquipmentsData((byte[] mainHand, byte[] offHand) equipmentsData)
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                System.Diagnostics.Debug.Assert(equipmentsData.mainHand != null);
+                System.Diagnostics.Debug.Assert(equipmentsData.offHand != null);
+
+                System.Diagnostics.Debug.Assert(Renderers != null);
+                foreach (EntityRenderer renderer in Renderers.GetValues())
+                {
+                    System.Diagnostics.Debug.Assert(renderer != null);
+                    renderer.SetEquipmentsData(Id, equipmentsData);
                 }
             }
 
@@ -168,9 +198,11 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(!Ids.Contains(Id));
 
+                System.Diagnostics.Debug.Assert(Renderers != null);
                 while (!Renderers.Empty)
                 {
                     EntityRenderer renderer = Renderers.Dequeue();
+                    System.Diagnostics.Debug.Assert(renderer != null);
                     if (renderer.Disconnected)
                     {
                         continue;
@@ -447,12 +479,14 @@ namespace MinecraftServerEngine
             UpdateFormChangingRendering();
         }
 
-        internal void UpdateEquipmentsRenderingData(byte[] mainHand, byte[] offHand)
+        internal void UpdateEntityEquipmentsData((byte[] mainHand, byte[] offHand) equipmentsData)
         {
-            System.Diagnostics.Debug.Assert(mainHand != null);
-            System.Diagnostics.Debug.Assert(offHand != null);
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            throw new System.NotImplementedException();
+            System.Diagnostics.Debug.Assert(equipmentsData.mainHand != null);
+            System.Diagnostics.Debug.Assert(equipmentsData.offHand != null);
+
+            Manager.SetEquipmentsData(equipmentsData);
         }
 
         public virtual void Flush()
@@ -576,7 +610,7 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
-        protected readonly PlayerInventory2 Inventory = new();
+        protected readonly PlayerInventory Inventory = new();
 
         private Connection Conn;
         public bool Disconnected => (Conn == null);
@@ -612,7 +646,8 @@ namespace MinecraftServerEngine
             renderer.SpawnPlayer(
                 Id, UniqueId,
                 Position, Look,
-                Sneaking, Sprinting);
+                Sneaking, Sprinting,
+                Inventory.GetEquipmentsData());
         }
 
         internal void Connect(Client client, World world, UserId id)
@@ -746,7 +781,7 @@ namespace MinecraftServerEngine
 
                 Conn.Control(
                     controls, 
-                    world, 
+                    world, this,
                     Sneaking, Sprinting, 
                     Inventory);
 
@@ -807,8 +842,7 @@ namespace MinecraftServerEngine
             Conn.Render(
                 world, 
                 Id, 
-                Position, Look, 
-                Inventory);
+                Position, Look);
         }
         
         public bool Open(PublicInventory invPublic)

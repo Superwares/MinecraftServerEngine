@@ -22,34 +22,42 @@ namespace MinecraftServerEngine
 
     internal sealed class PlayerListRenderer : Renderer
     {
-        public PlayerListRenderer(
+        internal PlayerListRenderer(
             ConcurrentQueue<ClientboundPlayingPacket> outPackets)
             : base(outPackets) { }
 
-        public void AddPlayerWithLaytency(
-            UserId id, string username, long ticks)
+        internal void AddPlayerWithLaytency(UserId id, string username, long ticks)
         {
-            System.Diagnostics.Debug.Assert(ticks <= int.MaxValue);
-            System.Diagnostics.Debug.Assert(ticks >= int.MinValue);
-            
-            int ms = (int)ticks;
-
-            Render(new PlayerListItemAddPacket(id.Data, username, ms));
-        }
-
-        public void RemovePlayer(UserId id)
-        {
-            Render(new PlayerListItemRemovePacket(id.Data));
-        }
-
-        public void UpdatePlayerLatency(UserId id, long ticks)
-        {
+            System.Diagnostics.Debug.Assert(id != UserId.Null);
+            System.Diagnostics.Debug.Assert(username != "");
             System.Diagnostics.Debug.Assert(ticks <= int.MaxValue);
             System.Diagnostics.Debug.Assert(ticks >= int.MinValue);
 
-            int ms = (int)ticks;
+            long ms = ticks * 50;
+            System.Diagnostics.Debug.Assert(ms >= int.MinValue);
+            System.Diagnostics.Debug.Assert(ms <= int.MaxValue);
+            Render(new PlayerListItemAddPacket(id.Data, username, (int)ms));
+        }
 
-            Render(new PlayerListItemUpdateLatencyPacket(id.Data, (int)ms));
+        internal void AddPlayerWithLaytency(PlayerListItemAddPacket pck)
+        {
+            System.Diagnostics.Debug.Assert(pck != null);
+
+            Render(pck);
+        }
+
+        internal void RemovePlayer(PlayerListItemRemovePacket pck)
+        {
+            System.Diagnostics.Debug.Assert(pck != null);
+
+            Render(pck);
+        }
+
+        internal void UpdatePlayerLatency(PlayerListItemUpdateLatencyPacket pck)
+        {
+            System.Diagnostics.Debug.Assert(pck != null);
+
+            Render(pck);
         }
     }
 
@@ -97,12 +105,13 @@ namespace MinecraftServerEngine
     {
         private int _id;
 
-        // TODO: Remove offset parameter. offset value is only for to render private inventory when _id == -1;
+        // TODO: Remove offset parameter.
+        // offset value is only for to render private inventory when _id == -1;
         public void Update(
-            int id, PlayerInventory invPrivate, InventorySlot cursor, int offset)
+            int id, PlayerInventory invPlayer, InventorySlot cursor, int offset)
         {
             System.Diagnostics.Debug.Assert(id >= 0);
-            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(invPlayer != null);
             System.Diagnostics.Debug.Assert(cursor != null);
             System.Diagnostics.Debug.Assert(offset >= 0);
 
@@ -112,7 +121,7 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(offset == 0);
 
-                foreach (InventorySlot slot in invPrivate.Slots)
+                foreach (InventorySlot slot in invPlayer.Slots)
                 {
                     System.Diagnostics.Debug.Assert(slot != null);
                     slot.WriteData(buffer);
@@ -120,9 +129,9 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(id >= byte.MinValue);
                 System.Diagnostics.Debug.Assert(id <= byte.MaxValue);
-                System.Diagnostics.Debug.Assert(invPrivate.TotalSlotCount > 0);
+                System.Diagnostics.Debug.Assert(invPlayer.TotalSlotCount > 0);
                 Render(new WindowItemsPacket(
-                    (byte)id, invPrivate.TotalSlotCount, buffer.ReadData()));
+                    (byte)id, invPlayer.TotalSlotCount, buffer.ReadData()));
             }
             else
             {
@@ -130,9 +139,9 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(id == 1);
 
-                for (int i = 0; i < invPrivate.PrimarySlotCount; ++i)
+                for (int i = 0; i < PlayerInventory.PrimarySlotCount; ++i)
                 {
-                    InventorySlot slot = invPrivate.GetPrimarySlot(i);
+                    InventorySlot slot = invPlayer.GetPrimarySlot(i);
                     System.Diagnostics.Debug.Assert(slot != null);
 
                     System.Diagnostics.Debug.Assert(id >= sbyte.MinValue);
@@ -141,7 +150,7 @@ namespace MinecraftServerEngine
                     System.Diagnostics.Debug.Assert(j >= short.MinValue);
                     System.Diagnostics.Debug.Assert(j <= short.MaxValue);
                     Render(new SetSlotPacket(
-                        (sbyte)id, j, buffer.ReadData()));
+                        (sbyte)id, (short)j, buffer.ReadData()));
                 }
 
             }
@@ -373,33 +382,24 @@ namespace MinecraftServerEngine
             Render(new EntityMetadataPacket(id, metadata.WriteData()));
         }
 
-        public void SetMainHand(int id, byte[] data)
+        public void SetEquipmentsData(int id, (byte[] mainHand, byte[] offHand) equipmentsData)
         {
-            System.Diagnostics.Debug.Assert(data != null);
+            System.Diagnostics.Debug.Assert(equipmentsData.mainHand != null);
+            System.Diagnostics.Debug.Assert(equipmentsData.offHand != null);
 
             System.Diagnostics.Debug.Assert(id != Id);
 
             System.Diagnostics.Debug.Assert(!_disconnected);
 
-            Render(new EntityEquipmentPacket(id, 0, data));
+            Render(new EntityEquipmentPacket(id, 0, equipmentsData.mainHand));
+            Render(new EntityEquipmentPacket(id, 1, equipmentsData.offHand));
         }
-
-        public void SetOffHand(int id, byte[] data)
-        {
-            System.Diagnostics.Debug.Assert(data != null);
-
-            System.Diagnostics.Debug.Assert(id != Id);
-
-            System.Diagnostics.Debug.Assert(!_disconnected);
-
-            Render(new EntityEquipmentPacket(id, 1, data));
-        }
-
+        
         public void SpawnPlayer(
             int id, System.Guid uniqueId, 
             Vector p, Look look, 
             bool sneaking, bool sprinting,
-            byte[] mainHand, byte[] offHand)
+            (byte[], byte[]) equipmentsData)
         {
             System.Diagnostics.Debug.Assert(id != Id);
 
@@ -426,8 +426,7 @@ namespace MinecraftServerEngine
                 x, y,
                 metadata.WriteData()));
 
-            SetMainHand(id, mainHand);
-            SetMainHand(id, offHand);
+            SetEquipmentsData(id, equipmentsData);
         }
 
         public void SpawnItemEntity(int id)

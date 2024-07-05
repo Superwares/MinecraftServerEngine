@@ -386,7 +386,7 @@ namespace MinecraftServerEngine
     internal readonly struct User(Client client, System.Guid userId, string username)
     {
         public readonly Client Client = client;
-        public readonly System.Guid UserId = userId;
+        public readonly UserId Id = new(userId);
         public readonly string Username = username;
     }
 
@@ -419,7 +419,7 @@ namespace MinecraftServerEngine
                     continue;
                 }
 
-                world.CreateOrConnectPlayer(user.Client, user.Username, user.UserId);
+                world.CreateOrConnectPlayer(user.Client, user.Username, user.Id);
             } 
         }
 

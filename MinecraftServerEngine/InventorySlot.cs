@@ -7,129 +7,92 @@ namespace MinecraftServerEngine
 
     internal sealed class InventorySlot
     {
-        internal enum AccessLevel
+        /*internal enum AccessLevel
         {
-            None,
-            TakeOnly,
-            HelmetTakeOnly,
-            ChestplateTakeOnly,
-            LeggingsTakeOnly,
-            BootsTakeOnly,
-        }
+            Full,
+            HelmetOnly,
+            ChestplateOnly,
+            LeggingsOnly,
+            BootsOnly,
+        }*/
 
-        private readonly AccessLevel Level;
+        /*private readonly AccessLevel Level;*/
 
         private ItemStack _stack = null;
         public ItemStack Stack => _stack;
         internal bool Empty => (_stack == null);
 
-        public InventorySlot()
-        {
-            Level = AccessLevel.None;
-        }
+        public InventorySlot() { }
 
-        public InventorySlot(AccessLevel level)
+        /*public InventorySlot(AccessLevel level)
         {
             Level = level;
-        }
-
-        internal void TakeAll(
-            int i, ref ItemSlot cursor, WindowRenderer renderer)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(i >= 0);
-            System.Diagnostics.Debug.Assert(i < TotalSlotCount);
-            System.Diagnostics.Debug.Assert(cursor == null);
-            System.Diagnostics.Debug.Assert(renderer != null);
-
-            System.Diagnostics.Debug.Assert(_count >= 0);
-            System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
-
-            ref ItemSlot slot = ref Slots[i];
-
-            if (slot != null)
-            {
-                System.Diagnostics.Debug.Assert(!ReferenceEquals(slot, cursor));
-                cursor = slot;
-                slot = null;
-
-                --_count;
-                System.Diagnostics.Debug.Assert(_count >= 0);
-            }
-            else
-            {
-                System.Diagnostics.Debug.Assert(cursor == null);
-            }
-
-            Refresh(renderer);
-        }
-
-        internal void PutAll(
-            int i, ref ItemSlot cursor, WindowRenderer renderer)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(i >= 0);
-            System.Diagnostics.Debug.Assert(i < TotalSlotCount);
-            System.Diagnostics.Debug.Assert(cursor != null);
-            System.Diagnostics.Debug.Assert(renderer != null);
-
-            System.Diagnostics.Debug.Assert(_count >= 0);
-            System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
-
-            ref ItemSlot slot = ref Slots[i];
-            System.Diagnostics.Debug.Assert(!ReferenceEquals(slot, cursor));
-
-            if (slot != null)
-            {
-                if (cursor.Item == slot.Item)
-                {
-                    int spend = slot.Stack(cursor.Count);
-                    System.Diagnostics.Debug.Assert(spend <= cursor.Count);
-                    if (spend == cursor.Count)
-                    {
-                        cursor = null;
-                    }
-                    else
-                    {
-                        cursor.Spend(spend);
-                    }
-                }
-                else
-                {
-                    // Swap
-                    ItemSlot temp = cursor;
-                    cursor = slot;
-                    slot = temp;
-                }
-            }
-            else
-            {
-                slot = cursor;
-                cursor = null;
-
-                ++_count;
-                System.Diagnostics.Debug.Assert(_count >= 0);
-                System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
-
-            }
-
-            Refresh(renderer);
-        }
+        }*/
 
         internal void LeftClick(InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(cursor != null);
 
-            LeftClick(cursor, false);
+            ref ItemStack stackCursor = ref cursor._stack;
+
+            if (!Empty)
+            {
+                if (stackCursor == null)
+                {
+                    stackCursor = _stack;
+                    _stack = null;
+                }
+                else if (!_stack.Move(ref stackCursor))
+                {
+                    ItemStack stackTemp = stackCursor;
+                    stackCursor = _stack;
+                    _stack = stackTemp; 
+                }
+            }
+            else
+            {
+                _stack = stackCursor;
+                stackCursor = null;
+            }
+
         }
 
         internal void RightClick(InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(cursor != null);
 
-            RightClick(cursor, false);
+            ref ItemStack stackCursor = ref cursor._stack;
+
+            if (stackCursor == null)
+            {
+                if (!Empty && !_stack.DivideHalf(ref stackCursor))
+                {
+                    stackCursor = _stack;
+                    _stack = null;
+                }
+            }
+            else
+            {
+                if (Empty)
+                {
+                    if (!stackCursor.DivideMinToEmpty(ref _stack))
+                    {
+                        _stack = stackCursor;
+                        stackCursor = null;
+                    }
+                }
+                else
+                {
+                    if (!_stack.DivideMinFrom(ref stackCursor))
+                    {
+                        ItemStack stackTemp = stackCursor;
+                        stackCursor = _stack;
+                        _stack = stackTemp;
+
+                    }
+                }
+
+            }
         }
 
         internal void Move(InventorySlot from)
@@ -141,32 +104,17 @@ namespace MinecraftServerEngine
                 return;
             }
 
-            if (!_stack.Equals(from._stack))
-            {
-                return;
-            }
+            ref ItemStack stackFrom = ref from._stack;
 
-            if (_stack == null)
+            if (Empty)
             {
-                _stack = from._stack;
-                from._stack = null;
+                _stack = stackFrom;
+                stackFrom = null;
 
                 return;
             }
 
-            int countFrom = from._stack.Count;
-            System.Diagnostics.Debug.Assert(countFrom >= 0);
-            int countSpend = _stack.Stack(countFrom);
-            System.Diagnostics.Debug.Assert(countSpend >= 0);
-            System.Diagnostics.Debug.Assert(countSpend <= countFrom);
-            if (countSpend == countFrom)
-            {
-                from._stack = null;
-            }
-            else
-            {
-                from._stack.Spend(countSpend);
-            }
+            _stack.Move(ref stackFrom);
         }
 
         internal void Give(ItemStack stack)

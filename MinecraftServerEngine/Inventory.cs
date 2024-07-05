@@ -45,7 +45,7 @@ namespace MinecraftServerEngine
                 InventorySlot slot = Slots[i];
                 System.Diagnostics.Debug.Assert(slot != null);
 
-                Console.Print($"{i}:D2:[{slot}]");
+                Console.Print($"{slot}");
             }
             Console.NewLine();
         }
@@ -219,102 +219,27 @@ namespace MinecraftServerEngine
             return Slots[_indexMainHandSlot];
         }
 
+        internal (byte[], byte[]) GetEquipmentsData()
+        {
+            InventorySlot 
+                slotMainHand = GetMainHandSlot(),
+                slotOffHand = GetOffHandSlot();
+            System.Diagnostics.Debug.Assert(slotMainHand != null);
+            System.Diagnostics.Debug.Assert(slotOffHand != null);
+            return (slotMainHand.WriteData(), slotOffHand.WriteData());
+        }
+
         private bool _disposed = false;
 
         internal PlayerInventory() : base(46) 
         {
-            GiveFromLeftInMain(ItemType.Stick, 100);
-            GiveFromLeftInMain(ItemType.Snowball, 100);
+            GiveFromLeftInPrimary(new ItemStack(ItemType.Stick));
+            GiveFromLeftInPrimary(new ItemStack(ItemType.Snowball));
         }
 
         ~PlayerInventory() => System.Diagnostics.Debug.Assert(false);
 
-        /*internal virtual void TakeAll(
-            int i, ref ItemSlot cursor, WindowRenderer renderer)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(i >= 0);
-            System.Diagnostics.Debug.Assert(i < TotalSlotCount);
-            System.Diagnostics.Debug.Assert(cursor == null);
-            System.Diagnostics.Debug.Assert(renderer != null);
-
-            System.Diagnostics.Debug.Assert(_count >= 0);
-            System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
-
-            ref ItemSlot slot = ref Slots[i];
-
-            if (slot != null)
-            {
-                System.Diagnostics.Debug.Assert(!ReferenceEquals(slot, cursor));
-                cursor = slot;
-                slot = null;
-
-                --_count;
-                System.Diagnostics.Debug.Assert(_count >= 0);
-            }
-            else
-            {
-                System.Diagnostics.Debug.Assert(cursor == null);
-            }
-
-            Refresh(renderer);
-        }
-
-        internal virtual void PutAll(
-            int i, ref ItemSlot cursor, WindowRenderer renderer)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(i >= 0);
-            System.Diagnostics.Debug.Assert(i < TotalSlotCount);
-            System.Diagnostics.Debug.Assert(cursor != null);
-            System.Diagnostics.Debug.Assert(renderer != null);
-
-            System.Diagnostics.Debug.Assert(_count >= 0);
-            System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
-            
-            ref ItemSlot slot = ref Slots[i];
-            System.Diagnostics.Debug.Assert(!ReferenceEquals(slot, cursor));
-
-            if (slot != null)
-            {
-                if (cursor.Item == slot.Item)
-                {
-                    int spend = slot.Stack(cursor.Count);
-                    System.Diagnostics.Debug.Assert(spend <= cursor.Count);
-                    if (spend == cursor.Count)
-                    {
-                        cursor = null;
-                    }
-                    else
-                    {
-                        cursor.Spend(spend);
-                    }
-                }
-                else
-                {
-                    // Swap
-                    ItemSlot temp = cursor;
-                    cursor = slot;
-                    slot = temp;
-                }
-            }
-            else
-            {
-                slot = cursor;
-                cursor = null;
-
-                ++_count;
-                System.Diagnostics.Debug.Assert(_count >= 0);
-                System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
-
-            }
-
-            Refresh(renderer);
-        }
-
-        internal virtual void TakeHalf(
+        /*internal virtual void TakeHalf(
             int i, ref ItemSlot cursor, WindowRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -440,6 +365,30 @@ namespace MinecraftServerEngine
             Refresh(renderer);
         }*/
 
+        private void LeftClick(InventorySlot slot, InventorySlot cursor)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(slot != null);
+            System.Diagnostics.Debug.Assert(cursor != null);
+
+            slot.LeftClick(cursor);
+        }
+
+        internal void LeftClickInPrimary(int i, InventorySlot cursor)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < PrimarySlotCount);
+            System.Diagnostics.Debug.Assert(cursor != null);
+
+            InventorySlot slot = GetPrimarySlot(i);
+            System.Diagnostics.Debug.Assert(slot != null);
+
+            LeftClick(slot, cursor);
+        }
+
         internal void LeftClick(int i, InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -448,10 +397,39 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(i < TotalSlotCount);
             System.Diagnostics.Debug.Assert(cursor != null);
 
+            if (i >= CraftingOutputSlotIndex && i < PrimarySlotsOffset)
+            {
+                return;
+            }
+
             InventorySlot slot = Slots[i];
             System.Diagnostics.Debug.Assert(slot != null);
 
-            slot.LeftClick(cursor);
+            LeftClick(slot, cursor);
+        }
+
+        private void RightClick(InventorySlot slot, InventorySlot cursor)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(slot != null);
+            System.Diagnostics.Debug.Assert(cursor != null);
+
+            slot.RightClick(cursor);
+        }
+
+        internal void RightClickInPrimary(int i, InventorySlot cursor)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount);
+            System.Diagnostics.Debug.Assert(cursor != null);
+
+            InventorySlot slot = GetPrimarySlot(i);
+            System.Diagnostics.Debug.Assert(slot != null);
+
+            RightClick(slot, cursor);
         }
 
         internal void RightClick(int i, InventorySlot cursor)
@@ -462,10 +440,15 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(i < TotalSlotCount);
             System.Diagnostics.Debug.Assert(cursor != null);
 
+            if (i >= CraftingOutputSlotIndex && i < PrimarySlotsOffset)
+            {
+                return;
+            }
+
             InventorySlot slot = Slots[i];
             System.Diagnostics.Debug.Assert(slot != null);
 
-            slot.RightClick(cursor);
+            RightClick(slot, cursor);
         }
 
         internal bool GiveFromLeftInPrimary(ItemStack stack)
@@ -489,11 +472,6 @@ namespace MinecraftServerEngine
                 }
             }
 
-            if (j < 0)
-            {
-                return false;
-            }
-
             System.Diagnostics.Debug.Assert(j <= TotalSlotCount);
             if (j >= 0)
             {
@@ -504,7 +482,7 @@ namespace MinecraftServerEngine
                 slotInside.Give(stack);
             }
 
-            return true;
+            return j >= 0;
         }
 
         internal void QuickMoveFromLeftInPrimary(InventorySlot slot)
@@ -585,35 +563,28 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(i >= 0);
             System.Diagnostics.Debug.Assert(i < TotalSlotCount);
 
+            if (i >= CraftingOutputSlotIndex && i < PrimarySlotsOffset)
+            {
+                return;
+            }
+
             InventorySlot slot = Slots[i];
             System.Diagnostics.Debug.Assert(slot != null);
 
-            if (i == CraftingOutputSlotIndex)
+            if (i >= MainSlotsOffset && i < HotbarSlotsOffset)
             {
-                QuickMoveFromRightInPrimary(slot);
-            }
-            else if (i >= CraftingInputSlotsOffset && i < ArmorSlotsOffset)
-            {
-                QuickMoveFromLeftInPrimary(slot);
-            }
-            else if (i >= ArmorSlotsOffset && < MainSlotsOffset)
-            {
-                QuickMoveFromLeftInPrimary(slot);
-            }
-            else if (i >= MainSlotsOffset && i < HotbarSlotsOffset)
-            {
-                QuickMoveFromLeftInArmor(slot);
+                /*QuickMoveFromLeftInArmor(slot);*/
                 QuickMoveFromLeftInHotbar(slot);
             }
             else if (i >= HotbarSlotsOffset && i < OffHandSlotIndex)
             {
-                QuickMoveFromLeftInArmor(slot);
+                /*QuickMoveFromLeftInArmor(slot);*/
                 QuickMoveFromLeftInMain(slot);
             }
             else
             {
                 System.Diagnostics.Debug.Assert(i == OffHandSlotIndex);
-                QuickMoveFromLeftInArmor(slot);
+                /*QuickMoveFromLeftInArmor(slot);*/
                 QuickMoveFromLeftInPrimary(slot);
             }
         }
@@ -674,12 +645,12 @@ namespace MinecraftServerEngine
         }
 
         internal void Open(
-            PlayerInventory invPrivate, 
+            PlayerInventory inv, 
             ConcurrentQueue<ClientboundPlayingPacket> outPackets)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(inv != null);
             System.Diagnostics.Debug.Assert(outPackets != null);
 
             PublicInventoryRenderer renderer = new(outPackets);
@@ -688,364 +659,42 @@ namespace MinecraftServerEngine
 
             renderer.Open(Title, Slots);
 
-            System.Diagnostics.Debug.Assert(!Renderers.Contains(invPrivate));
-            Renderers.Insert(invPrivate, renderer);
+            System.Diagnostics.Debug.Assert(!Renderers.Contains(inv));
+            Renderers.Insert(inv, renderer);
 
             Locker.Release();
         }
 
-        internal void Close(PlayerInventory invPrivate)
+        internal void Close(PlayerInventory inv)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(inv != null);
 
             Locker.Hold();
 
-            System.Diagnostics.Debug.Assert(Renderers.Contains(invPrivate));
-            Renderers.Extract(invPrivate);
+            System.Diagnostics.Debug.Assert(Renderers.Contains(inv));
+            Renderers.Extract(inv);
 
             Locker.Release();
         }
-
-        /*private ref ItemSlot GetSlot(
-            PrivateInventory invPrivate, int i, bool isPublic)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(invPrivate != null);
-
-            System.Diagnostics.Debug.Assert(i >= 0);
-            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
-
-            return ref isPublic ? ref Slots[i] : ref invPrivate.GetPrimarySlot(i);
-        }*/
-
-        /*private void SetSlot(
-            PrivateInventory invPrivate, int i, ItemSlot slot, bool isPublic)
-        {
-            System.Diagnostics.Debug.Assert(invPrivate != null);
-
-            System.Diagnostics.Debug.Assert(i >= 0);
-            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
-
-            System.Diagnostics.Debug.Assert(slot != null);
-
-            if (isPublic)
-            {
-                Slots[i] = slot;
-            }
-            else
-            {
-                invPrivate.SetPrimarySlot(i, slot);
-            }
-
-        }
-
-        private void EmptySlot(
-            PrivateInventory invPrivate, int i, bool isPublic)
-        {
-            System.Diagnostics.Debug.Assert(invPrivate != null);
-
-            System.Diagnostics.Debug.Assert(i >= 0);
-            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
-
-            if (isPublic)
-            {
-                Slots[i] = null;
-            }
-            else
-            {
-                invPrivate.EmptyPrimarySlot(i);
-            }
-
-        }*/
-
-        /*internal virtual void TakeAll(
-            PrivateInventory invPrivate, int i, ref ItemSlot cursor,
-            WindowRenderer renderer)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(invPrivate != null);
-            System.Diagnostics.Debug.Assert(i >= 0);
-            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
-            System.Diagnostics.Debug.Assert(cursor == null);
-            System.Diagnostics.Debug.Assert(renderer != null);
-
-            System.Diagnostics.Debug.Assert(Renderers.Contains(renderer));
-
-            System.Diagnostics.Debug.Assert(_count >= 0);
-            System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
-
-            bool isPublic = (i < TotalSlotCount);
-            int j = isPublic ? i : i - TotalSlotCount;
-
-            Locker.Hold();
-
-            ref ItemSlot slot = ref GetSlot(invPrivate, j, isPublic);
-            
-            if (slot != null)
-            {
-                System.Diagnostics.Debug.Assert(!ReferenceEquals(slot, cursor));
-
-                cursor = slot;
-                slot = null;
-
-                --_count;
-                System.Diagnostics.Debug.Assert(_count >= 0);
-            }
-            else
-            {
-                System.Diagnostics.Debug.Assert(cursor == null);
-
-            }
-
-            Update(invPrivate, renderer);
-
-            if (isPublic)
-            {
-                Broadcast(renderer);
-            }
-
-            Locker.Release();
-        }
-
-        internal virtual void PutAll(
-            PrivateInventory invPrivate, int i, ref ItemSlot cursor,
-            WindowRenderer renderer)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(invPrivate != null);
-            System.Diagnostics.Debug.Assert(i >= 0);
-            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
-            System.Diagnostics.Debug.Assert(cursor != null);
-            System.Diagnostics.Debug.Assert(renderer != null);
-
-            System.Diagnostics.Debug.Assert(Renderers.Contains(renderer));
-
-            System.Diagnostics.Debug.Assert(_count >= 0);
-            System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
-
-            bool isPublic = (i < TotalSlotCount);
-            int j = isPublic ? i : i - TotalSlotCount;
-
-            Locker.Hold();
-            
-            ref ItemSlot slot = ref GetSlot(invPrivate, j, isPublic);
-            System.Diagnostics.Debug.Assert(!ReferenceEquals(slot, cursor));
-
-            if (slot != null)
-            {
-                if (cursor.Item == slot.Item)
-                {
-                    int spend = slot.Stack(cursor.Count);
-                    System.Diagnostics.Debug.Assert(spend <= cursor.Count);
-                    if (spend == cursor.Count)
-                    {
-                        cursor = null;
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.Assert(spend < cursor.Count);
-                        cursor.Spend(spend);
-                    }
-                }
-                else
-                {
-                    // Swap
-                    ItemSlot temp = cursor;
-                    cursor = slot;
-                    slot = temp;
-                }
-            }
-            else
-            {
-                slot = cursor;
-                cursor = null;
-
-                ++_count;
-                System.Diagnostics.Debug.Assert(_count >= 0);
-                System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
-
-            }
-
-            Update(invPrivate, renderer);
-
-            if (isPublic)
-            {
-                Broadcast(renderer);
-            }
-
-            Locker.Release();
-
-        }
-
-        internal virtual void TakeHalf(
-            PrivateInventory invPrivate, int i, ref ItemSlot cursor,
-            WindowRenderer renderer)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(invPrivate != null);
-            System.Diagnostics.Debug.Assert(i >= 0);
-            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
-            System.Diagnostics.Debug.Assert(cursor == null);
-            System.Diagnostics.Debug.Assert(renderer != null);
-
-            System.Diagnostics.Debug.Assert(Renderers.Contains(renderer));
-
-            System.Diagnostics.Debug.Assert(_count >= 0);
-            System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
-
-            bool isPublic = (i < TotalSlotCount);
-            int j = isPublic ? i : i - TotalSlotCount;
-
-            Locker.Hold();
-
-            ref ItemSlot slot = ref GetSlot(invPrivate, j, isPublic);
-
-            if (slot == null)
-            {
-                System.Diagnostics.Debug.Assert(cursor == null);
-
-            }
-            else
-            {
-                System.Diagnostics.Debug.Assert(!ReferenceEquals(slot, cursor));
-
-                if (slot.Count == 1)
-                {
-                    --_count;
-                    System.Diagnostics.Debug.Assert(_count >= 0);
-                    System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
-
-                    cursor = slot;
-                    slot = null;
-
-                    System.Diagnostics.Debug.Assert(cursor.Count == 1);
-                }
-                else
-                {
-                    System.Diagnostics.Debug.Assert(slot.Count > 1);
-
-                    cursor = slot.DivideHalf();
-                    System.Diagnostics.Debug.Assert(slot.Count > 0);
-                    System.Diagnostics.Debug.Assert(cursor != null);
-                }
-            }
-
-            Update(invPrivate, renderer);
-
-            if (isPublic)
-            {
-                Broadcast(renderer);
-            }
-
-            Locker.Release();
-
-        }
-
-        internal virtual void PutOne(
-            PrivateInventory invPrivate, int i, ref ItemSlot cursor, 
-            WindowRenderer renderer)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(invPrivate != null);
-            System.Diagnostics.Debug.Assert(i >= 0);
-            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
-            System.Diagnostics.Debug.Assert(cursor != null);
-            System.Diagnostics.Debug.Assert(renderer != null);
-
-            System.Diagnostics.Debug.Assert(Renderers.Contains(renderer));
-
-            System.Diagnostics.Debug.Assert(_count >= 0);
-            System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
-
-            bool isPublic = (i < TotalSlotCount);
-            int j = isPublic ? i : i - TotalSlotCount;
-
-            Locker.Hold();
-
-            ref ItemSlot slot = ref GetSlot(invPrivate, j, isPublic);
-            System.Diagnostics.Debug.Assert(!ReferenceEquals(slot, cursor));
-
-            if (slot != null)
-            {
-                if (cursor.Item == slot.Item)
-                {
-                    int spend = slot.Stack(1);
-                    System.Diagnostics.Debug.Assert(spend <= 1);
-                    if (spend == cursor.Count)
-                    {
-                        cursor = null;
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.Assert(spend < cursor.Count);
-                        cursor.Spend(spend);
-                    }
-
-                }
-                else
-                {
-                    // Swap
-                    ItemSlot temp = cursor;
-                    cursor = slot;
-                    slot = temp;
-                }
-
-            }
-            else
-            {
-                if (cursor.Count > 1)
-                {
-                    slot = cursor.DivideOne();
-                    System.Diagnostics.Debug.Assert(cursor.Count >= cursor.MinCount);
-                }
-                else
-                {
-                    System.Diagnostics.Debug.Assert(cursor.Count == 1);
-                    System.Diagnostics.Debug.Assert(slot == null);
-
-                    slot = cursor;
-                    cursor = null;
-                }
-
-                ++_count;
-                System.Diagnostics.Debug.Assert(_count >= 0);
-                System.Diagnostics.Debug.Assert(_count <= TotalSlotCount);
-            }
-
-            Update(invPrivate, renderer);
-
-            if (isPublic)
-            {
-                Broadcast(renderer);
-            }
-            
-            Locker.Release();
-        }*/
 
         internal virtual void LeftClick(
-            World world, Player player,
-            int i, InventorySlot cursor, PlayerInventory invPrivate)
+            UserId id, PlayerInventory invPlayer,
+            int i, InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(world != null);
-            System.Diagnostics.Debug.Assert(player != null);
+            System.Diagnostics.Debug.Assert(id != UserId.Null);
+            System.Diagnostics.Debug.Assert(invPlayer != null);
 
             System.Diagnostics.Debug.Assert(i >= 0);
-            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount + PlayerInventory.PrimarySlotCount);
             System.Diagnostics.Debug.Assert(cursor != null);
-            System.Diagnostics.Debug.Assert(invPrivate != null);
 
             Locker.Hold();
 
-            System.Diagnostics.Debug.Assert(Renderers.Contains(invPrivate));
+            System.Diagnostics.Debug.Assert(Renderers.Contains(invPlayer));
 
             if (i < TotalSlotCount)
             {
@@ -1058,42 +707,44 @@ namespace MinecraftServerEngine
             }
             else
             {
-                invPrivate.LeftClick(world, player, i, cursor);
+                int j = i - TotalSlotCount;
+                invPlayer.LeftClickInPrimary(j, cursor);
             }
 
             Locker.Release();
         }
 
         internal virtual void RightClick(
-            World world, Player player,
-            int i, InventorySlot cursor, PlayerInventory invPrivate)
+            UserId id, PlayerInventory invPlayer,
+            int i, InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(world != null);
-            System.Diagnostics.Debug.Assert(player != null);
+            System.Diagnostics.Debug.Assert(id != UserId.Null);
+            System.Diagnostics.Debug.Assert(invPlayer != null);
 
             System.Diagnostics.Debug.Assert(i >= 0);
-            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount + PlayerInventory.PrimarySlotCount);
             System.Diagnostics.Debug.Assert(cursor != null);
-            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(invPlayer != null);
 
             Locker.Hold();
 
-            System.Diagnostics.Debug.Assert(Renderers.Contains(invPrivate));
+            System.Diagnostics.Debug.Assert(Renderers.Contains(invPlayer));
 
             if (i < TotalSlotCount)
             {
                 InventorySlot slot = Slots[i];
                 System.Diagnostics.Debug.Assert(slot != null);
 
-                slot.LeftClick(cursor);
+                slot.RightClick(cursor);
 
                 Update();
             }
             else
             {
-                invPrivate.RightClick(world, player, i, cursor);
+                int j = i - TotalSlotCount;
+                invPlayer.RightClick(j, cursor);
             }
 
             Locker.Release();
@@ -1148,17 +799,16 @@ namespace MinecraftServerEngine
         }
 
         internal virtual void QuickMove(
-            World world, Player player,
-            PlayerInventory invPrivate, int i)
+            UserId id, PlayerInventory invPlayer,
+            int i)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(world != null);
-            System.Diagnostics.Debug.Assert(player != null);
+            System.Diagnostics.Debug.Assert(id != UserId.Null);
+            System.Diagnostics.Debug.Assert(invPlayer != null);
 
-            System.Diagnostics.Debug.Assert(invPrivate != null);
             System.Diagnostics.Debug.Assert(i >= 0);
-            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount + PlayerInventory.PrimarySlotCount);
 
             Locker.Hold();
 
@@ -1167,13 +817,13 @@ namespace MinecraftServerEngine
                 InventorySlot slot = Slots[i];
                 System.Diagnostics.Debug.Assert(slot != null);
 
-                invPrivate.QuickMoveFromRightInPrimary(slot);
+                invPlayer.QuickMoveFromRightInPrimary(slot);
             }
             else
             {
                 int j = i - TotalSlotCount;
                 System.Diagnostics.Debug.Assert(j >= 0);
-                InventorySlot slot = invPrivate.GetPrimarySlot(j);
+                InventorySlot slot = invPlayer.GetPrimarySlot(j);
                 System.Diagnostics.Debug.Assert(slot != null);
 
                 QuickMoveFromLeft(slot);

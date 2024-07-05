@@ -24,7 +24,7 @@ namespace MinecraftServerEngine
 
             public Window(
                 ConcurrentQueue<ClientboundPlayingPacket> outPackets,
-                PlayerInventory2 invPlayer)
+                PlayerInventory invPlayer)
             {
                 System.Diagnostics.Debug.Assert(outPackets != null);
                 System.Diagnostics.Debug.Assert(invPlayer != null);
@@ -254,7 +254,7 @@ namespace MinecraftServerEngine
                                 }
                                 else
                                 {
-                                    _invPublic.LeftClick(id, i, Cursor, invPlayer);
+                                    _invPublic.LeftClick(id, invPlayer, i, Cursor);
                                 }
                                 break;
                             case 1:
@@ -264,7 +264,7 @@ namespace MinecraftServerEngine
                                 }
                                 else
                                 {
-                                    _invPublic.RightClick(id, i, Cursor, invPlayer);
+                                    _invPublic.RightClick(id, invPlayer, i, Cursor);
                                 }
                                 break;
                         }
@@ -281,7 +281,7 @@ namespace MinecraftServerEngine
                                 }
                                 else
                                 {
-                                    _invPublic.QuickMove(id, i, invPlayer);
+                                    _invPublic.QuickMove(id, invPlayer, i);
                                 }
                                 break;
                             case 1:
@@ -291,7 +291,7 @@ namespace MinecraftServerEngine
                                 }
                                 else
                                 {
-                                    _invPublic.QuickMove(id, i, invPlayer);
+                                    _invPublic.QuickMove(id, invPlayer, i);
                                 }
                                 break;
                         }
@@ -308,7 +308,7 @@ namespace MinecraftServerEngine
                         throw new System.NotImplementedException();
                 }
 
-                player.UpdateEquipmentsRenderingData(invPlayer.Get);
+                player.UpdateEntityEquipmentsData(invPlayer.GetEquipmentsData());
 
                 int offset = _invPublic == null ? 0 : _invPublic.TotalSlotCount;
                 System.Diagnostics.Debug.Assert(offset >= 0);
@@ -362,7 +362,7 @@ namespace MinecraftServerEngine
                     {
                         System.Diagnostics.Debug.Assert(_invPublic != null);
 
-                        if (i >= _invPublic.TotalSlotCount + invPlayer.PrimarySlotCount)
+                        if (i >= _invPublic.TotalSlotCount + PlayerInventory.PrimarySlotCount)
                         {
                             throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
                         }
@@ -407,7 +407,7 @@ namespace MinecraftServerEngine
                 }
             }
 
-            public void Flush(World world, PlayerInventory2 invPlayer)
+            public void Flush(World world, PlayerInventory invPlayer)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -685,10 +685,9 @@ namespace MinecraftServerEngine
                     System.Diagnostics.Debug.Assert(_ticks >= 0);
                 }
 
-                System.Diagnostics.Debug.Assert(_ticks < long.MaxValue);
                 if (++_ticks > Timeout)
                 {
-                    throw new ResponseKeepAliveTimeoutException();
+                    throw new KeepAliveTimeoutException();
                 }
 
             }
@@ -735,9 +734,9 @@ namespace MinecraftServerEngine
             World world, 
             int idEntity, 
             Vector p, 
-            PlayerInventory2 invPlayer)
+            PlayerInventory invPlayer)
         {
-            System.Diagnostics.Debug.Assert(id != System.Guid.Empty);
+            System.Diagnostics.Debug.Assert(id != UserId.Null);
             System.Diagnostics.Debug.Assert(client != null);
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(invPlayer != null);
@@ -765,13 +764,14 @@ namespace MinecraftServerEngine
         private void RecvDataAndHandle(
             Queue<PlayerControl> controls,
             Buffer buffer, 
-            World world, 
+            World world, Player player,
             bool sneaking, bool sprinting,
-            PlayerInventory2 invPlayer)
+            PlayerInventory invPlayer)
         {
             System.Diagnostics.Debug.Assert(controls != null);
             System.Diagnostics.Debug.Assert(buffer != null);
             System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(player != null);
             System.Diagnostics.Debug.Assert(invPlayer != null);
 
             if (_disconnected)
@@ -852,7 +852,7 @@ namespace MinecraftServerEngine
 
                         System.Diagnostics.Debug.Assert(_Window != null);
                         _Window.Handle(
-                            world, invPlayer,
+                            Id, world, player, invPlayer,
                             packet.WindowId, packet.Mode, packet.Button, packet.Slot);
 
                         OutPackets.Enqueue(new ClientboundConfirmTransactionPacket(
@@ -883,7 +883,7 @@ namespace MinecraftServerEngine
                         ServerboundKeepAlivePacket packet = ServerboundKeepAlivePacket.Read(buffer);
 
                         long ticks = _KeepAliveRecord.Confirm(packet.Payload);
-                        world.PlayerList.UpdateLaytency(userId, ticks);
+                        world.PlayerList.UpdateLaytency(Id, ticks);
                     }
                     break;
                 case ServerboundPlayingPacket.PlayerPacketId:
@@ -1013,13 +1013,14 @@ namespace MinecraftServerEngine
 
         internal void Control(
             Queue<PlayerControl> controls,
-            World world,
+            World world, Player player,
             bool sneaking, bool sprinting,
-            PlayerInventory2 inv)
+            PlayerInventory invPlayer)
         {
             System.Diagnostics.Debug.Assert(controls != null);
             System.Diagnostics.Debug.Assert(world != null);
-            System.Diagnostics.Debug.Assert(inv != null);
+            System.Diagnostics.Debug.Assert(player != null);
+            System.Diagnostics.Debug.Assert(invPlayer != null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -1045,10 +1046,9 @@ namespace MinecraftServerEngine
                             RecvDataAndHandle(
                                 controls,
                                 buffer, 
-                                world,
-                                userId,
+                                world, player,
                                 sneaking, sprinting,
-                                inv);
+                                invPlayer);
                         }
                     }
                     catch (TryAgainException)
@@ -1272,14 +1272,12 @@ namespace MinecraftServerEngine
         internal void Render(
             World world, 
             int id,
-            Vector p, Look look, 
-            PlayerInventory2 inv)
+            Vector p, Look look)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
             System.Diagnostics.Debug.Assert(!_disconnected);
 
             System.Diagnostics.Debug.Assert(world != null);
-            System.Diagnostics.Debug.Assert(inv != null);
 
             using Buffer buffer = new();
 
@@ -1321,17 +1319,6 @@ namespace MinecraftServerEngine
                 {
                     ClientboundPlayingPacket packet = OutPackets.Dequeue();
 
-                    /*if (packet is TeleportSelfPlayerPacket teleportPacket)
-                    {
-                        
-                    }*/
-                    /*else if (packet is ClientboundCloseWindowPacket)
-                    {
-                        throw new System.NotImplementedException();
-                        System.Diagnostics.Debug.Assert(_window != null);
-                        _window.ResetWindowForcibly(inv, _OUT_PACKETS, false);
-                    }*/
-
                     SendPacket(buffer, packet);
 
                     System.Diagnostics.Debug.Assert(buffer.Empty);
@@ -1353,15 +1340,15 @@ namespace MinecraftServerEngine
         public void Flush(
             out UserId id,
             World world, 
-            PlayerInventory2 invPlayer)
+            PlayerInventory invPlayer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
             System.Diagnostics.Debug.Assert(_disconnected);
 
             System.Diagnostics.Debug.Assert(world != null);
-            System.Diagnostics.Debug.Assert(id != UserId.Null);
             System.Diagnostics.Debug.Assert(invPlayer != null);
 
+            System.Diagnostics.Debug.Assert(Id != UserId.Null);
             id = Id;
 
             EntityRenderer.Disconnect();
