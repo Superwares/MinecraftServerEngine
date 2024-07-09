@@ -26,7 +26,7 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            return false;
+            return true;
         }
 
         protected override Player CreatePlayer(UserId id)
