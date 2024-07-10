@@ -4,15 +4,15 @@ namespace MinecraftServerEngine.PhysicsEngine
 {
     public abstract class BoundingVolume
     {
-        public abstract void Extend(Vector v);
-        public abstract void Move(Vector v);
+        internal abstract void Extend(Vector v);
+        internal abstract void Move(Vector v);
 
-        public abstract Vector GetCenter();
-        public abstract Vector GetBottomCenter();
+        internal abstract Vector GetCenter();
+        internal abstract Vector GetBottomCenter();
 
-        public abstract AxisAlignedBoundingBox GetMinBoundingBox();
+        internal abstract AxisAlignedBoundingBox GetMinBoundingBox();
 
-        public abstract bool TestIntersection(BoundingVolume volume);
+        internal abstract bool TestIntersection(BoundingVolume volume);
         /*public abstract bool TestIntersection(BoundingVolume volume, Vector v);*/
 
         /*public override string ToString()
@@ -21,13 +21,13 @@ namespace MinecraftServerEngine.PhysicsEngine
         }*/
     }
 
-    public sealed class AxisAlignedBoundingBox : BoundingVolume
+    public class AxisAlignedBoundingBox : BoundingVolume
     {
         private Vector _max, _min;
         public Vector Max => _max;
         public Vector Min => _min;
 
-        public AxisAlignedBoundingBox(Vector max, Vector min)
+        internal AxisAlignedBoundingBox(Vector max, Vector min)
         {
             System.Diagnostics.Debug.Assert(max.X >= min.X);
             System.Diagnostics.Debug.Assert(max.Y >= min.Y);
@@ -37,7 +37,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             _min = min;
         }
 
-        public override void Extend(Vector v)
+        internal override void Extend(Vector v)
         {
             System.Diagnostics.Debug.Assert(Max.X >= Min.X);
             System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
@@ -80,7 +80,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             System.Diagnostics.Debug.Assert(Max.Z >= Min.Z);
         }
 
-        public override void Move(Vector v)
+        internal override void Move(Vector v)
         {
             System.Diagnostics.Debug.Assert(Max.X >= Min.X);
             System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
@@ -89,7 +89,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             _max = _max + v; _min = _min + v;
         }
 
-        public override Vector GetCenter()
+        internal override Vector GetCenter()
         {
             System.Diagnostics.Debug.Assert(Max.X >= Min.X);
             System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
@@ -101,7 +101,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             return new(x, y, z);
         }
 
-        public override Vector GetBottomCenter()
+        internal override Vector GetBottomCenter()
         {
             System.Diagnostics.Debug.Assert(Max.X >= Min.X);
             System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
@@ -113,7 +113,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             return new(x, y, z);
         }
 
-        public override AxisAlignedBoundingBox GetMinBoundingBox()
+        internal override AxisAlignedBoundingBox GetMinBoundingBox()
         {
             System.Diagnostics.Debug.Assert(Max.X >= Min.X);
             System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
@@ -122,7 +122,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             return new(Max, Min);
         }
 
-        public override bool TestIntersection(BoundingVolume volume)
+        internal override bool TestIntersection(BoundingVolume volume)
         {
             if (volume is AxisAlignedBoundingBox aabb)
             {
@@ -191,32 +191,32 @@ namespace MinecraftServerEngine.PhysicsEngine
             Volumes = volumes;
         }
 
-        public override void Extend(Vector v)
+        internal override void Extend(Vector v)
         {
             throw new System.NotImplementedException();
         }
 
-        public override void Move(Vector v)
+        internal override void Move(Vector v)
         {
             throw new System.NotImplementedException();
         }
 
-        public override  Vector GetCenter()
+        internal override  Vector GetCenter()
         {
             throw new System.NotImplementedException();
         }
 
-        public override  Vector GetBottomCenter()
+        internal override  Vector GetBottomCenter()
         {
             throw new System.NotImplementedException();
         }
 
-        public override AxisAlignedBoundingBox GetMinBoundingBox()
+        internal override AxisAlignedBoundingBox GetMinBoundingBox()
         {
             throw new System.NotImplementedException();
         }
 
-        public override  bool TestIntersection(BoundingVolume volume)
+        internal override  bool TestIntersection(BoundingVolume volume)
         {
             if (volume is AxisAlignedBoundingBox aabb)
             {

@@ -75,12 +75,14 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         private readonly struct Grid : System.IEquatable<Grid>
         {
-            public static Grid Generate(Vector max, Vector min)
+            private static Grid Generate(Vector max, Vector min)
             {
                 BlockLocation maxBlock = BlockLocation.Generate(max),
                               minBlock = BlockLocation.Generate(min);
 
-                int xMinBlock = minBlock.X, yMinBlock = minBlock.Y, zMinBlock = minBlock.Z;
+                int xMinBlock = minBlock.X, 
+                    yMinBlock = minBlock.Y, 
+                    zMinBlock = minBlock.Z;
 
                 double r1 = min.X % BlockWidth,
                        r2 = min.Y % BlockHeight,
@@ -98,7 +100,21 @@ namespace MinecraftServerEngine.PhysicsEngine
                     --zMinBlock;
                 }
 
-                return new(maxBlock, new(xMinBlock, yMinBlock, zMinBlock));
+                return new Grid(
+                    maxBlock, 
+                    new BlockLocation(xMinBlock, yMinBlock, zMinBlock));
+            }
+
+            internal static Grid Generate(BoundingVolume volume)
+            {
+                if (volume is AxisAlignedBoundingBox aabb)
+                {
+                    return Grid.Generate(aabb.Max, aabb.Min);
+                }
+                else
+                {
+                    throw new System.NotImplementedException();
+                }
             }
 
             public readonly BlockLocation Max, Min;
@@ -185,6 +201,8 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
+
+
             int axis = -1;
             double t = double.PositiveInfinity;
 
@@ -212,8 +230,6 @@ namespace MinecraftServerEngine.PhysicsEngine
                 return (v, onGround);
             }
 
-            bool movedDown = v.Y < 0.0D;
-
             System.Diagnostics.Debug.Assert(axis < 3);
             System.Diagnostics.Debug.Assert(t <= 1.0D);
             System.Diagnostics.Debug.Assert(t >= 0.0D);
@@ -222,18 +238,18 @@ namespace MinecraftServerEngine.PhysicsEngine
             v = v * t;
             volume.Move(v);
 
-            if (axis == 0)  // X
+            if (axis == 0)  // Y
             {
-                vPrime = new Vector(0.0D, vPrime.Y, vPrime.Z);
-            }
-            else if (axis == 1)  // Y
-            {
-                if (movedDown)
+                if (v.Y < 0.0D)
                 {
                     onGround = true;
                 }
 
                 vPrime = new Vector(vPrime.X, 0.0D, vPrime.Z);
+            }
+            else if (axis == 1)  // X
+            {
+                vPrime = new Vector(0.0D, vPrime.Y, vPrime.Z);
             }
             else if (axis == 2)  // Z
             {
@@ -247,33 +263,25 @@ namespace MinecraftServerEngine.PhysicsEngine
             return ResolveCollisions(queue, volume, vPrime, onGround);
         }
 
-        internal (Vector, bool) ResolveCollisions(
-            BoundingVolume volumeTotal, BoundingVolume volumeObject, Vector v)
+        internal (Vector, bool) ResolveCollisions(BoundingVolume volumeObj, Vector v)
         {
-            System.Diagnostics.Debug.Assert(volumeTotal != null);
-            System.Diagnostics.Debug.Assert(volumeObject != null);
-
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(volumeObj != null);
+
+            AxisAlignedBoundingBox volumeTotal = volumeObj.GetMinBoundingBox();
+            volumeTotal.Extend(v);
 
             using Queue<AxisAlignedBoundingBox> queue = new();
 
-            Grid grid;
-
-            if (volumeTotal is AxisAlignedBoundingBox aabb)
-            {
-                grid = Grid.Generate(aabb.Max, aabb.Min);
-            }
-            else
-            {
-                throw new System.NotImplementedException();
-            }
+            Grid grid = Grid.Generate(volumeTotal);
 
             foreach (BlockLocation loc in grid.GetBlockLocations())
             {
                 GenerateBoundingBoxForBlock(queue, loc);
             }
 
-            return ResolveCollisions(queue, volumeObject, v, false);
+            return ResolveCollisions(queue, volumeObj, v, false);
         }
 
         public virtual void Dispose()

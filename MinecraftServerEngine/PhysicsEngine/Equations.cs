@@ -12,7 +12,8 @@ namespace MinecraftServerEngine.PhysicsEngine
             return (max1 < min2 || max2 < min1);
         }
 
-        public static (bool, bool) FindCollisionInterval(
+        // returns collided, updated.
+        public static (bool, bool) FindCollisionInterval1(
             double max1, double min1,
             double max2, double min2, double v,
             ref double t, ref double tPrime)

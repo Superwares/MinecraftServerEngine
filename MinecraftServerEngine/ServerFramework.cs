@@ -229,13 +229,13 @@ namespace MinecraftServerEngine
             TaskManager manager = new(
                 new Task(  // 0
                     () => World.SwapQueues(),
-                    () => World.StartPlayerControls(_ticks)),
+                    () => World.ControlPlayers(_ticks)),
                 new Task(  // 1
                     () => World.SwapQueues(),
                     () => World.DestroyEntities()),
                 new Task(  // 2
                     () => World.SwapQueues(),
-                    () => World.IntegrateEntityMovements()),
+                    () => World.IntegrateEntity()),
                 new Task(  // 3
                     () => World.SwapQueues(),
                     () => World.MoveEntities()),
@@ -245,7 +245,7 @@ namespace MinecraftServerEngine
                     () => connListener.Accept(World)),
                 new Task(  // 6
                     () => World.SwapQueues(),
-                    () => World.HandlePlayerRenders()),
+                    () => World.RenderPlayers()),
                 new Task(  // 7
                     () => World.StartRoutine(_ticks)),
                 new Task(  // 8

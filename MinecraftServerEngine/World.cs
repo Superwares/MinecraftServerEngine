@@ -300,7 +300,7 @@ namespace MinecraftServerEngine
             Entities.Swap();
         }
 
-        public void StartRoutine(long serverTicks)
+        internal void StartRoutine(long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -310,7 +310,7 @@ namespace MinecraftServerEngine
             }*/
         }
 
-        public void StartEntityRoutines(long serverTicks)
+        internal void StartEntityRoutines(long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -323,7 +323,7 @@ namespace MinecraftServerEngine
             }
         }
 
-        public void StartPlayerControls(long serverTicks)
+        internal void ControlPlayers(long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -350,7 +350,7 @@ namespace MinecraftServerEngine
             entity.Dispose();
         }
 
-        public void DestroyEntities()
+        internal void DestroyEntities()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -393,7 +393,7 @@ namespace MinecraftServerEngine
             }
         }
 
-        public void IntegrateEntityMovements()
+        internal void IntegrateEntity()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -409,13 +409,14 @@ namespace MinecraftServerEngine
 
         }
 
-        public void MoveEntities()
+        internal void MoveEntities()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Entity entity;
             while (Entities.Dequeue(out entity))
             {
+                System.Diagnostics.Debug.Assert(entity != null);
                 IntegrationResult result = IntegrationResults.Extract(entity);
 
                 entity.Move(result.Volume, result.Velocity, result.OnGround);
@@ -427,7 +428,7 @@ namespace MinecraftServerEngine
 
         }
 
-        public void CreateEntities()
+        internal void CreateEntities()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -480,7 +481,7 @@ namespace MinecraftServerEngine
 
         }
 
-        public void HandlePlayerRenders()
+        internal void RenderPlayers()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

@@ -4,13 +4,15 @@ namespace MinecraftServerEngine.PhysicsEngine
 {
     internal static class Collisions
     {
-
+        // returns axis, t
         public static (int, double) Resolve(
             AxisAlignedBoundingBox aabb1, 
             AxisAlignedBoundingBox aabb2, Vector v)
         {
-            if (
-                (aabb2.Min.X < aabb1.Max.X && aabb1.Min.X < aabb2.Max.X) &&
+            System.Diagnostics.Debug.Assert(aabb1 != null);
+            System.Diagnostics.Debug.Assert(aabb2 != null);
+
+            if ((aabb2.Min.X < aabb1.Max.X && aabb1.Min.X < aabb2.Max.X) &&
                 (aabb2.Min.Y < aabb1.Max.Y && aabb1.Min.Y < aabb2.Max.Y) &&
                 (aabb2.Min.Z < aabb1.Max.Z && aabb1.Min.Z < aabb2.Max.Z))
             {
@@ -22,11 +24,11 @@ namespace MinecraftServerEngine.PhysicsEngine
             int axis = -1;
 
             bool collided, updated;
-            (collided, updated) = Equations.FindCollisionInterval(
-                aabb1.Max.X, aabb1.Min.X,
-                aabb2.Max.X, aabb2.Min.X, v.X,
-                ref t, ref tPrime);
 
+            (collided, updated) = Equations.FindCollisionInterval1(
+                aabb1.Max.Y, aabb1.Min.Y,
+                aabb2.Max.Y, aabb2.Min.Y, v.Y,
+                ref t, ref tPrime);
             if (!collided)
             {
                 return (-1, 0.0D);
@@ -39,11 +41,10 @@ namespace MinecraftServerEngine.PhysicsEngine
                 axis = 0;
             }
 
-            (collided, updated) = Equations.FindCollisionInterval(
-                aabb1.Max.Y, aabb1.Min.Y,
-                aabb2.Max.Y, aabb2.Min.Y, v.Y,
+            (collided, updated) = Equations.FindCollisionInterval1(
+                aabb1.Max.X, aabb1.Min.X,
+                aabb2.Max.X, aabb2.Min.X, v.X,
                 ref t, ref tPrime);
-
             if (!collided)
             {
                 return (-1, 0.0D);
@@ -56,11 +57,10 @@ namespace MinecraftServerEngine.PhysicsEngine
                 axis = 1;
             }
 
-            (collided, updated) = Equations.FindCollisionInterval(
+            (collided, updated) = Equations.FindCollisionInterval1(
                 aabb1.Max.Z, aabb1.Min.Z,
                 aabb2.Max.Z, aabb2.Min.Z, v.Z,
                 ref t, ref tPrime);
-
             if (!collided)
             {
                 return (-1, 0.0D);

@@ -276,7 +276,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             }*/
         }
 
-        public void InitObjectMapping(PhysicsObject obj)
+        private protected void InitObjectMapping(PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(obj != null);
 
@@ -292,7 +292,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             ObjectToGrid.Insert(obj, grid);
         }
 
-        public void CloseObjectMapping(PhysicsObject obj)
+        private protected void CloseObjectMapping(PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(obj != null);
 
@@ -307,7 +307,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             }
         }
 
-        public void UpdateObjectMapping(PhysicsObject obj)
+        private protected void UpdateObjectMapping(PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(obj != null);
 
@@ -349,7 +349,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             ObjectToGrid.Insert(obj, grid);
         }
 
-        public (BoundingVolume, Vector, bool) IntegrateObject(
+        private protected (BoundingVolume, Vector, bool) IntegrateObject(
             Terrain terrain, PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(terrain != null);
@@ -359,10 +359,7 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             (BoundingVolume volumeObject, Vector v) = obj.Integrate();
 
-            AxisAlignedBoundingBox volumeTotal = volumeObject.GetMinBoundingBox();
-            volumeTotal.Extend(v);
-
-            (v, bool onGround) = terrain.ResolveCollisions(volumeTotal, volumeObject, v);
+            (v, bool onGround) = terrain.ResolveCollisions(volumeObject, v);
 
             return (volumeObject, v, onGround);
         }
