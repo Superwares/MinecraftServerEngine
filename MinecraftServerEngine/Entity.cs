@@ -436,7 +436,7 @@ namespace MinecraftServerEngine
             Manager.ChangeForms(_sneaking, _sprinting);
         }
 
-        private protected void Sneak()
+        internal void Sneak()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -447,7 +447,7 @@ namespace MinecraftServerEngine
             UpdateFormChangingRendering();
         }
 
-        private protected void Unsneak()
+        internal void Unsneak()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -458,7 +458,7 @@ namespace MinecraftServerEngine
             UpdateFormChangingRendering();
         }
 
-        private protected void Sprint()
+        internal void Sprint()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -469,7 +469,7 @@ namespace MinecraftServerEngine
             UpdateFormChangingRendering();
         }
 
-        private protected void Unsprint()
+        internal void Unsprint()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -729,53 +729,18 @@ namespace MinecraftServerEngine
             base.Teleport(p, look);
         }
 
-        private void ControlMovement(Vector p)
+        internal void ControlMovement(Vector p)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             _pControl = p;
         }
 
-        private void ControlStanding(bool onGround)
+        internal void ControlStanding(bool onGround)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             _onGroundControl = onGround;
-        }
-
-        private void HandleControl(World world, TransformationControl control)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(world != null);
-            System.Diagnostics.Debug.Assert(control != null);
-
-            switch (control)
-            {
-                default:
-                    throw new System.NotImplementedException();
-                case MovementControl moveControl:
-                    ControlMovement(moveControl.Position);
-                    break;
-                case RotatingControl rotControl:
-                    Rotate(rotControl.Look);
-                    break;
-                case StandingControl standControl:
-                    ControlStanding(standControl.OnGround);
-                    break;
-                case SneakControl:
-                    Sneak();
-                    break;
-                case UnsneakControl:
-                    Unsneak();
-                    break;
-                case SprintControl:
-                    Sprint();
-                    break;
-                case UnsprintControl:
-                    Unsprint();
-                    break;
-            }
         }
 
         internal void Control(long serverTicks, World world)
@@ -786,27 +751,7 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(Conn != null);
 
-                using Queue<PlayerControl> controls = new();
-
-                Conn.Control(
-                    controls, 
-                    world, this,
-                    Sneaking, Sprinting, 
-                    Inventory);
-
-                while (!controls.Empty)
-                {
-                    PlayerControl control = controls.Dequeue();
-                    if (control is TransformationControl transformationControl)
-                    {
-                        HandleControl(world, transformationControl);
-                    }
-                    else
-                    {
-                        throw new System.NotImplementedException();
-                    }
-
-                }
+                Conn.Control(world, this, Inventory);
             }
 
         }

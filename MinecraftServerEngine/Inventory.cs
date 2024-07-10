@@ -83,7 +83,7 @@ namespace MinecraftServerEngine
         private const int ArmorSlotCount = 4;
         internal const int PrimarySlotCount = 36;
         private const int MainSlotCount = 27;
-        private const int HotbarSlotCount = 9;
+        internal const int HotbarSlotCount = 9;
 
         internal System.Collections.Generic.IEnumerable<InventorySlot> GetCraftingInputSlots()
         {
@@ -209,6 +209,12 @@ namespace MinecraftServerEngine
         }
 
         private int _indexMainHandSlot = 0;  // 0-8
+        internal void ChangeMainHand(int index)
+        {
+            System.Diagnostics.Debug.Assert(index >= 0);
+            System.Diagnostics.Debug.Assert(index < HotbarSlotCount);
+            _indexMainHandSlot = index;
+        }
         private InventorySlot GetMainHandSlot()
         {
             System.Diagnostics.Debug.Assert(!_disposed);

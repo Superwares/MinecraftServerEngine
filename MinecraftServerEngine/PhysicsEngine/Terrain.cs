@@ -192,7 +192,7 @@ namespace MinecraftServerEngine.PhysicsEngine
         protected abstract void GenerateBoundingBoxForBlock(
             Queue<AxisAlignedBoundingBox> queue, BlockLocation loc);
 
-        private void ResolveCollisionsWithOnGround(
+        private void ResolveCollisionsOnGround(
             Queue<AxisAlignedBoundingBox> queue,
             BoundingVolume volume, double maxStepHeight, Vector v)
         {
@@ -334,7 +334,7 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             if (onGround)
             {
-                ResolveCollisionsWithOnGround(queue, volume, maxStepHeight, v);
+                ResolveCollisionsOnGround(queue, volume, maxStepHeight, v);
                 return (Vector.Zero, true);
             }
 

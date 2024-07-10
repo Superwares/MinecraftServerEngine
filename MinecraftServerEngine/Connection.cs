@@ -762,13 +762,9 @@ namespace MinecraftServerEngine
         ~Connection() => System.Diagnostics.Debug.Assert(false);
 
         private void RecvDataAndHandle(
-            Queue<PlayerControl> controls,
             Buffer buffer, 
-            World world, Player player,
-            bool sneaking, bool sprinting,
-            PlayerInventory invPlayer)
+            World world, Player player, PlayerInventory invPlayer)
         {
-            System.Diagnostics.Debug.Assert(controls != null);
             System.Diagnostics.Debug.Assert(buffer != null);
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(player != null);
@@ -890,28 +886,30 @@ namespace MinecraftServerEngine
                     {
                         PlayerPacket packet = PlayerPacket.Read(buffer);
 
-                        if (TeleportRecords.Empty)
+                        if (!TeleportRecords.Empty)
                         {
-                            StandingControl control = new(packet.OnGround);
-                            controls.Enqueue(control);
+                            break;
                         }
 
+                        player.ControlStanding(packet.OnGround);
                     }
                     break;
                 case ServerboundPlayingPacket.PlayerPositionPacketId:
                     {
                         PlayerPositionPacket packet = PlayerPositionPacket.Read(buffer);
                 
-                        if (TeleportRecords.Empty)
+                        if (!TeleportRecords.Empty)
                         {
-                            Vector p = new(packet.X, packet.Y, packet.Z);
-
-                            controls.Enqueue(new MovementControl(p));
-                            controls.Enqueue(new StandingControl(packet.OnGround));
-
-                            ChunkLocation locChunk = ChunkLocation.Generate(p);
-                            EntityRenderer.Update(locChunk);
+                            break;
                         }
+
+                        Vector p = new(packet.X, packet.Y, packet.Z);
+
+                        player.ControlMovement(p);
+                        player.ControlStanding(packet.OnGround);
+
+                        ChunkLocation locChunk = ChunkLocation.Generate(p);
+                        EntityRenderer.Update(locChunk);
 
                     }
                     break;
@@ -919,33 +917,35 @@ namespace MinecraftServerEngine
                     {
                         PlayerPosAndLookPacket packet = PlayerPosAndLookPacket.Read(buffer);
 
-                        if (TeleportRecords.Empty)
+                        if (!TeleportRecords.Empty)
                         {
-                            Vector p = new(packet.X, packet.Y, packet.Z);
-                            Look look = new(packet.Yaw, packet.Pitch);
-
-                            controls.Enqueue(new MovementControl(p));
-                            controls.Enqueue(new RotatingControl(look));
-                            controls.Enqueue(new StandingControl(packet.OnGround));
-
-                            ChunkLocation locChunk = ChunkLocation.Generate(p);
-                            EntityRenderer.Update(locChunk);
+                            break;
                         }
 
+                        Vector p = new(packet.X, packet.Y, packet.Z);
+                        Look look = new(packet.Yaw, packet.Pitch);
+
+                        player.ControlMovement(p);
+                        player.Rotate(look);
+                        player.ControlStanding(packet.OnGround);
+
+                        ChunkLocation locChunk = ChunkLocation.Generate(p);
+                        EntityRenderer.Update(locChunk);
                     }
                     break;
                 case ServerboundPlayingPacket.PlayerLookPacketId:
                     {
                         PlayerLookPacket packet = PlayerLookPacket.Read(buffer);
 
-                        if (TeleportRecords.Empty)
+                        if (!TeleportRecords.Empty)
                         {
-                            Look look = new(packet.Yaw, packet.Pitch);
-
-                            controls.Enqueue(new RotatingControl(look));
-                            controls.Enqueue(new StandingControl(packet.OnGround));
+                            break;
                         }
 
+                        Look look = new(packet.Yaw, packet.Pitch);
+
+                        player.Rotate(look);
+                        player.ControlStanding(packet.OnGround);
                     }
                     break;
                 case ServerboundPlayingPacket.EntityActionPacketId:
@@ -958,45 +958,41 @@ namespace MinecraftServerEngine
                                 throw new UnexpectedValueException("EntityAction.ActoinId");
                             case 0:
                                 /*Console.Print("Seanking!");*/
-                                if (sneaking)
+                                if (player.Sneaking)
                                 {
                                     throw new UnexpectedValueException("EntityActionPacket.ActionId");
                                 }
 
-                                controls.Enqueue(new SneakControl());
+                                player.Sneak();
 
-                                sneaking = true;
                                 break;
                             case 1:
                                 /*Console.Print("Unseanking!");*/
-                                if (!sneaking)
+                                if (!player.Sneaking)
                                 {
                                     throw new UnexpectedValueException("EntityActionPacket.ActionId");
                                 }
 
-                                controls.Enqueue(new UnsneakControl());
+                                player.Unsneak();
 
-                                sneaking = false;
                                 break;
                             case 3:
-                                if (sprinting)
+                                if (player.Sprinting)
                                 {
                                     throw new UnexpectedValueException("EntityActionPacket.ActionId");
                                 }
 
-                                controls.Enqueue(new SprintControl());
+                                player.Sprint();
 
-                                sprinting = true;
                                 break;
                             case 4:
-                                if (!sprinting)
+                                if (!player.Sprinting)
                                 {
                                     throw new UnexpectedValueException("EntityActionPacket.ActionId");
                                 }
 
-                                controls.Enqueue(new UnsprintControl());
+                                player.Unsprint();
 
-                                sprinting = false;
                                 break;
                         }
 
@@ -1007,17 +1003,25 @@ namespace MinecraftServerEngine
 
                     }
                     break;
+                case ServerboundPlayingPacket.ServerboundHeldItemSlotPacketId:
+                    {
+                        var packet = ServerboundHeldItemSlotPacket.Read(buffer);
+
+                        if (packet.Slot < 0 || packet.Slot >= PlayerInventory.HotbarSlotCount)
+                        {
+                            throw new UnexpectedValueException("ServerboundHeldItemSlotPacket.Slot");
+                        }
+
+                        invPlayer.ChangeMainHand(packet.Slot);
+                        player.UpdateEntityEquipmentsData(invPlayer.GetEquipmentsData());
+                    }
+                    break;
             }
 
         }
 
-        internal void Control(
-            Queue<PlayerControl> controls,
-            World world, Player player,
-            bool sneaking, bool sprinting,
-            PlayerInventory invPlayer)
+        internal void Control(World world, Player player, PlayerInventory invPlayer)
         {
-            System.Diagnostics.Debug.Assert(controls != null);
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(player != null);
             System.Diagnostics.Debug.Assert(invPlayer != null);
@@ -1044,11 +1048,8 @@ namespace MinecraftServerEngine
                         while (true)
                         {
                             RecvDataAndHandle(
-                                controls,
                                 buffer, 
-                                world, player,
-                                sneaking, sprinting,
-                                invPlayer);
+                                world, player, invPlayer);
                         }
                     }
                     catch (TryAgainException)
