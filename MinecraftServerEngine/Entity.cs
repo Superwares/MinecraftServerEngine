@@ -177,7 +177,8 @@ namespace MinecraftServerEngine
                 }
             }
 
-            public void SetEquipmentsData((byte[] mainHand, byte[] offHand) equipmentsData)
+            public void SetEquipmentsData(
+                (byte[] mainHand, byte[] offHand) equipmentsData)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -479,12 +480,13 @@ namespace MinecraftServerEngine
             UpdateFormChangingRendering();
         }
 
-        internal void UpdateEntityEquipmentsData((byte[] mainHand, byte[] offHand) equipmentsData)
+        internal void UpdateEntityEquipmentsData((
+            byte[] mainHand, byte[] offHand) equipmentsData)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
             System.Diagnostics.Debug.Assert(equipmentsData.mainHand != null);
             System.Diagnostics.Debug.Assert(equipmentsData.offHand != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             Manager.SetEquipmentsData(equipmentsData);
         }
@@ -523,36 +525,36 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
-        public ItemEntity(Vector p, Look look)
+        private readonly ItemStack Stack;
+
+        public ItemEntity(ItemStack stack, Vector p, Look look)
             : base(System.Guid.NewGuid(), p, look, DefaultHitbox,
                   DefaultMass, DefaultMaxStepLevel) 
-        { }
+        {
+            System.Diagnostics.Debug.Assert(stack != null);
+
+            Stack = stack;
+        }
 
         ~ItemEntity() => System.Diagnostics.Debug.Assert(false);
 
         private protected override void RenderSpawning(EntityRenderer renderer)
         {
-            /*(byte x, byte y) = Look.ConvertToPacketFormat();
-            outPackets.Enqueue(new SpawnObjectPacket(
-                Id, UniqueId, 2,
-                Position.X, Position.Y, Position.Z,
-                x, y,
-                1, 0, 0, 0));
+            System.Diagnostics.Debug.Assert(renderer != null);
 
-            using EntityMetadata metadata = new();
-            metadata.AddBool(5, true);
-            metadata.AddSlotData(6, new SlotData(280, 1));
-            outPackets.Enqueue(new EntityMetadataPacket(
-                Id, metadata.WriteData()));*/
+            System.Diagnostics.Debug.Assert(!_disposed);
 
-            renderer.SpawnItemEntity(Id);
+            renderer.SpawnItemEntity(
+                Id, UniqueId,
+                Position, Look,
+                Stack);
         }
 
         public override void Dispose()
         {
+            // Assertions.
             System.Diagnostics.Debug.Assert(!_disposed);
-
-            // Assertion.
+            System.Diagnostics.Debug.Assert(Stack != null);
 
             // Release resources.
 

@@ -216,7 +216,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_indexMainHandSlot >= 0);
             System.Diagnostics.Debug.Assert(_indexMainHandSlot < HotbarSlotCount);
 
-            return Slots[_indexMainHandSlot];
+            return Slots[_indexMainHandSlot + HotbarSlotsOffset];
         }
 
         internal (byte[], byte[]) GetEquipmentsData()

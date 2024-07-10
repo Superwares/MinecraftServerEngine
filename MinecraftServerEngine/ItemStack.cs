@@ -6,7 +6,9 @@ namespace MinecraftServerEngine
     {
 
         private readonly ItemType Type;
+
         /*private readonly string Name;*/
+
         private int _count;
         public int Count => _count;
         public const int MinCount = 1;
@@ -174,6 +176,13 @@ namespace MinecraftServerEngine
 
             buffer.WriteShort(0);  // damage
             buffer.WriteByte(0x00);  // no NBT
+        }
+
+        internal byte[] WriteData()
+        {
+            using Buffer buffer = new();
+            WriteData(buffer);
+            return buffer.ReadData();
         }
 
         public override string ToString()

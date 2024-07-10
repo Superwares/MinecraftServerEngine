@@ -402,6 +402,7 @@ namespace MinecraftServerEngine
             (byte[], byte[]) equipmentsData)
         {
             System.Diagnostics.Debug.Assert(id != Id);
+            System.Diagnostics.Debug.Assert(uniqueId != System.Guid.Empty);
 
             System.Diagnostics.Debug.Assert(!_disconnected);
 
@@ -429,13 +430,28 @@ namespace MinecraftServerEngine
             SetEquipmentsData(id, equipmentsData);
         }
 
-        public void SpawnItemEntity(int id)
+        public void SpawnItemEntity(
+            int id, System.Guid uniqueId,
+            Vector p, Look look,
+            ItemStack stack)
         {
             System.Diagnostics.Debug.Assert(id != Id);
+            System.Diagnostics.Debug.Assert(uniqueId != System.Guid.Empty);
 
             System.Diagnostics.Debug.Assert(!_disconnected);
 
-            throw new System.NotImplementedException();
+            (byte x, byte y) = look.ConvertToProtocolFormat();
+            Render(new SpawnEntityPacket(
+                Id, uniqueId, 2,
+                p.X, p.Y, p.Z,
+                x, y,
+                1, 0, 0, 0));
+
+            using EntityMetadata metadata = new();
+            metadata.AddBool(5, true);
+            metadata.AddItemStack(6, stack);
+            Render(new EntityMetadataPacket(
+                Id, metadata.WriteData()));
         }
 
         public void DestroyEntity(int id)

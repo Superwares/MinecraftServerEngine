@@ -201,17 +201,17 @@ namespace MinecraftServerEngine.PhysicsEngine
             System.Diagnostics.Debug.Assert(maxStepHeight >= 0.0D);
 
             System.Diagnostics.Debug.Assert(!_disposed);
-
-            Vector vUp = new(0.0D, maxStepHeight, 0.0D),
-                vDown = new(0.0D, -maxStepHeight, 0.0D);
-
+            
             int axis;
             double t;
 
             int a;
             double b;
 
+            if (maxStepHeight > 0.0D)
             {
+                Vector vUp = new(0.0D, maxStepHeight, 0.0D);
+
                 axis = -1;
                 t = double.PositiveInfinity;
 
@@ -281,7 +281,10 @@ namespace MinecraftServerEngine.PhysicsEngine
                 }
             }
 
+            if (maxStepHeight > 0.0D)
             {
+                Vector vDown = new(0.0D, -maxStepHeight, 0.0D);
+
                 axis = -1;
                 t = double.PositiveInfinity;
 

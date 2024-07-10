@@ -440,17 +440,16 @@ namespace MinecraftServerEngine
 
     public sealed class ClientListener : System.IDisposable
     {
+        private static readonly System.TimeSpan PendingTimeout = System.TimeSpan.FromSeconds(1);
+
         private bool _disposed = false;
 
-
-        private static readonly System.TimeSpan _PendingTimeout = System.TimeSpan.FromSeconds(1);
-
-        private readonly ConnectionListener _connListener;
+        private readonly ConnectionListener ConnListener;
 
 
-        private readonly System.Net.Sockets.Socket _SOCKET;  // Disposable
+        private readonly System.Net.Sockets.Socket Socket;  // Disposable
 
-        private readonly Queue<Client> _VISITORS;  // Disposable
+        private readonly Queue<Client> Visitors;  // Disposable
 
         /*
          * 0: Handshake
@@ -458,18 +457,18 @@ namespace MinecraftServerEngine
          * 2: Ping
          * 3: Start Login
          */
-        private readonly Queue<int> _LEVEL_QUEUE;  // Disposable
+        private readonly Queue<int> LevelQueue;  // Disposable
 
 
         public ClientListener(ConnectionListener connListener, ushort port)
         {
-            _connListener = connListener;
+            ConnListener = connListener;
 
-            _SOCKET = SocketMethods.Establish(port);
-            _VISITORS = new();
-            _LEVEL_QUEUE = new();
+            Socket = SocketMethods.Establish(port);
+            Visitors = new();
+            LevelQueue = new();
 
-            SocketMethods.SetBlocking(_SOCKET, true);
+            SocketMethods.SetBlocking(Socket, true);
         }
 
         ~ClientListener() => System.Diagnostics.Debug.Assert(false);
@@ -478,8 +477,8 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            int count = _VISITORS.Count;
-            System.Diagnostics.Debug.Assert(count == _LEVEL_QUEUE.Count);
+            int count = Visitors.Count;
+            System.Diagnostics.Debug.Assert(count == LevelQueue.Count);
             if (count == 0) return 0;
 
             bool close, success;
@@ -488,8 +487,8 @@ namespace MinecraftServerEngine
             {
                 close = success = false;
 
-                Client client = _VISITORS.Dequeue();
-                int level = _LEVEL_QUEUE.Dequeue();
+                Client client = Visitors.Dequeue();
+                int level = LevelQueue.Dequeue();
 
                 /*Console.WriteLine($"count: {count}, level: {level}");*/
 
@@ -603,9 +602,8 @@ namespace MinecraftServerEngine
                         // TODO: Use own http client in common library.
                         using System.Net.Http.HttpClient httpClient = new();
                         string url = string.Format("https://api.mojang.com/users/profiles/minecraft/{0}", inPacket.Username);
-                        /*Console.Printll(inPacket.Username);
-                        */
-                        Console.Printl($"url: {url}");
+                        /*Console.Printll(inPacket.Username);*/
+                        /*Console.Printl($"url: {url}");*/
                         using System.Net.Http.HttpRequestMessage request = new(System.Net.Http.HttpMethod.Get, url);
 
                         // TODO: handle HttpRequestException
@@ -633,7 +631,7 @@ namespace MinecraftServerEngine
                         client.Send(buffer);
 
                         // TODO: Must dealloc id when connection is disposed.
-                        _connListener.AddUser(client, userId, username);
+                        ConnListener.AddUser(client, userId, username);
 
                         success = true;
                     }
@@ -686,8 +684,8 @@ namespace MinecraftServerEngine
                 {
                     if (close == false)
                     {
-                        _VISITORS.Enqueue(client);
-                        _LEVEL_QUEUE.Enqueue(level);
+                        Visitors.Enqueue(client);
+                        LevelQueue.Enqueue(level);
                     }
                     else
                     {
@@ -701,7 +699,7 @@ namespace MinecraftServerEngine
 
             }
 
-            return _VISITORS.Count;
+            return Visitors.Count;
         }
 
         public void StartRoutine()
@@ -712,19 +710,19 @@ namespace MinecraftServerEngine
 
             try
             {
-                if (!SocketMethods.IsBlocking(_SOCKET) &&
+                if (!SocketMethods.IsBlocking(Socket) &&
                     HandleVisitors() == 0)
                 {
-                    SocketMethods.SetBlocking(_SOCKET, true);
+                    SocketMethods.SetBlocking(Socket, true);
                 }
 
-                if (SocketMethods.Poll(_SOCKET, _PendingTimeout))
+                if (SocketMethods.Poll(Socket, PendingTimeout))
                 {
-                    Client client = Client.Accept(_SOCKET);
-                    _VISITORS.Enqueue(client);
-                    _LEVEL_QUEUE.Enqueue(0);
+                    Client client = Client.Accept(Socket);
+                    Visitors.Enqueue(client);
+                    LevelQueue.Enqueue(0);
 
-                    SocketMethods.SetBlocking(_SOCKET, false);
+                    SocketMethods.SetBlocking(Socket, false);
                 }
             }
             catch (TryAgainException)
@@ -747,13 +745,13 @@ namespace MinecraftServerEngine
             // Assertions.
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(_VISITORS.Empty);
-            System.Diagnostics.Debug.Assert(_LEVEL_QUEUE.Empty);
+            System.Diagnostics.Debug.Assert(Visitors.Empty);
+            System.Diagnostics.Debug.Assert(LevelQueue.Empty);
 
             // Release resources.
-            _SOCKET.Dispose();
-            _VISITORS.Dispose();
-            _LEVEL_QUEUE.Dispose();
+            Socket.Dispose();
+            Visitors.Dispose();
+            LevelQueue.Dispose();
 
             // Finish.
             System.GC.SuppressFinalize(this);

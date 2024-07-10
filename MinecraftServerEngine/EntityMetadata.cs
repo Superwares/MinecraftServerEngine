@@ -20,82 +20,82 @@ namespace MinecraftServerEngine
 
         private class ByteItem(byte index, byte value) : Item(index)
         {
-            private readonly byte _value = value;
+            private readonly byte Value = value;
 
             public override void WriteData(Buffer buffer)
             {
                 System.Diagnostics.Debug.Assert(buffer != null);
 
                 buffer.WriteInt(0, true);
-                buffer.WriteByte(_value);
+                buffer.WriteByte(Value);
             }
 
         }
 
         private class IntItem(byte index, int value) : Item(index)
         {
-            private readonly int _value = value;
+            private readonly int Value = value;
 
             public override void WriteData(Buffer buffer)
             {
                 System.Diagnostics.Debug.Assert(buffer != null);
 
                 buffer.WriteInt(1, true);
-                buffer.WriteInt(_value, true);
+                buffer.WriteInt(Value, true);
             }
 
         }
 
         private class FloatItem(byte index, float value) : Item(index)
         {
-            private readonly float _value = value;
+            private readonly float Value = value;
 
             public override void WriteData(Buffer buffer)
             {
                 System.Diagnostics.Debug.Assert(buffer != null);
 
                 buffer.WriteInt(2, true);
-                buffer.WriteFloat(_value);
+                buffer.WriteFloat(Value);
             }
 
         }
 
         private class StringItem(byte index, string value) : Item(index)
         {
-            private readonly string _value = value;
+            private readonly string Value = value;
 
             public override void WriteData(Buffer buffer)
             {
                 System.Diagnostics.Debug.Assert(buffer != null);
 
                 buffer.WriteInt(3, true);
-                buffer.WriteString(_value);
+                buffer.WriteString(Value);
             }
         }
 
-        /*private class SlotDataItem(byte index, SlotData value) : Item(index)
+        private class ItemStackItem(byte index, ItemStack value) : Item(index)
         {
-            private readonly SlotData _VALUE = value;
+            private readonly ItemStack Value = value;
 
             public override void WriteData(Buffer buffer)
             {
-        System.Diagnostics.Debug.Assert(buffer != null);
+                System.Diagnostics.Debug.Assert(buffer != null);
 
                 buffer.WriteInt(5, true);
-                buffer.WriteData(_VALUE.WriteData());
+                buffer.WriteData(Value.WriteData());
             }
-        }*/
+        }
 
         private class BoolItem(byte index, bool value) : Item(index)
         {
-            private readonly bool _VALUE = value;
+            private readonly bool Value = value;
 
             public override void WriteData(Buffer buffer)
             {
                 System.Diagnostics.Debug.Assert(buffer != null);
 
                 buffer.WriteInt(6, true);
-                buffer.WriteBool(_VALUE);
+                buffer.WriteBool(Value);
             }
         }
 
@@ -141,14 +141,14 @@ namespace MinecraftServerEngine
             Items.Enqueue(new StringItem(index, value));
         }
 
-        /*public void AddSlotData(byte index, SlotData value)
+        public void AddItemStack(byte index, ItemStack value)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-        System.Diagnostics.Debug.Assert(index >= 0);
+            System.Diagnostics.Debug.Assert(index >= 0);
 
-            _ITEMS.Enqueue(new SlotDataItem(index, value));
-        }*/
+            Items.Enqueue(new ItemStackItem(index, value));
+        }
 
         public void AddBool(byte index, bool value)
         {

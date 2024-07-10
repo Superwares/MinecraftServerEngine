@@ -143,16 +143,7 @@ namespace MinecraftServerEngine
         internal byte[] WriteData()
         {
             using Buffer buffer = new();
-
-            if (_stack == null)
-            {
-                buffer.WriteShort(-1);
-            }
-            else
-            {
-                _stack.WriteData(buffer);
-            }
-
+            WriteData(buffer);
             return buffer.ReadData();
         }
 
