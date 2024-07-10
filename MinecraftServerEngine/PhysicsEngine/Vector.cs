@@ -58,6 +58,8 @@ namespace MinecraftServerEngine.PhysicsEngine
             return Math.Sqrt(s);
         }
 
+        public static readonly Vector Zero = new(0.0D, 0.0D, 0.0D);
+
         public readonly double X, Y, Z;
 
         public Vector(double x, double y, double z)

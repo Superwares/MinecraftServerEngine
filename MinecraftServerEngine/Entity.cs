@@ -299,8 +299,8 @@ namespace MinecraftServerEngine
             System.Guid uniqueId,
             Vector p, Look look,
             Hitbox hitbox,
-            double m)
-            : base(hitbox.Convert(p), m)
+            double m, double maxStepLevel)
+            : base(hitbox.Convert(p), m, maxStepLevel)
         {
             Id = EntityIdAllocator.Alloc();
             UniqueId = uniqueId;
@@ -519,10 +519,13 @@ namespace MinecraftServerEngine
 
         public const double DefaultMass = 1.0D;
 
+        public const double DefaultMaxStepLevel = 0.0D;
+
         private bool _disposed = false;
 
         public ItemEntity(Vector p, Look look)
-            : base(System.Guid.NewGuid(), p, look, DefaultHitbox, DefaultMass) 
+            : base(System.Guid.NewGuid(), p, look, DefaultHitbox,
+                  DefaultMass, DefaultMaxStepLevel) 
         { }
 
         ~ItemEntity() => System.Diagnostics.Debug.Assert(false);
@@ -568,7 +571,9 @@ namespace MinecraftServerEngine
             System.Guid uniqueId,
             Vector p, Look look,
             Hitbox hitbox,
-            double m) : base(uniqueId, p, look, hitbox, m) { }
+            double m, double maxStepLevel) 
+            : base(uniqueId, p, look, hitbox, m, maxStepLevel) 
+        { }
 
         ~LivingEntity() => System.Diagnostics.Debug.Assert(false);
 
@@ -608,6 +613,8 @@ namespace MinecraftServerEngine
 
         public const double DefaultMass = 1.0D;
 
+        public const double DefaultMaxStepLevel = 0.6;
+
         private bool _disposed = false;
 
         protected readonly PlayerInventory Inventory = new();
@@ -620,7 +627,7 @@ namespace MinecraftServerEngine
         private bool _onGroundControl;
 
         public Player(UserId id, Vector p, Look look) 
-            : base(id.Data, p, look, DefaultHitbox, DefaultMass) 
+            : base(id.Data, p, look, DefaultHitbox, DefaultMass, DefaultMaxStepLevel) 
         {
             System.Diagnostics.Debug.Assert(id != UserId.Null);
 

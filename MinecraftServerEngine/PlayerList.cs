@@ -178,9 +178,9 @@ namespace MinecraftServerEngine
 
             Info info = new(id, username);
             System.Diagnostics.Debug.Assert(!Infos.Contains(id));
-            Console.Printl("PlayerList::Add 1!");
+            /*Console.Printl("PlayerList::Add 1!");*/
             Infos.Insert(id, info);
-            Console.Printl("PlayerList::Add 2!");
+            /*Console.Printl("PlayerList::Add 2!");*/
             Manager.AddPlayerWithLaytency(id, username, info.Laytency);
         }
 

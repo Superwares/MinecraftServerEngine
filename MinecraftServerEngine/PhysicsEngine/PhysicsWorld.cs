@@ -359,7 +359,8 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             (BoundingVolume volumeObject, Vector v) = obj.Integrate();
 
-            (v, bool onGround) = terrain.ResolveCollisions(volumeObject, v);
+            (v, bool onGround) = 
+                terrain.ResolveCollisions(volumeObject, obj.MaxStepHeight, v);
 
             return (volumeObject, v, onGround);
         }

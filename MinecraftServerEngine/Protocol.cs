@@ -598,13 +598,14 @@ namespace MinecraftServerEngine
 
                         // TODO: Check username is empty or invalid.
 
-                        /*Console.Print("Start http request!");*/
+                        Console.Printl("Start http request!");
 
                         // TODO: Use own http client in common library.
                         using System.Net.Http.HttpClient httpClient = new();
                         string url = string.Format("https://api.mojang.com/users/profiles/minecraft/{0}", inPacket.Username);
-                        /*Console.Printl(inPacket.Username);
-                        Console.Printl($"url: {url}");*/
+                        /*Console.Printll(inPacket.Username);
+                        */
+                        Console.Printl($"url: {url}");
                         using System.Net.Http.HttpRequestMessage request = new(System.Net.Http.HttpMethod.Get, url);
 
                         // TODO: handle HttpRequestException
@@ -619,13 +620,13 @@ namespace MinecraftServerEngine
 
                         System.Guid userId = System.Guid.Parse(dictionary["id"]);
                         string username = dictionary["name"];  // TODO: check username is valid
-                        /*Console.Printl($"userId: {userId}");
-                        Console.Printl($"username: {username}");*/
+                        /*Console.Printll($"userId: {userId}");
+                        Console.Printll($"username: {username}");*/
 
                         // TODO: Handle to throw exception
                         /*System.Diagnostics.Debug.Assert(inPacket.Username == username);*/
 
-                        /*Console.Print("Finish http request!");*/
+                        Console.Printl("Finish http request!");
 
                         LoginSuccessPacket outPacket1 = new(userId, username);
                         outPacket1.Write(buffer);

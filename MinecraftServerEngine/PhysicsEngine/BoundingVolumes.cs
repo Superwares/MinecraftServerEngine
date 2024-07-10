@@ -10,6 +10,8 @@ namespace MinecraftServerEngine.PhysicsEngine
         internal abstract Vector GetCenter();
         internal abstract Vector GetBottomCenter();
 
+        internal abstract double GetHeight();
+
         internal abstract AxisAlignedBoundingBox GetMinBoundingBox();
 
         internal abstract bool TestIntersection(BoundingVolume volume);
@@ -29,9 +31,9 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         internal AxisAlignedBoundingBox(Vector max, Vector min)
         {
-            System.Diagnostics.Debug.Assert(max.X >= min.X);
-            System.Diagnostics.Debug.Assert(max.Y >= min.Y);
-            System.Diagnostics.Debug.Assert(max.Z >= min.Z);
+            System.Diagnostics.Debug.Assert(max.X > min.X);
+            System.Diagnostics.Debug.Assert(max.Y > min.Y);
+            System.Diagnostics.Debug.Assert(max.Z > min.Z);
 
             _max = max;
             _min = min;
@@ -39,9 +41,9 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         internal override void Extend(Vector v)
         {
-            System.Diagnostics.Debug.Assert(Max.X >= Min.X);
-            System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
-            System.Diagnostics.Debug.Assert(Max.Z >= Min.Z);
+            System.Diagnostics.Debug.Assert(Max.X > Min.X);
+            System.Diagnostics.Debug.Assert(Max.Y > Min.Y);
+            System.Diagnostics.Debug.Assert(Max.Z > Min.Z);
 
             double xMax = Max.X, yMax = Max.Y, zMax = Max.Z,
                 xMin = Min.X, yMin = Min.Y, zMin = Min.Z;
@@ -75,25 +77,25 @@ namespace MinecraftServerEngine.PhysicsEngine
             _max = new Vector(xMax, yMax, zMax);
             _min = new Vector(xMin, yMin, zMin);
 
-            System.Diagnostics.Debug.Assert(Max.X >= Min.X);
-            System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
-            System.Diagnostics.Debug.Assert(Max.Z >= Min.Z);
+            System.Diagnostics.Debug.Assert(Max.X > Min.X);
+            System.Diagnostics.Debug.Assert(Max.Y > Min.Y);
+            System.Diagnostics.Debug.Assert(Max.Z > Min.Z);
         }
 
         internal override void Move(Vector v)
         {
-            System.Diagnostics.Debug.Assert(Max.X >= Min.X);
-            System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
-            System.Diagnostics.Debug.Assert(Max.Z >= Min.Z);
+            System.Diagnostics.Debug.Assert(Max.X > Min.X);
+            System.Diagnostics.Debug.Assert(Max.Y > Min.Y);
+            System.Diagnostics.Debug.Assert(Max.Z > Min.Z);
 
             _max = _max + v; _min = _min + v;
         }
 
         internal override Vector GetCenter()
         {
-            System.Diagnostics.Debug.Assert(Max.X >= Min.X);
-            System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
-            System.Diagnostics.Debug.Assert(Max.Z >= Min.Z);
+            System.Diagnostics.Debug.Assert(Max.X > Min.X);
+            System.Diagnostics.Debug.Assert(Max.Y > Min.Y);
+            System.Diagnostics.Debug.Assert(Max.Z > Min.Z);
 
             double x = (Max.X + Min.X) / 2.0D,
                 y = (Max.Y + Min.Y) / 2.0D,
@@ -103,9 +105,9 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         internal override Vector GetBottomCenter()
         {
-            System.Diagnostics.Debug.Assert(Max.X >= Min.X);
-            System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
-            System.Diagnostics.Debug.Assert(Max.Z >= Min.Z);
+            System.Diagnostics.Debug.Assert(Max.X > Min.X);
+            System.Diagnostics.Debug.Assert(Max.Y > Min.Y);
+            System.Diagnostics.Debug.Assert(Max.Z > Min.Z);
 
             double x = (Max.X + Min.X) / 2.0D,
                 y = Min.Y,
@@ -113,11 +115,20 @@ namespace MinecraftServerEngine.PhysicsEngine
             return new(x, y, z);
         }
 
+        internal override double GetHeight()
+        {
+            System.Diagnostics.Debug.Assert(Max.X > Min.X);
+            System.Diagnostics.Debug.Assert(Max.Y > Min.Y);
+            System.Diagnostics.Debug.Assert(Max.Z > Min.Z);
+
+            return (Max.Y - Min.Y);
+        }
+
         internal override AxisAlignedBoundingBox GetMinBoundingBox()
         {
-            System.Diagnostics.Debug.Assert(Max.X >= Min.X);
-            System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
-            System.Diagnostics.Debug.Assert(Max.Z >= Min.Z);
+            System.Diagnostics.Debug.Assert(Max.X > Min.X);
+            System.Diagnostics.Debug.Assert(Max.Y > Min.Y);
+            System.Diagnostics.Debug.Assert(Max.Z > Min.Z);
 
             return new(Max, Min);
         }
@@ -207,6 +218,11 @@ namespace MinecraftServerEngine.PhysicsEngine
         }
 
         internal override  Vector GetBottomCenter()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        internal override double GetHeight()
         {
             throw new System.NotImplementedException();
         }

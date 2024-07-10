@@ -192,16 +192,148 @@ namespace MinecraftServerEngine.PhysicsEngine
         protected abstract void GenerateBoundingBoxForBlock(
             Queue<AxisAlignedBoundingBox> queue, BlockLocation loc);
 
-        private (Vector, bool) ResolveCollisions(
+        private void ResolveCollisionsWithOnGround(
             Queue<AxisAlignedBoundingBox> queue,
-            BoundingVolume volume, Vector v, bool onGround)
+            BoundingVolume volume, double maxStepHeight, Vector v)
         {
             System.Diagnostics.Debug.Assert(queue != null);
             System.Diagnostics.Debug.Assert(volume != null);
+            System.Diagnostics.Debug.Assert(maxStepHeight >= 0.0D);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            Vector vUp = new(0.0D, maxStepHeight, 0.0D),
+                vDown = new(0.0D, -maxStepHeight, 0.0D);
 
+            int axis;
+            double t;
+
+            int a;
+            double b;
+
+            {
+                axis = -1;
+                t = double.PositiveInfinity;
+
+                System.Diagnostics.Debug.Assert(vUp.Y > 0.0D);
+                foreach (AxisAlignedBoundingBox aabb in queue.GetValues())
+                {
+                    (a, b) = aabb.ResolveCollision(volume, vUp);
+
+                    System.Diagnostics.Debug.Assert(t >= 0.0D);
+                    if (a > -1 && b < t)
+                    {
+                        System.Diagnostics.Debug.Assert(b <= 1.0D);
+                        System.Diagnostics.Debug.Assert(b >= 0.0D);
+                        System.Diagnostics.Debug.Assert(a == 0);
+
+                        axis = a;
+                        t = b;
+                    }
+                }
+
+                if (axis ==  -1)
+                {
+                    volume.Move(vUp);
+                }
+                else if (axis == 0)
+                {
+                    volume.Move(vUp * t);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.Assert(false);
+                }
+            }
+
+            {
+                axis = -1;
+                t = double.PositiveInfinity;
+
+                System.Diagnostics.Debug.Assert(v.Y == 0.0D);
+                foreach (AxisAlignedBoundingBox aabb in queue.GetValues())
+                {
+                    (a, b) = aabb.ResolveCollision(volume, v);
+
+                    System.Diagnostics.Debug.Assert(t >= 0.0D);
+                    if (a > -1 && b < t)
+                    {
+                        System.Diagnostics.Debug.Assert(b <= 1.0D);
+                        System.Diagnostics.Debug.Assert(b >= 0.0D);
+                        System.Diagnostics.Debug.Assert(a == 1 || a == 2);
+
+                        axis = a;
+                        t = b;
+                    }
+                }
+
+                if (axis == -1)
+                {
+                    volume.Move(v);
+                }
+                else if (axis == 1 || axis == 2)
+                {
+                    volume.Move(v * t);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.Assert(false);
+                }
+            }
+
+            {
+                axis = -1;
+                t = double.PositiveInfinity;
+
+                System.Diagnostics.Debug.Assert(vDown.Y < 0.0D);
+                foreach (AxisAlignedBoundingBox aabb in queue.GetValues())
+                {
+                    (a, b) = aabb.ResolveCollision(volume, vDown);
+
+                    System.Diagnostics.Debug.Assert(t >= 0.0D);
+                    if (a > -1 && b < t)
+                    {
+                        System.Diagnostics.Debug.Assert(b <= 1.0D);
+                        System.Diagnostics.Debug.Assert(b >= 0.0D);
+                        System.Diagnostics.Debug.Assert(a == 0);
+
+                        axis = a;
+                        t = b;
+                    }
+                }
+
+                if (axis == -1)
+                {
+                    volume.Move(vDown);
+                }
+                else if (axis == 0)
+                {
+                    volume.Move(vDown * t);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.Assert(false);
+                }
+                
+            }
+
+        }
+
+        private (Vector, bool) ResolveCollisions(
+            Queue<AxisAlignedBoundingBox> queue,
+            BoundingVolume volume, double maxStepHeight, Vector v, bool onGround)
+        {
+            System.Diagnostics.Debug.Assert(queue != null);
+            System.Diagnostics.Debug.Assert(volume != null);
+            System.Diagnostics.Debug.Assert(maxStepHeight >= 0.0D);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (onGround)
+            {
+                ResolveCollisionsWithOnGround(queue, volume, maxStepHeight, v);
+                return (Vector.Zero, true);
+            }
 
             int axis = -1;
             double t = double.PositiveInfinity;
@@ -260,10 +392,11 @@ namespace MinecraftServerEngine.PhysicsEngine
                 System.Diagnostics.Debug.Assert(false);
             }
 
-            return ResolveCollisions(queue, volume, vPrime, onGround);
+            return ResolveCollisions(queue, volume, maxStepHeight, vPrime, onGround);
         }
 
-        internal (Vector, bool) ResolveCollisions(BoundingVolume volumeObj, Vector v)
+        internal (Vector, bool) ResolveCollisions(
+            BoundingVolume volumeObj, double maxStepHeight, Vector v)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -281,7 +414,7 @@ namespace MinecraftServerEngine.PhysicsEngine
                 GenerateBoundingBoxForBlock(queue, loc);
             }
 
-            return ResolveCollisions(queue, volumeObj, v, false);
+            return ResolveCollisions(queue, volumeObj, maxStepHeight, v, false);
         }
 
         public virtual void Dispose()
