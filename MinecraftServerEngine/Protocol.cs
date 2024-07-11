@@ -118,6 +118,10 @@ namespace MinecraftServerEngine
                 {
                     throw new TryAgainException();
                 }
+                if (e.SocketErrorCode == System.Net.Sockets.SocketError.ConnectionAborted)
+                {
+                    throw new DisconnectedClientException();
+                }
 
                 throw;
             }
@@ -407,10 +411,11 @@ namespace MinecraftServerEngine
 
         public void Accept(World world)
         {
+            System.Diagnostics.Debug.Assert(world != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            User user;
-            while (Users.Dequeue(out user))
+            while (Users.Dequeue(out User user))
             {
                 if (!world.CanJoinWorld())
                 {

@@ -22,9 +22,6 @@ namespace MinecraftServerEngine.PhysicsEngine
         private readonly bool _noGravity;
         public bool NoGravity => _noGravity;
 
-        private bool _onGround;
-        public bool OnGround => _onGround;
-
         private BoundingVolume _volume;
         public BoundingVolume BoundingVolume => _volume;
 
@@ -43,11 +40,8 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             _noGravity = false;
 
-            _onGround = false;
-
             _volume = volume;
 
-            
         }
 
         public virtual void ApplyForce(Vector v)
@@ -88,17 +82,17 @@ namespace MinecraftServerEngine.PhysicsEngine
             return (volume, v);
         }
 
-        internal virtual void Move(BoundingVolume volume, Vector v, bool onGround)
+        internal virtual void Move(BoundingVolume volume, Vector v)
         {
+            System.Diagnostics.Debug.Assert(volume != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(Forces.Empty);
 
             _volume = volume;
             _v = v;
-            _onGround = onGround;
 
-            /*Console.Printl($"Velocity: {v}, OnGround: {onGround}");*/
         }
 
         public virtual void Dispose()

@@ -117,7 +117,8 @@ namespace MinecraftServerEngine
 
         private sealed class TaskManager
         {
-            private readonly int ProcessorCount = System.Environment.ProcessorCount;
+            /*private readonly int ProcessorCount = System.Environment.ProcessorCount;*/
+            private readonly int ProcessorCount = 1;
 
             public readonly int TotalTaskCount;
             private readonly Task[] Tasks;
@@ -228,28 +229,25 @@ namespace MinecraftServerEngine
 
             TaskManager manager = new(
                 new Task(  // 0
-                    () => World.SwapQueues(),
+                    () => World.SwapEntityQueue(),
                     () => World.ControlPlayers(_ticks)),
                 new Task(  // 1
-                    () => World.SwapQueues(),
+                    () => World.SwapEntityQueue(),
                     () => World.DestroyEntities()),
                 new Task(  // 2
-                    () => World.SwapQueues(),
-                    () => World.IntegrateEntity()),
-                new Task(  // 3
-                    () => World.SwapQueues(),
+                    () => World.SwapEntityQueue(),
                     () => World.MoveEntities()),
-                new Task(  // 4
+                new Task(  // 3
                     () => World.CreateEntities()),
-                new Task(  // 5
+                new Task(  // 4
                     () => connListener.Accept(World)),
-                new Task(  // 6
-                    () => World.SwapQueues(),
+                new Task(  // 5
+                    () => World.SwapEntityQueue(),
                     () => World.RenderPlayers()),
-                new Task(  // 7
+                new Task(  // 6
                     () => World.StartRoutine(_ticks)),
-                new Task(  // 8
-                    () => World.SwapQueues(),
+                new Task(  // 7
+                    () => World.SwapEntityQueue(),
                     () => World.StartEntityRoutines(_ticks)));
 
             PerformanceMonitor sys = new(manager.TotalTaskCount);

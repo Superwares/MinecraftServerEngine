@@ -140,7 +140,7 @@ namespace MinecraftServerEngine
             private readonly Locker Locker = new();  // Disposable
 
             private readonly SwapQueue<Entity> Entities = new();  // Disposable
-            private readonly SwapQueue<Player> Players = new();
+            private readonly SwapQueue<AbstractPlayer> Players = new();
 
             ~EntityQueue() => System.Diagnostics.Debug.Assert(false);
             
@@ -171,7 +171,7 @@ namespace MinecraftServerEngine
                 }
                 else
                 {
-                    Player player;
+                    AbstractPlayer player;
                     f = Players.Dequeue(out player);
                     entity = player;
                 }
@@ -186,7 +186,7 @@ namespace MinecraftServerEngine
             /// </summary>
             /// <returns></returns>
             /// <exception cref="EmptyContainerException" />
-            public bool DequeuePlayer(out Player player)
+            public bool DequeuePlayer(out AbstractPlayer player)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -211,7 +211,7 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                if (entity is Player player)
+                if (entity is AbstractPlayer player)
                 {
                     Players.Enqueue(player);
                 }
@@ -242,7 +242,7 @@ namespace MinecraftServerEngine
 
         }
 
-        private readonly struct IntegrationResult
+        /*private readonly struct IntegrationResult
         {
             public readonly BoundingVolume Volume;
             public readonly Vector Velocity;
@@ -255,7 +255,7 @@ namespace MinecraftServerEngine
                 Velocity = v;
                 OnGround = onGround;
             }
-        }
+        }*/
 
         private bool _disposed = false;
 
@@ -265,11 +265,11 @@ namespace MinecraftServerEngine
 
         private readonly EntityQueue Entities = new();  // Disposable
 
-        private readonly ConcurrentTable<UserId, Player> DisconnectedPlayers = new(); // Disposable
+        private readonly ConcurrentTable<UserId, AbstractPlayer> DisconnectedPlayers = new(); // Disposable
 
         internal readonly BlockContext BlockContext = new();  // Disposable
 
-        private readonly ConcurrentTable<Entity, IntegrationResult> IntegrationResults = new();  // Disposable
+        /*private readonly ConcurrentTable<Entity, IntegrationResult> IntegrationResults = new();  // Disposable*/
 
         /*internal PublicInventory _Inventory = new ChestInventory();*/
 
@@ -281,18 +281,16 @@ namespace MinecraftServerEngine
 
         public void SpawnEntity(Entity entity)
         {
-            System.Diagnostics.Debug.Assert(entity is not Player);
+            System.Diagnostics.Debug.Assert(entity is not AbstractPlayer);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
             EntitySpawningPool.Enqueue(entity);
-
-            throw new System.NotImplementedException();
         }
 
         protected abstract bool DetermineToDespawnPlayerOnDisconnect();
 
-        internal void SwapQueues()
+        internal void SwapEntityQueue()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -304,19 +302,20 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            /*if (serverTicks == 20 * 5)
+            if (serverTicks == 20 * 5)
             {
-                SpawnItemEntity();
-            }*/
+                SpawnEntity(new ItemEntity(new ItemStack(ItemType.Stick, 30), new Vector(0.0D, 120.0D, 0.0D)));
+            }
         }
 
         internal void StartEntityRoutines(long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Entity entity;
-            while (Entities.Dequeue(out entity))
+            while (Entities.Dequeue(out Entity entity))
             {
+                System.Diagnostics.Debug.Assert(entity != null);
+
                 entity.StartRoutine(serverTicks, this);
 
                 Entities.Enqueue(entity);
@@ -327,8 +326,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Player player;
-            while (Entities.DequeuePlayer(out player))
+            while (Entities.DequeuePlayer(out AbstractPlayer player))
             {
                 System.Diagnostics.Debug.Assert(player != null);
 
@@ -359,8 +357,8 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(entity != null);
 
-                UserId id;
-                if (entity is Player player && player.HandleConnection(out id, this))
+                if (entity is AbstractPlayer player && 
+                    player.HandleConnection(out UserId id, this))
                 {
                     System.Diagnostics.Debug.Assert(id != UserId.Null);
                     System.Diagnostics.Debug.Assert(!DisconnectedPlayers.Contains(id));
@@ -370,7 +368,7 @@ namespace MinecraftServerEngine
                     {
                         PlayerList.Remove(id);
 
-                        Player playerExtracted = DisconnectedPlayers.Extract(id);
+                        AbstractPlayer playerExtracted = DisconnectedPlayers.Extract(id);
                         System.Diagnostics.Debug.Assert(ReferenceEquals(playerExtracted, player));
 
                         DestroyEntity(player);
@@ -393,22 +391,6 @@ namespace MinecraftServerEngine
             }
         }
 
-        internal void IntegrateEntity()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Entity entity;
-            while (Entities.Dequeue(out entity))
-            {
-                (BoundingVolume volume, Vector v, bool f) =
-                    IntegrateObject(BlockContext, entity);
-                IntegrationResults.Insert(entity, new IntegrationResult(volume, v, f));
-
-                Entities.Enqueue(entity);
-            }
-
-        }
-
         internal void MoveEntities()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -417,9 +399,11 @@ namespace MinecraftServerEngine
             while (Entities.Dequeue(out entity))
             {
                 System.Diagnostics.Debug.Assert(entity != null);
-                IntegrationResult result = IntegrationResults.Extract(entity);
 
-                entity.Move(result.Volume, result.Velocity, result.OnGround);
+                (BoundingVolume volume, Vector v) = 
+                    IntegrateObject(BlockContext, entity);
+
+                entity.Move(volume, v);
 
                 UpdateObjectMapping(entity);
 
@@ -432,12 +416,10 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Entity entity;
-            while (EntitySpawningPool.Dequeue(out entity))
+            while (EntitySpawningPool.Dequeue(out Entity entity))
             {
                 System.Diagnostics.Debug.Assert(entity != null);
-
-                System.Diagnostics.Debug.Assert(entity is not Player);
+                System.Diagnostics.Debug.Assert(entity is not AbstractPlayer);
 
                 InitObjectMapping(entity);
 
@@ -447,18 +429,17 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(EntitySpawningPool.Empty);
         }
 
-        protected abstract Player CreatePlayer(UserId id);
+        protected abstract AbstractPlayer CreatePlayer(UserId id);
 
-        internal void CreateOrConnectPlayer(
-            Client client, string username, UserId id)
+        internal void CreateOrConnectPlayer(Client client, string username, UserId id)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
             System.Diagnostics.Debug.Assert(client != null);
             System.Diagnostics.Debug.Assert(username != "");
             System.Diagnostics.Debug.Assert(id != UserId.Null);
 
-            Player player;
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            AbstractPlayer player;
 
             if (DisconnectedPlayers.Contains(id))
             {
@@ -485,7 +466,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Player player;
+            AbstractPlayer player;
             while (Entities.DequeuePlayer(out player))
             {
                 System.Diagnostics.Debug.Assert(player != null);
@@ -506,7 +487,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(DisconnectedPlayers.Empty);
 
-            System.Diagnostics.Debug.Assert(IntegrationResults.Empty);
+            /*System.Diagnostics.Debug.Assert(IntegrationResults.Empty);*/
 
             // Release resources.
             PlayerList.Dispose();
@@ -519,14 +500,13 @@ namespace MinecraftServerEngine
 
             BlockContext.Dispose();
 
-            IntegrationResults.Dispose();
+            /*IntegrationResults.Dispose();*/
 
             // Finish.
             base.Dispose();
             _disposed = true;
         }
        
-
     }
 
 

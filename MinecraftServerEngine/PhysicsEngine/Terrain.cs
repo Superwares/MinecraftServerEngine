@@ -192,7 +192,7 @@ namespace MinecraftServerEngine.PhysicsEngine
         protected abstract void GenerateBoundingBoxForBlock(
             Queue<AxisAlignedBoundingBox> queue, BlockLocation loc);
 
-        private void ResolveCollisionsOnGround(
+        private Vector ResolveCollisionsOnGround(
             Queue<AxisAlignedBoundingBox> queue,
             BoundingVolume volume, double maxStepHeight, Vector v)
         {
@@ -320,9 +320,10 @@ namespace MinecraftServerEngine.PhysicsEngine
                 
             }
 
+            return Vector.Zero;
         }
 
-        private (Vector, bool) ResolveCollisions(
+        private Vector ResolveCollisions(
             Queue<AxisAlignedBoundingBox> queue,
             BoundingVolume volume, double maxStepHeight, Vector v, bool onGround)
         {
@@ -334,8 +335,7 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             if (onGround)
             {
-                ResolveCollisionsOnGround(queue, volume, maxStepHeight, v);
-                return (Vector.Zero, true);
+                return ResolveCollisionsOnGround(queue, volume, maxStepHeight, v);
             }
 
             int axis = -1;
@@ -362,7 +362,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             if (axis == -1)
             {
                 volume.Move(v);
-                return (v, onGround);
+                return v;
             }
 
             System.Diagnostics.Debug.Assert(axis < 3);
@@ -398,7 +398,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             return ResolveCollisions(queue, volume, maxStepHeight, vPrime, onGround);
         }
 
-        internal (Vector, bool) ResolveCollisions(
+        internal Vector ResolveCollisions(
             BoundingVolume volumeObj, double maxStepHeight, Vector v)
         {
             System.Diagnostics.Debug.Assert(!_disposed);

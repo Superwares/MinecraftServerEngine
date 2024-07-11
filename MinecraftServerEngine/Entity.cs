@@ -79,8 +79,7 @@ namespace MinecraftServerEngine
 
             }
 
-            public void MoveAndRotate(
-                Vector p, Vector pPrev, Look look, bool onGround)
+            public void MoveAndRotate(Vector p, Vector pPrev, Look look)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -90,13 +89,13 @@ namespace MinecraftServerEngine
                 foreach (EntityRenderer renderer in Renderers.GetValues())
                 {
                     System.Diagnostics.Debug.Assert(renderer != null);
-                    renderer.RelMoveAndRotate(Id, p, pPrev, look, onGround);
+                    renderer.RelMoveAndRotate(Id, p, pPrev, look);
                 }
 
                 _movement = true;
             }
 
-            public void Move(Vector p, Vector pPrev, bool onGround)
+            public void Move(Vector p, Vector pPrev)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -106,13 +105,13 @@ namespace MinecraftServerEngine
                 foreach (EntityRenderer renderer in Renderers.GetValues())
                 {
                     System.Diagnostics.Debug.Assert(renderer != null);
-                    renderer.RelMove(Id, p, pPrev, onGround);
+                    renderer.RelMove(Id, p, pPrev);
                 }
 
                 _movement = true;
             }
 
-            public void Rotate(Look look, bool onGround)
+            public void Rotate(Look look)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -122,7 +121,7 @@ namespace MinecraftServerEngine
                 foreach (EntityRenderer renderer in Renderers.GetValues())
                 {
                     System.Diagnostics.Debug.Assert(renderer != null);
-                    renderer.Rotate(Id, look, onGround);
+                    renderer.Rotate(Id, look);
                 }
 
                 _movement = true;
@@ -352,7 +351,7 @@ namespace MinecraftServerEngine
             return _teleported ? hitbox.Convert(_pTeleport) : hitbox.Convert(_p);
         }
 
-        internal override void Move(BoundingVolume volume, Vector v, bool onGround)
+        internal override void Move(BoundingVolume volume, Vector v)
         {
             System.Diagnostics.Debug.Assert(volume != null);
 
@@ -380,19 +379,19 @@ namespace MinecraftServerEngine
             bool moved = !p.Equals(_p);  // TODO: Compare with machine epsilon.
             if (moved && _rotated)
             {
-                Manager.MoveAndRotate(p, _p, _look, onGround);
+                Manager.MoveAndRotate(p, _p, _look);
             }
             else if (moved)
             {
                 System.Diagnostics.Debug.Assert(!_rotated);
 
-                Manager.Move(p, _p, onGround);
+                Manager.Move(p, _p);
             }
             else if (_rotated)
             {
                 System.Diagnostics.Debug.Assert(!moved);
 
-                Manager.Rotate(_look, onGround);
+                Manager.Rotate(_look);
             }
             else
             {
@@ -404,7 +403,7 @@ namespace MinecraftServerEngine
 
             Manager.FinishMovementRenderring();
 
-            base.Move(volume, v, onGround);
+            base.Move(volume, v);
 
             _p = p;
             _rotated = false;
@@ -515,7 +514,7 @@ namespace MinecraftServerEngine
 
     }
 
-    public abstract class ItemEntity : Entity
+    public sealed class ItemEntity : Entity
     {
         private static readonly Hitbox DefaultHitbox = new(0.25D, 0.25D);
 
@@ -527,8 +526,8 @@ namespace MinecraftServerEngine
 
         private readonly ItemStack Stack;
 
-        public ItemEntity(ItemStack stack, Vector p, Look look)
-            : base(System.Guid.NewGuid(), p, look, DefaultHitbox,
+        public ItemEntity(ItemStack stack, Vector p)
+            : base(System.Guid.NewGuid(), p, new Look(0.0F, 0.0F), DefaultHitbox,
                   DefaultMass, DefaultMaxStepLevel) 
         {
             System.Diagnostics.Debug.Assert(stack != null);
@@ -537,6 +536,13 @@ namespace MinecraftServerEngine
         }
 
         ~ItemEntity() => System.Diagnostics.Debug.Assert(false);
+
+        private protected override Hitbox GetHitbox()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            return DefaultHitbox;
+        }
 
         private protected override void RenderSpawning(EntityRenderer renderer)
         {
@@ -594,7 +600,7 @@ namespace MinecraftServerEngine
 
     }
 
-    public abstract class Player : LivingEntity
+    public abstract class AbstractPlayer : LivingEntity
     {
         private static Hitbox GetHitbox(bool sneaking)
         {
@@ -626,9 +632,8 @@ namespace MinecraftServerEngine
         public bool Connected => !Disconnected;
 
         private Vector _pControl;
-        private bool _onGroundControl;
 
-        public Player(UserId id, Vector p, Look look) 
+        public AbstractPlayer(UserId id, Vector p, Look look) 
             : base(id.Data, p, look, DefaultHitbox, DefaultMass, DefaultMaxStepLevel) 
         {
             System.Diagnostics.Debug.Assert(id != UserId.Null);
@@ -637,7 +642,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!Sprinting);
         }
 
-        ~Player() => System.Diagnostics.Debug.Assert(false);
+        ~AbstractPlayer() => System.Diagnostics.Debug.Assert(false);
 
         private protected override Hitbox GetHitbox()
         {
@@ -668,7 +673,6 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(id != UserId.Null);
 
             _pControl = Position;
-            _onGroundControl = OnGround;
 
             Conn = new Connection(id, client, world, Id, _pControl, Inventory);
         }
@@ -687,7 +691,7 @@ namespace MinecraftServerEngine
             base.ApplyForce(force);
         }
 
-        internal override void Move(BoundingVolume volume, Vector v, bool onGround)
+        internal override void Move(BoundingVolume volume, Vector v)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -708,10 +712,9 @@ namespace MinecraftServerEngine
                 Console.Printl($"length: {length}");*/
 
                 volume = GetHitbox().Convert(_pControl);
-                onGround = _onGroundControl;
             }
             
-            base.Move(volume, v, onGround);
+            base.Move(volume, v);
         }
 
         public override void Teleport(Vector p, Look look)
@@ -721,7 +724,6 @@ namespace MinecraftServerEngine
             if (Connected)
             {
                 _pControl = p;
-                _onGroundControl = false;
 
                 Conn.Teleport(p, look);
             }
@@ -734,13 +736,6 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             _pControl = p;
-        }
-
-        internal void ControlStanding(bool onGround)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            _onGroundControl = onGround;
         }
 
         internal void Control(long serverTicks, World world)
@@ -838,7 +833,6 @@ namespace MinecraftServerEngine
             base.Dispose();
             _disposed = true;
         }
-
 
     }
 

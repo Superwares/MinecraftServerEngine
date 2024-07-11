@@ -223,7 +223,7 @@ namespace MinecraftServerEngine
 
             public void Handle(
                 UserId id,
-                World world, Player player,
+                World world, AbstractPlayer player,
                 PlayerInventory invPlayer,
                 int mode, int button, int i)
             {
@@ -327,7 +327,7 @@ namespace MinecraftServerEngine
 
             public void Handle(
                 UserId id,
-                World world, Player player,
+                World world, AbstractPlayer player,
                 PlayerInventory invPlayer,
                 int idWindow, int mode, int button, int i)
             {
@@ -763,7 +763,7 @@ namespace MinecraftServerEngine
 
         private void RecvDataAndHandle(
             Buffer buffer, 
-            World world, Player player, PlayerInventory invPlayer)
+            World world, AbstractPlayer player, PlayerInventory invPlayer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
             System.Diagnostics.Debug.Assert(world != null);
@@ -891,7 +891,7 @@ namespace MinecraftServerEngine
                             break;
                         }
 
-                        player.ControlStanding(packet.OnGround);
+                        /*player.ControlStanding(packet.OnGround);*/
                     }
                     break;
                 case ServerboundPlayingPacket.PlayerPositionPacketId:
@@ -906,7 +906,7 @@ namespace MinecraftServerEngine
                         Vector p = new(packet.X, packet.Y, packet.Z);
 
                         player.ControlMovement(p);
-                        player.ControlStanding(packet.OnGround);
+                        /*player.ControlStanding(packet.OnGround);*/
 
                         ChunkLocation locChunk = ChunkLocation.Generate(p);
                         EntityRenderer.Update(locChunk);
@@ -927,7 +927,7 @@ namespace MinecraftServerEngine
 
                         player.ControlMovement(p);
                         player.Rotate(look);
-                        player.ControlStanding(packet.OnGround);
+                        /*player.ControlStanding(packet.OnGround);*/
 
                         ChunkLocation locChunk = ChunkLocation.Generate(p);
                         EntityRenderer.Update(locChunk);
@@ -945,7 +945,7 @@ namespace MinecraftServerEngine
                         Look look = new(packet.Yaw, packet.Pitch);
 
                         player.Rotate(look);
-                        player.ControlStanding(packet.OnGround);
+                        /*player.ControlStanding(packet.OnGround);*/
                     }
                     break;
                 case ServerboundPlayingPacket.EntityActionPacketId:
@@ -1020,7 +1020,7 @@ namespace MinecraftServerEngine
 
         }
 
-        internal void Control(World world, Player player, PlayerInventory invPlayer)
+        internal void Control(World world, AbstractPlayer player, PlayerInventory invPlayer)
         {
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(player != null);
@@ -1275,10 +1275,10 @@ namespace MinecraftServerEngine
             int id,
             Vector p, Look look)
         {
+            System.Diagnostics.Debug.Assert(world != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
             System.Diagnostics.Debug.Assert(!_disconnected);
-
-            System.Diagnostics.Debug.Assert(world != null);
 
             using Buffer buffer = new();
 
@@ -1319,6 +1319,7 @@ namespace MinecraftServerEngine
                 while (!OutPackets.Empty)
                 {
                     ClientboundPlayingPacket packet = OutPackets.Dequeue();
+                    System.Diagnostics.Debug.Assert(packet != null);
 
                     SendPacket(buffer, packet);
 

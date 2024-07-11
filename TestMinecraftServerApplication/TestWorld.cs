@@ -29,7 +29,7 @@ namespace TestMinecraftServerApplication
             return false;
         }
 
-        protected override Player CreatePlayer(UserId id)
+        protected override AbstractPlayer CreatePlayer(UserId id)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

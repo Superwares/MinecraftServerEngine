@@ -349,7 +349,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             ObjectToGrid.Insert(obj, grid);
         }
 
-        private protected (BoundingVolume, Vector, bool) IntegrateObject(
+        private protected (BoundingVolume, Vector) IntegrateObject(
             Terrain terrain, PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(terrain != null);
@@ -359,10 +359,9 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             (BoundingVolume volumeObject, Vector v) = obj.Integrate();
 
-            (v, bool onGround) = 
-                terrain.ResolveCollisions(volumeObject, obj.MaxStepHeight, v);
+            v = terrain.ResolveCollisions(volumeObject, obj.MaxStepHeight, v);
 
-            return (volumeObject, v, onGround);
+            return (volumeObject, v);
         }
 
         public virtual void Dispose()

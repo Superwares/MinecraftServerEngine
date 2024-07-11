@@ -283,7 +283,7 @@ namespace MinecraftServerEngine
 
         public void RelMoveAndRotate(
             int id, 
-            Vector p, Vector pPrev, Look look, bool onGround)
+            Vector p, Vector pPrev, Look look)
         {
             System.Diagnostics.Debug.Assert(id != Id);
 
@@ -301,12 +301,12 @@ namespace MinecraftServerEngine
                 id,
                 (short)dx, (short)dy, (short)dz,
                 x, y,
-                onGround));
+                false));
             Render(new EntityHeadLookPacket(id, x));
         
         }
 
-        public void RelMove(int id, Vector p, Vector pPrev, bool onGround)
+        public void RelMove(int id, Vector p, Vector pPrev)
         {
             System.Diagnostics.Debug.Assert(id != Id);
 
@@ -322,18 +322,18 @@ namespace MinecraftServerEngine
             Render(new EntityRelMovePacket(
                 id,
                 (short)dx, (short)dy, (short)dz,
-                onGround));
+                false));
 
         }
 
-        public void Rotate(int id, Look look, bool onGround)
+        public void Rotate(int id, Look look)
         {
             System.Diagnostics.Debug.Assert(id != Id);
 
             System.Diagnostics.Debug.Assert(!_disconnected);
 
             (byte x, byte y) = look.ConvertToProtocolFormat();
-            Render(new EntityLookPacket(id, x, y, onGround));
+            Render(new EntityLookPacket(id, x, y, false));
             Render(new EntityHeadLookPacket(id, x));
         }
 
@@ -442,7 +442,7 @@ namespace MinecraftServerEngine
 
             (byte x, byte y) = look.ConvertToProtocolFormat();
             Render(new SpawnEntityPacket(
-                Id, uniqueId, 2,
+                id, uniqueId, 2,
                 p.X, p.Y, p.Z,
                 x, y,
                 1, 0, 0, 0));
@@ -451,7 +451,7 @@ namespace MinecraftServerEngine
             metadata.AddBool(5, true);
             metadata.AddItemStack(6, stack);
             Render(new EntityMetadataPacket(
-                Id, metadata.WriteData()));
+                id, metadata.WriteData()));
         }
 
         public void DestroyEntity(int id)

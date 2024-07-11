@@ -3,7 +3,7 @@ using MinecraftServerEngine.PhysicsEngine;
 
 namespace TestMinecraftServerApplication
 {
-    public sealed class Guest : Player
+    public sealed class Guest : AbstractPlayer
     {
         private bool _disposed = false;
 
