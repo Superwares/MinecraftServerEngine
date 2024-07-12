@@ -182,6 +182,7 @@ namespace MinecraftServerEngine
         public const int UnloadChunkPacketId = 0x1D;
         public const int ClientboundKeepAlivePacketId = 0x1F;
         public const int LoadChunkPacketId = 0x20;
+        public const int ParticlesPacketId = 0x22;
         public const int JoinGamePacketId = 0x23;
         public const int EntityPacketId = 0x25;
         public const int EntityRelMovePacketId = 0x26;
@@ -965,6 +966,50 @@ namespace MinecraftServerEngine
             buffer.WriteInt(Data.Length, true);
             buffer.WriteData(Data);
             buffer.WriteInt(0, true);  // TODO: Block entities
+        }
+
+    }
+
+    internal sealed class ParticlesPacket : ClientboundPlayingPacket
+    {
+        internal readonly int ParticleId;
+        internal readonly bool ExtendedRange;
+        internal readonly float X, Y, Z;
+        internal readonly float OffsetX, OffsetY, OffsetZ;
+        internal readonly float Speed;
+        internal readonly int Count;
+
+        internal static ParticlesPacket Read(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            throw new System.NotImplementedException();
+        }
+
+        public ParticlesPacket(
+            int particleId, bool extendedRange, 
+            float x, float y, float z, 
+            float offsetX, float offsetY, float offsetZ, 
+            float speed, int count) : base(ParticlesPacketId)
+        {
+            ParticleId = particleId;
+            ExtendedRange = extendedRange;
+            X = x; Y = y; Z = z;
+            OffsetX = offsetX; OffsetY = offsetY; OffsetZ = offsetZ;
+            Speed = speed;
+            Count = count;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            buffer.WriteInt(ParticleId);
+            buffer.WriteBool(ExtendedRange);
+            buffer.WriteFloat(X); buffer.WriteFloat(Y); buffer.WriteFloat(Z);
+            buffer.WriteFloat(OffsetX); buffer.WriteFloat(OffsetY); buffer.WriteFloat(OffsetZ);
+            buffer.WriteFloat(Speed);
+            buffer.WriteInt(Count);
         }
 
     }

@@ -1020,7 +1020,7 @@ namespace MinecraftServerEngine
 
         }
 
-        internal void Control(World world, AbstractPlayer player, PlayerInventory invPlayer)
+        internal void Control(long serverTicks, World world, AbstractPlayer player, PlayerInventory invPlayer)
         {
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(player != null);
@@ -1036,6 +1036,23 @@ namespace MinecraftServerEngine
                     player._selfInventory,
                     world._Inventory);
             }*/
+
+            if (serverTicks == 20 * 5)  // 5 seconds
+            {
+                /*Console.Printl("Particles!");*/
+
+                using Buffer buffer2 = new();   
+
+                float offset = 1.0F;
+                ParticlesPacket packet2 = new(
+                    30, false, 
+                    0.0F, 105.0F, 0.0F, 
+                    offset, offset, offset, 
+                    10.0F, 
+                    10);
+
+                SendPacket(buffer2, packet2);
+            }
 
             using Buffer buffer = new();
 

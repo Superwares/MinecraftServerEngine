@@ -178,7 +178,6 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             _volume = volume;
             _v = v;
-
         }
 
         public virtual void Dispose()

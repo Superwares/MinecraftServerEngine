@@ -330,7 +330,6 @@ namespace MinecraftServerEngine.PhysicsEngine
             System.Diagnostics.Debug.Assert(queue != null);
             System.Diagnostics.Debug.Assert(volume != null);
             System.Diagnostics.Debug.Assert(maxStepHeight >= 0.0D);
-            System.Diagnostics.Debug.Assert(v.GetLengthSquared() > 0.0D);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -423,15 +422,24 @@ namespace MinecraftServerEngine.PhysicsEngine
             return ResolveCollisions(queue, volume, maxStepHeight, v);
         }
 
-        private Vector ResolveCollisions(
-            Queue<AxisAlignedBoundingBox> queue,
-            BoundingVolume volume, Vector v)
+        internal Vector ResolveCollisions(BoundingVolume volume, Vector v)
         {
-            System.Diagnostics.Debug.Assert(queue != null);
             System.Diagnostics.Debug.Assert(volume != null);
             System.Diagnostics.Debug.Assert(v.GetLengthSquared() > 0.0D);
 
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            AxisAlignedBoundingBox volumeTotal = volume.GetMinBoundingBox();
+            volumeTotal.Extend(v);
+
+            using Queue<AxisAlignedBoundingBox> queue = new();
+
+            Grid grid = Grid.Generate(volumeTotal);
+
+            foreach (BlockLocation loc in grid.GetBlockLocations())
+            {
+                GenerateBoundingBoxForBlock(queue, loc);
+            }
 
             int axis = -1;
             double t = double.PositiveInfinity;
@@ -467,28 +475,6 @@ namespace MinecraftServerEngine.PhysicsEngine
             volume.Move(v);
 
             return Vector.Zero;
-        }
-
-        internal Vector ResolveCollisions(BoundingVolume volume, Vector v)
-        {
-            System.Diagnostics.Debug.Assert(volume != null);
-            System.Diagnostics.Debug.Assert(v.GetLengthSquared() > 0.0D);
-
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            AxisAlignedBoundingBox volumeTotal = volume.GetMinBoundingBox();
-            volumeTotal.Extend(v);
-
-            using Queue<AxisAlignedBoundingBox> queue = new();
-
-            Grid grid = Grid.Generate(volumeTotal);
-
-            foreach (BlockLocation loc in grid.GetBlockLocations())
-            {
-                GenerateBoundingBoxForBlock(queue, loc);
-            }
-
-            return ResolveCollisions(queue, volume, v);
         }
 
         public virtual void Dispose()

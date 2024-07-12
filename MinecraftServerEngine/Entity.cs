@@ -534,7 +534,7 @@ namespace MinecraftServerEngine
 
         public override void StartRoutine(long serverTicks, PhysicsWorld world)
         {
-            throw new System.NotImplementedException();
+            System.Diagnostics.Debug.Assert(world != null);
         }
 
         public override void Dispose()
@@ -727,7 +727,7 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(Conn != null);
 
-                Conn.Control(world, this, Inventory);
+                Conn.Control(serverTicks, world, this, Inventory);
             }
 
         }
