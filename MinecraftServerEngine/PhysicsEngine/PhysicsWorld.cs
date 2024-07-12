@@ -350,7 +350,7 @@ namespace MinecraftServerEngine.PhysicsEngine
         }
 
         private protected (BoundingVolume, Vector) IntegrateObject(
-            Terrain terrain, PhysicsObject obj)
+            Terrain terrain, PhysicsObject obj, double maxStepHeight)
         {
             System.Diagnostics.Debug.Assert(terrain != null);
             System.Diagnostics.Debug.Assert(obj != null);
@@ -359,7 +359,11 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             (BoundingVolume volumeObject, Vector v) = obj.Integrate();
 
-            v = terrain.ResolveCollisions(volumeObject, obj.MaxStepHeight, v);
+            if (v.GetLengthSquared() > 0.0D)
+            {
+                v = terrain.ResolveCollisions(volumeObject, maxStepHeight, v);
+            }
+            
 
             return (volumeObject, v);
         }

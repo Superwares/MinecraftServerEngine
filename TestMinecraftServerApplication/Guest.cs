@@ -12,6 +12,14 @@ namespace TestMinecraftServerApplication
 
         ~Guest() => System.Diagnostics.Debug.Assert(false);
 
+        public override void StartRoutine(PhysicsWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+        }
+
         public override void Dispose()
         {
             // Assertions.

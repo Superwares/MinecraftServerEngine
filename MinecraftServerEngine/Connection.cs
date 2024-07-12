@@ -1103,7 +1103,7 @@ namespace MinecraftServerEngine
             /*Console.Printl($"grid: {grid}");*/
 
             AxisAlignedBoundingBox aabbTotal = grid.GetMinBoundingBox();
-            foreach (PhysicsObject obj in world.GetObjects(aabbTotal))
+            foreach (PhysicsEngine.PhysicsObject obj in world.GetObjects(aabbTotal))
             {
                 switch (obj)
                 {
@@ -1270,7 +1270,7 @@ namespace MinecraftServerEngine
             return _Window.Open(OutPackets, invPri, invPub);
         }
 
-        internal void Render(
+        internal void LoadAndSendData(
             World world, 
             int id,
             Vector p, Look look)

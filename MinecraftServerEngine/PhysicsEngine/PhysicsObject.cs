@@ -12,8 +12,6 @@ namespace MinecraftServerEngine.PhysicsEngine
         private readonly double _m;
         public double Mass => _m;
 
-        internal readonly double MaxStepHeight;
-
         private readonly Queue<Vector> Forces = new();  // Disposable
 
         private Vector _v;
@@ -21,6 +19,8 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         private readonly bool _noGravity;
         public bool NoGravity => _noGravity;
+
+        internal readonly double MaxStepHeight;
 
         private BoundingVolume _volume;
         public BoundingVolume BoundingVolume => _volume;
@@ -30,19 +30,33 @@ namespace MinecraftServerEngine.PhysicsEngine
         {
             System.Diagnostics.Debug.Assert(volume != null);
             System.Diagnostics.Debug.Assert(m > 0.0D);
-            System.Diagnostics.Debug.Assert(maxStepHeight >= 0.0D);
 
             _m = m;
-            System.Diagnostics.Debug.Assert(maxStepHeight < volume.GetHeight() / 2.0D);
-            MaxStepHeight = maxStepHeight;
 
             _v = new(0.0D, 0.0D, 0.0D);
 
             _noGravity = false;
 
-            _volume = volume;
+            System.Diagnostics.Debug.Assert(maxStepHeight >= 0.0D);
+            System.Diagnostics.Debug.Assert(maxStepHeight <= volume.GetHeight() / 2.0D);
+            MaxStepHeight = maxStepHeight;
 
+            _volume = volume;
         }
+
+        public PhysicsObject(BoundingVolume volume, double m) : this(volume, m, 0.0D)
+        {
+            
+        }
+
+        public virtual bool IsDead()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            return false;
+        }
+
+        public abstract void StartRoutine(PhysicsWorld world);
 
         public virtual void ApplyForce(Vector v)
         {

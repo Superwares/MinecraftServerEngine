@@ -229,26 +229,26 @@ namespace MinecraftServerEngine
 
             TaskManager manager = new(
                 new Task(  // 0
-                    () => World.SwapEntityQueue(),
+                    () => World.SwapObjectQueue(),
                     () => World.ControlPlayers(_ticks)),
                 new Task(  // 1
-                    () => World.SwapEntityQueue(),
-                    () => World.DestroyEntities()),
+                    () => World.SwapObjectQueue(),
+                    () => World.DestroyObjects()),
                 new Task(  // 2
-                    () => World.SwapEntityQueue(),
-                    () => World.MoveEntities()),
+                    () => World.SwapObjectQueue(),
+                    () => World.MoveObjects()),
                 new Task(  // 3
-                    () => World.CreateEntities()),
+                    () => World.CreateObjects()),
                 new Task(  // 4
                     () => connListener.Accept(World)),
                 new Task(  // 5
-                    () => World.SwapEntityQueue(),
-                    () => World.RenderPlayers()),
+                    () => World.SwapObjectQueue(),
+                    () => World.LoadAndSendData()),
                 new Task(  // 6
                     () => World.StartRoutine(_ticks)),
                 new Task(  // 7
-                    () => World.SwapEntityQueue(),
-                    () => World.StartEntityRoutines(_ticks)));
+                    () => World.SwapObjectQueue(),
+                    () => World.StartObjectRoutines()));
 
             PerformanceMonitor sys = new(manager.TotalTaskCount);
 

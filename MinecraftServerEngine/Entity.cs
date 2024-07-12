@@ -1,10 +1,12 @@
 ﻿
 using Common;
 using Containers;
-using MinecraftServerEngine.PhysicsEngine;
+
 
 namespace MinecraftServerEngine
 {
+    using PhysicsEngine;
+
     public abstract class Entity : PhysicsObject
     {
         private sealed class RendererManager : System.IDisposable
@@ -192,11 +194,15 @@ namespace MinecraftServerEngine
                 }
             }
 
-            public void Flush()
+            public void Dispose()
             {
+                // Assertions.
                 System.Diagnostics.Debug.Assert(!_disposed);
-
+                System.Diagnostics.Debug.Assert(!_movement);
                 System.Diagnostics.Debug.Assert(!Ids.Contains(Id));
+
+                // Release  resources.
+                Ids.Dispose();
 
                 System.Diagnostics.Debug.Assert(Renderers != null);
                 while (!Renderers.Empty)
@@ -212,18 +218,6 @@ namespace MinecraftServerEngine
 
                     System.Diagnostics.Debug.Assert(Ids.Contains(renderer.Id));
                 }
-            }
-
-            public void Dispose()
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                // Assertion
-                System.Diagnostics.Debug.Assert(!_movement);
-                System.Diagnostics.Debug.Assert(Renderers.Empty);
-
-                // Release  resources.
-                Ids.Dispose();
                 Renderers.Dispose();
 
                 // Finish
@@ -286,7 +280,6 @@ namespace MinecraftServerEngine
         public bool Sneaking => _sneaking;
         public bool Sprinting => _sprinting;
 
-
         private protected bool _teleported = false;
         private protected Vector _pTeleport;
         private protected Look _lookTeleport;
@@ -299,8 +292,8 @@ namespace MinecraftServerEngine
             System.Guid uniqueId,
             Vector p, Look look,
             Hitbox hitbox,
-            double m, double maxStepLevel)
-            : base(hitbox.Convert(p), m, maxStepLevel)
+            double m, double maxStepHeight)
+            : base(hitbox.Convert(p), m, maxStepHeight)
         {
             Id = EntityIdAllocator.Alloc();
             UniqueId = uniqueId;
@@ -334,15 +327,6 @@ namespace MinecraftServerEngine
                 RenderSpawning(renderer);
             }
         }
-
-        public virtual bool IsDead()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            return false;
-        }
-
-        public virtual void StartRoutine(long serverTicks, World world) { }
 
         protected override BoundingVolume GenerateBoundingVolume()
         {
@@ -490,14 +474,6 @@ namespace MinecraftServerEngine
             Manager.SetEquipmentsData(equipmentsData);
         }
 
-        public virtual void Flush()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(Manager != null);
-            Manager.Flush();
-        }
-
         public override void Dispose()
         {
             // Assertion
@@ -554,6 +530,11 @@ namespace MinecraftServerEngine
                 Id, UniqueId,
                 Position, Look,
                 Stack);
+        }
+
+        public override void StartRoutine(PhysicsWorld world)
+        {
+            throw new System.NotImplementedException();
         }
 
         public override void Dispose()
@@ -778,7 +759,7 @@ namespace MinecraftServerEngine
             return false;
         }
 
-        public void Render(World world)
+        public void LoadAndSendData(World world)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -788,7 +769,7 @@ namespace MinecraftServerEngine
             }
 
             System.Diagnostics.Debug.Assert(Conn != null);
-            Conn.Render(
+            Conn.LoadAndSendData(
                 world, 
                 Id, 
                 Position, Look);

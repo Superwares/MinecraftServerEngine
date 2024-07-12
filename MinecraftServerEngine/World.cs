@@ -8,7 +8,7 @@ namespace MinecraftServerEngine
 
     public abstract class World : PhysicsWorld
     {
-        private sealed class EntityQueue : System.IDisposable
+        private sealed class ObjectQueue : System.IDisposable
         {
             private class SwapQueue<T> : System.IDisposable
             {
@@ -139,16 +139,16 @@ namespace MinecraftServerEngine
 
             private readonly Locker Locker = new();  // Disposable
 
-            private readonly SwapQueue<Entity> Entities = new();  // Disposable
+            private readonly SwapQueue<PhysicsObject> Objects = new();  // Disposable
             private readonly SwapQueue<AbstractPlayer> Players = new();
 
-            ~EntityQueue() => System.Diagnostics.Debug.Assert(false);
+            ~ObjectQueue() => System.Diagnostics.Debug.Assert(false);
             
             public void Swap()
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                Entities.Swap();
+                Objects.Swap();
                 Players.Swap();
             }
 
@@ -157,7 +157,7 @@ namespace MinecraftServerEngine
             /// </summary>
             /// <returns></returns>
             /// <exception cref="EmptyContainerException" />
-            public bool Dequeue(out Entity entity)
+            public bool Dequeue(out PhysicsObject obj)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -165,15 +165,14 @@ namespace MinecraftServerEngine
 
                 bool f;
 
-                if (!Entities.Empty)
+                if (!Objects.Empty)
                 {
-                    f = Entities.Dequeue(out entity);
+                    f = Objects.Dequeue(out obj);
                 }
                 else
                 {
-                    AbstractPlayer player;
-                    f = Players.Dequeue(out player);
-                    entity = player;
+                    f = Players.Dequeue(out AbstractPlayer player);
+                    obj = player;
                 }
 
                 Locker.Release();
@@ -198,26 +197,26 @@ namespace MinecraftServerEngine
             /// </summary>
             /// <returns></returns>
             /// <exception cref="EmptyContainerException" />
-            public bool DequeueNonPlayer(out Entity entity)
+            public bool DequeueNonPlayer(out PhysicsObject obj)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                return Entities.Dequeue(out entity);
+                return Objects.Dequeue(out obj);
             }
 
-            public void Enqueue(Entity entity)
+            public void Enqueue(PhysicsObject obj)
             {
-                System.Diagnostics.Debug.Assert(entity != null);
+                System.Diagnostics.Debug.Assert(obj != null);
 
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                if (entity is AbstractPlayer player)
+                if (obj is AbstractPlayer player)
                 {
                     Players.Enqueue(player);
                 }
                 else
                 {
-                    Entities.Enqueue(entity);
+                    Objects.Enqueue(obj);
                 }
             }
 
@@ -226,13 +225,13 @@ namespace MinecraftServerEngine
                 // Assertions.
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                System.Diagnostics.Debug.Assert(Entities.Empty);
+                System.Diagnostics.Debug.Assert(Objects.Empty);
                 System.Diagnostics.Debug.Assert(Players.Empty);
 
                 // Release resources.
                 Locker.Dispose();
 
-                Entities.Dispose();
+                Objects.Dispose();
                 Players.Dispose();
 
                 // Finish.
@@ -242,36 +241,17 @@ namespace MinecraftServerEngine
 
         }
 
-        /*private readonly struct IntegrationResult
-        {
-            public readonly BoundingVolume Volume;
-            public readonly Vector Velocity;
-            public readonly bool OnGround;
-
-            public IntegrationResult(
-                BoundingVolume volume, Vector v, bool onGround)
-            {
-                Volume = volume;
-                Velocity = v;
-                OnGround = onGround;
-            }
-        }*/
-
         private bool _disposed = false;
 
         internal readonly PlayerList PlayerList = new();  // Disposable
 
-        private readonly ConcurrentQueue<Entity> EntitySpawningPool = new();  // Disposable
+        private readonly ConcurrentQueue<PhysicsObject> EntitySpawningPool = new();  // Disposable
 
-        private readonly EntityQueue Entities = new();  // Disposable
+        private readonly ObjectQueue Objects = new();  // Disposable
 
         private readonly ConcurrentTable<UserId, AbstractPlayer> DisconnectedPlayers = new(); // Disposable
 
         internal readonly BlockContext BlockContext = new();  // Disposable
-
-        /*private readonly ConcurrentTable<Entity, IntegrationResult> IntegrationResults = new();  // Disposable*/
-
-        /*internal PublicInventory _Inventory = new ChestInventory();*/
 
         public World() { }
 
@@ -279,23 +259,23 @@ namespace MinecraftServerEngine
 
         public abstract bool CanJoinWorld();
 
-        public void SpawnEntity(Entity entity)
+        public void SpawnObject(PhysicsObject obj)
         {
-            System.Diagnostics.Debug.Assert(entity is not AbstractPlayer);
+            System.Diagnostics.Debug.Assert(obj is not AbstractPlayer);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            EntitySpawningPool.Enqueue(entity);
+            EntitySpawningPool.Enqueue(obj);
         }
 
         protected abstract bool DetermineToDespawnPlayerOnDisconnect();
 
-        internal void SwapEntityQueue()
+        internal void SwapObjectQueue()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(Entities != null);
-            Entities.Swap();
+            System.Diagnostics.Debug.Assert(Objects != null);
+            Objects.Swap();
         }
 
         internal void StartRoutine(long serverTicks)
@@ -304,21 +284,21 @@ namespace MinecraftServerEngine
 
             if (serverTicks == 20 * 5)
             {
-                SpawnEntity(new ItemEntity(new ItemStack(ItemType.Stick, 30), new Vector(0.0D, 120.0D, 0.0D)));
+                SpawnObject(new ItemEntity(new ItemStack(ItemType.Stick, 30), new Vector(0.0D, 120.0D, 0.0D)));
             }
         }
 
-        internal void StartEntityRoutines(long serverTicks)
+        internal void StartObjectRoutines()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            while (Entities.Dequeue(out Entity entity))
+            while (Objects.Dequeue(out PhysicsObject obj))
             {
-                System.Diagnostics.Debug.Assert(entity != null);
+                System.Diagnostics.Debug.Assert(obj != null);
 
-                entity.StartRoutine(serverTicks, this);
+                obj.StartRoutine(this);
 
-                Entities.Enqueue(entity);
+                Objects.Enqueue(obj);
             }
         }
 
@@ -326,38 +306,36 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            while (Entities.DequeuePlayer(out AbstractPlayer player))
+            while (Objects.DequeuePlayer(out AbstractPlayer player))
             {
                 System.Diagnostics.Debug.Assert(player != null);
 
                 player.Control(serverTicks, this);
 
-                Entities.Enqueue(player);
+                Objects.Enqueue(player);
             }
         }
 
-        private void DestroyEntity(Entity entity)
+        private void DestroyObject(PhysicsObject obj)
         {
-            System.Diagnostics.Debug.Assert(entity != null);
+            System.Diagnostics.Debug.Assert(obj != null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            CloseObjectMapping(entity);
+            CloseObjectMapping(obj);
 
-            entity.Flush();
-            entity.Dispose();
+            obj.Dispose();
         }
 
-        internal void DestroyEntities()
+        internal void DestroyObjects()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Entity entity;
-            while (Entities.Dequeue(out entity))
+            while (Objects.Dequeue(out PhysicsObject obj))
             {
-                System.Diagnostics.Debug.Assert(entity != null);
+                System.Diagnostics.Debug.Assert(obj != null);
 
-                if (entity is AbstractPlayer player && 
+                if (obj is AbstractPlayer player && 
                     player.HandleConnection(out UserId id, this))
                 {
                     System.Diagnostics.Debug.Assert(id != UserId.Null);
@@ -371,59 +349,58 @@ namespace MinecraftServerEngine
                         AbstractPlayer playerExtracted = DisconnectedPlayers.Extract(id);
                         System.Diagnostics.Debug.Assert(ReferenceEquals(playerExtracted, player));
 
-                        DestroyEntity(player);
+                        DestroyObject(player);
 
                         continue;
                     }
                 }
                 else
                 {
-                    if (entity.IsDead())
+                    if (obj.IsDead())
                     {
-                        DestroyEntity(entity);
+                        DestroyObject(obj);
 
                         continue;
                     }
                 }
 
-                Entities.Enqueue(entity);
+                Objects.Enqueue(obj);
 
             }
         }
 
-        internal void MoveEntities()
+        internal void MoveObjects()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Entity entity;
-            while (Entities.Dequeue(out entity))
+            while (Objects.Dequeue(out PhysicsObject obj))
             {
-                System.Diagnostics.Debug.Assert(entity != null);
+                System.Diagnostics.Debug.Assert(obj != null);
 
-                (BoundingVolume volume, Vector v) = 
-                    IntegrateObject(BlockContext, entity);
+                (BoundingVolume volume, Vector v) =
+                    IntegrateObject(BlockContext, obj, obj.MaxStepHeight);
 
-                entity.Move(volume, v);
+                obj.Move(volume, v);
 
-                UpdateObjectMapping(entity);
+                UpdateObjectMapping(obj);
 
-                Entities.Enqueue(entity);
+                Objects.Enqueue(obj);
             }
 
         }
 
-        internal void CreateEntities()
+        internal void CreateObjects()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            while (EntitySpawningPool.Dequeue(out Entity entity))
+            while (EntitySpawningPool.Dequeue(out PhysicsObject obj))
             {
-                System.Diagnostics.Debug.Assert(entity != null);
-                System.Diagnostics.Debug.Assert(entity is not AbstractPlayer);
+                System.Diagnostics.Debug.Assert(obj != null);
+                System.Diagnostics.Debug.Assert(obj is not AbstractPlayer);
 
-                InitObjectMapping(entity);
+                InitObjectMapping(obj);
 
-                Entities.Enqueue(entity);
+                Objects.Enqueue(obj);
             }
 
             System.Diagnostics.Debug.Assert(EntitySpawningPool.Empty);
@@ -455,25 +432,24 @@ namespace MinecraftServerEngine
 
                 PlayerList.Add(id, username);
 
-                Entities.Enqueue(player);
+                Objects.Enqueue(player);
             }
             
             player.Connect(client, this, id);
 
         }
 
-        internal void RenderPlayers()
+        internal void LoadAndSendData()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            AbstractPlayer player;
-            while (Entities.DequeuePlayer(out player))
+            while (Objects.DequeuePlayer(out AbstractPlayer player))
             {
                 System.Diagnostics.Debug.Assert(player != null);
 
-                player.Render(this);
+                player.LoadAndSendData(this);
 
-                Entities.Enqueue(player);
+                Objects.Enqueue(player);
             }
 
         }
@@ -487,20 +463,16 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(DisconnectedPlayers.Empty);
 
-            /*System.Diagnostics.Debug.Assert(IntegrationResults.Empty);*/
-
             // Release resources.
             PlayerList.Dispose();
 
             EntitySpawningPool.Dispose();
 
-            Entities.Dispose();
+            Objects.Dispose();
 
             DisconnectedPlayers.Dispose();
 
             BlockContext.Dispose();
-
-            /*IntegrationResults.Dispose();*/
 
             // Finish.
             base.Dispose();

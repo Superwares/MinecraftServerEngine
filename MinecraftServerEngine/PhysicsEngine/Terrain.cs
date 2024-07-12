@@ -325,18 +325,16 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         private Vector ResolveCollisions(
             Queue<AxisAlignedBoundingBox> queue,
-            BoundingVolume volume, double maxStepHeight, Vector v, bool onGround)
+            BoundingVolume volume, double maxStepHeight, Vector v)
         {
             System.Diagnostics.Debug.Assert(queue != null);
             System.Diagnostics.Debug.Assert(volume != null);
             System.Diagnostics.Debug.Assert(maxStepHeight >= 0.0D);
+            System.Diagnostics.Debug.Assert(v.GetLengthSquared() > 0.0D);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (onGround)
-            {
-                return ResolveCollisionsOnGround(queue, volume, maxStepHeight, v);
-            }
+            bool onGround = false;
 
             int axis = -1;
             double t = double.PositiveInfinity;
@@ -395,15 +393,19 @@ namespace MinecraftServerEngine.PhysicsEngine
                 System.Diagnostics.Debug.Assert(false);
             }
 
-            return ResolveCollisions(queue, volume, maxStepHeight, vPrime, onGround);
+            return onGround ? 
+                ResolveCollisionsOnGround(queue, volume, maxStepHeight, v) : 
+                ResolveCollisions(queue, volume, maxStepHeight, vPrime);
         }
 
         internal Vector ResolveCollisions(
             BoundingVolume volumeObj, double maxStepHeight, Vector v)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
             System.Diagnostics.Debug.Assert(volumeObj != null);
+            System.Diagnostics.Debug.Assert(maxStepHeight >= 0.0D);
+            System.Diagnostics.Debug.Assert(v.GetLengthSquared() > 0.0D);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             AxisAlignedBoundingBox volumeTotal = volumeObj.GetMinBoundingBox();
             volumeTotal.Extend(v);
@@ -417,7 +419,7 @@ namespace MinecraftServerEngine.PhysicsEngine
                 GenerateBoundingBoxForBlock(queue, loc);
             }
 
-            return ResolveCollisions(queue, volumeObj, maxStepHeight, v, false);
+            return ResolveCollisions(queue, volumeObj, maxStepHeight, v);
         }
 
         public virtual void Dispose()
