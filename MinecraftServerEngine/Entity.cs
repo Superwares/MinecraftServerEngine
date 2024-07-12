@@ -293,7 +293,7 @@ namespace MinecraftServerEngine
             Vector p, Look look,
             Hitbox hitbox,
             double m, double maxStepHeight)
-            : base(hitbox.Convert(p), m, maxStepHeight)
+            : base(m, hitbox.Convert(p), new StepableMovement(maxStepHeight))
         {
             Id = EntityIdAllocator.Alloc();
             UniqueId = uniqueId;

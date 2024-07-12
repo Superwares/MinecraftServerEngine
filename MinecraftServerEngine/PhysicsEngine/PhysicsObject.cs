@@ -7,6 +7,72 @@ namespace MinecraftServerEngine.PhysicsEngine
 {
     public abstract class PhysicsObject : System.IDisposable
     {
+        internal abstract class Movement
+        {
+            internal abstract Vector Resolve(Terrain terrain, BoundingVolume volume, Vector v);
+        }
+
+        internal sealed class WallPharsing : Movement
+        {
+            internal override Vector Resolve(Terrain terrain, BoundingVolume volume, Vector v)
+            {
+                System.Diagnostics.Debug.Assert(terrain != null);
+                System.Diagnostics.Debug.Assert(volume != null);
+
+                volume.Move(v);
+
+                return v;
+            }
+        }
+
+        internal abstract class NoneWallPharsing : Movement
+        {
+        }
+
+        internal sealed class SimpleMovement : NoneWallPharsing
+        {
+            internal override Vector Resolve(Terrain terrain, BoundingVolume volume, Vector v)
+            {
+                System.Diagnostics.Debug.Assert(terrain != null);
+                System.Diagnostics.Debug.Assert(volume != null);
+
+                return terrain.ResolveCollisions(volume, v);
+            }
+        }
+
+        internal class SmoothMovement : NoneWallPharsing
+        {
+            internal readonly double MaxStepHeight;
+
+            internal SmoothMovement()
+            {
+                MaxStepHeight = 0.0D;
+            }
+
+            protected SmoothMovement(double maxStepHeight)
+            {
+                System.Diagnostics.Debug.Assert(maxStepHeight >= 0.0D);
+
+                MaxStepHeight = maxStepHeight;
+            }
+
+            internal override Vector Resolve(Terrain terrain, BoundingVolume volume, Vector v)
+            {
+                System.Diagnostics.Debug.Assert(terrain != null);
+                System.Diagnostics.Debug.Assert(volume != null);
+
+                return terrain.ResolveCollisions(volume, MaxStepHeight, v);
+            }
+        }
+
+        internal sealed class StepableMovement : SmoothMovement
+        {
+
+            internal StepableMovement(double maxStepHeight) : base(maxStepHeight)
+            {
+            }
+        }
+
         private bool _disposed = false;
 
         private readonly double _m;
@@ -20,13 +86,14 @@ namespace MinecraftServerEngine.PhysicsEngine
         private readonly bool _noGravity;
         public bool NoGravity => _noGravity;
 
-        internal readonly double MaxStepHeight;
-
         private BoundingVolume _volume;
         public BoundingVolume BoundingVolume => _volume;
 
+        internal readonly Movement _Movement;
 
-        public PhysicsObject(BoundingVolume volume, double m, double maxStepHeight)
+        internal PhysicsObject(
+            double m, BoundingVolume volume,
+            Movement movement)
         {
             System.Diagnostics.Debug.Assert(volume != null);
             System.Diagnostics.Debug.Assert(m > 0.0D);
@@ -37,16 +104,9 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             _noGravity = false;
 
-            System.Diagnostics.Debug.Assert(maxStepHeight >= 0.0D);
-            System.Diagnostics.Debug.Assert(maxStepHeight <= volume.GetHeight() / 2.0D);
-            MaxStepHeight = maxStepHeight;
-
             _volume = volume;
-        }
 
-        public PhysicsObject(BoundingVolume volume, double m) : this(volume, m, 0.0D)
-        {
-            
+            _Movement = movement;
         }
 
         public virtual bool IsDead()
@@ -68,8 +128,10 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         protected abstract BoundingVolume GenerateBoundingVolume();
 
-        internal (BoundingVolume, Vector) Integrate()
+        internal (BoundingVolume, Vector) Integrate(Terrain terrain)
         {
+            System.Diagnostics.Debug.Assert(terrain != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Forces.Enqueue(
@@ -93,6 +155,16 @@ namespace MinecraftServerEngine.PhysicsEngine
             }
 
             BoundingVolume volume = GenerateBoundingVolume();
+
+            double s = v.GetLengthSquared();
+            System.Diagnostics.Debug.Assert(s >= 0.0D);
+            if (s == 0.0D)
+            {
+                return (volume, v);
+            }
+
+            v = _Movement.Resolve(terrain, volume, v);
+
             return (volume, v);
         }
 

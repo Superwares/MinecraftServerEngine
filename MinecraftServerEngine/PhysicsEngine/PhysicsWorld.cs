@@ -352,22 +352,14 @@ namespace MinecraftServerEngine.PhysicsEngine
         }
 
         private protected (BoundingVolume, Vector) IntegrateObject(
-            Terrain terrain, PhysicsObject obj, double maxStepHeight)
+            Terrain terrain, PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(terrain != null);
             System.Diagnostics.Debug.Assert(obj != null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            (BoundingVolume volumeObject, Vector v) = obj.Integrate();
-
-            if (v.GetLengthSquared() > 0.0D)
-            {
-                v = terrain.ResolveCollisions(volumeObject, maxStepHeight, v);
-            }
-            
-
-            return (volumeObject, v);
+            return obj.Integrate(terrain);
         }
 
         public virtual void Dispose()

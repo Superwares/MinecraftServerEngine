@@ -367,8 +367,7 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(obj != null);
 
-                (BoundingVolume volume, Vector v) =
-                    IntegrateObject(BlockContext, obj, obj.MaxStepHeight);
+                (BoundingVolume volume, Vector v) = IntegrateObject(BlockContext, obj);
 
                 obj.Move(volume, v);
 
