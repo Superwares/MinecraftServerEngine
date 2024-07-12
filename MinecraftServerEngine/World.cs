@@ -278,17 +278,7 @@ namespace MinecraftServerEngine
             Objects.Swap();
         }
 
-        internal void StartRoutine(long serverTicks)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            if (serverTicks == 20 * 5)
-            {
-                SpawnObject(new ItemEntity(new ItemStack(ItemType.Stick, 30), new Vector(0.0D, 120.0D, 0.0D)));
-            }
-        }
-
-        internal void StartObjectRoutines()
+        internal void StartObjectRoutines(long serverTicks)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -296,7 +286,7 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(obj != null);
 
-                obj.StartRoutine(this);
+                obj.StartRoutine(serverTicks,this);
 
                 Objects.Enqueue(obj);
             }

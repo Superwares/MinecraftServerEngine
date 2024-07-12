@@ -29,6 +29,18 @@ namespace TestMinecraftServerApplication
             return false;
         }
 
+        protected override void StartRoutine(long serverTicks)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (serverTicks == 20 * 5)
+            {
+                SpawnObject(
+                    new ItemEntity(
+                        new ItemStack(ItemType.Stick, 30), new Vector(0.0D, 120.0D, 0.0D)));
+            }
+        }
+
         protected override AbstractPlayer CreatePlayer(UserId id)
         {
             System.Diagnostics.Debug.Assert(!_disposed);

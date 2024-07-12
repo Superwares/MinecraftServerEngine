@@ -248,7 +248,7 @@ namespace MinecraftServerEngine
                     () => World.StartRoutine(_ticks)),
                 new Task(  // 7
                     () => World.SwapObjectQueue(),
-                    () => World.StartObjectRoutines()));
+                    () => World.StartObjectRoutines(_ticks)));
 
             PerformanceMonitor sys = new(manager.TotalTaskCount);
 

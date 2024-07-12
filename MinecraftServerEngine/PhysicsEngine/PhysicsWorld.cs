@@ -206,6 +206,8 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         ~PhysicsWorld() => System.Diagnostics.Debug.Assert(false);
 
+        protected internal abstract void StartRoutine(long serverTicks);
+
         public System.Collections.Generic.IEnumerable<PhysicsObject> GetObjects(
             AxisAlignedBoundingBox minBoundingBox)
         {

@@ -56,7 +56,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             return false;
         }
 
-        public abstract void StartRoutine(PhysicsWorld world);
+        public abstract void StartRoutine(long serverTicks, PhysicsWorld world);
 
         public virtual void ApplyForce(Vector v)
         {
