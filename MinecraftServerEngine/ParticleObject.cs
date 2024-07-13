@@ -2,17 +2,111 @@
 
 namespace MinecraftServerEngine
 {
+    using Containers;
     using PhysicsEngine;
 
     public abstract class ParticleObject : PhysicsObject
     {
+        private sealed class RendererManager : System.IDisposable
+        {
+            private bool _disposed = false;
 
+            private readonly ConcurrentTree<ParticleObjectRenderer> Renderers = new();  // Disposable
+
+            public RendererManager()
+            {
+            }
+
+            ~RendererManager() => System.Diagnostics.Debug.Assert(false);
+
+            internal bool Apply(ParticleObjectRenderer renderer)
+            {
+                System.Diagnostics.Debug.Assert(renderer != null);
+
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                if (Renderers.Contains(renderer))
+                {
+                    return false;
+                }
+
+                System.Diagnostics.Debug.Assert(Renderers != null);
+                Renderers.Insert(renderer);
+
+                return true;
+            }
+
+            internal void HandleRendering(Vector p)
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                using Queue<ParticleObjectRenderer> queue = new();
+
+                System.Diagnostics.Debug.Assert(Renderers != null);
+                foreach (ParticleObjectRenderer renderer in Renderers.GetKeys())
+                {
+                    System.Diagnostics.Debug.Assert(renderer != null);
+
+                    if (renderer.CanRender(p))
+                    {
+                        continue;
+                    }
+
+                    queue.Enqueue(renderer);
+                }
+
+                while (!queue.Empty)
+                {
+                    ParticleObjectRenderer renderer = queue.Dequeue();
+
+                    Renderers.Extract(renderer);
+                }
+
+            }
+
+
+            internal void Move(Vector p, float r, float g, float b)
+            {
+                System.Diagnostics.Debug.Assert(r > 0.0D);
+                System.Diagnostics.Debug.Assert(r <= 1.0D);
+                System.Diagnostics.Debug.Assert(g > 0.0D);
+                System.Diagnostics.Debug.Assert(g <= 1.0D);
+                System.Diagnostics.Debug.Assert(b > 0.0D);
+                System.Diagnostics.Debug.Assert(b <= 1.0D);
+
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                System.Diagnostics.Debug.Assert(Renderers != null);
+                foreach (ParticleObjectRenderer renderer in Renderers.GetKeys())
+                {
+                    System.Diagnostics.Debug.Assert(renderer != null);
+                    renderer.Move(p, r, g, b);
+                }
+            
+            }
+
+            public void Dispose()
+            {
+                // Assertions.
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                // Release  resources.
+                Renderers.Dispose();
+
+                // Finish
+                System.GC.SuppressFinalize(this);
+                _disposed = true;
+            }
+
+        }
 
         private const double Radius = 0.25D;
 
         private bool _disposed = false;
 
         private readonly float Red, Green, Blue;
+
+        private RendererManager Manager = new();  // Disposable
 
         private static float Normalize(byte v)
         {
@@ -53,6 +147,9 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Vector p = volume.GetCenter();
+
+            System.Diagnostics.Debug.Assert(Manager != null);
+            Manager.HandleRendering(p);
             Manager.Move(p, Red, Green, Blue);
 
             base.Move(volume, v);
@@ -64,6 +161,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release Resources.
+            Manager.Dispose();
 
             // Finish.
             base.Dispose();

@@ -469,16 +469,33 @@ namespace MinecraftServerEngine
     {
         public ParticleObjectRenderer(
             ConcurrentQueue<ClientboundPlayingPacket> outPackets,
-            int id,
-            ChunkLocation loc, int dEntityRendering)
-            : base(outPackets)
+            ChunkLocation loc, int d)
+            : base(outPackets, loc, d)
         {
-            _id = id;
-
-            _loc = loc;
-
-            _d = dEntityRendering;
         }
+
+        internal void Move(Vector p, float r, float g, float b)
+        {
+            System.Diagnostics.Debug.Assert(r > 0.0D);
+            System.Diagnostics.Debug.Assert(r <= 1.0D);
+            System.Diagnostics.Debug.Assert(g > 0.0D);
+            System.Diagnostics.Debug.Assert(g <= 1.0D);
+            System.Diagnostics.Debug.Assert(b > 0.0D);
+            System.Diagnostics.Debug.Assert(b <= 1.0D);
+
+            System.Diagnostics.Debug.Assert(p.X >= float.MinValue);
+            System.Diagnostics.Debug.Assert(p.X <= float.MaxValue);
+            System.Diagnostics.Debug.Assert(p.Y >= float.MinValue);
+            System.Diagnostics.Debug.Assert(p.Y <= float.MaxValue);
+            System.Diagnostics.Debug.Assert(p.Z >= float.MinValue);
+            System.Diagnostics.Debug.Assert(p.Z <= float.MaxValue);
+            Render(new ParticlesPacket(
+                    30, true,
+                    (float)p.X, (float)p.Y, (float)p.Z,
+                    r, g, b,
+                    1.0F, 0));
+        }
+
     }
 
 }

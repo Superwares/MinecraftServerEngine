@@ -182,7 +182,7 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         internal virtual void Flush()
         {
-
+            System.Diagnostics.Debug.Assert(!_disposed);
         }
 
         public virtual void Dispose()

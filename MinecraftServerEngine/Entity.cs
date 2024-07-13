@@ -480,6 +480,8 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Manager.Flush();
+
+            base.Flush();
         }
 
         public override void Dispose()

@@ -1020,7 +1020,10 @@ namespace MinecraftServerEngine
 
         }
 
-        internal void Control(long serverTicks, World world, AbstractPlayer player, PlayerInventory invPlayer)
+        internal void Control(
+            long serverTicks, 
+            World world, 
+            AbstractPlayer player, PlayerInventory invPlayer)
         {
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(player != null);
