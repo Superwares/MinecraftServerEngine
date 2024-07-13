@@ -1,9 +1,11 @@
 ﻿using Common;
 using Containers;
-using MinecraftServerEngine.PhysicsEngine;
 
 namespace MinecraftServerEngine
 {
+    using PhysicsEngine;
+    using System.Security.Cryptography;
+
     internal abstract class Renderer
     {
         private protected readonly ConcurrentQueue<ClientboundPlayingPacket> OutPackets;
@@ -17,7 +19,7 @@ namespace MinecraftServerEngine
         {
             OutPackets.Enqueue(packet);
         }
-        
+
     }
 
     internal sealed class PlayerListRenderer : Renderer
@@ -39,25 +41,23 @@ namespace MinecraftServerEngine
             Render(new PlayerListItemAddPacket(id.Data, username, (int)ms));
         }
 
-        internal void AddPlayerWithLaytency(PlayerListItemAddPacket pck)
+        internal void RemovePlayer(UserId id)
         {
-            System.Diagnostics.Debug.Assert(pck != null);
+            System.Diagnostics.Debug.Assert(id != UserId.Null);
 
-            Render(pck);
+            Render(new PlayerListItemRemovePacket(id.Data));
         }
 
-        internal void RemovePlayer(PlayerListItemRemovePacket pck)
+        internal void UpdatePlayerLatency(UserId id, long ticks)
         {
-            System.Diagnostics.Debug.Assert(pck != null);
+            System.Diagnostics.Debug.Assert(id != UserId.Null);
+            System.Diagnostics.Debug.Assert(ticks <= int.MaxValue);
+            System.Diagnostics.Debug.Assert(ticks >= int.MinValue);
 
-            Render(pck);
-        }
-
-        internal void UpdatePlayerLatency(PlayerListItemUpdateLatencyPacket pck)
-        {
-            System.Diagnostics.Debug.Assert(pck != null);
-
-            Render(pck);
+            long ms = ticks * 50;
+            System.Diagnostics.Debug.Assert(ms >= int.MinValue);
+            System.Diagnostics.Debug.Assert(ms <= int.MaxValue);
+            Render(new PlayerListItemUpdateLatencyPacket(id.Data, (int)ms));
         }
     }
 
@@ -160,7 +160,7 @@ namespace MinecraftServerEngine
             Render(new SetSlotPacket(-1, 0, buffer.ReadData()));
         }
 
-        public WindowRenderer(ConcurrentQueue<ClientboundPlayingPacket> outPackets, 
+        public WindowRenderer(ConcurrentQueue<ClientboundPlayingPacket> outPackets,
             PlayerInventory invPrivate, InventorySlot cursor)
             : base(outPackets)
         {
@@ -204,7 +204,7 @@ namespace MinecraftServerEngine
             Update(_id, invPrivate, cursor, offset);
         }
 
-        
+
     }
 
     /*internal sealed class ChunkRenderer : Renderer
@@ -212,41 +212,39 @@ namespace MinecraftServerEngine
 
     }*/
 
+
+
     internal abstract class WorldRenderer : Renderer
     {
 
-        public WorldRenderer(
-            ConcurrentQueue<ClientboundPlayingPacket> outPackets) 
+        internal WorldRenderer(
+            ConcurrentQueue<ClientboundPlayingPacket> outPackets)
             : base(outPackets) { }
 
-        // particles
+        // title, worldboarder, chattings
     }
 
-    internal sealed class EntityRenderer : WorldRenderer
+    internal abstract class ObjectRenderer : Renderer
     {
+
         private bool _disconnected = false;
         public bool Disconnected => _disconnected;
 
 
-        private readonly int _id;
-        public int Id => _id;
-
         private ChunkLocation _loc;
+        private int _d = -1;
 
-        private int _dEntityRendering = -1;
 
-
-        public EntityRenderer(
+        internal ObjectRenderer(
             ConcurrentQueue<ClientboundPlayingPacket> outPackets,
-            int id,
-            ChunkLocation loc, int dEntityRendering) 
-            : base(outPackets) 
+            ChunkLocation loc, int d)
+            : base(outPackets)
         {
-            _id = id;
+            System.Diagnostics.Debug.Assert(d > 0);
 
             _loc = loc;
 
-            _dEntityRendering = dEntityRendering;
+            _d = d;
         }
 
         public void Disconnect()
@@ -268,26 +266,42 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disconnected);
             System.Diagnostics.Debug.Assert(d > 0);
 
-            _dEntityRendering = d;
+            _d = d;
         }
 
         public bool CanRender(Vector p)
         {
-            System.Diagnostics.Debug.Assert(!_disconnected);
-            System.Diagnostics.Debug.Assert(_dEntityRendering > 0);
+            if (_disconnected)
+            {
+                return false;
+            }
 
-            ChunkGrid grid = ChunkGrid.Generate(_loc, _dEntityRendering);
+            System.Diagnostics.Debug.Assert(_d > 0);
+
+            ChunkGrid grid = ChunkGrid.Generate(_loc, _d);
             ChunkLocation loc = ChunkLocation.Generate(p);
             return grid.Contains(loc);
+        }
+
+        // particles
+    }
+
+    internal sealed class EntityRenderer : ObjectRenderer
+    {
+
+        public EntityRenderer(
+            ConcurrentQueue<ClientboundPlayingPacket> outPackets,
+            ChunkLocation loc, int d) 
+            : base(outPackets, loc, d) 
+        {
+            
         }
 
         public void RelMoveAndRotate(
             int id, 
             Vector p, Vector pPrev, Look look)
         {
-            System.Diagnostics.Debug.Assert(id != Id);
-
-            System.Diagnostics.Debug.Assert(!_disconnected);
+            System.Diagnostics.Debug.Assert(!Disconnected);
 
             double dx = (p.X - pPrev.X) * (32 * 128),
                 dy = (p.Y - pPrev.Y) * (32 * 128),
@@ -308,9 +322,7 @@ namespace MinecraftServerEngine
 
         public void RelMove(int id, Vector p, Vector pPrev)
         {
-            System.Diagnostics.Debug.Assert(id != Id);
-
-            System.Diagnostics.Debug.Assert(!_disconnected);
+            System.Diagnostics.Debug.Assert(!Disconnected);
 
             double dx = (p.X - pPrev.X) * (32 * 128), 
                 dy = (p.Y - pPrev.Y) * (32 * 128), 
@@ -328,9 +340,7 @@ namespace MinecraftServerEngine
 
         public void Rotate(int id, Look look)
         {
-            System.Diagnostics.Debug.Assert(id != Id);
-
-            System.Diagnostics.Debug.Assert(!_disconnected);
+            System.Diagnostics.Debug.Assert(!Disconnected);
 
             (byte x, byte y) = look.ConvertToProtocolFormat();
             Render(new EntityLookPacket(id, x, y, false));
@@ -339,18 +349,14 @@ namespace MinecraftServerEngine
 
         public void Stand(int id)
         {
-            System.Diagnostics.Debug.Assert(id != Id);
-
-            System.Diagnostics.Debug.Assert(!_disconnected);
+            System.Diagnostics.Debug.Assert(!Disconnected);
 
             Render(new EntityPacket(id));
         }
 
         public void Teleport(int id, Vector p, Look look, bool onGround)
         {
-            System.Diagnostics.Debug.Assert(id != Id);
-
-            System.Diagnostics.Debug.Assert(!_disconnected);
+            System.Diagnostics.Debug.Assert(!Disconnected);
 
             Render(new EntityTeleportPacket(
                 id,
@@ -361,9 +367,7 @@ namespace MinecraftServerEngine
 
         public void ChangeForms(int id, bool sneaking, bool sprinting)
         {
-            System.Diagnostics.Debug.Assert(id != Id);
-
-            System.Diagnostics.Debug.Assert(!_disconnected);
+            System.Diagnostics.Debug.Assert(!Disconnected);
 
             byte flags = 0x00;
 
@@ -382,14 +386,14 @@ namespace MinecraftServerEngine
             Render(new EntityMetadataPacket(id, metadata.WriteData()));
         }
 
-        public void SetEquipmentsData(int id, (byte[] mainHand, byte[] offHand) equipmentsData)
+        public void SetEquipmentsData(
+            int id, 
+            (byte[] mainHand, byte[] offHand) equipmentsData)
         {
             System.Diagnostics.Debug.Assert(equipmentsData.mainHand != null);
             System.Diagnostics.Debug.Assert(equipmentsData.offHand != null);
 
-            System.Diagnostics.Debug.Assert(id != Id);
-
-            System.Diagnostics.Debug.Assert(!_disconnected);
+            System.Diagnostics.Debug.Assert(!Disconnected);
 
             Render(new EntityEquipmentPacket(id, 0, equipmentsData.mainHand));
             Render(new EntityEquipmentPacket(id, 1, equipmentsData.offHand));
@@ -401,10 +405,9 @@ namespace MinecraftServerEngine
             bool sneaking, bool sprinting,
             (byte[], byte[]) equipmentsData)
         {
-            System.Diagnostics.Debug.Assert(id != Id);
             System.Diagnostics.Debug.Assert(uniqueId != System.Guid.Empty);
 
-            System.Diagnostics.Debug.Assert(!_disconnected);
+            System.Diagnostics.Debug.Assert(!Disconnected);
 
             byte flags = 0x00;
 
@@ -435,10 +438,9 @@ namespace MinecraftServerEngine
             Vector p, Look look,
             ItemStack stack)
         {
-            System.Diagnostics.Debug.Assert(id != Id);
             System.Diagnostics.Debug.Assert(uniqueId != System.Guid.Empty);
 
-            System.Diagnostics.Debug.Assert(!_disconnected);
+            System.Diagnostics.Debug.Assert(!Disconnected);
 
             (byte x, byte y) = look.ConvertToProtocolFormat();
             Render(new SpawnEntityPacket(
@@ -456,13 +458,27 @@ namespace MinecraftServerEngine
 
         public void DestroyEntity(int id)
         {
-            System.Diagnostics.Debug.Assert(id != Id);
-
-            System.Diagnostics.Debug.Assert(!_disconnected);
+            System.Diagnostics.Debug.Assert(!Disconnected);
 
             Render(new DestroyEntitiesPacket(id));
         }
 
+    }
+
+    internal sealed class ParticleObjectRenderer : ObjectRenderer
+    {
+        public ParticleObjectRenderer(
+            ConcurrentQueue<ClientboundPlayingPacket> outPackets,
+            int id,
+            ChunkLocation loc, int dEntityRendering)
+            : base(outPackets)
+        {
+            _id = id;
+
+            _loc = loc;
+
+            _d = dEntityRendering;
+        }
     }
 
 }

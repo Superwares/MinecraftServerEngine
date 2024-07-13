@@ -54,15 +54,10 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(username != null && !string.IsNullOrEmpty(username));
 
                 System.Diagnostics.Debug.Assert(!_disposed);
-
-                long ms = ticks * 50;
-                System.Diagnostics.Debug.Assert(ms >= int.MinValue);
-                System.Diagnostics.Debug.Assert(ms <= int.MaxValue);
-                PlayerListItemAddPacket pck = new(id.Data, username, (int)ms);
-
+                
                 foreach (PlayerListRenderer renderer in Renderers.GetValues())
                 {
-                    renderer.AddPlayerWithLaytency(pck);
+                    renderer.AddPlayerWithLaytency(id, username, ticks);
                 }
             }
 
@@ -72,10 +67,9 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                PlayerListItemRemovePacket pck = new(id.Data);
                 foreach (PlayerListRenderer renderer in Renderers.GetValues())
                 {
-                    renderer.RemovePlayer(pck);
+                    renderer.RemovePlayer(id);
                 }
             }
 
@@ -85,13 +79,9 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                long ms = ticks * 50;
-                System.Diagnostics.Debug.Assert(ms >= int.MinValue);
-                System.Diagnostics.Debug.Assert(ms <= int.MaxValue);
-                PlayerListItemUpdateLatencyPacket pck = new(id.Data, (int)ms);
                 foreach (PlayerListRenderer renderer in Renderers.GetValues())
                 {
-                    renderer.UpdatePlayerLatency(pck);
+                    renderer.UpdatePlayerLatency(id, ticks);
                 }
             }
 

@@ -973,10 +973,10 @@ namespace MinecraftServerEngine
     internal sealed class ParticlesPacket : ClientboundPlayingPacket
     {
         internal readonly int ParticleId;
-        internal readonly bool ExtendedRange;
+        internal readonly bool Flag;  // ExtendedRange?
         internal readonly float X, Y, Z;
         internal readonly float OffsetX, OffsetY, OffsetZ;
-        internal readonly float Speed;
+        internal readonly float Extra;
         internal readonly int Count;
 
         internal static ParticlesPacket Read(Buffer buffer)
@@ -990,14 +990,14 @@ namespace MinecraftServerEngine
             int particleId, bool extendedRange, 
             float x, float y, float z, 
             float offsetX, float offsetY, float offsetZ, 
-            float speed, int count) : base(ParticlesPacketId)
+            float speed, int extra) : base(ParticlesPacketId)
         {
             ParticleId = particleId;
-            ExtendedRange = extendedRange;
+            Flag = extendedRange;
             X = x; Y = y; Z = z;
             OffsetX = offsetX; OffsetY = offsetY; OffsetZ = offsetZ;
-            Speed = speed;
-            Count = count;
+            Extra = speed;
+            Count = extra;
         }
 
         protected override void WriteData(Buffer buffer)
@@ -1005,10 +1005,10 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(buffer != null);
 
             buffer.WriteInt(ParticleId);
-            buffer.WriteBool(ExtendedRange);
+            buffer.WriteBool(Flag);
             buffer.WriteFloat(X); buffer.WriteFloat(Y); buffer.WriteFloat(Z);
             buffer.WriteFloat(OffsetX); buffer.WriteFloat(OffsetY); buffer.WriteFloat(OffsetZ);
-            buffer.WriteFloat(Speed);
+            buffer.WriteFloat(Extra);
             buffer.WriteInt(Count);
         }
 

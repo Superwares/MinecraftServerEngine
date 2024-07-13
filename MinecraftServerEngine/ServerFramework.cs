@@ -233,20 +233,23 @@ namespace MinecraftServerEngine
                     () => World.ControlPlayers(_ticks)),
                 new Task(  // 1
                     () => World.SwapObjectQueue(),
-                    () => World.DestroyObjects()),
+                    () => World.HandleDisconnections()),
                 new Task(  // 2
                     () => World.SwapObjectQueue(),
-                    () => World.MoveObjects()),
+                    () => World.DestroyObjects()),
                 new Task(  // 3
-                    () => World.CreateObjects()),
+                    () => World.SwapObjectQueue(),
+                    () => World.MoveObjects()),
                 new Task(  // 4
-                    () => connListener.Accept(World)),
+                    () => World.CreateObjects()),
                 new Task(  // 5
+                    () => connListener.Accept(World)),
+                new Task(  // 6
                     () => World.SwapObjectQueue(),
                     () => World.LoadAndSendData()),
-                new Task(  // 6
-                    () => World.StartRoutine(_ticks)),
                 new Task(  // 7
+                    () => World.StartRoutine(_ticks)),
+                new Task(  // 8
                     () => World.SwapObjectQueue(),
                     () => World.StartObjectRoutines(_ticks)));
 

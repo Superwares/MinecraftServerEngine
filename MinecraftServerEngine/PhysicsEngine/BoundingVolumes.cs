@@ -25,6 +25,15 @@ namespace MinecraftServerEngine.PhysicsEngine
 
     public class AxisAlignedBoundingBox : BoundingVolume
     {
+        internal static AxisAlignedBoundingBox Generate(Vector p, double r)
+        {
+            System.Diagnostics.Debug.Assert(r > 0.0D);
+
+            Vector max = new(p.X + r, p.Y + r, p.Z + r),
+                min = new(p.X - r, p.Y - r, p.Z - r);
+            return new AxisAlignedBoundingBox(max, min);
+        }
+
         private Vector _max, _min;
         public Vector Max => _max;
         public Vector Min => _min;

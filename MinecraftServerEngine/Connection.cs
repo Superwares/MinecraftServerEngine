@@ -749,7 +749,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(MaxRenderDistance >= MAxEntityRanderDistance);
 
             ChunkLocation loc = ChunkLocation.Generate(p);
-            EntityRenderer = new EntityRenderer(OutPackets, idEntity, loc, _dEntityRendering);
+            EntityRenderer = new EntityRenderer(OutPackets, loc, _dEntityRendering);
 
             ChunkingHelprt = new ChunkingHelper(loc, _dChunkRendering);
 
@@ -1037,22 +1037,18 @@ namespace MinecraftServerEngine
                     world._Inventory);
             }*/
 
-            if (serverTicks == 20 * 5)  // 5 seconds
-            {
-                /*Console.Printl("Particles!");*/
+            /*{
+                using Buffer buffer2 = new();
 
-                using Buffer buffer2 = new();   
-
-                float offset = 1.0F;
                 ParticlesPacket packet2 = new(
-                    30, false, 
-                    0.0F, 105.0F, 0.0F, 
-                    offset, offset, offset, 
-                    10.0F, 
-                    10);
+                    30, true,
+                    0.0F, 102.0F, 0.0F,
+                    0.001F, 0.999F, 0.999F,
+                    1.0F,
+                    0);
 
                 SendPacket(buffer2, packet2);
-            }
+            }*/
 
             using Buffer buffer = new();
 
@@ -1102,7 +1098,7 @@ namespace MinecraftServerEngine
             
         }
 
-        private void LoadWorld(World world, Vector p)
+        private void LoadWorld(int idEntitySelf, World world, Vector p)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -1120,14 +1116,17 @@ namespace MinecraftServerEngine
             /*Console.Printl($"grid: {grid}");*/
 
             AxisAlignedBoundingBox aabbTotal = grid.GetMinBoundingBox();
-            foreach (PhysicsEngine.PhysicsObject obj in world.GetObjects(aabbTotal))
+            foreach (PhysicsObject obj in world.GetObjects(aabbTotal))
             {
                 switch (obj)
                 {
                     default:
                         throw new System.NotImplementedException();
                     case Entity entity:
-                        entity.ApplyRenderer(EntityRenderer);
+                        if (entity.Id != idEntitySelf)
+                        {
+                            entity.ApplyRenderer(EntityRenderer);
+                        }
                         break;
                 }
             }
@@ -1289,7 +1288,7 @@ namespace MinecraftServerEngine
 
         internal void LoadAndSendData(
             World world, 
-            int id,
+            int idEntitySelf,
             Vector p, Look look)
         {
             System.Diagnostics.Debug.Assert(world != null);
@@ -1304,7 +1303,7 @@ namespace MinecraftServerEngine
                 if (!_init)
                 {
 
-                    JoinGamePacket packet = new(id, 0, 0, 0, "default", false);
+                    JoinGamePacket packet = new(idEntitySelf, 0, 0, 0, "default", false);
                     SendPacket(buffer, packet);
 
                     int payload = Random.NextInt();
@@ -1323,7 +1322,7 @@ namespace MinecraftServerEngine
                     _init = true;
                 }
 
-                LoadWorld(world, p);
+                LoadWorld(idEntitySelf, world, p);
 
                 while (!LoadChunkPackets.Empty)
                 {
@@ -1361,11 +1360,12 @@ namespace MinecraftServerEngine
             World world, 
             PlayerInventory invPlayer)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
-            System.Diagnostics.Debug.Assert(_disconnected);
-
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(invPlayer != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_disconnected);
 
             System.Diagnostics.Debug.Assert(Id != UserId.Null);
             id = Id;

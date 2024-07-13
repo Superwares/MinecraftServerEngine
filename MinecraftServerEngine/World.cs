@@ -251,6 +251,8 @@ namespace MinecraftServerEngine
 
         private readonly ConcurrentTable<UserId, AbstractPlayer> DisconnectedPlayers = new(); // Disposable
 
+        private readonly ConcurrentQueue<AbstractPlayer> PlayerDespawningPool = new();  // Disposable
+
         internal readonly BlockContext BlockContext = new();  // Disposable
 
         public World() { }
@@ -317,16 +319,13 @@ namespace MinecraftServerEngine
             obj.Dispose();
         }
 
-        internal void DestroyObjects()
+        internal void HandleDisconnections()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            while (Objects.Dequeue(out PhysicsObject obj))
+            while (Objects.DequeuePlayer(out AbstractPlayer player))
             {
-                System.Diagnostics.Debug.Assert(obj != null);
+                System.Diagnostics.Debug.Assert(player != null);
 
-                if (obj is AbstractPlayer player && 
-                    player.HandleConnection(out UserId id, this))
+                if (player.HandleDisconnection(out UserId id, this))
                 {
                     System.Diagnostics.Debug.Assert(id != UserId.Null);
                     System.Diagnostics.Debug.Assert(!DisconnectedPlayers.Contains(id));
@@ -339,23 +338,38 @@ namespace MinecraftServerEngine
                         AbstractPlayer playerExtracted = DisconnectedPlayers.Extract(id);
                         System.Diagnostics.Debug.Assert(ReferenceEquals(playerExtracted, player));
 
-                        DestroyObject(player);
+                        PlayerDespawningPool.Enqueue(player);
 
                         continue;
                     }
                 }
-                else
-                {
-                    if (obj.IsDead())
-                    {
-                        DestroyObject(obj);
 
-                        continue;
-                    }
+                Objects.Enqueue(player);
+            }
+        }
+
+        internal void DestroyObjects()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            while (Objects.DequeueNonPlayer(out PhysicsObject obj))
+            {
+                System.Diagnostics.Debug.Assert(obj != null);
+                System.Diagnostics.Debug.Assert(obj is not AbstractPlayer);
+
+                if (obj.IsDead())
+                {
+                    DestroyObject(obj);
+
+                    continue;
                 }
 
                 Objects.Enqueue(obj);
+            }
 
+            while (PlayerDespawningPool.Dequeue(out AbstractPlayer obj))
+            {
+                DestroyObject(obj);
             }
         }
 
@@ -452,6 +466,8 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(DisconnectedPlayers.Empty);
 
+            System.Diagnostics.Debug.Assert(PlayerDespawningPool.Empty);
+
             // Release resources.
             PlayerList.Dispose();
 
@@ -460,6 +476,8 @@ namespace MinecraftServerEngine
             Objects.Dispose();
 
             DisconnectedPlayers.Dispose();
+
+            PlayerDespawningPool.Dispose();
 
             BlockContext.Dispose();
 
