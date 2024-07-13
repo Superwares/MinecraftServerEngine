@@ -50,7 +50,7 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(!_movement);
 
-                using Queue<EntityRenderer> notRenderers = new();
+                using Queue<EntityRenderer> queue = new();
 
                 System.Diagnostics.Debug.Assert(Renderers != null);
                 foreach (EntityRenderer renderer in Renderers.GetKeys())
@@ -59,15 +59,15 @@ namespace MinecraftServerEngine
                     
                     if (renderer.CanRender(p))
                     {
-                        continue;    
+                        continue;
                     }
 
-                    notRenderers.Enqueue(renderer);
+                    queue.Enqueue(renderer);
                 }
 
-                while (!notRenderers.Empty)
+                while (!queue.Empty)
                 {
-                    EntityRenderer renderer = notRenderers.Dequeue();
+                    EntityRenderer renderer = queue.Dequeue();
 
                     renderer.DestroyEntity(Id);
                     Renderers.Extract(renderer);
@@ -473,6 +473,13 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             throw new System.NotImplementedException();
+        }
+
+        internal override void Flush()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            Manager.Flush();
         }
 
         public override void Dispose()

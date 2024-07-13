@@ -180,6 +180,11 @@ namespace MinecraftServerEngine.PhysicsEngine
             _v = v;
         }
 
+        internal virtual void Flush()
+        {
+
+        }
+
         public virtual void Dispose()
         {
             // Assertions.

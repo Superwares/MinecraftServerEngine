@@ -245,13 +245,12 @@ namespace MinecraftServerEngine
 
         internal readonly PlayerList PlayerList = new();  // Disposable
 
-        private readonly ConcurrentQueue<PhysicsObject> EntitySpawningPool = new();  // Disposable
+        private readonly ConcurrentQueue<PhysicsObject> ObjectSpawningPool = new();  // Disposable
+        private readonly ConcurrentQueue<PhysicsObject> ObjectDespawningPool = new();  // Disposable
 
         private readonly ObjectQueue Objects = new();  // Disposable
 
         private readonly ConcurrentTable<UserId, AbstractPlayer> DisconnectedPlayers = new(); // Disposable
-
-        private readonly ConcurrentQueue<AbstractPlayer> PlayerDespawningPool = new();  // Disposable
 
         internal readonly BlockContext BlockContext = new();  // Disposable
 
@@ -267,7 +266,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            EntitySpawningPool.Enqueue(obj);
+            ObjectSpawningPool.Enqueue(obj);
         }
 
         protected abstract bool DetermineToDespawnPlayerOnDisconnect();
@@ -308,17 +307,6 @@ namespace MinecraftServerEngine
             }
         }
 
-        private void DestroyObject(PhysicsObject obj)
-        {
-            System.Diagnostics.Debug.Assert(obj != null);
-
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            CloseObjectMapping(obj);
-
-            obj.Dispose();
-        }
-
         internal void HandleDisconnections()
         {
             while (Objects.DequeuePlayer(out AbstractPlayer player))
@@ -338,7 +326,7 @@ namespace MinecraftServerEngine
                         AbstractPlayer playerExtracted = DisconnectedPlayers.Extract(id);
                         System.Diagnostics.Debug.Assert(ReferenceEquals(playerExtracted, player));
 
-                        PlayerDespawningPool.Enqueue(player);
+                        ObjectDespawningPool.Enqueue(player);
 
                         continue;
                     }
@@ -359,7 +347,7 @@ namespace MinecraftServerEngine
 
                 if (obj.IsDead())
                 {
-                    DestroyObject(obj);
+                    ObjectDespawningPool.Enqueue(obj);
 
                     continue;
                 }
@@ -367,9 +355,12 @@ namespace MinecraftServerEngine
                 Objects.Enqueue(obj);
             }
 
-            while (PlayerDespawningPool.Dequeue(out AbstractPlayer obj))
+            while (ObjectDespawningPool.Dequeue(out PhysicsObject obj))
             {
-                DestroyObject(obj);
+                CloseObjectMapping(obj);
+
+                obj.Flush();
+                obj.Dispose();
             }
         }
 
@@ -396,7 +387,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            while (EntitySpawningPool.Dequeue(out PhysicsObject obj))
+            while (ObjectSpawningPool.Dequeue(out PhysicsObject obj))
             {
                 System.Diagnostics.Debug.Assert(obj != null);
                 System.Diagnostics.Debug.Assert(obj is not AbstractPlayer);
@@ -406,7 +397,7 @@ namespace MinecraftServerEngine
                 Objects.Enqueue(obj);
             }
 
-            System.Diagnostics.Debug.Assert(EntitySpawningPool.Empty);
+            System.Diagnostics.Debug.Assert(ObjectSpawningPool.Empty);
         }
 
         protected abstract AbstractPlayer CreatePlayer(UserId id);
@@ -462,22 +453,21 @@ namespace MinecraftServerEngine
             // Assertion.
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(EntitySpawningPool.Empty);
+            System.Diagnostics.Debug.Assert(ObjectSpawningPool.Empty);
+            System.Diagnostics.Debug.Assert(ObjectDespawningPool.Empty);
 
             System.Diagnostics.Debug.Assert(DisconnectedPlayers.Empty);
 
-            System.Diagnostics.Debug.Assert(PlayerDespawningPool.Empty);
 
             // Release resources.
             PlayerList.Dispose();
 
-            EntitySpawningPool.Dispose();
+            ObjectSpawningPool.Dispose();
+            ObjectDespawningPool.Dispose();
 
             Objects.Dispose();
 
             DisconnectedPlayers.Dispose();
-
-            PlayerDespawningPool.Dispose();
 
             BlockContext.Dispose();
 
