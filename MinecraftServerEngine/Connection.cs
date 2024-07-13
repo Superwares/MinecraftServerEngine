@@ -1383,6 +1383,7 @@ namespace MinecraftServerEngine
             id = Id;
 
             EntityRenderer.Disconnect();
+            ParticleObjectRenderer.Disconnect();
 
             _Window.Flush(world, invPlayer);
 

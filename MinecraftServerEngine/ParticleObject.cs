@@ -172,7 +172,7 @@ namespace MinecraftServerEngine
 
     public abstract class FreeParticle : ParticleObject
     {
-        internal FreeParticle(Vector p, double m, byte r, byte g, byte b)
+        protected FreeParticle(Vector p, double m, byte r, byte g, byte b)
             : base(p, m, r, g, b, new WallPharsing())
         {
 
@@ -181,7 +181,7 @@ namespace MinecraftServerEngine
 
     public abstract class SimpleParticle : ParticleObject
     {
-        internal SimpleParticle(Vector p, double m, byte r, byte g, byte b)
+        protected SimpleParticle(Vector p, double m, byte r, byte g, byte b)
             : base(p, m, r, g, b, new SimpleMovement())
         {
 
@@ -190,7 +190,7 @@ namespace MinecraftServerEngine
 
     public abstract class SmoothParticle : ParticleObject
     {
-        internal SmoothParticle(Vector p, double m, byte r, byte g, byte b)
+        protected SmoothParticle(Vector p, double m, byte r, byte g, byte b)
             : base(p, m, r, g, b, new SmoothMovement())
         {
 

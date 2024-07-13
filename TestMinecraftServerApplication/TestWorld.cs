@@ -38,6 +38,8 @@ namespace TestMinecraftServerApplication
                 SpawnObject(
                     new ItemEntity(
                         new ItemStack(ItemType.Stick, 30), new Vector(0.0D, 120.0D, 0.0D)));
+
+                SpawnObject(new Flame(new Vector(0.0D, 102.0D, 0.0D)));
             }
         }
 

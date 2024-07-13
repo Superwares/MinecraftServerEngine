@@ -69,7 +69,10 @@ namespace MinecraftServerEngine
                 {
                     EntityRenderer renderer = queue.Dequeue();
 
-                    renderer.DestroyEntity(Id);
+                    if (!renderer.Disconnected)
+                    {
+                        renderer.DestroyEntity(Id);
+                    }
                     Renderers.Extract(renderer);
                 }
 
