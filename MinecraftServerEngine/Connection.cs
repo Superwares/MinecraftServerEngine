@@ -719,6 +719,7 @@ namespace MinecraftServerEngine
 
 
         private readonly EntityRenderer EntityRenderer;
+        private readonly ParticleObjectRenderer ParticleObjectRenderer;
 
 
         private readonly ChunkingHelper ChunkingHelprt;  // Dispoasble
@@ -750,6 +751,7 @@ namespace MinecraftServerEngine
 
             ChunkLocation loc = ChunkLocation.Generate(p);
             EntityRenderer = new EntityRenderer(OutPackets, loc, _dEntityRendering);
+            ParticleObjectRenderer = new ParticleObjectRenderer(OutPackets, loc, _dEntityRendering);
 
             ChunkingHelprt = new ChunkingHelper(loc, _dChunkRendering);
 
@@ -800,6 +802,7 @@ namespace MinecraftServerEngine
                         Vector p = new(record.Position.X, record.Position.Y, record.Position.Z);
                         ChunkLocation locChunk = ChunkLocation.Generate(p);
                         EntityRenderer.Update(locChunk);
+                        ParticleObjectRenderer.Update(locChunk);
                     }
                     break;
                 case ServerboundPlayingPacket.SettingsPacketId:
@@ -817,6 +820,7 @@ namespace MinecraftServerEngine
                         _dEntityRendering = System.Math.Min(d, MAxEntityRanderDistance);
 
                         EntityRenderer.Update(_dEntityRendering);
+                        ParticleObjectRenderer.Update(_dEntityRendering);
                     }
                     break;
                 case ServerboundPlayingPacket.ServerboundConfirmTransactionPacketId:
@@ -910,6 +914,7 @@ namespace MinecraftServerEngine
 
                         ChunkLocation locChunk = ChunkLocation.Generate(p);
                         EntityRenderer.Update(locChunk);
+                        ParticleObjectRenderer.Update(locChunk);
 
                     }
                     break;
@@ -931,6 +936,7 @@ namespace MinecraftServerEngine
 
                         ChunkLocation locChunk = ChunkLocation.Generate(p);
                         EntityRenderer.Update(locChunk);
+                        ParticleObjectRenderer.Update(locChunk);
                     }
                     break;
                 case ServerboundPlayingPacket.PlayerLookPacketId:
@@ -1125,6 +1131,9 @@ namespace MinecraftServerEngine
                 {
                     default:
                         throw new System.NotImplementedException();
+                    case ParticleObject particleObj:
+                        particleObj.ApplyRenderer(ParticleObjectRenderer);
+                        break;
                     case Entity entity:
                         if (entity.Id != idEntitySelf)
                         {
