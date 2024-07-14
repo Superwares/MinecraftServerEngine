@@ -78,7 +78,7 @@ namespace MinecraftServerEngine.PhysicsEngine
         private readonly double _m;
         public double Mass => _m;
 
-        private readonly Queue<Vector> Forces = new();  // Disposable
+        internal readonly Queue<Vector> Forces = new();  // Disposable
 
         private Vector _v;
         public Vector Velocity => _v;
@@ -97,6 +97,7 @@ namespace MinecraftServerEngine.PhysicsEngine
         {
             System.Diagnostics.Debug.Assert(volume != null);
             System.Diagnostics.Debug.Assert(m > 0.0D);
+            System.Diagnostics.Debug.Assert(movement != null);
 
             _m = m;
 
@@ -134,16 +135,12 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Forces.Enqueue(
-                -1.0D *
-                new Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
-                Velocity);  // Damping Force
-
             if (!NoGravity)
             {
                 Forces.Enqueue(Mass * 0.08D * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
             }
 
+            BoundingVolume volume = GenerateBoundingVolume();
             Vector v = _v;
 
             while (!Forces.Empty)
@@ -151,10 +148,9 @@ namespace MinecraftServerEngine.PhysicsEngine
                 Vector force = Forces.Dequeue();
 
                 System.Diagnostics.Debug.Assert(_m > 0.0D);
-                v += (force / _m);
+                /*v += (force / _m);*/
+                v += force;
             }
-
-            BoundingVolume volume = GenerateBoundingVolume();
 
             double s = v.GetLengthSquared();
             System.Diagnostics.Debug.Assert(s >= 0.0D);

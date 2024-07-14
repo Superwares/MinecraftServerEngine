@@ -329,6 +329,12 @@ namespace MinecraftServerEngine
         {
             Hitbox hitbox = GetHitbox();
 
+            // TODO: Apply force based on hitbox.
+            Forces.Enqueue(
+                -1.0D *
+                new Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
+                Velocity);  // Damping Force
+
             return _teleported ? hitbox.Convert(_pTeleport) : hitbox.Convert(_p);
         }
 

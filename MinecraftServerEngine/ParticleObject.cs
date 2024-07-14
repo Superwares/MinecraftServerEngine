@@ -137,6 +137,12 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            // TODO: Apply force based on volume size.
+            Forces.Enqueue(
+                -1.0D *
+                new Vector(1.0D - 0.9800000190734863D, 1.0D - 0.9800000190734863D, 1.0D - 0.9800000190734863D) *
+                Velocity);  // Damping Force
+
             return BoundingVolume;
         }
 
@@ -154,6 +160,8 @@ namespace MinecraftServerEngine
 
             base.Move(volume, v);
         }
+
+        // TODO: set color
 
         public override void Dispose()
         {

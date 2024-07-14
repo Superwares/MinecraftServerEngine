@@ -206,7 +206,7 @@ namespace MinecraftServerEngine
             CurrentRunningThread = Thread.GetCurrent();
             Console.HandleTerminatin(() =>
             {
-                /*Console.Print("Cancel Running!");*/
+                Console.Print("Cancel!");
                 _running = false;
 
                 System.Diagnostics.Debug.Assert(CurrentRunningThread != null);

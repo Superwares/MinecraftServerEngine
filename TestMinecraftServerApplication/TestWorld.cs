@@ -33,14 +33,17 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (serverTicks == 20 * 5)
+            /*if (serverTicks % 20 * 5 == 0)
             {
                 SpawnObject(
                     new ItemEntity(
                         new ItemStack(ItemType.Stick, 30), new Vector(0.0D, 120.0D, 0.0D)));
 
-                SpawnObject(new Flame(new Vector(0.0D, 102.0D, 0.0D)));
-            }
+                PhysicsObject obj = new Flame(new Vector(0.0D, 110.0D, 0.0D));
+                SpawnObject(obj);
+            }*/
+
+            
         }
 
         protected override AbstractPlayer CreatePlayer(UserId id)
