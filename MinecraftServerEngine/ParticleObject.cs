@@ -1,8 +1,8 @@
 ﻿
+using Containers;
 
 namespace MinecraftServerEngine
 {
-    using Containers;
     using PhysicsEngine;
 
     public abstract class ParticleObject : PhysicsObject
@@ -140,7 +140,7 @@ namespace MinecraftServerEngine
             // TODO: Apply force based on volume size.
             Forces.Enqueue(
                 -1.0D *
-                new Vector(1.0D - 0.9800000190734863D, 1.0D - 0.9800000190734863D, 1.0D - 0.9800000190734863D) *
+                new Vector(1.0D - 0.9999d, 1.0D - 0.9999d, 1.0D - 0.9999d) *
                 Velocity);  // Damping Force
 
             return BoundingVolume;

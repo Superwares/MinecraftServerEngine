@@ -208,8 +208,7 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         protected internal abstract void StartRoutine(long serverTicks);
 
-        public System.Collections.Generic.IEnumerable<PhysicsObject> GetObjects(
-            AxisAlignedBoundingBox minBoundingBox)
+        public void SearchObjects(Tree<PhysicsObject> objs, AxisAlignedBoundingBox minBoundingBox)
         {
             System.Diagnostics.Debug.Assert(minBoundingBox != null);
 
@@ -229,7 +228,12 @@ namespace MinecraftServerEngine.PhysicsEngine
                 foreach (PhysicsObject objInCell in objectsInCell.GetKeys())
                 {
                     System.Diagnostics.Debug.Assert(objInCell != null);
-                    yield return objInCell;
+                    if (objs.Contains(objInCell))
+                    {
+                        continue;
+                    }
+
+                    objs.Insert(objInCell);
                 }
             }
         }

@@ -197,6 +197,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             BoundingVolume volume, double maxStepHeight, Vector v)
         {
             System.Diagnostics.Debug.Assert(queue != null);
+            System.Diagnostics.Debug.Assert(!queue.Empty);
             System.Diagnostics.Debug.Assert(volume != null);
             System.Diagnostics.Debug.Assert(maxStepHeight >= 0.0D);
 
@@ -328,6 +329,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             BoundingVolume volume, double maxStepHeight, Vector v)
         {
             System.Diagnostics.Debug.Assert(queue != null);
+            System.Diagnostics.Debug.Assert(!queue.Empty);
             System.Diagnostics.Debug.Assert(volume != null);
             System.Diagnostics.Debug.Assert(maxStepHeight >= 0.0D);
 
@@ -419,6 +421,12 @@ namespace MinecraftServerEngine.PhysicsEngine
                 GenerateBoundingBoxForBlock(queue, loc);
             }
 
+            if (queue.Empty)
+            {
+                volume.Move(v);
+                return v;
+            }
+
             return ResolveCollisions(queue, volume, maxStepHeight, v);
         }
 
@@ -439,6 +447,12 @@ namespace MinecraftServerEngine.PhysicsEngine
             foreach (BlockLocation loc in grid.GetBlockLocations())
             {
                 GenerateBoundingBoxForBlock(queue, loc);
+            }
+
+            if (queue.Empty)
+            {
+                volume.Move(v);
+                return v;
             }
 
             int axis = -1;

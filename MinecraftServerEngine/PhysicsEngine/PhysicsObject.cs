@@ -148,8 +148,8 @@ namespace MinecraftServerEngine.PhysicsEngine
                 Vector force = Forces.Dequeue();
 
                 System.Diagnostics.Debug.Assert(_m > 0.0D);
-                /*v += (force / _m);*/
-                v += force;
+                v += (force / Mass);
+                /*v += force;*/
             }
 
             double s = v.GetLengthSquared();

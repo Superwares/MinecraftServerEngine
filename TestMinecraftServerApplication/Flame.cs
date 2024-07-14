@@ -9,7 +9,7 @@ namespace TestMinecraftServerApplication
         private int ticks = 0;
 
         public Flame(Vector p) : 
-            base(p, 0.1D, byte.MaxValue, 0, 0)
+            base(p, 20.0D, byte.MaxValue, 0, 0)
         {
 
         }
@@ -27,7 +27,7 @@ namespace TestMinecraftServerApplication
 
             if (ticks == 1)
             {
-                ApplyForce(new Vector(0.5D, 0.5D, 0.5D));
+                ApplyForce(new Vector(12.0D, 10.0D, 12.0D));
             }
         }
 

@@ -1125,7 +1125,9 @@ namespace MinecraftServerEngine
             /*Console.Printl($"grid: {grid}");*/
 
             AxisAlignedBoundingBox aabbTotal = grid.GetMinBoundingBox();
-            foreach (PhysicsObject obj in world.GetObjects(aabbTotal))
+            using Tree<PhysicsObject> objs = new();
+            world.SearchObjects(objs, aabbTotal);
+            foreach (PhysicsObject obj in objs.GetKeys())
             {
                 switch (obj)
                 {

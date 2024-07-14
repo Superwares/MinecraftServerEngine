@@ -79,6 +79,8 @@ namespace MinecraftServerEngine
 
         private sealed class Task
         {
+            internal readonly bool Parallel;
+
             private readonly VoidMethod InitRoutine = null;
             private readonly VoidMethod StartRoutine = null;
 
@@ -95,6 +97,17 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(startRoutine != null);
 
                 StartRoutine = startRoutine;
+
+                Parallel = true;
+            }
+
+            public Task(VoidMethod startRoutine, bool parallel)
+            {
+                System.Diagnostics.Debug.Assert(startRoutine != null);
+
+                StartRoutine = startRoutine;
+
+                Parallel = parallel;
             }
 
             public void Init()
@@ -117,8 +130,8 @@ namespace MinecraftServerEngine
 
         private sealed class TaskManager
         {
-            /*private readonly int ProcessorCount = System.Environment.ProcessorCount;*/
-            private readonly int ProcessorCount = 1;
+            private readonly int ProcessorCount = System.Environment.ProcessorCount;
+            /*private readonly int ProcessorCount = 1;*/
 
             public readonly int TotalTaskCount;
             private readonly Task[] Tasks;
@@ -146,13 +159,20 @@ namespace MinecraftServerEngine
 
                     task.Init();
 
-                    result = System.Threading.Tasks.Parallel.For(
-                        0, ProcessorCount, (_) => task.Start());
+                    if (task.Parallel)
+                    {
+                        result = System.Threading.Tasks.Parallel.For(
+                            0, ProcessorCount, (_) => task.Start());
+                        System.Diagnostics.Debug.Assert(result.IsCompleted);
+                    }
+                    else
+                    {
+                        task.Start();
+                    }
 
                     end = Time.Now();
                     sys.Record(end - start);
 
-                    System.Diagnostics.Debug.Assert(result.IsCompleted);
                 }
             }
         }
@@ -248,7 +268,7 @@ namespace MinecraftServerEngine
                     () => World.SwapObjectQueue(),
                     () => World.LoadAndSendData()),
                 new Task(  // 7
-                    () => World.StartRoutine(_ticks)),
+                    () => World.StartRoutine(_ticks), false),
                 new Task(  // 8
                     () => World.SwapObjectQueue(),
                     () => World.StartObjectRoutines(_ticks)));
