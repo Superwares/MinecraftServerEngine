@@ -116,6 +116,7 @@ namespace MinecraftServerEngine
         private bool _disposed = false;
 
         private readonly double Radius;
+        /*private Vector[] _points;*/
         private readonly float Red, Green, Blue;
 
         private RendererManager Manager = new();  // Disposable
@@ -134,7 +135,7 @@ namespace MinecraftServerEngine
                 return [p];
             }
 
-            int n = (int)(GetArea(r) / MinArea);
+            int n = (int)(GetArea(r) / MinArea) / 3;
             if (n == 1)
             {
                 return [p];
@@ -158,6 +159,19 @@ namespace MinecraftServerEngine
             return points;
         }
 
+        private static Vector[] UpdatePoints(Vector[] points, Vector v)
+        {
+            int n = points.Length;
+            var newPoints = new Vector[n];
+
+            for (int i = 0; i < n; ++i)
+            {
+                newPoints[i] = (points[i] + v);
+            }
+
+            return newPoints;
+        }
+
         private static double GetMiddleRadius(double r)
         {
             double a = Math.Sqrt(2);
@@ -173,6 +187,9 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(movement != null);
 
+            /*_points = GetPoints(p, r);*/
+            /*Console.Printl($"length: {_points.Length}");*/
+
             Radius = r;
 
             Red = Normalize(red);
@@ -187,6 +204,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(Manager != null);
+            
             Manager.Apply(renderer);
         }
 
@@ -213,6 +231,8 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(Manager != null);
             Manager.HandleRendering(p);
+
+            /*_points = UpdatePoints(_points, v);*/
             Manager.Move(GetPoints(p, Radius), Red, Green, Blue);
 
             base.Move(volume, v);

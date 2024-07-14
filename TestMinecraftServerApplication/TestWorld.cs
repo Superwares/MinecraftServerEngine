@@ -6,10 +6,12 @@ namespace TestMinecraftServerApplication
 {
     internal sealed class Lobby : World
     {
+        private static readonly Vector PosSpawning = new(0.0D, 101.0D, 0.0D);
+        private static readonly Look LookSpawning = new(0.0F, 0.0F);
+
         private bool _disposed = false;
 
-        private readonly Vector PosSpawning = new(0.0D, 101.0D, 0.0D);
-        private readonly Look LookSpawning = new(0.0F, 0.0F);
+        
 
         public Lobby() : base() { }
 
@@ -42,7 +44,7 @@ namespace TestMinecraftServerApplication
                 
             }
 
-            if (serverTicks == (20 * 5))
+            if (serverTicks % (20 * 5) == 0)
             {
                 PhysicsObject obj = new Flame(new Vector(0.0D, 110.0D, 0.0D));
                 SpawnObject(obj);

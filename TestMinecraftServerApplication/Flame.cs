@@ -14,10 +14,10 @@ namespace TestMinecraftServerApplication
 
         }
 
-        /*public override bool IsDead()
+        public override bool IsDead()
         {
-            return (ticks >= 100);
-        }*/
+            return (ticks >= (20 * 5));
+        }
 
         public override void StartRoutine(long serverTicks, PhysicsWorld world)
         {
@@ -27,7 +27,7 @@ namespace TestMinecraftServerApplication
 
             if (ticks == 1)
             {
-                ApplyForce(new Vector(0.0D, 10.0D, 0.0D));
+                ApplyForce(new Vector(5.0D, 10.0D, 5.0D));
             }
         }
 

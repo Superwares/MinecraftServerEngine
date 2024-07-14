@@ -1,4 +1,5 @@
 ﻿
+using Common;
 using Sync;
 
 namespace Containers
@@ -49,7 +50,8 @@ namespace Containers
             System.Diagnostics.Debug.Assert(!_disposed);
 
             /*Debug.Assert(key != null);*/
-            return System.Math.Abs(key.GetHashCode() * Constant);
+            int hashCode = key.GetHashCode();
+            return System.Math.Abs(hashCode * Constant);
         }
 
         private void Resize(int newLength)
@@ -137,7 +139,7 @@ namespace Containers
             System.Diagnostics.Debug.Assert(index >= 0);
             _flags[index] = true;
             _keys[index] = key;
-            _count++;
+            ++_count;
 
             float factor = (float)_count / (float)_length;
             if (factor >= LoadFactor)
