@@ -1,4 +1,5 @@
 ﻿
+using Common;
 using Containers;
 
 namespace MinecraftServerEngine
@@ -65,8 +66,10 @@ namespace MinecraftServerEngine
             }
 
 
-            internal void Move(Vector p, float r, float g, float b)
+            internal void Move(Vector[] points, float r, float g, float b)
             {
+                System.Diagnostics.Debug.Assert(points != null);
+
                 System.Diagnostics.Debug.Assert(r > 0.0D);
                 System.Diagnostics.Debug.Assert(r <= 1.0D);
                 System.Diagnostics.Debug.Assert(g > 0.0D);
@@ -80,7 +83,7 @@ namespace MinecraftServerEngine
                 foreach (ParticleObjectRenderer renderer in Renderers.GetKeys())
                 {
                     System.Diagnostics.Debug.Assert(renderer != null);
-                    renderer.Move(p, r, g, b);
+                    renderer.Move(points, r, g, b);
                 }
             
             }
@@ -100,10 +103,19 @@ namespace MinecraftServerEngine
 
         }
 
-        private const double Radius = 0.25D;
+        private static double GetArea(double r)
+        {
+            System.Diagnostics.Debug.Assert(r > 0.0D);
+
+            return 4 * System.Math.PI * r * r;
+        }
+
+        private const double MinRadius = 0.1D;
+        private static readonly double MinArea = GetArea(MinRadius);
 
         private bool _disposed = false;
 
+        private readonly double Radius;
         private readonly float Red, Green, Blue;
 
         private RendererManager Manager = new();  // Disposable
@@ -113,14 +125,59 @@ namespace MinecraftServerEngine
             return (v > 0) ? ((float)v / (float)byte.MaxValue) : 0.0001F;
         }
 
-        internal ParticleObject(Vector p, double m, byte r, byte g, byte b, Movement movement)
-            : base(m, AxisAlignedBoundingBox.Generate(p, Radius), movement)
+        private static Vector[] GetPoints(Vector p, double r)
+        {
+            System.Diagnostics.Debug.Assert(r >= MinRadius);
+
+            if (r == MinRadius)
+            {
+                return [p];
+            }
+
+            int n = (int)(GetArea(r) / MinArea);
+            if (n == 1)
+            {
+                return [p];
+            }
+
+            var points = new Vector[n];
+            for (int i = 0; i < n; ++i)
+            {
+                double theta = 2 * System.Math.PI * Random.NextDouble(),
+                    phi = System.Math.PI * Random.NextDouble();
+
+                double d = r * Random.NextDouble();
+
+                double x = (d * System.Math.Sin(phi) * System.Math.Cos(theta)) + p.X,
+                    y = (d * System.Math.Sin(phi) * System.Math.Sin(theta)) + p.Y,
+                    z = (d * System.Math.Cos(phi)) + p.Z;
+
+                points[i] = new Vector(x, y, z);
+            }
+
+            return points;
+        }
+
+        private static double GetMiddleRadius(double r)
+        {
+            double a = Math.Sqrt(2);
+            System.Diagnostics.Debug.Assert(((a - 1) * r) < 1.0D);
+            return (2 * r) / (a + 1);
+        }
+
+        internal ParticleObject(
+            Vector p, double r, double m,
+            byte red, byte green, byte blue, 
+            Movement movement)
+            : base(m, AxisAlignedBoundingBox.Generate(p, GetMiddleRadius(r)), movement)
         {
             System.Diagnostics.Debug.Assert(movement != null);
 
-            Red = Normalize(r);
-            Green = Normalize(g);
-            Blue = Normalize(b);
+            Radius = r;
+
+            Red = Normalize(red);
+            Green = Normalize(green);
+            Blue = Normalize(blue);
         }
 
         internal void ApplyRenderer(ParticleObjectRenderer renderer)
@@ -156,7 +213,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(Manager != null);
             Manager.HandleRendering(p);
-            Manager.Move(p, Red, Green, Blue);
+            Manager.Move(GetPoints(p, Radius), Red, Green, Blue);
 
             base.Move(volume, v);
         }
@@ -180,8 +237,10 @@ namespace MinecraftServerEngine
 
     public abstract class FreeParticle : ParticleObject
     {
-        protected FreeParticle(Vector p, double m, byte r, byte g, byte b)
-            : base(p, m, r, g, b, new WallPharsing())
+        protected FreeParticle(
+            Vector p, double r, double m,
+            byte red, byte green, byte blue)
+            : base(p, r, m, red, green, blue, new WallPharsing())
         {
 
         }
@@ -189,8 +248,10 @@ namespace MinecraftServerEngine
 
     public abstract class SimpleParticle : ParticleObject
     {
-        protected SimpleParticle(Vector p, double m, byte r, byte g, byte b)
-            : base(p, m, r, g, b, new SimpleMovement())
+        protected SimpleParticle(
+            Vector p, double r, double m,
+            byte red, byte green, byte blue)
+            : base(p, r, m, red, green, blue, new SimpleMovement())
         {
 
         }
@@ -198,8 +259,10 @@ namespace MinecraftServerEngine
 
     public abstract class SmoothParticle : ParticleObject
     {
-        protected SmoothParticle(Vector p, double m, byte r, byte g, byte b)
-            : base(p, m, r, g, b, new SmoothMovement())
+        protected SmoothParticle(
+            Vector p, double r, double m,
+            byte red, byte green, byte blue)
+            : base(p, r, m, red, green, blue, new SmoothMovement())
         {
 
         }

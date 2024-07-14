@@ -9,15 +9,15 @@ namespace TestMinecraftServerApplication
         private int ticks = 0;
 
         public Flame(Vector p) : 
-            base(p, 20.0D, byte.MaxValue, 0, 0)
+            base(p, 1.0D, 20.0D, byte.MaxValue, 0, 0)
         {
 
         }
 
-        public override bool IsDead()
+        /*public override bool IsDead()
         {
             return (ticks >= 100);
-        }
+        }*/
 
         public override void StartRoutine(long serverTicks, PhysicsWorld world)
         {
@@ -27,7 +27,7 @@ namespace TestMinecraftServerApplication
 
             if (ticks == 1)
             {
-                ApplyForce(new Vector(12.0D, 10.0D, 12.0D));
+                ApplyForce(new Vector(0.0D, 10.0D, 0.0D));
             }
         }
 

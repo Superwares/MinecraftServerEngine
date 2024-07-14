@@ -25,5 +25,13 @@ namespace Common
         {
             return (ulong)SystemRandom.NextInt64();
         }
+
+        public static double NextDouble()
+        {
+            double v = SystemRandom.NextDouble();
+            System.Diagnostics.Debug.Assert(v >= 0.0D);
+            System.Diagnostics.Debug.Assert(v < 1.0D);
+            return v;
+        }
     }
 }
