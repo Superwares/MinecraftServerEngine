@@ -312,6 +312,12 @@ namespace MinecraftServerEngine
 
         private protected abstract void RenderSpawning(EntityRenderer renderer);
 
+        protected (Vector, Vector) GetRay()
+        {
+            throw new System.NotImplementedException();
+            /*return (origin, dir);*/
+        }
+
         internal void ApplyRenderer(EntityRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(renderer != null);
