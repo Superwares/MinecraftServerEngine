@@ -211,14 +211,17 @@ namespace MinecraftServerEngine
         public const int ServerboundConfirmTransactionPacketId = 0x05;
         public const int ClickWindowPacketId = 0x07;
         public const int ServerboundCloseWindowPacketId = 0x08;
+        public const int ServerboundCustomPayloadPacketId = 0x09;
         public const int ServerboundKeepAlivePacketId = 0x0B;
         public const int PlayerPacketId = 0x0C;
         public const int PlayerPositionPacketId = 0x0D;
         public const int PlayerPosAndLookPacketId = 0x0E;
         public const int PlayerLookPacketId = 0x0F;
-        public const int PlayerDiggingPacketId = 0x14;
+        public const int PlayerDigPacketId = 0x14;
         public const int EntityActionPacketId = 0x15;
         public const int ServerboundHeldItemSlotPacketId = 0x1A;
+        public const int AnimationPacketId = 0x1D;
+        public const int BlockPlacementPacketId = 0x1F;
         public const int UseItemPacketId = 0x20;
 
         public override WhereBound BoundTo => WhereBound.Serverbound;
@@ -1923,25 +1926,25 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal sealed class PlayerDiggingPacket : ServerboundPlayingPacket
+    internal sealed class PlayerDigPacket : ServerboundPlayingPacket
     {
         public readonly int Status;
         // TODO: Make x as a 26-bit integer,
         // followed by z as a 26-bit integer,
         // followed by y as a 12-bit integer
         // (all signed, two's complement).
-        public readonly byte Position; 
+        public readonly byte[] Position; 
         public readonly byte Face;
 
-        internal static PlayerDiggingPacket Read(Buffer buffer)
+        internal static PlayerDigPacket Read(Buffer buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
-            return new(buffer.ReadInt(true), buffer.ReadByte(), buffer.ReadByte());
+            return new(buffer.ReadInt(true), buffer.ReadData(8), buffer.ReadByte());
         }
 
-        private PlayerDiggingPacket(int status, byte p, byte face) 
-            : base(PlayerDiggingPacketId)
+        internal PlayerDigPacket(int status, byte[] p, byte face) 
+            : base(PlayerDigPacketId)
         {
             Status = status;
             Position = p;
@@ -2000,6 +2003,30 @@ namespace MinecraftServerEngine
         private ServerboundHeldItemSlotPacket(int slot) : base(ServerboundHeldItemSlotPacketId)
         {
             Slot = slot;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            throw new System.NotImplementedException();
+        }
+    }
+
+    internal sealed class AnimationPacket : ServerboundPlayingPacket
+    {
+        public readonly int Hand;
+
+        internal static AnimationPacket Read(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            return new(buffer.ReadInt(true));
+        }
+
+        internal AnimationPacket(int hand) : base(AnimationPacketId)
+        {
+            Hand = hand;
         }
 
         protected override void WriteData(Buffer buffer)

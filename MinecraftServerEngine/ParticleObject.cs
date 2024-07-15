@@ -135,7 +135,7 @@ namespace MinecraftServerEngine
                 return [p];
             }
 
-            int n = (int)(GetArea(r) / MinArea) / 3;
+            int n = (int)(GetArea(r) / MinArea) / 2;
             if (n == 1)
             {
                 return [p];
@@ -233,6 +233,7 @@ namespace MinecraftServerEngine
             Manager.HandleRendering(p);
 
             /*_points = UpdatePoints(_points, v);*/
+            /*GetPoints(p, Radius);*/
             Manager.Move(GetPoints(p, Radius), Red, Green, Blue);
 
             base.Move(volume, v);

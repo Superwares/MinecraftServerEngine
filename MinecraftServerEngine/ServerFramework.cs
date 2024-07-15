@@ -142,6 +142,8 @@ namespace MinecraftServerEngine
 
                 TotalTaskCount = tasks.Length;
                 Tasks = tasks;
+
+                /*Console.Printl($"{System.Environment.ProcessorCount}");*/
             }
 
             public void Start(PerformanceMonitor sys)

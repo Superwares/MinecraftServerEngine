@@ -497,7 +497,6 @@ namespace MinecraftServerEngine.PhysicsEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
-            
 
             // Finish.
             System.GC.SuppressFinalize(this);

@@ -374,6 +374,21 @@ namespace MinecraftServerEngine
         }
 
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
+        internal byte[] ReadData(int size)
+        {
+            System.Diagnostics.Debug.Assert(size >= 0);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (size == 0)
+            {
+                return [];
+            }
+
+            return ExtractBytes(size);
+        }
+
+        /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
         internal byte[] ReadData()
         {
             System.Diagnostics.Debug.Assert(!_disposed);

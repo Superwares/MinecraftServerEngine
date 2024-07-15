@@ -726,6 +726,9 @@ namespace MinecraftServerEngine
         private readonly Queue<TeleportRecord> TeleportRecords = new();  // Dispoasble
         private KeepAliveRecord _KeepAliveRecord = new();  // Disposable
 
+        private bool _startDigging = false;
+        private bool _attackWhenDigging = false;
+
 
         private readonly Window _Window;  // Disposable
 
@@ -828,14 +831,13 @@ namespace MinecraftServerEngine
                         ServerboundConfirmTransactionPacket packet =
                             ServerboundConfirmTransactionPacket.Read(buffer);
 
-                        Console.Printl(
+                        /*Console.Printl(
                             $"WindowId: {packet.WindowId}, " +  
                             $"ActionNumber: {packet.ActionNumber}, " +
-                            $"Accepted: {packet.Accepted}, ");
+                            $"Accepted: {packet.Accepted}, ");*/
 
                         throw new UnexpectedPacketException();
                     }
-                    /*break;*/
                 case ServerboundPlayingPacket.ClickWindowPacketId:
                     {
                         ClickWindowPacket packet = ClickWindowPacket.Read(buffer);
@@ -873,7 +875,7 @@ namespace MinecraftServerEngine
                         _Window.Reset(OutPackets, world, packet.WindowId, invPlayer);
                     }
                     break;
-                case 0x09:
+                case ServerboundPlayingPacket.ServerboundCustomPayloadPacketId:
                     {
                         buffer.Flush();
                     }
@@ -954,6 +956,40 @@ namespace MinecraftServerEngine
                         /*player.ControlStanding(packet.OnGround);*/
                     }
                     break;
+                case ServerboundPlayingPacket.PlayerDigPacketId:
+                    {
+                        var packet = PlayerDigPacket.Read(buffer);
+
+                        /*Console.Printl("PlayerDigPacket!");
+                        Console.Printl($"\tStatus: {packet.Status}");*/
+                        switch (packet.Status)
+                        {
+                            default:
+                                throw new System.NotImplementedException();
+                            case 0:  // Started digging
+                                if (_startDigging)
+                                {
+                                    throw new UnexpectedValueException("PlayerDigPacket.Status");
+                                }
+
+                                _startDigging = true;
+                                System.Diagnostics.Debug.Assert(!_attackWhenDigging);
+                                break;
+                            case 1:  // Cancelled digging
+
+                                _startDigging = false;
+                                _attackWhenDigging = false;
+                                break;
+                            case 2:  // Finished digging
+
+                                // TODO: Send Block Change Packet, 0x0B.
+
+                                _startDigging = false;
+                                _attackWhenDigging = false;
+                                break;
+                        }
+                    }
+                    break;
                 case ServerboundPlayingPacket.EntityActionPacketId:
                     {
                         EntityActionPacket packet = EntityActionPacket.Read(buffer);
@@ -1020,6 +1056,66 @@ namespace MinecraftServerEngine
 
                         invPlayer.ChangeMainHand(packet.Slot);
                         player.UpdateEntityEquipmentsData(invPlayer.GetEquipmentsData());
+                    }
+                    break;
+                case ServerboundPlayingPacket.AnimationPacketId:
+                    {
+                        var packet = AnimationPacket.Read(buffer);
+
+                        /*Console.Printl("AnimationPacket!");
+                        Console.Printl($"\tHand: {packet.Hand}");*/
+
+                        if (packet.Hand == 0)
+                        {
+                            if (_startDigging)
+                            {
+                                if (!_attackWhenDigging)
+                                {
+                                    // Attack!
+                                    Console.Printl("Attack!");
+
+                                    _attackWhenDigging = true;
+                                }
+                            }
+                            else
+                            {
+                                // Attack!
+                                Console.Printl("Attack!");
+                            }
+                        }
+                        else if (packet.Hand == 1)  // offhand
+                        {
+                            // TOOD: Check it is correct behavior.
+                            throw new UnexpectedValueException("AnimationPacket.Hand");
+                        }
+                        else
+                        {
+                            throw new UnexpectedValueException("AnimationPacket.Hand");
+                        }
+                        
+                    }
+                    break;
+                case ServerboundPlayingPacket.BlockPlacementPacketId:
+                    {
+                        buffer.Flush();
+                    }
+                    break;
+                case ServerboundPlayingPacket.UseItemPacketId:
+                    {
+                        var packet = UseItemPacket.Read(buffer);
+
+                        /*Console.Printl("UseItemPacket!");
+                        Console.Printl($"\tHand: {packet.Hand}");*/
+
+                        if (packet.Hand == 0 || packet.Hand == 1)
+                        {
+                            // UseItem
+                        }
+                        else
+                        {
+                            throw new UnexpectedValueException("UseItemPacket.Hand");
+                        }
+                        
                     }
                     break;
             }
@@ -1347,6 +1443,7 @@ namespace MinecraftServerEngine
                     System.Diagnostics.Debug.Assert(buffer.Empty);
                 }
 
+                /*Console.Printl($"Packets Length: {OutPackets.Count}");*/
                 while (!OutPackets.Empty)
                 {
                     ClientboundPlayingPacket packet = OutPackets.Dequeue();
