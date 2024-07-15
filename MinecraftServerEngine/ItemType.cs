@@ -16,6 +16,6 @@ namespace MinecraftServerEngine
 
         Stick,
 
-        Snowball,
+        /*Snowball,*/  // This item is handled by clientside.
     }
 }

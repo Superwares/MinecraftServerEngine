@@ -34,7 +34,7 @@ namespace MinecraftServerEngine
 
             ~Window() => System.Diagnostics.Debug.Assert(false);
 
-            public bool Open(
+            internal bool Open(
                 ConcurrentQueue<ClientboundPlayingPacket> outPackets,
                 PlayerInventory invPrivate, PublicInventory invPublic)
             {
@@ -68,7 +68,7 @@ namespace MinecraftServerEngine
                 }
             }
 
-            public void Reset(
+            internal void Reset(
                 ConcurrentQueue<ClientboundPlayingPacket> outPackets,
                 World world,
                 int idWindow, PlayerInventory invPrivate)
@@ -141,6 +141,15 @@ namespace MinecraftServerEngine
                     Locker.Release();
                 }
             }
+
+            /*internal void Refresh(PlayerInventory invPlayer)
+            {
+                System.Diagnostics.Debug.Assert(invPlayer != null);
+
+                int offset = _invPublic == null ? 0 : _invPublic.TotalSlotCount;
+                System.Diagnostics.Debug.Assert(offset >= 0);
+                Renderer.Update(invPlayer, Cursor, offset);
+            }*/
 
             /*private void LeftClick(PrivateInventory invPrivate, int i)
             {
@@ -221,18 +230,18 @@ namespace MinecraftServerEngine
 
             }*/
 
-            public void Handle(
+            internal void Handle(
                 UserId id,
                 World world, AbstractPlayer player,
                 PlayerInventory invPlayer,
                 int mode, int button, int i)
             {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
                 System.Diagnostics.Debug.Assert(id != UserId.Null);
                 System.Diagnostics.Debug.Assert(world != null);
                 System.Diagnostics.Debug.Assert(player != null);
                 System.Diagnostics.Debug.Assert(invPlayer != null);
+
+                System.Diagnostics.Debug.Assert(!_disposed);
 
                 System.Diagnostics.Debug.Assert(Renderer != null);
                 System.Diagnostics.Debug.Assert(Cursor != null);
@@ -325,7 +334,7 @@ namespace MinecraftServerEngine
 
             }
 
-            public void Handle(
+            internal void Handle(
                 UserId id,
                 World world, AbstractPlayer player,
                 PlayerInventory invPlayer,
@@ -880,6 +889,21 @@ namespace MinecraftServerEngine
                         buffer.Flush();
                     }
                     break;
+                case ServerboundPlayingPacket.UseEntityPacketId:
+                    {
+                        var packet = UseEntityPacket.Read(buffer);
+
+                        /*Console.Printl("UseEntityPacket!");
+                        Console.Printl($"\tEntityId: {packet.EntityId}");
+                        Console.Printl($"\tType: {packet.Type}");
+                        Console.Printl($"\tHand: {packet.Hand}");*/
+
+                        if (packet.Type == 2 && packet.Hand == 0)
+                        {
+                            Console.Printl("UseEntity!");
+                        }
+                    }
+                    break;
                 case ServerboundPlayingPacket.ServerboundKeepAlivePacketId:
                     {
                         ServerboundKeepAlivePacket packet = ServerboundKeepAlivePacket.Read(buffer);
@@ -1110,6 +1134,9 @@ namespace MinecraftServerEngine
                         if (packet.Hand == 0 || packet.Hand == 1)
                         {
                             // UseItem
+                            Console.Printl("UseItem!");
+
+                            /*_Window.Refresh(invPlayer);*/
                         }
                         else
                         {

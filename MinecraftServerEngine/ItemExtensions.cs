@@ -23,7 +23,7 @@ namespace MinecraftServerEngine
 
             _ITEM_ENUM_TO_ID_MAP.Insert(ItemType.Stick, 280);
 
-            _ITEM_ENUM_TO_ID_MAP.Insert(ItemType.Snowball, 332);
+            /*_ITEM_ENUM_TO_ID_MAP.Insert(ItemType.Snowball, 332);*/
 
             foreach ((ItemType item, int id) in _ITEM_ENUM_TO_ID_MAP.GetElements())
             {
@@ -57,8 +57,8 @@ namespace MinecraftServerEngine
                 case ItemType.Stick:
                     return 64;
 
-                case ItemType.Snowball:
-                    return 16;
+                /*case ItemType.Snowball:
+                    return 16;*/
             }
         }
 

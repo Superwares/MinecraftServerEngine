@@ -212,6 +212,7 @@ namespace MinecraftServerEngine
         public const int ClickWindowPacketId = 0x07;
         public const int ServerboundCloseWindowPacketId = 0x08;
         public const int ServerboundCustomPayloadPacketId = 0x09;
+        public const int UseEntityPacketId = 0x0A;
         public const int ServerboundKeepAlivePacketId = 0x0B;
         public const int PlayerPacketId = 0x0C;
         public const int PlayerPositionPacketId = 0x0D;
@@ -1757,6 +1758,53 @@ namespace MinecraftServerEngine
             throw new System.NotImplementedException();
         }
 
+    }
+
+    internal sealed class UseEntityPacket : ServerboundPlayingPacket
+    {
+        internal readonly int EntityId;
+        internal readonly int Type;
+        internal readonly int Hand;
+
+        internal static UseEntityPacket Read(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            int entityid = buffer.ReadInt(true);
+            int type = buffer.ReadInt(true);
+            if (type == 2)
+            {
+                buffer.ReadFloat();
+                buffer.ReadFloat();
+                buffer.ReadFloat();
+            }
+
+            int hand;
+            if (type == 0 || type == 2)
+            {
+                hand = buffer.ReadInt(true);
+            }
+            else
+            {
+                hand = -1;
+            }
+
+            return new(entityid, type, hand);
+        }
+
+        internal UseEntityPacket(int target, int type, int hand) : base(UseEntityPacketId)
+        {
+            EntityId = target;
+            Type = type;
+            Hand = hand;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            throw new System.NotImplementedException();
+        }
     }
 
     internal sealed class ServerboundKeepAlivePacket : ServerboundPlayingPacket

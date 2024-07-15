@@ -240,7 +240,8 @@ namespace MinecraftServerEngine
         internal PlayerInventory() : base(46) 
         {
             GiveFromLeftInPrimary(new ItemStack(ItemType.Stick));
-            GiveFromLeftInPrimary(new ItemStack(ItemType.Snowball));
+            GiveFromLeftInPrimary(new ItemStack(ItemType.DiamondSword));
+            /*GiveFromLeftInPrimary(new ItemStack(ItemType.Snowball));*/
         }
 
         ~PlayerInventory() => System.Diagnostics.Debug.Assert(false);
