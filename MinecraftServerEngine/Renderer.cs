@@ -358,10 +358,11 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!Disconnected);
 
+            (byte x, byte y) = look.ConvertToProtocolFormat();
             Render(new EntityTeleportPacket(
                 id,
                 p.X, p.Y, p.Z,
-                look.Yaw, look.Pitch,
+                x, y,
                 onGround));
         }
 

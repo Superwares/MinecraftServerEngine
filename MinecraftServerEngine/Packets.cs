@@ -1563,7 +1563,7 @@ namespace MinecraftServerEngine
     {
         public readonly int EntityId;
         public readonly double X, Y, Z;
-        public readonly float Yaw, Pitch;
+        public readonly byte Yaw, Pitch;
         public readonly bool OnGround;
 
         internal static EntityTeleportPacket Read(Buffer buffer)
@@ -1576,7 +1576,7 @@ namespace MinecraftServerEngine
         public EntityTeleportPacket(
             int entityId, 
             double x, double y, double z, 
-            float yaw, float pitch,
+            byte yaw, byte pitch,
             bool onGround) : base(EntityTeleportPacketId)
         {
             EntityId = entityId;
@@ -1591,7 +1591,7 @@ namespace MinecraftServerEngine
 
             buffer.WriteInt(EntityId, true);
             buffer.WriteDouble(X); buffer.WriteDouble(Y); buffer.WriteDouble(Z);
-            buffer.WriteFloat(Yaw); buffer.WriteFloat(Pitch);
+            buffer.WriteByte(Yaw); buffer.WriteByte(Pitch);
             buffer.WriteBool(OnGround);
         }
 

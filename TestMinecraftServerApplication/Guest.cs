@@ -70,10 +70,12 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            entity.ApplyForce(new Vector(
+            entity.Teleport(new Vector(1.0D, 103.0D, 3.0D), new Look(0.0F, 0.0F));
+
+            /*entity.ApplyForce(new Vector(
                 (Random.NextDouble() - 0.5D) / 10.0D, 
                 (Random.NextDouble() - 0.5D) / 10.0D, 
-                (Random.NextDouble() - 0.5D) / 10.0D));
+                (Random.NextDouble() - 0.5D) / 10.0D));*/
         }
 
         protected override void OnDeath(PhysicsWorld world)
