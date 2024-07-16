@@ -13,7 +13,7 @@ namespace TestMinecraftServerApplication
 
         ~Guest() => System.Diagnostics.Debug.Assert(false);
 
-        public override void StartRoutine(long serverTicks, PhysicsWorld world)
+        public override void StartRoutine(PhysicsWorld world)
         {
             System.Diagnostics.Debug.Assert(world != null);
 

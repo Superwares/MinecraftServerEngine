@@ -31,23 +31,10 @@ namespace TestMinecraftServerApplication
             return false;
         }
 
-        protected override void StartRoutine(long serverTicks)
+        protected override void StartRoutine()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-
-            if (serverTicks % 20 == 0)
-            {
-                /*SpawnObject(
-                    new ItemEntity(
-                        new ItemStack(ItemType.Stick, 30), new Vector(0.0D, 120.0D, 0.0D)));*/
-                
-            }
-
-            if (serverTicks == 20)
-            {
-                PhysicsObject obj = new Flame(new Vector(0.0D, 110.0D, 0.0D));
-                SpawnObject(obj);
-            }
+            
             
         }
 

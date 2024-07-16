@@ -281,7 +281,7 @@ namespace MinecraftServerEngine
             Objects.Swap();
         }
 
-        internal void StartObjectRoutines(long serverTicks)
+        internal void StartObjectRoutines()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -289,13 +289,13 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(obj != null);
 
-                obj.StartRoutine(serverTicks,this);
+                obj.StartRoutine(this);
 
                 Objects.Enqueue(obj);
             }
         }
 
-        internal void ControlPlayers(long serverTicks)
+        internal void ControlPlayers()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -303,7 +303,7 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(player != null);
 
-                player.Control(serverTicks, this);
+                player.Control(this);
 
                 Objects.Enqueue(player);
             }

@@ -1190,7 +1190,6 @@ namespace MinecraftServerEngine
         }
 
         internal void Control(
-            long serverTicks, 
             World world, 
             AbstractPlayer player, PlayerInventory invPlayer)
         {

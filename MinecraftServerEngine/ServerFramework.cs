@@ -23,7 +23,7 @@ namespace MinecraftServerEngine
 
                 for (int i = 0; i <= N; ++i)
                 {
-                    _totalTimes[i] = Time.Zero();
+                    _totalTimes[i] = Time.Zero;
                 }
             }
 
@@ -61,14 +61,14 @@ namespace MinecraftServerEngine
                     average = _totalTimes[i] / _count;
                     msg += $"{i}:{average}, ";
 
-                    _totalTimes[i] = Time.Zero();
+                    _totalTimes[i] = Time.Zero;
                 }
 
                 {
                     average = _totalTimes[N] / _count;
                     msg += $"T:{average}";
 
-                    _totalTimes[N] = Time.Zero();
+                    _totalTimes[N] = Time.Zero;
                 }
 
                 Console.Printl(msg);
@@ -190,12 +190,11 @@ namespace MinecraftServerEngine
 
         private readonly World World;
 
-        private long _ticks = 0;
-
 
         public ServerFramework(World world)
         {
             System.Diagnostics.Debug.Assert(world != null);
+
             World = world;
         }
 
@@ -209,16 +208,6 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(Threads != null);
             Threads.Enqueue(Thread.New(startRoutine));
-        }
-
-        private void CountTicks()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(_ticks >= 0);
-            System.Diagnostics.Debug.Assert(_ticks < long.MaxValue);
-
-            ++_ticks;
         }
 
         public void Run(ushort port)
@@ -252,7 +241,7 @@ namespace MinecraftServerEngine
             TaskManager manager = new(
                 new Task(  // 0
                     () => World.SwapObjectQueue(),
-                    () => World.ControlPlayers(_ticks)),
+                    () => World.ControlPlayers()),
                 new Task(  // 1
                     () => World.SwapObjectQueue(),
                     () => World.HandleDeathEvents()),
@@ -273,17 +262,20 @@ namespace MinecraftServerEngine
                     () => World.SwapObjectQueue(),
                     () => World.LoadAndSendData()),
                 new Task(  // 8
-                    () => World.StartRoutine(_ticks), false),
+                    () => World.StartRoutine(), false),
                 new Task(  // 9
                     () => World.SwapObjectQueue(),
-                    () => World.StartObjectRoutines(_ticks)));
+                    () => World.StartObjectRoutines()));
 
             PerformanceMonitor sys = new(manager.TotalTaskCount);
 
             bool f;
 
-            Time interval, accumulated, start, end, elapsed;
+            ulong ticks = 0;
 
+            Time total, interval, accumulated, start, end, elapsed;
+
+            total = Time.Zero;
             interval = accumulated = Time.FromMilliseconds(50);
             start = Time.Now();
 
@@ -292,7 +284,7 @@ namespace MinecraftServerEngine
                 f = (accumulated >= interval);
                 if (f)
                 {
-                    System.Diagnostics.Debug.Assert(_ticks >= 0);
+                    /*System.Diagnostics.Debug.Assert(_ticks >= 0);*/
 
                     manager.Start(sys);
                 }
@@ -302,6 +294,7 @@ namespace MinecraftServerEngine
 
                 start = end;
                 accumulated += elapsed;
+                total += elapsed;
 
                 if (elapsed > interval)
                 {
@@ -311,11 +304,12 @@ namespace MinecraftServerEngine
                 if (f)
                 {
                     accumulated -= interval;
-                    CountTicks();
+                    ++ticks;
 
                     sys.Record(elapsed);
 
-                    if (_ticks % (20 * 5) == 0)
+                    /*Console.Printl($"total % Time.FromSeconds(5): {total % Time.FromSeconds(5)}");*/
+                    if (ticks % (20 * 5) == 0)
                     {
                         sys.Print();
                     }

@@ -28,7 +28,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(!_disposed);
         }
 
-        public override void StartRoutine(long serverTicks, PhysicsWorld world)
+        public override void StartRoutine(PhysicsWorld world)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

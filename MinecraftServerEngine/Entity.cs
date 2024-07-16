@@ -657,7 +657,7 @@ namespace MinecraftServerEngine
                 Stack);
         }
 
-        public override void StartRoutine(long serverTicks, PhysicsWorld world)
+        public override void StartRoutine(PhysicsWorld world)
         {
             System.Diagnostics.Debug.Assert(world != null);
         }
@@ -854,7 +854,7 @@ namespace MinecraftServerEngine
             _pControl = p;
         }
 
-        internal void Control(long serverTicks, World world)
+        internal void Control(World world)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -862,7 +862,7 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(Conn != null);
 
-                Conn.Control(serverTicks, world, this, Inventory);
+                Conn.Control(world, this, Inventory);
             }
 
         }

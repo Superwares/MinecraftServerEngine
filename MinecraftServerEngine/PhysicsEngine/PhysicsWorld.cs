@@ -206,7 +206,7 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         ~PhysicsWorld() => System.Diagnostics.Debug.Assert(false);
 
-        protected internal abstract void StartRoutine(long serverTicks);
+        protected internal abstract void StartRoutine();
 
         public void SearchObjects(Tree<PhysicsObject> objs, AxisAlignedBoundingBox minBoundingBox)
         {

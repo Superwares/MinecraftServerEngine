@@ -119,7 +119,7 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         protected internal abstract void OnDeath(PhysicsWorld world);
 
-        public abstract void StartRoutine(long serverTicks, PhysicsWorld world);
+        public abstract void StartRoutine(PhysicsWorld world);
 
         public virtual void ApplyForce(Vector v)
         {

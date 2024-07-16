@@ -28,6 +28,18 @@ namespace Common
             return new(t.Amount / amount);
         }
 
+        public static Time operator /(Time t1, Time t2)
+        {
+            // TODO: Assertion of value range
+            return new(t1.Amount / t2.Amount);
+        }
+
+        public static Time operator %(Time t1, Time t2)
+        {
+            // TODO: Assertion of value range
+            return new(t1.Amount % t2.Amount);
+        }
+
         public static bool operator !=(Time t1, Time t2)
         {
             return t1.Amount != t2.Amount;
@@ -58,11 +70,6 @@ namespace Common
             return t1.Amount >= t2.Amount;
         }
 
-        public static Time Zero()
-        {
-            return new(0);
-        }
-
         public static Time Now()
         {
             long usec = (System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMicrosecond);
@@ -85,6 +92,8 @@ namespace Common
         }
 
         public static string Symbol => "μs";
+
+        public static Time Zero => new(0);
 
         private readonly long Amount;
 
