@@ -6,6 +6,8 @@ namespace TestMinecraftServerApplication
 {
     internal sealed class Flame : SmoothParticle
     {
+        private bool _disposed = false;
+
         private int ticks = 0;
 
         public Flame(Vector p) : 
@@ -14,13 +16,22 @@ namespace TestMinecraftServerApplication
 
         }
 
-        public override bool IsDead()
+        protected override bool IsDead()
         {
             return (ticks >= (20 * 5));
         }
 
+        protected override void OnDeath(PhysicsWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+        }
+
         public override void StartRoutine(long serverTicks, PhysicsWorld world)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(world != null);
 
             ++ticks;
@@ -29,6 +40,18 @@ namespace TestMinecraftServerApplication
             {
                 ApplyForce(new Vector(5.0D, 10.0D, 5.0D));
             }
+        }
+
+        public override void Dispose()
+        {
+            // Assertions.
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            // Release resources.
+
+            // Finish.
+            base.Dispose();
+            _disposed = true;
         }
 
     }

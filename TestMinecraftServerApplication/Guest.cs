@@ -20,6 +20,62 @@ namespace TestMinecraftServerApplication
 
         }
 
+        protected override void OnSneak(World world, bool f)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+        }
+
+        protected override void OnSprint(World world, bool f)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+        }
+
+        protected override void OnAttack(World world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+        }
+
+        protected override void OnAttack(World world, ItemStack stack)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+        }
+
+        protected override void OnUseItem(World world, ItemStack stack)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+        }
+
+        protected override void OnUseEntity(World world, Entity entity)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+        }
+
+        protected override void OnDeath(PhysicsWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+        }
+
         public override void Dispose()
         {
             // Assertions.

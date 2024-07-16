@@ -307,6 +307,29 @@ namespace MinecraftServerEngine
             }
         }
 
+        internal void HandleDeathEvents()
+        {
+            while (Objects.Dequeue(out PhysicsObject obj))
+            {
+                System.Diagnostics.Debug.Assert(obj != null);
+                System.Diagnostics.Debug.Assert(obj is not AbstractPlayer);
+
+                if (obj.IsDead())
+                {
+                    obj.OnDeath(this);
+
+                    if (obj is not AbstractPlayer)
+                    {
+                        ObjectDespawningPool.Enqueue(obj);
+
+                        continue;
+                    }
+                }
+
+                Objects.Enqueue(obj);
+            }
+        }
+
         internal void HandleDisconnections()
         {
             while (Objects.DequeuePlayer(out AbstractPlayer player))
@@ -340,23 +363,10 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            while (Objects.DequeueNonPlayer(out PhysicsObject obj))
-            {
-                System.Diagnostics.Debug.Assert(obj != null);
-                System.Diagnostics.Debug.Assert(obj is not AbstractPlayer);
-
-                if (obj.IsDead())
-                {
-                    ObjectDespawningPool.Enqueue(obj);
-
-                    continue;
-                }
-
-                Objects.Enqueue(obj);
-            }
-
             while (ObjectDespawningPool.Dequeue(out PhysicsObject obj))
             {
+                System.Diagnostics.Debug.Assert(obj != null);
+
                 CloseObjectMapping(obj);
 
                 obj.Flush();

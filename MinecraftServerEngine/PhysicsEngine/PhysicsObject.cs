@@ -110,12 +110,14 @@ namespace MinecraftServerEngine.PhysicsEngine
             _Movement = movement;
         }
 
-        public virtual bool IsDead()
+        protected internal virtual bool IsDead()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             return false;
         }
+
+        protected internal abstract void OnDeath(PhysicsWorld world);
 
         public abstract void StartRoutine(long serverTicks, PhysicsWorld world);
 

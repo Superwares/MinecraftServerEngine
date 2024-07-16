@@ -901,6 +901,8 @@ namespace MinecraftServerEngine
                         if (packet.Type == 2 && packet.Hand == 0)
                         {
                             Console.Printl("UseEntity!");
+
+                            player.OnUseEntity(world, );
                         }
                     }
                     break;
@@ -1029,7 +1031,7 @@ namespace MinecraftServerEngine
                                     throw new UnexpectedValueException("EntityActionPacket.ActionId");
                                 }
 
-                                player.Sneak();
+                                player.Sneak(world);
 
                                 break;
                             case 1:
@@ -1039,7 +1041,7 @@ namespace MinecraftServerEngine
                                     throw new UnexpectedValueException("EntityActionPacket.ActionId");
                                 }
 
-                                player.Unsneak();
+                                player.Unsneak(world);
 
                                 break;
                             case 3:
@@ -1048,7 +1050,7 @@ namespace MinecraftServerEngine
                                     throw new UnexpectedValueException("EntityActionPacket.ActionId");
                                 }
 
-                                player.Sprint();
+                                player.Sprint(world);
 
                                 break;
                             case 4:
@@ -1057,7 +1059,7 @@ namespace MinecraftServerEngine
                                     throw new UnexpectedValueException("EntityActionPacket.ActionId");
                                 }
 
-                                player.Unsprint();
+                                player.Unsprint(world);
 
                                 break;
                         }
@@ -1098,6 +1100,15 @@ namespace MinecraftServerEngine
                                     // Attack!
                                     Console.Printl("Attack!");
 
+                                    if ()
+                                    {
+                                        player.OnAttack(world, );
+                                    }
+                                    else
+                                    {
+                                        player.OnAttack(world);
+                                    }
+
                                     _attackWhenDigging = true;
                                 }
                             }
@@ -1105,6 +1116,15 @@ namespace MinecraftServerEngine
                             {
                                 // Attack!
                                 Console.Printl("Attack!");
+
+                                if ()
+                                {
+                                    player.OnAttack(world, );
+                                }
+                                else
+                                {
+                                    player.OnAttack(world);
+                                }
                             }
                         }
                         else if (packet.Hand == 1)  // offhand
@@ -1136,7 +1156,8 @@ namespace MinecraftServerEngine
                             // UseItem
                             Console.Printl("UseItem!");
 
-                            /*_Window.Refresh(invPlayer);*/
+                            ItemStack stack = invPlayer.
+                            player.OnUseItem(world, );
                         }
                         else
                         {

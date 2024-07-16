@@ -228,7 +228,7 @@ namespace MinecraftServerEngine
             CurrentRunningThread = Thread.GetCurrent();
             Console.HandleTerminatin(() =>
             {
-                Console.Print("Cancel!");
+                Console.Printl("Cancel!");
                 _running = false;
 
                 System.Diagnostics.Debug.Assert(CurrentRunningThread != null);
@@ -255,23 +255,26 @@ namespace MinecraftServerEngine
                     () => World.ControlPlayers(_ticks)),
                 new Task(  // 1
                     () => World.SwapObjectQueue(),
-                    () => World.HandleDisconnections()),
+                    () => World.HandleDeathEvents()),
                 new Task(  // 2
                     () => World.SwapObjectQueue(),
-                    () => World.DestroyObjects()),
+                    () => World.HandleDisconnections()),
                 new Task(  // 3
                     () => World.SwapObjectQueue(),
-                    () => World.MoveObjects()),
+                    () => World.DestroyObjects()),
                 new Task(  // 4
-                    () => World.CreateObjects()),
+                    () => World.SwapObjectQueue(),
+                    () => World.MoveObjects()),
                 new Task(  // 5
-                    () => connListener.Accept(World)),
+                    () => World.CreateObjects()),
                 new Task(  // 6
+                    () => connListener.Accept(World)),
+                new Task(  // 7
                     () => World.SwapObjectQueue(),
                     () => World.LoadAndSendData()),
-                new Task(  // 7
-                    () => World.StartRoutine(_ticks), false),
                 new Task(  // 8
+                    () => World.StartRoutine(_ticks), false),
+                new Task(  // 9
                     () => World.SwapObjectQueue(),
                     () => World.StartObjectRoutines(_ticks)));
 

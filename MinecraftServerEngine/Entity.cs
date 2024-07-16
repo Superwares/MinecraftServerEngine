@@ -6,6 +6,7 @@ using Containers;
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
+    using Sync;
 
     public abstract class Entity : PhysicsObject
     {
@@ -263,23 +264,29 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
+
         internal readonly int Id;
         internal readonly System.Guid UniqueId;
+
 
         private Vector _p;
         internal Vector Position => _p;
 
+
+        private readonly Locker LockerRotate = new();
         private bool _rotated = false;
         private Look _look;
         internal Look Look => _look;
+
 
         protected bool _sneaking, _sprinting = false;
         public bool Sneaking => _sneaking;
         public bool Sprinting => _sprinting;
 
-        private protected bool _teleported = false;
-        private protected Vector _pTeleport;
-        private protected Look _lookTeleport;
+
+        private readonly Locker LockerTeleport = new();
+        private bool _teleported = false;
+        private Vector _pTeleport;
 
 
         private RendererManager Manager;  // Disposable
@@ -311,6 +318,14 @@ namespace MinecraftServerEngine
         private protected abstract Hitbox GetHitbox();
 
         private protected abstract void RenderSpawning(EntityRenderer renderer);
+
+        protected abstract void OnSneak(World world, bool f);
+        protected abstract void OnSprint(World world, bool f);
+        
+        protected internal abstract void OnAttack(World world);
+        protected internal abstract void OnAttack(World world, ItemStack stack);
+        protected internal abstract void OnUseItem(World world, ItemStack stack);
+        protected internal abstract void OnUseEntity(World world, Entity entity);
 
         protected (Vector, Vector) GetRay()
         {
@@ -352,15 +367,11 @@ namespace MinecraftServerEngine
 
             if (_teleported)
             {
-                Manager.Teleport(_pTeleport, _lookTeleport, false);
+                Manager.Teleport(_pTeleport, _look, false);
 
                 _p = _pTeleport;
 
-                if (!_rotated)
-                {
-                    _look = _lookTeleport;
-                }
-
+                _rotated = false;
                 _teleported = false;
             }
 
@@ -406,19 +417,27 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _rotated = false;
+            LockerTeleport.Hold();
 
             _teleported = true;
             _pTeleport = p;
-            _lookTeleport = look;
+
+            Rotate(look);
+
+            LockerTeleport.Release();
+
         }
 
         public void Rotate(Look look)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            LockerRotate.Hold();
+
             _rotated = true;
             _look = look;
+
+            LockerRotate.Release();
         }
 
         private void UpdateFormChangingRendering()
@@ -428,46 +447,62 @@ namespace MinecraftServerEngine
             Manager.ChangeForms(_sneaking, _sprinting);
         }
 
-        internal void Sneak()
+        internal void Sneak(World world)
         {
+            System.Diagnostics.Debug.Assert(world != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(!Sneaking);
 
             _sneaking = true;
 
+            OnSneak(world, _sneaking);
+
             UpdateFormChangingRendering();
         }
 
-        internal void Unsneak()
+        internal void Unsneak(World world)
         {
+            System.Diagnostics.Debug.Assert(world != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(Sneaking);
 
             _sneaking = false;
 
+            OnSneak(world, _sneaking);
+
             UpdateFormChangingRendering();
         }
 
-        internal void Sprint()
+        internal void Sprint(World world)
         {
+            System.Diagnostics.Debug.Assert(world != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(!Sprinting);
 
             _sprinting = true;
 
+            OnSprint(world, _sprinting);
+
             UpdateFormChangingRendering();
         }
 
-        internal void Unsprint()
+        internal void Unsprint(World world)
         {
+            System.Diagnostics.Debug.Assert(world != null);
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(Sprinting);
 
             _sprinting = false;
+
+            OnSprint(world, _sprinting);
 
             UpdateFormChangingRendering();
         }
@@ -508,6 +543,9 @@ namespace MinecraftServerEngine
             EntityIdAllocator.Dealloc(Id);
             Manager.Dispose();
 
+            LockerRotate.Dispose();
+            LockerTeleport.Dispose();
+
             // Finish.
             base.Dispose();
             _disposed = true;
@@ -523,9 +561,12 @@ namespace MinecraftServerEngine
 
         public const double DefaultMaxStepLevel = 0.0D;
 
+
         private bool _disposed = false;
 
+
         private readonly ItemStack Stack;
+
 
         public ItemEntity(ItemStack stack, Vector p)
             : base(System.Guid.NewGuid(), p, new Look(0.0F, 0.0F), DefaultHitbox,
@@ -537,6 +578,62 @@ namespace MinecraftServerEngine
         }
 
         ~ItemEntity() => System.Diagnostics.Debug.Assert(false);
+
+        protected override void OnSneak(World world, bool f)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+        }
+
+        protected override void OnSprint(World world, bool f)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+        }
+
+        protected override void OnAttack(World world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+        }
+
+        protected override void OnAttack(World world, ItemStack stack)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+        }
+
+        protected override void OnUseItem(World world, ItemStack stack)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+        }
+
+        protected override void OnUseEntity(World world, Entity entity)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+        }
+
+        protected internal override void OnDeath(PhysicsWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+        }
 
         private protected override Hitbox GetHitbox()
         {
@@ -560,6 +657,11 @@ namespace MinecraftServerEngine
         public override void StartRoutine(long serverTicks, PhysicsWorld world)
         {
             System.Diagnostics.Debug.Assert(world != null);
+        }
+
+        public void PickUp()
+        {
+            throw new System.NotImplementedException();
         }
 
         public override void Dispose()
@@ -629,15 +731,20 @@ namespace MinecraftServerEngine
 
         public const double DefaultMaxStepLevel = 0.6;
 
+
         private bool _disposed = false;
 
+
         protected readonly PlayerInventory Inventory = new();
+
 
         private Connection Conn;
         public bool Disconnected => (Conn == null);
         public bool Connected => !Disconnected;
 
+
         private Vector _pControl;
+
 
         public AbstractPlayer(UserId id, Vector p, Look look) 
             : base(id.Data, p, look, DefaultHitbox, DefaultMass, DefaultMaxStepLevel) 
@@ -814,14 +921,6 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(Conn != null);
             return Conn.Open(Inventory, invPublic);
         }
-
-        protected virtual void UseMainHand(World world) { }
-
-        protected virtual void UseOffHand(World world) { }
-
-        protected virtual void UseMainHand(World world, ItemStack stack) { }
-
-        protected virtual void UseOffHand(World world, ItemStack stack) { }
 
         public override void Dispose()
         {
