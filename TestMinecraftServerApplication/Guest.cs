@@ -1,4 +1,5 @@
-﻿using MinecraftServerEngine;
+﻿using Common;
+using MinecraftServerEngine;
 using MinecraftServerEngine.PhysicsEngine;
 
 namespace TestMinecraftServerApplication
@@ -69,7 +70,10 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            entity.ApplyForce(new Vector(0.1D, 0.1D, 0.1D));
+            entity.ApplyForce(new Vector(
+                (Random.NextDouble() - 0.5D) / 10.0D, 
+                (Random.NextDouble() - 0.5D) / 10.0D, 
+                (Random.NextDouble() - 0.5D) / 10.0D));
         }
 
         protected override void OnDeath(PhysicsWorld world)
