@@ -314,7 +314,6 @@ namespace MinecraftServerEngine
             while (Objects.Dequeue(out PhysicsObject obj))
             {
                 System.Diagnostics.Debug.Assert(obj != null);
-                System.Diagnostics.Debug.Assert(obj is not AbstractPlayer);
 
                 if (obj.IsDead())
                 {
@@ -401,28 +400,6 @@ namespace MinecraftServerEngine
 
         }
 
-        internal void CreateObjects()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            while (ObjectSpawningPool.Dequeue(out PhysicsObject obj))
-            {
-                System.Diagnostics.Debug.Assert(obj != null);
-                System.Diagnostics.Debug.Assert(obj is not AbstractPlayer);
-
-                InitObjectMapping(obj);
-
-                Objects.Enqueue(obj);
-
-                if (obj is Entity entity)
-                {
-                    EntitiesById.Insert(entity.Id, entity);
-                }
-            }
-
-            System.Diagnostics.Debug.Assert(ObjectSpawningPool.Empty);
-        }
-
         protected abstract AbstractPlayer CreatePlayer(UserId id);
 
         internal void CreateOrConnectPlayer(Client client, string username, UserId id)
@@ -445,15 +422,35 @@ namespace MinecraftServerEngine
                 player = CreatePlayer(id);
                 System.Diagnostics.Debug.Assert(player != null);
 
-                InitObjectMapping(player);
+                ObjectSpawningPool.Enqueue(player);
 
                 PlayerList.Add(id, username);
-
-                Objects.Enqueue(player);
             }
-            
+
             player.Connect(client, this, id);
 
+        }
+
+        internal void CreateObjects()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            while (ObjectSpawningPool.Dequeue(out PhysicsObject obj))
+            {
+                System.Diagnostics.Debug.Assert(obj != null);
+
+                InitObjectMapping(obj);
+
+                Objects.Enqueue(obj);
+
+                if (obj is Entity entity)
+                {
+                    EntitiesById.Insert(entity.Id, entity);
+                }
+
+            }
+
+            System.Diagnostics.Debug.Assert(ObjectSpawningPool.Empty);
         }
 
         internal void LoadAndSendData()
