@@ -201,7 +201,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(i + HotbarSlotsOffset < TotalSlotCount);
             return Slots[i + HotbarSlotsOffset];
         }
-        private InventorySlot GetOffHandSlot()
+        internal InventorySlot GetOffHandSlot()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -215,7 +215,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(index < HotbarSlotCount);
             _indexMainHandSlot = index;
         }
-        private InventorySlot GetMainHandSlot()
+        internal InventorySlot GetMainHandSlot()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

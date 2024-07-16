@@ -250,6 +250,8 @@ namespace MinecraftServerEngine
 
         private readonly ObjectQueue Objects = new();  // Disposable
 
+        internal readonly ConcurrentTable<int, Entity> EntitiesById = new();  // Disposable
+
         private readonly ConcurrentTable<UserId, AbstractPlayer> DisconnectedPlayers = new(); // Disposable
 
         internal readonly BlockContext BlockContext = new();  // Disposable
@@ -371,6 +373,12 @@ namespace MinecraftServerEngine
 
                 obj.Flush();
                 obj.Dispose();
+
+                if (obj is Entity entity)
+                {
+                    Entity entityExtracted = EntitiesById.Extract(entity.Id);
+                    System.Diagnostics.Debug.Assert(ReferenceEquals(entity, entityExtracted));
+                }
             }
         }
 
@@ -405,6 +413,11 @@ namespace MinecraftServerEngine
                 InitObjectMapping(obj);
 
                 Objects.Enqueue(obj);
+
+                if (obj is Entity entity)
+                {
+                    EntitiesById.Insert(entity.Id, entity);
+                }
             }
 
             System.Diagnostics.Debug.Assert(ObjectSpawningPool.Empty);

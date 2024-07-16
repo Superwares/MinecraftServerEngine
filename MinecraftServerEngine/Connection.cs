@@ -902,7 +902,14 @@ namespace MinecraftServerEngine
                         {
                             Console.Printl("UseEntity!");
 
-                            player.OnUseEntity(world, );
+                            int id = packet.EntityId;
+
+                            if (!world.EntitiesById.Contains(id))
+                            {
+                                throw new UnexpectedValueException("UseEntityPacket.EntityId");
+                            }
+
+                            player.OnUseEntity(world, world.EntitiesById.Lookup(id));
                         }
                     }
                     break;
@@ -1100,9 +1107,11 @@ namespace MinecraftServerEngine
                                     // Attack!
                                     Console.Printl("Attack!");
 
-                                    if ()
+                                    ItemStack stack = invPlayer.GetMainHandSlot().Stack;
+
+                                    if (stack != null)
                                     {
-                                        player.OnAttack(world, );
+                                        player.OnAttack(world, stack);
                                     }
                                     else
                                     {
@@ -1117,9 +1126,11 @@ namespace MinecraftServerEngine
                                 // Attack!
                                 Console.Printl("Attack!");
 
-                                if ()
+                                ItemStack stack = invPlayer.GetMainHandSlot().Stack;
+
+                                if (stack != null)
                                 {
-                                    player.OnAttack(world, );
+                                    player.OnAttack(world, stack);
                                 }
                                 else
                                 {
@@ -1151,13 +1162,21 @@ namespace MinecraftServerEngine
                         /*Console.Printl("UseItemPacket!");
                         Console.Printl($"\tHand: {packet.Hand}");*/
 
-                        if (packet.Hand == 0 || packet.Hand == 1)
+                        if (packet.Hand == 0)
                         {
-                            // UseItem
                             Console.Printl("UseItem!");
 
-                            ItemStack stack = invPlayer.
-                            player.OnUseItem(world, );
+                            ItemStack stack = invPlayer.GetMainHandSlot().Stack;
+
+                            player.OnUseItem(world, stack);
+                        }
+                        else if (packet.Hand == 1)
+                        {
+                            Console.Printl("UseItem!");
+
+                            ItemStack stack = invPlayer.GetOffHandSlot().Stack;
+
+                            player.OnUseItem(world, stack);
                         }
                         else
                         {

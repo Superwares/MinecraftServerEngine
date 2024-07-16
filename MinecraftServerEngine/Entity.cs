@@ -595,7 +595,7 @@ namespace MinecraftServerEngine
 
         }
 
-        protected override void OnAttack(World world)
+        protected internal override void OnAttack(World world)
         {
             System.Diagnostics.Debug.Assert(world != null);
 
@@ -603,25 +603,28 @@ namespace MinecraftServerEngine
 
         }
 
-        protected override void OnAttack(World world, ItemStack stack)
+        protected internal override void OnAttack(World world, ItemStack stack)
         {
             System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(stack != null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
         }
 
-        protected override void OnUseItem(World world, ItemStack stack)
+        protected internal override void OnUseItem(World world, ItemStack stack)
         {
             System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(stack != null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
         }
 
-        protected override void OnUseEntity(World world, Entity entity)
+        protected internal override void OnUseEntity(World world, Entity entity)
         {
             System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(entity != null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
