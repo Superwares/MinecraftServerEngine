@@ -476,6 +476,8 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(ObjectSpawningPool.Empty);
             System.Diagnostics.Debug.Assert(ObjectDespawningPool.Empty);
 
+            System.Diagnostics.Debug.Assert(EntitiesById.Empty);
+
             System.Diagnostics.Debug.Assert(DisconnectedPlayers.Empty);
 
 
@@ -486,6 +488,8 @@ namespace MinecraftServerEngine
             ObjectDespawningPool.Dispose();
 
             Objects.Dispose();
+
+            EntitiesById.Dispose();
 
             DisconnectedPlayers.Dispose();
 
