@@ -687,7 +687,7 @@ namespace MinecraftServerEngine
         private bool _disposed = false;
 
         protected readonly Locker LockerHealth = new();
-        private double _health = 0.0D;
+        protected float _health = 0.0F;
 
         private protected LivingEntity(
             System.Guid uniqueId,
@@ -704,7 +704,7 @@ namespace MinecraftServerEngine
             return _health <= 0.0D;
         }
 
-        public void Damage(double amount)
+        public virtual void Damage(float amount)
         {
             System.Diagnostics.Debug.Assert(amount >= 0.0D);
 
@@ -777,6 +777,27 @@ namespace MinecraftServerEngine
         }
 
         ~AbstractPlayer() => System.Diagnostics.Debug.Assert(false);
+
+        public override void Damage(float amount)
+        {
+            System.Diagnostics.Debug.Assert(amount >= 0.0D);
+
+            LockerHealth.Hold();
+
+            base.Damage(amount);
+
+            if (!Disconnected)
+            {
+                Conn.UpdateHealth(_health);
+
+                if (_health <= 0.0D)
+                {
+                    Conn.Respawn();
+                }
+            }
+
+            LockerHealth.Release();
+        }
 
         private protected override Hitbox GetHitbox()
         {

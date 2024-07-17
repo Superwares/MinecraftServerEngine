@@ -421,6 +421,7 @@ namespace MinecraftServerEngine
                 {
                     // TODO: Send message why disconnected.
                     user.Client.Dispose();
+
                     continue;
                 }
 

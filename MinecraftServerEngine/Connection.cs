@@ -991,6 +991,8 @@ namespace MinecraftServerEngine
                     break;
                 case ServerboundPlayingPacket.PlayerDigPacketId:
                     {
+                        throw new UnexpectedPacketException();
+
                         var packet = PlayerDigPacket.Read(buffer);
 
                         /*Console.Printl("PlayerDigPacket!");
@@ -1186,9 +1188,11 @@ namespace MinecraftServerEngine
                     }
                     break;
                 case 0x03:
-                    Console.Printl("Respawn!");
-                    OutPackets.Enqueue(new RespawnPacket(
-                        0, 2, 0, "default"));
+                    /*Console.Printl("Respawn!");*/
+                    /*OutPackets.Enqueue(new RespawnPacket(
+                        0, 2, 0, "default"));*/
+
+                    /*player.Teleport(new Vector(2.0D, 110.0D, 2.0D), new Look(30.0F, 20.0F));*/
 
                     buffer.Flush();
                     break;
@@ -1232,13 +1236,13 @@ namespace MinecraftServerEngine
 
             ++ticks;
 
-            if (ticks == 20)
+            /*if (ticks == 20)
             {
                 using Buffer buffer2 = new();
 
-                UpdateHealthPacket packet = new(0.0F, 20, -0.1F);
+                UpdateHealthPacket packet = new(0.0F, 20, 0.0F);
                 SendPacket(buffer2, packet);
-            }
+            }*/
 
             using Buffer buffer = new();
 
@@ -1373,7 +1377,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(buffer.Empty);
         }
 
-        public void ApplyVelocity(int id, Vector v)
+        internal void ApplyVelocity(int id, Vector v)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -1420,7 +1424,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(buffer.Empty);
         }
 
-        public void Teleport(Vector p, Look look)
+        internal void Teleport(Vector p, Look look)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -1469,6 +1473,30 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(buffer.Empty);
         }
 
+        internal void UpdateHealth(float health)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (_disconnected)
+            {
+                return;
+            }
+
+            OutPackets.Enqueue(new UpdateHealthPacket(health, 20, 5.0F));
+        }
+
+        internal void Respawn()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (_disconnected)
+            {
+                return;
+            }
+
+            OutPackets.Enqueue(new RespawnPacket(0, 2, 2, "default"));
+        }
+
         internal bool Open(PlayerInventory invPri, PublicInventory invPub)
         {
             System.Diagnostics.Debug.Assert(invPri != null);
@@ -1501,7 +1529,7 @@ namespace MinecraftServerEngine
 
                     // The difficulty must be normal,
                     // because the hunger bar increases on its own in easy difficulty.
-                    JoinGamePacket packet = new(idEntitySelf, 0, 0, 2, "default", false);
+                    JoinGamePacket packet = new(idEntitySelf, 2, 0, 2, "default", false);
                     SendPacket(buffer, packet);
 
                     int payload = Random.NextInt();
@@ -1554,7 +1582,7 @@ namespace MinecraftServerEngine
 
         }
 
-        public void Flush(
+        internal void Flush(
             out UserId id,
             World world, 
             PlayerInventory invPlayer)

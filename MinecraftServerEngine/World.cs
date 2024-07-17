@@ -267,9 +267,8 @@ namespace MinecraftServerEngine
             PlayerListRenderer plRenderer = new(OutPackets);
             PlayerList.Connect(id, plRenderer);
 
-            // world border
-
-            throw new System.NotImplementedException();
+            // TODO: world border
+            // TODO: Boss Bar
         }
 
         internal void Disconnect(UserId id)
@@ -278,7 +277,8 @@ namespace MinecraftServerEngine
 
             PlayerList.Disconnect(id);
 
-            throw new System.NotImplementedException();
+            // TODO: world border
+            // TODO: Boss Bar
         }
 
         public abstract bool CanJoinWorld();

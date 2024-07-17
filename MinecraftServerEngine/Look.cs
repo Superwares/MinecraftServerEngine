@@ -17,6 +17,8 @@ namespace MinecraftServerEngine
         public Look(float yaw, float pitch)
         {
             // TODO: map yaw from 180 to -180.
+            /*System.Diagnostics.Debug.Assert(yaw >= MinYaw);
+            System.Diagnostics.Debug.Assert(yaw <= MaxYaw);*/
             System.Diagnostics.Debug.Assert(pitch >= MinPitch);
             System.Diagnostics.Debug.Assert(pitch <= MaxPitch);
 
