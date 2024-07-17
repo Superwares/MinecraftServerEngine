@@ -424,7 +424,7 @@ namespace MinecraftServerEngine
                     continue;
                 }
 
-                world.CreateOrConnectPlayer(user.Client, user.Username, user.Id);
+                world.ConnectPlayer(user.Client, user.Username, user.Id);
             } 
         }
 

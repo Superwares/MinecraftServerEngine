@@ -70,7 +70,7 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            entity.Teleport(new Vector(1.0D, 103.0D, 3.0D), new Look(0.0F, 0.0F));
+            /*entity.Teleport(new Vector(1.0D, 103.0D, 3.0D), new Look(30.0F, 90.0F));*/
 
             /*entity.ApplyForce(new Vector(
                 (Random.NextDouble() - 0.5D) / 10.0D, 

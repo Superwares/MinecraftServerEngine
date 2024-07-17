@@ -194,10 +194,12 @@ namespace MinecraftServerEngine
         public const int PlayerListItemRemovePacketId = 0x2E;
         public const int TeleportPacketId = 0x2F;
         public const int DestroyEntitiesPacketId = 0x32;
+        public const int RespawnPacketId = 0x35;
         public const int EntityHeadLookPacketId = 0x36;
         public const int EntityMetadataPacketId = 0x3C;
         public const int EntityVelocityPacketId = 0x3E;
         public const int EntityEquipmentPacketId = 0x3F;
+        public const int UpdateHealthPacketId = 0x41;
         public const int EntityTeleportPacketId = 0x4C;
 
         public override WhereBound BoundTo => WhereBound.Clientbound;
@@ -1438,6 +1440,42 @@ namespace MinecraftServerEngine
         }
 
     }
+    
+    internal sealed class RespawnPacket : ClientboundPlayingPacket
+    {
+        internal readonly int Dimension;
+        internal readonly byte Difficulty;
+        internal readonly byte Gamemode;
+        internal readonly string LevelType;
+
+        internal static RespawnPacket Read(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            throw new System.NotImplementedException();
+        }
+
+        internal RespawnPacket(
+            int dimension, byte difficulty, byte gamemode, string levelType) 
+            : base(RespawnPacketId)
+        {
+            Dimension = dimension;
+            Difficulty = difficulty;
+            Gamemode = gamemode;
+            LevelType = levelType;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            buffer.WriteInt(Dimension);
+            buffer.WriteByte(Difficulty);
+            buffer.WriteByte(Gamemode);
+            buffer.WriteString(LevelType);
+        }
+
+    }
 
     internal sealed class EntityHeadLookPacket : ClientboundPlayingPacket
     {
@@ -1556,6 +1594,37 @@ namespace MinecraftServerEngine
             buffer.WriteInt(EntityId, true);
             buffer.WriteInt(Slot, true);
             buffer.WriteData(Data);
+        }
+    }
+
+    internal sealed class UpdateHealthPacket : ClientboundPlayingPacket
+    {
+        internal readonly float Health;
+        internal readonly int Food;
+        internal readonly float FoodSaturation;
+
+        internal static UpdateHealthPacket Read(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            throw new System.NotImplementedException();
+        }
+        
+        internal UpdateHealthPacket(
+            float health, int food, float foodSaturation) : base(UpdateHealthPacketId)
+        {
+            Health = health;
+            Food = food;
+            FoodSaturation = foodSaturation;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            buffer.WriteFloat(Health);
+            buffer.WriteInt(Food, true);
+            buffer.WriteFloat(FoodSaturation);
         }
     }
 

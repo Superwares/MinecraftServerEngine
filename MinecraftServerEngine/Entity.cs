@@ -284,7 +284,7 @@ namespace MinecraftServerEngine
         public bool Sprinting => _sprinting;
 
 
-        private readonly Locker LockerTeleport = new();
+        protected readonly Locker LockerTeleport = new();
         private bool _teleported = false;
         private Vector _pTeleport;
 
@@ -428,7 +428,7 @@ namespace MinecraftServerEngine
 
         }
 
-        public void Rotate(Look look)
+        internal void Rotate(Look look)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -686,6 +686,9 @@ namespace MinecraftServerEngine
     {
         private bool _disposed = false;
 
+        protected readonly Locker LockerHealth = new();
+        private double _health = 0.0D;
+
         private protected LivingEntity(
             System.Guid uniqueId,
             Vector p, Look look,
@@ -696,11 +699,26 @@ namespace MinecraftServerEngine
 
         ~LivingEntity() => System.Diagnostics.Debug.Assert(false);
 
+        protected internal override bool IsDead()
+        {
+            return _health <= 0.0D;
+        }
+
+        public void Damage(double amount)
+        {
+            System.Diagnostics.Debug.Assert(amount >= 0.0D);
+
+            LockerHealth.Hold();
+
+            _health -= amount;
+
+            LockerHealth.Release();
+        }
+
         public override void Dispose()
         {
+            // Assertions.
             System.Diagnostics.Debug.Assert(!_disposed);
-
-            // Assertion.
 
             // Release resources.
 
@@ -837,6 +855,8 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            LockerTeleport.Hold();
+
             if (Connected)
             {
                 _pControl = p;
@@ -845,6 +865,8 @@ namespace MinecraftServerEngine
             }
 
             base.Teleport(p, look);
+
+            LockerTeleport.Release();
         }
 
         internal void ControlMovement(Vector p)

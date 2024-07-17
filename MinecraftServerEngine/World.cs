@@ -260,6 +260,27 @@ namespace MinecraftServerEngine
 
         ~World() => System.Diagnostics.Debug.Assert(false);
 
+        internal void Connect(UserId id, ConcurrentQueue<ClientboundPlayingPacket> OutPackets)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            PlayerListRenderer plRenderer = new(OutPackets);
+            PlayerList.Connect(id, plRenderer);
+
+            // world border
+
+            throw new System.NotImplementedException();
+        }
+
+        internal void Disconnect(UserId id)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            PlayerList.Disconnect(id);
+
+            throw new System.NotImplementedException();
+        }
+
         public abstract bool CanJoinWorld();
 
         public void SpawnObject(PhysicsObject obj)
@@ -402,7 +423,7 @@ namespace MinecraftServerEngine
 
         protected abstract AbstractPlayer CreatePlayer(UserId id);
 
-        internal void CreateOrConnectPlayer(Client client, string username, UserId id)
+        internal void ConnectPlayer(Client client, string username, UserId id)
         {
             System.Diagnostics.Debug.Assert(client != null);
             System.Diagnostics.Debug.Assert(username != "");

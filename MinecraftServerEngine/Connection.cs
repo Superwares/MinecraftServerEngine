@@ -5,6 +5,7 @@ using Sync;
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
+    using System.Net.Sockets;
 
     internal sealed class Connection : System.IDisposable
     {
@@ -769,8 +770,7 @@ namespace MinecraftServerEngine
 
             _Window = new Window(OutPackets, invPlayer);
 
-            PlayerListRenderer plRenderer = new(OutPackets);
-            world.PlayerList.Connect(id, plRenderer);
+            world.Connect(Id, OutPackets);
         }
 
         ~Connection() => System.Diagnostics.Debug.Assert(false);
@@ -1185,9 +1185,18 @@ namespace MinecraftServerEngine
                         
                     }
                     break;
+                case 0x03:
+                    Console.Printl("Respawn!");
+                    OutPackets.Enqueue(new RespawnPacket(
+                        0, 2, 0, "default"));
+
+                    buffer.Flush();
+                    break;
             }
 
         }
+
+        long ticks = 0;
 
         internal void Control(
             World world, 
@@ -1220,6 +1229,16 @@ namespace MinecraftServerEngine
 
                 SendPacket(buffer2, packet2);
             }*/
+
+            ++ticks;
+
+            if (ticks == 20)
+            {
+                using Buffer buffer2 = new();
+
+                UpdateHealthPacket packet = new(0.0F, 20, -0.1F);
+                SendPacket(buffer2, packet);
+            }
 
             using Buffer buffer = new();
 
@@ -1480,7 +1499,9 @@ namespace MinecraftServerEngine
                 if (!_init)
                 {
 
-                    JoinGamePacket packet = new(idEntitySelf, 0, 0, 0, "default", false);
+                    // The difficulty must be normal,
+                    // because the hunger bar increases on its own in easy difficulty.
+                    JoinGamePacket packet = new(idEntitySelf, 0, 0, 2, "default", false);
                     SendPacket(buffer, packet);
 
                     int payload = Random.NextInt();
@@ -1553,7 +1574,7 @@ namespace MinecraftServerEngine
 
             _Window.Flush(world, invPlayer);
 
-            world.PlayerList.Disconnect(Id);
+            world.Disconnect(Id);
         }
 
         public void Dispose()
