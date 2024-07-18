@@ -83,9 +83,6 @@ namespace MinecraftServerEngine.PhysicsEngine
         private Vector _v;
         public Vector Velocity => _v;
 
-        private readonly bool _noGravity;
-        public bool NoGravity => _noGravity;
-
         private BoundingVolume _volume;
         public BoundingVolume BoundingVolume => _volume;
 
@@ -102,8 +99,6 @@ namespace MinecraftServerEngine.PhysicsEngine
             _m = m;
 
             _v = new(0.0D, 0.0D, 0.0D);
-
-            _noGravity = false;
 
             _volume = volume;
 
@@ -129,7 +124,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             Forces.Enqueue(v);
         }
 
-        protected abstract BoundingVolume GenerateBoundingVolume();
+        protected abstract (BoundingVolume, bool noGravity) GetCurrentStatus();
 
         internal (BoundingVolume, Vector) Integrate(Terrain terrain)
         {
@@ -137,21 +132,22 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (!NoGravity)
+            (BoundingVolume volume, bool noGravity) = GetCurrentStatus();
+
+            if (!noGravity)
             {
                 Forces.Enqueue(Mass * 0.08D * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
             }
 
-            BoundingVolume volume = GenerateBoundingVolume();
             Vector v = _v;
 
+            System.Diagnostics.Debug.Assert(Mass > 0.0D);
             while (!Forces.Empty)
             {
                 Vector force = Forces.Dequeue();
 
                 System.Diagnostics.Debug.Assert(_m > 0.0D);
                 v += (force / Mass);
-                /*v += force;*/
             }
 
             double s = v.GetLengthSquared();

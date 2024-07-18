@@ -84,6 +84,8 @@ namespace MinecraftServerEngine.PhysicsEngine
                 {
                     default:
                         throw new System.NotImplementedException();
+                    case EmptyBoundingVolume:
+                        return null;
                     case AxisAlignedBoundingBox aabb:
                         return Generate(aabb);
                 }
@@ -289,9 +291,12 @@ namespace MinecraftServerEngine.PhysicsEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Grid grid = Grid.Generate(obj.BoundingVolume);
-            foreach (Cell cell in grid.GetCells())
+            if (grid != null)
             {
-                InsertObjectToCell(cell, obj);
+                foreach (Cell cell in grid.GetCells())
+                {
+                    InsertObjectToCell(cell, obj);
+                }
             }
 
             System.Diagnostics.Debug.Assert(!ObjectToGrid.Contains(obj));
@@ -307,9 +312,12 @@ namespace MinecraftServerEngine.PhysicsEngine
             System.Diagnostics.Debug.Assert(ObjectToGrid.Contains(obj));
             Grid grid = ObjectToGrid.Extract(obj);
 
-            foreach (Cell cell in grid.GetCells())
+            if (grid != null)
             {
-                ExtractObjectToCell(cell, obj);
+                foreach (Cell cell in grid.GetCells())
+                {
+                    ExtractObjectToCell(cell, obj);
+                }
             }
         }
 
@@ -319,37 +327,52 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            BoundingVolume volume = obj.BoundingVolume;
+
             System.Diagnostics.Debug.Assert(ObjectToGrid.Contains(obj));
             Grid gridPrev = ObjectToGrid.Extract(obj);
-            Grid grid = Grid.Generate(obj.BoundingVolume);
+            Grid grid = Grid.Generate(volume);
 
-            System.Diagnostics.Debug.Assert(gridPrev != null);
-            System.Diagnostics.Debug.Assert(grid != null);
-
-            if (!gridPrev.Equals(grid))
+            if (grid != null)
             {
-                Grid gridBetween = Grid.Generate(grid, gridPrev);
+                System.Diagnostics.Debug.Assert(grid != null);
 
-                foreach (Cell cell in gridPrev.GetCells())
+                if (gridPrev != null)
                 {
-                    if (gridBetween != null && gridBetween.Contains(cell))
+                    if (!gridPrev.Equals(grid))
                     {
-                        continue;
+                        Grid gridBetween = Grid.Generate(grid, gridPrev);
+
+                        foreach (Cell cell in gridPrev.GetCells())
+                        {
+                            if (gridBetween != null && gridBetween.Contains(cell))
+                            {
+                                continue;
+                            }
+
+                            ExtractObjectToCell(cell, obj);
+
+                        }
+
+                        foreach (Cell cell in grid.GetCells())
+                        {
+                            if (gridBetween != null && gridBetween.Contains(cell))
+                            {
+                                continue;
+                            }
+
+                            InsertObjectToCell(cell, obj);
+                        }
                     }
-
-                    ExtractObjectToCell(cell, obj);
-
+                }
+                else
+                {
+                    foreach (Cell cell in grid.GetCells())
+                    {
+                        InsertObjectToCell(cell, obj);
+                    }
                 }
 
-                foreach (Cell cell in grid.GetCells())
-                {
-                    if (gridBetween != null && gridBetween.Contains(cell))
-                    {
-                        continue;
-                    }
-
-                    InsertObjectToCell(cell, obj);
-                }
             }
 
             ObjectToGrid.Insert(obj, grid);

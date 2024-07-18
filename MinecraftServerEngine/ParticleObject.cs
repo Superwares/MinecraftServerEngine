@@ -208,7 +208,7 @@ namespace MinecraftServerEngine
             Manager.Apply(renderer);
         }
 
-        protected override BoundingVolume GenerateBoundingVolume()
+        protected override (BoundingVolume, bool noGravity) GetCurrentStatus()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -218,7 +218,7 @@ namespace MinecraftServerEngine
                 new Vector(1.0D - 0.9999d, 1.0D - 0.9999d, 1.0D - 0.9999d) *
                 Velocity);  // Damping Force
 
-            return BoundingVolume;
+            return (BoundingVolume, true);
         }
 
         internal override void Move(BoundingVolume volume, Vector v)

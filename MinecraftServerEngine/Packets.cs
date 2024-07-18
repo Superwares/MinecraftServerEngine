@@ -180,6 +180,7 @@ namespace MinecraftServerEngine
         public const int WindowItemsPacketId = 0x14;
         public const int SetSlotPacketId = 0x16;
         public const int UnloadChunkPacketId = 0x1D;
+        public const int GameStatePacketId = 0x1E;
         public const int ClientboundKeepAlivePacketId = 0x1F;
         public const int LoadChunkPacketId = 0x20;
         public const int ParticlesPacketId = 0x22;
@@ -904,6 +905,34 @@ namespace MinecraftServerEngine
 
     }
 
+    internal sealed class GameStatePacket : ClientboundPlayingPacket
+    {
+        internal readonly byte Reason;
+        internal readonly float Value;
+
+        internal static GameStatePacket Read(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            throw new System.NotImplementedException();
+        }
+
+        internal GameStatePacket(byte reason, float value) : base(GameStatePacketId)
+        {
+            Reason = reason;
+            Value = value;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            buffer.WriteByte(Reason);
+            buffer.WriteFloat(Value);
+        }
+
+    }
+
     internal sealed class ClientboundKeepAlivePacket : ClientboundPlayingPacket
     {
         public readonly long Payload;
@@ -1067,7 +1096,7 @@ namespace MinecraftServerEngine
             buffer.WriteByte(_gamemode);
             buffer.WriteInt(_dimension);
             buffer.WriteByte(_difficulty);
-            buffer.WriteByte(0);
+            buffer.WriteByte(100);
             buffer.WriteString(_levelType);
             buffer.WriteBool(_reducedDebugInfo);
         }
@@ -1224,20 +1253,28 @@ namespace MinecraftServerEngine
         }
 
         public AbilitiesPacket(
-            bool invulnerable, bool flying, bool allowFlying, bool creativeMode,
+            bool invulnerable, bool flying, bool canFly, bool canInstantlyBuild,
             float flyingSpeed, float fovModifier) : base(AbilitiesId)
         {
             // TODO: Assert variables.
 
             byte flags = 0;
             if (invulnerable)
+            {
                 flags |= 0x01;
+            }
             if (flying)
+            {
                 flags |= 0x02;
-            if (allowFlying)
+            }
+            if (canFly)
+            {
                 flags |= 0x04;
-            if (creativeMode)
+            }
+            if (canInstantlyBuild)
+            {
                 flags |= 0x08;
+            }
 
             _flags = flags;
             _flyingSpeed = flyingSpeed;
@@ -1286,7 +1323,7 @@ namespace MinecraftServerEngine
             buffer.WriteGuid(UniqueId);
             buffer.WriteString(Username);
             buffer.WriteInt(0, true);  
-            buffer.WriteInt(0, true);  // gamemode
+            buffer.WriteInt(2, true);  // gamemode
             buffer.WriteInt(Ping, true);  // latency
             buffer.WriteBool(false);
         }

@@ -9,7 +9,7 @@ namespace TestMinecraftServerApplication
         private bool _disposed = false;
 
         public Guest(UserId id, Vector p, Look look) 
-            : base(id, p, look) { }
+            : base(id, p, look, Gamemode.Spectator) { }
 
         ~Guest() => System.Diagnostics.Debug.Assert(false);
 
@@ -43,6 +43,9 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            Console.Printl("Attack!");
+
+            Damage(5.0F);
         }
 
         protected override void OnAttack(World world, ItemStack stack)
@@ -51,6 +54,8 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(stack != null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            
 
         }
 
@@ -84,6 +89,8 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            Console.Printl("Death!");
+            
         }
 
         public override void Dispose()

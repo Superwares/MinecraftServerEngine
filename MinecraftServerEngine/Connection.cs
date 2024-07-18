@@ -711,13 +711,12 @@ namespace MinecraftServerEngine
         private readonly Client Client;  // Dispoasble
 
         
-        private bool _init = false;
-
 
         private bool _disconnected = false;
         public bool Disconnected => _disconnected;
 
 
+        private JoinGamePacket JoinGamePacket = null;
         private readonly Queue<LoadChunkPacket> LoadChunkPackets = new();  // Dispoasble
         private readonly ConcurrentQueue<ClientboundPlayingPacket> OutPackets = new();  // Dispoasble
 
@@ -736,6 +735,7 @@ namespace MinecraftServerEngine
         private readonly Queue<TeleportRecord> TeleportRecords = new();  // Dispoasble
         private KeepAliveRecord _KeepAliveRecord = new();  // Disposable
 
+
         private bool _startDigging = false;
         private bool _attackWhenDigging = false;
 
@@ -746,9 +746,11 @@ namespace MinecraftServerEngine
             UserId id,
             Client client, 
             World world, 
-            int idEntity, 
-            Vector p, 
-            PlayerInventory invPlayer)
+            int idEntity,
+            float health,
+            Vector p, Look look,
+            PlayerInventory invPlayer,
+            byte gamemode)
         {
             System.Diagnostics.Debug.Assert(id != UserId.Null);
             System.Diagnostics.Debug.Assert(client != null);
@@ -771,6 +773,24 @@ namespace MinecraftServerEngine
             _Window = new Window(OutPackets, invPlayer);
 
             world.Connect(Id, OutPackets);
+
+            JoinGamePacket = new JoinGamePacket(idEntity, 2, 0, 2, "default", false);
+
+            OutPackets.Enqueue(new UpdateHealthPacket(health, 20, 5.0F));
+
+            int payload = Random.NextInt();
+            OutPackets.Enqueue(new TeleportPacket(
+                p.X, p.Y, p.Z,
+                look.Yaw, look.Pitch,
+                false, false, false, false, false,
+                payload));
+
+            TeleportRecord report = new(payload, p);
+            TeleportRecords.Enqueue(report);
+
+            OutPackets.Enqueue(new AbilitiesPacket(
+                    true, true, true, false, 0.1F, 0.0F));
+
         }
 
         ~Connection() => System.Diagnostics.Debug.Assert(false);
@@ -900,7 +920,7 @@ namespace MinecraftServerEngine
 
                         if (packet.Type == 2 && packet.Hand == 0)
                         {
-                            Console.Printl("UseEntity!");
+                            /*Console.Printl("UseEntity!");*/
 
                             int id = packet.EntityId;
 
@@ -1032,6 +1052,7 @@ namespace MinecraftServerEngine
                         switch (packet.ActionId)
                         {
                             default:
+                                Console.Printl($"ActionId: {packet.ActionId}");
                                 throw new UnexpectedValueException("EntityAction.ActoinId");
                             case 0:
                                 /*Console.Print("Seanking!");*/
@@ -1107,7 +1128,7 @@ namespace MinecraftServerEngine
                                 if (!_attackWhenDigging)
                                 {
                                     // Attack!
-                                    Console.Printl("Attack!");
+                                    /*Console.Printl("Attack!");*/
 
                                     ItemStack stack = invPlayer.GetMainHandSlot().Stack;
 
@@ -1126,7 +1147,7 @@ namespace MinecraftServerEngine
                             else
                             {
                                 // Attack!
-                                Console.Printl("Attack!");
+                                /*Console.Printl("Attack!");*/
 
                                 ItemStack stack = invPlayer.GetMainHandSlot().Stack;
 
@@ -1166,7 +1187,7 @@ namespace MinecraftServerEngine
 
                         if (packet.Hand == 0)
                         {
-                            Console.Printl("UseItem!");
+                            /*Console.Printl("UseItem!");*/
 
                             ItemStack stack = invPlayer.GetMainHandSlot().Stack;
 
@@ -1174,7 +1195,7 @@ namespace MinecraftServerEngine
                         }
                         else if (packet.Hand == 1)
                         {
-                            Console.Printl("UseItem!");
+                            /*Console.Printl("UseItem!");*/
 
                             ItemStack stack = invPlayer.GetOffHandSlot().Stack;
 
@@ -1188,9 +1209,9 @@ namespace MinecraftServerEngine
                     }
                     break;
                 case 0x03:
-                    /*Console.Printl("Respawn!");*/
-                    /*OutPackets.Enqueue(new RespawnPacket(
-                        0, 2, 0, "default"));*/
+                    /*Console.Printl("Respawn!");
+                    OutPackets.Enqueue(new RespawnPacket(
+                        0, 2, 2, "default"));*/
 
                     /*player.Teleport(new Vector(2.0D, 110.0D, 2.0D), new Look(30.0F, 20.0F));*/
 
@@ -1240,7 +1261,7 @@ namespace MinecraftServerEngine
             {
                 using Buffer buffer2 = new();
 
-                UpdateHealthPacket packet = new(0.0F, 20, 0.0F);
+                UpdateHealthPacket packet = new(0.00001F, 20, 0.0F);
                 SendPacket(buffer2, packet);
             }*/
 
@@ -1485,6 +1506,18 @@ namespace MinecraftServerEngine
             OutPackets.Enqueue(new UpdateHealthPacket(health, 20, 5.0F));
         }
 
+        internal void ChangeGamemode(byte gamemode)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (_disconnected)
+            {
+                return;
+            }
+
+            OutPackets.Enqueue(new GameStatePacket(3, gamemode));
+        }
+
         internal void Respawn()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -1494,7 +1527,7 @@ namespace MinecraftServerEngine
                 return;
             }
 
-            OutPackets.Enqueue(new RespawnPacket(0, 2, 2, "default"));
+            OutPackets.Enqueue(new RespawnPacket(0, 2, 3, "default"));
         }
 
         internal bool Open(PlayerInventory invPri, PublicInventory invPub)
@@ -1524,29 +1557,17 @@ namespace MinecraftServerEngine
 
             try
             {
-                if (!_init)
+                if (JoinGamePacket != null)
                 {
 
                     // The difficulty must be normal,
                     // because the hunger bar increases on its own in easy difficulty.
-                    JoinGamePacket packet = new(idEntitySelf, 2, 0, 2, "default", false);
-                    SendPacket(buffer, packet);
+                    SendPacket(buffer, JoinGamePacket);
 
-                    int payload = Random.NextInt();
-                    OutPackets.Enqueue(new TeleportPacket(
-                        p.X, p.Y, p.Z,
-                        look.Yaw, look.Pitch,
-                        false, false, false, false, false,
-                        payload));
-
-                    TeleportRecord report = new(payload, p);
-                    TeleportRecords.Enqueue(report);
-
-                    OutPackets.Enqueue(new AbilitiesPacket(
-                            false, false, true, false, 0.1F, 0.0F));
-
-                    _init = true;
+                    JoinGamePacket = null;
                 }
+
+                System.Diagnostics.Debug.Assert(JoinGamePacket == null);
 
                 LoadWorld(idEntitySelf, world, p);
 

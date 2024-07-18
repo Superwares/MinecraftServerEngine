@@ -23,6 +23,54 @@ namespace MinecraftServerEngine.PhysicsEngine
         }*/
     }
 
+    public class EmptyBoundingVolume : BoundingVolume
+    {
+        private Vector _p;
+        public Vector Position => _p;
+
+        internal EmptyBoundingVolume(Vector p)
+        {
+            _p = p;
+        }
+
+        internal override void Extend(Vector v)
+        {
+            
+        }
+
+        internal override void Move(Vector v)
+        {
+            _p += v;
+        }
+
+        internal override Vector GetCenter()
+        {
+            return _p;
+        }
+
+        internal override Vector GetBottomCenter()
+        {
+            return _p;
+        }
+
+        internal override double GetHeight()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        internal override AxisAlignedBoundingBox GetMinBoundingBox()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        internal override bool TestIntersection(BoundingVolume volume)
+        {
+            throw new System.NotImplementedException();
+        }
+
+
+    }
+
     public class AxisAlignedBoundingBox : BoundingVolume
     {
         internal static AxisAlignedBoundingBox Generate(Vector p, double r)
@@ -170,9 +218,13 @@ namespace MinecraftServerEngine.PhysicsEngine
             throw new System.NotImplementedException();
         }*/
 
-        internal (int, double) ResolveCollision(BoundingVolume volume, Vector v)
+        internal (int axis, double t) ResolveCollision(BoundingVolume volume, Vector v)
         {
-            if (volume is AxisAlignedBoundingBox aabb)
+            if (volume is EmptyBoundingVolume)
+            {
+                return (-1, 0.0D);
+            }
+            else if (volume is AxisAlignedBoundingBox aabb)
             {
                 return Collisions.Resolve(this, aabb, v);
             }

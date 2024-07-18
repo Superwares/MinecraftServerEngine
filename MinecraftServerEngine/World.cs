@@ -338,6 +338,11 @@ namespace MinecraftServerEngine
 
                 if (obj.IsDead())
                 {
+                    if (obj is AbstractPlayer player)
+                    {
+                        player.Respawn();
+                    }
+
                     obj.OnDeath(this);
 
                     if (obj is not AbstractPlayer)

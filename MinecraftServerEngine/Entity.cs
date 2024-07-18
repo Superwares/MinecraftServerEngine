@@ -16,6 +16,8 @@ namespace MinecraftServerEngine
 
             private bool _movement = false;
 
+            private bool _noRendering = false;
+
             private readonly int _id;
             public int Id => _id;
 
@@ -34,6 +36,12 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(!_disposed);
 
+                if (_noRendering)
+                {
+                    System.Diagnostics.Debug.Assert(Renderers.Empty);
+                    return false;
+                }
+
                 if (Renderers.Contains(renderer))
                 {
                     return false;
@@ -45,38 +53,64 @@ namespace MinecraftServerEngine
                 return true;
             }
 
-            public void HandleRendering(Vector p)
+            public bool HandleRendering(BoundingVolume volume, out Vector p)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                System.Diagnostics.Debug.Assert(!_movement);
+                p = volume.GetBottomCenter();
 
-                using Queue<EntityRenderer> queue = new();
-
-                System.Diagnostics.Debug.Assert(Renderers != null);
-                foreach (EntityRenderer renderer in Renderers.GetKeys())
+                if (volume is not EmptyBoundingVolume)
                 {
-                    System.Diagnostics.Debug.Assert(renderer != null);
-                    
-                    if (renderer.CanRender(p))
+                    _noRendering = false;
+
+                    System.Diagnostics.Debug.Assert(!_movement);
+
+                    using Queue<EntityRenderer> queue = new();
+
+                    System.Diagnostics.Debug.Assert(Renderers != null);
+                    foreach (EntityRenderer renderer in Renderers.GetKeys())
                     {
-                        continue;
+                        System.Diagnostics.Debug.Assert(renderer != null);
+
+                        if (renderer.CanRender(p))
+                        {
+                            continue;
+                        }
+
+                        queue.Enqueue(renderer);
                     }
 
-                    queue.Enqueue(renderer);
-                }
-
-                while (!queue.Empty)
-                {
-                    EntityRenderer renderer = queue.Dequeue();
-
-                    if (!renderer.Disconnected)
+                    while (!queue.Empty)
                     {
+                        EntityRenderer renderer = queue.Dequeue();
+
+                        if (!renderer.Disconnected)
+                        {
+                            renderer.DestroyEntity(Id);
+                        }
+                        Renderers.Extract(renderer);
+                    }
+
+                    return true;
+                }
+                else
+                {
+                    _noRendering = true;
+
+                    EntityRenderer[] renderers = Renderers.Flush();
+                    foreach (var renderer in renderers)
+                    {
+                        if (renderer.Disconnected)
+                        {
+                            continue;
+                        }
+
                         renderer.DestroyEntity(Id);
                     }
-                    Renderers.Extract(renderer);
-                }
 
+                    return false;
+                }
+                
             }
 
             public void MoveAndRotate(Vector p, Vector pPrev, Look look)
@@ -84,6 +118,12 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(!_disposed);
 
                 System.Diagnostics.Debug.Assert(!_movement);
+
+                if (_noRendering)
+                {
+                    System.Diagnostics.Debug.Assert(Renderers.Empty);
+                    return;
+                }
 
                 System.Diagnostics.Debug.Assert(Renderers != null);
                 foreach (EntityRenderer renderer in Renderers.GetKeys())
@@ -101,6 +141,12 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(!_movement);
 
+                if (_noRendering)
+                {
+                    System.Diagnostics.Debug.Assert(Renderers.Empty);
+                    return;
+                }
+
                 System.Diagnostics.Debug.Assert(Renderers != null);
                 foreach (EntityRenderer renderer in Renderers.GetKeys())
                 {
@@ -116,6 +162,12 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(!_disposed);
 
                 System.Diagnostics.Debug.Assert(!_movement);
+
+                if (_noRendering)
+                {
+                    System.Diagnostics.Debug.Assert(Renderers.Empty);
+                    return;
+                }
 
                 System.Diagnostics.Debug.Assert(Renderers != null);
                 foreach (EntityRenderer renderer in Renderers.GetKeys())
@@ -133,6 +185,12 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(!_movement);
 
+                if (_noRendering)
+                {
+                    System.Diagnostics.Debug.Assert(Renderers.Empty);
+                    return;
+                }
+
                 System.Diagnostics.Debug.Assert(Renderers != null);
                 foreach (EntityRenderer renderer in Renderers.GetKeys())
                 {
@@ -148,6 +206,7 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(!_disposed);
 
                 System.Diagnostics.Debug.Assert(_movement);
+                System.Diagnostics.Debug.Assert(!_noRendering);
 
                 _movement = false;
             }
@@ -155,6 +214,12 @@ namespace MinecraftServerEngine
             public void ChangeForms(bool sneaking, bool sprinting)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
+
+                if (_noRendering)
+                {
+                    System.Diagnostics.Debug.Assert(Renderers.Empty);
+                    return;
+                }
 
                 System.Diagnostics.Debug.Assert(Renderers != null);
                 foreach (EntityRenderer renderer in Renderers.GetKeys())
@@ -167,6 +232,12 @@ namespace MinecraftServerEngine
             public void Teleport(Vector p, Look look, bool onGround)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
+
+                if (_noRendering)
+                {
+                    System.Diagnostics.Debug.Assert(Renderers.Empty);
+                    return;
+                }
 
                 System.Diagnostics.Debug.Assert(Renderers != null);
                 foreach (EntityRenderer renderer in Renderers.GetKeys())
@@ -184,6 +255,12 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(equipmentsData.mainHand != null);
                 System.Diagnostics.Debug.Assert(equipmentsData.offHand != null);
 
+                if (_noRendering)
+                {
+                    System.Diagnostics.Debug.Assert(Renderers.Empty);
+                    return;
+                }
+
                 System.Diagnostics.Debug.Assert(Renderers != null);
                 foreach (EntityRenderer renderer in Renderers.GetKeys())
                 {
@@ -194,6 +271,12 @@ namespace MinecraftServerEngine
 
             public void Flush()
             {
+                if (_noRendering)
+                {
+                    System.Diagnostics.Debug.Assert(Renderers.Empty);
+                    return;
+                }
+
                 System.Diagnostics.Debug.Assert(Renderers != null);
                 EntityRenderer[] renderers = Renderers.Flush();
                 foreach (EntityRenderer renderer in renderers)
@@ -227,20 +310,30 @@ namespace MinecraftServerEngine
 
         private protected readonly struct Hitbox : System.IEquatable<Hitbox>
         {
+            internal static Hitbox Empty = new(0.0D, 0.0D);
+
             private readonly double Width, Height;
             /*public readonly double EyeHeight, MaxStepHeight;*/
 
-            public Hitbox(double w, double h)
+            internal Hitbox(double w, double h)
             {
-                System.Diagnostics.Debug.Assert(w > 0.0D);
-                System.Diagnostics.Debug.Assert(h > 0.0D);
-
+                System.Diagnostics.Debug.Assert(w >= 0.0D);
+                System.Diagnostics.Debug.Assert(h >= 0.0D);
+                
                 Width = w;
                 Height = h;
             }
 
-            public readonly BoundingVolume Convert(Vector p)
+            internal readonly BoundingVolume Convert(Vector p)
             {
+                if (Width == 0.0D || Height == 0.0D)
+                {
+                    System.Diagnostics.Debug.Assert(Width == 0.0D);
+                    System.Diagnostics.Debug.Assert(Height == 0.0D);
+
+                    return new EmptyBoundingVolume(p);
+                }
+
                 System.Diagnostics.Debug.Assert(Width > 0.0D);
                 System.Diagnostics.Debug.Assert(Height > 0.0D);
 
@@ -346,17 +439,17 @@ namespace MinecraftServerEngine
             }
         }
 
-        protected override BoundingVolume GenerateBoundingVolume()
+        protected override (BoundingVolume, bool noGravity) GetCurrentStatus()
         {
             Hitbox hitbox = GetHitbox();
 
-            // TODO: Apply force based on hitbox.
             Forces.Enqueue(
                 -1.0D *
                 new Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
                 Velocity);  // Damping Force
 
-            return _teleported ? hitbox.Convert(_pTeleport) : hitbox.Convert(_p);
+            BoundingVolume volume = _teleported ? hitbox.Convert(_pTeleport) : hitbox.Convert(_p);
+            return (volume, false);
         }
 
         internal override void Move(BoundingVolume volume, Vector v)
@@ -365,52 +458,51 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (_teleported)
-            {
-                Manager.Teleport(_pTeleport, _look, false);
-
-                _p = _pTeleport;
-
-                _rotated = false;
-                _teleported = false;
-            }
-
-            Vector p = volume.GetBottomCenter();
-
             System.Diagnostics.Debug.Assert(Manager != null);
-            Manager.HandleRendering(p);
-
-            bool moved = !p.Equals(_p);  // TODO: Compare with machine epsilon.
-            if (moved && _rotated)
+            if (Manager.HandleRendering(volume, out Vector p))
             {
-                Manager.MoveAndRotate(p, _p, _look);
+                if (_teleported)
+                {
+                    Manager.Teleport(_pTeleport, _look, false);
+
+                    _p = _pTeleport;
+
+                    _rotated = false;
+                    _teleported = false;
+                }
+
+                bool moved = !p.Equals(_p);  // TODO: Compare with machine epsilon.
+                if (moved && _rotated)
+                {
+                    Manager.MoveAndRotate(p, _p, _look);
+                }
+                else if (moved)
+                {
+                    System.Diagnostics.Debug.Assert(!_rotated);
+
+                    Manager.Move(p, _p);
+                }
+                else if (_rotated)
+                {
+                    System.Diagnostics.Debug.Assert(!moved);
+
+                    Manager.Rotate(_look);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.Assert(!moved);
+                    System.Diagnostics.Debug.Assert(!_rotated);
+
+                    Manager.Stand();
+                }
+
+                Manager.FinishMovementRenderring();
             }
-            else if (moved)
-            {
-                System.Diagnostics.Debug.Assert(!_rotated);
-
-                Manager.Move(p, _p);
-            }
-            else if (_rotated)
-            {
-                System.Diagnostics.Debug.Assert(!moved);
-
-                Manager.Rotate(_look);
-            }
-            else
-            {
-                System.Diagnostics.Debug.Assert(!moved);
-                System.Diagnostics.Debug.Assert(!_rotated);
-
-                Manager.Stand();
-            }
-
-            Manager.FinishMovementRenderring();
-
-            base.Move(volume, v);
 
             _p = p;
             _rotated = false;
+
+            base.Move(volume, v);
         }
 
         public virtual void Teleport(Vector p, Look look)
@@ -425,7 +517,6 @@ namespace MinecraftServerEngine
             Rotate(look);
 
             LockerTeleport.Release();
-
         }
 
         internal void Rotate(Look look)
@@ -687,7 +778,10 @@ namespace MinecraftServerEngine
         private bool _disposed = false;
 
         protected readonly Locker LockerHealth = new();
-        protected float _health = 0.0F;
+        protected float _maxHealth = 20.0F;
+        protected float _health;
+        public float MaxHealth => _maxHealth;
+        public float Health => _health;
 
         private protected LivingEntity(
             System.Guid uniqueId,
@@ -695,7 +789,9 @@ namespace MinecraftServerEngine
             Hitbox hitbox,
             double m, double maxStepLevel) 
             : base(uniqueId, p, look, hitbox, m, maxStepLevel) 
-        { }
+        {
+            _health = _maxHealth;
+        }
 
         ~LivingEntity() => System.Diagnostics.Debug.Assert(false);
 
@@ -707,6 +803,8 @@ namespace MinecraftServerEngine
         public virtual void Damage(float amount)
         {
             System.Diagnostics.Debug.Assert(amount >= 0.0D);
+            System.Diagnostics.Debug.Assert(_health > 0.0D);
+            System.Diagnostics.Debug.Assert(_health <= _maxHealth);
 
             LockerHealth.Hold();
 
@@ -731,7 +829,13 @@ namespace MinecraftServerEngine
 
     public abstract class AbstractPlayer : LivingEntity
     {
-        private static Hitbox GetHitbox(bool sneaking)
+        protected enum Gamemode
+        {
+            Adventure,
+            Spectator,
+        }
+
+        private static Hitbox GetAdventureHitbox(bool sneaking)
         {
             double w = 0.6D, h;
             if (sneaking)
@@ -746,7 +850,10 @@ namespace MinecraftServerEngine
             return new Hitbox(w, h);
         }
 
-        private static Hitbox DefaultHitbox = GetHitbox(false);
+        private static Hitbox GetSpectatorHitbox()
+        {
+            return Hitbox.Empty;
+        }
 
         public const double DefaultMass = 1.0D;
 
@@ -766,21 +873,44 @@ namespace MinecraftServerEngine
 
         private Vector _pControl;
 
+        protected Locker LockerGamemode = new();
+        protected Gamemode _gamemode;
 
-        public AbstractPlayer(UserId id, Vector p, Look look) 
-            : base(id.Data, p, look, DefaultHitbox, DefaultMass, DefaultMaxStepLevel) 
+
+        protected AbstractPlayer(UserId id, Vector p, Look look, Gamemode gamemode) 
+            : base(
+                  id.Data, 
+                  p, look, 
+                  gamemode == Gamemode.Spectator ? GetSpectatorHitbox() : GetAdventureHitbox(false), 
+                  DefaultMass, DefaultMaxStepLevel) 
         {
             System.Diagnostics.Debug.Assert(id != UserId.Null);
 
             System.Diagnostics.Debug.Assert(!Sneaking);
             System.Diagnostics.Debug.Assert(!Sprinting);
+
+            _gamemode = gamemode;
         }
 
         ~AbstractPlayer() => System.Diagnostics.Debug.Assert(false);
 
+        internal void Respawn()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            _gamemode = Gamemode.Spectator;
+            _health = MaxHealth;
+
+            if (!Disconnected)
+            {
+                Conn.Respawn();
+            }
+        }
+
         public override void Damage(float amount)
         {
             System.Diagnostics.Debug.Assert(amount >= 0.0D);
+            System.Diagnostics.Debug.Assert(_gamemode != Gamemode.Adventure);
 
             LockerHealth.Hold();
 
@@ -789,11 +919,6 @@ namespace MinecraftServerEngine
             if (!Disconnected)
             {
                 Conn.UpdateHealth(_health);
-
-                if (_health <= 0.0D)
-                {
-                    Conn.Respawn();
-                }
             }
 
             LockerHealth.Release();
@@ -803,15 +928,22 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            return GetHitbox(Sneaking);
+            return (_gamemode == Gamemode.Spectator) ? GetSpectatorHitbox() : GetAdventureHitbox(false);
         }
 
+        protected override (BoundingVolume, bool noGravity) GetCurrentStatus()
+        {
+            (BoundingVolume volume, bool noGravity) = base.GetCurrentStatus();
+
+            return (volume, (_gamemode == Gamemode.Spectator));
+        }
         private protected override void RenderSpawning(EntityRenderer renderer)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
             System.Diagnostics.Debug.Assert(renderer != null);
 
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_gamemode == Gamemode.Adventure);
             renderer.SpawnPlayer(
                 Id, UniqueId,
                 Position, Look,
@@ -829,7 +961,54 @@ namespace MinecraftServerEngine
 
             _pControl = Position;
 
-            Conn = new Connection(id, client, world, Id, _pControl, Inventory);
+            Conn = new Connection(
+                id, client,
+                world,
+                Id,
+                Health,
+                Position, Look,
+                Inventory,
+                _gamemode == Gamemode.Adventure ? (byte)2 : (byte)3);
+        }
+
+        public void SwitchToSpectator()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            LockerGamemode.Hold();
+            
+            if (_gamemode != Gamemode.Spectator)
+            {
+                if (!Disconnected)
+                {
+                    Conn.ChangeGamemode(
+                        _gamemode == Gamemode.Adventure ? (byte)2 : (byte)3);
+                }
+
+                _gamemode = Gamemode.Spectator;
+            }
+
+            LockerGamemode.Release();
+        }
+
+        public void SwitchToAdventure()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            LockerGamemode.Hold();
+
+            if (_gamemode != Gamemode.Adventure)
+            {
+                if (!Disconnected)
+                {
+                    Conn.ChangeGamemode(
+                        _gamemode == Gamemode.Adventure ? (byte)2 : (byte)3);
+                }
+
+                _gamemode = Gamemode.Adventure;
+            }
+
+            LockerGamemode.Release();
         }
 
         public override void ApplyForce(Vector force)
@@ -868,8 +1047,9 @@ namespace MinecraftServerEngine
 
                 volume = GetHitbox().Convert(_pControl);
             }
-            
+
             base.Move(volume, v);
+
         }
 
         public override void Teleport(Vector p, Look look)
@@ -974,11 +1154,14 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
-            Inventory.Dispose();
             if (!Disconnected)
             {
                 Conn.Dispose();
             }
+
+            Inventory.Dispose();
+
+            LockerGamemode.Dispose();
 
             // Finish.
             base.Dispose();
