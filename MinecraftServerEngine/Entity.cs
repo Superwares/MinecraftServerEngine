@@ -829,7 +829,7 @@ namespace MinecraftServerEngine
 
     public abstract class AbstractPlayer : LivingEntity
     {
-        protected enum Gamemode
+        protected internal enum Gamemode
         {
             Adventure,
             Spectator,
@@ -898,19 +898,23 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            _gamemode = Gamemode.Spectator;
-            _health = MaxHealth;
-
             if (!Disconnected)
             {
                 Conn.Respawn();
+
+                if (_gamemode == Gamemode.Adventure)
+                {
+                    Conn.ChangeGamemode(Id, Gamemode.Spectator);
+                }
             }
+
+            _gamemode = Gamemode.Spectator;
+            _health = MaxHealth;
         }
 
         public override void Damage(float amount)
         {
             System.Diagnostics.Debug.Assert(amount >= 0.0D);
-            System.Diagnostics.Debug.Assert(_gamemode != Gamemode.Adventure);
 
             LockerHealth.Hold();
 
@@ -968,7 +972,7 @@ namespace MinecraftServerEngine
                 Health,
                 Position, Look,
                 Inventory,
-                _gamemode == Gamemode.Adventure ? (byte)2 : (byte)3);
+                _gamemode);
         }
 
         public void SwitchToSpectator()
@@ -979,13 +983,12 @@ namespace MinecraftServerEngine
             
             if (_gamemode != Gamemode.Spectator)
             {
+                _gamemode = Gamemode.Spectator;
+
                 if (!Disconnected)
                 {
-                    Conn.ChangeGamemode(
-                        _gamemode == Gamemode.Adventure ? (byte)2 : (byte)3);
+                    Conn.ChangeGamemode(Id, _gamemode);
                 }
-
-                _gamemode = Gamemode.Spectator;
             }
 
             LockerGamemode.Release();
@@ -999,13 +1002,12 @@ namespace MinecraftServerEngine
 
             if (_gamemode != Gamemode.Adventure)
             {
+                _gamemode = Gamemode.Adventure;
+
                 if (!Disconnected)
                 {
-                    Conn.ChangeGamemode(
-                        _gamemode == Gamemode.Adventure ? (byte)2 : (byte)3);
+                    Conn.ChangeGamemode(Id, _gamemode);
                 }
-
-                _gamemode = Gamemode.Adventure;
             }
 
             LockerGamemode.Release();

@@ -9,7 +9,7 @@ namespace TestMinecraftServerApplication
         private bool _disposed = false;
 
         public Guest(UserId id, Vector p, Look look) 
-            : base(id, p, look, Gamemode.Spectator) { }
+            : base(id, p, look, Gamemode.Adventure) { }
 
         ~Guest() => System.Diagnostics.Debug.Assert(false);
 
@@ -55,8 +55,6 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            
-
         }
 
         protected override void OnUseItem(World world, ItemStack stack)
@@ -90,7 +88,8 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Console.Printl("Death!");
-            
+
+            Teleport(new Vector(0.0D, 110.0D, 0.0D), new Look(30.0F, 20.0F));
         }
 
         public override void Dispose()

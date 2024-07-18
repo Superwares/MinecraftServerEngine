@@ -5,7 +5,10 @@ using Sync;
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
+    using System.ComponentModel.DataAnnotations;
     using System.Net.Sockets;
+    using System.Security.Principal;
+    using static MinecraftServerEngine.AbstractPlayer;
 
     internal sealed class Connection : System.IDisposable
     {
@@ -750,7 +753,7 @@ namespace MinecraftServerEngine
             float health,
             Vector p, Look look,
             PlayerInventory invPlayer,
-            byte gamemode)
+            Gamemode gamemode)
         {
             System.Diagnostics.Debug.Assert(id != UserId.Null);
             System.Diagnostics.Debug.Assert(client != null);
@@ -788,8 +791,22 @@ namespace MinecraftServerEngine
             TeleportRecord report = new(payload, p);
             TeleportRecords.Enqueue(report);
 
+            bool canFly = false;
+            
+            if (gamemode == Gamemode.Spectator)
+            {
+                byte flags = 0x20;
+
+                using EntityMetadata metadata = new();
+                metadata.AddByte(0, flags);
+
+                OutPackets.Enqueue(new EntityMetadataPacket(idEntity, metadata.WriteData()));
+
+                canFly = true;
+            }
+
             OutPackets.Enqueue(new AbilitiesPacket(
-                    true, true, true, false, 0.1F, 0.0F));
+                    false, false, canFly, false, 0.1F, 0.0F));
 
         }
 
@@ -1503,19 +1520,38 @@ namespace MinecraftServerEngine
                 return;
             }
 
-            OutPackets.Enqueue(new UpdateHealthPacket(health, 20, 5.0F));
-        }
+            var packet = new UpdateHealthPacket(health, 20, 5.0F);
 
-        internal void ChangeGamemode(byte gamemode)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            using Buffer buffer = new();
 
-            if (_disconnected)
+            bool tryAgain;
+
+            do
             {
-                return;
-            }
+                tryAgain = false;
 
-            OutPackets.Enqueue(new GameStatePacket(3, gamemode));
+                try
+                {
+                    SendPacket(buffer, packet);
+                }
+                catch (DisconnectedClientException)
+                {
+                    buffer.Flush();
+
+                    _disconnected = true;
+
+                    /*Console.Print("Disconnect!");*/
+
+                    System.Diagnostics.Debug.Assert(!tryAgain);
+                }
+                catch (TryAgainException)
+                {
+                    tryAgain = true;
+                }
+
+            } while (tryAgain);
+
+            System.Diagnostics.Debug.Assert(buffer.Empty);
         }
 
         internal void Respawn()
@@ -1527,7 +1563,73 @@ namespace MinecraftServerEngine
                 return;
             }
 
-            OutPackets.Enqueue(new RespawnPacket(0, 2, 3, "default"));
+            var packet = new RespawnPacket(0, 2, 2, "default");
+
+            using Buffer buffer = new();
+
+            bool tryAgain;
+
+            do
+            {
+                tryAgain = false;
+
+                try
+                {
+                    SendPacket(buffer, packet);
+                }
+                catch (DisconnectedClientException)
+                {
+                    buffer.Flush();
+
+                    _disconnected = true;
+
+                    /*Console.Print("Disconnect!");*/
+
+                    System.Diagnostics.Debug.Assert(!tryAgain);
+                }
+                catch (TryAgainException)
+                {
+                    tryAgain = true;
+                }
+
+            } while (tryAgain);
+
+            System.Diagnostics.Debug.Assert(buffer.Empty);
+        }
+
+        internal void ChangeGamemode(int idEntitySelf, Gamemode gamemode)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (_disconnected)
+            {
+                return;
+            }
+
+            bool flying = false;
+
+            if (gamemode == Gamemode.Spectator)
+            {
+                byte flags = 0x20;
+
+                using EntityMetadata metadata = new();
+                metadata.AddByte(0, flags);
+
+                OutPackets.Enqueue(new EntityMetadataPacket(idEntitySelf, metadata.WriteData()));
+
+                flying = true;
+            }
+            else if (gamemode == Gamemode.Adventure)
+            {
+                
+            }
+            else
+            {
+                throw new System.NotImplementedException();
+            }
+
+            OutPackets.Enqueue(new AbilitiesPacket(
+                    false, flying, flying, false, 0.1F, 0.0F));
         }
 
         internal bool Open(PlayerInventory invPri, PublicInventory invPub)
