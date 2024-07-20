@@ -1449,7 +1449,7 @@ namespace MinecraftServerEngine
             using EntityMetadata metadata = new();
 
             if (gamemode == Gamemode.Spectator)
-            {
+            {   
                 metadata.AddByte(0, 0x20);
 
                 canFly = true;

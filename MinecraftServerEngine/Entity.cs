@@ -919,16 +919,23 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(amount >= 0.0D);
 
+            if (amount == 0.0D)
+            {
+                return;
+            }
+
+            if (Gamemode == Gamemode.Spectator)
+            {
+                return;
+            }
+
             LockerHealth.Hold();
 
-            if (Gamemode != Gamemode.Spectator)
-            {
-                base.Damage(amount);
+            base.Damage(amount);
 
-                if (Connected && Health > 0.0F)
-                {
-                    Conn.UpdateHealth(_health);
-                }
+            if (Connected && Health > 0.0F)
+            {
+                Conn.UpdateHealth(_health);
             }
 
             LockerHealth.Release();
