@@ -289,7 +289,7 @@ namespace MinecraftServerEngine
     internal sealed class EntityRenderer : ObjectRenderer
     {
 
-        public EntityRenderer(
+        internal EntityRenderer(
             ConcurrentQueue<ClientboundPlayingPacket> outPackets,
             ChunkLocation loc, int d) 
             : base(outPackets, loc, d) 
@@ -297,7 +297,7 @@ namespace MinecraftServerEngine
             
         }
 
-        public void RelMoveAndRotate(
+        internal void RelMoveAndRotate(
             int id, 
             Vector p, Vector pPrev, Look look)
         {
@@ -320,7 +320,7 @@ namespace MinecraftServerEngine
         
         }
 
-        public void RelMove(int id, Vector p, Vector pPrev)
+        internal void RelMove(int id, Vector p, Vector pPrev)
         {
             System.Diagnostics.Debug.Assert(!Disconnected);
 
@@ -338,7 +338,7 @@ namespace MinecraftServerEngine
 
         }
 
-        public void Rotate(int id, Look look)
+        internal void Rotate(int id, Look look)
         {
             System.Diagnostics.Debug.Assert(!Disconnected);
 
@@ -347,14 +347,14 @@ namespace MinecraftServerEngine
             Render(new EntityHeadLookPacket(id, x));
         }
 
-        public void Stand(int id)
+        internal void Stand(int id)
         {
             System.Diagnostics.Debug.Assert(!Disconnected);
 
             Render(new EntityPacket(id));
         }
 
-        public void Teleport(int id, Vector p, Look look, bool onGround)
+        internal void Teleport(int id, Vector p, Look look, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!Disconnected);
 
@@ -366,7 +366,7 @@ namespace MinecraftServerEngine
                 onGround));
         }
 
-        public void ChangeForms(int id, bool sneaking, bool sprinting)
+        internal void ChangeForms(int id, bool sneaking, bool sprinting)
         {
             System.Diagnostics.Debug.Assert(!Disconnected);
 
@@ -387,7 +387,7 @@ namespace MinecraftServerEngine
             Render(new EntityMetadataPacket(id, metadata.WriteData()));
         }
 
-        public void SetEquipmentsData(
+        internal void SetEquipmentsData(
             int id, 
             (byte[] mainHand, byte[] offHand) equipmentsData)
         {
@@ -400,7 +400,14 @@ namespace MinecraftServerEngine
             Render(new EntityEquipmentPacket(id, 1, equipmentsData.offHand));
         }
         
-        public void SpawnPlayer(
+        internal void SetEntityStatus(int id, byte v)
+        {
+            System.Diagnostics.Debug.Assert(!Disconnected);
+
+            Render(new EntityStatusPacket(id, v));
+        }
+
+        internal void SpawnPlayer(
             int id, System.Guid uniqueId, 
             Vector p, Look look, 
             bool sneaking, bool sprinting,
@@ -434,7 +441,7 @@ namespace MinecraftServerEngine
             SetEquipmentsData(id, equipmentsData);
         }
 
-        public void SpawnItemEntity(
+        internal void SpawnItemEntity(
             int id, System.Guid uniqueId,
             Vector p, Look look,
             ItemStack stack)
@@ -457,7 +464,7 @@ namespace MinecraftServerEngine
                 id, metadata.WriteData()));
         }
 
-        public void DestroyEntity(int id)
+        internal void DestroyEntity(int id)
         {
             System.Diagnostics.Debug.Assert(!Disconnected);
 

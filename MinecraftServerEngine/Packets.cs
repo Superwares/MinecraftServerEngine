@@ -179,6 +179,7 @@ namespace MinecraftServerEngine
         public const int OpenWindowPacketId = 0x13;
         public const int WindowItemsPacketId = 0x14;
         public const int SetSlotPacketId = 0x16;
+        public const int EntityStatusPacketId = 0x1B;
         public const int UnloadChunkPacketId = 0x1D;
         public const int GameStatePacketId = 0x1E;
         public const int ClientboundKeepAlivePacketId = 0x1F;
@@ -874,9 +875,36 @@ namespace MinecraftServerEngine
 
     }
 
+    internal sealed class EntityStatusPacket : ClientboundPlayingPacket
+    {
+        internal readonly int EntityId;
+        internal readonly byte Status;
+
+        internal static EntityStatusPacket Read(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            throw new System.NotImplementedException();
+        }
+
+        internal EntityStatusPacket(int idEntity, byte status) : base(EntityStatusPacketId)
+        {
+            EntityId = idEntity;
+            Status = status;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            buffer.WriteInt(EntityId);
+            buffer.WriteByte(Status);
+        }
+    }
+
     internal sealed class UnloadChunkPacket : ClientboundPlayingPacket
     {
-        public readonly int XChunk, ZChunk;
+        internal readonly int XChunk, ZChunk;
 
         /// <summary>
         /// TODO: Add description.
@@ -889,7 +917,7 @@ namespace MinecraftServerEngine
             throw new System.NotImplementedException();
         }
 
-        public UnloadChunkPacket(int xChunk, int zChunk) : base(UnloadChunkPacketId)
+        internal UnloadChunkPacket(int xChunk, int zChunk) : base(UnloadChunkPacketId)
         {
             XChunk = xChunk;
             ZChunk = zChunk;

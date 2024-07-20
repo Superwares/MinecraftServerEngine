@@ -1,16 +1,16 @@
 ﻿
 using Common;
+using Sync;
 using Containers;
 
 
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
-    using Sync;
-
+    
     public abstract class Entity : PhysicsObject
     {
-        private sealed class RendererManager : System.IDisposable
+        private protected sealed class RendererManager : System.IDisposable
         {
             private bool _disposed = false;
 
@@ -23,14 +23,14 @@ namespace MinecraftServerEngine
 
             private readonly ConcurrentTree<EntityRenderer> Renderers = new();  // Disposable
 
-            public RendererManager(int id)
+            internal RendererManager(int id)
             {
                 _id = id;
             }
 
             ~RendererManager() => System.Diagnostics.Debug.Assert(false);
 
-            public bool Apply(EntityRenderer renderer)
+            internal bool Apply(EntityRenderer renderer)
             {
                 System.Diagnostics.Debug.Assert(renderer != null);
 
@@ -53,7 +53,7 @@ namespace MinecraftServerEngine
                 return true;
             }
 
-            public bool HandleRendering(BoundingVolume volume, out Vector p)
+            internal bool HandleRendering(BoundingVolume volume, out Vector p)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -113,7 +113,7 @@ namespace MinecraftServerEngine
                 
             }
 
-            public void MoveAndRotate(Vector p, Vector pPrev, Look look)
+            internal void MoveAndRotate(Vector p, Vector pPrev, Look look)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -135,7 +135,7 @@ namespace MinecraftServerEngine
                 _movement = true;
             }
 
-            public void Move(Vector p, Vector pPrev)
+            internal void Move(Vector p, Vector pPrev)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -157,7 +157,7 @@ namespace MinecraftServerEngine
                 _movement = true;
             }
 
-            public void Rotate(Look look)
+            internal void Rotate(Look look)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -179,7 +179,7 @@ namespace MinecraftServerEngine
                 _movement = true;
             }
 
-            public void Stand()
+            internal void Stand()
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -201,7 +201,7 @@ namespace MinecraftServerEngine
                 _movement = true;
             }
 
-            public void FinishMovementRenderring()
+            internal void FinishMovementRenderring()
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -211,7 +211,7 @@ namespace MinecraftServerEngine
                 _movement = false;
             }
 
-            public void ChangeForms(bool sneaking, bool sprinting)
+            internal void ChangeForms(bool sneaking, bool sprinting)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -229,7 +229,7 @@ namespace MinecraftServerEngine
                 }
             }
 
-            public void Teleport(Vector p, Look look, bool onGround)
+            internal void Teleport(Vector p, Look look, bool onGround)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -247,13 +247,13 @@ namespace MinecraftServerEngine
                 }
             }
 
-            public void SetEquipmentsData(
+            internal void SetEquipmentsData(
                 (byte[] mainHand, byte[] offHand) equipmentsData)
             {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
                 System.Diagnostics.Debug.Assert(equipmentsData.mainHand != null);
                 System.Diagnostics.Debug.Assert(equipmentsData.offHand != null);
+
+                System.Diagnostics.Debug.Assert(!_disposed);
 
                 if (_noRendering)
                 {
@@ -266,6 +266,24 @@ namespace MinecraftServerEngine
                 {
                     System.Diagnostics.Debug.Assert(renderer != null);
                     renderer.SetEquipmentsData(Id, equipmentsData);
+                }
+            }
+
+            internal void SetEntityStatus(byte v)
+            {
+                System.Diagnostics.Debug.Assert(!_disposed);
+
+                if (_noRendering)
+                {
+                    System.Diagnostics.Debug.Assert(Renderers.Empty);
+                    return;
+                }
+
+                System.Diagnostics.Debug.Assert(Renderers != null);
+                foreach (EntityRenderer renderer in Renderers.GetKeys())
+                {
+                    System.Diagnostics.Debug.Assert(renderer != null);
+                    renderer.SetEntityStatus(Id, v);
                 }
             }
 
@@ -382,7 +400,7 @@ namespace MinecraftServerEngine
         private Vector _pTeleport;
 
 
-        private RendererManager Manager;  // Disposable
+        private protected RendererManager Manager;  // Disposable
 
 
         private protected Entity(
@@ -541,13 +559,6 @@ namespace MinecraftServerEngine
             LockerRotate.Release();
         }
 
-        private void UpdateFormChangingRendering()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-            
-            Manager.ChangeForms(_sneaking, _sprinting);
-        }
-
         internal void Sneak(World world)
         {
             System.Diagnostics.Debug.Assert(world != null);
@@ -560,7 +571,7 @@ namespace MinecraftServerEngine
 
             OnSneak(world, _sneaking);
 
-            UpdateFormChangingRendering();
+            Manager.ChangeForms(_sneaking, _sprinting);
         }
 
         internal void Unsneak(World world)
@@ -575,7 +586,7 @@ namespace MinecraftServerEngine
 
             OnSneak(world, _sneaking);
 
-            UpdateFormChangingRendering();
+            Manager.ChangeForms(_sneaking, _sprinting);
         }
 
         internal void Sprint(World world)
@@ -590,7 +601,7 @@ namespace MinecraftServerEngine
 
             OnSprint(world, _sprinting);
 
-            UpdateFormChangingRendering();
+            Manager.ChangeForms(_sneaking, _sprinting);
         }
 
         internal void Unsprint(World world)
@@ -605,7 +616,7 @@ namespace MinecraftServerEngine
 
             OnSprint(world, _sprinting);
 
-            UpdateFormChangingRendering();
+            Manager.ChangeForms(_sneaking, _sprinting);
         }
 
         internal void UpdateEntityEquipmentsData((
@@ -807,11 +818,15 @@ namespace MinecraftServerEngine
 
         protected internal override bool IsDead()
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             return _health <= 0.0D;
         }
 
         public virtual void Damage(float amount)
         {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
             System.Diagnostics.Debug.Assert(amount >= 0.0D);
             System.Diagnostics.Debug.Assert(_health > 0.0D);
             System.Diagnostics.Debug.Assert(_health <= _maxHealth);
@@ -819,6 +834,13 @@ namespace MinecraftServerEngine
             LockerHealth.Hold();
 
             _health -= amount;
+
+            Manager.SetEntityStatus(2);
+
+            if (_health <= 0.0D)
+            {
+                Manager.SetEntityStatus(3);
+            }
 
             LockerHealth.Release();
         }
@@ -829,6 +851,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             // Release resources.
+            LockerHealth.Dispose();
 
             // Finish.
             base.Dispose();
@@ -860,7 +883,6 @@ namespace MinecraftServerEngine
         }
 
         public const double DefaultMass = 1.0D;
-
         public const double DefaultMaxStepLevel = 0.6;
 
 
@@ -876,6 +898,7 @@ namespace MinecraftServerEngine
 
 
         private Vector _pControl;
+
 
         private Locker LockerGamemode = new();
         private Gamemode _nextGamemode, _gamemode;
