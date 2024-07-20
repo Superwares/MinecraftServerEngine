@@ -374,6 +374,16 @@ namespace MinecraftServerEngine.PhysicsEngine
                 }
 
             }
+            else
+            {
+                if (gridPrev != null)
+                {
+                    foreach (Cell cell in gridPrev.GetCells())
+                    {
+                        ExtractObjectToCell(cell, obj);
+                    }
+                }
+            }
 
             ObjectToGrid.Insert(obj, grid);
         }

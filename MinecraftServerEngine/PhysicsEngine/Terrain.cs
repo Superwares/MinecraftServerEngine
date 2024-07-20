@@ -364,6 +364,9 @@ namespace MinecraftServerEngine.PhysicsEngine
                 return v;
             }
 
+            System.Diagnostics.Debug.Assert(maxStepHeight >= 0.0D);
+            System.Diagnostics.Debug.Assert(maxStepHeight <= volume.GetHeight() / 2.0D);
+
             System.Diagnostics.Debug.Assert(axis < 3);
             System.Diagnostics.Debug.Assert(t <= 1.0D);
             System.Diagnostics.Debug.Assert(t >= 0.0D);
@@ -403,8 +406,6 @@ namespace MinecraftServerEngine.PhysicsEngine
             BoundingVolume volume, double maxStepHeight, Vector v)
         {
             System.Diagnostics.Debug.Assert(volume != null);
-            System.Diagnostics.Debug.Assert(maxStepHeight >= 0.0D);
-            System.Diagnostics.Debug.Assert(maxStepHeight <= volume.GetHeight() / 2.0D);
             System.Diagnostics.Debug.Assert(v.GetLengthSquared() > 0.0D);
 
             System.Diagnostics.Debug.Assert(!_disposed);

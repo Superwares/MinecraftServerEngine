@@ -11,8 +11,6 @@ namespace TestMinecraftServerApplication
 
         private bool _disposed = false;
 
-        
-
         public Lobby() : base() { }
 
         ~Lobby() => System.Diagnostics.Debug.Assert(false);
@@ -28,7 +26,7 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            return false;
+            return true;
         }
 
         protected override void StartRoutine()

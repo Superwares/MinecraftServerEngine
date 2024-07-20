@@ -89,7 +89,17 @@ namespace TestMinecraftServerApplication
 
             Console.Printl("Death!");
 
-            Teleport(new Vector(0.0D, 110.0D, 0.0D), new Look(30.0F, 20.0F));
+            /*Teleport(new Vector(0.0D, 110.0D, 0.0D), new Look(30.0F, 20.0F));*/
+
+            if (Gamemode == Gamemode.Adventure)
+            {
+                Switch(Gamemode.Spectator);
+            }
+            else
+            {
+                System.Diagnostics.Debug.Assert(Gamemode == Gamemode.Spectator);
+                Switch(Gamemode.Adventure);
+            }
         }
 
         public override void Dispose()

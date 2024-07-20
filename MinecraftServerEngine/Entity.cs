@@ -449,7 +449,7 @@ namespace MinecraftServerEngine
                 Velocity);  // Damping Force
 
             BoundingVolume volume = _teleported ? hitbox.Convert(_pTeleport) : hitbox.Convert(_p);
-            return (volume, false);
+            return (volume, volume is EmptyBoundingVolume);
         }
 
         internal override void Move(BoundingVolume volume, Vector v)
@@ -497,6 +497,16 @@ namespace MinecraftServerEngine
                 }
 
                 Manager.FinishMovementRenderring();
+            }
+            else
+            {
+                if (_teleported)
+                {
+                    _p = _pTeleport;
+
+                    _rotated = false;
+                    _teleported = false;
+                }
             }
 
             _p = p;
@@ -829,12 +839,6 @@ namespace MinecraftServerEngine
 
     public abstract class AbstractPlayer : LivingEntity
     {
-        protected internal enum Gamemode
-        {
-            Adventure,
-            Spectator,
-        }
-
         private static Hitbox GetAdventureHitbox(bool sneaking)
         {
             double w = 0.6D, h;
@@ -873,8 +877,9 @@ namespace MinecraftServerEngine
 
         private Vector _pControl;
 
-        protected Locker LockerGamemode = new();
-        protected Gamemode _gamemode;
+        private Locker LockerGamemode = new();
+        private Gamemode _nextGamemode, _gamemode;
+        public Gamemode Gamemode => _gamemode;
 
 
         protected AbstractPlayer(UserId id, Vector p, Look look, Gamemode gamemode) 
@@ -889,6 +894,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!Sneaking);
             System.Diagnostics.Debug.Assert(!Sprinting);
 
+            _nextGamemode = gamemode;
             _gamemode = gamemode;
         }
 
@@ -898,17 +904,14 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (!Disconnected)
-            {
-                Conn.Respawn();
+            System.Diagnostics.Debug.Assert(Gamemode != Gamemode.Spectator);
 
-                if (_gamemode == Gamemode.Adventure)
-                {
-                    Conn.ChangeGamemode(Id, Gamemode.Spectator);
-                }
+            if (Connected)
+            {
+                Conn.UpdateHealth(MaxHealth);
             }
 
-            _gamemode = Gamemode.Spectator;
+            _nextGamemode = Gamemode.Spectator;
             _health = MaxHealth;
         }
 
@@ -918,11 +921,14 @@ namespace MinecraftServerEngine
 
             LockerHealth.Hold();
 
-            base.Damage(amount);
-
-            if (!Disconnected)
+            if (Gamemode != Gamemode.Spectator)
             {
-                Conn.UpdateHealth(_health);
+                base.Damage(amount);
+
+                if (Connected && Health > 0.0F)
+                {
+                    Conn.UpdateHealth(_health);
+                }
             }
 
             LockerHealth.Release();
@@ -932,15 +938,10 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            return (_gamemode == Gamemode.Spectator) ? GetSpectatorHitbox() : GetAdventureHitbox(false);
+            return (_nextGamemode == Gamemode.Spectator) ? 
+                GetSpectatorHitbox() : GetAdventureHitbox(false);
         }
 
-        protected override (BoundingVolume, bool noGravity) GetCurrentStatus()
-        {
-            (BoundingVolume volume, bool noGravity) = base.GetCurrentStatus();
-
-            return (volume, (_gamemode == Gamemode.Spectator));
-        }
         private protected override void RenderSpawning(EntityRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(renderer != null);
@@ -975,39 +976,15 @@ namespace MinecraftServerEngine
                 _gamemode);
         }
 
-        public void SwitchToSpectator()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            LockerGamemode.Hold();
-            
-            if (_gamemode != Gamemode.Spectator)
-            {
-                _gamemode = Gamemode.Spectator;
-
-                if (!Disconnected)
-                {
-                    Conn.ChangeGamemode(Id, _gamemode);
-                }
-            }
-
-            LockerGamemode.Release();
-        }
-
-        public void SwitchToAdventure()
+        public void Switch(Gamemode gamemode)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             LockerGamemode.Hold();
 
-            if (_gamemode != Gamemode.Adventure)
+            if (_nextGamemode != gamemode)
             {
-                _gamemode = Gamemode.Adventure;
-
-                if (!Disconnected)
-                {
-                    Conn.ChangeGamemode(Id, _gamemode);
-                }
+                _nextGamemode = gamemode;
             }
 
             LockerGamemode.Release();
@@ -1048,10 +1025,16 @@ namespace MinecraftServerEngine
                 Console.Printl($"length: {length}");*/
 
                 volume = GetHitbox().Convert(_pControl);
+
+                if (_gamemode != _nextGamemode)
+                {
+                    Conn.Set(Id, _nextGamemode);
+                }
             }
 
-            base.Move(volume, v);
+            _gamemode = _nextGamemode;
 
+            base.Move(volume, v);
         }
 
         public override void Teleport(Vector p, Look look)

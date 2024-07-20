@@ -146,94 +146,6 @@ namespace MinecraftServerEngine
                 }
             }
 
-            /*internal void Refresh(PlayerInventory invPlayer)
-            {
-                System.Diagnostics.Debug.Assert(invPlayer != null);
-
-                int offset = _invPublic == null ? 0 : _invPublic.TotalSlotCount;
-                System.Diagnostics.Debug.Assert(offset >= 0);
-                Renderer.Update(invPlayer, Cursor, offset);
-            }*/
-
-            /*private void LeftClick(PrivateInventory invPrivate, int i)
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                System.Diagnostics.Debug.Assert(invPrivate != null);
-                System.Diagnostics.Debug.Assert(i >= 0);
-                System.Diagnostics.Debug.Assert(i < invPrivate.TotalSlotCount);
-
-                if (_cursor == null)
-                {
-                    invPrivate.TakeAll(i, ref _cursor, _renderer);
-                }
-                else
-                {
-                    invPrivate.PutAll(i, ref _cursor, _renderer);
-                }
-
-            }
-
-            private void LeftClickWithPublic(PrivateInventory invPrivate, int i)
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                System.Diagnostics.Debug.Assert(_invPublic != null);
-
-                System.Diagnostics.Debug.Assert(invPrivate != null);
-                System.Diagnostics.Debug.Assert(i >= 0);
-                System.Diagnostics.Debug.Assert(i < invPrivate.PrimarySlotCount + _invPublic.TotalSlotCount);
-
-                if (_cursor == null)
-                {
-                    _invPublic.TakeAll(invPrivate, i, ref _cursor, _renderer);
-                }
-                else
-                {
-                    _invPublic.PutAll(invPrivate, i, ref _cursor, _renderer);
-                }
-
-            }
-
-            private void RightClick(PrivateInventory invPrivate, int i)
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                System.Diagnostics.Debug.Assert(invPrivate != null);
-                System.Diagnostics.Debug.Assert(i >= 0);
-                System.Diagnostics.Debug.Assert(i < invPrivate.TotalSlotCount);
-
-                if (_cursor == null)
-                {
-                    invPrivate.TakeHalf(i, ref _cursor, _renderer);
-                }
-                else
-                {
-                    invPrivate.PutOne(i, ref _cursor, _renderer);
-                }
-            }
-
-            private void RightClickWithPublic(PrivateInventory invPrivate, int i)
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                System.Diagnostics.Debug.Assert(_invPublic != null);
-
-                System.Diagnostics.Debug.Assert(invPrivate != null);
-                System.Diagnostics.Debug.Assert(i >= 0);
-                System.Diagnostics.Debug.Assert(i < invPrivate.PrimarySlotCount + _invPublic.TotalSlotCount);
-
-                if (_cursor == null)
-                {
-                    _invPublic.TakeHalf(invPrivate, i, ref _cursor, _renderer);
-                }
-                else
-                {
-                    _invPublic.PutOne(invPrivate, i, ref _cursor, _renderer);
-                }
-
-            }*/
-
             internal void Handle(
                 UserId id,
                 World world, AbstractPlayer player,
@@ -777,9 +689,8 @@ namespace MinecraftServerEngine
 
             world.Connect(Id, OutPackets);
 
+            System.Diagnostics.Debug.Assert(JoinGamePacket == null);
             JoinGamePacket = new JoinGamePacket(idEntity, 2, 0, 2, "default", false);
-
-            OutPackets.Enqueue(new UpdateHealthPacket(health, 20, 5.0F));
 
             int payload = Random.NextInt();
             OutPackets.Enqueue(new TeleportPacket(
@@ -791,22 +702,8 @@ namespace MinecraftServerEngine
             TeleportRecord report = new(payload, p);
             TeleportRecords.Enqueue(report);
 
-            bool canFly = false;
-            
-            if (gamemode == Gamemode.Spectator)
-            {
-                byte flags = 0x20;
-
-                using EntityMetadata metadata = new();
-                metadata.AddByte(0, flags);
-
-                OutPackets.Enqueue(new EntityMetadataPacket(idEntity, metadata.WriteData()));
-
-                canFly = true;
-            }
-
-            OutPackets.Enqueue(new AbilitiesPacket(
-                    false, false, canFly, false, 0.1F, 0.0F));
+            UpdateHealth(health);
+            Set(idEntity, gamemode);
 
         }
 
@@ -852,6 +749,16 @@ namespace MinecraftServerEngine
                         ChunkLocation locChunk = ChunkLocation.Generate(p);
                         EntityRenderer.Update(locChunk);
                         ParticleObjectRenderer.Update(locChunk);
+
+                        if (player.Sneaking)
+                        {
+                            player.Unsneak(world);
+                        }
+
+                        if (player.Sprinting)
+                        {
+                            player.Unsprint(world);
+                        }
                     }
                     break;
                 case ServerboundPlayingPacket.SettingsPacketId:
@@ -1066,10 +973,15 @@ namespace MinecraftServerEngine
                     {
                         EntityActionPacket packet = EntityActionPacket.Read(buffer);
 
+                        if (!TeleportRecords.Empty)
+                        {
+                            break;
+                        }
+
                         switch (packet.ActionId)
                         {
                             default:
-                                Console.Printl($"ActionId: {packet.ActionId}");
+                                /*Console.Printl($"ActionId: {packet.ActionId}");*/
                                 throw new UnexpectedValueException("EntityAction.ActoinId");
                             case 0:
                                 /*Console.Print("Seanking!");*/
@@ -1520,41 +1432,10 @@ namespace MinecraftServerEngine
                 return;
             }
 
-            var packet = new UpdateHealthPacket(health, 20, 5.0F);
-
-            using Buffer buffer = new();
-
-            bool tryAgain;
-
-            do
-            {
-                tryAgain = false;
-
-                try
-                {
-                    SendPacket(buffer, packet);
-                }
-                catch (DisconnectedClientException)
-                {
-                    buffer.Flush();
-
-                    _disconnected = true;
-
-                    /*Console.Print("Disconnect!");*/
-
-                    System.Diagnostics.Debug.Assert(!tryAgain);
-                }
-                catch (TryAgainException)
-                {
-                    tryAgain = true;
-                }
-
-            } while (tryAgain);
-
-            System.Diagnostics.Debug.Assert(buffer.Empty);
+            OutPackets.Enqueue(new UpdateHealthPacket(health, 20, 5.0F));
         }
 
-        internal void Respawn()
+        internal void Set(int idEntity, Gamemode gamemode)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -1563,73 +1444,20 @@ namespace MinecraftServerEngine
                 return;
             }
 
-            var packet = new RespawnPacket(0, 2, 2, "default");
-
-            using Buffer buffer = new();
-
-            bool tryAgain;
-
-            do
-            {
-                tryAgain = false;
-
-                try
-                {
-                    SendPacket(buffer, packet);
-                }
-                catch (DisconnectedClientException)
-                {
-                    buffer.Flush();
-
-                    _disconnected = true;
-
-                    /*Console.Print("Disconnect!");*/
-
-                    System.Diagnostics.Debug.Assert(!tryAgain);
-                }
-                catch (TryAgainException)
-                {
-                    tryAgain = true;
-                }
-
-            } while (tryAgain);
-
-            System.Diagnostics.Debug.Assert(buffer.Empty);
-        }
-
-        internal void ChangeGamemode(int idEntitySelf, Gamemode gamemode)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            if (_disconnected)
-            {
-                return;
-            }
-
-            bool flying = false;
+            bool canFly = false;
 
             if (gamemode == Gamemode.Spectator)
             {
-                byte flags = 0x20;
-
                 using EntityMetadata metadata = new();
-                metadata.AddByte(0, flags);
 
-                OutPackets.Enqueue(new EntityMetadataPacket(idEntitySelf, metadata.WriteData()));
+                metadata.AddByte(0, 0x20);
+                OutPackets.Enqueue(new EntityMetadataPacket(idEntity, metadata.WriteData()));
 
-                flying = true;
-            }
-            else if (gamemode == Gamemode.Adventure)
-            {
-                
-            }
-            else
-            {
-                throw new System.NotImplementedException();
+                canFly = true;
             }
 
             OutPackets.Enqueue(new AbilitiesPacket(
-                    false, flying, flying, false, 0.1F, 0.0F));
+                    false, canFly, canFly, false, 0.1F, 0.0F));
         }
 
         internal bool Open(PlayerInventory invPri, PublicInventory invPub)
