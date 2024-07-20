@@ -27,6 +27,7 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
+
         }
 
         protected override void OnSprint(World world, bool f)
@@ -35,6 +36,8 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            Console.Printl("Sprint!");
+            Switch(Gamemode.Adventure);
         }
 
         protected override void OnAttack(World world)

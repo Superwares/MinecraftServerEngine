@@ -1446,16 +1446,20 @@ namespace MinecraftServerEngine
 
             bool canFly = false;
 
+            using EntityMetadata metadata = new();
+
             if (gamemode == Gamemode.Spectator)
             {
-                using EntityMetadata metadata = new();
-
                 metadata.AddByte(0, 0x20);
-                OutPackets.Enqueue(new EntityMetadataPacket(idEntity, metadata.WriteData()));
 
                 canFly = true;
             }
+            else
+            {
+                metadata.AddByte(0, 0x00);
+            }
 
+            OutPackets.Enqueue(new EntityMetadataPacket(idEntity, metadata.WriteData()));
             OutPackets.Enqueue(new AbilitiesPacket(
                     false, canFly, canFly, false, 0.1F, 0.0F));
         }
