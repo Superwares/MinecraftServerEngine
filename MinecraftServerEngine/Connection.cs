@@ -5,10 +5,6 @@ using Sync;
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
-    using System.ComponentModel.DataAnnotations;
-    using System.Net.Sockets;
-    using System.Security.Principal;
-    using static MinecraftServerEngine.AbstractPlayer;
 
     internal sealed class Connection : System.IDisposable
     {

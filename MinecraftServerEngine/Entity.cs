@@ -15,7 +15,6 @@ namespace MinecraftServerEngine
             private bool _disposed = false;
 
             private bool _movement = false;
-
             private bool _noRendering = false;
 
             private readonly int _id;
@@ -400,12 +399,16 @@ namespace MinecraftServerEngine
         private Vector _pTeleport;
 
 
+        private readonly bool NoGravity;
+
+
         private protected RendererManager Manager;  // Disposable
 
 
         private protected Entity(
             System.Guid uniqueId,
             Vector p, Look look,
+            bool noGravity,
             Hitbox hitbox,
             double m, double maxStepHeight)
             : base(m, hitbox.Convert(p), new StepableMovement(maxStepHeight))
@@ -420,6 +423,8 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_sneaking);
             System.Diagnostics.Debug.Assert(!_sprinting);
+
+            NoGravity = noGravity;
 
             Manager = new(Id);
         }
@@ -467,7 +472,7 @@ namespace MinecraftServerEngine
                 Velocity);  // Damping Force
 
             BoundingVolume volume = _teleported ? hitbox.Convert(_pTeleport) : hitbox.Convert(_p);
-            return (volume, volume is EmptyBoundingVolume);
+            return (volume, NoGravity || volume is EmptyBoundingVolume);
         }
 
         internal override void Move(BoundingVolume volume, Vector v)
@@ -665,12 +670,78 @@ namespace MinecraftServerEngine
 
     }
 
+    public abstract class BlockEntity : Entity
+    {
+        private static readonly Hitbox DefaultHitbox = new(1.0D, 1.0D);
+        public const double DefaultMass = 1.0D;
+        public const double DefaultMaxStepLevel = 0.0D;
+
+
+        private bool _disposed = false;
+
+
+        internal BlockEntity(Vector p, Look look, bool noGravity) : 
+            base(System.Guid.NewGuid(), p, look, noGravity, 
+                DefaultHitbox, 
+                DefaultMass, DefaultMaxStepLevel)
+        {
+        }
+
+        public override void Dispose()
+        {
+            // Assertions.
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            // Release resources.
+
+            // Finish.
+            base.Dispose();
+            _disposed = true;
+        }
+    }
+
+    public abstract class FixedBlockEntity : BlockEntity
+    {
+        private bool _disposed = false;
+
+
+
+        public FixedBlockEntity(Vector p) : base(p, new Look(), true)
+        {
+
+        }
+
+        private protected override void RenderSpawning(
+            EntityRenderer renderer)
+        {
+            System.Diagnostics.Debug.Assert(renderer != null);
+            
+            throw new System.NotImplementedException();
+        }
+
+        public override void Dispose()
+        {
+            // Assertions.
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            // Release resources.
+
+            // Finish.
+            base.Dispose();
+            _disposed = true;
+        }
+
+    }
+
+    /*public sealed class MovableBlockEntity : BlockEntity
+    {
+
+    }*/
+
     public sealed class ItemEntity : Entity
     {
         private static readonly Hitbox DefaultHitbox = new(0.25D, 0.25D);
-
         public const double DefaultMass = 1.0D;
-
         public const double DefaultMaxStepLevel = 0.0D;
 
 
@@ -681,7 +752,8 @@ namespace MinecraftServerEngine
 
 
         public ItemEntity(ItemStack stack, Vector p)
-            : base(System.Guid.NewGuid(), p, new Look(0.0F, 0.0F), DefaultHitbox,
+            : base(System.Guid.NewGuid(), p, new Look(0.0F, 0.0F), false,
+                  DefaultHitbox,
                   DefaultMass, DefaultMaxStepLevel) 
         {
             System.Diagnostics.Debug.Assert(stack != null);
@@ -807,9 +879,10 @@ namespace MinecraftServerEngine
         private protected LivingEntity(
             System.Guid uniqueId,
             Vector p, Look look,
+            bool noGravity,
             Hitbox hitbox,
             double m, double maxStepLevel) 
-            : base(uniqueId, p, look, hitbox, m, maxStepLevel) 
+            : base(uniqueId, p, look, noGravity, hitbox, m, maxStepLevel) 
         {
             _health = _maxHealth;
         }
@@ -905,10 +978,11 @@ namespace MinecraftServerEngine
         public Gamemode Gamemode => _gamemode;
 
 
-        protected AbstractPlayer(UserId id, Vector p, Look look, Gamemode gamemode) 
+        protected AbstractPlayer(UserId id, Vector p, Look look, Gamemode gamemode)
             : base(
-                  id.Data, 
-                  p, look, 
+                  id.Data,
+                  p, look,
+                  false,  // noGravity
                   gamemode == Gamemode.Spectator ? GetSpectatorHitbox() : GetAdventureHitbox(false), 
                   DefaultMass, DefaultMaxStepLevel) 
         {
