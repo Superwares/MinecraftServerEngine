@@ -94,3 +94,6 @@ such as with try-finally constructs, when using concurrency primitives.
 Disposable instances must be handled by 'using' statement except members of class and struct.
 If disposable objects were used as members of class and struct, they must be disposed at the current object Dispose(bool disposing) fucntion.
 
+## Notes
+### TODO
+* Buffer 의 expandData 에서 capNew == buf.cap 일시 함수가 끝나야됨.
