@@ -18,11 +18,11 @@ namespace MinecraftUtils
         [Test]
         public void Test1()
         {
-            FileInfo fileInfo = new("C:\\Users\\Peach\\Documents\\Superwares\\MinecraftServerEngine\\CraftBukkit\\target\\world1\\region\\r.-1.0.mca");
+            FileInfo fileInfo = new("C:\\Users\\welco\\Documents\\Superwares\\MinecraftServerEngine\\Testing\\r.0.0.mca");
             RegionFile file = new(fileInfo);
             Assert.IsNotNull(file);
 
-            byte[]? data = file.ReadChunk(1, 30);
+            byte[] data = file.ReadChunk(1, 30);
 
             Console.WriteLine("data:");
             Console.WriteLine(data);
