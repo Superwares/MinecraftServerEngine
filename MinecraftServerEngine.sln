@@ -24,6 +24,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestMinecraftServerApplicat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Network", "Network\Network.csproj", "{9674444A-AD40-488C-8755-1F795DB2A479}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinecraftUtils", "MinecraftUtils\MinecraftUtils.csproj", "{B01CD682-32AB-4B1E-8586-899BD2853F5A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,6 +60,10 @@ Global
 		{9674444A-AD40-488C-8755-1F795DB2A479}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9674444A-AD40-488C-8755-1F795DB2A479}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9674444A-AD40-488C-8755-1F795DB2A479}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B01CD682-32AB-4B1E-8586-899BD2853F5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B01CD682-32AB-4B1E-8586-899BD2853F5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B01CD682-32AB-4B1E-8586-899BD2853F5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B01CD682-32AB-4B1E-8586-899BD2853F5A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

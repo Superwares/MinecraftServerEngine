@@ -39,8 +39,7 @@ namespace MinecraftUtils
 
                 if ((this.c.Length & 4095L) != 0L)
                 {
-                    int padding = (int)(4096L - (this.c.Length & 4095L));
-                    for (int i = 0; i < padding; i++)
+                    for (int i = 0; i < (this.c.Length & 4095L); ++i)
                     {
                         this.c.WriteByte(0);
                     }
@@ -49,7 +48,7 @@ namespace MinecraftUtils
                 int sectorCount = (int)this.c.Length / 4096;
                 this.f = new List<bool>(new bool[sectorCount]);
 
-                for (int i = 0; i < sectorCount; i++)
+                for (int i = 0; i < sectorCount; ++i)
                 {
                     this.f[i] = true;
                 }
@@ -66,7 +65,7 @@ namespace MinecraftUtils
                         this.d[i] = value;
                         if (value != 0 && (value >> 8) + (value & 255) <= this.f.Count)
                         {
-                            for (int j = 0; j < (value & 255); j++)
+                            for (int j = 0; j < (value & 255); ++j)
                             {
                                 this.f[(value >> 8) + j] = false;
                             }
