@@ -5,14 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="91e12816-d8f9-435c-8051-38d9eeea1033" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/region/r.-1.0.mca" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/region/r.0.0.mca" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/examples/minecraft/utils/RegionFile.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../MinecraftUtils/RegionFile.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftUtils/RegionFile.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Testing/RegionFileTests.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../Testing/RegionFileTests.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -68,20 +62,6 @@
     <servers />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/examples/minecraft/utils/Main.java</url>
-          <line>18</line>
-          <option name="timeStamp" value="6" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/examples/minecraft/utils/RegionFile.java</url>
-          <line>86</line>
-          <option name="timeStamp" value="10" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
     <pin-to-top-manager>
       <pinned-members>
         <PinnedItemInfo parentTag="examples.minecraft.utils.RegionFile" memberName="d" />

@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MinecraftUtils
+namespace MinecraftPrimitives
 {
     internal class RegionFileTests
     {
@@ -22,10 +22,13 @@ namespace MinecraftUtils
             RegionFile file = new(fileInfo);
             Assert.IsNotNull(file);
 
-            byte[] data = file.ReadChunk(1, 30);
+            using (Stream s = file.ReadChunk(1, 30))
+            {
 
-            Console.WriteLine("data:");
-            Console.WriteLine(data);
+            }
+
+            //Console.WriteLine("data:");
+            //Console.WriteLine(data);
         }
    }
 }

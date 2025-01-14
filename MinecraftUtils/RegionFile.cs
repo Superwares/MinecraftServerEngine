@@ -4,9 +4,9 @@ using System.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 
-namespace MinecraftUtils
+namespace MinecraftPrimitives
 {
-    public class RegionFile
+    public sealed class RegionFile
     {
         private static readonly byte[] a = new byte[4096];
         private readonly FileInfo b;
@@ -112,7 +112,7 @@ namespace MinecraftUtils
             }
         }
 
-        public byte[] ReadChunk(int x, int z)
+        public Stream ReadChunk(int x, int z)
         {
             if (IsOutOfBounds(x, z))
             {
@@ -150,21 +150,11 @@ namespace MinecraftUtils
 
                 if (compressionType == 1)
                 {
-                    using (var gzipStream = new GZipStream(new MemoryStream(data), CompressionMode.Decompress))
-                    using (var memoryStream = new MemoryStream())
-                    {
-                        gzipStream.CopyTo(memoryStream);
-                        return memoryStream.ToArray();
-                    }
+                    return new GZipStream(new MemoryStream(data), CompressionMode.Decompress);
                 }
                 else if (compressionType == 2)
                 {
-                    using (var deflateStream = new DeflateStream(new MemoryStream(data), CompressionMode.Decompress))
-                    using (var memoryStream = new MemoryStream())
-                    {
-                        deflateStream.CopyTo(memoryStream);
-                        return memoryStream.ToArray();
-                    }
+                    return new DeflateStream(new MemoryStream(data), CompressionMode.Decompress));
                 }
                 else
                 {
