@@ -9,10 +9,6 @@ namespace MinecraftPrimitives
 
     public abstract class NBTBase
     {
-        public abstract byte TypeId
-        {
-            get;
-        }
 
         public abstract void Write(Stream s);
         
