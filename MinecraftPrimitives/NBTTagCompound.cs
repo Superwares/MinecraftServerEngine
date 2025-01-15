@@ -75,8 +75,38 @@ namespace MinecraftPrimitives
                     case NBTTagByte.TypeId:
                         value = NBTTagByte.Read(s, depth + 1);
                         break;
+                    case NBTTagShort.TypeId:
+                        value = NBTTagShort.Read(s, depth + 1);
+                        break;
+                    case NBTTagInt.TypeId:
+                        value = NBTTagInt.Read(s, depth + 1);
+                        break;
+                    case NBTTagLong.TypeId:
+                        value = NBTTagLong.Read(s, depth + 1);
+                        break;
+                    case NBTTagFloat.TypeId:
+                        value = NBTTagFloat.Read(s, depth + 1);
+                        break;
+                    case NBTTagDouble.TypeId:
+                        value = NBTTagDouble.Read(s, depth + 1);
+                        break;
+                    case NBTTagByteArray.TypeId:
+                        value = NBTTagByteArray.Read(s, depth + 1);
+                        break;
+                    case NBTTagString.TypeId:
+                        value = NBTTagString.Read(s, depth + 1);
+                        break;
+                    case NBTTagList.TypeId:
+                        value = NBTTagList.Read(s, depth + 1);
+                        break;
                     case NBTTagCompound.TypeId:
                         value = NBTTagCompound.Read(s, depth + 1);
+                        break;
+                    case NBTTagIntArray.TypeId:
+                        value = NBTTagIntArray.Read(s, depth + 1);
+                        break;
+                    case NBTTagLongArray.TypeId:
+                        value = NBTTagLongArray.Read(s, depth + 1);
                         break;
                 }
 
