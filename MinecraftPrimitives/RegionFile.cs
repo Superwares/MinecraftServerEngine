@@ -8,14 +8,24 @@ namespace MinecraftPrimitives
 {
     public sealed class RegionFile : IDisposable
     {
-        private static readonly byte[] a = new byte[4096];
-        private readonly FileInfo b;
-        private FileStream c;
-        private readonly int[] d = new int[1024];
-        private readonly int[] e = new int[1024];
-        private List<bool> f;
-        private int g;
-        private long h;
+        private static readonly byte[] EMPTY_CHUNK = new byte[4096];
+        private readonly FileInfo regionFile;
+        private FileStream fileStream;
+
+        // Location information of each chunk
+        private readonly int[] chunkLocations = new int[1024];
+
+        // Last modification time of each chunk
+        private readonly int[] chunkTimestamps = new int[1024];
+
+        // Indicates the status of sectors available for use within the file. (true: available, false: in use.)
+        private List<bool> freeSectors;
+
+        // Indicates the file size in bytes. Used to calculate the size of sectors in use.
+        private int fileSize;
+
+        // Last modification time of the file
+        private long lastModified;
 
         private static int ReadByte(FileStream s)
         {
@@ -35,75 +45,75 @@ namespace MinecraftPrimitives
 
         private static int ReadInt32(FileStream s)
         {
-            int ch1 = s.ReadByte();
-            int ch2 = s.ReadByte();
-            int ch3 = s.ReadByte();
-            int ch4 = s.ReadByte();
-            if ((ch1 | ch2 | ch3 | ch4) < 0)
+            int b0 = s.ReadByte();
+            int b1 = s.ReadByte();
+            int b2 = s.ReadByte();
+            int b3 = s.ReadByte();
+            if ((b0 | b1 | b2 | b3) < 0)
             {
                 throw new Exception("EOF");
             }
-            return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
+            return ((b0 << 24) + (b1 << 16) + (b2 << 8) + (b3 << 0));
         }
 
-        public RegionFile(FileInfo file)
+        public RegionFile(FileInfo regionFile)
         {
-            this.b = file;
-            this.g = 0;
+            this.regionFile = regionFile;
+            this.fileSize = 0;
 
             try
             {
-                if (file.Exists == true)
+                if (regionFile.Exists == true)
                 {
-                    this.h = file.LastWriteTimeUtc.Ticks;
+                    this.lastModified = regionFile.LastWriteTimeUtc.Ticks;
                 }
 
-                this.c = new FileStream(file.FullName, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+                this.fileStream = new FileStream(regionFile.FullName, FileMode.OpenOrCreate, FileAccess.ReadWrite);
 
-                if (this.c.Length < 4096L)
+                if (this.fileStream.Length < 4096L)
                 {
-                    this.c.Write(a, 0, a.Length);
-                    this.c.Write(a, 0, a.Length);
-                    this.g += 8192;
+                    this.fileStream.Write(EMPTY_CHUNK, 0, EMPTY_CHUNK.Length);
+                    this.fileStream.Write(EMPTY_CHUNK, 0, EMPTY_CHUNK.Length);
+                    this.fileSize += 8192;
                 }
 
-                if ((this.c.Length & 4095L) != 0L)
+                if ((this.fileStream.Length & 4095L) != 0L)
                 {
-                    for (int i = 0; i < (this.c.Length & 4095L); ++i)
+                    for (int i = 0; i < (this.fileStream.Length & 4095L); ++i)
                     {
-                        this.c.WriteByte(0);
+                        this.fileStream.WriteByte(0);
                     }
                 }
 
-                int sectorCount = (int)this.c.Length / 4096;
-                this.f = new List<bool>(new bool[sectorCount]);
+                int sectorCount = (int)this.fileStream.Length / 4096;
+                this.freeSectors = new List<bool>(new bool[sectorCount]);
 
                 for (int i = 0; i < sectorCount; ++i)
                 {
-                    this.f[i] = true;
+                    this.freeSectors[i] = true;
                 }
 
-                this.f[0] = false;
-                this.f[1] = false;
-                this.c.Seek(0, SeekOrigin.Begin);
+                this.freeSectors[0] = false;
+                this.freeSectors[1] = false;
+                this.fileStream.Seek(0, SeekOrigin.Begin);
 
                 for (int i = 0; i < 1024; ++i)
                 {
-                    int value = ReadInt32(this.c);
-                    this.d[i] = value;
-                    if (value != 0 && (value >> 8) + (value & 255) <= this.f.Count)
+                    int value = ReadInt32(this.fileStream);
+                    this.chunkLocations[i] = value;
+                    if (value != 0 && (value >> 8) + (value & 255) <= this.freeSectors.Count)
                     {
                         for (int j = 0; j < (value & 255); ++j)
                         {
-                            this.f[(value >> 8) + j] = false;
+                            this.freeSectors[(value >> 8) + j] = false;
                         }
                     }
                 }
 
                 for (int i = 0; i < 1024; ++i)
                 {
-                    int value = ReadInt32(this.c);
-                    this.e[i] = value;
+                    int value = ReadInt32(this.fileStream);
+                    this.chunkTimestamps[i] = value;
                 }
             }
             catch (IOException ex)
@@ -130,23 +140,23 @@ namespace MinecraftPrimitives
                 int sectorStart = offset >> 8;
                 int sectorCount = offset & 255;
 
-                if (sectorStart + sectorCount > this.f.Count)
+                if (sectorStart + sectorCount > this.freeSectors.Count)
                 {
                     return null;
                 }
 
-                this.c.Seek(sectorStart * 4096, SeekOrigin.Begin);
+                this.fileStream.Seek(sectorStart * 4096, SeekOrigin.Begin);
 
-                int length = ReadInt32(this.c);
+                int length = ReadInt32(this.fileStream);
                 if (length > 4096 * sectorCount || length <= 0)
                 {
                     return null;
                 }
 
-                int compressionType = ReadByte(this.c);
+                int compressionType = ReadByte(this.fileStream);
                 byte[] data = new byte[length - 1];
 
-                ReadBytes(this.c, data);
+                ReadBytes(this.fileStream, data);
 
                 if (compressionType == 1)
                 {
@@ -183,6 +193,7 @@ namespace MinecraftPrimitives
             }
             catch (IOException ex)
             {
+                // TODO: Print warning message and returns null
                 throw ex;
             }
         }
@@ -255,14 +266,14 @@ namespace MinecraftPrimitives
 
         private int GetOffset(int x, int z)
         {
-            return this.d[x + (z * 32)];
+            return this.chunkLocations[x + (z * 32)];
         }
 
         private void SetOffset(int x, int z, int offset)
         {
-            this.d[x + z * 32] = offset;
-            this.c.Seek((x + z * 32) * 4, SeekOrigin.Begin);
-            using (BinaryWriter writer = new BinaryWriter(this.c, System.Text.Encoding.Default, leaveOpen: true))
+            this.chunkLocations[x + z * 32] = offset;
+            this.fileStream.Seek((x + z * 32) * 4, SeekOrigin.Begin);
+            using (BinaryWriter writer = new BinaryWriter(this.fileStream, System.Text.Encoding.Default, leaveOpen: true))
             {
                 writer.Write(offset);
             }
@@ -276,7 +287,7 @@ namespace MinecraftPrimitives
 
         private void Dispose(bool disposing)
         {
-            this.c?.Close();
+            this.fileStream?.Close();
         }
 
         public void Dispose() => Close();
