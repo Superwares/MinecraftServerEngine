@@ -18,17 +18,16 @@ namespace MinecraftPrimitives
         [Test]
         public void Test1()
         {
-            FileInfo fileInfo = new("C:\\Users\\welco\\Documents\\Superwares\\MinecraftServerEngine\\Testing\\r.0.0.mca");
-            RegionFile file = new(fileInfo);
-            Assert.IsNotNull(file);
+            FileInfo fileInfo = new("C:\\Users\\Peach\\Documents\\Superwares\\MinecraftServerEngine\\Testing\\r.0.0.mca");
 
-            using (Stream s = file.ReadChunk(1, 30))
+            NBTTagCompound tag = NBTTagCompoundLoader.Load(fileInfo, 1, 1);
+
+            if (tag != null)
             {
-
+                Console.WriteLine(tag);
             }
 
-            //Console.WriteLine("data:");
-            //Console.WriteLine(data);
+
         }
-   }
+    }
 }

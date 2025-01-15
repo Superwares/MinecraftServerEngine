@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace MinecraftPrimitives
 {
-    public sealed class RegionFile
+    public sealed class RegionFile : IDisposable
     {
         private static readonly byte[] a = new byte[4096];
         private readonly FileInfo b;
@@ -17,15 +17,15 @@ namespace MinecraftPrimitives
         private int g;
         private long h;
 
-        private static byte ReadByte(FileStream s)
+        private static int ReadByte(FileStream s)
         {
-            int ch = s.ReadByte();
-            if (ch < 0)
+            int value = s.ReadByte();
+            if (value < 0)
             {
                 throw new Exception("EOF");
             }
 
-            return (byte)(ch);
+            return value;
         }
 
         private static void ReadBytes(FileStream s, byte[] bytes)
@@ -143,18 +143,37 @@ namespace MinecraftPrimitives
                     return null;
                 }
 
-                byte compressionType = ReadByte(this.c);
+                int compressionType = ReadByte(this.c);
                 byte[] data = new byte[length - 1];
 
                 ReadBytes(this.c, data);
 
                 if (compressionType == 1)
                 {
-                    return new GZipStream(new MemoryStream(data), CompressionMode.Decompress);
+                    GZipStream _s = new GZipStream(new MemoryStream(data), CompressionMode.Decompress);
+                    MemoryStream s = new MemoryStream();
+                    _s.CopyTo(s);
+                    return s;
                 }
                 else if (compressionType == 2)
                 {
-                    return new DeflateStream(new MemoryStream(data), CompressionMode.Decompress));
+                    using (var compressedDataStream = new MemoryStream(data))
+                    {
+                        // ZLIB 스트림을 처리하기 위해 DeflateStream을 사용할 때 ZLIB 헤더를 처리해야 합니다.
+                        // ZLIB 헤더(2 바이트)를 스킵합니다.
+                        compressedDataStream.ReadByte(); // 첫 번째 바이트
+                        compressedDataStream.ReadByte(); // 두 번째 바이트
+
+                        using (var deflateStream = new DeflateStream(compressedDataStream, CompressionMode.Decompress))
+                        {
+                            var outputStream = new MemoryStream();
+                            deflateStream.CopyTo(outputStream);
+                            outputStream.Seek(0, SeekOrigin.Begin); // 스트림의 시작으로 되돌립니다.
+                            return outputStream;
+                        }
+                    }
+
+
                 }
                 else
                 {
@@ -251,8 +270,16 @@ namespace MinecraftPrimitives
 
         public void Close()
         {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposing)
+        {
             this.c?.Close();
         }
+
+        public void Dispose() => Close();
 
         private class ChunkBuffer : MemoryStream
         {

@@ -6,8 +6,19 @@
   <component name="ChangeListManager">
     <list default="true" id="91e12816-d8f9-435c-8051-38d9eeea1033" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../MinecraftUtils/RegionFile.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftUtils/RegionFile.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/examples/minecraft/utils/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/examples/minecraft/utils/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTCompressedStreamTools.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTCompressedStreamTools.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagByteArray.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagByteArray.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagCompound.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagCompound.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagCompoundLoader.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagCompoundLoader.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagEnd.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagEnd.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagIntArray.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagIntArray.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagList.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagList.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagLongArray.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagLongArray.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/RegionFile.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/RegionFile.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Testing/RegionFileTests.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../Testing/RegionFileTests.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Testing/Testing.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/../../Testing/Testing.csproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Testing/r.0.0.mca" beforeDir="false" afterPath="$PROJECT_DIR$/../../Testing/r.0.0.mca" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -24,9 +35,9 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 7
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7
+}</component>
   <component name="ProjectId" id="2rcstfUbPp6SpiR0VSOZOPOL2KF" />
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
@@ -40,9 +51,10 @@
     "ASKED_ADD_EXTERNAL_FILES": "true",
     "Application.Main.executor": "Debug",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "main",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/welco/Documents/Superwares/MinecraftServerEngine/Examples/RegionFileLoader/region"
+    "last_opened_file_path": "C:/Users/Peach/Documents/Superwares/MinecraftServerEngine/Examples/RegionFileLoader"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -62,6 +74,25 @@
     <servers />
   </component>
   <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/examples/minecraft/utils/Main.java</url>
+          <line>27</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/examples/minecraft/utils/RegionFile.java</url>
+          <line>115</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/examples/minecraft/utils/RegionFile.java</url>
+          <line>119</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
     <pin-to-top-manager>
       <pinned-members>
         <PinnedItemInfo parentTag="examples.minecraft.utils.RegionFile" memberName="d" />
@@ -69,7 +100,8 @@
     </pin-to-top-manager>
     <watches-manager>
       <configuration name="Application">
-        <watch expression="((RandomAccessFile)((RegionFile)this).c).closeLock" custom="java.io.RandomAccessFile,examples.minecraft.utils.RegionFile" />
+        <watch expression="((RandomAccessFile)((RegionFile)this).c).closeLock" language="JAVA" custom="java.io.RandomAccessFile,examples.minecraft.utils.RegionFile" />
+        <watch expression="stream" />
       </configuration>
     </watches-manager>
   </component>

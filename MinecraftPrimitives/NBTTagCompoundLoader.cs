@@ -11,18 +11,16 @@ namespace MinecraftPrimitives
     {
         public static NBTTagCompound Load(FileInfo fileInfo, int chunkX, int chunkY)
         {
-            RegionFile file = new(fileInfo);
+            using RegionFile file = new(fileInfo);
 
-            using (Stream s = file.ReadChunk(chunkX & 31, chunkY & 31))
+            using Stream s = file.ReadChunk(chunkX & 31, chunkY & 31);
+
+            if (s == null)
             {
-                if (s == null)
-                {
-                    return null;
-                }
+                return null;
             }
 
-
-            throw new NotImplementedException();
+            return NBTCompressedStreamTools.Load(s);
         }
     }
 }

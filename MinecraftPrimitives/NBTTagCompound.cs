@@ -72,6 +72,9 @@ namespace MinecraftPrimitives
                 {
                     default:
                         throw new Exception("Unknown type Id");
+                    case NBTTagEnd.TypeId:
+                        value = NBTTagEnd.Read(s, depth + 1);
+                        break;
                     case NBTTagByte.TypeId:
                         value = NBTTagByte.Read(s, depth + 1);
                         break;

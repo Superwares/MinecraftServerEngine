@@ -8,11 +8,15 @@ namespace MinecraftPrimitives
 {
     public sealed class NBTTagEnd : NBTBase
     {
-        public const int TypeId = 1;
+        public const int TypeId = 0;
 
         public static NBTTagEnd Read(Stream s, int depth)
         {
-            
+            return new NBTTagEnd();
+        }
+
+        private NBTTagEnd()
+        {
         }
 
         public override void Write(Stream s)

@@ -10,7 +10,7 @@ namespace MinecraftPrimitives
     {
         public const int TypeId = 7;
 
-        private readonly byte[] value;
+        private readonly byte[] arr;
 
         public static NBTTagByteArray Read(Stream s, int depth)
         {
@@ -24,15 +24,15 @@ namespace MinecraftPrimitives
                 | ((b2 & 0xff) << 8)
                 | ((b3 & 0xff) << 0);
 
-            byte[] value = new byte[length];
-            s.Read(value, 0, length);
+            byte[] arr = new byte[length];
+            s.Read(arr, 0, length);
 
-            return new NBTTagByteArray(value);
+            return new NBTTagByteArray(arr);
         }
 
-        private NBTTagByteArray(byte[] value)
+        private NBTTagByteArray(byte[] arr)
         {
-            this.value = value;
+            this.arr = arr;
         }
 
         public override void Write(Stream s)
