@@ -10,118 +10,113 @@ namespace MinecraftPrimitives
     {
         public const int TypeId = 9;
 
-        public static NBTTagList<NBTTagEnd> ReadEndArray(Stream s, int depth)
-        {
-            System.Diagnostics.Debug.Assert(s != null);
-            System.Diagnostics.Debug.Assert(depth >= 0);
-            if (depth > 512)
-            {
-                throw new Exception("Tried to read NBT tag with too high complexity, depth > 512");
-            }
+        //public static NBTTagList<NBTTagEnd> ReadEndArray(Stream s, int depth)
+        //{
+        //    System.Diagnostics.Debug.Assert(s != null);
+        //    System.Diagnostics.Debug.Assert(depth >= 0);
+        //    if (depth > 512)
+        //    {
+        //        throw new Exception("Tried to read NBT tag with too high complexity, depth > 512");
+        //    }
 
-            int length = DataInputStreamUtils.ReadInt(s);
+        //    int length = DataInputStreamUtils.ReadInt(s);
 
-            if (length > 0)
-            {
-                throw new Exception("Missing type on ListTag");
-            }
+        //    if (length > 0)
+        //    {
+        //        throw new Exception("Missing type on ListTag");
+        //    }
 
-            NBTTagEnd[] list = new NBTTagEnd[length];
+        //    NBTTagEnd[] list = new NBTTagEnd[length];
 
-            for (int i = 0; i < length; i++)
-            {
-                list[i] = NBTTagEnd.Read(s, depth + 1);
-            }
+        //    for (int i = 0; i < length; i++)
+        //    {
+        //        list[i] = NBTTagEnd.Read(s, depth + 1);
+        //    }
 
-            return new NBTTagList<NBTTagEnd>(list);
-        }
+        //    return new NBTTagList<NBTTagEnd>(list);
+        //}
 
-        public static NBTTagList<NBTTagEnd> ReadByteArray(Stream s, int depth)
-        {
-            System.Diagnostics.Debug.Assert(s != null);
-            System.Diagnostics.Debug.Assert(depth >= 0);
-            if (depth > 512)
-            {
-                throw new Exception("Tried to read NBT tag with too high complexity, depth > 512");
-            }
+        //public static NBTTagList<NBTTagEnd> ReadByteArray(Stream s, int depth)
+        //{
+        //    System.Diagnostics.Debug.Assert(s != null);
+        //    System.Diagnostics.Debug.Assert(depth >= 0);
+        //    if (depth > 512)
+        //    {
+        //        throw new Exception("Tried to read NBT tag with too high complexity, depth > 512");
+        //    }
 
-            int typeId = DataInputStreamUtils.ReadByte(s);
-            int length = DataInputStreamUtils.ReadInt(s);
+        //    int id = DataInputStreamUtils.ReadByte(s);
+        //    int length = DataInputStreamUtils.ReadInt(s);
 
-            if (typeId == 0 && length > 0)
-            {
-                throw new Exception("Missing type on ListTag");
-            }
+        //    if (id == 0 && length > 0)
+        //    {
+        //        throw new Exception("Missing type on ListTag");
+        //    }
 
-            NBTBase[] list = new NBTBase[length];
+        //    NBTBase[] list = new NBTBase[length];
 
-            for (int i = 0; i < length; i++)
-            {
-                switch (typeId)
-                {
-                    default:
-                        throw new Exception("Unknown type Id");
-                    case NBTTagEnd.TypeId:
-                        list[i] = NBTTagEnd.Read(s, depth + 1);
-                        break;
-                    case NBTTagByte.TypeId:
-                        list[i] = NBTTagByte.Read(s, depth + 1);
-                        break;
-                    case NBTTagShort.TypeId:
-                        list[i] = NBTTagShort.Read(s, depth + 1);
-                        break;
-                    case NBTTagInt.TypeId:
-                        list[i] = NBTTagInt.Read(s, depth + 1);
-                        break;
-                    case NBTTagLong.TypeId:
-                        list[i] = NBTTagLong.Read(s, depth + 1);
-                        break;
-                    case NBTTagFloat.TypeId:
-                        list[i] = NBTTagFloat.Read(s, depth + 1);
-                        break;
-                    case NBTTagDouble.TypeId:
-                        list[i] = NBTTagDouble.Read(s, depth + 1);
-                        break;
-                    case NBTTagByteArray.TypeId:
-                        list[i] = NBTTagByteArray.Read(s, depth + 1);
-                        break;
-                    case NBTTagString.TypeId:
-                        list[i] = NBTTagString.Read(s, depth + 1);
-                        break;
-                    case NBTTagList.TypeId:
-                        list[i] = NBTTagList.Read(s, depth + 1);
-                        break;
-                    case NBTTagCompound.TypeId:
-                        list[i] = NBTTagCompound.Read(s, depth + 1);
-                        break;
-                    case NBTTagIntArray.TypeId:
-                        list[i] = NBTTagIntArray.Read(s, depth + 1);
-                        break;
-                    case NBTTagLongArray.TypeId:
-                        list[i] = NBTTagLongArray.Read(s, depth + 1);
-                        break;
-                }
-            }
+        //    for (int i = 0; i < length; i++)
+        //    {
+        //        switch (id)
+        //        {
+        //            default:
+        //                throw new Exception("Unknown type Id");
+        //            case NBTTagEnd.TypeId:
+        //                list[i] = NBTTagEnd.Read(s, depth + 1);
+        //                break;
+        //            case NBTTagByte.TypeId:
+        //                list[i] = NBTTagByte.Read(s, depth + 1);
+        //                break;
+        //            case NBTTagShort.TypeId:
+        //                list[i] = NBTTagShort.Read(s, depth + 1);
+        //                break;
+        //            case NBTTagInt.TypeId:
+        //                list[i] = NBTTagInt.Read(s, depth + 1);
+        //                break;
+        //            case NBTTagLong.TypeId:
+        //                list[i] = NBTTagLong.Read(s, depth + 1);
+        //                break;
+        //            case NBTTagFloat.TypeId:
+        //                list[i] = NBTTagFloat.Read(s, depth + 1);
+        //                break;
+        //            case NBTTagDouble.TypeId:
+        //                list[i] = NBTTagDouble.Read(s, depth + 1);
+        //                break;
+        //            case NBTTagByteArray.TypeId:
+        //                list[i] = NBTTagByteArray.Read(s, depth + 1);
+        //                break;
+        //            case NBTTagString.TypeId:
+        //                list[i] = NBTTagString.Read(s, depth + 1);
+        //                break;
+        //            case NBTTagList.TypeId:
+        //                list[i] = NBTTagList.Read(s, depth + 1);
+        //                break;
+        //            case NBTTagCompound.TypeId:
+        //                list[i] = NBTTagCompound.Read(s, depth + 1);
+        //                break;
+        //            case NBTTagIntArray.TypeId:
+        //                list[i] = NBTTagIntArray.Read(s, depth + 1);
+        //                break;
+        //            case NBTTagLongArray.TypeId:
+        //                list[i] = NBTTagLongArray.Read(s, depth + 1);
+        //                break;
+        //        }
+        //    }
 
-            return new NBTTagList(typeId, list);
-        }
+        //    return new NBTTagList(id, list);
+        //}
 
     }
 
 
-    public sealed class NBTTagList<T> : NBTTagListBase
-        where T : NBTBase
+    public sealed class NBTTagList<T> : NBTTagListBase, IReadableNBTTag<NBTTagList<T>>
+        where T : NBTBase, IReadableNBTTag<T>
     {
 
         private readonly T[] value;
 
         public static NBTTagList<T> Read(Stream s, int depth)
         {
-            if (
-            typeof(T).Name == "NBTTagEnd")
-            {
-
-            }
             System.Diagnostics.Debug.Assert(s != null);
             System.Diagnostics.Debug.Assert(depth >= 0);
             if (depth > 512)
@@ -131,19 +126,14 @@ namespace MinecraftPrimitives
 
             int length = DataInputStreamUtils.ReadInt(s);
 
-            if (length > 0)
-            {
-                throw new Exception("Missing type on ListTag");
-            }
-
-            T[] list = new T[length];
+            T[] value = new T[length];
 
             for (int i = 0; i < length; i++)
             {
-                list[i] = NBTTagEnd.Read(s, depth + 1);
+                value[i] = T.Read(s, depth + 1);
             }
 
-            return new NBTTagList<T>(list);
+            return new NBTTagList<T>(value);
         }
 
 
@@ -157,4 +147,5 @@ namespace MinecraftPrimitives
             throw new NotImplementedException();
         }
     }
+
 }
