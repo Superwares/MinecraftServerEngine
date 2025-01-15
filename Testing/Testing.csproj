@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\Containers\Containers.csproj" />
+    <ProjectReference Include="..\MinecraftPrimitives\MinecraftPrimitives.csproj" />
     <ProjectReference Include="..\MinecraftServerEngine\MinecraftServerEngine.csproj" />
     <ProjectReference Include="..\MinecraftUtils\MinecraftPrimitives.csproj" />
     <ProjectReference Include="..\Sync\Sync.csproj" />
