@@ -75,7 +75,7 @@ namespace MinecraftPrimitives
                         switch(_typeId)
                         {
                             case NBTTagEnd.TypeId:
-                                value = NBTTagList<NBTTagEnd>.ReadEndArray(s, depth + 1);
+                                value = NBTTagList<NBTTagEnd>.Read(s, depth + 1);
                                 break;
                             case NBTTagByte.TypeId:
                                 value = NBTTagByte.Read(s, depth + 1);
