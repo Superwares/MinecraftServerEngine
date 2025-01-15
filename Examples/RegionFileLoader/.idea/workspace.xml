@@ -5,7 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="91e12816-d8f9-435c-8051-38d9eeea1033" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../../CraftBukkit/work/decompile-cf6b1333/net/minecraft/server/RegionFile.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CraftBukkit/src/main/java/net/minecraft/server/RegionFile.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagByte.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagByte.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagCompound.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagCompound.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagInt.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagInt.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagShort.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagShort.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/RegionFile.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/RegionFile.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

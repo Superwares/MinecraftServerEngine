@@ -22,19 +22,10 @@ namespace MinecraftPrimitives
                 throw new Exception("Tried to read NBT tag with too high complexity, depth > 512");
             }
 
-            int type = (int)s.ReadByte();
+            int typeId = DataInputStreamUtils.ReadByte(s);
+            int length = DataInputStreamUtils.ReadInt(s);
 
-            int b0 = s.ReadByte();
-            int b1 = s.ReadByte();
-            int b2 = s.ReadByte();
-            int b3 = s.ReadByte();
-            int length =
-                ((b0 & 0xff) << 24)
-                | ((b1 & 0xff) << 16)
-                | ((b2 & 0xff) << 8)
-                | ((b3 & 0xff) << 0);
-
-            if (type == 0 && length > 0)
+            if (typeId == 0 && length > 0)
             {
                 throw new Exception("Missing type on ListTag");
             }
@@ -43,7 +34,7 @@ namespace MinecraftPrimitives
 
             for (int i = 0; i < length; i++)
             {
-                switch (type)
+                switch (typeId)
                 {
                     default:
                         throw new Exception("Unknown type Id");
@@ -89,12 +80,12 @@ namespace MinecraftPrimitives
                 }
             }
 
-            return new NBTTagList(type, list);
+            return new NBTTagList(typeId, list);
         }
 
         private NBTTagList(int type, NBTBase[] value)
         {
-            this.Type = type;
+            Type = type;
             this.value = value;
         }
 

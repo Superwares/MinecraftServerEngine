@@ -14,23 +14,7 @@ namespace MinecraftPrimitives
 
         public static NBTTagLong Read(Stream s, int depth)
         {
-            int b0 = s.ReadByte();
-            int b1 = s.ReadByte();
-            int b2 = s.ReadByte();
-            int b3 = s.ReadByte();
-            int b4 = s.ReadByte();
-            int b5 = s.ReadByte();
-            int b6 = s.ReadByte();
-            int b7 = s.ReadByte();
-            long value =
-                ((long)(b0 & 0xff) << 56)
-                | ((long)(b1 & 0xff) << 48)
-                | ((long)(b2 & 0xff) << 40)
-                | ((long)(b3 & 0xff) << 32)
-                | ((long)(b4 & 0xff) << 24)
-                | ((long)(b5 & 0xff) << 16)
-                | ((long)(b6 & 0xff) << 8)
-                | ((long)(b7 & 0xff) << 0);
+            long value = DataInputStreamUtils.ReadLong(s);
             return new NBTTagLong(value);
         }
 

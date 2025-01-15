@@ -14,7 +14,7 @@ namespace MinecraftPrimitives
 
         public static NBTTagByte Read(Stream s, int depth)
         {
-            int value = s.ReadByte();
+            int value = DataInputStreamUtils.ReadByte(s);
             return new NBTTagByte(value);
         }
 

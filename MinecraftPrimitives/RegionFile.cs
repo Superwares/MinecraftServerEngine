@@ -27,93 +27,68 @@ namespace MinecraftPrimitives
         // Last modification time of the file
         private long lastModified;
 
-        private static int ReadByte(FileStream s)
-        {
-            int value = s.ReadByte();
-            if (value < 0)
-            {
-                throw new Exception("EOF");
-            }
-
-            return value;
-        }
-
-        private static void ReadBytes(FileStream s, byte[] bytes)
-        {
-            s.Read(bytes, 0, bytes.Length);
-        }
-
-        private static int ReadInt32(FileStream s)
-        {
-            int b0 = s.ReadByte();
-            int b1 = s.ReadByte();
-            int b2 = s.ReadByte();
-            int b3 = s.ReadByte();
-            if ((b0 | b1 | b2 | b3) < 0)
-            {
-                throw new Exception("EOF");
-            }
-            return ((b0 << 24) + (b1 << 16) + (b2 << 8) + (b3 << 0));
-        }
-
         public RegionFile(FileInfo regionFile)
         {
             this.regionFile = regionFile;
-            this.fileSize = 0;
+            fileSize = 0;
 
             try
             {
                 if (regionFile.Exists == true)
                 {
-                    this.lastModified = regionFile.LastWriteTimeUtc.Ticks;
+                    lastModified = regionFile.LastWriteTimeUtc.Ticks;
                 }
 
-                this.fileStream = new FileStream(regionFile.FullName, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+                fileStream = new FileStream(
+                    regionFile.FullName,
+                    FileMode.OpenOrCreate,
+                    FileAccess.ReadWrite
+                    );
 
-                if (this.fileStream.Length < 4096L)
+                if (fileStream.Length < 4096L)
                 {
-                    this.fileStream.Write(EMPTY_CHUNK, 0, EMPTY_CHUNK.Length);
-                    this.fileStream.Write(EMPTY_CHUNK, 0, EMPTY_CHUNK.Length);
-                    this.fileSize += 8192;
+                    fileStream.Write(EMPTY_CHUNK, 0, EMPTY_CHUNK.Length);
+                    fileStream.Write(EMPTY_CHUNK, 0, EMPTY_CHUNK.Length);
+                    fileSize += 8192;
                 }
 
-                if ((this.fileStream.Length & 4095L) != 0L)
+                if ((fileStream.Length & 4095L) != 0L)
                 {
-                    for (int i = 0; i < (this.fileStream.Length & 4095L); ++i)
+                    for (int i = 0; i < (fileStream.Length & 4095L); ++i)
                     {
-                        this.fileStream.WriteByte(0);
+                        fileStream.WriteByte(0);
                     }
                 }
 
-                int sectorCount = (int)this.fileStream.Length / 4096;
-                this.freeSectors = new List<bool>(new bool[sectorCount]);
+                int sectorCount = (int)fileStream.Length / 4096;
+                freeSectors = new List<bool>(new bool[sectorCount]);
 
                 for (int i = 0; i < sectorCount; ++i)
                 {
-                    this.freeSectors[i] = true;
+                    freeSectors[i] = true;
                 }
 
-                this.freeSectors[0] = false;
-                this.freeSectors[1] = false;
-                this.fileStream.Seek(0, SeekOrigin.Begin);
+                freeSectors[0] = false;
+                freeSectors[1] = false;
+                fileStream.Seek(0, SeekOrigin.Begin);
 
                 for (int i = 0; i < 1024; ++i)
                 {
-                    int value = ReadInt32(this.fileStream);
-                    this.chunkLocations[i] = value;
-                    if (value != 0 && (value >> 8) + (value & 255) <= this.freeSectors.Count)
+                    int value = DataInputStreamUtils.ReadInt(fileStream);
+                    chunkLocations[i] = value;
+                    if (value != 0 && (value >> 8) + (value & 255) <= freeSectors.Count)
                     {
                         for (int j = 0; j < (value & 255); ++j)
                         {
-                            this.freeSectors[(value >> 8) + j] = false;
+                            freeSectors[(value >> 8) + j] = false;
                         }
                     }
                 }
 
                 for (int i = 0; i < 1024; ++i)
                 {
-                    int value = ReadInt32(this.fileStream);
-                    this.chunkTimestamps[i] = value;
+                    int value = DataInputStreamUtils.ReadInt(fileStream);
+                    chunkTimestamps[i] = value;
                 }
             }
             catch (IOException ex)
@@ -140,23 +115,23 @@ namespace MinecraftPrimitives
                 int sectorStart = offset >> 8;
                 int sectorCount = offset & 255;
 
-                if (sectorStart + sectorCount > this.freeSectors.Count)
+                if (sectorStart + sectorCount > freeSectors.Count)
                 {
                     return null;
                 }
 
-                this.fileStream.Seek(sectorStart * 4096, SeekOrigin.Begin);
+                fileStream.Seek(sectorStart * 4096, SeekOrigin.Begin);
 
-                int length = ReadInt32(this.fileStream);
+                int length = DataInputStreamUtils.ReadInt(fileStream);
                 if (length > 4096 * sectorCount || length <= 0)
                 {
                     return null;
                 }
 
-                int compressionType = ReadByte(this.fileStream);
+                int compressionType = DataInputStreamUtils.ReadByte(fileStream);
                 byte[] data = new byte[length - 1];
 
-                ReadBytes(this.fileStream, data);
+                DataInputStreamUtils.Read(fileStream, data);
 
                 if (compressionType == 1)
                 {
@@ -198,67 +173,6 @@ namespace MinecraftPrimitives
             }
         }
 
-
-        //public DataInputStream ReadChunk(int x, int z)
-        //{
-        //    if (IsOutOfBounds(x, z))
-        //    {
-        //        return null;
-        //    }
-
-        //    try
-        //    {
-        //        int offset = GetOffset(x, z);
-        //        if (offset == 0)
-        //        {
-        //            return null;
-        //        }
-
-        //        int sectorStart = offset >> 8;
-        //        int sectorCount = offset & 255;
-
-        //        if (sectorStart + sectorCount > this.f.Count)
-        //        {
-        //            return null;
-        //        }
-
-        //        this.c.Seek(sectorStart * 4096, SeekOrigin.Begin);
-        //        using (BinaryReader reader = new BinaryReader(this.c, System.Text.Encoding.Default, leaveOpen: true))
-        //        {
-        //            int length = reader.ReadInt32();
-        //            if (length > 4096 * sectorCount || length <= 0)
-        //            {
-        //                return null;
-        //            }
-
-        //            byte compressionType = reader.ReadByte();
-        //            byte[] data = reader.ReadBytes(length - 1);
-
-        //            if (compressionType == 1)
-        //            {
-        //                return new DataInputStream(new GZipStream(new MemoryStream(data), CompressionMode.Decompress));
-        //            }
-        //            else if (compressionType == 2)
-        //            {
-        //                return new DataInputStream(new DeflateStream(new MemoryStream(data), CompressionMode.Decompress));
-        //            }
-        //            else
-        //            {
-        //                return null;
-        //            }
-        //        }
-        //    }
-        //    catch (IOException)
-        //    {
-        //        return null;
-        //    }
-        //}
-
-        //public DataOutputStream WriteChunk(int x, int z)
-        //{
-        //    return IsOutOfBounds(x, z) ? null : new DataOutputStream(new DeflateStream(new ChunkBuffer(x, z), CompressionMode.Compress));
-        //}
-
         private bool IsOutOfBounds(int x, int z)
         {
             return x < 0 || x >= 32 || z < 0 || z >= 32;
@@ -266,52 +180,25 @@ namespace MinecraftPrimitives
 
         private int GetOffset(int x, int z)
         {
-            return this.chunkLocations[x + (z * 32)];
-        }
-
-        private void SetOffset(int x, int z, int offset)
-        {
-            this.chunkLocations[x + z * 32] = offset;
-            this.fileStream.Seek((x + z * 32) * 4, SeekOrigin.Begin);
-            using (BinaryWriter writer = new BinaryWriter(this.fileStream, System.Text.Encoding.Default, leaveOpen: true))
-            {
-                writer.Write(offset);
-            }
+            return chunkLocations[x + (z * 32)];
         }
 
         public void Close()
+        {
+            fileStream?.Close();
+        }
+
+        private void Dispose(bool disposing)
+        {
+            Close();
+        }
+
+        public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
-        private void Dispose(bool disposing)
-        {
-            this.fileStream?.Close();
-        }
-
-        public void Dispose() => Close();
-
-        private class ChunkBuffer : MemoryStream
-        {
-            private readonly int x;
-            private readonly int z;
-
-            public ChunkBuffer(int x, int z)
-            {
-                this.x = x;
-                this.z = z;
-            }
-
-            protected override void Dispose(bool disposing)
-            {
-                if (disposing)
-                {
-                    // Write chunk data here
-                }
-                base.Dispose(disposing);
-            }
-        }
     }
 }
 

@@ -14,25 +14,7 @@ namespace MinecraftPrimitives
 
         public static NBTTagFloat Read(Stream s, int depth)
         {
-            int b0 = s.ReadByte();
-            int b1 = s.ReadByte();
-            int b2 = s.ReadByte();
-            int b3 = s.ReadByte();
-
-            /**
-             * Reads four input bytes and returns a float value. 
-             * It does this by first constructing an int value 
-             * in exactly the manner of the readInt method, 
-             * then converting this int value to a float in exactly 
-             * the manner of the method Float. intBitsToFloat. 
-             * This method is suitable for reading bytes written by 
-             * the writeFloat method of interface DataOutput.
-             * 
-             * Returns: the float value read.
-             */
-            float value = BitConverter.ToSingle(new byte[] {
-                (byte)b0, (byte)b1, (byte)b2, (byte)b3,
-            }, 0);
+            float value = DataInputStreamUtils.ReadFloat(s);
             return new NBTTagFloat(value);
         }
 
