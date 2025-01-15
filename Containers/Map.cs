@@ -3,7 +3,7 @@ using Sync;
 
 namespace Containers
 {
-
+    // TODO: Implement hash table logic to tree structure.
     public class Map<K, T> : System.IDisposable 
         where K : notnull
     {

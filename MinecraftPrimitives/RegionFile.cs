@@ -114,7 +114,7 @@ namespace MinecraftPrimitives
 
         public Stream ReadChunk(int x, int z)
         {
-            if (IsOutOfBounds(x, z))
+            if (IsOutOfBounds(x, z) == true)
             {
                 return null;
             }
@@ -150,8 +150,8 @@ namespace MinecraftPrimitives
 
                 if (compressionType == 1)
                 {
-                    GZipStream _s = new GZipStream(new MemoryStream(data), CompressionMode.Decompress);
-                    MemoryStream s = new MemoryStream();
+                    GZipStream _s = new(new MemoryStream(data), CompressionMode.Decompress);
+                    MemoryStream s = new();
                     _s.CopyTo(s);
                     return s;
                 }

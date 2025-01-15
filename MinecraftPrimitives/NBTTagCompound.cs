@@ -18,28 +18,28 @@ namespace MinecraftPrimitives
         {
             var reader = new BinaryReader(s);
 
-            // 1. 읽을 문자열의 길이를 나타내는 2바이트를 읽음 (Big-Endian)
+            // 1. Read 2 bytes indicating the length of the string to be read (Big-Endian)
             int utfLength = reader.ReadByte() << 8 | reader.ReadByte();
 
-            // 2. 문자열을 담을 StringBuilder 초기화
+            // 2. Initialize StringBuilder to hold the string
             StringBuilder result = new StringBuilder(utfLength);
 
-            // 3. UTF-8로 디코딩
+            // 3. Decode as UTF-8
             int bytesRead = 0;
             while (bytesRead < utfLength)
             {
-                // 첫 번째 바이트 읽기
+                // Read the first byte
                 byte a = reader.ReadByte();
                 bytesRead++;
 
                 if ((a & 0x80) == 0)
                 {
-                    // 1바이트 문자 (0xxxxxxx)
+                    // 1-byte character (0xxxxxxx)
                     result.Append((char)a);
                 }
                 else if ((a & 0xE0) == 0xC0)
                 {
-                    // 2바이트 문자 (110xxxxx 10xxxxxx)
+                    // 2-byte character (110xxxxx 10xxxxxx)
                     byte b = reader.ReadByte();
                     bytesRead++;
 
@@ -51,7 +51,7 @@ namespace MinecraftPrimitives
                 }
                 else if ((a & 0xF0) == 0xE0)
                 {
-                    // 3바이트 문자 (1110xxxx 10xxxxxx 10xxxxxx)
+                    // 3-byte character (1110xxxx 10xxxxxx 10xxxxxx)
                     byte b = reader.ReadByte();
                     byte c = reader.ReadByte();
                     bytesRead += 2;
@@ -64,13 +64,12 @@ namespace MinecraftPrimitives
                 }
                 else
                 {
-                    // 잘못된 바이트
+                    // Invalid byte
                     throw new FormatException("Invalid UTF-8 sequence");
                 }
             }
 
             return result.ToString();
-
 
         }
 
@@ -86,7 +85,7 @@ namespace MinecraftPrimitives
 
             Table<string, NBTBase> data = new Table<string, NBTBase>();
 
-            int id = -1;
+            int id;
 
             while (true)
             {
