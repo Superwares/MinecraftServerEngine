@@ -26,12 +26,12 @@ namespace MinecraftPrimitives
 
             Table<string, NBTBase> data = new();
 
-            int id;
+            int typeId;
 
             while (true)
             {
-                id = DataInputStreamUtils.ReadByte(s);
-                if (NBTTagEnd.TypeId == id)
+                typeId = DataInputStreamUtils.ReadByte(s);
+                if (NBTTagEnd.TypeId == typeId)
                 {
                     break;
                 }
@@ -39,7 +39,7 @@ namespace MinecraftPrimitives
                 string key = DataInputStreamUtils.ReadModifiedUtf8String(s);
                 NBTBase value;
 
-                switch (id)
+                switch (typeId)
                 {
                     default:
                         throw new Exception("Unknown type Id");
@@ -70,8 +70,41 @@ namespace MinecraftPrimitives
                     case NBTTagString.TypeId:
                         value = NBTTagString.Read(s, depth + 1);
                         break;
-                    case NBTTagList.TypeId:
-                        value = NBTTagList.Read(s, depth + 1);
+                    case NBTTagListBase.TypeId:
+                        int _typeId = DataInputStreamUtils.ReadByte(s);
+                        switch(_typeId)
+                        {
+                            case NBTTagEnd.TypeId:
+                                value = NBTTagList<NBTTagEnd>.ReadEndArray(s, depth + 1);
+                                break;
+                            case NBTTagByte.TypeId:
+                                value = NBTTagByte.Read(s, depth + 1);
+                                break;
+                            case NBTTagShort.TypeId:
+                                value = NBTTagShort.Read(s, depth + 1);
+                                break;
+                            case NBTTagInt.TypeId:
+                                value = NBTTagInt.Read(s, depth + 1);
+                                break;
+                            case NBTTagLong.TypeId:
+                                value = NBTTagLong.Read(s, depth + 1);
+                                break;
+                            case NBTTagFloat.TypeId:
+                                value = NBTTagFloat.Read(s, depth + 1);
+                                break;
+                            case NBTTagDouble.TypeId:
+                                value = NBTTagDouble.Read(s, depth + 1);
+                                break;
+                            case NBTTagByteArray.TypeId:
+                                value = NBTTagByteArray.Read(s, depth + 1);
+                                break;
+                            case NBTTagString.TypeId:
+                                value = NBTTagString.Read(s, depth + 1);
+                                break;
+                            default:
+                                throw new Exception("Unknown type Id");
+
+                        }
                         break;
                     case NBTTagCompound.TypeId:
                         value = NBTTagCompound.Read(s, depth + 1);

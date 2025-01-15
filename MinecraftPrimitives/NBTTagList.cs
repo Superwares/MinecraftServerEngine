@@ -6,14 +6,37 @@ using System.Threading.Tasks;
 
 namespace MinecraftPrimitives
 {
-    public sealed class NBTTagList : NBTBase
+    public abstract class NBTTagListBase : NBTBase
     {
         public const int TypeId = 9;
 
-        public readonly int Type;
-        private readonly NBTBase[] value;
+        public static NBTTagList<NBTTagEnd> ReadEndArray(Stream s, int depth)
+        {
+            System.Diagnostics.Debug.Assert(s != null);
+            System.Diagnostics.Debug.Assert(depth >= 0);
+            if (depth > 512)
+            {
+                throw new Exception("Tried to read NBT tag with too high complexity, depth > 512");
+            }
 
-        public static NBTTagList Read(Stream s, int depth)
+            int length = DataInputStreamUtils.ReadInt(s);
+
+            if (length > 0)
+            {
+                throw new Exception("Missing type on ListTag");
+            }
+
+            NBTTagEnd[] list = new NBTTagEnd[length];
+
+            for (int i = 0; i < length; i++)
+            {
+                list[i] = NBTTagEnd.Read(s, depth + 1);
+            }
+
+            return new NBTTagList<NBTTagEnd>(list);
+        }
+
+        public static NBTTagList<NBTTagEnd> ReadByteArray(Stream s, int depth)
         {
             System.Diagnostics.Debug.Assert(s != null);
             System.Diagnostics.Debug.Assert(depth >= 0);
@@ -83,9 +106,49 @@ namespace MinecraftPrimitives
             return new NBTTagList(typeId, list);
         }
 
-        private NBTTagList(int type, NBTBase[] value)
+    }
+
+
+    public sealed class NBTTagList<T> : NBTTagListBase
+        where T : NBTBase
+    {
+
+        private readonly T[] value;
+
+        public static NBTTagList<T> Read(Stream s, int depth)
         {
-            Type = type;
+            if (
+            typeof(T).Name == "NBTTagEnd")
+            {
+
+            }
+            System.Diagnostics.Debug.Assert(s != null);
+            System.Diagnostics.Debug.Assert(depth >= 0);
+            if (depth > 512)
+            {
+                throw new Exception("Tried to read NBT tag with too high complexity, depth > 512");
+            }
+
+            int length = DataInputStreamUtils.ReadInt(s);
+
+            if (length > 0)
+            {
+                throw new Exception("Missing type on ListTag");
+            }
+
+            T[] list = new T[length];
+
+            for (int i = 0; i < length; i++)
+            {
+                list[i] = NBTTagEnd.Read(s, depth + 1);
+            }
+
+            return new NBTTagList<T>(list);
+        }
+
+
+        public NBTTagList(T[] value)
+        {
             this.value = value;
         }
 
