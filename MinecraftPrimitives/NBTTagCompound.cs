@@ -66,7 +66,7 @@ namespace MinecraftPrimitives
                 }
 
                 string key = ReadModifiedUtf8String(s);
-                NBTBase value = null;
+                NBTBase value;
 
                 switch (id)
                 {

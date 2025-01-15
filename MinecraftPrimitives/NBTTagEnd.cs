@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MinecraftPrimitives
 {
-    internal class NBTTagEnd : NBTBase
+    public sealed class NBTTagEnd : NBTBase
     {
         public const int TypeId = 1;
 

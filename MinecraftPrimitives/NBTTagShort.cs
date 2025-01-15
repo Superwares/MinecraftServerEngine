@@ -6,19 +6,21 @@ using System.Threading.Tasks;
 
 namespace MinecraftPrimitives
 {
-    public sealed class NBTTagByte : NBTBase
+    public sealed class NBTTagShort : NBTBase
     {
-        public const int TypeId = 1;
+        public const int TypeId = 2;
 
         private readonly int value;
 
-        public static NBTTagByte Read(Stream s, int depth)
+        public static NBTTagShort Read(Stream s, int depth)
         {
-            int value = s.ReadByte();
-            return new NBTTagByte(value);
+            int b0 = s.ReadByte();
+            int b1 = s.ReadByte();
+            int value = ((b0 << 8) | (b1 & 0xff));
+            return new NBTTagShort(value);
         }
 
-        private NBTTagByte(int value)
+        private NBTTagShort(int value)
         {
             this.value = value;
         }
