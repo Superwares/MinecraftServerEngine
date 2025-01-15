@@ -6,19 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="91e12816-d8f9-435c-8051-38d9eeea1033" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/examples/minecraft/utils/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/examples/minecraft/utils/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTCompressedStreamTools.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTCompressedStreamTools.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagByteArray.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagByteArray.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagCompound.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagCompound.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagCompoundLoader.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagCompoundLoader.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagEnd.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagEnd.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagIntArray.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagIntArray.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagList.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagList.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagLongArray.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/NBTTagLongArray.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../MinecraftPrimitives/RegionFile.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../MinecraftPrimitives/RegionFile.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Testing/RegionFileTests.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../Testing/RegionFileTests.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Testing/Testing.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/../../Testing/Testing.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Testing/r.0.0.mca" beforeDir="false" afterPath="$PROJECT_DIR$/../../Testing/r.0.0.mca" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -90,6 +79,11 @@
           <url>file://$PROJECT_DIR$/src/main/java/examples/minecraft/utils/RegionFile.java</url>
           <line>119</line>
           <option name="timeStamp" value="5" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/examples/minecraft/utils/RegionFile.java</url>
+          <line>127</line>
+          <option name="timeStamp" value="7" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

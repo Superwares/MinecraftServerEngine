@@ -1,6 +1,7 @@
 ﻿using Containers;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,34 +14,64 @@ namespace MinecraftPrimitives
 
         private Table<string, NBTBase> data;
 
-        static string ReadModifiedUtf8String(Stream stream)
+        static string ReadModifiedUtf8String(Stream s)
         {
-            using (MemoryStream buffer = new MemoryStream())
-            {
-                int b;
-                while ((b = stream.ReadByte()) != -1)
-                {
-                    if (b == 0xC0) // 수정된 Null 문자의 첫 번째 바이트
-                    {
-                        int nextByte = stream.ReadByte();
-                        if (nextByte == 0x80)
-                        {
-                            buffer.WriteByte(0x00); // Null 문자로 복원
-                        }
-                        else
-                        {
-                            throw new InvalidDataException("Invalid modified UTF-8 sequence.");
-                        }
-                    }
-                    else
-                    {
-                        buffer.WriteByte((byte)b);
-                    }
-                }
+            var reader = new BinaryReader(s);
 
-                // UTF-8로 디코딩
-                return Encoding.UTF8.GetString(buffer.ToArray());
+            // 1. 읽을 문자열의 길이를 나타내는 2바이트를 읽음 (Big-Endian)
+            int utfLength = reader.ReadByte() << 8 | reader.ReadByte();
+
+            // 2. 문자열을 담을 StringBuilder 초기화
+            StringBuilder result = new StringBuilder(utfLength);
+
+            // 3. UTF-8로 디코딩
+            int bytesRead = 0;
+            while (bytesRead < utfLength)
+            {
+                // 첫 번째 바이트 읽기
+                byte a = reader.ReadByte();
+                bytesRead++;
+
+                if ((a & 0x80) == 0)
+                {
+                    // 1바이트 문자 (0xxxxxxx)
+                    result.Append((char)a);
+                }
+                else if ((a & 0xE0) == 0xC0)
+                {
+                    // 2바이트 문자 (110xxxxx 10xxxxxx)
+                    byte b = reader.ReadByte();
+                    bytesRead++;
+
+                    if ((b & 0xC0) != 0x80)
+                        throw new FormatException("Invalid UTF-8 sequence");
+
+                    char decodedChar = (char)(((a & 0x1F) << 6) | (b & 0x3F));
+                    result.Append(decodedChar);
+                }
+                else if ((a & 0xF0) == 0xE0)
+                {
+                    // 3바이트 문자 (1110xxxx 10xxxxxx 10xxxxxx)
+                    byte b = reader.ReadByte();
+                    byte c = reader.ReadByte();
+                    bytesRead += 2;
+
+                    if ((b & 0xC0) != 0x80 || (c & 0xC0) != 0x80)
+                        throw new FormatException("Invalid UTF-8 sequence");
+
+                    char decodedChar = (char)(((a & 0x0F) << 12) | ((b & 0x3F) << 6) | (c & 0x3F));
+                    result.Append(decodedChar);
+                }
+                else
+                {
+                    // 잘못된 바이트
+                    throw new FormatException("Invalid UTF-8 sequence");
+                }
             }
+
+            return result.ToString();
+
+
         }
 
         public static NBTTagCompound Read(Stream s, int depth)
