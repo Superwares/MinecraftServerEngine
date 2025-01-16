@@ -7,7 +7,7 @@ namespace MinecraftPrimitives
         where T : NBTTagBase, IReadableNBTTag<T>
     {
 
-        private readonly T[] value;
+        public readonly T[] Data;
 
         public static NBTTagList<T> Read(Stream s, int depth)
         {
@@ -20,20 +20,20 @@ namespace MinecraftPrimitives
 
             int length = DataInputStreamUtils.ReadInt(s);
 
-            T[] value = new T[length];
+            T[] data = new T[length];
 
             for (int i = 0; i < length; i++)
             {
-                value[i] = T.Read(s, depth + 1);
+                data[i] = T.Read(s, depth + 1);
             }
 
-            return new NBTTagList<T>(value);
+            return new NBTTagList<T>(data);
         }
 
 
-        public NBTTagList(T[] value)
+        public NBTTagList(T[] data)
         {
-            this.value = value;
+            Data = data;
         }
 
         public override void Write(Stream s)
@@ -45,20 +45,20 @@ namespace MinecraftPrimitives
         {
             string tab = "    ";
 
-            string str = $"NBTTagList<{typeof(T).Name}>({value.Length})";
+            string str = $"NBTTagList<{typeof(T).Name}>({Data.Length})";
 
             str += "[";
-            if (value.Length > 0)
+            if (Data.Length > 0)
             {
-                for (int i = 0; i < value.Length; i++)
+                for (int i = 0; i < Data.Length; i++)
                 {
-                    string _str = value[i].ToString();
+                    string _str = Data[i].ToString();
                     string indentedStr = string.Join($"\n{tab}",
                         _str.Split('\n', StringSplitOptions.RemoveEmptyEntries));
 
                     str += $"\n{tab}{indentedStr}";
 
-                    if (i < value.Length - 1)
+                    if (i < Data.Length - 1)
                     {
                         str += $", ";
                     }
@@ -70,6 +70,7 @@ namespace MinecraftPrimitives
 
             return str;
         }
+
     }
 
 }

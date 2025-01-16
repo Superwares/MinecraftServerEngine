@@ -282,7 +282,7 @@ namespace MinecraftServerEngine
             while (_running)
             {
                 f = (accumulated >= interval);
-                if (f)
+                if (f  == true)
                 {
                     /*System.Diagnostics.Debug.Assert(_ticks >= 0);*/
 
