@@ -25,6 +25,10 @@ namespace MinecraftPrimitives
             if (tag != null)
             {
                 Console.WriteLine(tag);
+
+                NBTTagCompound level = tag.GetNBTTag<NBTTagCompound>("Level");
+                Console.Write("Level:");
+                Console.Write(level);
             }
 
 

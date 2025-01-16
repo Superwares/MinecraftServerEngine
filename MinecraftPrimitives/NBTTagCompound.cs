@@ -1,20 +1,25 @@
-﻿using Containers;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using Containers;
 
 namespace MinecraftPrimitives
 {
-    public sealed class NBTTagCompound : NBTBase, IReadableNBTTag<NBTTagCompound>
+    public sealed class NBTTagCompound : NBTTagBase, IReadableNBTTag<NBTTagCompound>
     {
+        private readonly struct TagListItem(string key, NBTTagBase value)
+        {
+            public readonly string Key = key;
+            public readonly NBTTagBase Value = value;
+        }
+
         public const int TypeId = 10;
 
-        private Table<string, NBTBase> data;
+        private readonly Table<string, NBTTagBase> _tagTable;
+        private readonly List<TagListItem> _tagList;
 
-        private static NBTBase ReadNBTTagList(Stream s, int depth)
+        private static NBTTagBase ReadNBTTagList(Stream s, int depth)
         {
             System.Diagnostics.Debug.Assert(s != null);
             System.Diagnostics.Debug.Assert(depth >= 0);
@@ -64,7 +69,8 @@ namespace MinecraftPrimitives
                 throw new Exception("Tried to read NBT tag with too high complexity, depth > 512");
             }
 
-            Table<string, NBTBase> data = new();
+            Table<string, NBTTagBase> tagTable = new();
+            List<TagListItem> tagList = new();
 
             int id;
 
@@ -77,7 +83,7 @@ namespace MinecraftPrimitives
                 }
 
                 string key = DataInputStreamUtils.ReadModifiedUtf8String(s);
-                NBTBase value;
+                NBTTagBase value;
 
                 switch (id)
                 {
@@ -124,25 +130,67 @@ namespace MinecraftPrimitives
                         break;
                 }
 
-                if (data.Contains(key) == true)
+                if (tagTable.Contains(key) == true)
                 {
                     throw new Exception("Duplicate item in NBT compound");
                 }
 
-                data.Insert(key, value);
+                tagTable.Insert(key, value);
+                tagList.Append(new TagListItem(key, value));
             }
 
-            return new NBTTagCompound(data);
+            return new NBTTagCompound(tagTable, tagList);
         }
 
-        private NBTTagCompound(Table<string, NBTBase> data)
+        private NBTTagCompound(
+            Table<string, NBTTagBase> tagTable,
+            List<TagListItem> tagList)
         {
-            this.data = data;
+            _tagTable = tagTable;
+            _tagList = tagList;
         }
 
         public override void Write(Stream s)
         {
             throw new NotImplementedException();
+        }
+
+        public T GetNBTTag<T>(string key) where T : NBTTagBase
+        {
+            try
+            {
+                NBTTagBase nbtBase = _tagTable.Lookup(key);
+
+                return (T)nbtBase;
+            }
+            catch (KeyNotFoundException)
+            {
+                return null;
+            }
+            catch (InvalidCastException)
+            {
+                return null;
+            }
+
+        }
+
+        public override string ToString()
+        {
+            string str = "";
+
+            foreach (var item in _tagList)
+            {
+                string _str = item.Value.ToString();
+
+                string indentedStr = string.Join("\n\t",
+                    _str.Split('\n', StringSplitOptions.None));
+
+                //Console.WriteLine($"{item.Key} : {item.Value}");
+
+                str += $"{item.Key}:\n\t{indentedStr}\n";
+            }
+
+            return str;
         }
     }
 }

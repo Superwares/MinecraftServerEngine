@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
 
 namespace MinecraftPrimitives
 {
-    public sealed class NBTTagLong : NBTBase, IReadableNBTTag<NBTTagLong>
+    public sealed class NBTTagLong : NBTTagBase, IReadableNBTTag<NBTTagLong>
     {
         public const int TypeId = 4;
 
-        private readonly long value;
+        public readonly long Value;
 
         public static NBTTagLong Read(Stream s, int depth)
         {
@@ -20,12 +17,17 @@ namespace MinecraftPrimitives
 
         private NBTTagLong(long value)
         {
-            this.value = value;
+            Value = value;
         }
 
         public override void Write(Stream s)
         {
             throw new NotImplementedException();
+        }
+
+        public override string ToString()
+        {
+            return $"NBTTagLong({Value})";
         }
     }
 }

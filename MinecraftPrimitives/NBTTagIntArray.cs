@@ -1,39 +1,41 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
 
 namespace MinecraftPrimitives
 {
-    public sealed class NBTTagIntArray : NBTBase, IReadableNBTTag<NBTTagIntArray>
+    public sealed class NBTTagIntArray : NBTTagBase, IReadableNBTTag<NBTTagIntArray>
     {
         public const int TypeId = 11;
 
-        private readonly int[] arr;
+        public readonly int[] Data;
 
         public static NBTTagIntArray Read(Stream s, int depth)
         {
             int length = DataInputStreamUtils.ReadInt(s);
 
-            int[] arr = new int[length];
+            int[] data = new int[length];
             
             for (int i = 0; i < length; ++i)
             {
-                arr[i] = DataInputStreamUtils.ReadInt(s);
+                data[i] = DataInputStreamUtils.ReadInt(s);
             }
 
-            return new NBTTagIntArray(arr);
+            return new NBTTagIntArray(data);
         }
 
-        private NBTTagIntArray(int[] arr)
+        private NBTTagIntArray(int[] data)
         {
-            this.arr = arr;
+            Data = data;
         }
 
         public override void Write(Stream s)
         {
             throw new NotImplementedException();
+        }
+
+        public override string ToString()
+        {
+            return $"{this.GetType().Name}({Data.Length})";
         }
     }
 }

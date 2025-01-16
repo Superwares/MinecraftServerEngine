@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
 
 namespace MinecraftPrimitives
 {
     public sealed class NBTTagList<T> : NBTTagListBase, IReadableNBTTag<NBTTagList<T>>
-        where T : NBTBase, IReadableNBTTag<T>
+        where T : NBTTagBase, IReadableNBTTag<T>
     {
 
         private readonly T[] value;
@@ -42,6 +39,11 @@ namespace MinecraftPrimitives
         public override void Write(Stream s)
         {
             throw new NotImplementedException();
+        }
+
+        public override string ToString()
+        {
+            return $"NBTTagList<{typeof(T).Name}>({value.Length})";
         }
     }
 

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MinecraftPrimitives
 {
-    public abstract class NBTTagListBase : NBTBase
+    public abstract class NBTTagListBase : NBTTagBase
     {
         public const int TypeId = 9;
 

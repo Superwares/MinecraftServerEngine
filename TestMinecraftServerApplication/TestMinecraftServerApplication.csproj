@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Containers\Containers.csproj" />
+    <ProjectReference Include="..\MinecraftPrimitives\MinecraftPrimitives.csproj" />
     <ProjectReference Include="..\MinecraftServerEngine\MinecraftServerEngine.csproj" />
   </ItemGroup>
 

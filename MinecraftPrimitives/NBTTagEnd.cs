@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
 
 namespace MinecraftPrimitives
 {
-    public sealed class NBTTagEnd : NBTBase, IReadableNBTTag<NBTTagEnd>
+    public sealed class NBTTagEnd : NBTTagBase, IReadableNBTTag<NBTTagEnd>
     {
         public const int TypeId = 0;
+
 
         public static NBTTagEnd Read(Stream s, int depth)
         {
