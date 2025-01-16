@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace MinecraftPrimitives
@@ -6,6 +7,7 @@ namespace MinecraftPrimitives
     public sealed class NBTTagList<T> : NBTTagListBase, IReadableNBTTag<NBTTagList<T>>
         where T : NBTTagBase, IReadableNBTTag<T>
     {
+        private bool _disposed = false;
 
         public readonly T[] Data;
 
@@ -69,6 +71,22 @@ namespace MinecraftPrimitives
             str += "]";
 
             return str;
+        }
+
+        public override void Dispose()
+        {
+            // Assertions.
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            // Release resources
+            foreach (T item in Data)
+            {
+                item.Dispose();
+            }
+
+            // Finish.
+            base.Dispose();
+            _disposed = true;
         }
 
     }

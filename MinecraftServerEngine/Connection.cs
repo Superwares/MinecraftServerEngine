@@ -241,7 +241,7 @@ namespace MinecraftServerEngine
                         invPlayer.Print();
                     }
 
-                    Console.Printl($"Cursor: {Cursor}");
+                    MyConsole.Printl($"Cursor: {Cursor}");
                 }
 
             }
@@ -725,7 +725,7 @@ namespace MinecraftServerEngine
             switch (packetId)
             {
                 default:
-                    Console.Printl($"packetId: 0x{packetId:X}");
+                    MyConsole.Printl($"packetId: 0x{packetId:X}");
                     /*throw new NotImplementedException();*/
                     buffer.Flush();
                     break;
@@ -792,8 +792,8 @@ namespace MinecraftServerEngine
                         ClickWindowPacket packet = ClickWindowPacket.Read(buffer);
 
                         {
-                            Console.NewLine();
-                            Console.Printl(
+                            MyConsole.NewLine();
+                            MyConsole.Printl(
                                 $"WindowId: {packet.WindowId}, " +
                                 $"SlotNumber: {packet.Slot}, " +
                                 $"ButtonNumber: {packet.Button}, " +
@@ -1222,7 +1222,7 @@ namespace MinecraftServerEngine
                 {
                     // TODO: send disconnected message to client.
 
-                    Console.Printl($"UnexpectedClientBehavior: {e.Message}!");
+                    MyConsole.Printl($"UnexpectedClientBehavior: {e.Message}!");
 
                     throw new DisconnectedClientException();
                 }

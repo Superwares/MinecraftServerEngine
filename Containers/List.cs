@@ -9,13 +9,18 @@ namespace Containers
     // TODO: Modify to use an array that is allocated and deallocated
     // according to a factor,
     // like a hash table, instead of using a simple array.
-    public class List<T> : IEnumerable<T>
+    public class List<T> : IEnumerable<T>, System.IDisposable
+
     {
+        private bool _disposed = false;
+
         private T[] _items = [];
 
         public List()
         {
         }
+
+        ~List() => System.Diagnostics.Debug.Assert(false);
 
         public void Append(T item)
         {
@@ -41,6 +46,17 @@ namespace Containers
         }
 
 
+        public virtual void Dispose()
+        {
+            // Assertions.
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
+            // Release resources.
+            _items = null;
+
+            // Finish.
+            System.GC.SuppressFinalize(this);
+            _disposed = true;
+        }
     }
 }

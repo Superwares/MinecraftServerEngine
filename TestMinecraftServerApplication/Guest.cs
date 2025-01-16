@@ -36,7 +36,7 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Console.Printl("Sprint!");
+            MyConsole.Printl("Sprint!");
             Switch(Gamemode.Adventure);
         }
 
@@ -46,7 +46,7 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Console.Printl("Attack!");
+            MyConsole.Printl("Attack!");
 
             Damage(5.0F);
         }
@@ -90,7 +90,7 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Console.Printl("Death!");
+            MyConsole.Printl("Death!");
 
             /*Teleport(new Vector(0.0D, 110.0D, 0.0D), new Look(30.0F, 20.0F));*/
 

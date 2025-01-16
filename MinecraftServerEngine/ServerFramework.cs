@@ -71,7 +71,7 @@ namespace MinecraftServerEngine
                     _totalTimes[N] = Time.Zero;
                 }
 
-                Console.Printl(msg);
+                MyConsole.Printl(msg);
 
                 _count = 0;
             }
@@ -215,9 +215,9 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             CurrentRunningThread = Thread.GetCurrent();
-            Console.HandleTerminatin(() =>
+            MyConsole.HandleTerminatin(() =>
             {
-                Console.Printl("Cancel!");
+                MyConsole.Printl("Cancel!");
                 _running = false;
 
                 System.Diagnostics.Debug.Assert(CurrentRunningThread != null);
@@ -298,7 +298,7 @@ namespace MinecraftServerEngine
 
                 if (elapsed > interval)
                 {
-                    Console.Printl($"[Warning] The task is taking longer, Elapsed: {elapsed}!");
+                    MyConsole.Printl($"[Warning] The task is taking longer, Elapsed: {elapsed}!");
                 }
 
                 if (f)
@@ -330,7 +330,7 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(!_running);
             }
 
-            Console.Printl("Finish!");
+            MyConsole.Printl("Finish!");
         }
 
         public void Dispose()

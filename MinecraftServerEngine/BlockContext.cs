@@ -2,13 +2,19 @@
 
 using Common;
 using Containers;
+using MinecraftPrimitives;
 using MinecraftServerEngine.PhysicsEngine;
+using System;
+using System.IO;
+using System.Linq.Expressions;
+using System.Text.RegularExpressions;
 
 namespace MinecraftServerEngine
 {
-    
+
     internal sealed class BlockContext : Terrain
     {
+
         private enum Directions : int
         {
             DOWN,
@@ -143,6 +149,88 @@ namespace MinecraftServerEngine
         {
             private sealed class SectionData : System.IDisposable
             {
+                private bool _disposed = false;
+
+                public const int BlocksPerWidth = ChunkData.BlocksPerWidth;
+                public const int BlocksPerHeight = ChunkData.BlocksPerHeight / SectionCount;
+                public const int TotalBlockCount = BlocksPerWidth * BlocksPerWidth * BlocksPerHeight;
+
+                private byte _bitsPerBlock;
+
+                private (int, int)[] _palette;
+
+                private const int _BITS_PER_DATA_UNIT = sizeof(long) * 8; // TODO: Change to appropriate name.
+                private long[] _data;
+
+                private byte[] _blockLights, _skyLights;
+
+                public static SectionData Load(NBTTagCompound section)
+                {
+                    byte[] blocks = section.GetNBTTag<NBTTagByteArray>("Blocks").Data;
+                    byte[] _data = section.GetNBTTag<NBTTagByteArray>("Data").Data;
+
+                    byte[] skyLights = section.GetNBTTag<NBTTagByteArray>("SkyLight").Data;
+                    byte[] blockLights = section.GetNBTTag<NBTTagByteArray>("BlockLight").Data;
+
+                    if (blocks.Length != TotalBlockCount)
+                    {
+                        return null;
+                    }
+                   
+                    byte bitsPerBlock = 13;
+                    (int, int)[] palette = null;
+
+                    int dataLength = GetDataLength(bitsPerBlock);
+                    long[] data = new long[dataLength];
+
+                    {
+                        int i;
+                        long value;
+
+                        int start, offset, end;
+
+                        for (int y = 0; y < BlocksPerHeight; ++y)
+                        {
+                            for (int z = 0; z < BlocksPerWidth; ++z)
+                            {
+                                for (int x = 0; x < BlocksPerWidth; ++x)
+                                {
+                                    i = (((y * BlocksPerHeight) + z) * BlocksPerWidth) + x;
+
+                                    value = (long)blocks[i];
+
+                                    start = (i * bitsPerBlock) / _BITS_PER_DATA_UNIT;
+                                    offset = (i * bitsPerBlock) % _BITS_PER_DATA_UNIT;
+                                    end = (((i + 1) * bitsPerBlock) - 1) / _BITS_PER_DATA_UNIT;
+
+                                    System.Diagnostics.Debug.Assert(
+                                        (value & ~((1L << bitsPerBlock) - 1L)) == 0);
+                                    data[start] |= (value << offset);
+
+                                    if (start != end)
+                                    {
+                                        data[end] = value >> (_BITS_PER_DATA_UNIT - offset);
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+
+
+                    if (skyLights.Length != TotalBlockCount / 2)
+                    {
+                        skyLights = new byte[TotalBlockCount / 2];
+                    }
+
+                    if (blockLights.Length != TotalBlockCount / 2)
+                    {
+                        blockLights = new byte[TotalBlockCount / 2];
+                    }
+
+                    return new SectionData(bitsPerBlock, palette, data, blockLights, skyLights);
+                }
+
                 public static void Write(Buffer buffer, SectionData sectionData)
                 {
                     byte bitCount = sectionData._bitsPerBlock;
@@ -180,27 +268,26 @@ namespace MinecraftServerEngine
 
                 }
 
-                private bool _disposed = false;
-
-                public const int BlocksPerWidth = ChunkData.BlocksPerWidth;
-                public const int BlocksPerHeight = ChunkData.BlocksPerHeight / SectionCount;
-                public const int TotalBlockCount = BlocksPerWidth * BlocksPerWidth * BlocksPerHeight;
-
-                private byte _bitsPerBlock;
-
-                private (int, int)[] _palette;
-
-                private const int _BITS_PER_DATA_UNIT = sizeof(long) * 8; // TODO: Change to appropriate name.
-                private long[] _data;
-
-                private byte[] _blockLights, _skyLights;
-
                 private static int GetDataLength(int _bitsPerBlock)
                 {
                     int a = TotalBlockCount * _bitsPerBlock;
                     System.Diagnostics.Debug.Assert(a % _BITS_PER_DATA_UNIT == 0);
                     int length = a / _BITS_PER_DATA_UNIT;
                     return length;
+                }
+
+                private SectionData(
+                    byte bitsPerBlock,
+                    (int, int)[] palette,
+                    long[] data,
+                    byte[] blockLights,
+                    byte[] skyLights)
+                {
+                    _bitsPerBlock = bitsPerBlock;
+                    _palette = palette;
+                    _data = data;
+                    _blockLights = blockLights;
+                    _skyLights = skyLights;
                 }
 
                 public SectionData(int defaultId)
@@ -342,8 +429,8 @@ namespace MinecraftServerEngine
                                         }
                                         else
                                         {
-                                            value = 
-                                                (_data[start] >> offset) | 
+                                            value =
+                                                (_data[start] >> offset) |
                                                 (_data[end] << (_BITS_PER_DATA_UNIT - offset));
                                         }
 
@@ -397,8 +484,8 @@ namespace MinecraftServerEngine
                                         }
                                         else
                                         {
-                                            value = 
-                                                (_data[start] >> offset | 
+                                            value =
+                                                (_data[start] >> offset |
                                                 _data[end] << (_BITS_PER_DATA_UNIT - offset));
                                         }
 
@@ -429,7 +516,7 @@ namespace MinecraftServerEngine
                     _data = data;
                 }
 
-                private long GetValue(int id)
+                private long MakeValue(int id)
                 {
                     System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -538,7 +625,7 @@ namespace MinecraftServerEngine
                     System.Diagnostics.Debug.Assert(y >= 0 && y <= BlocksPerHeight);
                     System.Diagnostics.Debug.Assert(z >= 0 && z <= BlocksPerWidth);
 
-                    long value = GetValue(id);
+                    long value = MakeValue(id);
 
                     int i = (((y * BlocksPerHeight) + z) * BlocksPerWidth) + x;
                     int start = (i * _bitsPerBlock) / _BITS_PER_DATA_UNIT;
@@ -579,6 +666,36 @@ namespace MinecraftServerEngine
 
             public const int BlocksPerHeight = ChunkLocation.BlocksPerHeight;
             public const int SectionCount = 16;
+
+            private bool _disposed = false;
+
+            private int _count = 0;
+            private SectionData[] _sections;  // from bottom to top
+
+            public static ChunkData Load(NBTTagList<NBTTagCompound> sectionList)
+            {
+                System.Diagnostics.Debug.Assert(sectionList != null);
+
+                SectionData[] sections = new SectionData[SectionCount];
+
+                bool[] prevChecks = new bool[SectionCount];
+
+                foreach (NBTTagCompound section in sectionList.Data)
+                {
+                    int y = section.GetNBTTag<NBTTagByte>("Y").Value;
+
+                    SectionData prev = sections[y];
+
+                    if (prev != null)
+                    {
+                        prev.Dispose();
+                    }
+
+                    sections[y] = SectionData.Load(section);
+                }
+
+                return new ChunkData(sections);
+            }
 
             public static (int, byte[]) Write(ChunkData chunkData)
             {
@@ -625,12 +742,18 @@ namespace MinecraftServerEngine
                 return (mask, buffer.ReadData());
             }
 
-            private bool _disposed = false;
+            private ChunkData(SectionData[] sections)
+            {
+                System.Diagnostics.Debug.Assert(sections != null);
+                System.Diagnostics.Debug.Assert(sections.Length == SectionCount);
 
-            private int _count = 0;
-            private SectionData[] _sections = new SectionData[SectionCount];  // from bottom to top
+                _sections = sections;
+            }
 
-            public ChunkData() { }
+            public ChunkData()
+            {
+                _sections = new SectionData[SectionCount];
+            }
 
             public void SetId(int defaultId, int x, int y, int z, int id)
             {
@@ -650,18 +773,16 @@ namespace MinecraftServerEngine
                 SectionData section = _sections[ySection];
                 if (section == null)
                 {
-                    if (id == defaultId)
-                    {
-                        return;
-                    }
-
                     section = new SectionData(defaultId);
                     _sections[ySection] = section;
 
                     _count++;
                 }
 
-                section.SetId(x, yPrime, z, id);
+                if (id != defaultId)
+                {
+                    section.SetId(x, yPrime, z, id);
+                }
             }
 
             public int GetId(int defaultId, int x, int y, int z)
@@ -723,21 +844,131 @@ namespace MinecraftServerEngine
 
         public static readonly Blocks DefaultBlock = Blocks.Air;
 
-        private readonly Table<ChunkLocation, ChunkData> Chunks = new();  // Disposable
+        private readonly Table<ChunkLocation, ChunkData> Chunks;  // Disposable
 
-        public BlockContext() 
+        public static BlockContext LoadWithRegionFiles(string folderPath)
         {
-            // Dummy code.
-            for (int z = -10; z <= 10; ++z)
-            {
-                for (int x = -10; x <= 10; ++x)
-                {
-                    BlockLocation loc = new(x, 100, z);
+            string regionFilePattern = @"r\.(-?\d+)\.(-?\d+)\.mca$";
 
-                    SetBlock(loc, Blocks.Stone);
+            try
+            {
+                Table<ChunkLocation, ChunkData> chunks = new();
+
+                string[] regionFiles = Directory.GetFiles(
+                    folderPath,
+                    "*.mca",
+                    SearchOption.TopDirectoryOnly);
+
+                foreach (string filename in regionFiles)
+                {
+                    FileInfo fileInfo = new(filename);
+
+                    if (fileInfo.Exists == false)
+                    {
+                        MyConsole.Warn($"File not found: {filename}");
+                        continue;
+                    }
+
+                    string name = fileInfo.Name;
+
+                    Match match = Regex.Match(name, regionFilePattern);
+
+                    if (match.Success == false)
+                    {
+                        MyConsole.Warn($"Invalid filename format, skipping file: {fileInfo.FullName}");
+                        continue;
+                    }
+
+                    MyConsole.Info($"Loading region file: {name}");
+
+                    int regionX = int.Parse(match.Groups[1].Value);
+                    int regionZ = int.Parse(match.Groups[2].Value);
+
+                    //MyConsole.Debug($"Valid filename: {name}");
+                    //MyConsole.Debug($"regionX = {regionX}, regionZ = {regionZ}");
+
+                    int chunkX_min = regionX * 32;
+                    int chunkZ_min = regionZ * 32;
+                    int chunkX_max = chunkX_min + 32 - 1;
+                    int chunkZ_max = chunkZ_min + 32 - 1;
+
+                    for (int chunkX = chunkX_min; chunkX <= chunkX_max; ++chunkX)
+                    {
+                        for (int chunkZ = chunkZ_min; chunkZ <= chunkZ_max; ++chunkZ)
+                        {
+                            using NBTTagCompound tag = NBTTagRootCompoundLoader.Load(fileInfo, chunkX, chunkZ);
+
+                            if (tag == null)
+                            {
+                                continue;
+                            }
+
+                            NBTTagCompound level = tag.GetNBTTag<NBTTagCompound>("Level");
+
+                            if (level == null)
+                            {
+                                MyConsole.Warn($"Level tag not found: ({chunkX},{chunkZ})");
+                                continue;
+                            }
+
+                            NBTTagList<NBTTagCompound> sectionList = level.GetNBTTag<NBTTagList<NBTTagCompound>>("Sections");
+
+                            if (sectionList == null)
+                            {
+                                MyConsole.Warn($"Sections tag not found: ({chunkX},{chunkZ})");
+                                continue;
+                            }
+
+                            ChunkData chunkData = ChunkData.Load(sectionList);
+
+                            if (chunkData != null)
+                            {
+                                chunks.Insert(new ChunkLocation(chunkX, chunkZ), chunkData);
+                            }
+                        }
+                    }
+
                 }
+
+                return new BlockContext(chunks);
             }
+            catch (DirectoryNotFoundException)
+            {
+                return new BlockContext();
+            }
+
         }
+
+        private BlockContext(
+            Table<ChunkLocation, ChunkData> chunks)
+        {
+            Chunks = chunks;
+        }
+
+        private BlockContext()
+        {
+            Chunks = new Table<ChunkLocation, ChunkData>();
+
+            BlockLocation loc = new(0, 100, 0);
+
+            SetBlock(loc, Blocks.Stone);
+        }
+
+        ~BlockContext() => System.Diagnostics.Debug.Assert(false);
+
+        //public BlockContext() 
+        //{
+        //    // Dummy code.
+        //    for (int z = -10; z <= 10; ++z)
+        //    {
+        //        for (int x = -10; x <= 10; ++x)
+        //        {
+        //            BlockLocation loc = new(x, 100, z);
+
+        //            SetBlock(loc, Blocks.Stone);
+        //        }
+        //    }
+        //}
 
         private ChunkLocation BlockToChunk(BlockLocation loc)
         {
@@ -1002,10 +1233,10 @@ namespace MinecraftServerEngine
         public override void Dispose()
         {
             // Assertion.
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             // Release resources.
-            (ChunkLocation, ChunkData)[]_chunks = Chunks.Flush();
+            (ChunkLocation, ChunkData)[] _chunks = Chunks.Flush();
             for (int i = 0; i < _chunks.Length; ++i)
             {
                 (var _, ChunkData data) = _chunks[i];

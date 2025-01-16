@@ -6,7 +6,9 @@ using Containers;
 
 namespace MinecraftPrimitives
 {
-    public sealed class NBTTagCompound : NBTTagBase, IReadableNBTTag<NBTTagCompound>
+    public sealed class NBTTagCompound
+        : NBTTagBase
+        , IReadableNBTTag<NBTTagCompound>
     {
         private readonly struct TagListItem(string key, NBTTagBase value)
         {
@@ -15,6 +17,8 @@ namespace MinecraftPrimitives
         }
 
         public const int TypeId = 10;
+
+        private bool _disposed = false;
 
         private readonly Table<string, NBTTagBase> _tagTable;
         private readonly List<TagListItem> _tagList;
@@ -150,6 +154,8 @@ namespace MinecraftPrimitives
             _tagList = tagList;
         }
 
+        ~NBTTagCompound() => System.Diagnostics.Debug.Assert(false);
+
         public override void Write(Stream s)
         {
             throw new NotImplementedException();
@@ -202,6 +208,24 @@ namespace MinecraftPrimitives
             str += "}";
 
             return str;
+        }
+
+        public override void Dispose()
+        {
+            // Assertions.
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            // Release resources
+            foreach (TagListItem item in _tagList)
+            {
+                item.Value.Dispose();
+            }
+            _tagTable.Dispose();
+            _tagList.Dispose();
+
+            // Finish.
+            base.Dispose();
+            _disposed = true;
         }
     }
 }

@@ -3,7 +3,7 @@
 namespace Common
 {
 
-    public static class Console
+    public static class MyConsole
     {
         private static VoidMethod startCancelRoutine = null;
 
@@ -16,7 +16,7 @@ namespace Common
             });
         }
 
-        static Console()
+        static MyConsole()
         {
             System.Console.CancelKeyPress += OnCancelKeyPress();
         }

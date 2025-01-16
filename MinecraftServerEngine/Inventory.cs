@@ -33,21 +33,21 @@ namespace MinecraftServerEngine
 
         public void Print()
         {
-            Console.Printl($"Inventory: ");
+            MyConsole.Printl($"Inventory: ");
             for (int i = 0; i < TotalSlotCount; ++i)
             {
                 if (i % SlotsPerLine == 0)
                 {
-                    Console.NewLine();
-                    Console.NewTab();
+                    MyConsole.NewLine();
+                    MyConsole.NewTab();
                 }
 
                 InventorySlot slot = Slots[i];
                 System.Diagnostics.Debug.Assert(slot != null);
 
-                Console.Print($"{slot}");
+                MyConsole.Print($"{slot}");
             }
-            Console.NewLine();
+            MyConsole.NewLine();
         }
 
         public virtual void Dispose()

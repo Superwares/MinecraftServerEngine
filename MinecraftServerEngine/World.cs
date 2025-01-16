@@ -254,9 +254,12 @@ namespace MinecraftServerEngine
 
         private readonly ConcurrentTable<UserId, AbstractPlayer> DisconnectedPlayers = new(); // Disposable
 
-        internal readonly BlockContext BlockContext = new();  // Disposable
+        internal readonly BlockContext BlockContext;  // Disposable
 
-        public World() { }
+        public World() 
+        {
+            BlockContext = BlockContext.LoadWithRegionFiles(@"region");
+        }
 
         ~World() => System.Diagnostics.Debug.Assert(false);
 

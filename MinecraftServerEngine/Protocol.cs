@@ -603,7 +603,7 @@ namespace MinecraftServerEngine
 
                         // TODO: Check username is empty or invalid.
 
-                        Console.Printl("Start http request!");
+                        MyConsole.Printl("Start http request!");
 
                         // TODO: Use own http client in common library.
                         using System.Net.Http.HttpClient httpClient = new();
@@ -630,7 +630,7 @@ namespace MinecraftServerEngine
                         // TODO: Handle to throw exception
                         /*System.Diagnostics.Debug.Assert(inPacket.Username == username);*/
 
-                        Console.Printl("Finish http request!");
+                        MyConsole.Printl("Finish http request!");
 
                         LoginSuccessPacket outPacket1 = new(userId, username);
                         outPacket1.Write(buffer);
