@@ -19,7 +19,33 @@ namespace Common
         static Console()
         {
             System.Console.CancelKeyPress += OnCancelKeyPress();
+        }
 
+        public static void Debug(string msg)
+        {
+            string currentTime = Time.Now().FormatToISO8601();
+
+            System.Console.ForegroundColor = System.ConsoleColor.DarkGray;
+            System.Console.WriteLine($"{currentTime} [DEBUG] {msg}");
+            System.Console.ResetColor();
+        }
+
+        public static void Info(string msg)
+        {
+            string currentTime = Time.Now().FormatToISO8601();
+
+            System.Console.ForegroundColor = System.ConsoleColor.Cyan;
+            System.Console.WriteLine($"{currentTime} [INFO] {msg}");
+            System.Console.ResetColor();
+        }
+
+        public static void Warn(string msg)
+        {
+            string currentTime = Time.Now().FormatToISO8601();
+
+            System.Console.ForegroundColor = System.ConsoleColor.DarkYellow;
+            System.Console.WriteLine($"{currentTime} [WARN] {msg}");
+            System.Console.ResetColor();
         }
 
         public static void Print(string msg)
@@ -46,6 +72,5 @@ namespace Common
         {
             startCancelRoutine = startRoutine;
         }
-
     }
 }

@@ -1,5 +1,7 @@
 ﻿
 
+using System;
+
 namespace Common
 {
     public readonly struct Time : System.IEquatable<Time>
@@ -102,6 +104,18 @@ namespace Common
             Amount = amount;
         }
 
+        public readonly string FormatToISO8601()
+        {
+            // Convert microseconds to TimeSpan
+            TimeSpan timeSpan = TimeSpan.FromTicks(Amount * 10); // 1 tick = 100 nanoseconds
+
+            // Assuming the microseconds represent the time elapsed since 0001-01-01 00:00:00 (Gregorian Calendar)
+            DateTimeOffset dateTimeOffset = new DateTimeOffset(0001, 1, 1, 0, 0, 0, TimeSpan.Zero).Add(timeSpan);
+
+            // Convert to ISO8601 format string
+            return dateTimeOffset.ToString("yyyy-MM-dd HH:mm:ss.fff");
+        }
+
         public readonly override bool Equals(object obj)
         {
             if (obj == null)
@@ -116,7 +130,7 @@ namespace Common
         {
             // TODO: Check this conversion.
             /*return base.GetHashCode();*/
-            return (int) Amount;
+            return (int)Amount;
         }
 
         public readonly bool Equals(Time other)

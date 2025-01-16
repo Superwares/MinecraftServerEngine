@@ -6,8 +6,11 @@ using MinecraftPrimitives;
 using MinecraftServerEngine;
 using TestMinecraftServerApplication;
 
+//Console.Debug("Hello, World!");
+//Console.Info("Hello, World!");
+//Console.Warn("Hello, World!");
 
-Console.Printl("Hello, World!");
+Console.Info("Hello, World!");
 
 //const ushort port = 25565;
 
