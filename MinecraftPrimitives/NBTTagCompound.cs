@@ -178,9 +178,9 @@ namespace MinecraftPrimitives
         {
             string tab = "    ";
 
-            string str = "";
+            string str = "{\n";
 
-            foreach (var item in _tagList)
+            foreach (TagListItem item in _tagList)
             {
                 string _str = item.Value.ToString();
 
@@ -189,8 +189,17 @@ namespace MinecraftPrimitives
 
                 //Console.WriteLine($"{item.Key} : {item.Value}");
 
-                str += $"{item.Key}:\n{tab}{indentedStr}\n";
+                str += $"{tab}{item.Key}: {indentedStr}";
+
+                if (item.Key != _tagList.Last().Key)
+                {
+                    str += $", ";
+                }
+
+                str += "\n";
             }
+
+            str += "}";
 
             return str;
         }

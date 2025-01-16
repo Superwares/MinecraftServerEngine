@@ -43,23 +43,32 @@ namespace MinecraftPrimitives
 
         public override string ToString()
         {
+            string tab = "    ";
+
             string str = $"NBTTagList<{typeof(T).Name}>({value.Length})";
 
+            str += "[";
             if (value.Length > 0)
             {
-                str += " [";
                 for (int i = 0; i < value.Length; i++)
                 {
-                    str += value[i].ToString();
+                    string _str = value[i].ToString();
+                    string indentedStr = string.Join($"\n{tab}",
+                        _str.Split('\n', StringSplitOptions.RemoveEmptyEntries));
+
+                    str += $"\n{tab}{indentedStr}";
+
                     if (i < value.Length - 1)
                     {
-                        str += ", ";
+                        str += $", ";
                     }
                 }
-                str += "]";
-            }
 
-            return 
+                str += "\n";
+            }
+            str += "]";
+
+            return str;
         }
     }
 
