@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MinecraftPrimitives
 {
-    public sealed class NBTTagLongArray : NBTBase
+    public sealed class NBTTagLongArray : NBTBase, IReadableNBTTag<NBTTagLongArray>
     {
         public const int TypeId = 12;
 

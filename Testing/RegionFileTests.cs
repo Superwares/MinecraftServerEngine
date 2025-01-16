@@ -20,7 +20,7 @@ namespace MinecraftPrimitives
         {
             FileInfo fileInfo = new("C:\\Users\\Peach\\Documents\\Superwares\\MinecraftServerEngine\\Testing\\r.0.0.mca");
 
-            NBTTagCompound tag = NBTTagCompoundLoader.Load(fileInfo, 1, 1);
+            NBTTagCompound tag = NBTTagRootCompoundLoader.Load(fileInfo, 1, 1);
 
             if (tag != null)
             {

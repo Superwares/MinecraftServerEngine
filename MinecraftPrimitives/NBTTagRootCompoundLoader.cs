@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MinecraftPrimitives
 {
-    public static class NBTTagCompoundLoader
+    public static class NBTTagRootCompoundLoader
     {
         public static NBTTagCompound Load(FileInfo fileInfo, int chunkX, int chunkY)
         {
@@ -20,7 +20,15 @@ namespace MinecraftPrimitives
                 return null;
             }
 
-            return NBTCompressedStreamTools.Load(s);
+            int id = s.ReadByte();
+            if (NBTTagCompound.TypeId != id)
+            {
+                throw new InvalidDataException("Root tag must be a named compound tag");
+            }
+
+            DataInputStreamUtils.ReadModifiedUtf8String(s);
+
+            return NBTTagCompound.Read(s, 0);
         }
     }
 }
