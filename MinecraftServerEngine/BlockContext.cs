@@ -176,9 +176,9 @@ namespace MinecraftServerEngine
                     {
                         return null;
                     }
-                   
+
                     byte bitsPerBlock = 13;
-                    (int, int)[] palette = null;
+                    (int, int)[] palette = [];
 
                     int dataLength = GetDataLength(bitsPerBlock);
                     long[] data = new long[dataLength];
@@ -197,7 +197,7 @@ namespace MinecraftServerEngine
                                 {
                                     i = (((y * BlocksPerHeight) + z) * BlocksPerWidth) + x;
 
-                                    value = (long)blocks[i];
+                                    value = ((long)blocks[i] << 4) | _data[i / 2];
 
                                     start = (i * bitsPerBlock) / _BITS_PER_DATA_UNIT;
                                     offset = (i * bitsPerBlock) % _BITS_PER_DATA_UNIT;
@@ -915,7 +915,7 @@ namespace MinecraftServerEngine
 
                             if (sectionList == null)
                             {
-                                MyConsole.Warn($"Sections tag not found: ({chunkX},{chunkZ})");
+                                //MyConsole.Warn($"Sections tag not found: ({chunkX},{chunkZ})");
                                 continue;
                             }
 
@@ -1195,7 +1195,94 @@ namespace MinecraftServerEngine
                 case Blocks.PolishedGranite:
                     a = 1;
                     break;
+                case Blocks.Diorite:
+                    a = 1;
+                    break;
+                case Blocks.PolishedDiorite:
+                    a = 1;
+                    break;
+                case Blocks.Andesite:
+                    a = 1;
+                    break;
+                case Blocks.PolishedAndesite:
+                    a = 1;
+                    break;
+                case Blocks.GrassBlock:
+                    a = 1;
+                    break;
+                case Blocks.Dirt:
+                    a = 1;
+                    break;
+                case Blocks.CoarseDirt:
+                    a = 1;
+                    break;
+                case Blocks.Podzol:
+                    a = 1;
+                    break;
+                case Blocks.Cobblestone:
+                    a = 1;
+                    break;
+                case Blocks.OakWoodPlanks:
+                    a = 1;
+                    break;
+                case Blocks.SpruceWoodPlanks:
+                    a = 1;
+                    break;
+                case Blocks.BirchWoodPlanks:
+                    a = 1;
+                    break;
+                case Blocks.JungleWoodPlanks:
+                    a = 1;
+                    break;
+                case Blocks.AcaciaWoodPlanks:
+                    a = 1;
+                    break;
+                case Blocks.DarkOakWoodPlanks:
+                    a = 1;
+                    break;
+                case Blocks.OakSapling:
+                    a = 0;
+                    break;
+                case Blocks.SpruceSapling:
+                    a = 0;
+                    break;
+                case Blocks.BirchSapling:
+                    a = 0;
+                    break;
+                case Blocks.JungleSapling:
+                    a = 0;
+                    break;
+                case Blocks.AcaciaSapling:
+                    a = 0;
+                    break;
+                case Blocks.DarkOakSapling:
+                    a = 0;
+                    break;
+                case Blocks.Bedrock:
+                    a = 1;
+                    break;
                 case Blocks.EastBottomOakWoodStairs:
+                    a = 3;
+                    break;
+                case Blocks.WestBottomOakWoodStairs:
+                    a = 3;
+                    break;
+                case Blocks.SouthBottomOakWoodStairs:
+                    a = 3;
+                    break;
+                case Blocks.NorthBottomOakWoodStairs:
+                    a = 3;
+                    break;
+                case Blocks.EastTopOakWoodStairs:
+                    a = 3;
+                    break;
+                case Blocks.WestTopOakWoodStairs:
+                    a = 3;
+                    break;
+                case Blocks.SouthTopOakWoodStairs:
+                    a = 3;
+                    break;
+                case Blocks.NorthTopOakWoodStairs:
                     a = 3;
                     break;
             }
