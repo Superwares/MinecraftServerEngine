@@ -176,18 +176,20 @@ namespace MinecraftPrimitives
 
         public override string ToString()
         {
+            string tab = "    ";
+
             string str = "";
 
             foreach (var item in _tagList)
             {
                 string _str = item.Value.ToString();
 
-                string indentedStr = string.Join("\n\t",
+                string indentedStr = string.Join($"\n{tab}",
                     _str.Split('\n', StringSplitOptions.None));
 
                 //Console.WriteLine($"{item.Key} : {item.Value}");
 
-                str += $"{item.Key}:\n\t{indentedStr}\n";
+                str += $"{item.Key}:\n{tab}{indentedStr}\n";
             }
 
             return str;

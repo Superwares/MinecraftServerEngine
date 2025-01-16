@@ -43,7 +43,23 @@ namespace MinecraftPrimitives
 
         public override string ToString()
         {
-            return $"NBTTagList<{typeof(T).Name}>({value.Length})";
+            string str = $"NBTTagList<{typeof(T).Name}>({value.Length})";
+
+            if (value.Length > 0)
+            {
+                str += " [";
+                for (int i = 0; i < value.Length; i++)
+                {
+                    str += value[i].ToString();
+                    if (i < value.Length - 1)
+                    {
+                        str += ", ";
+                    }
+                }
+                str += "]";
+            }
+
+            return 
         }
     }
 
