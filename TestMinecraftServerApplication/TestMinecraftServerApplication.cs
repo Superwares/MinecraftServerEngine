@@ -16,10 +16,12 @@ Console.Printl("Hello, World!");
 //using ServerFramework framework = new(world);
 //framework.Run(port);
 
+int chunkX = 4;
+int chunkZ = 4;
 
 FileInfo fileInfo = new("C:\\Users\\Peach\\Documents\\Superwares\\MinecraftServerEngine\\Testing\\r.0.0.mca");
 
-NBTTagCompound tag = NBTTagRootCompoundLoader.Load(fileInfo, 1, 1);
+NBTTagCompound tag = NBTTagRootCompoundLoader.Load(fileInfo, chunkX, chunkZ);
 
 if (tag != null)
 {
