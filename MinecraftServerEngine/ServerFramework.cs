@@ -5,7 +5,7 @@ using Containers;
 
 namespace MinecraftServerEngine
 {
-    public class ServerFramework : System.IDisposable
+    public sealed class ServerFramework : System.IDisposable
     {
         internal sealed class PerformanceMonitor
         {
@@ -71,7 +71,7 @@ namespace MinecraftServerEngine
                     _totalTimes[N] = Time.Zero;
                 }
 
-                MyConsole.Printl(msg);
+                MyConsole.Info(msg);
 
                 _count = 0;
             }
@@ -198,13 +198,18 @@ namespace MinecraftServerEngine
             World = world;
         }
 
-        ~ServerFramework() => System.Diagnostics.Debug.Assert(false);
+        ~ServerFramework()
+        {
+            System.Diagnostics.Debug.Assert(false);
+
+            Dispose(false);
+        }
 
         private void NewThread(VoidMethod startRoutine)
         {
             System.Diagnostics.Debug.Assert(startRoutine != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(Threads != null);
             Threads.Enqueue(Thread.New(startRoutine));
@@ -212,12 +217,12 @@ namespace MinecraftServerEngine
 
         public void Run(ushort port)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             CurrentRunningThread = Thread.GetCurrent();
             MyConsole.HandleTerminatin(() =>
             {
-                MyConsole.Printl("Cancel!");
+                MyConsole.Info("Server shutdown initiated.");
                 _running = false;
 
                 System.Diagnostics.Debug.Assert(CurrentRunningThread != null);
@@ -282,7 +287,7 @@ namespace MinecraftServerEngine
             while (_running)
             {
                 f = (accumulated >= interval);
-                if (f  == true)
+                if (f == true)
                 {
                     /*System.Diagnostics.Debug.Assert(_ticks >= 0);*/
 
@@ -298,7 +303,7 @@ namespace MinecraftServerEngine
 
                 if (elapsed > interval)
                 {
-                    MyConsole.Printl($"[Warning] The task is taking longer, Elapsed: {elapsed}!");
+                    MyConsole.Warn($"The task is taking longer, Elapsed: {elapsed}!");
                 }
 
                 if (f)
@@ -330,23 +335,42 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(!_running);
             }
 
-            MyConsole.Printl("Finish!");
+            MyConsole.Info("Finish!");
         }
 
         public void Dispose()
         {
-            // Assertiong
-            System.Diagnostics.Debug.Assert(!_disposed);
-            System.Diagnostics.Debug.Assert(!_running);
-            System.Diagnostics.Debug.Assert(Threads.Empty);
-
-            // Release resources.
-            Threads.Dispose();
-
-            // Finish
+            Dispose(true);
             System.GC.SuppressFinalize(this);
-            _disposed = true;
         }
+
+        private void Dispose(bool disposing)
+        {
+            // Check to see if Dispose has already been called.
+            if (_disposed == false)
+            {
+                System.Diagnostics.Debug.Assert(_running == false);
+                System.Diagnostics.Debug.Assert(Threads.Empty == true);
+
+                // If disposing equals true, dispose all managed
+                // and unmanaged resources.
+                if (disposing == true)
+                {
+                    Threads.Dispose();
+                }
+
+                // Call the appropriate methods to clean up
+                // unmanaged resources here.
+                // If disposing is false,
+                // only the following code is executed.
+                //CloseHandle(handle);
+                //handle = IntPtr.Zero;
+
+                // Note disposing has been done.
+                _disposed = true;
+            }
+        }
+
 
     }
 }
