@@ -17,10 +17,12 @@ which significantly enhances server performance and scalability.
 ### Single World
 
 ### Dynamic Entity Appearance (yet)
+다른 Entity 또는 블럭으로 변환 가능 (Hitbox 는 변하지 않음))
 
 ### Player Skin Morphing (yet)
 
-### Ghost Player
+### Ghost Entities (yet)
+* 실제 보이지만 않지만 실제로 존재하는 엔티티 (공격, 이동, 상호작용 가능)
 
 ## Code Conventions
 

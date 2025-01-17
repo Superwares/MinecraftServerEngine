@@ -7,7 +7,7 @@ using Containers;
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
-    
+
     public abstract class Entity : PhysicsObject
     {
         private protected sealed class RendererManager : System.IDisposable
@@ -109,7 +109,7 @@ namespace MinecraftServerEngine
 
                     return false;
                 }
-                
+
             }
 
             internal void MoveAndRotate(Vector p, Vector pPrev, Look look)
@@ -336,7 +336,7 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(w >= 0.0D);
                 System.Diagnostics.Debug.Assert(h >= 0.0D);
-                
+
                 Width = w;
                 Height = h;
             }
@@ -398,6 +398,11 @@ namespace MinecraftServerEngine
         private bool _teleported = false;
         private Vector _pTeleport;
 
+        //private bool _fakeBlockChanged = false;
+        //private Block _fakeBlock;
+
+        // ApplyBlockAppearance
+        // TransformAppearance
 
         private readonly bool NoGravity;
 
@@ -429,7 +434,11 @@ namespace MinecraftServerEngine
             Manager = new(Id);
         }
 
-        ~Entity() => System.Diagnostics.Debug.Assert(false);
+        ~Entity()
+        {
+            System.Diagnostics.Debug.Assert(false);
+            //Dispose(false);
+        }
 
         private protected abstract Hitbox GetHitbox();
 
@@ -437,7 +446,7 @@ namespace MinecraftServerEngine
 
         protected abstract void OnSneak(World world, bool f);
         protected abstract void OnSprint(World world, bool f);
-        
+
         protected internal abstract void OnAttack(World world);
         protected internal abstract void OnAttack(World world, ItemStack stack);
         protected internal abstract void OnUseItem(World world, ItemStack stack);
@@ -482,7 +491,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(Manager != null);
-            if (Manager.HandleRendering(volume, out Vector p))
+            if (Manager.HandleRendering(volume, out Vector p) == true)
             {
                 if (_teleported)
                 {
@@ -680,9 +689,9 @@ namespace MinecraftServerEngine
         private bool _disposed = false;
 
 
-        internal BlockEntity(Vector p, Look look, bool noGravity) : 
-            base(System.Guid.NewGuid(), p, look, noGravity, 
-                DefaultHitbox, 
+        internal BlockEntity(Vector p, Look look, bool noGravity) :
+            base(System.Guid.NewGuid(), p, look, noGravity,
+                DefaultHitbox,
                 DefaultMass, DefaultMaxStepLevel)
         {
         }
@@ -715,7 +724,7 @@ namespace MinecraftServerEngine
             EntityRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(renderer != null);
-            
+
             throw new System.NotImplementedException();
         }
 
@@ -754,7 +763,7 @@ namespace MinecraftServerEngine
         public ItemEntity(ItemStack stack, Vector p)
             : base(System.Guid.NewGuid(), p, new Look(0.0F, 0.0F), false,
                   DefaultHitbox,
-                  DefaultMass, DefaultMaxStepLevel) 
+                  DefaultMass, DefaultMaxStepLevel)
         {
             System.Diagnostics.Debug.Assert(stack != null);
 
@@ -881,8 +890,8 @@ namespace MinecraftServerEngine
             Vector p, Look look,
             bool noGravity,
             Hitbox hitbox,
-            double m, double maxStepLevel) 
-            : base(uniqueId, p, look, noGravity, hitbox, m, maxStepLevel) 
+            double m, double maxStepLevel)
+            : base(uniqueId, p, look, noGravity, hitbox, m, maxStepLevel)
         {
             _health = _maxHealth;
         }
@@ -983,8 +992,8 @@ namespace MinecraftServerEngine
                   id.Data,
                   p, look,
                   false,  // noGravity
-                  gamemode == Gamemode.Spectator ? GetSpectatorHitbox() : GetAdventureHitbox(false), 
-                  DefaultMass, DefaultMaxStepLevel) 
+                  gamemode == Gamemode.Spectator ? GetSpectatorHitbox() : GetAdventureHitbox(false),
+                  DefaultMass, DefaultMaxStepLevel)
         {
             System.Diagnostics.Debug.Assert(id != UserId.Null);
 
@@ -1042,7 +1051,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            return (_nextGamemode == Gamemode.Spectator) ? 
+            return (_nextGamemode == Gamemode.Spectator) ?
                 GetSpectatorHitbox() : GetAdventureHitbox(false);
         }
 
@@ -1217,11 +1226,11 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(Conn != null);
             Conn.LoadAndSendData(
-                world, 
-                Id, 
+                world,
+                Id,
                 Position, Look);
         }
-        
+
         public bool Open(PublicInventory invPublic)
         {
             System.Diagnostics.Debug.Assert(!_disposed);

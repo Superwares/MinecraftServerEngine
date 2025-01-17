@@ -6,7 +6,7 @@ namespace TestMinecraftServerApplication
 {
     internal sealed class Lobby : World
     {
-        private static readonly Vector PosSpawning = new(0.0D, 101.0D, 0.0D);
+        private static readonly Vector PosSpawning = new(0.0D, 110.0D, 0.0D);
         private static readonly Look LookSpawning = new(0.0F, 0.0F);
 
         private bool _disposed = false;
