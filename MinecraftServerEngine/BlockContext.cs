@@ -11,28 +11,7 @@ namespace MinecraftServerEngine
 
     internal sealed class BlockContext : Terrain
     {
-
-        private static StairsBlockDirection GetStairsDirection(Block block)
-        {
-            System.Diagnostics.Debug.Assert(block.IsStairs());
-
-            int id = block.GetId();
-            int metadata = id & 0b_1111;
-            switch (metadata % 4)
-            {
-                default:
-                    throw new System.NotImplementedException();
-                case 0:
-                    return StairsBlockDirection.EAST;
-                case 1:
-                    return StairsBlockDirection.WEST;
-                case 2:
-                    return StairsBlockDirection.SOUTH;
-                case 3:
-                    return StairsBlockDirection.NORTH;
-            }
-        }
-
+    
         private sealed class ChunkData : System.IDisposable
         {
             private sealed class SectionData : System.IDisposable
@@ -932,29 +911,29 @@ namespace MinecraftServerEngine
             return BlockExtensions.ToBlock(id);
         }
 
-        private Block GetBlock(BlockLocation loc, StairsBlockDirection d, int s)
+        private Block GetBlock(BlockLocation loc, BlockDirection d, int s)
         {
             BlockLocation locPrime;
             switch (d)
             {
                 default:
                     throw new System.NotImplementedException();
-                case StairsBlockDirection.EAST:
+                case BlockDirection.Right:
                     locPrime = new BlockLocation(loc.X + s, loc.Y, loc.Z);
                     break;
-                case StairsBlockDirection.WEST:
+                case BlockDirection.Left:
                     locPrime = new BlockLocation(loc.X - s, loc.Y, loc.Z);
                     break;
-                case StairsBlockDirection.SOUTH:
+                case BlockDirection.Back:
                     locPrime = new BlockLocation(loc.X, loc.Y, loc.Z + s);
                     break;
-                case StairsBlockDirection.NORTH:
+                case BlockDirection.Front:
                     locPrime = new BlockLocation(loc.X, loc.Y, loc.Z - s);
                     break;
-                case StairsBlockDirection.UP:
+                case BlockDirection.UP:
                     locPrime = new BlockLocation(loc.X, loc.Y + s, loc.Z);
                     break;
-                case StairsBlockDirection.DOWN:
+                case BlockDirection.DOWN:
                     locPrime = new BlockLocation(loc.X, loc.Y - s, loc.Z);
                     break;
             }
@@ -977,12 +956,12 @@ namespace MinecraftServerEngine
             return;
         }
 
-        private (StairsBlockDirection, bool, int) DetermineStairsBlockShape(
+        private (BlockDirection, bool, int) DetermineStairsBlockShape(
             BlockLocation loc, Block block)
         {
-            System.Diagnostics.Debug.Assert(block.IsStairs());
+            System.Diagnostics.Debug.Assert(block.IsStairs()  == true);
 
-            StairsBlockDirection d = GetStairsDirection(block);
+            BlockDirection d = block.GetStairsDirection();
             bool bottom = block.IsBottomStairs();
 
             Block block2 = GetBlock(loc, d, 1);
@@ -991,10 +970,10 @@ namespace MinecraftServerEngine
             {
                 if (block2.IsVerticalStairs() != block.IsVerticalStairs())
                 {
-                    StairsBlockDirection d2 = GetStairsDirection(block2);
+                    BlockDirection d2 = block2.GetStairsDirection();
                     Block block3 = GetBlock(loc, d2.GetOpposite(), 1);
                     if (!block3.IsStairs() ||
-                        GetStairsDirection(block3) != d ||
+                        block3.GetStairsDirection() != d ||
                         block3.IsBottomStairs() != bottom)
                     {
                         if (d2 == d.RotateCCW())
@@ -1019,10 +998,10 @@ namespace MinecraftServerEngine
             {
                 if (block4.IsVerticalStairs() != block.IsVerticalStairs())
                 {
-                    StairsBlockDirection d4 = GetStairsDirection(block4);
+                    BlockDirection d4 = block4.GetStairsDirection();
                     Block block5 = GetBlock(loc, d4, 1);
                     if (!block5.IsStairs() ||
-                        GetStairsDirection(block5) != d ||
+                        block5.GetStairsDirection() != d ||
                         block5.IsBottomStairs() != bottom)
                     {
                         if (d4 == d.RotateCCW())
@@ -1052,7 +1031,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            (StairsBlockDirection d, bool bottom, int b) = DetermineStairsBlockShape(loc, block);
+            (BlockDirection d, bool bottom, int b) = DetermineStairsBlockShape(loc, block);
 
             throw new System.NotImplementedException();
         }

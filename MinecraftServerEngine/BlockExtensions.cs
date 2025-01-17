@@ -220,5 +220,37 @@ namespace MinecraftServerEngine
             int metadata = id & 0b_1111;
             return metadata < 4;
         }
+
+        public static bool IsTopStairs(this Block block)
+        {
+            if (block.GetShape() != BlockShape.Stairs)
+            {
+                return false;
+            }
+            int id = block.GetId();
+            int metadata = id & 0b_1111;
+            return metadata >= 4;
+        }
+
+        public static BlockDirection GetStairsDirection(this Block block)
+        {
+            System.Diagnostics.Debug.Assert(block.IsStairs() == true);
+
+            int id = block.GetId();
+            int metadata = id & 0b_1111;
+            switch (metadata % 4)
+            {
+                default:
+                    throw new System.NotImplementedException();
+                case 0:
+                    return BlockDirection.Right;
+                case 1:
+                    return BlockDirection.Left;
+                case 2:
+                    return BlockDirection.Back;
+                case 3:
+                    return BlockDirection.Front;
+            }
+        }
     }
 }
