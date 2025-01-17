@@ -33,24 +33,6 @@ namespace MinecraftServerEngine
             }
         }
 
-        private static bool IsBottomStairsBlock(Block block)
-        {
-            System.Diagnostics.Debug.Assert(block.IsStairs());
-
-            int id = block.GetId();
-            int metadata = id & 0b_1111;
-            return metadata < 4;
-        }
-
-        private static bool IsVerticalStairsBlock(Block block)
-        {
-            System.Diagnostics.Debug.Assert(block.IsStairs());
-
-            int id = block.GetId();
-            int metadata = id & 0b_1111;
-            return metadata == 0 || metadata == 1 || metadata == 4 || metadata == 5;
-        }
-
         private sealed class ChunkData : System.IDisposable
         {
             private sealed class SectionData : System.IDisposable
@@ -995,19 +977,19 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(block.IsStairs());
 
             StairsBlockDirection d = GetStairsDirection(block);
-            bool bottom = IsBottomStairsBlock(block);
+            bool bottom = block.IsBottomStairs();
 
             Block block2 = GetBlock(loc, d, 1);
             if (block2.IsStairs() &&
-                bottom == IsBottomStairsBlock(block2))
+                bottom == block2.IsBottomStairs())
             {
-                if (IsVerticalStairsBlock(block2) != IsVerticalStairsBlock(block))
+                if (block2.IsVerticalStairs() != block.IsVerticalStairs())
                 {
                     StairsBlockDirection d2 = GetStairsDirection(block2);
                     Block block3 = GetBlock(loc, d2.GetOpposite(), 1);
                     if (!block3.IsStairs() ||
                         GetStairsDirection(block3) != d ||
-                        IsBottomStairsBlock(block3) != bottom)
+                        block3.IsBottomStairs() != bottom)
                     {
                         if (d2 == d.RotateCCW())
                         {
@@ -1027,15 +1009,15 @@ namespace MinecraftServerEngine
 
             Block block4 = GetBlock(loc, d.GetOpposite(), 1);
             if (block4.IsStairs() &&
-                bottom == IsBottomStairsBlock(block4))
+                bottom == block4.IsBottomStairs())
             {
-                if (IsVerticalStairsBlock(block4) != IsVerticalStairsBlock(block))
+                if (block4.IsVerticalStairs() != block.IsVerticalStairs())
                 {
                     StairsBlockDirection d4 = GetStairsDirection(block4);
                     Block block5 = GetBlock(loc, d4, 1);
                     if (!block5.IsStairs() ||
                         GetStairsDirection(block5) != d ||
-                        IsBottomStairsBlock(block5) != bottom)
+                        block5.IsBottomStairs() != bottom)
                     {
                         if (d4 == d.RotateCCW())
                         {

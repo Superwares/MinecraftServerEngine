@@ -194,5 +194,30 @@ namespace MinecraftServerEngine
         {
             return block.GetShape() == BlockShape.Stairs;
         }
+
+        public static bool IsVerticalStairs(this Block block)
+        {
+            if (block.GetShape() != BlockShape.Stairs)
+            {
+                return false;
+            }
+
+            int id = block.GetId();
+            int metadata = id & 0b_1111;
+
+            return metadata == 0 || metadata == 1 || metadata == 4 || metadata == 5;
+        }
+
+        public static bool IsBottomStairs(this Block block)
+        {
+            if (block.GetShape() != BlockShape.Stairs)
+            {
+                return false;
+            }
+
+            int id = block.GetId();
+            int metadata = id & 0b_1111;
+            return metadata < 4;
+        }
     }
 }
