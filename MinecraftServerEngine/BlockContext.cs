@@ -2,12 +2,9 @@
 
 using Common;
 using Containers;
+
 using MinecraftPrimitives;
 using MinecraftServerEngine.PhysicsEngine;
-using System;
-using System.IO;
-using System.Linq.Expressions;
-using System.Text.RegularExpressions;
 
 namespace MinecraftServerEngine
 {
@@ -15,100 +12,9 @@ namespace MinecraftServerEngine
     internal sealed class BlockContext : Terrain
     {
 
-        private enum Directions : int
+        private static StairsBlockDirection GetStairsDirection(Block block)
         {
-            DOWN,
-            UP,
-            NORTH,
-            SOUTH,
-            WEST,
-            EAST,
-        }
-
-        private static Directions ToCCWDirection(Directions d)
-        {
-            switch (d)
-            {
-                default:
-                    throw new System.NotImplementedException();
-                case Directions.NORTH:
-                    return Directions.WEST;
-                case Directions.EAST:
-                    return Directions.NORTH;
-                case Directions.SOUTH:
-                    return Directions.EAST;
-                case Directions.WEST:
-                    return Directions.SOUTH;
-            }
-        }
-
-        private static Directions ToCWDirection(Directions d)
-        {
-            switch (d)
-            {
-                default:
-                    throw new System.NotImplementedException();
-                case Directions.NORTH:
-                    return Directions.EAST;
-                case Directions.EAST:
-                    return Directions.SOUTH;
-                case Directions.SOUTH:
-                    return Directions.WEST;
-                case Directions.WEST:
-                    return Directions.NORTH;
-            }
-        }
-
-        private static Directions ToOppositeDirection(Directions d)
-        {
-            switch (d)
-            {
-                default:
-                    throw new System.NotImplementedException();
-                case Directions.UP:
-                    return Directions.DOWN;
-                case Directions.DOWN:
-                    return Directions.UP;
-                case Directions.NORTH:
-                    return Directions.SOUTH;
-                case Directions.EAST:
-                    return Directions.WEST;
-                case Directions.SOUTH:
-                    return Directions.NORTH;
-                case Directions.WEST:
-                    return Directions.EAST;
-            }
-        }
-
-        private static bool IsStairsBlock(Blocks block)
-        {
-            switch (block)
-            {
-                default:
-                    return false;
-                case Blocks.EastBottomOakWoodStairs:
-                    return true;
-                case Blocks.WestBottomOakWoodStairs:
-                    return true;
-                case Blocks.SouthBottomOakWoodStairs:
-                    return true;
-                case Blocks.NorthBottomOakWoodStairs:
-                    return true;
-                case Blocks.EastTopOakWoodStairs:
-                    return true;
-                case Blocks.WestTopOakWoodStairs:
-                    return true;
-                case Blocks.SouthTopOakWoodStairs:
-                    return true;
-                case Blocks.NorthTopOakWoodStairs:
-                    return true;
-
-            }
-        }
-
-        private static Directions GetStairsDirection(Blocks block)
-        {
-            System.Diagnostics.Debug.Assert(IsStairsBlock(block));
+            System.Diagnostics.Debug.Assert(block.IsStairs());
 
             int id = block.GetId();
             int metadata = id & 0b_1111;
@@ -117,28 +23,28 @@ namespace MinecraftServerEngine
                 default:
                     throw new System.NotImplementedException();
                 case 0:
-                    return Directions.EAST;
+                    return StairsBlockDirection.EAST;
                 case 1:
-                    return Directions.WEST;
+                    return StairsBlockDirection.WEST;
                 case 2:
-                    return Directions.SOUTH;
+                    return StairsBlockDirection.SOUTH;
                 case 3:
-                    return Directions.NORTH;
+                    return StairsBlockDirection.NORTH;
             }
         }
 
-        private static bool IsBottomStairsBlock(Blocks block)
+        private static bool IsBottomStairsBlock(Block block)
         {
-            System.Diagnostics.Debug.Assert(IsStairsBlock(block));
+            System.Diagnostics.Debug.Assert(block.IsStairs());
 
             int id = block.GetId();
             int metadata = id & 0b_1111;
             return metadata < 4;
         }
 
-        private static bool IsVerticalStairsBlock(Blocks block)
+        private static bool IsVerticalStairsBlock(Block block)
         {
-            System.Diagnostics.Debug.Assert(IsStairsBlock(block));
+            System.Diagnostics.Debug.Assert(block.IsStairs());
 
             int id = block.GetId();
             int metadata = id & 0b_1111;
@@ -842,7 +748,7 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
-        public static readonly Blocks DefaultBlock = Blocks.Air;
+        public static readonly Block DefaultBlock = Block.Air;
 
         private readonly Table<ChunkLocation, ChunkData> Chunks;  // Disposable
 
@@ -854,14 +760,14 @@ namespace MinecraftServerEngine
             {
                 Table<ChunkLocation, ChunkData> chunks = new();
 
-                string[] regionFiles = Directory.GetFiles(
+                string[] regionFiles = System.IO.Directory.GetFiles(
                     folderPath,
                     "*.mca",
-                    SearchOption.TopDirectoryOnly);
+                    System.IO.SearchOption.TopDirectoryOnly);
 
                 foreach (string filename in regionFiles)
                 {
-                    FileInfo fileInfo = new(filename);
+                    System.IO.FileInfo fileInfo = new(filename);
 
                     if (fileInfo.Exists == false)
                     {
@@ -871,7 +777,8 @@ namespace MinecraftServerEngine
 
                     string name = fileInfo.Name;
 
-                    Match match = Regex.Match(name, regionFilePattern);
+                    System.Text.RegularExpressions.Match match =
+                        System.Text.RegularExpressions.Regex.Match(name, regionFilePattern);
 
                     if (match.Success == false)
                     {
@@ -932,7 +839,7 @@ namespace MinecraftServerEngine
 
                 return new BlockContext(chunks);
             }
-            catch (DirectoryNotFoundException)
+            catch (System.IO.DirectoryNotFoundException)
             {
                 return new BlockContext();
             }
@@ -951,7 +858,7 @@ namespace MinecraftServerEngine
 
             BlockLocation loc = new(0, 100, 0);
 
-            SetBlock(loc, Blocks.Stone);
+            SetBlock(loc, Block.Stone);
         }
 
         ~BlockContext() => System.Diagnostics.Debug.Assert(false);
@@ -991,7 +898,7 @@ namespace MinecraftServerEngine
             return new ChunkLocation(x, z);
         }
 
-        private void SetBlock(BlockLocation loc, Blocks block)
+        private void SetBlock(BlockLocation loc, Block block)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -1019,7 +926,7 @@ namespace MinecraftServerEngine
             chunk.SetId(DefaultBlock.GetId(), x, y, z, block.GetId());
         }
 
-        private Blocks GetBlock(BlockLocation loc)
+        private Block GetBlock(BlockLocation loc)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -1037,29 +944,29 @@ namespace MinecraftServerEngine
             return BlockExtensions.ToBlock(id);
         }
 
-        private Blocks GetBlock(BlockLocation loc, Directions d, int s)
+        private Block GetBlock(BlockLocation loc, StairsBlockDirection d, int s)
         {
             BlockLocation locPrime;
             switch (d)
             {
                 default:
                     throw new System.NotImplementedException();
-                case Directions.EAST:
+                case StairsBlockDirection.EAST:
                     locPrime = new BlockLocation(loc.X + s, loc.Y, loc.Z);
                     break;
-                case Directions.WEST:
+                case StairsBlockDirection.WEST:
                     locPrime = new BlockLocation(loc.X - s, loc.Y, loc.Z);
                     break;
-                case Directions.SOUTH:
+                case StairsBlockDirection.SOUTH:
                     locPrime = new BlockLocation(loc.X, loc.Y, loc.Z + s);
                     break;
-                case Directions.NORTH:
+                case StairsBlockDirection.NORTH:
                     locPrime = new BlockLocation(loc.X, loc.Y, loc.Z - s);
                     break;
-                case Directions.UP:
+                case StairsBlockDirection.UP:
                     locPrime = new BlockLocation(loc.X, loc.Y + s, loc.Z);
                     break;
-                case Directions.DOWN:
+                case StairsBlockDirection.DOWN:
                     locPrime = new BlockLocation(loc.X, loc.Y - s, loc.Z);
                     break;
             }
@@ -1082,34 +989,34 @@ namespace MinecraftServerEngine
             return;
         }
 
-        private (Directions, bool, int) DetermineStairsBlockShape(
-            BlockLocation loc, Blocks block)
+        private (StairsBlockDirection, bool, int) DetermineStairsBlockShape(
+            BlockLocation loc, Block block)
         {
-            System.Diagnostics.Debug.Assert(IsStairsBlock(block));
+            System.Diagnostics.Debug.Assert(block.IsStairs());
 
-            Directions d = GetStairsDirection(block);
+            StairsBlockDirection d = GetStairsDirection(block);
             bool bottom = IsBottomStairsBlock(block);
 
-            Blocks block2 = GetBlock(loc, d, 1);
-            if (IsStairsBlock(block2) &&
+            Block block2 = GetBlock(loc, d, 1);
+            if (block2.IsStairs() &&
                 bottom == IsBottomStairsBlock(block2))
             {
                 if (IsVerticalStairsBlock(block2) != IsVerticalStairsBlock(block))
                 {
-                    Directions d2 = GetStairsDirection(block2);
-                    Blocks block3 = GetBlock(loc, ToOppositeDirection(d2), 1);
-                    if (!IsStairsBlock(block3) ||
+                    StairsBlockDirection d2 = GetStairsDirection(block2);
+                    Block block3 = GetBlock(loc, d2.GetOpposite(), 1);
+                    if (!block3.IsStairs() ||
                         GetStairsDirection(block3) != d ||
                         IsBottomStairsBlock(block3) != bottom)
                     {
-                        if (d2 == ToCCWDirection(d))
+                        if (d2 == d.RotateCCW())
                         {
                             // outer left
                             return (d, bottom, 1);
                         }
                         else
                         {
-                            System.Diagnostics.Debug.Assert(d2 == ToCWDirection(d));
+                            System.Diagnostics.Debug.Assert(d2 == d.RotateCW());
                             // outer right
                             return (d, bottom, 2);
                         }
@@ -1118,26 +1025,26 @@ namespace MinecraftServerEngine
 
             }
 
-            Blocks block4 = GetBlock(loc, ToOppositeDirection(d), 1);
-            if (IsStairsBlock(block4) &&
+            Block block4 = GetBlock(loc, d.GetOpposite(), 1);
+            if (block4.IsStairs() &&
                 bottom == IsBottomStairsBlock(block4))
             {
                 if (IsVerticalStairsBlock(block4) != IsVerticalStairsBlock(block))
                 {
-                    Directions d4 = GetStairsDirection(block4);
-                    Blocks block5 = GetBlock(loc, d4, 1);
-                    if (!IsStairsBlock(block5) ||
+                    StairsBlockDirection d4 = GetStairsDirection(block4);
+                    Block block5 = GetBlock(loc, d4, 1);
+                    if (!block5.IsStairs() ||
                         GetStairsDirection(block5) != d ||
                         IsBottomStairsBlock(block5) != bottom)
                     {
-                        if (d4 == ToCCWDirection(d))
+                        if (d4 == d.RotateCCW())
                         {
                             // inner left
                             return (d, bottom, 3);
                         }
                         else
                         {
-                            System.Diagnostics.Debug.Assert(d4 == ToCWDirection(d));
+                            System.Diagnostics.Debug.Assert(d4 == d.RotateCW());
                             // inner right
                             return (d, bottom, 4);
                         }
@@ -1151,13 +1058,13 @@ namespace MinecraftServerEngine
         }
 
         private void GenerateBoundingBoxForStairsBlock(
-            Queue<AxisAlignedBoundingBox> queue, BlockLocation loc, Blocks block)
+            Queue<AxisAlignedBoundingBox> queue, BlockLocation loc, Block block)
         {
             System.Diagnostics.Debug.Assert(queue != null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            (Directions d, bool bottom, int b) = DetermineStairsBlockShape(loc, block);
+            (StairsBlockDirection d, bool bottom, int b) = DetermineStairsBlockShape(loc, block);
 
             throw new System.NotImplementedException();
         }
@@ -1169,134 +1076,20 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Blocks block = GetBlock(loc);
+            Block block = GetBlock(loc);
 
-            /**
-             * 0: None (Air)
-             * 1: Cube
-             * 2: Slab
-             * 3: Stairs
-             */
-            int a = 0;
-
-            switch (block)
+            switch (block.GetShape())
             {
                 default:
                     throw new System.NotImplementedException();
-                case Blocks.Air:
-                    a = 0;
+                case BlockShape.None:
                     break;
-                case Blocks.Stone:
-                    a = 1;
-                    break;
-                case Blocks.Granite:
-                    a = 1;
-                    break;
-                case Blocks.PolishedGranite:
-                    a = 1;
-                    break;
-                case Blocks.Diorite:
-                    a = 1;
-                    break;
-                case Blocks.PolishedDiorite:
-                    a = 1;
-                    break;
-                case Blocks.Andesite:
-                    a = 1;
-                    break;
-                case Blocks.PolishedAndesite:
-                    a = 1;
-                    break;
-                case Blocks.GrassBlock:
-                    a = 1;
-                    break;
-                case Blocks.Dirt:
-                    a = 1;
-                    break;
-                case Blocks.CoarseDirt:
-                    a = 1;
-                    break;
-                case Blocks.Podzol:
-                    a = 1;
-                    break;
-                case Blocks.Cobblestone:
-                    a = 1;
-                    break;
-                case Blocks.OakWoodPlanks:
-                    a = 1;
-                    break;
-                case Blocks.SpruceWoodPlanks:
-                    a = 1;
-                    break;
-                case Blocks.BirchWoodPlanks:
-                    a = 1;
-                    break;
-                case Blocks.JungleWoodPlanks:
-                    a = 1;
-                    break;
-                case Blocks.AcaciaWoodPlanks:
-                    a = 1;
-                    break;
-                case Blocks.DarkOakWoodPlanks:
-                    a = 1;
-                    break;
-                case Blocks.OakSapling:
-                    a = 0;
-                    break;
-                case Blocks.SpruceSapling:
-                    a = 0;
-                    break;
-                case Blocks.BirchSapling:
-                    a = 0;
-                    break;
-                case Blocks.JungleSapling:
-                    a = 0;
-                    break;
-                case Blocks.AcaciaSapling:
-                    a = 0;
-                    break;
-                case Blocks.DarkOakSapling:
-                    a = 0;
-                    break;
-                case Blocks.Bedrock:
-                    a = 1;
-                    break;
-                case Blocks.EastBottomOakWoodStairs:
-                    a = 3;
-                    break;
-                case Blocks.WestBottomOakWoodStairs:
-                    a = 3;
-                    break;
-                case Blocks.SouthBottomOakWoodStairs:
-                    a = 3;
-                    break;
-                case Blocks.NorthBottomOakWoodStairs:
-                    a = 3;
-                    break;
-                case Blocks.EastTopOakWoodStairs:
-                    a = 3;
-                    break;
-                case Blocks.WestTopOakWoodStairs:
-                    a = 3;
-                    break;
-                case Blocks.SouthTopOakWoodStairs:
-                    a = 3;
-                    break;
-                case Blocks.NorthTopOakWoodStairs:
-                    a = 3;
-                    break;
-            }
-
-            switch (a)
-            {
-                default:
-                    throw new System.NotImplementedException();
-                case 0:
-                    break;
-                case 1:
+                case BlockShape.Cube:
                     GenerateBoundingBoxForCubeBlock(queue, loc);
                     break;
-                case 3:
+                case BlockShape.Slab:
+                    throw new System.NotImplementedException();
+                case BlockShape.Stairs:
                     GenerateBoundingBoxForStairsBlock(queue, loc, block);
                     break;
             }

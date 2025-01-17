@@ -3,7 +3,7 @@ using Common;
 
 namespace MinecraftServerEngine
 {
-    public enum Blocks : int
+    public enum Block : int
     {
         Air,
         Stone,
