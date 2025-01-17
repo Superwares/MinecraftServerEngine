@@ -171,7 +171,8 @@ namespace MinecraftServerEngine
                 _BLOCK_ID_TO_ENUM_MAP.Insert(ctx.Id, block);
             }
 
-            System.Diagnostics.Debug.Assert(_BLOCK_ENUM_TO_CTX_MAP.Count == _BLOCK_ID_TO_ENUM_MAP.Count);
+            System.Diagnostics.Debug.Assert(
+                _BLOCK_ENUM_TO_CTX_MAP.Count == _BLOCK_ID_TO_ENUM_MAP.Count);
 
         }
 

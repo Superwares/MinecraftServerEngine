@@ -4,6 +4,9 @@ using Common;
 using Containers;
 using MinecraftServerEngine.PhysicsEngine;
 using Sync;
+using System.ComponentModel;
+using System.Reflection.Metadata;
+using System;
 
 namespace MinecraftServerEngine.PhysicsEngine
 {
@@ -206,7 +209,12 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         public PhysicsWorld() { }
 
-        ~PhysicsWorld() => System.Diagnostics.Debug.Assert(false);
+        ~PhysicsWorld()
+        {
+            System.Diagnostics.Debug.Assert(false);
+
+            Dispose(false);
+        }
 
         protected internal abstract void StartRoutine();
 
@@ -399,20 +407,38 @@ namespace MinecraftServerEngine.PhysicsEngine
             return obj.Integrate(terrain);
         }
 
-        public virtual void Dispose()
+        public void Dispose()
         {
-            // Assertions.
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            // Release resources.
-            RLocker.Dispose();
-
-            CellToObjects.Dispose();
-            ObjectToGrid.Dispose();
-
-            // Finish.
+            Dispose(true);
             System.GC.SuppressFinalize(this);
-            _disposed = true;
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            // Check to see if Dispose has already been called.
+            if (_disposed == false)
+            {
+                // If disposing equals true, dispose all managed
+                // and unmanaged resources.
+                if (disposing == true)
+                {
+                    // Dispose managed resources.
+                    RLocker.Dispose();
+
+                    CellToObjects.Dispose();
+                    ObjectToGrid.Dispose();
+                }
+
+                // Call the appropriate methods to clean up
+                // unmanaged resources here.
+                // If disposing is false,
+                // only the following code is executed.
+                //CloseHandle(handle);
+                //handle = IntPtr.Zero;
+
+                // Note disposing has been done.
+                _disposed = true;
+            }
         }
 
     }

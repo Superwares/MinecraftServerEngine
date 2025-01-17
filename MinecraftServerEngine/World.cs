@@ -143,7 +143,7 @@ namespace MinecraftServerEngine
             private readonly SwapQueue<AbstractPlayer> Players = new();
 
             ~ObjectQueue() => System.Diagnostics.Debug.Assert(false);
-            
+
             public void Swap()
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
@@ -256,12 +256,17 @@ namespace MinecraftServerEngine
 
         internal readonly BlockContext BlockContext;  // Disposable
 
-        public World() 
+        public World()
         {
             BlockContext = BlockContext.LoadWithRegionFiles(@"region");
         }
 
-        ~World() => System.Diagnostics.Debug.Assert(false);
+        ~World()
+        {
+            System.Diagnostics.Debug.Assert(false);
+
+            Dispose(false);
+        }
 
         internal void Connect(UserId id, ConcurrentQueue<ClientboundPlayingPacket> OutPackets)
         {
@@ -497,38 +502,51 @@ namespace MinecraftServerEngine
 
         }
 
-        public override void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            // Assertion.
-            System.Diagnostics.Debug.Assert(!_disposed);
+            // Check to see if Dispose has already been called.
+            if (_disposed == false)
+            {
+                System.Diagnostics.Debug.Assert(ObjectSpawningPool.Empty == true);
+                System.Diagnostics.Debug.Assert(ObjectDespawningPool.Empty == true);
 
-            System.Diagnostics.Debug.Assert(ObjectSpawningPool.Empty);
-            System.Diagnostics.Debug.Assert(ObjectDespawningPool.Empty);
+                System.Diagnostics.Debug.Assert(EntitiesById.Empty == true);
 
-            System.Diagnostics.Debug.Assert(EntitiesById.Empty);
+                System.Diagnostics.Debug.Assert(DisconnectedPlayers.Empty == true);
 
-            System.Diagnostics.Debug.Assert(DisconnectedPlayers.Empty);
+                // If disposing equals true, dispose all managed
+                // and unmanaged resources.
+                if (disposing == true)
+                {
+                    PlayerList.Dispose();
 
+                    ObjectSpawningPool.Dispose();
+                    ObjectDespawningPool.Dispose();
 
-            // Release resources.
-            PlayerList.Dispose();
+                    Objects.Dispose();
 
-            ObjectSpawningPool.Dispose();
-            ObjectDespawningPool.Dispose();
+                    EntitiesById.Dispose();
 
-            Objects.Dispose();
+                    DisconnectedPlayers.Dispose();
 
-            EntitiesById.Dispose();
+                    BlockContext.Dispose();
+                }
 
-            DisconnectedPlayers.Dispose();
+                // Call the appropriate methods to clean up
+                // unmanaged resources here.
+                // If disposing is false,
+                // only the following code is executed.
+                //CloseHandle(handle);
+                //handle = IntPtr.Zero;
 
-            BlockContext.Dispose();
+                // Note disposing has been done.
+                _disposed = true;
+            }
 
-            // Finish.
-            base.Dispose();
-            _disposed = true;
+            base.Dispose(disposing);
         }
-       
+
+
     }
 
 

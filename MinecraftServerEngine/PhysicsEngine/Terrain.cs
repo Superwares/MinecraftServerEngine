@@ -189,6 +189,13 @@ namespace MinecraftServerEngine.PhysicsEngine
             
         }
 
+        ~Terrain()
+        {
+            System.Diagnostics.Debug.Assert(false);
+
+            Dispose(false);
+        }
+
         protected abstract void GenerateBoundingBoxForBlock(
             Queue<AxisAlignedBoundingBox> queue, BlockLocation loc);
 
@@ -492,16 +499,35 @@ namespace MinecraftServerEngine.PhysicsEngine
             return Vector.Zero;
         }
 
-        public virtual void Dispose()
+        public void Dispose()
         {
-            // Assertions.
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            // Release resources.
-
-            // Finish.
+            Dispose(true);
             System.GC.SuppressFinalize(this);
-            _disposed = true;
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            // Check to see if Dispose has already been called.
+            if (_disposed == false)
+            {
+                // If disposing equals true, dispose all managed
+                // and unmanaged resources.
+                if (disposing == true)
+                {
+                    // Dispose managed resources.
+                    
+                }
+
+                // Call the appropriate methods to clean up
+                // unmanaged resources here.
+                // If disposing is false,
+                // only the following code is executed.
+                //CloseHandle(handle);
+                //handle = IntPtr.Zero;
+
+                // Note disposing has been done.
+                _disposed = true;
+            }
         }
 
     }

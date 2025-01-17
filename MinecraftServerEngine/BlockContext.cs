@@ -494,7 +494,8 @@ namespace MinecraftServerEngine
                             }
                             else
                             {
-                                System.Diagnostics.Debug.Assert(bitsPerBlock >= 4 && bitsPerBlock <= 8);
+                                System.Diagnostics.Debug.Assert(
+                                    bitsPerBlock >= 4 && bitsPerBlock <= 8);
 
                                 value = (long)length;
                             }
@@ -641,6 +642,11 @@ namespace MinecraftServerEngine
             public ChunkData()
             {
                 _sections = new SectionData[SectionCount];
+            }
+
+            ~ChunkData()
+            {
+                System.Diagnostics.Debug.Assert(false);
             }
 
             public void SetId(int defaultId, int x, int y, int z, int id)
@@ -1092,23 +1098,37 @@ namespace MinecraftServerEngine
             }
         }
 
-        public override void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            // Assertion.
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            // Release resources.
-            (ChunkLocation, ChunkData)[] _chunks = Chunks.Flush();
-            for (int i = 0; i < _chunks.Length; ++i)
+            // Check to see if Dispose has already been called.
+            if (_disposed == false)
             {
-                (var _, ChunkData data) = _chunks[i];
-                data.Dispose();
-            }
-            Chunks.Dispose();
+                // If disposing equals true, dispose all managed
+                // and unmanaged resources.
+                if (disposing == true)
+                {
+                    // Dispose managed resources.
+                    (ChunkLocation, ChunkData)[] _chunks = Chunks.Flush();
+                    for (int i = 0; i < _chunks.Length; ++i)
+                    {
+                        (var _, ChunkData data) = _chunks[i];
+                        data.Dispose();
+                    }
+                    Chunks.Dispose();
+                }
 
-            // Finish.
-            base.Dispose();
-            _disposed = true;
+                // Call the appropriate methods to clean up
+                // unmanaged resources here.
+                // If disposing is false,
+                // only the following code is executed.
+                //CloseHandle(handle);
+                //handle = IntPtr.Zero;
+
+                // Note disposing has been done.
+                _disposed = true;
+            }
+
+            base.Dispose(disposing);
         }
 
     }
