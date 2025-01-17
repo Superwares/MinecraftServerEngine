@@ -398,8 +398,11 @@ namespace MinecraftServerEngine
         private bool _teleported = false;
         private Vector _pTeleport;
 
-        //private bool _fakeBlockChanged = false;
-        //private Block _fakeBlock;
+        private bool _fakeBlockChanged = false;
+        private bool _prevFakeBlockApplied = false;
+        private Block _prevFakeBlock;
+        private bool _fakeBlockApplied = false;
+        private Block _fakeBlock;
 
         // ApplyBlockAppearance
         // TransformAppearance
