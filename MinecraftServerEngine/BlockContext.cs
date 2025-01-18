@@ -26,8 +26,8 @@ namespace MinecraftServerEngine
 
                 private (int, int)[] _palette;
 
-                private const int _BITS_PER_DATA_UNIT = sizeof(long) * 8; // TODO: Change to appropriate name.
-                private long[] _data;
+                private const int _BITS_PER_DATA_UNIT = sizeof(ulong) * 8; // TODO: Change to appropriate name.
+                private ulong[] _data;
 
                 private byte[] _blockLights, _skyLights;
 
@@ -48,11 +48,11 @@ namespace MinecraftServerEngine
                     (int, int)[] palette = [];
 
                     int dataLength = GetDataLength(bitsPerBlock);
-                    long[] data = new long[dataLength];
+                    ulong[] data = new ulong[dataLength];
 
                     {
                         int i;
-                        long value;
+                        ulong value;
 
                         int start, offset, end;
 
@@ -64,14 +64,14 @@ namespace MinecraftServerEngine
                                 {
                                     i = (((y * BlocksPerHeight) + z) * BlocksPerWidth) + x;
 
-                                    value = ((long)blocks[i] << 4) | _data[i / 2];
+                                    value = ((ulong)blocks[i] << 4) | _data[i / 2];
 
                                     start = (i * bitsPerBlock) / _BITS_PER_DATA_UNIT;
                                     offset = (i * bitsPerBlock) % _BITS_PER_DATA_UNIT;
                                     end = (((i + 1) * bitsPerBlock) - 1) / _BITS_PER_DATA_UNIT;
 
                                     System.Diagnostics.Debug.Assert(
-                                        (value & ~((1L << bitsPerBlock) - 1L)) == 0);
+                                        (value & ~((1UL << bitsPerBlock) - 1UL)) == 0);
                                     data[start] |= (value << offset);
 
                                     if (start != end)
@@ -123,11 +123,11 @@ namespace MinecraftServerEngine
                         }
                     }
 
-                    long[] data = sectionData._data;
+                    ulong[] data = sectionData._data;
                     buffer.WriteInt(data.Length, true);
                     for (int i = 0; i < data.Length; ++i)
                     {
-                        buffer.WriteLong(data[i]);
+                        buffer.WriteLong((long)data[i]);
                     }
 
                     buffer.WriteData(sectionData._blockLights);
@@ -146,7 +146,7 @@ namespace MinecraftServerEngine
                 private SectionData(
                     byte bitsPerBlock,
                     (int, int)[] palette,
-                    long[] data,
+                    ulong[] data,
                     byte[] blockLights,
                     byte[] skyLights)
                 {
@@ -165,10 +165,10 @@ namespace MinecraftServerEngine
 
                     {
                         int length = GetDataLength(_bitsPerBlock);
-                        _data = new long[length];
+                        _data = new ulong[length];
 
                         int i;
-                        long value = (long)defaultId;
+                        ulong value = (ulong)defaultId;
 
                         int start, offset, end;
 
@@ -185,7 +185,7 @@ namespace MinecraftServerEngine
                                     end = (((i + 1) * _bitsPerBlock) - 1) / _BITS_PER_DATA_UNIT;
 
                                     System.Diagnostics.Debug.Assert(
-                                        (value & ~((1L << _bitsPerBlock) - 1L)) == 0);
+                                        (value & ~((1UL << _bitsPerBlock) - 1UL)) == 0);
                                     _data[start] |= (value << offset);
 
                                     if (start != end)
@@ -219,10 +219,10 @@ namespace MinecraftServerEngine
                     System.Diagnostics.Debug.Assert(z >= 0 && z <= BlocksPerWidth);
                     System.Diagnostics.Debug.Assert(y >= 0 && y <= BlocksPerHeight);
 
-                    long mask = (1L << _bitsPerBlock) - 1L;
+                    ulong mask = (1UL << _bitsPerBlock) - 1UL;
 
                     int i;
-                    long value;
+                    ulong value;
 
                     int start, offset, end;
 
@@ -264,12 +264,12 @@ namespace MinecraftServerEngine
                     System.Diagnostics.Debug.Assert(bitsPerBlock > _bitsPerBlock);
 
                     int length = GetDataLength(bitsPerBlock);
-                    var data = new long[length];
+                    var data = new ulong[length];
 
-                    long mask = (1L << bitsPerBlock) - 1L;
+                    ulong mask = (1UL << bitsPerBlock) - 1UL;
 
                     int i;
-                    long value;
+                    ulong value;
 
                     int start, offset, end;
 
@@ -311,10 +311,10 @@ namespace MinecraftServerEngine
                                         offset = (i * bitsPerBlock) % _BITS_PER_DATA_UNIT;
                                         end = (((i + 1) * bitsPerBlock) - 1) / _BITS_PER_DATA_UNIT;
 
-                                        value = (long)id;
+                                        value = (ulong)id;
 
                                         System.Diagnostics.Debug.Assert(
-                                            (value & ~((1L << bitsPerBlock) - 1L)) == 0);
+                                            (value & ~((1UL << bitsPerBlock) - 1UL)) == 0);
                                         data[start] |= (value << offset);
 
                                         if (start != end)
@@ -365,7 +365,7 @@ namespace MinecraftServerEngine
                                         end = (((i + 1) * bitsPerBlock) - 1) / _BITS_PER_DATA_UNIT;
 
                                         System.Diagnostics.Debug.Assert(
-                                            (value & ~((1L << bitsPerBlock) - 1L)) == 0);
+                                            (value & ~((1UL << bitsPerBlock) - 1UL)) == 0);
                                         data[start] |= (value << offset);
 
                                         if (start != end)
@@ -383,17 +383,17 @@ namespace MinecraftServerEngine
                     _data = data;
                 }
 
-                private long MakeValue(int id)
+                private ulong MakeValue(int id)
                 {
                     System.Diagnostics.Debug.Assert(!_disposed);
 
-                    long value;
+                    ulong value;
 
                     if (_bitsPerBlock == 13)
                     {
                         System.Diagnostics.Debug.Assert(_palette == null);
 
-                        value = (long)id;
+                        value = (ulong)id;
                     }
                     else
                     {
@@ -418,7 +418,7 @@ namespace MinecraftServerEngine
 
                         if (indexPalette >= 0)
                         {
-                            value = (long)indexPalette;
+                            value = (ulong)indexPalette;
                         }
                         else
                         {
@@ -469,14 +469,14 @@ namespace MinecraftServerEngine
 
                             if (bitsPerBlock == 13)
                             {
-                                value = (long)id;
+                                value = (ulong)id;
                             }
                             else
                             {
                                 System.Diagnostics.Debug.Assert(
                                     bitsPerBlock >= 4 && bitsPerBlock <= 8);
 
-                                value = (long)length;
+                                value = (ulong)length;
                             }
 
                         }
@@ -493,7 +493,7 @@ namespace MinecraftServerEngine
                     System.Diagnostics.Debug.Assert(y >= 0 && y <= BlocksPerHeight);
                     System.Diagnostics.Debug.Assert(z >= 0 && z <= BlocksPerWidth);
 
-                    long value = MakeValue(id);
+                    ulong value = MakeValue(id);
 
                     int i = (((y * BlocksPerHeight) + z) * BlocksPerWidth) + x;
                     int start = (i * _bitsPerBlock) / _BITS_PER_DATA_UNIT;
@@ -501,7 +501,7 @@ namespace MinecraftServerEngine
                     int end = ((i + 1) * _bitsPerBlock - 1) / _BITS_PER_DATA_UNIT;
 
                     System.Diagnostics.Debug.Assert(
-                        (value & ~((1L << _bitsPerBlock) - 1L)) == 0L);
+                        (value & ~((1UL << _bitsPerBlock) - 1UL)) == 0L);
                     _data[start] |= (value << offset);
 
                     if (start != end)
