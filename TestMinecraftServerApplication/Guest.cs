@@ -77,7 +77,7 @@ namespace TestMinecraftServerApplication
 
             world.SearchObjects(objs, eyeOrigin, scaled_d);
 
-            double a = double.PositiveInfinity, b;
+            double a = double.PositiveInfinity;
             LivingEntity closestEntity = null;
 
             foreach (PhysicsObject obj in objs.GetKeys())
@@ -89,15 +89,11 @@ namespace TestMinecraftServerApplication
                     continue;
                 }
 
-                if (obj is LivingEntity entity)
+                if (
+                    obj is LivingEntity entity
+                    && a > Vector.GetLength(obj.Position, Position))
                 {
-                    b = Vector.GetLength(entity.Position, Position);
-
-                    if (a > b)
-                    {
-                        closestEntity = entity;
-                    }
-
+                    closestEntity = entity;
                 }
             }
 
