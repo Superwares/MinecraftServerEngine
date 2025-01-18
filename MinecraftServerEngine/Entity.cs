@@ -10,321 +10,6 @@ namespace MinecraftServerEngine
 
     public abstract class Entity : PhysicsObject
     {
-        private protected sealed class RendererManager : System.IDisposable
-        {
-            private bool _disposed = false;
-
-            private bool _movement = false;
-            private bool _noRendering = false;
-
-            private readonly int _id;
-            public int Id => _id;
-
-            private readonly ConcurrentTree<EntityRenderer> Renderers = new();  // Disposable
-
-            internal RendererManager(int id)
-            {
-                _id = id;
-            }
-
-            ~RendererManager() => System.Diagnostics.Debug.Assert(false);
-
-            internal bool Apply(EntityRenderer renderer)
-            {
-                System.Diagnostics.Debug.Assert(renderer != null);
-
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                if (_noRendering)
-                {
-                    System.Diagnostics.Debug.Assert(Renderers.Empty);
-                    return false;
-                }
-
-                if (Renderers.Contains(renderer))
-                {
-                    return false;
-                }
-
-                System.Diagnostics.Debug.Assert(Renderers != null);
-                Renderers.Insert(renderer);
-
-                return true;
-            }
-
-            internal bool HandleRendering(BoundingVolume volume, out Vector p)
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                p = volume.GetBottomCenter();
-
-                if (volume is not EmptyBoundingVolume)
-                {
-                    _noRendering = false;
-
-                    System.Diagnostics.Debug.Assert(!_movement);
-
-                    using Queue<EntityRenderer> queue = new();
-
-                    System.Diagnostics.Debug.Assert(Renderers != null);
-                    foreach (EntityRenderer renderer in Renderers.GetKeys())
-                    {
-                        System.Diagnostics.Debug.Assert(renderer != null);
-
-                        if (renderer.CanRender(p))
-                        {
-                            continue;
-                        }
-
-                        queue.Enqueue(renderer);
-                    }
-
-                    while (!queue.Empty)
-                    {
-                        EntityRenderer renderer = queue.Dequeue();
-
-                        if (!renderer.Disconnected)
-                        {
-                            renderer.DestroyEntity(Id);
-                        }
-                        Renderers.Extract(renderer);
-                    }
-
-                    return true;
-                }
-                else
-                {
-                    _noRendering = true;
-
-                    EntityRenderer[] renderers = Renderers.Flush();
-                    foreach (var renderer in renderers)
-                    {
-                        if (renderer.Disconnected)
-                        {
-                            continue;
-                        }
-
-                        renderer.DestroyEntity(Id);
-                    }
-
-                    return false;
-                }
-
-            }
-
-            internal void MoveAndRotate(Vector p, Vector pPrev, Look look)
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                System.Diagnostics.Debug.Assert(!_movement);
-
-                if (_noRendering)
-                {
-                    System.Diagnostics.Debug.Assert(Renderers.Empty);
-                    return;
-                }
-
-                System.Diagnostics.Debug.Assert(Renderers != null);
-                foreach (EntityRenderer renderer in Renderers.GetKeys())
-                {
-                    System.Diagnostics.Debug.Assert(renderer != null);
-                    renderer.RelMoveAndRotate(Id, p, pPrev, look);
-                }
-
-                _movement = true;
-            }
-
-            internal void Move(Vector p, Vector pPrev)
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                System.Diagnostics.Debug.Assert(!_movement);
-
-                if (_noRendering)
-                {
-                    System.Diagnostics.Debug.Assert(Renderers.Empty);
-                    return;
-                }
-
-                System.Diagnostics.Debug.Assert(Renderers != null);
-                foreach (EntityRenderer renderer in Renderers.GetKeys())
-                {
-                    System.Diagnostics.Debug.Assert(renderer != null);
-                    renderer.RelMove(Id, p, pPrev);
-                }
-
-                _movement = true;
-            }
-
-            internal void Rotate(Look look)
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                System.Diagnostics.Debug.Assert(!_movement);
-
-                if (_noRendering)
-                {
-                    System.Diagnostics.Debug.Assert(Renderers.Empty);
-                    return;
-                }
-
-                System.Diagnostics.Debug.Assert(Renderers != null);
-                foreach (EntityRenderer renderer in Renderers.GetKeys())
-                {
-                    System.Diagnostics.Debug.Assert(renderer != null);
-                    renderer.Rotate(Id, look);
-                }
-
-                _movement = true;
-            }
-
-            internal void Stand()
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                System.Diagnostics.Debug.Assert(!_movement);
-
-                if (_noRendering)
-                {
-                    System.Diagnostics.Debug.Assert(Renderers.Empty);
-                    return;
-                }
-
-                System.Diagnostics.Debug.Assert(Renderers != null);
-                foreach (EntityRenderer renderer in Renderers.GetKeys())
-                {
-                    System.Diagnostics.Debug.Assert(renderer != null);
-                    renderer.Stand(Id);
-                }
-
-                _movement = true;
-            }
-
-            internal void FinishMovementRenderring()
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                System.Diagnostics.Debug.Assert(_movement);
-                System.Diagnostics.Debug.Assert(!_noRendering);
-
-                _movement = false;
-            }
-
-            internal void ChangeForms(bool sneaking, bool sprinting)
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                if (_noRendering)
-                {
-                    System.Diagnostics.Debug.Assert(Renderers.Empty);
-                    return;
-                }
-
-                System.Diagnostics.Debug.Assert(Renderers != null);
-                foreach (EntityRenderer renderer in Renderers.GetKeys())
-                {
-                    System.Diagnostics.Debug.Assert(renderer != null);
-                    renderer.ChangeForms(Id, sneaking, sprinting);
-                }
-            }
-
-            internal void Teleport(Vector p, Look look, bool onGround)
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                if (_noRendering)
-                {
-                    System.Diagnostics.Debug.Assert(Renderers.Empty);
-                    return;
-                }
-
-                System.Diagnostics.Debug.Assert(Renderers != null);
-                foreach (EntityRenderer renderer in Renderers.GetKeys())
-                {
-                    System.Diagnostics.Debug.Assert(renderer != null);
-                    renderer.Teleport(Id, p, look, onGround);
-                }
-            }
-
-            internal void SetEquipmentsData(
-                (byte[] mainHand, byte[] offHand) equipmentsData)
-            {
-                System.Diagnostics.Debug.Assert(equipmentsData.mainHand != null);
-                System.Diagnostics.Debug.Assert(equipmentsData.offHand != null);
-
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                if (_noRendering)
-                {
-                    System.Diagnostics.Debug.Assert(Renderers.Empty);
-                    return;
-                }
-
-                System.Diagnostics.Debug.Assert(Renderers != null);
-                foreach (EntityRenderer renderer in Renderers.GetKeys())
-                {
-                    System.Diagnostics.Debug.Assert(renderer != null);
-                    renderer.SetEquipmentsData(Id, equipmentsData);
-                }
-            }
-
-            internal void SetEntityStatus(byte v)
-            {
-                System.Diagnostics.Debug.Assert(!_disposed);
-
-                if (_noRendering)
-                {
-                    System.Diagnostics.Debug.Assert(Renderers.Empty);
-                    return;
-                }
-
-                System.Diagnostics.Debug.Assert(Renderers != null);
-                foreach (EntityRenderer renderer in Renderers.GetKeys())
-                {
-                    System.Diagnostics.Debug.Assert(renderer != null);
-                    renderer.SetEntityStatus(Id, v);
-                }
-            }
-
-            public void Flush()
-            {
-                if (_noRendering)
-                {
-                    System.Diagnostics.Debug.Assert(Renderers.Empty);
-                    return;
-                }
-
-                System.Diagnostics.Debug.Assert(Renderers != null);
-                EntityRenderer[] renderers = Renderers.Flush();
-                foreach (EntityRenderer renderer in renderers)
-                {
-                    System.Diagnostics.Debug.Assert(renderer != null);
-
-                    if (renderer.Disconnected)
-                    {
-                        continue;
-                    }
-
-                    renderer.DestroyEntity(Id);
-                }
-            }
-
-            public void Dispose()
-            {
-                // Assertions.
-                System.Diagnostics.Debug.Assert(!_disposed);
-                System.Diagnostics.Debug.Assert(!_movement);
-
-                // Release  resources.
-                Renderers.Dispose();
-
-                // Finish
-                System.GC.SuppressFinalize(this);
-                _disposed = true;
-            }
-
-        }
-
         private protected readonly struct Hitbox : System.IEquatable<Hitbox>
         {
             internal static Hitbox Empty = new(0.0D, 0.0D);
@@ -378,6 +63,11 @@ namespace MinecraftServerEngine
         internal readonly int Id;
         internal readonly System.Guid UniqueId;
 
+        private bool _hasMovement = false;
+        private bool _noRendering = false;
+
+        private readonly ConcurrentTree<EntityRenderer> Renderers = new();  // Disposable
+
 
         private Vector _p;
         internal Vector Position => _p;
@@ -398,11 +88,8 @@ namespace MinecraftServerEngine
         private bool _teleported = false;
         private Vector _pTeleport;
 
-        private bool _fakeBlockChanged = false;
-        private bool _prevFakeBlockApplied = false;
-        private Block _prevFakeBlock;
-        private bool _fakeBlockApplied = false;
-        private Block _fakeBlock;
+        //private bool _fakeBlockApplied = false;
+        //private Block _fakeBlock;
 
         // ApplyBlockAppearance
         // TransformAppearance
@@ -410,7 +97,6 @@ namespace MinecraftServerEngine
         private readonly bool NoGravity;
 
 
-        private protected RendererManager Manager;  // Disposable
 
 
         private protected Entity(
@@ -433,8 +119,6 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_sprinting);
 
             NoGravity = noGravity;
-
-            Manager = new(Id);
         }
 
         ~Entity()
@@ -467,11 +151,21 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(Manager != null);
-            if (Manager.Apply(renderer))
+            if (_noRendering)
             {
-                RenderSpawning(renderer);
+                System.Diagnostics.Debug.Assert(Renderers.Empty);
+                return;
             }
+
+            if (Renderers.Contains(renderer))
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(Renderers != null);
+            Renderers.Insert(renderer);
+
+            RenderSpawning(renderer);
         }
 
         protected override (BoundingVolume, bool noGravity) GetCurrentStatus()
@@ -487,18 +181,96 @@ namespace MinecraftServerEngine
             return (volume, NoGravity || volume is EmptyBoundingVolume);
         }
 
+        private bool HandleRendering(
+                BoundingVolume volume, out Vector p)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+
+            p = volume.GetBottomCenter();
+
+            if (volume is not EmptyBoundingVolume)
+            {
+                _noRendering = false;
+
+                System.Diagnostics.Debug.Assert(!_hasMovement);
+
+                using Queue<EntityRenderer> queue = new();
+
+                System.Diagnostics.Debug.Assert(Renderers != null);
+                foreach (EntityRenderer renderer in Renderers.GetKeys())
+                {
+                    System.Diagnostics.Debug.Assert(renderer != null);
+
+                    if (renderer.CanRender(p))
+                    {
+                        continue;
+                    }
+
+                    queue.Enqueue(renderer);
+                }
+
+                while (!queue.Empty)
+                {
+                    EntityRenderer renderer = queue.Dequeue();
+
+                    if (!renderer.Disconnected)
+                    {
+                        renderer.DestroyEntity(Id);
+                    }
+                    Renderers.Extract(renderer);
+                }
+
+                System.Diagnostics.Debug.Assert(_hasMovement == false);
+                _hasMovement = true;
+                return true;
+            }
+            else
+            {
+                _noRendering = true;
+
+                EntityRenderer[] renderers = Renderers.Flush();
+                foreach (var renderer in renderers)
+                {
+                    if (renderer.Disconnected)
+                    {
+                        continue;
+                    }
+
+                    renderer.DestroyEntity(Id);
+                }
+
+                System.Diagnostics.Debug.Assert(_hasMovement == false);
+                _hasMovement = false;
+                return false;
+            }
+
+        }
+
         internal override void Move(BoundingVolume volume, Vector v)
         {
             System.Diagnostics.Debug.Assert(volume != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(Manager != null);
-            if (Manager.HandleRendering(volume, out Vector p) == true)
+
+            bool hasMovementRendering = HandleRendering(
+                volume, out Vector p);
+
+            if (hasMovementRendering == true)
             {
                 if (_teleported)
                 {
-                    Manager.Teleport(_pTeleport, _look, false);
+                    System.Diagnostics.Debug.Assert(_noRendering == false || (_noRendering == true && Renderers.Empty == true));
+                    if (_noRendering == false)
+                    {
+                        System.Diagnostics.Debug.Assert(Renderers != null);
+                        foreach (EntityRenderer renderer in Renderers.GetKeys())
+                        {
+                            System.Diagnostics.Debug.Assert(renderer != null);
+                            renderer.Teleport(Id, _pTeleport, _look, false);
+                        }
+                    }
 
                     _p = _pTeleport;
 
@@ -506,48 +278,104 @@ namespace MinecraftServerEngine
                     _teleported = false;
                 }
 
+                System.Diagnostics.Debug.Assert(_hasMovement == true);
+                System.Diagnostics.Debug.Assert(_noRendering == false);
+
                 bool moved = !p.Equals(_p);  // TODO: Compare with machine epsilon.
                 if (moved && _rotated)
                 {
-                    Manager.MoveAndRotate(p, _p, _look);
+                    System.Diagnostics.Debug.Assert(_noRendering == false || (_noRendering == true && Renderers.Empty == true));
+                    if (_noRendering == false)
+                    {
+                        System.Diagnostics.Debug.Assert(Renderers != null);
+                        foreach (EntityRenderer renderer in Renderers.GetKeys())
+                        {
+                            System.Diagnostics.Debug.Assert(renderer != null);
+                            renderer.RelMoveAndRotate(Id, p, _p, _look);
+                        }
+                    }
                 }
                 else if (moved)
                 {
                     System.Diagnostics.Debug.Assert(!_rotated);
 
-                    Manager.Move(p, _p);
+                    System.Diagnostics.Debug.Assert(_noRendering == false || (_noRendering == true && Renderers.Empty == true));
+                    if (_noRendering == false)
+                    {
+                        System.Diagnostics.Debug.Assert(Renderers != null);
+                        foreach (EntityRenderer renderer in Renderers.GetKeys())
+                        {
+                            System.Diagnostics.Debug.Assert(renderer != null);
+                            renderer.RelMove(Id, p, _p);
+                        }
+                    }
                 }
                 else if (_rotated)
                 {
                     System.Diagnostics.Debug.Assert(!moved);
 
-                    Manager.Rotate(_look);
+                    System.Diagnostics.Debug.Assert(_noRendering == false || (_noRendering == true && Renderers.Empty == true));
+                    if (_noRendering == false)
+                    {
+                        System.Diagnostics.Debug.Assert(Renderers != null);
+                        foreach (EntityRenderer renderer in Renderers.GetKeys())
+                        {
+                            System.Diagnostics.Debug.Assert(renderer != null);
+                            renderer.Rotate(Id, _look);
+                        }
+                    }
+
                 }
                 else
                 {
                     System.Diagnostics.Debug.Assert(!moved);
                     System.Diagnostics.Debug.Assert(!_rotated);
 
-                    Manager.Stand();
+                    System.Diagnostics.Debug.Assert(_noRendering == false || (_noRendering == true && Renderers.Empty == true));
+                    if (_noRendering == false)
+                    {
+                        System.Diagnostics.Debug.Assert(Renderers != null);
+                        foreach (EntityRenderer renderer in Renderers.GetKeys())
+                        {
+                            System.Diagnostics.Debug.Assert(renderer != null);
+                            renderer.Stand(Id);
+                        }
+                    }
                 }
 
-                Manager.FinishMovementRenderring();
+                _hasMovement = false;
+
             }
-            else
+            else if (_teleported == true)
             {
-                if (_teleported)
-                {
-                    _p = _pTeleport;
+                _p = _pTeleport;
 
-                    _rotated = false;
-                    _teleported = false;
-                }
+                _rotated = false;
+                _teleported = false;
             }
 
             _p = p;
             _rotated = false;
 
             base.Move(volume, v);
+        }
+
+        internal void SetEntityStatus(byte v)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            if (_noRendering)
+            {
+                System.Diagnostics.Debug.Assert(Renderers.Empty);
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(Renderers != null);
+            foreach (EntityRenderer renderer in Renderers.GetKeys())
+            {
+                System.Diagnostics.Debug.Assert(renderer != null);
+                renderer.SetEntityStatus(Id, v);
+            }
         }
 
         public virtual void Teleport(Vector p, Look look)
@@ -576,6 +404,22 @@ namespace MinecraftServerEngine
             LockerRotate.Release();
         }
 
+        private void ChangeForms(bool sneaking, bool sprinting)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_noRendering == false || (_noRendering == true && Renderers.Empty == true));
+            if (_noRendering == false)
+            {
+                System.Diagnostics.Debug.Assert(Renderers != null);
+                foreach (EntityRenderer renderer in Renderers.GetKeys())
+                {
+                    System.Diagnostics.Debug.Assert(renderer != null);
+                    renderer.ChangeForms(Id, sneaking, sprinting);
+                }
+            }
+        }
+
         internal void Sneak(World world)
         {
             System.Diagnostics.Debug.Assert(world != null);
@@ -588,7 +432,7 @@ namespace MinecraftServerEngine
 
             OnSneak(world, _sneaking);
 
-            Manager.ChangeForms(_sneaking, _sprinting);
+            ChangeForms(_sneaking, _sprinting);
         }
 
         internal void Unsneak(World world)
@@ -603,7 +447,7 @@ namespace MinecraftServerEngine
 
             OnSneak(world, _sneaking);
 
-            Manager.ChangeForms(_sneaking, _sprinting);
+            ChangeForms(_sneaking, _sprinting);
         }
 
         internal void Sprint(World world)
@@ -618,7 +462,7 @@ namespace MinecraftServerEngine
 
             OnSprint(world, _sprinting);
 
-            Manager.ChangeForms(_sneaking, _sprinting);
+            ChangeForms(_sneaking, _sprinting);
         }
 
         internal void Unsprint(World world)
@@ -633,7 +477,7 @@ namespace MinecraftServerEngine
 
             OnSprint(world, _sprinting);
 
-            Manager.ChangeForms(_sneaking, _sprinting);
+            ChangeForms(_sneaking, _sprinting);
         }
 
         internal void UpdateEntityEquipmentsData((
@@ -644,7 +488,17 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Manager.SetEquipmentsData(equipmentsData);
+            System.Diagnostics.Debug.Assert(_noRendering == false || (_noRendering == true && Renderers.Empty == true));
+            if (_noRendering == false)
+            {
+                System.Diagnostics.Debug.Assert(Renderers != null);
+                foreach (EntityRenderer renderer in Renderers.GetKeys())
+                {
+                    System.Diagnostics.Debug.Assert(renderer != null);
+                    renderer.SetEquipmentsData(Id, equipmentsData);
+                }
+            }
+
         }
 
         protected void EmitParticles(Particles particle, int count)
@@ -654,11 +508,39 @@ namespace MinecraftServerEngine
             throw new System.NotImplementedException();
         }
 
+        //public void ApplyBlockAppearance(Block block)
+        //{
+        //    System.Diagnostics.Debug.Assert(_disposed == false);
+
+        //    _fakeBlockApplied = true;
+        //    _fakeBlock = block;
+
+        //    _fakeBlockChanged = true;
+        //}
+
         internal override void Flush()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Manager.Flush();
+            System.Diagnostics.Debug.Assert(_noRendering == false || (_noRendering == true && Renderers.Empty == true));
+            if (_noRendering == false)
+            {
+                System.Diagnostics.Debug.Assert(Renderers != null);
+                EntityRenderer[] renderers = Renderers.Flush();
+                foreach (EntityRenderer renderer in renderers)
+                {
+                    System.Diagnostics.Debug.Assert(renderer != null);
+
+                    if (renderer.Disconnected)
+                    {
+                        continue;
+                    }
+
+                    renderer.DestroyEntity(Id);
+                }
+            }
+
+
 
             base.Flush();
         }
@@ -667,10 +549,11 @@ namespace MinecraftServerEngine
         {
             // Assertion
             System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_hasMovement);
 
             // Release resources.
             EntityIdAllocator.Dealloc(Id);
-            Manager.Dispose();
+            Renderers.Dispose();
 
             LockerRotate.Dispose();
             LockerTeleport.Dispose();
@@ -899,7 +782,12 @@ namespace MinecraftServerEngine
             _health = _maxHealth;
         }
 
-        ~LivingEntity() => System.Diagnostics.Debug.Assert(false);
+        ~LivingEntity()
+        {
+            System.Diagnostics.Debug.Assert(false);
+
+            //Dispose(false);
+        }
 
         protected internal override bool IsDead()
         {
@@ -920,11 +808,11 @@ namespace MinecraftServerEngine
 
             _health -= amount;
 
-            Manager.SetEntityStatus(2);
+            SetEntityStatus(2);
 
             if (_health <= 0.0D)
             {
-                Manager.SetEntityStatus(3);
+                SetEntityStatus(3);
             }
 
             LockerHealth.Release();
