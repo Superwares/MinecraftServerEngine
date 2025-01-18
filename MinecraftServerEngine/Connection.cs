@@ -220,9 +220,11 @@ namespace MinecraftServerEngine
                     case 2:
                         throw new System.NotImplementedException();
                     case 3:
-                        throw new System.NotImplementedException();
+                        //throw new System.NotImplementedException();
+                        break;
                     case 4:
-                        throw new System.NotImplementedException();
+                        //throw new System.NotImplementedException();
+                        break;
                     case 5:
                         throw new System.NotImplementedException();
                     case 6:
