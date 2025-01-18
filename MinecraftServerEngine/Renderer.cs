@@ -299,7 +299,7 @@ namespace MinecraftServerEngine
 
         internal void RelMoveAndRotate(
             int id, 
-            Vector p, Vector pPrev, Look look)
+            Vector p, Vector pPrev, Angles look)
         {
             System.Diagnostics.Debug.Assert(!Disconnected);
 
@@ -338,7 +338,7 @@ namespace MinecraftServerEngine
 
         }
 
-        internal void Rotate(int id, Look look)
+        internal void Rotate(int id, Angles look)
         {
             System.Diagnostics.Debug.Assert(!Disconnected);
 
@@ -354,7 +354,7 @@ namespace MinecraftServerEngine
             Render(new EntityPacket(id));
         }
 
-        internal void Teleport(int id, Vector p, Look look, bool onGround)
+        internal void Teleport(int id, Vector p, Angles look, bool onGround)
         {
             System.Diagnostics.Debug.Assert(!Disconnected);
 
@@ -418,7 +418,7 @@ namespace MinecraftServerEngine
 
         internal void SpawnPlayer(
             int id, System.Guid uniqueId, 
-            Vector p, Look look, 
+            Vector p, Angles look, 
             bool sneaking, bool sprinting,
             (byte[], byte[]) equipmentsData)
         {
@@ -452,7 +452,7 @@ namespace MinecraftServerEngine
 
         internal void SpawnItemEntity(
             int id, System.Guid uniqueId,
-            Vector p, Look look,
+            Vector p, Angles look,
             ItemStack stack)
         {
             System.Diagnostics.Debug.Assert(uniqueId != System.Guid.Empty);

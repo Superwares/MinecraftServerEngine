@@ -659,7 +659,7 @@ namespace MinecraftServerEngine
             World world, 
             int idEntity,
             float health,
-            Vector p, Look look,
+            Vector p, Angles look,
             PlayerInventory invPlayer,
             Gamemode gamemode)
         {
@@ -903,7 +903,7 @@ namespace MinecraftServerEngine
                         }
 
                         Vector p = new(packet.X, packet.Y, packet.Z);
-                        Look look = new(packet.Yaw, packet.Pitch);
+                        Angles look = new(packet.Yaw, packet.Pitch);
 
                         player.ControlMovement(p);
                         player.Rotate(look);
@@ -923,7 +923,7 @@ namespace MinecraftServerEngine
                             break;
                         }
 
-                        Look look = new(packet.Yaw, packet.Pitch);
+                        Angles look = new(packet.Yaw, packet.Pitch);
 
                         player.Rotate(look);
                         /*player.ControlStanding(packet.OnGround);*/
@@ -1370,7 +1370,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(buffer.Empty);
         }
 
-        internal void Teleport(Vector p, Look look)
+        internal void Teleport(Vector p, Angles look)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -1476,7 +1476,7 @@ namespace MinecraftServerEngine
         internal void LoadAndSendData(
             World world, 
             int idEntitySelf,
-            Vector p, Look look)
+            Vector p, Angles look)
         {
             System.Diagnostics.Debug.Assert(world != null);
 

@@ -8,7 +8,7 @@ namespace TestMinecraftServerApplication
     {
         private bool _disposed = false;
 
-        public Guest(UserId id, Vector p, Look look)
+        public Guest(UserId id, Vector p, Angles look)
             : base(id, p, look, Gamemode.Adventure) { }
 
         ~Guest()
@@ -61,8 +61,12 @@ namespace TestMinecraftServerApplication
 
             MyConsole.Printl("Attack!");
 
-            Damage(5.0F);
+            //Damage(5.0F);
 
+            double eyeHeight = GetEyeHeight();
+            Vector u_look = Look.GetUnitVector();
+
+            MyConsole.Debug($"EyeHeight: {eyeHeight}, Look's unit vector: {u_look}");
         }
 
         protected override void OnAttack(World world, ItemStack stack)

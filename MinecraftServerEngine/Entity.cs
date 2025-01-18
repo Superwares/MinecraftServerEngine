@@ -75,8 +75,8 @@ namespace MinecraftServerEngine
 
         private readonly Locker LockerRotate = new();
         private bool _rotated = false;
-        private Look _look;
-        internal Look Look => _look;
+        private Angles _look;
+        public Angles Look => _look;
 
 
         protected bool _sneaking = false, _sprinting = false;
@@ -99,7 +99,7 @@ namespace MinecraftServerEngine
 
         private protected Entity(
             System.Guid uniqueId,
-            Vector position, Look look,
+            Vector position, Angles look,
             bool noGravity,
             Hitbox hitbox,
             double mass, double maxStepHeight)
@@ -141,7 +141,7 @@ namespace MinecraftServerEngine
         protected (Vector, Vector) GetRay()
         {
             throw new System.NotImplementedException();
-            /*return (origin, dir);*/
+            /*return (origin, u);*/
         }
 
         internal void ApplyRenderer(EntityRenderer renderer)
@@ -467,7 +467,7 @@ namespace MinecraftServerEngine
             }
         }
 
-        public virtual void Teleport(Vector p, Look look)
+        public virtual void Teleport(Vector p, Angles look)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -481,7 +481,7 @@ namespace MinecraftServerEngine
             LockerTeleport.Release();
         }
 
-        internal void Rotate(Look look)
+        internal void Rotate(Angles look)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

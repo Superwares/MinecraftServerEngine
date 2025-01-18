@@ -16,7 +16,7 @@ namespace MinecraftServerEngine
 
         private protected LivingEntity(
             System.Guid uniqueId,
-            Vector p, Look look,
+            Vector p, Angles look,
             bool noGravity,
             Hitbox hitbox,
             double m, double maxStepLevel)

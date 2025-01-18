@@ -17,7 +17,7 @@ namespace MinecraftServerEngine
 
 
         public ItemEntity(ItemStack stack, Vector p)
-            : base(System.Guid.NewGuid(), p, new Look(0.0F, 0.0F), false,
+            : base(System.Guid.NewGuid(), p, new Angles(0.0F, 0.0F), false,
                   DefaultHitbox,
                   DefaultMass, DefaultMaxStepLevel)
         {

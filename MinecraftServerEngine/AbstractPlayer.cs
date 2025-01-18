@@ -28,6 +28,7 @@ namespace MinecraftServerEngine
 
         public const double DefaultMass = 1.0D;
         public const double DefaultMaxStepLevel = 0.6;
+        public const double DefaultEyeHeight = 1.62D;
 
 
         private bool _disposed = false;
@@ -49,7 +50,7 @@ namespace MinecraftServerEngine
         public Gamemode Gamemode => _gamemode;
 
 
-        protected AbstractPlayer(UserId id, Vector p, Look look, Gamemode gamemode)
+        protected AbstractPlayer(UserId id, Vector p, Angles look, Gamemode gamemode)
             : base(
                   id.Data,
                   p, look,
@@ -120,6 +121,18 @@ namespace MinecraftServerEngine
 
             return (_nextGamemode == Gamemode.Spectator) ?
                 GetSpectatorHitbox() : GetAdventureHitbox(false);
+        }
+
+        public double GetEyeHeight()
+        {
+            double value = DefaultEyeHeight;
+
+            if (Sneaking == true)
+            {
+                value = -0.08D;
+            }
+
+            return value;
         }
 
         private protected override void RenderSpawning(EntityRenderer renderer)
@@ -217,7 +230,7 @@ namespace MinecraftServerEngine
             base.Move(volume, v);
         }
 
-        public override void Teleport(Vector p, Look look)
+        public override void Teleport(Vector p, Angles look)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

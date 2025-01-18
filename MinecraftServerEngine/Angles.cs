@@ -1,7 +1,10 @@
 ﻿
+
 namespace MinecraftServerEngine
 {
-    public readonly struct Look : System.IEquatable<Look>
+    using PhysicsEngine;
+
+    public readonly struct Angles : System.IEquatable<Angles>
     {
         internal const float MaxYaw = 180, MinYaw = -180;
         internal const float MaxPitch = 90, MinPitch = -90;
@@ -10,11 +13,11 @@ namespace MinecraftServerEngine
 
         private static float Frem(float angle)
         {
-            float y = 360.0f;
-            return angle - (y * (float)System.Math.Floor(angle / y));
+            float x = 360.0f;
+            return angle - (x * (float)System.Math.Floor(angle / x));
         }
 
-        public Look(float yaw, float pitch)
+        public Angles(float yaw, float pitch)
         {
             // TODO: map yaw from 180 to -180.
             /*System.Diagnostics.Debug.Assert(yaw >= MinYaw);
@@ -24,6 +27,28 @@ namespace MinecraftServerEngine
 
             Yaw = yaw;
             Pitch = pitch;
+        }
+
+        public Vector GetUnitVector()
+        {
+            /**
+             * x = -cos(pitch) * sin(yaw)
+             * y = -sin(pitch)
+             * z =  cos(pitch) * cos(yaw)
+             */
+
+            //float yaw = Frem(Yaw);
+            //float pitch = Frem(Pitch);
+
+            //double xzLen = System.Math.Cos(Pitch);
+            //double x = xzLen * System.Math.Cos(Yaw),
+            //    y = System.Math.Sin(Pitch),
+            //    z = xzLen * System.Math.Sin(-Yaw);
+            double x = -System.Math.Cos(Pitch) * System.Math.Sin(Yaw),
+                y = -System.Math.Sin(Pitch),
+                z = System.Math.Cos(Pitch) * System.Math.Cos(Yaw);
+
+            return new Vector(x, y, z);
         }
 
         internal readonly (byte, byte) ConvertToProtocolFormat()
@@ -44,7 +69,7 @@ namespace MinecraftServerEngine
             throw new System.NotImplementedException();
         }
 
-        public readonly bool Equals(Look other)
+        public readonly bool Equals(Angles other)
         {
             return (Yaw == other.Yaw) && (Pitch == other.Pitch);
         }
