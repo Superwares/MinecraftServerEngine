@@ -69,10 +69,6 @@ namespace MinecraftServerEngine
         private readonly ConcurrentTree<EntityRenderer> Renderers = new();  // Disposable
 
 
-        private Vector _p;
-        internal Vector Position => _p;
-
-
         private readonly Locker LockerRotate = new();
         private bool _rotated = false;
         private Angles _look;
@@ -99,16 +95,14 @@ namespace MinecraftServerEngine
 
         private protected Entity(
             System.Guid uniqueId,
-            Vector position, Angles look,
+            Vector p, Angles look,
             bool noGravity,
             Hitbox hitbox,
             double mass, double maxStepHeight)
-            : base(mass, hitbox.Convert(position), new StepableMovement(maxStepHeight))
+            : base(p, mass, hitbox.Convert(p), new StepableMovement(maxStepHeight))
         {
             Id = EntityIdAllocator.Alloc();
             UniqueId = uniqueId;
-
-            _p = position;
 
             System.Diagnostics.Debug.Assert(!_rotated);
             _look = look;

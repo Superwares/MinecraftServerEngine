@@ -85,7 +85,7 @@ namespace MinecraftServerEngine
                     System.Diagnostics.Debug.Assert(renderer != null);
                     renderer.Move(points, r, g, b);
                 }
-            
+
             }
 
             public void Dispose()
@@ -181,9 +181,9 @@ namespace MinecraftServerEngine
 
         internal ParticleObject(
             Vector p, double r, double m,
-            byte red, byte green, byte blue, 
+            byte red, byte green, byte blue,
             Movement movement)
-            : base(m, AxisAlignedBoundingBox.Generate(p, GetMiddleRadius(r)), movement)
+            : base(p, m, AxisAlignedBoundingBox.Generate(p, GetMiddleRadius(r)), movement)
         {
             System.Diagnostics.Debug.Assert(movement != null);
 
@@ -211,7 +211,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(Manager != null);
-            
+
             Manager.Apply(renderer);
         }
 

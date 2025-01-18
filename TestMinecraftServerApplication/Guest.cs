@@ -1,5 +1,6 @@
 ﻿using Common;
 using Containers;
+
 using MinecraftServerEngine;
 using MinecraftServerEngine.PhysicsEngine;
 
@@ -67,27 +68,43 @@ namespace TestMinecraftServerApplication
             //double eyeHeight = GetEyeHeight();
 
             Vector eyeOrigin = GetEyeOrigin();
-            Vector scaledDirection = Look.GetUnitVector() * 3;
+            Vector d = Look.GetUnitVector();
+            Vector scaled_d = d * 3;
 
-            MyConsole.Debug($"Eye Origin: {eyeOrigin}, Look's unit vector: {scaledDirection}");
+            //MyConsole.Debug($"Eye origin: {eyeOrigin}, Scaled direction vector: {scaled_d}");
 
             using Tree<PhysicsObject> objs = new();
 
-            world.SearchObjects(objs, eyeOrigin, scaledDirection);
+            world.SearchObjects(objs, eyeOrigin, scaled_d);
+
+            double a = double.PositiveInfinity, b;
+            LivingEntity closestEntity = null;
 
             foreach (PhysicsObject obj in objs.GetKeys())
             {
-                MyConsole.Debug($"obj: {obj}");
+                //MyConsole.Debug($"obj: {obj}");
 
                 if (ReferenceEquals(obj, this) == true)
                 {
                     continue;
                 }
 
-                if (obj is AbstractPlayer player)
+                if (obj is LivingEntity entity)
                 {
-                    player.Damage(5.0F);
+                    b = Vector.GetLength(entity.Position, Position);
+
+                    if (a > b)
+                    {
+                        closestEntity = entity;
+                    }
+
                 }
+            }
+
+            if (closestEntity != null)
+            {
+                closestEntity.Damage(1.0F);
+                closestEntity.ApplyForce(d);
             }
         }
 

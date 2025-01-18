@@ -229,8 +229,12 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             // Final merge
             if ((tMin > tzMax) || (tzMin > tMax)) return false;
+            tMin = System.Math.Max(tMin, tzMin);
+            tMax = System.Math.Min(tMax, tzMax);
 
-            return true; // Ray intersects AABB
+            // Ensure the intersection is within the segment [o, o + d]
+            return tMin <= 1 && tMax >= 0;
+
         }
 
 

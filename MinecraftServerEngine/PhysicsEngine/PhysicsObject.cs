@@ -76,6 +76,10 @@ namespace MinecraftServerEngine.PhysicsEngine
         private bool _disposed = false;
 
 
+        protected Vector _p;
+        public Vector Position => _p;
+
+
         private readonly double _m;
         public double Mass => _m;
 
@@ -90,12 +94,15 @@ namespace MinecraftServerEngine.PhysicsEngine
         internal readonly Movement _Movement;
 
         internal PhysicsObject(
+            Vector p,
             double m, BoundingVolume volume,
             Movement movement)
         {
             System.Diagnostics.Debug.Assert(volume != null);
             System.Diagnostics.Debug.Assert(m > 0.0D);
             System.Diagnostics.Debug.Assert(movement != null);
+
+            _p = p;
 
             _m = m;
 
