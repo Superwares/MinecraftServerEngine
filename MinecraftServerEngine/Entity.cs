@@ -245,6 +245,7 @@ namespace MinecraftServerEngine
 
                         if (_fakeBlockApplied == false)
                         {
+                            renderer.SetBlockAppearance(Block.Air, prevBlockLocation);
                             RenderSpawning(renderer);
                         }
                         else
@@ -605,7 +606,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            _fakeBlockApplied = true;
+            _fakeBlockApplied = false;
             _fakeBlock = Block.Air;
         }
 

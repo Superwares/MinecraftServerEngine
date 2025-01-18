@@ -27,7 +27,15 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            if (f == true)
+            {
+                ApplyBlockAppearance(Block.Dirt);
+            }
+            else
+            {
+                ResetBlockAppearance();
 
+            }
         }
 
         protected override void OnSprint(World world, bool f)
@@ -50,7 +58,6 @@ namespace TestMinecraftServerApplication
 
             Damage(5.0F);
 
-            ApplyBlockAppearance(Block.Dirt);
         }
 
         protected override void OnAttack(World world, ItemStack stack)
