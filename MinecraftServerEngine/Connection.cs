@@ -164,6 +164,10 @@ namespace MinecraftServerEngine
                     default:
                         throw new UnexpectedValueException("ClickWindowPacket.ModeNumber");
                     case 0:
+                        if (i < 0)
+                        {
+                            break;
+                        }
                         switch (button)
                         {
                             default:
@@ -191,6 +195,10 @@ namespace MinecraftServerEngine
                         }
                         break;
                     case 1:
+                        if (i < 0)
+                        {
+                            break;
+                        }
                         switch (button)
                         {
                             default:
@@ -226,9 +234,11 @@ namespace MinecraftServerEngine
                         //throw new System.NotImplementedException();
                         break;
                     case 5:
-                        throw new System.NotImplementedException();
+                        //throw new System.NotImplementedException();
+                        break;
                     case 6:
-                        throw new System.NotImplementedException();
+                        //throw new System.NotImplementedException();
+                        break;
                 }
 
                 player.UpdateEntityEquipmentsData(invPlayer.GetEquipmentsData());
