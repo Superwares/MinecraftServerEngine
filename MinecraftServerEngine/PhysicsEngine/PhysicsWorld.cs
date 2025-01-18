@@ -287,6 +287,53 @@ namespace MinecraftServerEngine.PhysicsEngine
             }
         }
 
+        public PhysicsObject SearchClosestObject(Vector o, Vector d, PhysicsObject exceptObj)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            AxisAlignedBoundingBox aabb = AxisAlignedBoundingBox.Generate(o, d);
+
+            Grid grid = Grid.Generate(aabb);
+
+            double a = double.PositiveInfinity;
+            PhysicsObject objFound = null;
+
+            foreach (Cell cell in grid.GetCells())
+            {
+                if (!CellToObjects.Contains(cell))
+                {
+                    continue;
+                }
+
+                Tree<PhysicsObject> objectsInCell = CellToObjects.Lookup(cell);
+                System.Diagnostics.Debug.Assert(objectsInCell != null);
+                foreach (PhysicsObject objInCell in objectsInCell.GetKeys())
+                {
+                    System.Diagnostics.Debug.Assert(objInCell != null);
+                    if (ReferenceEquals(objInCell, exceptObj) == true)
+                    {
+                        continue;
+                    }
+
+                    //objs.Insert(objInCell);
+
+                    AxisAlignedBoundingBox minAABB = objInCell.BoundingVolume.GetMinBoundingBox();
+
+                    //minAABB.Move(-1 * origin);
+
+                    if (
+                        minAABB.Intersects(o, d) == true 
+                        && a > Vector.GetLengthSquared(objInCell.Position, o))
+                    {
+                        objFound = objInCell;
+                    }
+
+                }
+            }
+
+            return objFound;
+        }
+
         private void InsertObjectToCell(Cell cell, PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(obj != null);

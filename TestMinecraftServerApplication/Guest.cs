@@ -73,34 +73,12 @@ namespace TestMinecraftServerApplication
 
             //MyConsole.Debug($"Eye origin: {eyeOrigin}, Scaled direction vector: {scaled_d}");
 
-            using Tree<PhysicsObject> objs = new();
+            PhysicsObject obj = world.SearchClosestObject(eyeOrigin, scaled_d, this);
 
-            world.SearchObjects(objs, eyeOrigin, scaled_d);
-
-            double a = double.PositiveInfinity;
-            LivingEntity closestEntity = null;
-
-            foreach (PhysicsObject obj in objs.GetKeys())
+            if (obj != null && obj is LivingEntity entity)
             {
-                //MyConsole.Debug($"obj: {obj}");
-
-                if (ReferenceEquals(obj, this) == true)
-                {
-                    continue;
-                }
-
-                if (
-                    obj is LivingEntity entity
-                    && a > Vector.GetLength(obj.Position, Position))
-                {
-                    closestEntity = entity;
-                }
-            }
-
-            if (closestEntity != null)
-            {
-                closestEntity.Damage(1.0F);
-                closestEntity.ApplyForce(d);
+                entity.Damage(1.0F);
+                entity.ApplyForce(d);
             }
         }
 
