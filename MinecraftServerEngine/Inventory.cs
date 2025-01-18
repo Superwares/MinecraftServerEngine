@@ -9,18 +9,19 @@ namespace MinecraftServerEngine
     {
         internal const int SlotsPerLine = 9;
 
+
         private bool _disposed = false;
 
+        
         public readonly int TotalSlotCount;
 
         internal readonly InventorySlot[] Slots;
+
 
         internal Inventory(int n)
         {
             System.Diagnostics.Debug.Assert(n > 0);
             TotalSlotCount = n;
-
-            System.Diagnostics.Debug.Assert(TotalSlotCount > 0);
 
             Slots = new InventorySlot[TotalSlotCount];
             for (int i = 0; i < TotalSlotCount; ++i)

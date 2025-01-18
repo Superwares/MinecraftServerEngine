@@ -146,6 +146,7 @@ namespace MinecraftServerEngine
 
                     System.Diagnostics.Debug.Assert(id >= sbyte.MinValue);
                     System.Diagnostics.Debug.Assert(id <= sbyte.MaxValue);
+
                     int j = i + offset;
                     System.Diagnostics.Debug.Assert(j >= short.MinValue);
                     System.Diagnostics.Debug.Assert(j <= short.MaxValue);
