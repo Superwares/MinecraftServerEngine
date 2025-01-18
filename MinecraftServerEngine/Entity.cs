@@ -79,7 +79,7 @@ namespace MinecraftServerEngine
         internal Look Look => _look;
 
 
-        protected bool _sneaking, _sprinting = false;
+        protected bool _sneaking = false, _sprinting = false;
         public bool Sneaking => _sneaking;
         public bool Sprinting => _sprinting;
 
@@ -88,10 +88,8 @@ namespace MinecraftServerEngine
         private bool _teleported = false;
         private Vector _pTeleport;
 
-        private bool _prevFakeBlockApplied = false;
-        private Block _prevFakeBlock;
-        private bool _fakeBlockApplied = false;
-        private Block _fakeBlock;
+        private bool _prevFakeBlockApplied = false, _fakeBlockApplied = false;
+        private Block _prevFakeBlock, _fakeBlock;
 
         // ApplyBlockAppearance
         // TransformAppearance
