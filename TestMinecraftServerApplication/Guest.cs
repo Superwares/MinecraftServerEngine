@@ -11,7 +11,12 @@ namespace TestMinecraftServerApplication
         public Guest(UserId id, Vector p, Look look)
             : base(id, p, look, Gamemode.Adventure) { }
 
-        ~Guest() => System.Diagnostics.Debug.Assert(false);
+        ~Guest()
+        {
+            System.Diagnostics.Debug.Assert(false);
+
+            Dispose(false);
+        }
 
         public override void StartRoutine(PhysicsWorld world)
         {
@@ -114,16 +119,33 @@ namespace TestMinecraftServerApplication
             }
         }
 
-        public override void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            // Assertions.
-            System.Diagnostics.Debug.Assert(!_disposed);
+            // Check to see if Dispose has already been called.
+            if (_disposed == false)
+            {
 
-            // Release reousrces.
+                // If disposing equals true, dispose all managed
+                // and unmanaged resources.
+                if (disposing == true)
+                {
+                    // Dispose managed resources.
 
-            // Finish.
-            base.Dispose();
-            _disposed = true;
+                }
+
+                // Call the appropriate methods to clean up
+                // unmanaged resources here.
+                // If disposing is false,
+                // only the following code is executed.
+                //CloseHandle(handle);
+                //handle = IntPtr.Zero;
+
+                // Note disposing has been done.
+                _disposed = true;
+            }
+
+            base.Dispose(disposing);
         }
+
     }
 }

@@ -6,15 +6,15 @@ namespace MinecraftServerEngine
     {
 
         internal static BoundingVolume GenerateBoundingVolume(
-            this Particles particle, Vector p)
+            this Particle particle, Vector p)
         {
             switch (particle)
             {
                 default:
                     throw new System.NotImplementedException();
-                case Particles.Bubble:
+                case Particle.Bubble:
                     return AxisAlignedBoundingBox.Generate(p, 0.2D);
-                case Particles.Flame:
+                case Particle.Flame:
                     return AxisAlignedBoundingBox.Generate(p, 0.2D);
             }
         }

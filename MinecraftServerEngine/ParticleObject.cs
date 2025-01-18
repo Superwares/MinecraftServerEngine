@@ -197,6 +197,13 @@ namespace MinecraftServerEngine
             Blue = Normalize(blue);
         }
 
+        ~ParticleObject()
+        {
+            System.Diagnostics.Debug.Assert(false);
+
+            Dispose(false);
+        }
+
         internal void ApplyRenderer(ParticleObjectRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(renderer != null);
@@ -241,17 +248,33 @@ namespace MinecraftServerEngine
 
         // TODO: set color
 
-        public override void Dispose()
+
+        protected override void Dispose(bool disposing)
         {
-            // Assertions.
-            System.Diagnostics.Debug.Assert(!_disposed);
+            // Check to see if Dispose has already been called.
+            if (_disposed == false)
+            {
 
-            // Release Resources.
-            Manager.Dispose();
+                // If disposing equals true, dispose all managed
+                // and unmanaged resources.
+                if (disposing == true)
+                {
+                    // Dispose managed resources.
+                    Manager.Dispose();
+                }
 
-            // Finish.
-            base.Dispose();
-            _disposed = true;
+                // Call the appropriate methods to clean up
+                // unmanaged resources here.
+                // If disposing is false,
+                // only the following code is executed.
+                //CloseHandle(handle);
+                //handle = IntPtr.Zero;
+
+                // Note disposing has been done.
+                _disposed = true;
+            }
+
+            base.Dispose(disposing);
         }
 
     }

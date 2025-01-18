@@ -124,7 +124,8 @@ namespace MinecraftServerEngine
         ~Entity()
         {
             System.Diagnostics.Debug.Assert(false);
-            //Dispose(false);
+
+            Dispose(false);
         }
 
         private protected abstract Hitbox GetHitbox();
@@ -595,7 +596,7 @@ namespace MinecraftServerEngine
 
         }
 
-        protected void EmitParticles(Particles particle, int count)
+        protected void EmitParticles(Particle particle, int count)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -647,22 +648,37 @@ namespace MinecraftServerEngine
             base.Flush();
         }
 
-        public override void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            // Assertion
-            System.Diagnostics.Debug.Assert(!_disposed);
-            System.Diagnostics.Debug.Assert(!_hasMovement);
+            // Check to see if Dispose has already been called.
+            if (_disposed == false)
+            {
+                System.Diagnostics.Debug.Assert(_hasMovement == false);
 
-            // Release resources.
-            EntityIdAllocator.Dealloc(Id);
-            Renderers.Dispose();
+                // If disposing equals true, dispose all managed
+                // and unmanaged resources.
+                if (disposing == true)
+                {
+                    // Dispose managed resources.
+                    EntityIdAllocator.Dealloc(Id);
+                    Renderers.Dispose();
 
-            LockerRotate.Dispose();
-            LockerTeleport.Dispose();
+                    LockerRotate.Dispose();
+                    LockerTeleport.Dispose();
+                }
 
-            // Finish.
-            base.Dispose();
-            _disposed = true;
+                // Call the appropriate methods to clean up
+                // unmanaged resources here.
+                // If disposing is false,
+                // only the following code is executed.
+                //CloseHandle(handle);
+                //handle = IntPtr.Zero;
+
+                // Note disposing has been done.
+                _disposed = true;
+            }
+
+            base.Dispose(disposing);
         }
 
     }

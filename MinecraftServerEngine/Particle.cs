@@ -1,7 +1,7 @@
 ﻿
 namespace MinecraftServerEngine
 {
-    public enum Particles
+    public enum Particle
     {
         Explode,
         largeExplode,
