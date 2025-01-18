@@ -304,6 +304,7 @@ namespace MinecraftServerEngine
                 prevBlockLocation,
                 volume, out Vector p);
 
+            BlockLocation blockLocatioin = BlockLocation.Generate(p);
 
             if (hasMovementRendering == true)
             {
@@ -332,20 +333,17 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(_noRendering == false);
 
                 bool moved = p.Equals(_p) == false;  // TODO: Compare with machine epsilon.
+                bool blockMoved = prevBlockLocation.Equals(blockLocatioin) == false;
 
-                if (moved == true && _fakeBlockApplied == true)
+                if (_fakeBlockApplied == true)
                 {
-                    BlockLocation blockLocatioin = BlockLocation.Generate(p);
-
-                    foreach (EntityRenderer renderer in Renderers.GetKeys())
+                    if (blockMoved == true)
                     {
-                        System.Diagnostics.Debug.Assert(renderer != null);
-                        if (prevBlockLocation.Equals(blockLocatioin) == false)
+                        foreach (EntityRenderer renderer in Renderers.GetKeys())
                         {
+                            System.Diagnostics.Debug.Assert(renderer != null);
                             renderer.SetBlockAppearance(Block.Air, prevBlockLocation);
                         }
-
-                        renderer.SetBlockAppearance(_fakeBlock, blockLocatioin);
                     }
 
                 }
@@ -431,6 +429,15 @@ namespace MinecraftServerEngine
 
                 _rotated = false;
                 _teleported = false;
+            }
+
+            if (_fakeBlockApplied == true)
+            {
+                foreach (EntityRenderer renderer in Renderers.GetKeys())
+                {
+                    System.Diagnostics.Debug.Assert(renderer != null);
+                    renderer.SetBlockAppearance(_fakeBlock, blockLocatioin);
+                }
             }
 
             _p = p;
@@ -592,6 +599,14 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             throw new System.NotImplementedException();
+        }
+
+        public void ResetBlockAppearance()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _fakeBlockApplied = true;
+            _fakeBlock = Block.Air;
         }
 
         public void ApplyBlockAppearance(Block block)

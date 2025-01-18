@@ -371,6 +371,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(Disconnected == false);
 
             int blockId = block.GetId();
+            //int blockId = Block.Podzol.GetId();
             Render(new BlockChangePacket(loc.X, loc.Y, loc.Z, blockId));
         }
 

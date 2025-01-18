@@ -8,7 +8,7 @@ namespace TestMinecraftServerApplication
     {
         private bool _disposed = false;
 
-        public Guest(UserId id, Vector p, Look look) 
+        public Guest(UserId id, Vector p, Look look)
             : base(id, p, look, Gamemode.Adventure) { }
 
         ~Guest() => System.Diagnostics.Debug.Assert(false);
@@ -37,7 +37,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(!_disposed);
 
             MyConsole.Printl("Sprint!");
-            Switch(Gamemode.Adventure);
+            //Switch(Gamemode.Adventure);
         }
 
         protected override void OnAttack(World world)
@@ -49,6 +49,8 @@ namespace TestMinecraftServerApplication
             MyConsole.Printl("Attack!");
 
             Damage(5.0F);
+
+            ApplyBlockAppearance(Block.Dirt);
         }
 
         protected override void OnAttack(World world, ItemStack stack)

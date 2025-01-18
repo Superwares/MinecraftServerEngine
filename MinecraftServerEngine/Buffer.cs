@@ -284,7 +284,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (decode == false)       
+            if (decode == false)
             {
                 return ReadInt();
             }
@@ -320,7 +320,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (decode == false)     
+            if (decode == false)
             {
                 return ReadLong();
             }
@@ -353,7 +353,7 @@ namespace MinecraftServerEngine
         public string ReadString()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-        
+
 
             int size = ReadInt(true);
             System.Diagnostics.Debug.Assert(size >= 0);
@@ -549,7 +549,23 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            long value = ((long)(x & 0x3FFFFFF) << 38) | ((long)(z & 0x3FFFFFF) << 12) | (long)(y & 0xFFF);
+            if (x >= 1 << 25)
+            {
+                x -= 1 << 26;
+            }
+            if (y >= 1 << 11)
+            {
+                y -= 1 << 12;
+            }
+            if (z >= 1 << 25)
+            {
+                z -= 1 << 26;
+            }
+
+            //long value = (((long)x & 0x3FFFFFF) << 38) | (((long)z & 0x3FFFFFF) << 12) | ((long)y & 0xFFF);
+            long value = (((long)x & 0x3FFFFFF) << 38) | (((long)y & 0xFFF) << 26) | ((long)z & 0x3FFFFFF);
+
+            //MyConsole.Debug($"x: {x}, y: {y}, z: {z}, value: {value}");
 
             WriteLong(value);
         }
