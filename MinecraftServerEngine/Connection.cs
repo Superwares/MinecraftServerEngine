@@ -241,7 +241,7 @@ namespace MinecraftServerEngine
                         invPlayer.Print();
                     }
 
-                    MyConsole.Printl($"Cursor: {Cursor}");
+                    MyConsole.Debug($"Cursor: {Cursor}");
                 }
 
             }
