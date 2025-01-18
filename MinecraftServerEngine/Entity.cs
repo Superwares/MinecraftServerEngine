@@ -88,8 +88,10 @@ namespace MinecraftServerEngine
         private bool _teleported = false;
         private Vector _pTeleport;
 
-        //private bool _fakeBlockApplied = false;
-        //private Block _fakeBlock;
+        private bool _prevFakeBlockApplied = false;
+        private Block _prevFakeBlock;
+        private bool _fakeBlockApplied = false;
+        private Block _fakeBlock;
 
         // ApplyBlockAppearance
         // TransformAppearance
@@ -97,20 +99,18 @@ namespace MinecraftServerEngine
         private readonly bool NoGravity;
 
 
-
-
         private protected Entity(
             System.Guid uniqueId,
-            Vector p, Look look,
+            Vector position, Look look,
             bool noGravity,
             Hitbox hitbox,
-            double m, double maxStepHeight)
-            : base(m, hitbox.Convert(p), new StepableMovement(maxStepHeight))
+            double mass, double maxStepHeight)
+            : base(mass, hitbox.Convert(position), new StepableMovement(maxStepHeight))
         {
             Id = EntityIdAllocator.Alloc();
             UniqueId = uniqueId;
 
-            _p = p;
+            _p = position;
 
             System.Diagnostics.Debug.Assert(!_rotated);
             _look = look;
@@ -165,7 +165,15 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(Renderers != null);
             Renderers.Insert(renderer);
 
-            RenderSpawning(renderer);
+            if (_prevFakeBlockApplied == true)
+            {
+                BlockLocation loc = BlockLocation.Generate(_p);
+                renderer.SetBlockAppearance(_prevFakeBlock, loc);
+            }
+            else
+            {
+                RenderSpawning(renderer);
+            }
         }
 
         protected override (BoundingVolume, bool noGravity) GetCurrentStatus()
@@ -182,10 +190,10 @@ namespace MinecraftServerEngine
         }
 
         private bool HandleRendering(
-                BoundingVolume volume, out Vector p)
+            BlockLocation prevBlockLocation,
+            BoundingVolume volume, out Vector p)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
-
 
             p = volume.GetBottomCenter();
 
@@ -216,9 +224,35 @@ namespace MinecraftServerEngine
 
                     if (!renderer.Disconnected)
                     {
-                        renderer.DestroyEntity(Id);
+                        if (_prevFakeBlockApplied == true)
+                        {
+                            renderer.SetBlockAppearance(Block.Air, prevBlockLocation);
+                        }
+                        else
+                        {
+                            renderer.DestroyEntity(Id);
+                        }
                     }
                     Renderers.Extract(renderer);
+                }
+
+                if (_prevFakeBlockApplied != _fakeBlockApplied)
+                {
+                    System.Diagnostics.Debug.Assert(Renderers != null);
+                    foreach (EntityRenderer renderer in Renderers.GetKeys())
+                    {
+                        System.Diagnostics.Debug.Assert(renderer != null);
+
+                        if (_fakeBlockApplied == false)
+                        {
+                            RenderSpawning(renderer);
+                        }
+                        else
+                        {
+                            renderer.DestroyEntity(Id);
+                        }
+                    }
+
                 }
 
                 System.Diagnostics.Debug.Assert(_hasMovement == false);
@@ -237,7 +271,15 @@ namespace MinecraftServerEngine
                         continue;
                     }
 
-                    renderer.DestroyEntity(Id);
+                    if (_prevFakeBlockApplied == true)
+                    {
+                        renderer.SetBlockAppearance(Block.Air, prevBlockLocation);
+                    }
+                    else
+                    {
+                        renderer.DestroyEntity(Id);
+                    }
+
                 }
 
                 System.Diagnostics.Debug.Assert(_hasMovement == false);
@@ -253,18 +295,24 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            bool isNoneToBlockAppearanceApplie = _prevFakeBlockApplied == false && _fakeBlockApplied == true;
+
+            BlockLocation prevBlockLocation = BlockLocation.Generate(_p);
+            Vector prevPosition = _p;
 
             bool hasMovementRendering = HandleRendering(
+                prevBlockLocation,
                 volume, out Vector p);
+
 
             if (hasMovementRendering == true)
             {
-                if (_teleported)
+                if (_teleported == true)
                 {
                     System.Diagnostics.Debug.Assert(
-                        _noRendering == false 
+                        _noRendering == false
                         || (_noRendering == true && Renderers.Empty == true));
-                    if (_noRendering == false)
+                    if (_noRendering == false && _fakeBlockApplied == false)
                     {
                         System.Diagnostics.Debug.Assert(Renderers != null);
                         foreach (EntityRenderer renderer in Renderers.GetKeys())
@@ -283,12 +331,30 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(_hasMovement == true);
                 System.Diagnostics.Debug.Assert(_noRendering == false);
 
-                bool moved = !p.Equals(_p);  // TODO: Compare with machine epsilon.
-                if (moved && _rotated)
+                bool moved = p.Equals(_p) == false;  // TODO: Compare with machine epsilon.
+
+                if (moved == true && _fakeBlockApplied == true)
+                {
+                    BlockLocation blockLocatioin = BlockLocation.Generate(p);
+
+                    foreach (EntityRenderer renderer in Renderers.GetKeys())
+                    {
+                        System.Diagnostics.Debug.Assert(renderer != null);
+                        if (prevBlockLocation.Equals(blockLocatioin) == false)
+                        {
+                            renderer.SetBlockAppearance(Block.Air, prevBlockLocation);
+                        }
+
+                        renderer.SetBlockAppearance(_fakeBlock, blockLocatioin);
+                    }
+
+                }
+                else if (moved == true && _rotated == true)
                 {
                     System.Diagnostics.Debug.Assert(
-                        _noRendering == false 
+                        _noRendering == false
                         || (_noRendering == true && Renderers.Empty == true));
+
                     if (_noRendering == false)
                     {
                         System.Diagnostics.Debug.Assert(Renderers != null);
@@ -299,14 +365,15 @@ namespace MinecraftServerEngine
                         }
                     }
                 }
-                else if (moved)
+                else if (moved == true)
                 {
                     System.Diagnostics.Debug.Assert(!_rotated);
 
                     System.Diagnostics.Debug.Assert(
-                        _noRendering == false 
+                        _noRendering == false
                         || (_noRendering == true && Renderers.Empty == true));
-                    if (_noRendering == false)  
+
+                    if (_noRendering == false)
                     {
                         System.Diagnostics.Debug.Assert(Renderers != null);
                         foreach (EntityRenderer renderer in Renderers.GetKeys())
@@ -316,13 +383,14 @@ namespace MinecraftServerEngine
                         }
                     }
                 }
-                else if (_rotated)
+                else if (_rotated == true)
                 {
                     System.Diagnostics.Debug.Assert(!moved);
 
                     System.Diagnostics.Debug.Assert(
-                        _noRendering == false 
+                        _noRendering == false
                         || (_noRendering == true && Renderers.Empty == true));
+
                     if (_noRendering == false)
                     {
                         System.Diagnostics.Debug.Assert(Renderers != null);
@@ -340,8 +408,9 @@ namespace MinecraftServerEngine
                     System.Diagnostics.Debug.Assert(!_rotated);
 
                     System.Diagnostics.Debug.Assert(
-                        _noRendering == false 
+                        _noRendering == false
                         || (_noRendering == true && Renderers.Empty == true));
+
                     if (_noRendering == false)
                     {
                         System.Diagnostics.Debug.Assert(Renderers != null);
@@ -366,6 +435,9 @@ namespace MinecraftServerEngine
 
             _p = p;
             _rotated = false;
+
+            _prevFakeBlockApplied = _fakeBlockApplied;
+            _prevFakeBlock = _fakeBlock;
 
             base.Move(volume, v);
         }
@@ -419,7 +491,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(
-                _noRendering == false 
+                _noRendering == false
                 || (_noRendering == true && Renderers.Empty == true));
             if (_noRendering == false)
             {
@@ -501,7 +573,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(
-                _noRendering == false 
+                _noRendering == false
                 || (_noRendering == true && Renderers.Empty == true));
             if (_noRendering == false)
             {
@@ -522,22 +594,20 @@ namespace MinecraftServerEngine
             throw new System.NotImplementedException();
         }
 
-        //public void ApplyBlockAppearance(Block block)
-        //{
-        //    System.Diagnostics.Debug.Assert(_disposed == false);
+        public void ApplyBlockAppearance(Block block)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
-        //    _fakeBlockApplied = true;
-        //    _fakeBlock = block;
-
-        //    _fakeBlockChanged = true;
-        //}
+            _fakeBlockApplied = true;
+            _fakeBlock = block;
+        }
 
         internal override void Flush()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(
-                _noRendering == false 
+                _noRendering == false
                 || (_noRendering == true && Renderers.Empty == true));
             if (_noRendering == false)
             {

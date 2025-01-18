@@ -545,6 +545,15 @@ namespace MinecraftServerEngine
             InsertBytes(data);
         }
 
+        public void WritePosition(int x, int y, int z)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            long value = ((long)(x & 0x3FFFFFF) << 38) | ((long)(z & 0x3FFFFFF) << 12) | (long)(y & 0xFFF);
+
+            WriteLong(value);
+        }
+
         public void WriteGuid(System.Guid value)
         {
             System.Diagnostics.Debug.Assert(!_disposed);

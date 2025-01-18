@@ -56,7 +56,7 @@ namespace MinecraftServerEngine
 
     }*/
 
-    
+
 
     internal abstract class Packet
     {
@@ -82,11 +82,11 @@ namespace MinecraftServerEngine
 
         public readonly int Id;
 
-        internal Packet(int id) 
+        internal Packet(int id)
         {
             System.Diagnostics.Debug.Assert(id >= 0);
 
-            Id = id; 
+            Id = id;
         }
 
         protected abstract void WriteData(Buffer buffer);
@@ -174,6 +174,7 @@ namespace MinecraftServerEngine
     {
         public const int SpawnEntityPacketId = 0x00;
         public const int SpawnNamedEntityPacketId = 0x05;
+        public const int BlockChangePacketId = 0x0B;
         public const int ClientboundConfirmTransactionPacketId = 0x11;
         public const int ClientboundCloseWindowPacketId = 0x12;
         public const int OpenWindowPacketId = 0x13;
@@ -284,7 +285,7 @@ namespace MinecraftServerEngine
         }
 
         public SetProtocolPacket(string hostname, ushort port, States nextState)
-            : this(ProtocolVersion, hostname, port, nextState) 
+            : this(ProtocolVersion, hostname, port, nextState)
         { }
 
         protected override void WriteData(Buffer buffer)
@@ -388,7 +389,7 @@ namespace MinecraftServerEngine
 
         public RequestPacket() : base(RequestPacketId) { }
 
-        protected override void WriteData(Buffer buffer) 
+        protected override void WriteData(Buffer buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
         }
@@ -621,7 +622,7 @@ namespace MinecraftServerEngine
 
             throw new System.NotImplementedException();
         }
-        
+
         public SpawnEntityPacket(
             int entityId, System.Guid uniqueId,
             sbyte type, double x, double y, double z,
@@ -674,13 +675,13 @@ namespace MinecraftServerEngine
         }
 
         public SpawnNamedEntityPacket(
-            int entityId, 
-            System.Guid uniqueId, 
-            double x, double y, double z, 
+            int entityId,
+            System.Guid uniqueId,
+            double x, double y, double z,
             byte yaw, byte pitch,
             byte[] data) : base(SpawnNamedEntityPacketId)
         {
-            EntityId = entityId; 
+            EntityId = entityId;
             UniqueId = uniqueId;
             X = x; Y = y; Z = z;
             Yaw = yaw; Pitch = pitch;
@@ -696,6 +697,37 @@ namespace MinecraftServerEngine
             buffer.WriteDouble(X); buffer.WriteDouble(Y); buffer.WriteDouble(Z);
             buffer.WriteByte(Yaw); buffer.WriteByte(Pitch);
             buffer.WriteData(Data);
+        }
+
+    }
+
+    internal sealed class BlockChangePacket : ClientboundPlayingPacket
+    {
+        public readonly int X, Y, Z;
+        public readonly int BlockId;
+
+        public static BlockChangePacket Read(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            throw new System.NotImplementedException();
+        }
+
+        public BlockChangePacket(
+            int x, int y, int z,
+            int blockId)
+            : base(BlockChangePacketId)
+        {
+            X = x; Y = y; Z = z;
+            BlockId = blockId;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            buffer.WritePosition(X, Y, Z);
+            buffer.WriteInt(BlockId, true);
         }
 
     }
@@ -744,7 +776,7 @@ namespace MinecraftServerEngine
             throw new System.NotImplementedException();
         }
 
-        public ClientboundCloseWindowPacket(byte windowId) 
+        public ClientboundCloseWindowPacket(byte windowId)
             : base(ClientboundCloseWindowPacketId)
         {
             WindowId = windowId;
@@ -765,7 +797,7 @@ namespace MinecraftServerEngine
         public readonly string WindowType;
         public readonly string WindowTitle;
         public readonly byte SlotCount;
-        
+
         public static OpenWindowPacket Read(Buffer buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
@@ -774,10 +806,10 @@ namespace MinecraftServerEngine
         }
 
         public OpenWindowPacket(
-            byte windowId, string windowType, string windowTitle, byte slotCount) 
+            byte windowId, string windowType, string windowTitle, byte slotCount)
             : base(OpenWindowPacketId)
         {
-            
+
             WindowId = windowId;
             WindowType = windowType;
             WindowTitle = windowTitle;
@@ -853,7 +885,7 @@ namespace MinecraftServerEngine
             throw new System.NotImplementedException();
         }
 
-        public SetSlotPacket(sbyte windowId, short slotNumber, byte[] data) 
+        public SetSlotPacket(sbyte windowId, short slotNumber, byte[] data)
             : base(SetSlotPacketId)
         {
             System.Diagnostics.Debug.Assert(slotNumber >= 0);
@@ -1050,9 +1082,9 @@ namespace MinecraftServerEngine
         }
 
         public ParticlesPacket(
-            int particleId, bool extendedRange, 
-            float x, float y, float z, 
-            float offsetX, float offsetY, float offsetZ, 
+            int particleId, bool extendedRange,
+            float x, float y, float z,
+            float offsetX, float offsetY, float offsetZ,
             float speed, int extra) : base(ParticlesPacketId)
         {
             ParticleId = particleId;
@@ -1254,7 +1286,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
-            
+
             buffer.WriteInt(EntityId, true);
             buffer.WriteByte(Yaw); buffer.WriteByte(Pitch);
             buffer.WriteBool(OnGround);
@@ -1319,7 +1351,7 @@ namespace MinecraftServerEngine
         }
 
     }
-    
+
     internal sealed class PlayerListItemAddPacket : ClientboundPlayingPacket
     {
         public readonly System.Guid UniqueId;
@@ -1350,7 +1382,7 @@ namespace MinecraftServerEngine
             buffer.WriteInt(1, true);
             buffer.WriteGuid(UniqueId);
             buffer.WriteString(Username);
-            buffer.WriteInt(0, true);  
+            buffer.WriteInt(0, true);
             buffer.WriteInt(2, true);  // gamemode
             buffer.WriteInt(Ping, true);  // latency
             buffer.WriteBool(false);
@@ -1370,7 +1402,7 @@ namespace MinecraftServerEngine
             throw new System.NotImplementedException();
         }
 
-        public PlayerListItemUpdateLatencyPacket(System.Guid uniqueId, int laytency) 
+        public PlayerListItemUpdateLatencyPacket(System.Guid uniqueId, int laytency)
             : base(PlayerListItemUpdateLatencyPacketId)
         {
             UniqueId = uniqueId;
@@ -1436,13 +1468,13 @@ namespace MinecraftServerEngine
         }
 
         public TeleportPacket(
-            double x, double y, double z, 
-            float yaw, float pitch, 
+            double x, double y, double z,
+            float yaw, float pitch,
             bool relativeX, bool relativeY, bool relativeZ,
             bool relativeYaw, bool relativePitch,
             int payload) : base(TeleportPacketId)
         {
-            
+
 
             X = x; Y = y; Z = z;
             Yaw = yaw; Pitch = pitch;
@@ -1505,7 +1537,7 @@ namespace MinecraftServerEngine
         }
 
     }
-    
+
     internal sealed class RespawnPacket : ClientboundPlayingPacket
     {
         internal readonly int Dimension;
@@ -1521,7 +1553,7 @@ namespace MinecraftServerEngine
         }
 
         internal RespawnPacket(
-            int dimension, byte difficulty, byte gamemode, string levelType) 
+            int dimension, byte difficulty, byte gamemode, string levelType)
             : base(RespawnPacketId)
         {
             Dimension = dimension;
@@ -1674,7 +1706,7 @@ namespace MinecraftServerEngine
 
             throw new System.NotImplementedException();
         }
-        
+
         internal UpdateHealthPacket(
             float health, int food, float foodSaturation) : base(UpdateHealthPacketId)
         {
@@ -1708,8 +1740,8 @@ namespace MinecraftServerEngine
         }
 
         public EntityTeleportPacket(
-            int entityId, 
-            double x, double y, double z, 
+            int entityId,
+            double x, double y, double z,
             byte yaw, byte pitch,
             bool onGround) : base(EntityTeleportPacketId)
         {
@@ -1773,7 +1805,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(buffer != null);
 
             buffer.ReadString();  // TODO
-            byte renderDistance = buffer.ReadByte(); 
+            byte renderDistance = buffer.ReadByte();
             buffer.ReadInt(true);  // TODO
             buffer.ReadBool();  // TODO
             buffer.ReadSbyte();  // TODO
@@ -1879,7 +1911,7 @@ namespace MinecraftServerEngine
             return new(buffer.ReadByte());
         }
 
-        private ServerboundCloseWindowPacket(byte windowId) 
+        private ServerboundCloseWindowPacket(byte windowId)
             : base(ServerboundCloseWindowPacketId)
         {
             WindowId = windowId;
@@ -2013,7 +2045,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(buffer != null);
 
             return new(
-                buffer.ReadDouble(), buffer.ReadDouble(), buffer.ReadDouble(), 
+                buffer.ReadDouble(), buffer.ReadDouble(), buffer.ReadDouble(),
                 buffer.ReadBool());
         }
 
@@ -2049,12 +2081,12 @@ namespace MinecraftServerEngine
 
             return new(
                 buffer.ReadDouble(), buffer.ReadDouble(), buffer.ReadDouble(),
-                buffer.ReadFloat(), buffer.ReadFloat(), 
+                buffer.ReadFloat(), buffer.ReadFloat(),
                 buffer.ReadBool());
         }
 
         private PlayerPosAndLookPacket(
-            double x, double y, double z, 
+            double x, double y, double z,
             float yaw, float pitch,
             bool onGround)
             : base(PlayerPosAndLookPacketId)
@@ -2093,7 +2125,7 @@ namespace MinecraftServerEngine
 
         public PlayerLookPacket(
             float yaw, float pitch,
-            bool onGround) 
+            bool onGround)
             : base(PlayerLookPacketId)
         {
             Yaw = yaw; Pitch = pitch;
@@ -2115,7 +2147,7 @@ namespace MinecraftServerEngine
         // followed by z as a 26-bit integer,
         // followed by y as a 12-bit integer
         // (all signed, two's complement).
-        public readonly byte[] Position; 
+        public readonly byte[] Position;
         public readonly byte Face;
 
         internal static PlayerDigPacket Read(Buffer buffer)
@@ -2125,7 +2157,7 @@ namespace MinecraftServerEngine
             return new(buffer.ReadInt(true), buffer.ReadData(8), buffer.ReadByte());
         }
 
-        internal PlayerDigPacket(int status, byte[] p, byte face) 
+        internal PlayerDigPacket(int status, byte[] p, byte face)
             : base(PlayerDigPacketId)
         {
             Status = status;
@@ -2154,7 +2186,7 @@ namespace MinecraftServerEngine
             return new(buffer.ReadInt(true), buffer.ReadInt(true), buffer.ReadInt(true));
         }
 
-        private EntityActionPacket(int entityId, int actionId, int jumpBoost) 
+        private EntityActionPacket(int entityId, int actionId, int jumpBoost)
             : base(EntityActionPacketId)
         {
             EntityId = entityId;

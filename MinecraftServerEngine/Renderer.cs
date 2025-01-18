@@ -366,6 +366,14 @@ namespace MinecraftServerEngine
                 onGround));
         }
 
+        internal void SetBlockAppearance(Block block, BlockLocation loc)
+        {
+            System.Diagnostics.Debug.Assert(Disconnected == false);
+
+            int blockId = block.GetId();
+            Render(new BlockChangePacket(loc.X, loc.Y, loc.Z, blockId));
+        }
+
         internal void ChangeForms(int id, bool sneaking, bool sprinting)
         {
             System.Diagnostics.Debug.Assert(!Disconnected);
