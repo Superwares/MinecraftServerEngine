@@ -264,19 +264,19 @@ namespace MinecraftServerEngine
                 {
                     if (idWindow < 0 || idWindow > 1)
                     {
-                        throw new UnexpectedValueException("ClickWindowPacket.WindowId");
+                        throw new UnexpectedClientBehaviorExecption("Invalid window id: <0 || >1");
                     }
 
-                    if (i < 0)
-                    {
-                        throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
-                    }
+                    //if (i < 0)
+                    //{
+                    //    throw new UnexpectedClientBehaviorExecption("Negative slot index");
+                    //}
 
                     if (_invPublic == null)
                     {
                         if (i >= invPlayer.TotalSlotCount)
                         {
-                            throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
+                            throw new UnexpectedClientBehaviorExecption("Slot index is out of the valid range for player inventory");
                         }
                     }
                     else
@@ -285,7 +285,7 @@ namespace MinecraftServerEngine
 
                         if (i >= _invPublic.TotalSlotCount + PlayerInventory.PrimarySlotCount)
                         {
-                            throw new UnexpectedValueException("ClickWindowPacket.SlotNumber");
+                            throw new UnexpectedClientBehaviorExecption("Slot index is out of the valid range for public and player primary inventory");
                         }
                     }
 
@@ -294,7 +294,7 @@ namespace MinecraftServerEngine
                         System.Diagnostics.Debug.Assert(!_ambiguous);
                         if (idWindow == 1)
                         {
-                            throw new UnexpectedValueException("ClickWindowPacket.WindowId");
+                            throw new UnexpectedClientBehaviorExecption("Invalid window id: ==1");
                         }
 
                         System.Diagnostics.Debug.Assert(idWindow == 0);
@@ -304,9 +304,9 @@ namespace MinecraftServerEngine
 
                         if (idWindow == 0)
                         {
-                            if (!_ambiguous)
+                            if (_ambiguous == false)
                             {
-                                throw new UnexpectedValueException("ClickWindowPacket.WindowId");
+                                throw new UnexpectedClientBehaviorExecption("Not ambiguous!");
                             }
                             else
                             {
