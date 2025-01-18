@@ -32,6 +32,19 @@ namespace MinecraftServerEngine
             Dispose(false);
         }
 
+        public abstract double GetEyeHeight();
+
+        public Vector GetEyeOrigin()
+        {
+            double eyeHeight = GetEyeHeight();
+
+            double x = Position.X,
+                y = Position.Y + eyeHeight,
+                z = Position.Z;
+
+            return new Vector(x, y, z);
+        }
+
         protected internal override bool IsDead()
         {
             System.Diagnostics.Debug.Assert(!_disposed);

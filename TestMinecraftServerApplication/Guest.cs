@@ -1,4 +1,5 @@
 ﻿using Common;
+using Containers;
 using MinecraftServerEngine;
 using MinecraftServerEngine.PhysicsEngine;
 
@@ -63,10 +64,31 @@ namespace TestMinecraftServerApplication
 
             //Damage(5.0F);
 
-            double eyeHeight = GetEyeHeight();
-            Vector u_look = Look.GetUnitVector();
+            //double eyeHeight = GetEyeHeight();
 
-            MyConsole.Debug($"EyeHeight: {eyeHeight}, Look's unit vector: {u_look}");
+            Vector eyeOrigin = GetEyeOrigin();
+            Vector scaledDirection = Look.GetUnitVector() * 3;
+
+            MyConsole.Debug($"Eye Origin: {eyeOrigin}, Look's unit vector: {scaledDirection}");
+
+            using Tree<PhysicsObject> objs = new();
+
+            world.SearchObjects(objs, eyeOrigin, scaledDirection);
+
+            foreach (PhysicsObject obj in objs.GetKeys())
+            {
+                MyConsole.Debug($"obj: {obj}");
+
+                if (ReferenceEquals(obj, this) == true)
+                {
+                    continue;
+                }
+
+                if (obj is AbstractPlayer player)
+                {
+                    player.Damage(5.0F);
+                }
+            }
         }
 
         protected override void OnAttack(World world, ItemStack stack)

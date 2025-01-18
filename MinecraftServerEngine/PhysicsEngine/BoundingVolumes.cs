@@ -6,6 +6,7 @@ namespace MinecraftServerEngine.PhysicsEngine
     {
         internal abstract void Extend(Vector v);
         internal abstract void Move(Vector v);
+        internal abstract bool Intersects(Vector o, Vector d);
 
         internal abstract Vector GetCenter();
         internal abstract Vector GetBottomCenter();
@@ -35,12 +36,17 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         internal override void Extend(Vector v)
         {
-            
+
         }
 
         internal override void Move(Vector v)
         {
             _p += v;
+        }
+
+        internal override bool Intersects(Vector o, Vector d)
+        {
+            return false;
         }
 
         internal override Vector GetCenter()
@@ -81,6 +87,26 @@ namespace MinecraftServerEngine.PhysicsEngine
                 min = new(p.X - r, p.Y - r, p.Z - r);
             return new AxisAlignedBoundingBox(max, min);
         }
+
+        public static AxisAlignedBoundingBox Generate(Vector p, Vector d)
+        {
+            // Calculate min and max based on p (origin) and d (direction)
+            Vector min = new Vector(
+                System.Math.Min(p.X, p.X + d.X),
+                System.Math.Min(p.Y, p.Y + d.Y),
+                System.Math.Min(p.Z, p.Z + d.Z)
+            );
+
+            Vector max = new Vector(
+                System.Math.Max(p.X, p.X + d.X),
+                System.Math.Max(p.Y, p.Y + d.Y),
+                System.Math.Max(p.Z, p.Z + d.Z)
+            );
+
+            // Return the axis-aligned bounding box
+            return new AxisAlignedBoundingBox(max, min);
+        }
+
 
         private Vector _max, _min;
         public Vector Max => _max;
@@ -147,6 +173,66 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             _max = _max + v; _min = _min + v;
         }
+        internal override bool Intersects(Vector o, Vector d)
+        {
+            double tMin, tMax, tyMin, tyMax, tzMin, tzMax;
+
+            // X-axis
+            if (d.X != 0)
+            {
+                tMin = (Min.X - o.X) / d.X;
+                tMax = (Max.X - o.X) / d.X;
+                if (tMin > tMax) (tMin, tMax) = (tMax, tMin); // Swap if needed
+            }
+            else
+            {
+                // Ray parallel to X-axis, check if origin is within X bounds
+                if (o.X < Min.X || o.X > Max.X) return false;
+                tMin = double.NegativeInfinity;
+                tMax = double.PositiveInfinity;
+            }
+
+            // Y-axis
+            if (d.Y != 0)
+            {
+                tyMin = (Min.Y - o.Y) / d.Y;
+                tyMax = (Max.Y - o.Y) / d.Y;
+                if (tyMin > tyMax) (tyMin, tyMax) = (tyMax, tyMin); // Swap if needed
+            }
+            else
+            {
+                // Ray parallel to Y-axis, check if origin is within Y bounds
+                if (o.Y < Min.Y || o.Y > Max.Y) return false;
+                tyMin = double.NegativeInfinity;
+                tyMax = double.PositiveInfinity;
+            }
+
+            // Merge X and Y slabs
+            if ((tMin > tyMax) || (tyMin > tMax)) return false;
+            tMin = System.Math.Max(tMin, tyMin);
+            tMax = System.Math.Min(tMax, tyMax);
+
+            // Z-axis
+            if (d.Z != 0)
+            {
+                tzMin = (Min.Z - o.Z) / d.Z;
+                tzMax = (Max.Z - o.Z) / d.Z;
+                if (tzMin > tzMax) (tzMin, tzMax) = (tzMax, tzMin); // Swap if needed
+            }
+            else
+            {
+                // Ray parallel to Z-axis, check if origin is within Z bounds
+                if (o.Z < Min.Z || o.Z > Max.Z) return false;
+                tzMin = double.NegativeInfinity;
+                tzMax = double.PositiveInfinity;
+            }
+
+            // Final merge
+            if ((tMin > tzMax) || (tzMin > tMax)) return false;
+
+            return true; // Ray intersects AABB
+        }
+
 
         internal override Vector GetCenter()
         {
@@ -272,13 +358,17 @@ namespace MinecraftServerEngine.PhysicsEngine
         {
             throw new System.NotImplementedException();
         }
-
-        internal override  Vector GetCenter()
+        internal override bool Intersects(Vector o, Vector d)
         {
             throw new System.NotImplementedException();
         }
 
-        internal override  Vector GetBottomCenter()
+        internal override Vector GetCenter()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        internal override Vector GetBottomCenter()
         {
             throw new System.NotImplementedException();
         }
@@ -293,7 +383,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             throw new System.NotImplementedException();
         }
 
-        internal override  bool TestIntersection(BoundingVolume volume)
+        internal override bool TestIntersection(BoundingVolume volume)
         {
             if (volume is AxisAlignedBoundingBox aabb)
             {
@@ -304,7 +394,7 @@ namespace MinecraftServerEngine.PhysicsEngine
                 return IntersectionTests.TestFixedAndFixed(this, cbv);
             }
 
-            throw new System.NotImplementedException();     
+            throw new System.NotImplementedException();
         }
 
         /*public override bool TestIntersection(BoundingVolume volume, Vector v)

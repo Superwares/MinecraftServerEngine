@@ -245,6 +245,48 @@ namespace MinecraftServerEngine.PhysicsEngine
             }
         }
 
+        public void SearchObjects(Tree<PhysicsObject> objs, Vector o, Vector d)
+        {
+            System.Diagnostics.Debug.Assert(objs != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            AxisAlignedBoundingBox aabb = AxisAlignedBoundingBox.Generate(o, d);
+
+            Grid grid = Grid.Generate(aabb);
+
+            foreach (Cell cell in grid.GetCells())
+            {
+                if (!CellToObjects.Contains(cell))
+                {
+                    continue;
+                }
+
+                Tree<PhysicsObject> objectsInCell = CellToObjects.Lookup(cell);
+                System.Diagnostics.Debug.Assert(objectsInCell != null);
+                foreach (PhysicsObject objInCell in objectsInCell.GetKeys())
+                {
+                    System.Diagnostics.Debug.Assert(objInCell != null);
+                    if (objs.Contains(objInCell) == true)
+                    {
+                        continue;
+                    }
+
+                    //objs.Insert(objInCell);
+
+                    AxisAlignedBoundingBox minAABB = objInCell.BoundingVolume.GetMinBoundingBox();
+
+                    //minAABB.Move(-1 * origin);
+
+                    if (minAABB.Intersects(o, d) == true)
+                    {
+                        objs.Insert(objInCell);
+                    }
+
+                }
+            }
+        }
+
         private void InsertObjectToCell(Cell cell, PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(obj != null);

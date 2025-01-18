@@ -123,7 +123,7 @@ namespace MinecraftServerEngine
                 GetSpectatorHitbox() : GetAdventureHitbox(false);
         }
 
-        public double GetEyeHeight()
+        public override double GetEyeHeight()
         {
             double value = DefaultEyeHeight;
 

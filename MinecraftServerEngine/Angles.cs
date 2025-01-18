@@ -32,21 +32,15 @@ namespace MinecraftServerEngine
         public Vector GetUnitVector()
         {
             /**
-             * x = -cos(pitch) * sin(yaw)
-             * y = -sin(pitch)
-             * z =  cos(pitch) * cos(yaw)
+             * Reference: https://www.spigotmc.org/threads/converting-a-yaw-and-a-pitch-to-a-vector.639501/
              */
 
-            //float yaw = Frem(Yaw);
-            //float pitch = Frem(Pitch);
+            double yaw = ((Yaw + 90.0D) * System.Math.PI) / 180;
+            double pitch = ((Pitch + 90.0D) * System.Math.PI) / 180;
 
-            //double xzLen = System.Math.Cos(Pitch);
-            //double x = xzLen * System.Math.Cos(Yaw),
-            //    y = System.Math.Sin(Pitch),
-            //    z = xzLen * System.Math.Sin(-Yaw);
-            double x = -System.Math.Cos(Pitch) * System.Math.Sin(Yaw),
-                y = -System.Math.Sin(Pitch),
-                z = System.Math.Cos(Pitch) * System.Math.Cos(Yaw);
+            double x = System.Math.Sin(pitch) * System.Math.Cos(yaw),
+                y = System.Math.Cos(pitch),
+                z = System.Math.Sin(pitch) * System.Math.Sin(yaw);
 
             return new Vector(x, y, z);
         }
