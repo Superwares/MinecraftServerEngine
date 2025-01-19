@@ -29,6 +29,11 @@ namespace MinecraftServerEngine
             PlayerInventory playerInventory,
             int i, ItemType item, int count);
 
+        protected abstract void OnRightClickSharedItem(
+            UserId userId,
+            PlayerInventory playerInventory,
+            int i, ItemType item, int count);
+
         internal override void LeftClick(
             UserId userId, PlayerInventory playerInventory,
             int i, InventorySlot cursor)
@@ -73,6 +78,84 @@ namespace MinecraftServerEngine
 
         }
 
+        internal override void RightClick(
+            UserId userId, PlayerInventory playerInventory,
+            int i, InventorySlot cursor)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            int totalSlots = GetTotalSlotCount();
+            System.Diagnostics.Debug.Assert(totalSlots > 0);
+
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < totalSlots + PlayerInventory.PrimarySlotCount);
+            System.Diagnostics.Debug.Assert(cursor != null);
+
+            //base.RightClick(userId, playerInventory, i, cursor);
+
+            Locker.Hold();
+
+            try
+            {
+
+                if (i < totalSlots)
+                {
+                    InventorySlot slot = GetSlot(playerInventory, i);
+
+                    System.Diagnostics.Debug.Assert(slot != null);
+
+                    if (slot.Empty == false)
+                    {
+                        OnRightClickSharedItem(
+                            userId, playerInventory,
+                            i, slot.Stack.Type, slot.Stack.Count);
+                    }
+
+                }
+            }
+            finally
+            {
+                UpdateRendering(userId, playerInventory);
+
+                Locker.Release();
+            }
+
+        }
+
+        internal override void QuickMove(UserId userId, PlayerInventory playerInventory, int i)
+        {
+            //base.QuickMove(userId, playerInventory, i);
+
+            Locker.Hold();
+
+            try
+            {
+            }
+            finally
+            {
+                UpdateRendering(userId, playerInventory);
+
+                Locker.Release();
+            }
+        }
+
+        internal override void SwapItems(UserId userId, PlayerInventory playerInventory, int i, int j)
+        {
+            //base.SwapItems(userId, playerInventory, i, j);
+
+            Locker.Hold();
+
+            try
+            {
+            }
+            finally
+            {
+                UpdateRendering(userId, playerInventory);
+
+                Locker.Release();
+            }
+        }
+
         protected override void Dispose(bool disposing)
         {
             // Check to see if Dispose has already been called.
@@ -99,5 +182,7 @@ namespace MinecraftServerEngine
 
             base.Dispose(disposing);
         }
+
+
     }
 }

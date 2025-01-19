@@ -335,29 +335,36 @@ namespace MinecraftServerEngine
 
             Locker.Hold();
 
-            if (i < totalSlots)
+            try
             {
-                InventorySlot slot = Slots[i];
-                System.Diagnostics.Debug.Assert(slot != null);
+                if (i < totalSlots)
+                {
+                    InventorySlot slot = Slots[i];
+                    System.Diagnostics.Debug.Assert(slot != null);
 
-                playerInventory.QuickMoveFromRightInPrimary(slot);
+                    playerInventory.QuickMoveFromRightInPrimary(slot);
+                }
+                else
+                {
+                    int j = i - totalSlots;
+                    System.Diagnostics.Debug.Assert(j >= 0);
+                    InventorySlot slot = playerInventory.GetPrimarySlot(j);
+                    System.Diagnostics.Debug.Assert(slot != null);
+
+                    QuickMoveFromLeft(slot);
+                }
             }
-            else
+            finally
             {
-                int j = i - totalSlots;
-                System.Diagnostics.Debug.Assert(j >= 0);
-                InventorySlot slot = playerInventory.GetPrimarySlot(j);
-                System.Diagnostics.Debug.Assert(slot != null);
+                UpdateRendering(userId, playerInventory);
 
-                QuickMoveFromLeft(slot);
+                Locker.Release();
             }
 
-            UpdateRendering(userId, playerInventory);
 
-            Locker.Release();
         }
 
-        internal void SwapItems(
+        internal virtual void SwapItems(
             UserId userId, PlayerInventory playerInventory,
             int i, int j)
         {
@@ -376,14 +383,20 @@ namespace MinecraftServerEngine
 
             Locker.Hold();
 
-            InventorySlot slot_i = GetSlot(playerInventory, i), slot_j = GetSlot(playerInventory, j);
+            try
+            {
+                InventorySlot slot_i = GetSlot(playerInventory, i), slot_j = GetSlot(playerInventory, j);
 
-            SetSlot(playerInventory, i, slot_j);
-            SetSlot(playerInventory, j, slot_i);
+                SetSlot(playerInventory, i, slot_j);
+                SetSlot(playerInventory, j, slot_i);
 
-            UpdateRendering(userId, playerInventory);
+            }
+            finally
+            {
+                UpdateRendering(userId, playerInventory);
 
-            Locker.Release();
+                Locker.Release();
+            }
         }
 
         internal void SwapItemsWithHotbarSlot(

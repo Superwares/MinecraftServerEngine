@@ -24,5 +24,15 @@ namespace TestMinecraftServerApplication
             MyConsole.Debug($"UserId: {userId}");
             MyConsole.Debug($"i: {i}, Item: {item}, count: {count}");
         }
+
+        protected override void OnRightClickSharedItem(
+            UserId userId, PlayerInventory playerInventory,
+            int i, ItemType item, int count)
+        {
+            System.Diagnostics.Debug.Assert(count >= 0);
+
+            MyConsole.Debug($"UserId: {userId}");
+            MyConsole.Debug($"i: {i}, Item: {item}, count: {count}");
+        }
     }
 }
