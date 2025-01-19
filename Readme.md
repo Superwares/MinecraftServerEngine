@@ -21,8 +21,8 @@ which significantly enhances server performance and scalability.
 
 ### Player Skin Morphing (yet)
 
-### Ghost Entities (yet)
-* 실제 보이지만 않지만 실제로 존재하는 엔티티 (공격, 이동, 상호작용 가능)
+### Ghost Players
+* 게임에 접속을 끊은 플레이어가 월드에서 사라지지 물리 작용을 받을 수 있는 오브젝트로 남아있음.
 
 ## Code Conventions
 

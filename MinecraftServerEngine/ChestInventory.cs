@@ -19,7 +19,7 @@ namespace MinecraftServerEngine
             Dispose(false);
         }
 
-        public override int GetTotalSlotCount()
+        private protected override int GetTotalSlotCount()
         {
             System.Diagnostics.Debug.Assert(TotalSlotCount > 0);
             return TotalSlotCount;

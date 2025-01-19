@@ -2,7 +2,7 @@
 
 namespace MinecraftServerEngine
 {
-    /*public abstract class ItemInterfaceInventory : PublicInventory
+    public abstract class ItemInterfaceInventory : PublicInventory
     {
         protected abstract class ClickContext
         {
@@ -52,10 +52,19 @@ namespace MinecraftServerEngine
         private bool _disposed = false;
 
 
-        public ItemInterfaceInventory(int line) : base(line * SlotsPerLine)
+        private readonly int totalSlotCount;
+
+        private protected override int GetTotalSlotCount()
+        {
+            System.Diagnostics.Debug.Assert(totalSlotCount > 0);
+            return totalSlotCount;
+        }
+
+        public ItemInterfaceInventory(int line) : base()
         {
             System.Diagnostics.Debug.Assert(line > 0);
             System.Diagnostics.Debug.Assert(line <= MaxLineCount);
+            totalSlotCount = line * SlotsPerLine;
         }
 
         ~ItemInterfaceInventory()
@@ -65,97 +74,10 @@ namespace MinecraftServerEngine
             Dispose(false);
         }
 
-        internal override void TakeAll(
-            PrivateInventory invPrivate, int i, ref ItemSlot cursor, 
-            WindowRenderer renderer)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(invPrivate != null);
-            System.Diagnostics.Debug.Assert(i >= 0);
-            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
-            System.Diagnostics.Debug.Assert(cursor == null);
-            System.Diagnostics.Debug.Assert(renderer != null);
+        protected abstract void OnLeftClick(LeftClickContext ctx, int i);
 
-            Locker.Hold();
-                
-            LeftClickContext ctx = new(invPrivate);
-            LeftClick(ctx, i);
-
-            Refresh(invPrivate, renderer);
-
-            Locker.Release();
-        }
-
-        internal override void PutAll(
-            PrivateInventory invPrivate, int i, ref ItemSlot cursor,  
-            WindowRenderer renderer)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(invPrivate != null);
-            System.Diagnostics.Debug.Assert(i >= 0);
-            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
-            System.Diagnostics.Debug.Assert(cursor != null);
-            System.Diagnostics.Debug.Assert(renderer != null);
-
-            Locker.Hold();
-
-            LeftClickContext ctx = new(invPrivate);
-            LeftClick(ctx, i);
-
-            Refresh(invPrivate, renderer);
-
-            Locker.Release();
-        }
-
-        internal override void TakeHalf(
-            PrivateInventory invPrivate, int i, ref ItemSlot cursor, 
-            WindowRenderer renderer)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(invPrivate != null);
-            System.Diagnostics.Debug.Assert(i >= 0);
-            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
-            System.Diagnostics.Debug.Assert(cursor == null);
-            System.Diagnostics.Debug.Assert(renderer != null);
-
-            Locker.Hold();
-
-            RightClickContext ctx = new(invPrivate);
-            RightClick(ctx, i);
-
-            Refresh(invPrivate, renderer);
-
-            Locker.Release();
-        }
-
-        internal override void PutOne(
-            PrivateInventory invPrivate, int i, ref ItemSlot cursor, 
-            WindowRenderer renderer)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(invPrivate != null);
-            System.Diagnostics.Debug.Assert(i >= 0);
-            System.Diagnostics.Debug.Assert(i < TotalSlotCount + invPrivate.PrimarySlotCount);
-            System.Diagnostics.Debug.Assert(cursor != null);
-            System.Diagnostics.Debug.Assert(renderer != null);
-
-            Locker.Hold();
-            
-            RightClickContext ctx = new(invPrivate);
-            RightClick(ctx, i);
-
-            Refresh(invPrivate, renderer);
-
-            Locker.Release();
-        }
-
-        protected abstract void LeftClick(LeftClickContext ctx, int i);
-
-        protected abstract void RightClick(RightClickContext ctx, int i);
+        protected abstract void OnRightClick(RightClickContext ctx, int i);
 
         protected override void Dispose(bool disposing)
         {
@@ -183,5 +105,5 @@ namespace MinecraftServerEngine
 
             base.Dispose(disposing);
         }
-    }*/
+    }
 }

@@ -18,7 +18,7 @@ namespace MinecraftServerEngine
         internal readonly InventorySlot[] Slots;
 
 
-        public abstract int GetTotalSlotCount();
+        private protected abstract int GetTotalSlotCount();
 
         internal Inventory()
         {
