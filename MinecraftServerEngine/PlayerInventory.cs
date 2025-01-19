@@ -32,14 +32,7 @@ namespace MinecraftServerEngine
         private int _indexMainHandSlot = 0;  // 0-8
 
 
-        internal override int GetTotalSlotCount()
-        {
-            System.Diagnostics.Debug.Assert(TotalSlotCount > 0);
-            return TotalSlotCount;
-        }
-
-
-        internal PlayerInventory() : base()
+        internal PlayerInventory() : base(TotalSlotCount)
         {
             GiveFromLeftInPrimary(new ItemStack(ItemType.Stick));
             GiveFromLeftInPrimary(new ItemStack(ItemType.DiamondSword));

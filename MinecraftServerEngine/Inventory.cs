@@ -7,29 +7,26 @@ namespace MinecraftServerEngine
 
     public abstract class Inventory : System.IDisposable
     {
-        internal const int SlotsPerLine = 9;
+        internal const int SlotCountPerLine = 9;
 
 
         private bool _disposed = false;
 
-        
-
-
+        private readonly int _totalSlotCount;
         internal readonly InventorySlot[] Slots;
 
 
-        internal abstract int GetTotalSlotCount();
-
-        internal Inventory()
+        internal Inventory(int totalSlotCount)
         {
-            int totalSlots = GetTotalSlotCount();
-            System.Diagnostics.Debug.Assert(totalSlots >= 0);
+            System.Diagnostics.Debug.Assert(totalSlotCount > 0);
 
-            Slots = new InventorySlot[totalSlots];
-            for (int i = 0; i < totalSlots; ++i)
+            Slots = new InventorySlot[totalSlotCount];
+            for (int i = 0; i < totalSlotCount; ++i)
             {
                 Slots[i] = new InventorySlot();
             }
+
+            _totalSlotCount = totalSlotCount;
         }
 
         ~Inventory()
@@ -37,6 +34,12 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(false);
 
             Dispose(false);
+        }
+
+        public int GetTotalSlotCount()
+        {
+            System.Diagnostics.Debug.Assert(_totalSlotCount > 0);
+            return _totalSlotCount;
         }
 
         public void Print()
@@ -47,7 +50,7 @@ namespace MinecraftServerEngine
             MyConsole.Printl($"Inventory: ");
             for (int i = 0; i < totalSlots; ++i)
             {
-                if (i % SlotsPerLine == 0)
+                if (i % SlotCountPerLine == 0)
                 {
                     MyConsole.NewLine();
                     MyConsole.NewTab();

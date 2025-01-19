@@ -5,24 +5,16 @@ namespace MinecraftServerEngine
     public abstract class ItemInterfaceInventory : SharedInventory
     {
 
-        private const int MaxLineCount = 6;
-
         private bool _disposed = false;
 
 
-        private readonly int totalSlotCount;
-
-        internal override int GetTotalSlotCount()
+        public ItemInterfaceInventory(int totalLineCount) : base(totalLineCount)
         {
-            System.Diagnostics.Debug.Assert(totalSlotCount > 0);
-            return totalSlotCount;
-        }
+            System.Diagnostics.Debug.Assert(totalLineCount > 0);
+            System.Diagnostics.Debug.Assert(totalLineCount <= MaxLineCount);
 
-        public ItemInterfaceInventory(int line) : base()
-        {
-            System.Diagnostics.Debug.Assert(line > 0);
-            System.Diagnostics.Debug.Assert(line <= MaxLineCount);
-            totalSlotCount = line * SlotsPerLine;
+            // TODO: remove
+            Slots[10].Give(new ItemStack(ItemType.Stick));
         }
 
         ~ItemInterfaceInventory()
@@ -35,7 +27,51 @@ namespace MinecraftServerEngine
         protected abstract void OnLeftClickSharedItem(
             UserId userId,
             PlayerInventory playerInventory,
-            int i, ItemType Item, int count);
+            int i, ItemType item, int count);
+
+        internal override void LeftClick(
+            UserId userId, PlayerInventory playerInventory,
+            int i, InventorySlot cursor)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            int totalSlots = GetTotalSlotCount();
+            System.Diagnostics.Debug.Assert(totalSlots > 0);
+
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < totalSlots + PlayerInventory.PrimarySlotCount);
+            System.Diagnostics.Debug.Assert(cursor != null);
+
+            //base.LeftClick(userId, playerInventory, i, cursor);
+
+            Locker.Hold();
+
+            try
+            {
+
+                if (i < totalSlots)
+                {
+                    InventorySlot slot = GetSlot(playerInventory, i);
+
+                    System.Diagnostics.Debug.Assert(slot != null);
+
+                    if (slot.Empty == false)
+                    {
+                        OnLeftClickSharedItem(
+                            userId, playerInventory,
+                            i, slot.Stack.Type, slot.Stack.Count);
+                    }
+
+                }
+            }
+            finally
+            {
+                UpdateRendering(userId, playerInventory);
+
+                Locker.Release();
+            }
+
+        }
 
         protected override void Dispose(bool disposing)
         {

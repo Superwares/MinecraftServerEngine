@@ -9,15 +9,22 @@ namespace MinecraftServerEngine
 
     public abstract class SharedInventory : Inventory
     {
-        private bool _disposed = false;
+        internal const int MaxLineCount = 6;
 
         protected abstract string Title { get; }
+
+        private bool _disposed = false;
+
 
         private protected readonly Locker Locker = new();  // Disposable
 
         private readonly Map<PlayerInventory, PublicInventoryRenderer> Renderers = new();
 
-        internal SharedInventory() : base() { }
+        internal SharedInventory(int totalLineCount) : base(totalLineCount * SlotCountPerLine)
+        {
+            System.Diagnostics.Debug.Assert(totalLineCount > 0);
+            System.Diagnostics.Debug.Assert(totalLineCount <= MaxLineCount);
+        }
 
         ~SharedInventory()
         {
@@ -133,7 +140,7 @@ namespace MinecraftServerEngine
             Locker.Release();
         }
 
-        private InventorySlot GetSlot(
+        internal InventorySlot GetSlot(
             PlayerInventory invPlayer,
             int i)
         {
@@ -157,7 +164,7 @@ namespace MinecraftServerEngine
 
         }
 
-        private void SetSlot(
+        internal void SetSlot(
             PlayerInventory invPlayer,
             int i, InventorySlot slot)
         {

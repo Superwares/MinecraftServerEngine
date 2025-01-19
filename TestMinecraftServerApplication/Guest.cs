@@ -10,7 +10,8 @@ namespace TestMinecraftServerApplication
     {
         private bool _disposed = false;
 
-        private static ChestInventory chestInventory = new ChestInventory();
+        private static ChestInventory chestInventory = new();
+        private static ShopInventory shopInventory = new();
 
 
         public Guest(UserId id, Vector p, Angles look)
@@ -45,7 +46,7 @@ namespace TestMinecraftServerApplication
             if (f == true)
             {
                 //ApplyBlockAppearance(Block.Dirt);
-                OpenInventory(chestInventory);
+                OpenInventory(shopInventory);
             }
             else
             {

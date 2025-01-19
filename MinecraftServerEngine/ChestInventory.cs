@@ -3,26 +3,22 @@ namespace MinecraftServerEngine
 {
     public sealed class ChestInventory : SharedInventory
     {
-        internal const int TotalSlotCount = 3 * SlotsPerLine;
+
+        internal const int TotalLineCount = 3;
+        internal const int TotalSlotCount = TotalLineCount * SlotCountPerLine;
 
 
         private bool _disposed = false;
 
         protected override string Title => "Chest";
 
-        public ChestInventory() : base() { }
+        public ChestInventory() : base(TotalLineCount) { }
 
         ~ChestInventory()
         {
             System.Diagnostics.Debug.Assert(false);
 
             Dispose(false);
-        }
-
-        internal override int GetTotalSlotCount()
-        {
-            System.Diagnostics.Debug.Assert(TotalSlotCount > 0);
-            return TotalSlotCount;
         }
 
         protected override void Dispose(bool disposing)

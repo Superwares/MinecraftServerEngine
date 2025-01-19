@@ -5,7 +5,7 @@ namespace MinecraftServerEngine
     public sealed class ItemStack
     {
 
-        private readonly ItemType Type;
+        public readonly ItemType Type;
 
         /*private readonly string Name;*/
 
