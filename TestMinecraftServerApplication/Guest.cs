@@ -122,6 +122,8 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            MyConsole.Debug("Use entity!");
+
             /*entity.Teleport(new Vector(1.0D, 103.0D, 3.0D), new Look(30.0F, 90.0F));*/
 
             /*entity.ApplyForce(new Vector(

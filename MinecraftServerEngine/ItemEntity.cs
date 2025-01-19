@@ -12,12 +12,12 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
-
         private readonly ItemStack Stack;
 
 
         public ItemEntity(ItemStack stack, Vector p)
-            : base(System.Guid.NewGuid(), p, new Angles(0.0F, 0.0F), false,
+            : base(
+                  System.Guid.NewGuid(), p, new Angles(0.0F, 0.0F), false,
                   DefaultHitbox,
                   DefaultMass, DefaultMaxStepLevel)
         {
@@ -61,7 +61,6 @@ namespace MinecraftServerEngine
         {
             throw new System.NotImplementedException();
         }
-
 
         protected override void Dispose(bool disposing)
         {
