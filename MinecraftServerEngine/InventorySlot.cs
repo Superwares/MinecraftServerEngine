@@ -127,7 +127,23 @@ namespace MinecraftServerEngine
             _stack = stack;
         }
 
-        internal ItemStack Drop()
+        internal ItemStack DropSingle()
+        {
+            ItemStack stack = _stack;
+
+            if (stack != null && stack.Count > 1)
+            {
+                stack.Spend(1);
+
+                return new ItemStack(stack.Type, 1);
+            }
+
+            _stack = null;
+
+            return stack;
+        }
+
+        internal ItemStack DropFull()
         {
             ItemStack stack = _stack;
 

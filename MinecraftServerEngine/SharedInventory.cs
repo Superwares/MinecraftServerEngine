@@ -397,6 +397,49 @@ namespace MinecraftServerEngine
             SwapItems(userId, playerInventory, i, k);
         }
 
+
+        internal ItemStack DropSingle(UserId userId, PlayerInventory playerInventory, int i)
+        {
+            int totalSlots = GetTotalSlotCount();
+
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < totalSlots + PlayerInventory.PrimarySlotCount);
+
+            Locker.Hold();
+
+            try
+            {
+
+                InventorySlot slot = GetSlot(playerInventory, i);
+
+                return slot.DropSingle();
+            }
+            finally
+            {
+                Locker.Release();
+            }
+        }
+
+        internal ItemStack DropFull(UserId userId, PlayerInventory playerInventory, int i)
+        {
+            int totalSlots = GetTotalSlotCount();
+
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < totalSlots + PlayerInventory.PrimarySlotCount);
+
+            try
+            {
+                InventorySlot slot = GetSlot(playerInventory, i);
+
+                return slot.DropFull();
+            }
+            finally
+            {
+                Locker.Release();
+            }
+
+        }
+
         protected override void Dispose(bool disposing)
         {
             // Check to see if Dispose has already been called.

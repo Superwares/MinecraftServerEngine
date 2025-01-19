@@ -730,6 +730,26 @@ namespace MinecraftServerEngine
             SwapItems(i, HotbarSlotsOffset + j);
         }
 
+        internal ItemStack DropSingle(int i)
+        {
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount);
+
+            InventorySlot slot = Slots[i];
+
+            return slot.DropSingle();
+        }
+
+        internal ItemStack DropFull(int i)
+        {
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount);
+
+            InventorySlot slot = Slots[i];
+
+            return slot.DropFull();
+        }
+
         protected override void Dispose(bool disposing)
         {
             // Check to see if Dispose has already been called.
