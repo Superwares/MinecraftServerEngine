@@ -136,7 +136,7 @@ namespace MinecraftServerEngine
 
                         // TODO: Drop item stack.
                     }
-                    
+
                     Renderer.Reset(invPrivate, Cursor);
                     _sharedInventory = null;
 
@@ -151,13 +151,13 @@ namespace MinecraftServerEngine
             internal void Handle(
                 UserId id,
                 World world, AbstractPlayer player,
-                PlayerInventory invPlayer,
+                PlayerInventory playerInventory,
                 int mode, int button, int i)
             {
                 System.Diagnostics.Debug.Assert(id != UserId.Null);
                 System.Diagnostics.Debug.Assert(world != null);
                 System.Diagnostics.Debug.Assert(player != null);
-                System.Diagnostics.Debug.Assert(invPlayer != null);
+                System.Diagnostics.Debug.Assert(playerInventory != null);
 
                 System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -181,21 +181,21 @@ namespace MinecraftServerEngine
                             case 0:
                                 if (_sharedInventory == null)
                                 {
-                                    invPlayer.LeftClick(i, Cursor);
+                                    playerInventory.LeftClick(i, Cursor);
                                 }
                                 else
                                 {
-                                    _sharedInventory.LeftClick(id, invPlayer, i, Cursor);
+                                    _sharedInventory.LeftClick(id, playerInventory, i, Cursor);
                                 }
                                 break;
                             case 1:
                                 if (_sharedInventory == null)
                                 {
-                                    invPlayer.RightClick(i, Cursor);
+                                    playerInventory.RightClick(i, Cursor);
                                 }
                                 else
                                 {
-                                    _sharedInventory.RightClick(id, invPlayer, i, Cursor);
+                                    _sharedInventory.RightClick(id, playerInventory, i, Cursor);
                                 }
                                 break;
                         }
@@ -212,21 +212,21 @@ namespace MinecraftServerEngine
                             case 0:
                                 if (_sharedInventory == null)
                                 {
-                                    invPlayer.QuickMove(i);
+                                    playerInventory.QuickMove(i);
                                 }
                                 else
                                 {
-                                    _sharedInventory.QuickMove(id, invPlayer, i);
+                                    _sharedInventory.QuickMove(id, playerInventory, i);
                                 }
                                 break;
                             case 1:
                                 if (_sharedInventory == null)
                                 {
-                                    invPlayer.QuickMove(i);
+                                    playerInventory.QuickMove(i);
                                 }
                                 else
                                 {
-                                    _sharedInventory.QuickMove(id, invPlayer, i);
+                                    _sharedInventory.QuickMove(id, playerInventory, i);
                                 }
                                 break;
                         }
@@ -234,37 +234,61 @@ namespace MinecraftServerEngine
                     case 2:
                         if (_sharedInventory == null)
                         {
-                            invPlayer.SwapItemsWithHotbarSlot(i, button);
+                            playerInventory.SwapItemsWithHotbarSlot(i, button);
                         }
                         else
                         {
-                            _sharedInventory.SwapItemsWithHotbarSlot(id, invPlayer, i, button);
+                            _sharedInventory.SwapItemsWithHotbarSlot(id, playerInventory, i, button);
                         }
                         break;
                     case 3:
-                        //throw new System.NotImplementedException();
+                        if (_sharedInventory == null)
+                        {
+                        }
+                        else
+                        {
+                            _sharedInventory.UpdateRendering(id, playerInventory);
+                        }
                         break;
                     case 4:
-                        //throw new System.NotImplementedException();
+                        if (_sharedInventory == null)
+                        {
+                        }
+                        else
+                        {
+                            _sharedInventory.UpdateRendering(id, playerInventory);
+                        }
                         break;
                     case 5:
-                        //throw new System.NotImplementedException();
+                        if (_sharedInventory == null)
+                        {
+                        }
+                        else
+                        {
+                            _sharedInventory.UpdateRendering(id, playerInventory);
+                        }
                         break;
                     case 6:
-                        //throw new System.NotImplementedException();
+                        if (_sharedInventory == null)
+                        {
+                        }
+                        else
+                        {
+                            _sharedInventory.UpdateRendering(id, playerInventory);
+                        }
                         break;
                 }
 
-                player.UpdateEntityEquipmentsData(invPlayer.GetEquipmentsData());
+                player.UpdateEntityEquipmentsData(playerInventory.GetEquipmentsData());
 
                 int offset = _sharedInventory == null ? 0 : _sharedInventory.GetTotalSlotCount();
                 System.Diagnostics.Debug.Assert(offset >= 0);
-                Renderer.Update(invPlayer, Cursor, offset);
+                Renderer.Update(playerInventory, Cursor, offset);
 
                 {
                     if (_sharedInventory == null)
                     {
-                        invPlayer.Print();
+                        playerInventory.Print();
                     }
 
                     MyConsole.Debug($"Cursor: {Cursor}");
@@ -392,7 +416,7 @@ namespace MinecraftServerEngine
             }
 
         }
-        
+
         private sealed class ChunkingHelper : System.IDisposable
         {
             private const int MaxLoadCount = 7;
@@ -408,7 +432,7 @@ namespace MinecraftServerEngine
 
             private int _x, _z, _layer, _n;
 
-            public ChunkingHelper(ChunkLocation loc, int d) 
+            public ChunkingHelper(ChunkLocation loc, int d)
             {
                 _loc = loc;
                 _d = d;
@@ -421,7 +445,7 @@ namespace MinecraftServerEngine
             ~ChunkingHelper() => System.Diagnostics.Debug.Assert(false);
 
             public void Load(
-                Queue<ChunkLocation> newChunks, Queue<ChunkLocation> outOfRangeChunks, 
+                Queue<ChunkLocation> newChunks, Queue<ChunkLocation> outOfRangeChunks,
                 ChunkLocation loc, int d)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
@@ -648,7 +672,7 @@ namespace MinecraftServerEngine
 
         private readonly Client Client;  // Dispoasble
 
-        
+
 
         private bool _disconnected = false;
         public bool Disconnected => _disconnected;
@@ -682,8 +706,8 @@ namespace MinecraftServerEngine
 
         internal Connection(
             UserId id,
-            Client client, 
-            World world, 
+            Client client,
+            World world,
             int idEntity,
             float health,
             Vector p, Angles look,
@@ -733,7 +757,7 @@ namespace MinecraftServerEngine
         ~Connection() => System.Diagnostics.Debug.Assert(false);
 
         private void RecvDataAndHandle(
-            Buffer buffer, 
+            Buffer buffer,
             World world, AbstractPlayer player, PlayerInventory invPlayer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
@@ -789,7 +813,7 @@ namespace MinecraftServerEngine
                         SettingsPacket packet = SettingsPacket.Read(buffer);
 
                         int d = packet.RenderDistance;
-                        
+
                         if (d < MinRenderDistance || d > MaxRenderDistance)
                         {
                             throw new UnexpectedValueException("SetClientSettingsPacket.RenderDistance");
@@ -903,7 +927,7 @@ namespace MinecraftServerEngine
                 case ServerboundPlayingPacket.PlayerPositionPacketId:
                     {
                         PlayerPositionPacket packet = PlayerPositionPacket.Read(buffer);
-                
+
                         if (!TeleportRecords.Empty)
                         {
                             break;
@@ -1122,7 +1146,7 @@ namespace MinecraftServerEngine
                         {
                             throw new UnexpectedValueException("AnimationPacket.Hand");
                         }
-                        
+
                     }
                     break;
                 case ServerboundPlayingPacket.BlockPlacementPacketId:
@@ -1157,7 +1181,7 @@ namespace MinecraftServerEngine
                         {
                             throw new UnexpectedValueException("UseItemPacket.Hand");
                         }
-                        
+
                     }
                     break;
                 case 0x03:
@@ -1176,7 +1200,7 @@ namespace MinecraftServerEngine
         long ticks = 0;
 
         internal void Control(
-            World world, 
+            World world,
             AbstractPlayer player, PlayerInventory invPlayer)
         {
             System.Diagnostics.Debug.Assert(world != null);
@@ -1228,7 +1252,7 @@ namespace MinecraftServerEngine
                         while (true)
                         {
                             RecvDataAndHandle(
-                                buffer, 
+                                buffer,
                                 world, player, invPlayer);
                         }
                     }
@@ -1262,7 +1286,7 @@ namespace MinecraftServerEngine
                 _disconnected = true;
                 /*Console.Print("Disconnect!");*/
             }
-            
+
         }
 
         private void LoadWorld(int idEntitySelf, World world, Vector p)
@@ -1472,7 +1496,7 @@ namespace MinecraftServerEngine
             using EntityMetadata metadata = new();
 
             if (gamemode == Gamemode.Spectator)
-            {   
+            {
                 metadata.AddByte(0, 0x20);
 
                 canFly = true;
@@ -1501,7 +1525,7 @@ namespace MinecraftServerEngine
         }
 
         internal void LoadAndSendData(
-            World world, 
+            World world,
             int idEntitySelf,
             Vector p, Angles look)
         {
@@ -1562,7 +1586,7 @@ namespace MinecraftServerEngine
 
         internal void Flush(
             out UserId id,
-            World world, 
+            World world,
             PlayerInventory invPlayer)
         {
             System.Diagnostics.Debug.Assert(world != null);

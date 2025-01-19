@@ -26,7 +26,7 @@ namespace MinecraftServerEngine
             Dispose(false);
         }
 
-        private protected void Update(
+        internal void UpdateRendering(
             UserId userId, PlayerInventory playerInventory)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -215,7 +215,7 @@ namespace MinecraftServerEngine
                 playerInventory.LeftClickInPrimary(j, cursor);
             }
 
-            Update(userId, playerInventory);
+            UpdateRendering(userId, playerInventory);
 
             Locker.Release();
         }
@@ -255,7 +255,7 @@ namespace MinecraftServerEngine
                 playerInventory.RightClickInPrimary(j, cursor);
             }
 
-            Update(userId, playerInventory);
+            UpdateRendering(userId, playerInventory);
 
             Locker.Release();
         }
@@ -345,7 +345,7 @@ namespace MinecraftServerEngine
                 QuickMoveFromLeft(slot);
             }
 
-            Update(userId, playerInventory);
+            UpdateRendering(userId, playerInventory);
 
             Locker.Release();
         }
@@ -374,7 +374,7 @@ namespace MinecraftServerEngine
             SetSlot(playerInventory, i, slot_j);
             SetSlot(playerInventory, j, slot_i);
 
-            Update(userId, playerInventory);
+            UpdateRendering(userId, playerInventory);
 
             Locker.Release();
         }
