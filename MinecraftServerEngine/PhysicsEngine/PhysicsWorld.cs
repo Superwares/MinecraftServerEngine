@@ -97,7 +97,7 @@ namespace MinecraftServerEngine.PhysicsEngine
                 if (g1 == null)
                 {
                     return null;
-                }    
+                }
                 if (g2 == null)
                 {
                     return null;
@@ -136,7 +136,7 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             public bool Contains(Cell cell)
             {
-                return 
+                return
                     cell.X <= _MAX.X && cell.X >= _MIN.X &&
                     cell.Z <= _MAX.Z && cell.Z >= _MIN.Z;
             }
@@ -215,7 +215,9 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         protected internal abstract void StartRoutine();
 
-        public void SearchObjects(Tree<PhysicsObject> objs, AxisAlignedBoundingBox minBoundingBox)
+        public void SearchObjects(
+            Tree<PhysicsObject> objs, AxisAlignedBoundingBox minBoundingBox,
+            bool strict)
         {
             System.Diagnostics.Debug.Assert(minBoundingBox != null);
 
@@ -240,9 +242,28 @@ namespace MinecraftServerEngine.PhysicsEngine
                         continue;
                     }
 
-                    objs.Insert(objInCell);
+                    if (strict == true)
+                    {
+                        if (objInCell.BoundingVolume.TestIntersection(minBoundingBox) == true)
+                        {
+                            objs.Insert(objInCell);
+                        }
+                    }
+                    else
+                    {
+                        objs.Insert(objInCell);
+                    }
                 }
             }
+        }
+
+        public void SearchObjects(Tree<PhysicsObject> objs, AxisAlignedBoundingBox minBoundingBox)
+        {
+            System.Diagnostics.Debug.Assert(minBoundingBox != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            SearchObjects(objs, minBoundingBox, false);
         }
 
         public void SearchObjects(Tree<PhysicsObject> objs, Vector o, Vector d)
@@ -322,7 +343,7 @@ namespace MinecraftServerEngine.PhysicsEngine
                     //minAABB.Move(-1 * origin);
 
                     if (
-                        minAABB.Intersects(o, d) == true 
+                        minAABB.Intersects(o, d) == true
                         && a > Vector.GetLengthSquared(objInCell.Position, o))
                     {
                         objFound = objInCell;

@@ -13,7 +13,7 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         internal abstract double GetHeight();
 
-        internal abstract AxisAlignedBoundingBox GetMinBoundingBox();
+        public abstract AxisAlignedBoundingBox GetMinBoundingBox();
 
         internal abstract bool TestIntersection(BoundingVolume volume);
         /*public abstract bool TestIntersection(BoundingVolume volume, Vector v);*/
@@ -64,14 +64,14 @@ namespace MinecraftServerEngine.PhysicsEngine
             return 0.0D;
         }
 
-        internal override AxisAlignedBoundingBox GetMinBoundingBox()
+        public override AxisAlignedBoundingBox GetMinBoundingBox()
         {
             return new(_p, _p);
         }
 
         internal override bool TestIntersection(BoundingVolume volume)
         {
-            throw new System.NotImplementedException();
+            return false;
         }
 
 
@@ -271,7 +271,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             return (Max.Y - Min.Y);
         }
 
-        internal override AxisAlignedBoundingBox GetMinBoundingBox()
+        public override AxisAlignedBoundingBox GetMinBoundingBox()
         {
             System.Diagnostics.Debug.Assert(Max.X >= Min.X);
             System.Diagnostics.Debug.Assert(Max.Y >= Min.Y);
@@ -382,7 +382,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             throw new System.NotImplementedException();
         }
 
-        internal override AxisAlignedBoundingBox GetMinBoundingBox()
+        public override AxisAlignedBoundingBox GetMinBoundingBox()
         {
             throw new System.NotImplementedException();
         }

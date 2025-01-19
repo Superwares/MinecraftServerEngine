@@ -1,4 +1,6 @@
 ﻿using Common;
+using Containers;
+
 using MinecraftServerEngine;
 using MinecraftServerEngine.PhysicsEngine;
 
@@ -10,10 +12,14 @@ namespace TestMinecraftServerApplication
 
         private int ticks = 0;
 
-        public Flame(Vector p) : 
+        private readonly Vector _D;
+        private readonly AbstractPlayer _Owner;
+
+        public Flame(Vector p, Vector d, AbstractPlayer owner) :
             base(p, 1.0D, 20.0D, byte.MaxValue, 0, 0)
         {
-
+            _D = d;
+            _Owner = owner;
         }
 
         ~Flame()
@@ -25,7 +31,7 @@ namespace TestMinecraftServerApplication
 
         protected override bool IsDead()
         {
-            return (ticks >= (20 * 5));
+            return (ticks >= (20 * 1));
         }
 
         protected override void OnDeath(PhysicsWorld world)
@@ -41,11 +47,22 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(world != null);
 
-            ++ticks;
-
-            if (ticks == 1)
+            if (++ticks == 1)
             {
-                ApplyForce(new Vector(5.0D, 10.0D, 5.0D));
+                ApplyForce(_D * 5);
+            }
+
+            AxisAlignedBoundingBox aabb = BoundingVolume.GetMinBoundingBox();
+
+            using Tree<PhysicsObject> objs = new();
+            world.SearchObjects(objs, aabb, true);
+
+            foreach (PhysicsObject obj in objs.GetKeys())
+            {
+                if (obj is LivingEntity livingEntity && ReferenceEquals(_Owner, obj) == false)
+                {
+                    livingEntity.Damage(0.1F);
+                }
             }
         }
 

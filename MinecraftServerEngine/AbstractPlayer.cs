@@ -6,9 +6,11 @@ namespace MinecraftServerEngine
 
     public abstract class AbstractPlayer : LivingEntity
     {
+        public const double HitboxWidth = 0.6D;
+
         private static Hitbox GetAdventureHitbox(bool sneaking)
         {
-            double w = 0.6D, h;
+            double w = HitboxWidth, h;
             if (sneaking)
             {
                 h = 1.65D;
@@ -98,15 +100,16 @@ namespace MinecraftServerEngine
                 return;
             }
 
-            if (Gamemode == Gamemode.Spectator)
-            {
-                return;
-            }
-
             LockerHealth.Hold();
 
             try
             {
+
+                if (Gamemode == Gamemode.Spectator)
+                {
+                    return;
+                }
+
                 base.Damage(amount);
 
                 if (Connected && Health > 0.0F)

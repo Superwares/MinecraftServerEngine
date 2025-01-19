@@ -57,21 +57,36 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(amount >= 0.0D);
-            System.Diagnostics.Debug.Assert(_health > 0.0D);
+            System.Diagnostics.Debug.Assert(_health >= 0.0D);
             System.Diagnostics.Debug.Assert(_health <= _maxHealth);
 
             LockerHealth.Hold();
 
-            _health -= amount;
-
-            SetEntityStatus(2);
-
-            if (_health <= 0.0D)
+            try
             {
-                SetEntityStatus(3);
-            }
+                _health -= amount;
 
-            LockerHealth.Release();
+                SetEntityStatus(2);
+
+                if (_health <= 0.0D)
+                {
+                    _health = 0.0F;
+
+                    //using Buffer buffer = new();
+                    //buffer.WriteShort(-1);
+
+                    //byte[] data = buffer.ReadData();
+
+                    //UpdateEntityEquipmentsData((data, data));
+                    //SetEntityStatus(3);
+                }
+
+            }
+            finally
+            {
+                LockerHealth.Release();
+
+            }
         }
 
         protected override void Dispose(bool disposing)
