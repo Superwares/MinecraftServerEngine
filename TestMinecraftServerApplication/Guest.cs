@@ -11,7 +11,10 @@ namespace TestMinecraftServerApplication
         private bool _disposed = false;
 
         public Guest(UserId id, Vector p, Angles look)
-            : base(id, p, look, Gamemode.Adventure) { }
+            : base(id, p, look, Gamemode.Adventure)
+        {
+            ApplyBlockAppearance(Block.Dirt);
+        }
 
         ~Guest()
         {
@@ -26,7 +29,7 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            ApplyBlockAppearance(Block.Dirt);
+
 
         }
 
