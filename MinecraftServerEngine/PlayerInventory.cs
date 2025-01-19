@@ -511,9 +511,53 @@ namespace MinecraftServerEngine
 
         internal void QuickMoveFromRightInPrimary(InventorySlot slot)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
-            throw new System.NotImplementedException();
+            System.Diagnostics.Debug.Assert(slot != null);
+
+            if (slot.Empty)
+            {
+                return;
+            }
+
+            int j = -1;
+
+            InventorySlot slotInside;
+            for (int i = 0; i < PrimarySlotCount; ++i)
+            {
+                int k = PrimarySlotCount - i - 1;
+
+                System.Diagnostics.Debug.Assert(slot.Empty == false);
+
+                slotInside = GetPrimarySlot(k);
+
+                System.Diagnostics.Debug.Assert(slotInside != null);
+                System.Diagnostics.Debug.Assert(ReferenceEquals(slotInside, slot) == false);
+
+                if (slotInside.Empty == true)
+                {
+                    j = (j < 0) ? k : j;
+
+                    continue;
+                }
+
+                slotInside.Move(slot);
+
+                if (slot.Empty == true)
+                {
+                    break;
+                }
+            }
+
+            System.Diagnostics.Debug.Assert(j <= TotalSlotCount);
+            if (slot.Empty == false && j >= 0)
+            {
+                slotInside = GetPrimarySlot(j);
+
+                System.Diagnostics.Debug.Assert(slotInside != null);
+                System.Diagnostics.Debug.Assert(slotInside.Empty == true);
+                slotInside.Move(slot);
+            }
         }
 
         private void QuickMoveFromLeftInMain(InventorySlot slot)
