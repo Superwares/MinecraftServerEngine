@@ -212,8 +212,12 @@ namespace MinecraftServerEngine
         {
             private const long Timeout = 20 * 30;  // 30 seconds, 20 * 30 ticks
 
+            private readonly static Time CHECK_INTERVAL = Time.FromSeconds(5);
+
             private long _payload;
             private long _ticks = -1;
+
+            private Time _startTime = Time.Now();
 
             public KeepAliveRecord() { }
 
@@ -233,11 +237,21 @@ namespace MinecraftServerEngine
                 long ticks = _ticks;
                 _ticks = -1;
 
+                _startTime = Time.Now();
+
                 return ticks;
             }
 
             public void Update(ConcurrentQueue<ClientboundPlayingPacket> renderer)
             {
+                Time endTime = Time.Now();
+                Time intervalTime = endTime - _startTime;
+
+                if (intervalTime < CHECK_INTERVAL)
+                {
+                    return;
+                }
+
                 if (_ticks == -1)
                 {
                     long payload = Random.NextLong();
@@ -370,10 +384,13 @@ namespace MinecraftServerEngine
             Client.Recv(buffer);
 
             int packetId = buffer.ReadInt(true);
+
+            MyConsole.Debug($"Received packet Id: 0x{packetId:X}");
+
             switch (packetId)
             {
                 default:
-                    MyConsole.Debug($"Received packet Id: 0x{packetId:X}");
+                    
                     /*throw new NotImplementedException();*/
                     buffer.Flush();
                     break;
@@ -751,6 +768,17 @@ namespace MinecraftServerEngine
                 case ServerboundPlayingPacket.BlockPlacementPacketId:
                     {
                         buffer.Flush();
+
+                        Vector eyeOrigin = player.GetEyeOrigin();
+                        Vector d = player.Look.GetUnitVector();
+                        Vector scaled_d = d * 3;
+
+                        PhysicsObject obj = world.SearchClosestObject(eyeOrigin, scaled_d, player);
+
+                        if (obj is ItemEntity itemEntity)
+                        {
+                            itemEntity.PickUp(player);
+                        }
                     }
                     break;
                 case ServerboundPlayingPacket.UseItemPacketId:

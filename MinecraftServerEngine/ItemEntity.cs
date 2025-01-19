@@ -98,7 +98,6 @@ namespace MinecraftServerEngine
             // Check to see if Dispose has already been called.
             if (_disposed == false)
             {
-                System.Diagnostics.Debug.Assert(_stack != null);
 
                 // If disposing equals true, dispose all managed
                 // and unmanaged resources.

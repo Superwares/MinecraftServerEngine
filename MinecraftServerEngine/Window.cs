@@ -361,7 +361,7 @@ namespace MinecraftServerEngine
 
                 if (dropItem != null)
                 {
-                    world.SpawnObject(new ItemEntity(dropItem, player.GetEyeOrigin()));
+                    world.SpawnObject(new ItemEntity(dropItem, player.Position));
                 }
 
                 Renderer.Reset(invPrivate, Cursor);

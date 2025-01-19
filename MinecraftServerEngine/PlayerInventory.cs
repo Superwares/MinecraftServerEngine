@@ -426,6 +426,8 @@ namespace MinecraftServerEngine
                 return true;
             }
 
+            // TODO: Change the logic of distributing items so that they are not only given to new slots, but also distributed to pre-calculated slots.
+
             int j = -1;
 
             InventorySlot slotInside;
