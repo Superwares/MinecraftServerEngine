@@ -771,7 +771,7 @@ namespace MinecraftServerEngine
 
                         Vector eyeOrigin = player.GetEyeOrigin();
                         Vector d = player.Look.GetUnitVector();
-                        Vector scaled_d = d * 3;
+                        Vector scaled_d = d * player.GetEyeHeight();
 
                         PhysicsObject obj = world.SearchClosestObject(eyeOrigin, scaled_d, player);
 
