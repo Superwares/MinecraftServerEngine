@@ -1,4 +1,5 @@
 ﻿using Containers;
+using Sync;
 
 namespace MinecraftServerEngine
 {
@@ -180,6 +181,7 @@ namespace MinecraftServerEngine
         public const int OpenWindowPacketId = 0x13;
         public const int WindowItemsPacketId = 0x14;
         public const int SetSlotPacketId = 0x16;
+        public const int NamedSoundEffectPacketId = 0x19;
         public const int EntityStatusPacketId = 0x1B;
         public const int UnloadChunkPacketId = 0x1D;
         public const int GameStatePacketId = 0x1E;
@@ -903,6 +905,48 @@ namespace MinecraftServerEngine
             buffer.WriteSbyte(WindowId);
             buffer.WriteShort(SlotNumber);
             buffer.WriteData(Data);
+        }
+
+    }
+
+    internal sealed class NamedSoundEffectPacket : ClientboundPlayingPacket
+    {
+        public readonly string SoundName;
+        public readonly int SoundCategory;
+        public readonly int EffectX, EffectY, EffectZ;
+        public readonly float Volume, Pitch;
+
+
+        public static NamedSoundEffectPacket Read(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            throw new System.NotImplementedException();
+        }
+
+        public NamedSoundEffectPacket(
+            string soundName, int soundCategory,
+            int effectX, int effectY, int effectZ,
+            float volume, float pitch)
+            : base(NamedSoundEffectPacketId)
+        {
+            SoundName = soundName;
+            SoundCategory = soundCategory;
+            EffectX = effectX; EffectY = effectY; EffectZ = effectZ;
+            Volume = volume; Pitch = pitch;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            buffer.WriteString(SoundName);
+            buffer.WriteInt(SoundCategory, true);
+            buffer.WriteInt(EffectX);
+            buffer.WriteInt(EffectY);
+            buffer.WriteInt(EffectZ);
+            buffer.WriteFloat(Volume);
+            buffer.WriteFloat(Pitch);
         }
 
     }
