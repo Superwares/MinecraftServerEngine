@@ -754,7 +754,12 @@ namespace MinecraftServerEngine
 
         }
 
-        ~Connection() => System.Diagnostics.Debug.Assert(false);
+        ~Connection()
+        {
+            System.Diagnostics.Debug.Assert(false);
+
+            //Dispose(false);
+        }
 
         private void RecvDataAndHandle(
             Buffer buffer,
