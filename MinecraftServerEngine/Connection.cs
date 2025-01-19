@@ -19,8 +19,6 @@ namespace MinecraftServerEngine
 
             private SharedInventory _sharedInventory = null;
 
-            private bool _ambiguous = false;
-
 
             public Window(
                 ConcurrentQueue<ClientboundPlayingPacket> outPackets,
@@ -64,8 +62,6 @@ namespace MinecraftServerEngine
 
                     _sharedInventory = sharedInventory;
 
-                    _ambiguous = true;
-
                     return true;
                 }
                 finally
@@ -91,44 +87,33 @@ namespace MinecraftServerEngine
                 {
                     if (idWindow < 0 || idWindow > 1)
                     {
-                        throw new UnexpectedValueException("ServerboundCloseWindowPacket.WindowId");
+                        throw new UnexpectedValueException($"Invalid window Id: {idWindow}<0 || {idWindow}>1");
                     }
 
                     if (_sharedInventory == null)
                     {
-                        System.Diagnostics.Debug.Assert(!_ambiguous);
 
                         if (idWindow == 0)
                         {
-                            return;
                         }
                         else if (idWindow == 1)
                         {
-                            throw new UnexpectedValueException("ServerboundCloseWindowPacket.WindowId");
+                            throw new UnexpectedValueException($"Invalid window Id: {idWindow}==1");
                         }
 
-                        System.Diagnostics.Debug.Assert(false);
                     }
                     else
                     {
                         if (idWindow == 0)
                         {
-                            if (!_ambiguous)
-                            {
-                                throw new UnexpectedValueException("ServerboundCloseWindowPacket.WindowId");
-                            }
-                            else
-                            {
-                                return;
-                            }
+                            throw new UnexpectedValueException($"Invalid window Id: {idWindow}==0");
                         }
 
                         System.Diagnostics.Debug.Assert(idWindow == 1);
+
+                        _sharedInventory.Close(invPrivate);
                     }
 
-                    System.Diagnostics.Debug.Assert(idWindow == 1);
-
-                    _sharedInventory.Close(invPrivate);
 
                     if (Cursor.Empty == false)
                     {
@@ -140,7 +125,6 @@ namespace MinecraftServerEngine
                     Renderer.Reset(invPrivate, Cursor);
                     _sharedInventory = null;
 
-                    _ambiguous = false;
                 }
                 finally
                 {
@@ -163,12 +147,11 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(Renderer != null);
                 System.Diagnostics.Debug.Assert(Cursor != null);
-                System.Diagnostics.Debug.Assert(!_ambiguous);
 
                 switch (mode)
                 {
                     default:
-                        throw new UnexpectedValueException("ClickWindowPacket.ModeNumber");
+                        throw new UnexpectedValueException($"Invalid mode number: {mode}");
                     case 0:
                         if (i < 0)
                         {
@@ -177,7 +160,7 @@ namespace MinecraftServerEngine
                         switch (button)
                         {
                             default:
-                                throw new UnexpectedValueException("ClickWindowPacket.ButtonNumber");
+                                throw new UnexpectedValueException($"Invalid button number: {button}, in mode {mode}");
                             case 0:
                                 if (_sharedInventory == null)
                                 {
@@ -208,7 +191,7 @@ namespace MinecraftServerEngine
                         switch (button)
                         {
                             default:
-                                throw new UnexpectedValueException("ClickWindowPacket.ButtonNumber");
+                                throw new UnexpectedValueException($"Invalid button number: {button}, in mode {mode}");
                             case 0:
                                 if (_sharedInventory == null)
                                 {
@@ -341,7 +324,6 @@ namespace MinecraftServerEngine
 
                     if (_sharedInventory == null)
                     {
-                        System.Diagnostics.Debug.Assert(!_ambiguous);
                         if (idWindow == 1)
                         {
                             throw new UnexpectedClientBehaviorExecption("Invalid window id: ==1");
@@ -354,20 +336,11 @@ namespace MinecraftServerEngine
 
                         if (idWindow == 0)
                         {
-                            if (_ambiguous == false)
-                            {
-                                throw new UnexpectedClientBehaviorExecption("Not ambiguous!");
-                            }
-                            else
-                            {
-                                return;
-                            }
+                            throw new UnexpectedClientBehaviorExecption("Invalid window Id");
                         }
 
                         System.Diagnostics.Debug.Assert(idWindow == 1);
                     }
-
-                    _ambiguous = false;
 
                     Handle(id, world, player, invPlayer, mode, button, i);
 
