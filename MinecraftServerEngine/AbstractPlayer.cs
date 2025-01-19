@@ -105,14 +105,20 @@ namespace MinecraftServerEngine
 
             LockerHealth.Hold();
 
-            base.Damage(amount);
-
-            if (Connected && Health > 0.0F)
+            try
             {
-                Conn.UpdateHealth(_health);
+                base.Damage(amount);
+
+                if (Connected && Health > 0.0F)
+                {
+                    Conn.UpdateHealth(_health);
+                }
+            }
+            finally
+            {
+                LockerHealth.Release();
             }
 
-            LockerHealth.Release();
         }
 
         private protected override Hitbox GetHitbox()

@@ -16,7 +16,7 @@ namespace TestMinecraftServerApplication
         }
 
         protected override void OnLeftClickSharedItem(
-            UserId userId, PlayerInventory playerInventory, 
+            UserId userId, AbstractPlayer player, PlayerInventory playerInventory, 
             int i, ItemType item, int count)
         {
             System.Diagnostics.Debug.Assert(count >= 0);
@@ -26,7 +26,7 @@ namespace TestMinecraftServerApplication
         }
 
         protected override void OnRightClickSharedItem(
-            UserId userId, PlayerInventory playerInventory,
+            UserId userId, AbstractPlayer player, PlayerInventory playerInventory,
             int i, ItemType item, int count)
         {
             System.Diagnostics.Debug.Assert(count >= 0);

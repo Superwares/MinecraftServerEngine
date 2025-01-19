@@ -70,12 +70,12 @@ namespace MinecraftServerEngine
         }
 
         internal void Handle(
-            UserId id,
+            UserId userId,
             World world, AbstractPlayer player,
             PlayerInventory playerInventory,
             int mode, int button, int i)
         {
-            System.Diagnostics.Debug.Assert(id != UserId.Null);
+            System.Diagnostics.Debug.Assert(userId != UserId.Null);
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(player != null);
             System.Diagnostics.Debug.Assert(playerInventory != null);
@@ -130,7 +130,7 @@ namespace MinecraftServerEngine
                                 }
                                 else
                                 {
-                                    _sharedInventory.LeftClick(id, playerInventory, i, Cursor);
+                                    _sharedInventory.LeftClick(userId, player, playerInventory, i, Cursor);
                                 }
                                 break;
                             case 1:
@@ -140,7 +140,7 @@ namespace MinecraftServerEngine
                                 }
                                 else
                                 {
-                                    _sharedInventory.RightClick(id, playerInventory, i, Cursor);
+                                    _sharedInventory.RightClick(userId, player, playerInventory, i, Cursor);
                                 }
                                 break;
                         }
@@ -161,7 +161,7 @@ namespace MinecraftServerEngine
                                 }
                                 else
                                 {
-                                    _sharedInventory.QuickMove(id, playerInventory, i);
+                                    _sharedInventory.QuickMove(userId, playerInventory, i);
                                 }
                                 break;
                             case 1:
@@ -171,7 +171,7 @@ namespace MinecraftServerEngine
                                 }
                                 else
                                 {
-                                    _sharedInventory.QuickMove(id, playerInventory, i);
+                                    _sharedInventory.QuickMove(userId, playerInventory, i);
                                 }
                                 break;
                         }
@@ -183,7 +183,7 @@ namespace MinecraftServerEngine
                         }
                         else
                         {
-                            _sharedInventory.SwapItemsWithHotbarSlot(id, playerInventory, i, button);
+                            _sharedInventory.SwapItemsWithHotbarSlot(userId, playerInventory, i, button);
                         }
                         break;
                     case 3:
@@ -204,7 +204,7 @@ namespace MinecraftServerEngine
                                 }
                                 else
                                 {
-                                    dropItem = _sharedInventory.DropSingle(id, playerInventory, i);
+                                    dropItem = _sharedInventory.DropSingle(userId, playerInventory, i);
                                 }
                                 break;
                             case 1:
@@ -214,7 +214,7 @@ namespace MinecraftServerEngine
                                 }
                                 else
                                 {
-                                    dropItem = _sharedInventory.DropFull(id, playerInventory, i);
+                                    dropItem = _sharedInventory.DropFull(userId, playerInventory, i);
                                 }
                                 break;
                         }

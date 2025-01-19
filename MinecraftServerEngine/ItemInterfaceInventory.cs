@@ -25,17 +25,17 @@ namespace MinecraftServerEngine
         }
 
         protected abstract void OnLeftClickSharedItem(
-            UserId userId,
+            UserId userId, AbstractPlayer player,
             PlayerInventory playerInventory,
             int i, ItemType item, int count);
 
         protected abstract void OnRightClickSharedItem(
-            UserId userId,
+            UserId userId, AbstractPlayer player,
             PlayerInventory playerInventory,
             int i, ItemType item, int count);
 
         internal override void LeftClick(
-            UserId userId, PlayerInventory playerInventory,
+            UserId userId, AbstractPlayer player, PlayerInventory playerInventory,
             int i, InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
@@ -63,7 +63,7 @@ namespace MinecraftServerEngine
                     if (slot.Empty == false)
                     {
                         OnLeftClickSharedItem(
-                            userId, playerInventory,
+                            userId, player, playerInventory,
                             i, slot.Stack.Type, slot.Stack.Count);
                     }
 
@@ -79,7 +79,7 @@ namespace MinecraftServerEngine
         }
 
         internal override void RightClick(
-            UserId userId, PlayerInventory playerInventory,
+            UserId userId, AbstractPlayer player, PlayerInventory playerInventory,
             int i, InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
@@ -107,7 +107,7 @@ namespace MinecraftServerEngine
                     if (slot.Empty == false)
                     {
                         OnRightClickSharedItem(
-                            userId, playerInventory,
+                            userId, player, playerInventory,
                             i, slot.Stack.Type, slot.Stack.Count);
                     }
 

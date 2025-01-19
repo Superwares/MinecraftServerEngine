@@ -171,7 +171,7 @@ namespace MinecraftServerEngine
         }
 
         internal virtual void LeftClick(
-            UserId userId, PlayerInventory playerInventory,
+            UserId userId, AbstractPlayer player, PlayerInventory playerInventory,
             int i, InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -210,7 +210,7 @@ namespace MinecraftServerEngine
         }
 
         internal virtual void RightClick(
-            UserId userId, PlayerInventory playerInventory,
+            UserId userId, AbstractPlayer player, PlayerInventory playerInventory,
             int i, InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
