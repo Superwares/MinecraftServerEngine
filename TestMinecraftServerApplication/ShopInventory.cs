@@ -33,6 +33,8 @@ namespace TestMinecraftServerApplication
 
             MyConsole.Debug($"UserId: {userId}");
             MyConsole.Debug($"i: {i}, Item: {item}, count: {count}");
+
+            playerInventory.GiveItem(new ItemStack(ItemType.DiamondSword));
         }
     }
 }

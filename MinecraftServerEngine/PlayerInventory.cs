@@ -453,6 +453,15 @@ namespace MinecraftServerEngine
             return false;
         }
 
+        public bool GiveItem(ItemStack stack)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(stack != null);
+
+            return GiveFromLeftInPrimary(stack);
+        }
+
         internal void QuickMoveFromLeftInPrimary(InventorySlot slot)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
