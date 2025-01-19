@@ -4,7 +4,6 @@ using Containers;
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
-    using System.Security.Cryptography;
 
     internal abstract class Renderer
     {
@@ -77,17 +76,17 @@ namespace MinecraftServerEngine
             UserId = userId;
         }
 
-        public void Open(string title, int totalSharedSlots, int totalSlots, byte[] data)
-        {
-            System.Diagnostics.Debug.Assert(title != null);
-            System.Diagnostics.Debug.Assert(totalSharedSlots > 0);
-            Render(new OpenWindowPacket(WindowId, "minecraft:chest", title, (byte)totalSharedSlots));
+        //public void Open(string title, int totalSharedSlots, int totalSlots, byte[] data)
+        //{
+        //    System.Diagnostics.Debug.Assert(title != null);
+        //    System.Diagnostics.Debug.Assert(totalSharedSlots > 0);
+        //    Render(new OpenWindowPacket(WindowId, "minecraft:chest", title, (byte)totalSharedSlots));
 
 
-            System.Diagnostics.Debug.Assert(totalSlots > 0);
-            System.Diagnostics.Debug.Assert(data != null);
-            Render(new WindowItemsPacket(WindowId, totalSlots, data));
-        }
+        //    System.Diagnostics.Debug.Assert(totalSlots > 0);
+        //    System.Diagnostics.Debug.Assert(data != null);
+        //    Render(new WindowItemsPacket(WindowId, totalSlots, data));
+        //}
 
         internal void Update(int count, byte[] data)
         {
@@ -100,61 +99,62 @@ namespace MinecraftServerEngine
 
     internal sealed class WindowRenderer : Renderer
     {
-        private int _id;
 
         // TODO: Remove offset parameter.
         // offset value is only for to render private inventory when _id == -1;
-        public void Update(
-            int id, PlayerInventory invPlayer, InventorySlot cursor, int offset)
+        internal void Update(
+            SharedInventory sharedInventory,
+            PlayerInventory playerInventory, InventorySlot cursor)
         {
-            System.Diagnostics.Debug.Assert(id >= 0);
-            System.Diagnostics.Debug.Assert(invPlayer != null);
+            System.Diagnostics.Debug.Assert(playerInventory != null);
             System.Diagnostics.Debug.Assert(cursor != null);
-            System.Diagnostics.Debug.Assert(offset >= 0);
 
             using Buffer buffer = new();
 
-            if (id == 0)
+            if (sharedInventory == null)
             {
-                System.Diagnostics.Debug.Assert(offset == 0);
+                int windowId = 0;
 
-                foreach (InventorySlot slot in invPlayer.Slots)
+                foreach (InventorySlot slot in playerInventory.Slots)
                 {
                     System.Diagnostics.Debug.Assert(slot != null);
                     slot.WriteData(buffer);
                 }
 
-                int totalSlots = invPlayer.GetTotalSlotCount();
+                int totalSlots = playerInventory.GetTotalSlotCount();
                 System.Diagnostics.Debug.Assert(totalSlots > 0);
 
-                System.Diagnostics.Debug.Assert(id >= byte.MinValue);
-                System.Diagnostics.Debug.Assert(id <= byte.MaxValue);
+                System.Diagnostics.Debug.Assert(windowId >= byte.MinValue);
+                System.Diagnostics.Debug.Assert(windowId <= byte.MaxValue);
                 System.Diagnostics.Debug.Assert(totalSlots > 0);
                 Render(new WindowItemsPacket(
-                    (byte)id, totalSlots, buffer.ReadData()));
+                    (byte)windowId, totalSlots, buffer.ReadData()));
             }
             else
             {
-                //System.Diagnostics.Debug.Assert(offset > 0);
+                int windowId = 1;
 
-                //System.Diagnostics.Debug.Assert(id == 1);
+                System.Diagnostics.Debug.Assert(sharedInventory.Slots != null);
+                foreach (InventorySlot slot in sharedInventory.Slots)
+                {
+                    System.Diagnostics.Debug.Assert(slot != null);
+                    slot.WriteData(buffer);
+                }
 
-                //for (int i = 0; i < PlayerInventory.PrimarySlotCount; ++i)
-                //{
-                //    InventorySlot slot = invPlayer.GetPrimarySlot(i);
-                //    System.Diagnostics.Debug.Assert(slot != null);
+                foreach (InventorySlot slot in playerInventory.GetPrimarySlots())
+                {
+                    System.Diagnostics.Debug.Assert(slot != null);
+                    slot.WriteData(buffer);
+                }
 
-                //    System.Diagnostics.Debug.Assert(id >= sbyte.MinValue);
-                //    System.Diagnostics.Debug.Assert(id <= sbyte.MaxValue);
+                int totalSlots = sharedInventory.GetTotalSlotCount() + PlayerInventory.PrimarySlotCount;
+                byte[] data = buffer.ReadData();
 
-                //    slot.WriteData(buffer);
-
-                //    int j = i + offset;
-                //    System.Diagnostics.Debug.Assert(j >= short.MinValue);
-                //    System.Diagnostics.Debug.Assert(j <= short.MaxValue);
-                //    Render(new SetSlotPacket(
-                //        (sbyte)id, (short)j, buffer.ReadData()));
-                //}
+                System.Diagnostics.Debug.Assert(windowId >= byte.MinValue);
+                System.Diagnostics.Debug.Assert(windowId <= byte.MaxValue);
+                System.Diagnostics.Debug.Assert(totalSlots > 0);
+                Render(new WindowItemsPacket(
+                    (byte)windowId, totalSlots, data));
 
             }
 
@@ -171,42 +171,36 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(invPrivate != null);
             System.Diagnostics.Debug.Assert(cursor != null);
 
-            _id = 0;
-
-            Update(_id, invPrivate, cursor, 0);
+            Update(null, invPrivate, cursor);
         }
 
-        internal void Open(PlayerInventory invPrivate, InventorySlot cursor, int offset)
+        internal void Open(
+            SharedInventory sharedInventory,
+            PlayerInventory playerInventory, InventorySlot cursor)
         {
-            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(sharedInventory != null);
+            System.Diagnostics.Debug.Assert(playerInventory != null);
             System.Diagnostics.Debug.Assert(cursor != null);
-            System.Diagnostics.Debug.Assert(offset >= 0);
 
-            _id = 1;
+            int windowId = 1;
+            string title = sharedInventory.Title;
+            int totalSharedSlots = sharedInventory.GetTotalSlotCount();
 
-            Update(_id, invPrivate, cursor, offset);
+            System.Diagnostics.Debug.Assert(totalSharedSlots > 0);
+
+            System.Diagnostics.Debug.Assert(windowId >= byte.MinValue);
+            System.Diagnostics.Debug.Assert(windowId <= byte.MaxValue);
+            Render(new OpenWindowPacket((byte)windowId, "minecraft:chest", title, (byte)totalSharedSlots));
+
+            Update(sharedInventory, playerInventory, cursor);
         }
 
-        internal void Reset(PlayerInventory invPrivate, InventorySlot cursor)
+        internal void Reset(PlayerInventory playerInventory, InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(cursor.Empty);
 
-            using Buffer buffer = new();
-
-            _id = 0;
-
-            Update(invPrivate, cursor, 0);
+            Update(null, playerInventory, cursor);
         }
-
-        public void Update(PlayerInventory invPrivate, InventorySlot cursor, int offset)
-        {
-            System.Diagnostics.Debug.Assert(invPrivate != null);
-            System.Diagnostics.Debug.Assert(cursor != null);
-            System.Diagnostics.Debug.Assert(offset >= 0);
-
-            Update(_id, invPrivate, cursor, offset);
-        }
-
 
     }
 
@@ -294,14 +288,14 @@ namespace MinecraftServerEngine
 
         internal EntityRenderer(
             ConcurrentQueue<ClientboundPlayingPacket> outPackets,
-            ChunkLocation loc, int d) 
-            : base(outPackets, loc, d) 
+            ChunkLocation loc, int d)
+            : base(outPackets, loc, d)
         {
-            
+
         }
 
         internal void RelMoveAndRotate(
-            int id, 
+            int id,
             Vector p, Vector pPrev, Angles look)
         {
             System.Diagnostics.Debug.Assert(!Disconnected);
@@ -320,15 +314,15 @@ namespace MinecraftServerEngine
                 x, y,
                 false));
             Render(new EntityHeadLookPacket(id, x));
-        
+
         }
 
         internal void RelMove(int id, Vector p, Vector pPrev)
         {
             System.Diagnostics.Debug.Assert(!Disconnected);
 
-            double dx = (p.X - pPrev.X) * (32 * 128), 
-                dy = (p.Y - pPrev.Y) * (32 * 128), 
+            double dx = (p.X - pPrev.X) * (32 * 128),
+                dy = (p.Y - pPrev.Y) * (32 * 128),
                 dz = (p.Z - pPrev.Z) * (32 * 128);
             System.Diagnostics.Debug.Assert((dx >= short.MinValue) && (dx <= short.MaxValue));
             System.Diagnostics.Debug.Assert((dy >= short.MinValue) && (dy <= short.MaxValue));
@@ -400,7 +394,7 @@ namespace MinecraftServerEngine
         }
 
         internal void SetEquipmentsData(
-            int id, 
+            int id,
             (byte[] mainHand, byte[] offHand) equipmentsData)
         {
             System.Diagnostics.Debug.Assert(equipmentsData.mainHand != null);
@@ -411,7 +405,7 @@ namespace MinecraftServerEngine
             Render(new EntityEquipmentPacket(id, 0, equipmentsData.mainHand));
             Render(new EntityEquipmentPacket(id, 1, equipmentsData.offHand));
         }
-        
+
         internal void SetEntityStatus(int id, byte v)
         {
             System.Diagnostics.Debug.Assert(!Disconnected);
@@ -420,8 +414,8 @@ namespace MinecraftServerEngine
         }
 
         internal void SpawnPlayer(
-            int id, System.Guid uniqueId, 
-            Vector p, Angles look, 
+            int id, System.Guid uniqueId,
+            Vector p, Angles look,
             bool sneaking, bool sprinting,
             (byte[], byte[]) equipmentsData)
         {

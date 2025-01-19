@@ -8,7 +8,7 @@ namespace TestMinecraftServerApplication
 {
     public sealed class ShopInventory : ItemInterfaceInventory
     {
-        protected override string Title => "Shop";
+        public override string Title => "Shop";
 
         public ShopInventory() : base(3)
         {

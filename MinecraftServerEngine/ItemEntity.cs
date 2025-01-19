@@ -35,7 +35,7 @@ namespace MinecraftServerEngine
 
         private protected override Hitbox GetHitbox()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             return DefaultHitbox;
         }
@@ -44,7 +44,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(renderer != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             renderer.SpawnItemEntity(
                 Id, UniqueId,

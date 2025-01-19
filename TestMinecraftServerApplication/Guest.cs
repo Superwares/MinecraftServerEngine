@@ -34,7 +34,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(!_disposed);
 
 
-
+            
         }
 
         protected override void OnSneak(World world, bool f)
@@ -46,6 +46,7 @@ namespace TestMinecraftServerApplication
             if (f == true)
             {
                 ApplyBlockAppearance(Block.Dirt);
+                OpenInventory(chestInventory);
                 //OpenInventory(shopInventory);
             }
             else
@@ -109,6 +110,9 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            MyConsole.Debug("Use item!");
+
+            GiveItem(new ItemStack(ItemType.DiamondSword));
         }
 
         protected override void OnUseEntity(World world, Entity entity)
@@ -138,12 +142,12 @@ namespace TestMinecraftServerApplication
 
             if (Gamemode == Gamemode.Adventure)
             {
-                Switch(Gamemode.Spectator);
+                SwitchGamemode(Gamemode.Spectator);
             }
             else
             {
                 System.Diagnostics.Debug.Assert(Gamemode == Gamemode.Spectator);
-                Switch(Gamemode.Adventure);
+                SwitchGamemode(Gamemode.Adventure);
             }
         }
 

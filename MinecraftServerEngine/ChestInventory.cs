@@ -10,7 +10,7 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
-        protected override string Title => "Chest";
+        public override string Title => "Chest";
 
         public ChestInventory() : base(TotalLineCount) { }
 

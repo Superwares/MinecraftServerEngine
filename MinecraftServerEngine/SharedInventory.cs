@@ -11,12 +11,12 @@ namespace MinecraftServerEngine
     {
         internal const int MaxLineCount = 6;
 
-        protected abstract string Title { get; }
+        public abstract string Title { get; }
 
         private bool _disposed = false;
 
 
-        private protected readonly Locker Locker = new();  // Disposable
+        internal readonly Locker Locker = new();  // Disposable
 
         private readonly Map<PlayerInventory, PublicInventoryRenderer> Renderers = new();
 
@@ -42,46 +42,38 @@ namespace MinecraftServerEngine
 
             Locker.Hold();
 
-            using Buffer buffer = new();
-
-            System.Diagnostics.Debug.Assert(Slots != null);
-            foreach (InventorySlot slot in Slots)
+            try
             {
-                System.Diagnostics.Debug.Assert(slot != null);
-                slot.WriteData(buffer);
-            }
+                using Buffer buffer = new();
 
-            int sharedDataSize = buffer.Size;
-
-            foreach (InventorySlot slot in playerInventory.GetPrimarySlots())
-            {
-                System.Diagnostics.Debug.Assert(slot != null);
-                slot.WriteData(buffer);
-            }
-
-            byte[] data = buffer.ReadData(),
-                sharedData = new byte[sharedDataSize];
-
-            System.Array.Copy(data, 0, sharedData, 0, sharedDataSize);
-
-            int totalSharedSlots = GetTotalSlotCount();
-            int totalSlots = totalSharedSlots + PlayerInventory.PrimarySlotCount;
-
-            System.Diagnostics.Debug.Assert(totalSharedSlots > 0);
-            System.Diagnostics.Debug.Assert(Renderers != null);
-            foreach (PublicInventoryRenderer renderer in Renderers.GetValues())
-            {
-                if (renderer.UserId == userId)
+                System.Diagnostics.Debug.Assert(Slots != null);
+                foreach (InventorySlot slot in Slots)
                 {
+                    System.Diagnostics.Debug.Assert(slot != null);
+                    slot.WriteData(buffer);
+                }
+
+                int totalSlots = GetTotalSlotCount();
+                byte[] data = buffer.ReadData();
+
+                System.Diagnostics.Debug.Assert(totalSlots > 0);
+                System.Diagnostics.Debug.Assert(Renderers != null);
+                foreach (PublicInventoryRenderer renderer in Renderers.GetValues())
+                {
+                    if (renderer.UserId == userId)
+                    {
+                        continue;
+                    }
+
                     renderer.Update(totalSlots, data);
                 }
-                else
-                {
-                    renderer.Update(totalSharedSlots, sharedData);
-                }
+            }
+            finally
+            {
+                Locker.Release();
             }
 
-            Locker.Release();
+
         }
 
         internal void Open(
@@ -94,36 +86,21 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(playerInventory != null);
             System.Diagnostics.Debug.Assert(outPackets != null);
 
-            PublicInventoryRenderer renderer = new(userId, outPackets);
-
             Locker.Hold();
 
-            using Buffer buffer = new();
-
-            System.Diagnostics.Debug.Assert(Slots != null);
-            foreach (InventorySlot slot in Slots)
+            try
             {
-                System.Diagnostics.Debug.Assert(slot != null);
-                slot.WriteData(buffer);
+                PublicInventoryRenderer renderer = new(userId, outPackets);
+
+                System.Diagnostics.Debug.Assert(!Renderers.Contains(playerInventory));
+                Renderers.Insert(playerInventory, renderer);
+            }
+            finally
+            {
+                Locker.Release();
             }
 
-            foreach (InventorySlot slot in playerInventory.GetPrimarySlots())
-            {
-                System.Diagnostics.Debug.Assert(slot != null);
-                slot.WriteData(buffer);
-            }
 
-            byte[] data = buffer.ReadData();
-
-            int totalSharedSlots = GetTotalSlotCount();
-            int totalSlots = totalSharedSlots + PlayerInventory.PrimarySlotCount;
-
-            renderer.Open(Title, totalSharedSlots, totalSlots, data);
-
-            System.Diagnostics.Debug.Assert(!Renderers.Contains(playerInventory));
-            Renderers.Insert(playerInventory, renderer);
-
-            Locker.Release();
         }
 
         internal void Close(PlayerInventory inv)
@@ -134,10 +111,15 @@ namespace MinecraftServerEngine
 
             Locker.Hold();
 
-            System.Diagnostics.Debug.Assert(Renderers.Contains(inv) == true);
-            Renderers.Extract(inv);
-
-            Locker.Release();
+            try
+            {
+                System.Diagnostics.Debug.Assert(Renderers.Contains(inv) == true);
+                Renderers.Extract(inv);
+            }
+            finally
+            {
+                Locker.Release();
+            }
         }
 
         internal InventorySlot GetSlot(

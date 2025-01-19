@@ -421,7 +421,10 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(stack != null);
+            if (stack == null)
+            {
+                return true;
+            }
 
             int j = -1;
 
@@ -457,7 +460,10 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(stack != null);
+            if (stack == null)
+            {
+                return true;
+            }
 
             return GiveFromLeftInPrimary(stack);
         }

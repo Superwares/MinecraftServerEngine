@@ -169,7 +169,7 @@ namespace MinecraftServerEngine
                 _gamemode);
         }
 
-        public void Switch(Gamemode gamemode)
+        public void SwitchGamemode(Gamemode gamemode)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -324,6 +324,25 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(Conn != null);
             return Conn.Open(Inventory, sharedInventory);
+        }
+
+        public void GiveItem(ItemStack stack)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (stack == null)
+            {
+                return;
+            }
+
+            if (Conn != null)
+            {
+                Conn.Window.GiveItem(Inventory, stack);
+            } else
+            {
+                Inventory.GiveItem(stack);
+            }
+
         }
 
         protected override void Dispose(bool disposing)
