@@ -67,7 +67,7 @@ namespace MinecraftServerEngine
             return _stack == null;
         }
 
-        public void PickUp(AbstractPlayer player)
+        internal void PickUp(AbstractPlayer player)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 

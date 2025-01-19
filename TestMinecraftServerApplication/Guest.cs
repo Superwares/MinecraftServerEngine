@@ -129,10 +129,6 @@ namespace TestMinecraftServerApplication
                 (Random.NextDouble() - 0.5D) / 10.0D, 
                 (Random.NextDouble() - 0.5D) / 10.0D));*/
 
-            if (entity is ItemEntity itemEntity)
-            {
-                itemEntity.PickUp(this);
-            }
         }
 
         protected override void OnDeath(PhysicsWorld world)
