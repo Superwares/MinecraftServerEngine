@@ -218,7 +218,7 @@ namespace MinecraftServerEngine
             ConcurrentQueue<ClientboundPlayingPacket> outPackets)
             : base(outPackets) { }
 
-        // title, worldboarder, chattings
+        // title, worldboarder, chattings, sound
     }
 
     internal abstract class ObjectRenderer : Renderer
