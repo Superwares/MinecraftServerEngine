@@ -127,6 +127,15 @@ namespace MinecraftServerEngine
             _stack = stack;
         }
 
+        internal ItemStack Drop()
+        {
+            ItemStack stack = _stack;
+
+            _stack = null;
+            
+            return stack;
+        }
+
         internal void WriteData(Buffer buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);

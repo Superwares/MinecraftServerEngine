@@ -33,7 +33,7 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
-
+        private readonly Locker InventoryLocker = new();
         protected readonly PlayerInventory Inventory = new();
 
 
@@ -326,22 +326,34 @@ namespace MinecraftServerEngine
             return Conn.Open(Inventory, sharedInventory);
         }
 
-        public void GiveItem(ItemStack stack)
+        public bool GiveItem(ItemStack stack)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (stack == null)
             {
-                return;
+                return true;
             }
 
-            if (Conn != null)
+            InventoryLocker.Hold();
+
+            try
             {
-                Conn.Window.GiveItem(Inventory, stack);
-            } else
-            {
-                Inventory.GiveItem(stack);
+                if (Conn != null)
+                {
+                    return Conn.Window.GiveItem(Inventory, stack);
+                }
+                else
+                {
+                    return Inventory.GiveItem(stack);
+                }
             }
+            finally
+            {
+                InventoryLocker.Release();
+            }
+
+
 
         }
 
@@ -364,6 +376,7 @@ namespace MinecraftServerEngine
                     Inventory.Dispose();
 
                     LockerGamemode.Dispose();
+                    InventoryLocker.Dispose();
                 }
 
                 // Call the appropriate methods to clean up

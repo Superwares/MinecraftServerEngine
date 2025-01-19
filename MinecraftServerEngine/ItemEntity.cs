@@ -2,6 +2,7 @@
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
+    using Sync;
 
     public sealed class ItemEntity : Entity
     {
@@ -12,7 +13,8 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
-        private readonly ItemStack Stack;
+        private readonly Locker DefaultLocker = new();
+        private ItemStack _stack;
 
 
         public ItemEntity(ItemStack stack, Vector p)
@@ -22,8 +24,7 @@ namespace MinecraftServerEngine
                   DefaultMass, DefaultMaxStepLevel)
         {
             System.Diagnostics.Debug.Assert(stack != null);
-
-            Stack = stack;
+            _stack = stack;
         }
 
         ~ItemEntity()
@@ -49,17 +50,47 @@ namespace MinecraftServerEngine
             renderer.SpawnItemEntity(
                 Id, UniqueId,
                 Position, Look,
-                Stack);
+                _stack);
         }
 
         public override void StartRoutine(PhysicsWorld world)
         {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
             System.Diagnostics.Debug.Assert(world != null);
         }
 
-        public void PickUp()
+        protected internal override bool IsDead()
         {
-            throw new System.NotImplementedException();
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            return _stack == null;
+        }
+
+        public void PickUp(AbstractPlayer player)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (_stack == null)
+            {
+                return;
+            }
+
+            DefaultLocker.Hold();
+
+            try
+            {
+                bool f = player.GiveItem(_stack);
+                
+                if (f == true)
+                {
+                    _stack = null;
+                }
+            } finally
+            {
+                DefaultLocker.Release();
+            }
+
         }
 
         protected override void Dispose(bool disposing)
@@ -67,14 +98,14 @@ namespace MinecraftServerEngine
             // Check to see if Dispose has already been called.
             if (_disposed == false)
             {
-                System.Diagnostics.Debug.Assert(Stack != null);
+                System.Diagnostics.Debug.Assert(_stack != null);
 
                 // If disposing equals true, dispose all managed
                 // and unmanaged resources.
                 if (disposing == true)
                 {
                     // Dispose managed resources.
-
+                    DefaultLocker.Dispose();
                 }
 
                 // Call the appropriate methods to clean up

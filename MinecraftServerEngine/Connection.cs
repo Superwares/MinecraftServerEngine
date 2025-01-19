@@ -355,12 +355,12 @@ namespace MinecraftServerEngine
 
         private void RecvDataAndHandle(
             Buffer buffer,
-            World world, AbstractPlayer player, PlayerInventory invPlayer)
+            World world, AbstractPlayer player, PlayerInventory playerInventory)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(player != null);
-            System.Diagnostics.Debug.Assert(invPlayer != null);
+            System.Diagnostics.Debug.Assert(playerInventory != null);
 
             if (_disconnected)
             {
@@ -451,7 +451,7 @@ namespace MinecraftServerEngine
 
                         System.Diagnostics.Debug.Assert(Window != null);
                         Window.Handle(
-                            Id, world, player, invPlayer,
+                            Id, world, player, playerInventory,
                             packet.WindowId, packet.Mode, packet.Button, packet.Slot);
 
                         OutPackets.Enqueue(new ClientboundConfirmTransactionPacket(
@@ -469,7 +469,7 @@ namespace MinecraftServerEngine
                         }
 
                         System.Diagnostics.Debug.Assert(Window != null);
-                        Window.Reset(OutPackets, world, packet.WindowId, invPlayer);
+                        Window.Reset(OutPackets, world, player, packet.WindowId, playerInventory);
                     }
                     break;
                 case ServerboundPlayingPacket.ServerboundCustomPayloadPacketId:
@@ -685,8 +685,8 @@ namespace MinecraftServerEngine
                             throw new UnexpectedValueException("ServerboundHeldItemSlotPacket.Slot");
                         }
 
-                        invPlayer.ChangeMainHand(packet.Slot);
-                        player.UpdateEntityEquipmentsData(invPlayer.GetEquipmentsData());
+                        playerInventory.ChangeMainHand(packet.Slot);
+                        player.UpdateEntityEquipmentsData(playerInventory.GetEquipmentsData());
                     }
                     break;
                 case ServerboundPlayingPacket.AnimationPacketId:
@@ -705,7 +705,7 @@ namespace MinecraftServerEngine
                                     // Attack!
                                     /*Console.Printl("Attack!");*/
 
-                                    ItemStack stack = invPlayer.GetMainHandSlot().Stack;
+                                    ItemStack stack = playerInventory.GetMainHandSlot().Stack;
 
                                     if (stack != null)
                                     {
@@ -724,7 +724,7 @@ namespace MinecraftServerEngine
                                 // Attack!
                                 /*Console.Printl("Attack!");*/
 
-                                ItemStack stack = invPlayer.GetMainHandSlot().Stack;
+                                ItemStack stack = playerInventory.GetMainHandSlot().Stack;
 
                                 if (stack != null)
                                 {
@@ -764,7 +764,7 @@ namespace MinecraftServerEngine
                         {
                             /*Console.Printl("UseItem!");*/
 
-                            ItemStack stack = invPlayer.GetMainHandSlot().Stack;
+                            ItemStack stack = playerInventory.GetMainHandSlot().Stack;
 
                             player.OnUseItem(world, stack);
                         }
@@ -772,7 +772,7 @@ namespace MinecraftServerEngine
                         {
                             /*Console.Printl("UseItem!");*/
 
-                            ItemStack stack = invPlayer.GetOffHandSlot().Stack;
+                            ItemStack stack = playerInventory.GetOffHandSlot().Stack;
 
                             player.OnUseItem(world, stack);
                         }

@@ -309,7 +309,7 @@ namespace MinecraftServerEngine
 
         internal void Reset(
             ConcurrentQueue<ClientboundPlayingPacket> outPackets,
-            World world,
+            World world, AbstractPlayer player,
             int idWindow, PlayerInventory invPrivate)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -357,12 +357,11 @@ namespace MinecraftServerEngine
                     _sharedInventory.Close(invPrivate);
                 }
 
+                ItemStack dropItem = Cursor.Drop();
 
-                if (Cursor.Empty == false)
+                if (dropItem != null)
                 {
-                    throw new System.NotImplementedException();
-
-                    // TODO: Drop item stack.
+                    world.SpawnObject(new ItemEntity(dropItem, player.GetEyeOrigin()));
                 }
 
                 Renderer.Reset(invPrivate, Cursor);
