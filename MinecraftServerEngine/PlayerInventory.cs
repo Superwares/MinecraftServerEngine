@@ -431,6 +431,7 @@ namespace MinecraftServerEngine
 
             using Queue<InventorySlot> slots = new();
 
+            int j = -1;
             int prevCount = stack.Count;
 
             InventorySlot slotInside;
@@ -441,9 +442,16 @@ namespace MinecraftServerEngine
 
                 if (slotInside.Empty)
                 {
-                    prevCount = 0;
-                    slots.Enqueue(slotInside);
-                    break;
+                    //prevCount = 0;
+                    //slots.Enqueue(slotInside);
+                    //break;
+
+                    if (j < 0)
+                    {
+                        j = i;
+                    }
+                  
+                    continue;
                 }
 
                 int restCount = slotInside.PreMove(stack.Type, prevCount);
@@ -463,21 +471,33 @@ namespace MinecraftServerEngine
 
             }
 
-            if (prevCount > 0)
+            if (prevCount > 0 && j < 0)
             {
                 return false;
             }
 
             while (slots.Empty == false)
             {
-                InventorySlot slot = slots.Dequeue();
+                slotInside = slots.Dequeue();
 
-                slot.Move(ref stack);
+                slotInside.Move(ref stack);
 
                 if (stack == null)
                 {
                     break;
                 }
+            }
+
+            if (j >= 0)
+            {
+                slotInside = GetPrimarySlot(j);
+
+                System.Diagnostics.Debug.Assert(slotInside != null);
+                System.Diagnostics.Debug.Assert(slotInside.Empty == true);
+
+                slotInside.Move(ref stack);
+
+                System.Diagnostics.Debug.Assert(stack == null);
             }
 
             slots.Flush();
