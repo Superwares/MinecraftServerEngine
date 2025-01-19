@@ -3,7 +3,7 @@
 
 namespace MinecraftServerEngine
 {
-    
+
 
     internal sealed class InventorySlot
     {
@@ -46,7 +46,7 @@ namespace MinecraftServerEngine
                 {
                     ItemStack stackTemp = stackCursor;
                     stackCursor = _stack;
-                    _stack = stackTemp; 
+                    _stack = stackTemp;
                 }
             }
             else
@@ -117,14 +117,48 @@ namespace MinecraftServerEngine
             _stack.Move(ref stackFrom);
         }
 
-        internal void Give(ItemStack stack)
+        internal void Move(ref ItemStack from)
         {
-            System.Diagnostics.Debug.Assert(stack != null);
-            System.Diagnostics.Debug.Assert(stack.Count >= ItemStack.MinCount);
+            if (from == null)
+            {
+                return;
+            }
 
-            System.Diagnostics.Debug.Assert(Empty);
+            if (Empty)
+            {
+                _stack = from;
+                from = null;
 
-            _stack = stack;
+                return;
+            }
+
+            _stack.Move(ref from);
+        }
+
+        internal int PreMove(ItemType type, int count)
+        {
+            System.Diagnostics.Debug.Assert(count >= 0);
+
+            if (count == 0)
+            {
+                return 0;
+            }
+
+            System.Diagnostics.Debug.Assert(count >= ItemStack.MinCount);
+
+            if (type != _stack.Type || _stack.IsFull() == true)
+            {
+                return count;
+            }
+
+            int canMovedAmount = (_stack.MaxCount - _stack.Count);
+
+            if (count < canMovedAmount)
+            {
+                return 0;
+            }
+
+            return count - canMovedAmount;
         }
 
         internal ItemStack DropSingle()
@@ -148,7 +182,7 @@ namespace MinecraftServerEngine
             ItemStack stack = _stack;
 
             _stack = null;
-            
+
             return stack;
         }
 

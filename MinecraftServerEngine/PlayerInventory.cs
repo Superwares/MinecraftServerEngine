@@ -1,10 +1,13 @@
 ﻿
 
+using Containers;
+using System.Collections;
+
 namespace MinecraftServerEngine
 {
     public sealed class PlayerInventory : Inventory
     {
-   
+
 
         internal const int TotalSlotCount = 46;
 
@@ -426,9 +429,9 @@ namespace MinecraftServerEngine
                 return true;
             }
 
-            // TODO: Change the logic of distributing items so that they are not only given to new slots, but also distributed to pre-calculated slots.
+            using Queue<InventorySlot> slots = new();
 
-            int j = -1;
+            int prevCount = stack.Count;
 
             InventorySlot slotInside;
             for (int i = 0; i < PrimarySlotCount; ++i)
@@ -438,24 +441,48 @@ namespace MinecraftServerEngine
 
                 if (slotInside.Empty)
                 {
-                    j = i;
+                    prevCount = 0;
+                    slots.Enqueue(slotInside);
+                    break;
+                }
+
+                int restCount = slotInside.PreMove(stack.Type, prevCount);
+
+                if (prevCount == restCount)
+                {
+                    continue;
+                }
+
+                prevCount = restCount;
+                slots.Enqueue(slotInside);
+
+                if (prevCount == 0)
+                {
+                    break;
+                }
+
+            }
+
+            if (prevCount > 0)
+            {
+                return false;
+            }
+
+            while (slots.Empty == false)
+            {
+                InventorySlot slot = slots.Dequeue();
+
+                slot.Move(ref stack);
+
+                if (stack == null)
+                {
                     break;
                 }
             }
 
-            System.Diagnostics.Debug.Assert(j <= TotalSlotCount);
-            if (j >= 0)
-            {
-                slotInside = GetPrimarySlot(j);
-                System.Diagnostics.Debug.Assert(slotInside != null);
-                System.Diagnostics.Debug.Assert(slotInside.Empty);
+            slots.Flush();
 
-                slotInside.Give(stack);
-
-                return true;
-            }
-
-            return false;
+            return true;
         }
 
         public bool GiveItem(ItemStack stack)

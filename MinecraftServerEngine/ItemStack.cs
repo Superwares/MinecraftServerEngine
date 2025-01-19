@@ -34,6 +34,13 @@ namespace MinecraftServerEngine
             _count = MaxCount;
         }
 
+        internal bool IsFull()
+        {
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
+            return _count == MaxCount;
+        }
+
         internal int Stack(int count)
         {
             System.Diagnostics.Debug.Assert(count >= 0);

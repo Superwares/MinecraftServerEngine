@@ -90,6 +90,8 @@ namespace MinecraftServerEngine
                 _sharedInventory.Locker.Hold();
             }
 
+            ItemStack dropItem = null;
+
             try
             {
                 switch (mode)
@@ -182,41 +184,21 @@ namespace MinecraftServerEngine
                             case 0:
                                 if (_sharedInventory == null)
                                 {
-                                    ItemStack dropItem = playerInventory.DropSingle(i);
-
-                                    if (dropItem != null)
-                                    {
-                                        world.SpawnObject(new ItemEntity(dropItem, player.Position));
-                                    }
+                                    dropItem = playerInventory.DropSingle(i);
                                 }
                                 else
                                 {
-                                    ItemStack dropItem = _sharedInventory.DropSingle(id, playerInventory, i);
-
-                                    if (dropItem != null)
-                                    {
-                                        world.SpawnObject(new ItemEntity(dropItem, player.Position));
-                                    }
+                                    dropItem = _sharedInventory.DropSingle(id, playerInventory, i);
                                 }
                                 break;
                             case 1:
                                 if (_sharedInventory == null)
                                 {
-                                    ItemStack dropItem = playerInventory.DropFull(i);
-
-                                    if (dropItem != null)
-                                    {
-                                        world.SpawnObject(new ItemEntity(dropItem, player.Position));
-                                    }
+                                    dropItem = playerInventory.DropFull(i);
                                 }
                                 else
                                 {
-                                    ItemStack dropItem =_sharedInventory.DropFull(id, playerInventory, i);
-
-                                    if (dropItem != null)
-                                    {
-                                        world.SpawnObject(new ItemEntity(dropItem, player.Position));
-                                    }
+                                    dropItem = _sharedInventory.DropFull(id, playerInventory, i);
                                 }
                                 break;
                         }
@@ -225,6 +207,11 @@ namespace MinecraftServerEngine
                         break;
                     case 6:
                         break;
+                }
+
+                if (dropItem != null)
+                {
+                    world.SpawnObject(new ItemEntity(dropItem, player.Position));
                 }
 
                 player.UpdateEntityEquipmentsData(playerInventory.GetEquipmentsData());

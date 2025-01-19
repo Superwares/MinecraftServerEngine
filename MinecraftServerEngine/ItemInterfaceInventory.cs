@@ -14,7 +14,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(totalLineCount <= MaxLineCount);
 
             // TODO: remove
-            Slots[10].Give(new ItemStack(ItemType.Stick));
+            //Slots[10].Give(new ItemStack(ItemType.Stick));
         }
 
         ~ItemInterfaceInventory()
