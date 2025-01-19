@@ -622,6 +622,10 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(Renderers != null);
                 EntityRenderer[] renderers = Renderers.Flush();
+
+                
+                BlockLocation prevBlockLocation = BlockLocation.Generate(_p);
+
                 foreach (EntityRenderer renderer in renderers)
                 {
                     System.Diagnostics.Debug.Assert(renderer != null);
@@ -631,7 +635,15 @@ namespace MinecraftServerEngine
                         continue;
                     }
 
-                    renderer.DestroyEntity(Id);
+                    if (_prevFakeBlockApplied == true)
+                    {
+                        renderer.SetBlockAppearance(Block.Air, prevBlockLocation);
+                    }
+                    else
+                    {
+                        renderer.DestroyEntity(Id);
+                    }
+
                 }
             }
 

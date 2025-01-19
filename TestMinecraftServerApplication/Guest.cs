@@ -26,6 +26,8 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            ApplyBlockAppearance(Block.Dirt);
+
         }
 
         protected override void OnSneak(World world, bool f)
@@ -34,15 +36,15 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (f == true)
-            {
-                ApplyBlockAppearance(Block.Dirt);
-            }
-            else
-            {
-                ResetBlockAppearance();
+            //if (f == true)
+            //{
+            //    ApplyBlockAppearance(Block.Dirt);
+            //}
+            //else
+            //{
+            //    ResetBlockAppearance();
 
-            }
+            //}
         }
 
         protected override void OnSprint(World world, bool f)
@@ -89,6 +91,7 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            MyConsole.Debug($"stack: {stack}");
         }
 
         protected override void OnUseItem(World world, ItemStack stack)
