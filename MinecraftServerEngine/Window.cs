@@ -101,6 +101,22 @@ namespace MinecraftServerEngine
                     case 0:
                         if (i < 0)
                         {
+                            if (i == -999)
+                            {
+                                switch (button)
+                                {
+                                    default:
+                                        throw new UnexpectedValueException($"Invalid button number: {button}, in mode {mode}");
+                                    case 0:
+                                        dropItem = Cursor.DropFull();
+                                        break;
+                                    case 1:
+                                        dropItem = Cursor.DropSingle();
+                                        break;
+                                    
+                                }
+                            }
+
                             break;
                         }
                         switch (button)
