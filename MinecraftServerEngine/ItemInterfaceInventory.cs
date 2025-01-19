@@ -2,50 +2,8 @@
 
 namespace MinecraftServerEngine
 {
-    public abstract class ItemInterfaceInventory : PublicInventory
+    public abstract class ItemInterfaceInventory : SharedInventory
     {
-        protected abstract class ClickContext
-        {
-            private readonly PrivateInventory Inventory;
-
-            internal ClickContext(PrivateInventory inv)
-            {
-                System.Diagnostics.Debug.Assert(inv != null);
-                Inventory = inv;
-            }
-
-            public bool Give(ItemType item, int count)
-            {
-                System.Diagnostics.Debug.Assert(count >= 0);
-
-                System.Diagnostics.Debug.Assert(Inventory != null);
-                return Inventory.GiveFromLeftInMain(item, count);
-            }
-        }
-
-        protected sealed class LeftClickContext : ClickContext
-        {
-            internal LeftClickContext(PrivateInventory inv) : base(inv)
-            {
-                System.Diagnostics.Debug.Assert(inv != null);
-            }
-        }
-
-        protected sealed class RightClickContext : ClickContext
-        {
-            internal RightClickContext(PrivateInventory inv) : base(inv)
-            {
-                System.Diagnostics.Debug.Assert(inv != null);
-            }
-        }
-
-        protected sealed class MiddleClickContext : ClickContext
-        {
-            internal MiddleClickContext(PrivateInventory inv) : base(inv)
-            {
-                System.Diagnostics.Debug.Assert(inv != null);
-            }
-        }
 
         private const int MaxLineCount = 6;
 
@@ -54,7 +12,7 @@ namespace MinecraftServerEngine
 
         private readonly int totalSlotCount;
 
-        private protected override int GetTotalSlotCount()
+        internal override int GetTotalSlotCount()
         {
             System.Diagnostics.Debug.Assert(totalSlotCount > 0);
             return totalSlotCount;
@@ -74,10 +32,10 @@ namespace MinecraftServerEngine
             Dispose(false);
         }
 
-
-        protected abstract void OnLeftClick(LeftClickContext ctx, int i);
-
-        protected abstract void OnRightClick(RightClickContext ctx, int i);
+        protected abstract void OnLeftClickSharedItem(
+            UserId userId,
+            PlayerInventory playerInventory,
+            int i, ItemType Item, int count);
 
         protected override void Dispose(bool disposing)
         {

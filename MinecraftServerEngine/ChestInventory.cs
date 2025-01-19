@@ -1,7 +1,7 @@
 ﻿
 namespace MinecraftServerEngine
 {
-    public sealed class ChestInventory : PublicInventory
+    public sealed class ChestInventory : SharedInventory
     {
         internal const int TotalSlotCount = 3 * SlotsPerLine;
 
@@ -19,7 +19,7 @@ namespace MinecraftServerEngine
             Dispose(false);
         }
 
-        private protected override int GetTotalSlotCount()
+        internal override int GetTotalSlotCount()
         {
             System.Diagnostics.Debug.Assert(TotalSlotCount > 0);
             return TotalSlotCount;

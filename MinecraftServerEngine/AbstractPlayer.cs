@@ -311,19 +311,19 @@ namespace MinecraftServerEngine
                 Position, Look);
         }
 
-        public bool Open(PublicInventory invPublic)
+        public bool OpenInventory(SharedInventory sharedInventory)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(invPublic != null);
+            System.Diagnostics.Debug.Assert(sharedInventory != null);
 
-            if (Disconnected)
+            if (Disconnected == true)
             {
                 return false;
             }
 
             System.Diagnostics.Debug.Assert(Conn != null);
-            return Conn.Open(Inventory, invPublic);
+            return Conn.Open(Inventory, sharedInventory);
         }
 
         protected override void Dispose(bool disposing)
@@ -337,7 +337,7 @@ namespace MinecraftServerEngine
                 if (disposing == true)
                 {
                     // Dispose managed resources.
-                    if (!Disconnected)
+                    if (Disconnected == false)
                     {
                         Conn.Dispose();
                     }

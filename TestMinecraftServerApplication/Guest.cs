@@ -10,6 +10,9 @@ namespace TestMinecraftServerApplication
     {
         private bool _disposed = false;
 
+        private static ChestInventory chestInventory = new ChestInventory();
+
+
         public Guest(UserId id, Vector p, Angles look)
             : base(id, p, look, Gamemode.Adventure)
         {
@@ -39,15 +42,16 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            //if (f == true)
-            //{
-            //    ApplyBlockAppearance(Block.Dirt);
-            //}
-            //else
-            //{
-            //    ResetBlockAppearance();
+            if (f == true)
+            {
+                //ApplyBlockAppearance(Block.Dirt);
+                OpenInventory(chestInventory);
+            }
+            else
+            {
+                //ResetBlockAppearance();
 
-            //}
+            }
         }
 
         protected override void OnSprint(World world, bool f)

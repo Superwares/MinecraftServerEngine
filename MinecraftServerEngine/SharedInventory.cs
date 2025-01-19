@@ -2,11 +2,12 @@
 
 using Containers;
 using Sync;
+using static System.Reflection.Metadata.BlobBuilder;
 
 namespace MinecraftServerEngine
 {
 
-    public abstract class PublicInventory : Inventory
+    public abstract class SharedInventory : Inventory
     {
         private bool _disposed = false;
 
@@ -16,18 +17,21 @@ namespace MinecraftServerEngine
 
         private readonly Map<PlayerInventory, PublicInventoryRenderer> Renderers = new();
 
-        internal PublicInventory() : base() { }
+        internal SharedInventory() : base() { }
 
-        ~PublicInventory()
+        ~SharedInventory()
         {
             System.Diagnostics.Debug.Assert(false);
 
             Dispose(false);
         }
 
-        private protected void Update()
+        private protected void Update(
+            UserId userId, PlayerInventory playerInventory)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(playerInventory != null);
 
             Locker.Hold();
 
@@ -40,37 +44,77 @@ namespace MinecraftServerEngine
                 slot.WriteData(buffer);
             }
 
-            byte[] data = buffer.ReadData();
+            int sharedDataSize = buffer.Size;
 
-            int totalSlots = GetTotalSlotCount();
+            foreach (InventorySlot slot in playerInventory.GetPrimarySlots())
+            {
+                System.Diagnostics.Debug.Assert(slot != null);
+                slot.WriteData(buffer);
+            }
 
-            System.Diagnostics.Debug.Assert(totalSlots > 0);
+            byte[] data = buffer.ReadData(),
+                sharedData = new byte[sharedDataSize];
+
+            System.Array.Copy(data, 0, sharedData, 0, sharedDataSize);
+
+            int totalSharedSlots = GetTotalSlotCount();
+            int totalSlots = totalSharedSlots + PlayerInventory.PrimarySlotCount;
+
+            System.Diagnostics.Debug.Assert(totalSharedSlots > 0);
             System.Diagnostics.Debug.Assert(Renderers != null);
             foreach (PublicInventoryRenderer renderer in Renderers.GetValues())
             {
-                renderer.Update(totalSlots, data);
+                if (renderer.UserId == userId)
+                {
+                    renderer.Update(totalSlots, data);
+                }
+                else
+                {
+                    renderer.Update(totalSharedSlots, sharedData);
+                }
             }
 
             Locker.Release();
         }
 
         internal void Open(
-            PlayerInventory inv,
+            UserId userId,
+            PlayerInventory playerInventory,
             ConcurrentQueue<ClientboundPlayingPacket> outPackets)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(inv != null);
+            System.Diagnostics.Debug.Assert(playerInventory != null);
             System.Diagnostics.Debug.Assert(outPackets != null);
 
-            PublicInventoryRenderer renderer = new(outPackets);
+            PublicInventoryRenderer renderer = new(userId, outPackets);
 
             Locker.Hold();
 
-            renderer.Open(Title, Slots);
+            using Buffer buffer = new();
 
-            System.Diagnostics.Debug.Assert(!Renderers.Contains(inv));
-            Renderers.Insert(inv, renderer);
+            System.Diagnostics.Debug.Assert(Slots != null);
+            foreach (InventorySlot slot in Slots)
+            {
+                System.Diagnostics.Debug.Assert(slot != null);
+                slot.WriteData(buffer);
+            }
+
+            foreach (InventorySlot slot in playerInventory.GetPrimarySlots())
+            {
+                System.Diagnostics.Debug.Assert(slot != null);
+                slot.WriteData(buffer);
+            }
+
+            byte[] data = buffer.ReadData();
+
+            int totalSharedSlots = GetTotalSlotCount();
+            int totalSlots = totalSharedSlots + PlayerInventory.PrimarySlotCount;
+
+            renderer.Open(Title, totalSharedSlots, totalSlots, data);
+
+            System.Diagnostics.Debug.Assert(!Renderers.Contains(playerInventory));
+            Renderers.Insert(playerInventory, renderer);
 
             Locker.Release();
         }
@@ -125,7 +169,8 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(i < totalSlots + PlayerInventory.PrimarySlotCount);
 
             if (i < totalSlots)
-            {Slots[i] = slot;
+            {
+                Slots[i] = slot;
             }
             else
             {
@@ -137,13 +182,13 @@ namespace MinecraftServerEngine
         }
 
         internal virtual void LeftClick(
-            UserId id, PlayerInventory invPlayer,
+            UserId userId, PlayerInventory playerInventory,
             int i, InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(id != UserId.Null);
-            System.Diagnostics.Debug.Assert(invPlayer != null);
+            System.Diagnostics.Debug.Assert(userId != UserId.Null);
+            System.Diagnostics.Debug.Assert(playerInventory != null);
 
             int totalSlots = GetTotalSlotCount();
             System.Diagnostics.Debug.Assert(totalSlots > 0);
@@ -154,7 +199,7 @@ namespace MinecraftServerEngine
 
             Locker.Hold();
 
-            System.Diagnostics.Debug.Assert(Renderers.Contains(invPlayer));
+            System.Diagnostics.Debug.Assert(Renderers.Contains(playerInventory));
 
             if (i < totalSlots)
             {
@@ -163,25 +208,26 @@ namespace MinecraftServerEngine
 
                 slot.LeftClick(cursor);
 
-                Update();
             }
             else
             {
                 int j = i - totalSlots;
-                invPlayer.LeftClickInPrimary(j, cursor);
+                playerInventory.LeftClickInPrimary(j, cursor);
             }
+
+            Update(userId, playerInventory);
 
             Locker.Release();
         }
 
         internal virtual void RightClick(
-            UserId id, PlayerInventory invPlayer,
+            UserId userId, PlayerInventory playerInventory,
             int i, InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(id != UserId.Null);
-            System.Diagnostics.Debug.Assert(invPlayer != null);
+            System.Diagnostics.Debug.Assert(userId != UserId.Null);
+            System.Diagnostics.Debug.Assert(playerInventory != null);
 
             int totalSlots = GetTotalSlotCount();
             System.Diagnostics.Debug.Assert(totalSlots > 0);
@@ -189,11 +235,11 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(i >= 0);
             System.Diagnostics.Debug.Assert(i < totalSlots + PlayerInventory.PrimarySlotCount);
             System.Diagnostics.Debug.Assert(cursor != null);
-            System.Diagnostics.Debug.Assert(invPlayer != null);
+            System.Diagnostics.Debug.Assert(playerInventory != null);
 
             Locker.Hold();
 
-            System.Diagnostics.Debug.Assert(Renderers.Contains(invPlayer));
+            System.Diagnostics.Debug.Assert(Renderers.Contains(playerInventory));
 
             if (i < totalSlots)
             {
@@ -202,13 +248,14 @@ namespace MinecraftServerEngine
 
                 slot.RightClick(cursor);
 
-                Update();
             }
             else
             {
                 int j = i - totalSlots;
-                invPlayer.RightClick(j, cursor);
+                playerInventory.RightClickInPrimary(j, cursor);
             }
+
+            Update(userId, playerInventory);
 
             Locker.Release();
         }
@@ -265,13 +312,13 @@ namespace MinecraftServerEngine
         }
 
         internal virtual void QuickMove(
-            UserId id, PlayerInventory invPlayer,
+            UserId userId, PlayerInventory playerInventory,
             int i)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(id != UserId.Null);
-            System.Diagnostics.Debug.Assert(invPlayer != null);
+            System.Diagnostics.Debug.Assert(userId != UserId.Null);
+            System.Diagnostics.Debug.Assert(playerInventory != null);
 
             int totalSlots = GetTotalSlotCount();
             System.Diagnostics.Debug.Assert(totalSlots > 0);
@@ -286,25 +333,25 @@ namespace MinecraftServerEngine
                 InventorySlot slot = Slots[i];
                 System.Diagnostics.Debug.Assert(slot != null);
 
-                invPlayer.QuickMoveFromRightInPrimary(slot);
+                playerInventory.QuickMoveFromRightInPrimary(slot);
             }
             else
             {
                 int j = i - totalSlots;
                 System.Diagnostics.Debug.Assert(j >= 0);
-                InventorySlot slot = invPlayer.GetPrimarySlot(j);
+                InventorySlot slot = playerInventory.GetPrimarySlot(j);
                 System.Diagnostics.Debug.Assert(slot != null);
 
                 QuickMoveFromLeft(slot);
             }
 
-            Update();
+            Update(userId, playerInventory);
 
             Locker.Release();
         }
 
         internal void SwapItems(
-            UserId id, PlayerInventory invPlayer,
+            UserId userId, PlayerInventory playerInventory,
             int i, int j)
         {
             int totalSlots = GetTotalSlotCount();
@@ -322,19 +369,18 @@ namespace MinecraftServerEngine
 
             Locker.Hold();
 
-            InventorySlot slot_i = GetSlot(invPlayer, i), slot_j = GetSlot(invPlayer, j);
+            InventorySlot slot_i = GetSlot(playerInventory, i), slot_j = GetSlot(playerInventory, j);
 
+            SetSlot(playerInventory, i, slot_j);
+            SetSlot(playerInventory, j, slot_i);
 
-            SetSlot(invPlayer, i, slot_j);
-            SetSlot(invPlayer, j, slot_i);
-
-            Update();
+            Update(userId, playerInventory);
 
             Locker.Release();
         }
 
         internal void SwapItemsWithHotbarSlot(
-            UserId id, PlayerInventory invPlayer,
+            UserId userId, PlayerInventory playerInventory,
             int i, int j)
         {
             int totalSlots = GetTotalSlotCount();
@@ -346,7 +392,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(j < PlayerInventory.HotbarSlotCount);
 
             int k = totalSlots + (PlayerInventory.HotbarSlotsOffset - PlayerInventory.PrimarySlotsOffset) + j;
-            SwapItems(id, invPlayer, i, k);
+            SwapItems(userId, playerInventory, i, k);
         }
 
         protected override void Dispose(bool disposing)

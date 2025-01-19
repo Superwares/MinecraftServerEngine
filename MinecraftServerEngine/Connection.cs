@@ -17,7 +17,7 @@ namespace MinecraftServerEngine
             private readonly WindowRenderer Renderer;
             private readonly InventorySlot Cursor = new();
 
-            private PublicInventory _invPublic = null;
+            private SharedInventory _sharedInventory = null;
 
             private bool _ambiguous = false;
 
@@ -32,31 +32,37 @@ namespace MinecraftServerEngine
                 Renderer = new WindowRenderer(outPackets, invPlayer, Cursor);
             }
 
-            ~Window() => System.Diagnostics.Debug.Assert(false);
+            ~Window()
+            {
+                System.Diagnostics.Debug.Assert(false);
+
+                //Dispose(false);
+            }
 
             internal bool Open(
+                UserId userId,
                 ConcurrentQueue<ClientboundPlayingPacket> outPackets,
-                PlayerInventory invPrivate, PublicInventory invPublic)
+                PlayerInventory invPrivate, SharedInventory sharedInventory)
             {
                 System.Diagnostics.Debug.Assert(!_disposed);
 
                 System.Diagnostics.Debug.Assert(outPackets != null);
                 System.Diagnostics.Debug.Assert(invPrivate != null);
-                System.Diagnostics.Debug.Assert(invPublic != null);
+                System.Diagnostics.Debug.Assert(sharedInventory != null);
 
                 Locker.Hold();
 
                 try
                 {
-                    if (_invPublic != null)
+                    if (_sharedInventory != null)
                     {
                         return false;
                     }
 
-                    invPublic.Open(invPrivate, outPackets);
-                    Renderer.Open(invPrivate, Cursor, invPublic.GetTotalSlotCount());
+                    sharedInventory.Open(userId, invPrivate, outPackets);
+                    Renderer.Open(invPrivate, Cursor, sharedInventory.GetTotalSlotCount());
 
-                    _invPublic = invPublic;
+                    _sharedInventory = sharedInventory;
 
                     _ambiguous = true;
 
@@ -88,7 +94,7 @@ namespace MinecraftServerEngine
                         throw new UnexpectedValueException("ServerboundCloseWindowPacket.WindowId");
                     }
 
-                    if (_invPublic == null)
+                    if (_sharedInventory == null)
                     {
                         System.Diagnostics.Debug.Assert(!_ambiguous);
 
@@ -122,9 +128,9 @@ namespace MinecraftServerEngine
 
                     System.Diagnostics.Debug.Assert(idWindow == 1);
 
-                    _invPublic.Close(invPrivate);
+                    _sharedInventory.Close(invPrivate);
 
-                    if (!Cursor.Empty)
+                    if (Cursor.Empty == false)
                     {
                         throw new System.NotImplementedException();
 
@@ -132,7 +138,7 @@ namespace MinecraftServerEngine
                     }
                     
                     Renderer.Reset(invPrivate, Cursor);
-                    _invPublic = null;
+                    _sharedInventory = null;
 
                     _ambiguous = false;
                 }
@@ -173,23 +179,23 @@ namespace MinecraftServerEngine
                             default:
                                 throw new UnexpectedValueException("ClickWindowPacket.ButtonNumber");
                             case 0:
-                                if (_invPublic == null)
+                                if (_sharedInventory == null)
                                 {
                                     invPlayer.LeftClick(i, Cursor);
                                 }
                                 else
                                 {
-                                    _invPublic.LeftClick(id, invPlayer, i, Cursor);
+                                    _sharedInventory.LeftClick(id, invPlayer, i, Cursor);
                                 }
                                 break;
                             case 1:
-                                if (_invPublic == null)
+                                if (_sharedInventory == null)
                                 {
                                     invPlayer.RightClick(i, Cursor);
                                 }
                                 else
                                 {
-                                    _invPublic.RightClick(id, invPlayer, i, Cursor);
+                                    _sharedInventory.RightClick(id, invPlayer, i, Cursor);
                                 }
                                 break;
                         }
@@ -204,35 +210,35 @@ namespace MinecraftServerEngine
                             default:
                                 throw new UnexpectedValueException("ClickWindowPacket.ButtonNumber");
                             case 0:
-                                if (_invPublic == null)
+                                if (_sharedInventory == null)
                                 {
                                     invPlayer.QuickMove(i);
                                 }
                                 else
                                 {
-                                    _invPublic.QuickMove(id, invPlayer, i);
+                                    _sharedInventory.QuickMove(id, invPlayer, i);
                                 }
                                 break;
                             case 1:
-                                if (_invPublic == null)
+                                if (_sharedInventory == null)
                                 {
                                     invPlayer.QuickMove(i);
                                 }
                                 else
                                 {
-                                    _invPublic.QuickMove(id, invPlayer, i);
+                                    _sharedInventory.QuickMove(id, invPlayer, i);
                                 }
                                 break;
                         }
                         break;
                     case 2:
-                        if (_invPublic == null)
+                        if (_sharedInventory == null)
                         {
                             invPlayer.SwapItemsWithHotbarSlot(i, button);
                         }
                         else
                         {
-                            _invPublic.SwapItemsWithHotbarSlot(id, invPlayer, i, button);
+                            _sharedInventory.SwapItemsWithHotbarSlot(id, invPlayer, i, button);
                         }
                         break;
                     case 3:
@@ -251,12 +257,12 @@ namespace MinecraftServerEngine
 
                 player.UpdateEntityEquipmentsData(invPlayer.GetEquipmentsData());
 
-                int offset = _invPublic == null ? 0 : _invPublic.GetTotalSlotCount();
+                int offset = _sharedInventory == null ? 0 : _sharedInventory.GetTotalSlotCount();
                 System.Diagnostics.Debug.Assert(offset >= 0);
                 Renderer.Update(invPlayer, Cursor, offset);
 
                 {
-                    if (_invPublic == null)
+                    if (_sharedInventory == null)
                     {
                         invPlayer.Print();
                     }
@@ -292,7 +298,7 @@ namespace MinecraftServerEngine
                     //    throw new UnexpectedClientBehaviorExecption("Negative slot index");
                     //}
 
-                    if (_invPublic == null)
+                    if (_sharedInventory == null)
                     {
                         if (i >= invPlayer.GetTotalSlotCount())
                         {
@@ -301,15 +307,15 @@ namespace MinecraftServerEngine
                     }
                     else
                     {
-                        System.Diagnostics.Debug.Assert(_invPublic != null);
+                        System.Diagnostics.Debug.Assert(_sharedInventory != null);
 
-                        if (i >= _invPublic.GetTotalSlotCount() + PlayerInventory.PrimarySlotCount)
+                        if (i >= _sharedInventory.GetTotalSlotCount() + PlayerInventory.PrimarySlotCount)
                         {
                             throw new UnexpectedClientBehaviorExecption("Slot index is out of the valid range for public and player primary inventory");
                         }
                     }
 
-                    if (_invPublic == null)
+                    if (_sharedInventory == null)
                     {
                         System.Diagnostics.Debug.Assert(!_ambiguous);
                         if (idWindow == 1)
@@ -355,10 +361,10 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(world != null);
                 System.Diagnostics.Debug.Assert(invPlayer != null);
 
-                if (_invPublic != null)
+                if (_sharedInventory != null)
                 {
-                    _invPublic.Close(invPlayer);
-                    _invPublic = null;
+                    _sharedInventory.Close(invPlayer);
+                    _sharedInventory = null;
                 }
 
                 if (!Cursor.Empty)
@@ -375,7 +381,7 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(!_disposed);
 
                 // Assertion.
-                System.Diagnostics.Debug.Assert(_invPublic == null);
+                System.Diagnostics.Debug.Assert(_sharedInventory == null);
                 System.Diagnostics.Debug.Assert(Cursor.Empty);
 
                 // Release Resources.
@@ -386,6 +392,7 @@ namespace MinecraftServerEngine
             }
 
         }
+        
         private sealed class ChunkingHelper : System.IDisposable
         {
             private const int MaxLoadCount = 7;
@@ -1480,17 +1487,17 @@ namespace MinecraftServerEngine
                     false, canFly, canFly, false, 0.1F, 0.0F));
         }
 
-        internal bool Open(PlayerInventory invPri, PublicInventory invPub)
+        internal bool Open(PlayerInventory invPri, SharedInventory invPub)
         {
             System.Diagnostics.Debug.Assert(invPri != null);
             System.Diagnostics.Debug.Assert(invPub != null);
 
-            if (_disconnected)
+            if (_disconnected == true)
             {
                 return false;
             }
 
-            return _Window.Open(OutPackets, invPri, invPub);
+            return _Window.Open(Id, OutPackets, invPri, invPub);
         }
 
         internal void LoadAndSendData(

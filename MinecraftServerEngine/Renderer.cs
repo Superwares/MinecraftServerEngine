@@ -65,31 +65,28 @@ namespace MinecraftServerEngine
     {
         private const byte WindowId = 1;
 
-        internal PublicInventoryRenderer(ConcurrentQueue<ClientboundPlayingPacket> outPackets)
+        internal readonly UserId UserId;
+
+        internal PublicInventoryRenderer(
+            UserId userId,
+            ConcurrentQueue<ClientboundPlayingPacket> outPackets)
             : base(outPackets)
         {
             System.Diagnostics.Debug.Assert(outPackets != null);
+
+            UserId = userId;
         }
 
-        public void Open(string title, InventorySlot[] slots)
+        public void Open(string title, int totalSharedSlots, int totalSlots, byte[] data)
         {
             System.Diagnostics.Debug.Assert(title != null);
-            System.Diagnostics.Debug.Assert(slots != null);
+            System.Diagnostics.Debug.Assert(totalSharedSlots > 0);
+            Render(new OpenWindowPacket(WindowId, "minecraft:chest", title, (byte)totalSharedSlots));
 
-            System.Diagnostics.Debug.Assert(slots.Length >= byte.MinValue);
-            System.Diagnostics.Debug.Assert(slots.Length <= byte.MaxValue);
-            Render(new OpenWindowPacket(WindowId, "minecraft:chest", title, (byte)slots.Length));
 
-            using Buffer buffer = new();
-
-            foreach (InventorySlot slot in slots)
-            {
-                System.Diagnostics.Debug.Assert(slot != null);
-                slot.WriteData(buffer);
-            }
-
-            System.Diagnostics.Debug.Assert(slots.Length > 0);
-            Render(new WindowItemsPacket(WindowId, slots.Length, buffer.ReadData()));
+            System.Diagnostics.Debug.Assert(totalSlots > 0);
+            System.Diagnostics.Debug.Assert(data != null);
+            Render(new WindowItemsPacket(WindowId, totalSlots, data));
         }
 
         internal void Update(int count, byte[] data)
@@ -138,24 +135,26 @@ namespace MinecraftServerEngine
             }
             else
             {
-                System.Diagnostics.Debug.Assert(offset > 0);
+                //System.Diagnostics.Debug.Assert(offset > 0);
 
-                System.Diagnostics.Debug.Assert(id == 1);
+                //System.Diagnostics.Debug.Assert(id == 1);
 
-                for (int i = 0; i < PlayerInventory.PrimarySlotCount; ++i)
-                {
-                    InventorySlot slot = invPlayer.GetPrimarySlot(i);
-                    System.Diagnostics.Debug.Assert(slot != null);
+                //for (int i = 0; i < PlayerInventory.PrimarySlotCount; ++i)
+                //{
+                //    InventorySlot slot = invPlayer.GetPrimarySlot(i);
+                //    System.Diagnostics.Debug.Assert(slot != null);
 
-                    System.Diagnostics.Debug.Assert(id >= sbyte.MinValue);
-                    System.Diagnostics.Debug.Assert(id <= sbyte.MaxValue);
+                //    System.Diagnostics.Debug.Assert(id >= sbyte.MinValue);
+                //    System.Diagnostics.Debug.Assert(id <= sbyte.MaxValue);
 
-                    int j = i + offset;
-                    System.Diagnostics.Debug.Assert(j >= short.MinValue);
-                    System.Diagnostics.Debug.Assert(j <= short.MaxValue);
-                    Render(new SetSlotPacket(
-                        (sbyte)id, (short)j, buffer.ReadData()));
-                }
+                //    slot.WriteData(buffer);
+
+                //    int j = i + offset;
+                //    System.Diagnostics.Debug.Assert(j >= short.MinValue);
+                //    System.Diagnostics.Debug.Assert(j <= short.MaxValue);
+                //    Render(new SetSlotPacket(
+                //        (sbyte)id, (short)j, buffer.ReadData()));
+                //}
 
             }
 

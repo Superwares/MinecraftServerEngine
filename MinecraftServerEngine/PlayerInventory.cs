@@ -32,7 +32,7 @@ namespace MinecraftServerEngine
         private int _indexMainHandSlot = 0;  // 0-8
 
 
-        private protected override int GetTotalSlotCount()
+        internal override int GetTotalSlotCount()
         {
             System.Diagnostics.Debug.Assert(TotalSlotCount > 0);
             return TotalSlotCount;
