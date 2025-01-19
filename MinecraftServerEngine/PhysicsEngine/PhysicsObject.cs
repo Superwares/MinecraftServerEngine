@@ -127,7 +127,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             return false;
         }
 
-        protected internal abstract void OnDeath(PhysicsWorld world);
+        protected internal virtual void OnDeath(PhysicsWorld world) { }
 
         public abstract void StartRoutine(PhysicsWorld world);
 

@@ -17,7 +17,7 @@ namespace TestMinecraftServerApplication
         public Guest(UserId id, Vector p, Angles look)
             : base(id, p, look, Gamemode.Adventure)
         {
-            ApplyBlockAppearance(Block.Dirt);
+            //ApplyBlockAppearance(Block.Dirt);
         }
 
         ~Guest()
@@ -45,12 +45,12 @@ namespace TestMinecraftServerApplication
 
             if (f == true)
             {
-                //ApplyBlockAppearance(Block.Dirt);
-                OpenInventory(shopInventory);
+                ApplyBlockAppearance(Block.Dirt);
+                //OpenInventory(shopInventory);
             }
             else
             {
-                //ResetBlockAppearance();
+                ResetBlockAppearance();
 
             }
         }

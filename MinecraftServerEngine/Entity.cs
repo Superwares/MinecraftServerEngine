@@ -124,13 +124,13 @@ namespace MinecraftServerEngine
 
         private protected abstract void RenderSpawning(EntityRenderer renderer);
 
-        protected abstract void OnSneak(World world, bool f);
-        protected abstract void OnSprint(World world, bool f);
+        protected virtual void OnSneak(World world, bool f) { }
+        protected virtual void OnSprint(World world, bool f) { }
 
-        protected internal abstract void OnAttack(World world);
-        protected internal abstract void OnAttack(World world, ItemStack stack);
-        protected internal abstract void OnUseItem(World world, ItemStack stack);
-        protected internal abstract void OnUseEntity(World world, Entity entity);
+        protected internal virtual void OnAttack(World world) { }
+        protected internal virtual void OnAttack(World world, ItemStack stack) { }
+        protected internal virtual void OnUseItem(World world, ItemStack stack) { }
+        protected internal virtual void OnUseEntity(World world, Entity entity) { }
 
         protected (Vector, Vector) GetRay()
         {
@@ -623,7 +623,7 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(Renderers != null);
                 EntityRenderer[] renderers = Renderers.Flush();
 
-                
+
                 BlockLocation prevBlockLocation = BlockLocation.Generate(_p);
 
                 foreach (EntityRenderer renderer in renderers)
