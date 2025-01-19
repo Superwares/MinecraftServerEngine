@@ -54,7 +54,7 @@ namespace MinecraftServerEngine
                     }
 
                     invPublic.Open(invPrivate, outPackets);
-                    Renderer.Open(invPrivate, Cursor, invPublic.TotalSlotCount);
+                    Renderer.Open(invPrivate, Cursor, invPublic.GetTotalSlotCount());
 
                     _invPublic = invPublic;
 
@@ -251,7 +251,7 @@ namespace MinecraftServerEngine
 
                 player.UpdateEntityEquipmentsData(invPlayer.GetEquipmentsData());
 
-                int offset = _invPublic == null ? 0 : _invPublic.TotalSlotCount;
+                int offset = _invPublic == null ? 0 : _invPublic.GetTotalSlotCount();
                 System.Diagnostics.Debug.Assert(offset >= 0);
                 Renderer.Update(invPlayer, Cursor, offset);
 
@@ -294,7 +294,7 @@ namespace MinecraftServerEngine
 
                     if (_invPublic == null)
                     {
-                        if (i >= invPlayer.TotalSlotCount)
+                        if (i >= invPlayer.GetTotalSlotCount())
                         {
                             throw new UnexpectedClientBehaviorExecption("Slot index is out of the valid range for player inventory");
                         }
@@ -303,7 +303,7 @@ namespace MinecraftServerEngine
                     {
                         System.Diagnostics.Debug.Assert(_invPublic != null);
 
-                        if (i >= _invPublic.TotalSlotCount + PlayerInventory.PrimarySlotCount)
+                        if (i >= _invPublic.GetTotalSlotCount() + PlayerInventory.PrimarySlotCount)
                         {
                             throw new UnexpectedClientBehaviorExecption("Slot index is out of the valid range for public and player primary inventory");
                         }

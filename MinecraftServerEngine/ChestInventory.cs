@@ -3,17 +3,26 @@ namespace MinecraftServerEngine
 {
     public sealed class ChestInventory : PublicInventory
     {
+        internal const int TotalSlotCount = 3 * SlotsPerLine;
+
+
         private bool _disposed = false;
 
         protected override string Title => "Chest";
 
-        public ChestInventory(int line) : base(3 * SlotsPerLine) { }
+        public ChestInventory() : base() { }
 
         ~ChestInventory()
         {
             System.Diagnostics.Debug.Assert(false);
 
             Dispose(false);
+        }
+
+        public override int GetTotalSlotCount()
+        {
+            System.Diagnostics.Debug.Assert(TotalSlotCount > 0);
+            return TotalSlotCount;
         }
 
         protected override void Dispose(bool disposing)

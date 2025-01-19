@@ -127,11 +127,14 @@ namespace MinecraftServerEngine
                     slot.WriteData(buffer);
                 }
 
+                int totalSlots = invPlayer.GetTotalSlotCount();
+                System.Diagnostics.Debug.Assert(totalSlots > 0);
+
                 System.Diagnostics.Debug.Assert(id >= byte.MinValue);
                 System.Diagnostics.Debug.Assert(id <= byte.MaxValue);
-                System.Diagnostics.Debug.Assert(invPlayer.TotalSlotCount > 0);
+                System.Diagnostics.Debug.Assert(totalSlots > 0);
                 Render(new WindowItemsPacket(
-                    (byte)id, invPlayer.TotalSlotCount, buffer.ReadData()));
+                    (byte)id, totalSlots, buffer.ReadData()));
             }
             else
             {

@@ -4,8 +4,9 @@ namespace MinecraftServerEngine
 {
     public sealed class PlayerInventory : Inventory
     {
-        private bool _disposed = false;
+   
 
+        internal const int TotalSlotCount = 46;
 
         internal const int CraftingOutputSlotIndex = 0;
         internal const int CraftingInputSlotsOffset = 1;
@@ -25,10 +26,20 @@ namespace MinecraftServerEngine
         internal const int MainSlotCount = 27;
         internal const int HotbarSlotCount = 9;
 
+
+        private bool _disposed = false;
+
         private int _indexMainHandSlot = 0;  // 0-8
 
 
-        internal PlayerInventory() : base(46)
+        public override int GetTotalSlotCount()
+        {
+            System.Diagnostics.Debug.Assert(TotalSlotCount > 0);
+            return TotalSlotCount;
+        }
+
+
+        internal PlayerInventory() : base()
         {
             GiveFromLeftInPrimary(new ItemStack(ItemType.Stick));
             GiveFromLeftInPrimary(new ItemStack(ItemType.DiamondSword));

@@ -13,18 +13,20 @@ namespace MinecraftServerEngine
         private bool _disposed = false;
 
         
-        public readonly int TotalSlotCount;
+
 
         internal readonly InventorySlot[] Slots;
 
 
-        internal Inventory(int n)
-        {
-            System.Diagnostics.Debug.Assert(n > 0);
-            TotalSlotCount = n;
+        public abstract int GetTotalSlotCount();
 
-            Slots = new InventorySlot[TotalSlotCount];
-            for (int i = 0; i < TotalSlotCount; ++i)
+        internal Inventory()
+        {
+            int totalSlots = GetTotalSlotCount();
+            System.Diagnostics.Debug.Assert(totalSlots >= 0);
+
+            Slots = new InventorySlot[totalSlots];
+            for (int i = 0; i < totalSlots; ++i)
             {
                 Slots[i] = new InventorySlot();
             }
@@ -39,8 +41,11 @@ namespace MinecraftServerEngine
 
         public void Print()
         {
+            int totalSlots = GetTotalSlotCount();
+            System.Diagnostics.Debug.Assert(totalSlots >= 0);
+
             MyConsole.Printl($"Inventory: ");
-            for (int i = 0; i < TotalSlotCount; ++i)
+            for (int i = 0; i < totalSlots; ++i)
             {
                 if (i % SlotsPerLine == 0)
                 {
