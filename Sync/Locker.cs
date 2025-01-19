@@ -11,6 +11,7 @@ namespace Sync
 
         ~Locker() => System.Diagnostics.Debug.Assert(false);
 
+        // This method supports recursive locking.
         public virtual void Hold()
         {
             System.Diagnostics.Debug.Assert(!_disposed);

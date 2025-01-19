@@ -226,7 +226,15 @@ namespace MinecraftServerEngine
                         }
                         break;
                     case 2:
-                        throw new System.NotImplementedException();
+                        if (_invPublic == null)
+                        {
+                            invPlayer.SwapItemsWithHotbarSlot(i, button);
+                        }
+                        else
+                        {
+                            _invPublic.SwapItemsWithHotbarSlot(id, invPlayer, i, button);
+                        }
+                        break;
                     case 3:
                         //throw new System.NotImplementedException();
                         break;
@@ -737,7 +745,7 @@ namespace MinecraftServerEngine
             switch (packetId)
             {
                 default:
-                    MyConsole.Printl($"packetId: 0x{packetId:X}");
+                    MyConsole.Debug($"Received packet Id: 0x{packetId:X}");
                     /*throw new NotImplementedException();*/
                     buffer.Flush();
                     break;

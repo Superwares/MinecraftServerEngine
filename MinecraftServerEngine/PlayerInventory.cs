@@ -7,22 +7,22 @@ namespace MinecraftServerEngine
         private bool _disposed = false;
 
 
-        private const int CraftingOutputSlotIndex = 0;
-        private const int CraftingInputSlotsOffset = 1;
-        private const int HelmetSlotIndex = 5;
-        private const int ChestplateSlotIndex = 6;
-        private const int LeggingsSlotIndex = 7;
-        private const int BootsSlotIndex = 8;
-        private const int ArmorSlotsOffset = 5;
+        internal const int CraftingOutputSlotIndex = 0;
+        internal const int CraftingInputSlotsOffset = 1;
+        internal const int HelmetSlotIndex = 5;
+        internal const int ChestplateSlotIndex = 6;
+        internal const int LeggingsSlotIndex = 7;
+        internal const int BootsSlotIndex = 8;
+        internal const int ArmorSlotsOffset = 5;
         internal const int PrimarySlotsOffset = 9;
-        private const int MainSlotsOffset = 9;
-        private const int HotbarSlotsOffset = 36;
-        private const int OffHandSlotIndex = 45;
+        internal const int MainSlotsOffset = 9;
+        internal const int HotbarSlotsOffset = 36;
+        internal const int OffHandSlotIndex = 45;
 
-        private const int CraftingInputSlotCount = 4;
-        private const int ArmorSlotCount = 4;
+        internal const int CraftingInputSlotCount = 4;
+        internal const int ArmorSlotCount = 4;
         internal const int PrimarySlotCount = 36;
-        private const int MainSlotCount = 27;
+        internal const int MainSlotCount = 27;
         internal const int HotbarSlotCount = 9;
 
         private int _indexMainHandSlot = 0;  // 0-8
@@ -88,37 +88,37 @@ namespace MinecraftServerEngine
             }
         }
 
-        private InventorySlot GetCraftingOutputSlot()
+        internal InventorySlot GetCraftingOutputSlot()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             return Slots[CraftingOutputSlotIndex];
         }
-        private InventorySlot GetHelmetSlot()
+        internal InventorySlot GetHelmetSlot()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             return Slots[HelmetSlotIndex];
         }
-        private InventorySlot GetChestplateSlot()
+        internal InventorySlot GetChestplateSlot()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             return Slots[ChestplateSlotIndex];
         }
-        private InventorySlot GetLeggingsSlot()
+        internal InventorySlot GetLeggingsSlot()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             return Slots[LeggingsSlotIndex];
         }
-        private InventorySlot GetBootsSlot()
+        internal InventorySlot GetBootsSlot()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             return Slots[BootsSlotIndex];
         }
-        private InventorySlot GetArmorSlot(int i)
+        internal InventorySlot GetArmorSlot(int i)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -136,7 +136,16 @@ namespace MinecraftServerEngine
 
             return Slots[i + PrimarySlotsOffset];
         }
-        private InventorySlot GetMainSlot(int i)
+        internal void SetPrimarySlot(int i, InventorySlot slot)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < PrimarySlotCount);
+
+            Slots[i + PrimarySlotsOffset] = slot;
+        }
+        internal InventorySlot GetMainSlot(int i)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -147,7 +156,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(i + MainSlotsOffset < TotalSlotCount);
             return Slots[i + MainSlotsOffset];
         }
-        private InventorySlot GetHotbarSlot(int i)
+        internal InventorySlot GetHotbarSlot(int i)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -318,7 +327,7 @@ namespace MinecraftServerEngine
             Refresh(renderer);
         }*/
 
-        private void LeftClick(InventorySlot slot, InventorySlot cursor)
+        internal void LeftClick(InventorySlot slot, InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -626,6 +635,34 @@ namespace MinecraftServerEngine
                 /*QuickMoveFromLeftInArmor(slot);*/
                 QuickMoveFromLeftInPrimary(slot);
             }
+        }
+
+        internal void SwapItems(int i, int j)
+        {
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount);
+            System.Diagnostics.Debug.Assert(j >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount);
+
+            if (i == j)
+            {
+                return;
+            }
+
+            InventorySlot slot_i = Slots[i], slot_j = Slots[j];
+
+            Slots[i] = slot_j;
+            Slots[j] = slot_i;
+        }
+
+        internal void SwapItemsWithHotbarSlot(int i, int j)
+        {
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount);
+            System.Diagnostics.Debug.Assert(j >= 0);
+            System.Diagnostics.Debug.Assert(j < HotbarSlotCount);
+
+            SwapItems(i, HotbarSlotsOffset + j);
         }
 
         protected override void Dispose(bool disposing)

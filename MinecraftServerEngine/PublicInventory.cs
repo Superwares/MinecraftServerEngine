@@ -81,10 +81,49 @@ namespace MinecraftServerEngine
 
             Locker.Hold();
 
-            System.Diagnostics.Debug.Assert(Renderers.Contains(inv));
+            System.Diagnostics.Debug.Assert(Renderers.Contains(inv) == true);
             Renderers.Extract(inv);
 
             Locker.Release();
+        }
+
+        private InventorySlot GetSlot(
+            PlayerInventory invPlayer,
+            int i)
+        {
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount + PlayerInventory.PrimarySlotCount);
+
+            if (i < TotalSlotCount)
+            {
+                return Slots[i];
+            }
+            else
+            {
+                int j = i - TotalSlotCount;
+                System.Diagnostics.Debug.Assert(j >= 0);
+                return invPlayer.GetPrimarySlot(j);
+            }
+
+        }
+
+        private void SetSlot(
+            PlayerInventory invPlayer,
+            int i, InventorySlot slot)
+        {
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount + PlayerInventory.PrimarySlotCount);
+
+            if (i < TotalSlotCount)
+            {Slots[i] = slot;
+            }
+            else
+            {
+                int j = i - TotalSlotCount;
+                System.Diagnostics.Debug.Assert(j >= 0);
+                invPlayer.SetPrimarySlot(j, slot);
+            }
+
         }
 
         internal virtual void LeftClick(
@@ -240,6 +279,46 @@ namespace MinecraftServerEngine
             Update();
 
             Locker.Release();
+        }
+
+        internal void SwapItems(
+            UserId id, PlayerInventory invPlayer,
+            int i, int j)
+        {
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount + PlayerInventory.PrimarySlotCount);
+            System.Diagnostics.Debug.Assert(j >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount + PlayerInventory.PrimarySlotCount);
+
+            if (i == j)
+            {
+                return;
+            }
+
+            Locker.Hold();
+
+            InventorySlot slot_i = GetSlot(invPlayer, i), slot_j = GetSlot(invPlayer, j);
+
+
+            SetSlot(invPlayer, i, slot_j);
+            SetSlot(invPlayer, j, slot_i);
+
+            Update();
+
+            Locker.Release();
+        }
+
+        internal void SwapItemsWithHotbarSlot(
+            UserId id, PlayerInventory invPlayer,
+            int i, int j)
+        {
+            System.Diagnostics.Debug.Assert(i >= 0);
+            System.Diagnostics.Debug.Assert(i < TotalSlotCount + PlayerInventory.PrimarySlotCount);
+            System.Diagnostics.Debug.Assert(j >= 0);
+            System.Diagnostics.Debug.Assert(j < PlayerInventory.HotbarSlotCount);
+
+            int k = TotalSlotCount + (PlayerInventory.HotbarSlotsOffset - PlayerInventory.PrimarySlotsOffset) + j;
+            SwapItems(id, invPlayer, i, k);
         }
 
         protected override void Dispose(bool disposing)
