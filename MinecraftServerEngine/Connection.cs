@@ -492,10 +492,12 @@ namespace MinecraftServerEngine
 
                             int id = packet.EntityId;
 
-                            if (!world.EntitiesById.Contains(id))
+                            if (world.EntitiesById.Contains(id) == false)
                             {
-                                throw new UnexpectedValueException("UseEntityPacket.EntityId");
+                                throw new UnexpectedValueException("Invalid entity Id");
                             }
+
+                            // TODO: Check the relationship between the curent player and entitty physically.
 
                             player.OnUseEntity(world, world.EntitiesById.Lookup(id));
                         }
