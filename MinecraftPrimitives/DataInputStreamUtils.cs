@@ -1,49 +1,54 @@
-﻿using System;
-using System.Text;
-using System.IO;
-
+﻿
 namespace MinecraftPrimitives
 {
     internal static class DataInputStreamUtils
     {
-        public static int ReadByte(Stream s)
+        public static int ReadByte(System.IO.Stream s)
         {
+            System.Diagnostics.Debug.Assert(s != null);
+
             int value = s.ReadByte();
             if (value < 0)
             {
-                throw new Exception("EOF");
+                throw new System.IO.EndOfStreamException("EOF");
             }
 
             return value;
         }
 
-        public static int ReadShort(Stream s)
+        public static int ReadShort(System.IO.Stream s)
         {
+            System.Diagnostics.Debug.Assert(s != null);
+
             int b0 = s.ReadByte();
             int b1 = s.ReadByte();
             if ((b0 | b1) < 0)
             {
-                throw new Exception("EOF");
+                throw new System.IO.EndOfStreamException("EOF");
             }
             return (b0 << 8) + (b1 << 0);
         }
 
-        public static int ReadInt(Stream s)
+        public static int ReadInt(System.IO.Stream s)
         {
+            System.Diagnostics.Debug.Assert(s != null);
+
             int b0 = s.ReadByte();
             int b1 = s.ReadByte();
             int b2 = s.ReadByte();
             int b3 = s.ReadByte();
             if ((b0 | b1 | b2 | b3) < 0)
             {
-                throw new Exception("EOF");
+                throw new System.IO.EndOfStreamException("EOF");
             }
 
             return (b0 << 24) + (b1 << 16) + (b2 << 8) + (b3 << 0);
         }
 
-        public static long ReadLong(Stream s)
+        public static long ReadLong(System.IO.Stream s)
         {
+            System.Diagnostics.Debug.Assert(s != null);
+
             int b0 = s.ReadByte();
             int b1 = s.ReadByte();
             int b2 = s.ReadByte();
@@ -54,7 +59,7 @@ namespace MinecraftPrimitives
             int b7 = s.ReadByte();
             if ((b0 | b1 | b2 | b3 | b4 | b5 | b6 | b7) < 0)
             {
-                throw new Exception("EOF");
+                throw new System.IO.EndOfStreamException("EOF");
             }
 
             return ((long)(b0 & 0xff) << 56)
@@ -67,15 +72,17 @@ namespace MinecraftPrimitives
                 + ((long)(b7 & 0xff) << 0);
         }
 
-        public static float ReadFloat(Stream s)
+        public static float ReadFloat(System.IO.Stream s)
         {
+            System.Diagnostics.Debug.Assert(s != null);
+
             int b0 = s.ReadByte();
             int b1 = s.ReadByte();
             int b2 = s.ReadByte();
             int b3 = s.ReadByte();
             if ((b0 | b1 | b2 | b3) < 0)
             {
-                throw new Exception("EOF");
+                throw new System.IO.EndOfStreamException("EOF");
             }
 
             /**
@@ -89,13 +96,15 @@ namespace MinecraftPrimitives
              * 
              * Returns: the float value read.
              */
-            return BitConverter.ToSingle(new byte[] {
+            return System.BitConverter.ToSingle(new byte[] {
                 (byte)b0, (byte)b1, (byte)b2, (byte)b3,
             }, 0);
         }
 
-        public static double ReadDouble(Stream s)
+        public static double ReadDouble(System.IO.Stream s)
         {
+            System.Diagnostics.Debug.Assert(s != null);
+
             int b0 = s.ReadByte();
             int b1 = s.ReadByte();
             int b2 = s.ReadByte();
@@ -106,7 +115,7 @@ namespace MinecraftPrimitives
             int b7 = s.ReadByte();
             if ((b0 | b1 | b2 | b3 | b4 | b5 | b6 | b7) < 0)
             {
-                throw new Exception("EOF");
+                throw new System.IO.EndOfStreamException("EOF");
             }
 
             /**
@@ -120,20 +129,21 @@ namespace MinecraftPrimitives
              * 
              * Returns: the double value read.
              */
-            return BitConverter.ToDouble(new byte[] {
+            return System.BitConverter.ToDouble(new byte[] {
                 (byte)b0, (byte)b1, (byte)b2, (byte)b3,
                 (byte)b4, (byte)b5, (byte)b6, (byte)b7,
             }, 0);
         }
 
-        public static string ReadModifiedUtf8String(Stream s)
+        public static string ReadModifiedUtf8String(System.IO.Stream s)
         {
+            System.Diagnostics.Debug.Assert(s != null);
 
             // 1. Read 2 bytes indicating the length of the string to be read (Big-Endian)
             int utfLength = ReadByte(s) << 8 | ReadByte(s);
 
             // 2. Initialize StringBuilder to hold the string
-            StringBuilder result = new(utfLength);
+            System.Text.StringBuilder result = new(utfLength);
 
             // 3. Decode as UTF-8
             int bytesRead = 0;
@@ -156,7 +166,7 @@ namespace MinecraftPrimitives
 
                     if ((b & 0xC0) != 0x80)
                     {
-                        throw new FormatException("Invalid UTF-8 sequence");
+                        throw new System.FormatException("Invalid UTF-8 sequence");
                     }
 
                     char decodedChar = (char)(((a & 0x1F) << 6) | (b & 0x3F));
@@ -171,7 +181,7 @@ namespace MinecraftPrimitives
 
                     if ((b & 0xC0) != 0x80 || (c & 0xC0) != 0x80)
                     {
-                        throw new FormatException("Invalid UTF-8 sequence");
+                        throw new System.FormatException("Invalid UTF-8 sequence");
                     }
 
                     char decodedChar = (char)(((a & 0x0F) << 12) | ((b & 0x3F) << 6) | (c & 0x3F));
@@ -180,15 +190,21 @@ namespace MinecraftPrimitives
                 else
                 {
                     // Invalid byte
-                    throw new FormatException("Invalid UTF-8 sequence");
+                    throw new System.FormatException("Invalid UTF-8 sequence");
                 }
             }
 
             return result.ToString();
         }
 
-        public static void Read(Stream s, byte[] bytes)
+        public static void Read(System.IO.Stream s, byte[] bytes)
         {
+            System.Diagnostics.Debug.Assert(s != null);
+
+            if (bytes == null)
+            {
+                return;
+            }
 
             /**
              * Returns the number of bytes read. 
@@ -200,7 +216,7 @@ namespace MinecraftPrimitives
 
             if (read < bytes.Length)
             {
-                throw new Exception("EOF");
+                throw new System.IO.EndOfStreamException("EOF");
             }
         }
     }
