@@ -276,7 +276,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (Connected)
+            if (Connected == true)
             {
                 System.Diagnostics.Debug.Assert(Conn != null);
 
