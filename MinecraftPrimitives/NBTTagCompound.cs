@@ -47,7 +47,7 @@ namespace MinecraftPrimitives
                 case NBTTagString.TypeId:
                     return NBTTagList<NBTTagString>.Read(s, depth + 1);
                 case NBTTagListBase.TypeId:
-                    throw new NotImplementedException();
+                    throw new System.NotImplementedException();
                 case NBTTagCompound.TypeId:
                     return NBTTagList<NBTTagCompound>.Read(s, depth + 1);
                 case NBTTagIntArray.TypeId:
@@ -55,7 +55,7 @@ namespace MinecraftPrimitives
                 case NBTTagLongArray.TypeId:
                     return NBTTagList<NBTTagLongArray>.Read(s, depth + 1);
                 default:
-                    throw new Exception("Unknown type Id");
+                    throw new NBTTagException("Unknown type Id");
 
             }
         }
@@ -67,7 +67,7 @@ namespace MinecraftPrimitives
 
             if (depth > 512)
             {
-                throw new System.Exception("Tried to read NBT tag with too high complexity, depth > 512");
+                throw new NBTTagException("Tried to read NBT tag with too high complexity, depth > 512");
             }
 
             Table<string, NBTTagBase> tagTable = new();
@@ -89,7 +89,7 @@ namespace MinecraftPrimitives
                 switch (id)
                 {
                     default:
-                        throw new System.Exception("Unknown type Id");
+                        throw new NBTTagException("Unknown type Id");
                     case NBTTagEnd.TypeId:
                         value = NBTTagEnd.Read(s, depth + 1);
                         break;
@@ -133,7 +133,7 @@ namespace MinecraftPrimitives
 
                 if (tagTable.Contains(key) == true)
                 {
-                    throw new System.Exception("Duplicate item in NBT compound");
+                    throw new NBTTagException("Duplicate item in NBT compound");
                 }
 
                 tagTable.Insert(key, value);
@@ -197,13 +197,13 @@ namespace MinecraftPrimitives
                 string _str = item.Value.ToString();
 
                 string indentedStr = string.Join($"\n{tab}",
-                    _str.Split('\n', StringSplitOptions.None));
+                    _str.Split('\n', System.StringSplitOptions.None));
 
                 //Console.WriteLine($"{item.Key} : {item.Value}");
 
                 str += $"{tab}{item.Key}: {indentedStr}";
 
-                if (item.Key != _tagList.Last().Key)
+                if (item.Key != System.Linq.Enumerable.Last(_tagList).Key)
                 {
                     str += $", ";
                 }
