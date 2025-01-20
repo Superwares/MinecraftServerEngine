@@ -1,7 +1,4 @@
-﻿using System;
-using System.ComponentModel;
-using System.IO;
-using System.Reflection.Metadata;
+﻿
 
 namespace MinecraftPrimitives
 {
@@ -10,23 +7,51 @@ namespace MinecraftPrimitives
     {
         private bool _disposed = false;
 
-        ~NBTTagBase() => System.Diagnostics.Debug.Assert(false);
+        ~NBTTagBase()
+        {
+            System.Diagnostics.Debug.Assert(false);
 
-        public abstract void Write(Stream s);
+            Dispose(false);
+        }
+
+        public abstract void Write(System.IO.Stream s);
 
         public override string ToString()
         {
-            throw new NotImplementedException();
+            throw new System.NotImplementedException();
         }
 
-        public virtual void Dispose()
+        public void Dispose()
         {
-            // Assertions.
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            // Finish.
+            Dispose(true);
             System.GC.SuppressFinalize(this);
-            _disposed = true;
         }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            // Check to see if Dispose has already been called.
+            if (_disposed == false)
+            {
+
+                // If disposing equals true, dispose all managed
+                // and unmanaged resources.
+                if (disposing == true)
+                {
+                    // Dispose managed resources.
+                }
+
+                // Call the appropriate methods to clean up
+                // unmanaged resources here.
+                // If disposing is false,
+                // only the following code is executed.
+                //CloseHandle(handle);
+                //handle = IntPtr.Zero;
+
+                // Note disposing has been done.
+                _disposed = true;
+            }
+
+        }
+
     }
 }

@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-
+﻿
 using Containers;
 
 namespace MinecraftPrimitives
@@ -23,7 +20,7 @@ namespace MinecraftPrimitives
         private readonly Table<string, NBTTagBase> _tagTable;
         private readonly List<TagListItem> _tagList;
 
-        private static NBTTagBase ReadNBTTagList(Stream s, int depth)
+        private static NBTTagBase ReadNBTTagList(System.IO.Stream s, int depth)
         {
             System.Diagnostics.Debug.Assert(s != null);
             System.Diagnostics.Debug.Assert(depth >= 0);
@@ -63,14 +60,14 @@ namespace MinecraftPrimitives
             }
         }
 
-        public static NBTTagCompound Read(Stream s, int depth)
+        public static NBTTagCompound Read(System.IO.Stream s, int depth)
         {
-            //Console.WriteLine($"Reading stream with depth {depth}");
             System.Diagnostics.Debug.Assert(s != null);
             System.Diagnostics.Debug.Assert(depth >= 0);
+
             if (depth > 512)
             {
-                throw new Exception("Tried to read NBT tag with too high complexity, depth > 512");
+                throw new System.Exception("Tried to read NBT tag with too high complexity, depth > 512");
             }
 
             Table<string, NBTTagBase> tagTable = new();
@@ -92,7 +89,7 @@ namespace MinecraftPrimitives
                 switch (id)
                 {
                     default:
-                        throw new Exception("Unknown type Id");
+                        throw new System.Exception("Unknown type Id");
                     case NBTTagEnd.TypeId:
                         value = NBTTagEnd.Read(s, depth + 1);
                         break;
@@ -136,7 +133,7 @@ namespace MinecraftPrimitives
 
                 if (tagTable.Contains(key) == true)
                 {
-                    throw new Exception("Duplicate item in NBT compound");
+                    throw new System.Exception("Duplicate item in NBT compound");
                 }
 
                 tagTable.Insert(key, value);
@@ -154,11 +151,20 @@ namespace MinecraftPrimitives
             _tagList = tagList;
         }
 
-        ~NBTTagCompound() => System.Diagnostics.Debug.Assert(false);
-
-        public override void Write(Stream s)
+        ~NBTTagCompound()
         {
-            throw new NotImplementedException();
+            System.Diagnostics.Debug.Assert(false);
+
+            Dispose(false);
+        }
+
+        public override void Write(System.IO.Stream s)
+        {
+            System.Diagnostics.Debug.Assert(s != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            throw new System.NotImplementedException();
         }
 
         public T GetNBTTag<T>(string key) where T : NBTTagBase
@@ -173,7 +179,7 @@ namespace MinecraftPrimitives
             {
                 return null;
             }
-            catch (InvalidCastException)
+            catch (System.InvalidCastException)
             {
                 return null;
             }
@@ -210,22 +216,38 @@ namespace MinecraftPrimitives
             return str;
         }
 
-        public override void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            // Assertions.
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            // Release resources
-            foreach (TagListItem item in _tagList)
+            // Check to see if Dispose has already been called.
+            if (_disposed == false)
             {
-                item.Value.Dispose();
-            }
-            _tagTable.Dispose();
-            _tagList.Dispose();
 
-            // Finish.
-            base.Dispose();
-            _disposed = true;
+                // If disposing equals true, dispose all managed
+                // and unmanaged resources.
+                if (disposing == true)
+                {
+                    // Dispose managed resources.
+                    foreach (TagListItem item in _tagList)
+                    {
+                        item.Value.Dispose();
+                    }
+                    _tagTable.Dispose();
+                    _tagList.Dispose();
+                }
+
+                // Call the appropriate methods to clean up
+                // unmanaged resources here.
+                // If disposing is false,
+                // only the following code is executed.
+                //CloseHandle(handle);
+                //handle = IntPtr.Zero;
+
+                // Note disposing has been done.
+                _disposed = true;
+            }
+
+            base.Dispose(disposing);
         }
+
     }
 }
