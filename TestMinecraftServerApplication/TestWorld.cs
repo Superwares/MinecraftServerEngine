@@ -41,13 +41,14 @@ namespace TestMinecraftServerApplication
 
         }
 
-        protected override AbstractPlayer CreatePlayer(UserId id)
+        protected override AbstractPlayer CreatePlayer(UserId userId, string username)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(id != UserId.Null);
+            System.Diagnostics.Debug.Assert(userId != UserId.Null);
+            System.Diagnostics.Debug.Assert(username != null && string.IsNullOrEmpty(username) == false);
 
-            return new Guest(id, PosSpawning, LookSpawning);
+            return new Guest(userId, username, PosSpawning, LookSpawning);
         }
 
         protected override void Dispose(bool disposing)

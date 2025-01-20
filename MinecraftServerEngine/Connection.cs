@@ -34,7 +34,12 @@ namespace MinecraftServerEngine
                 _n = 0;
             }
 
-            ~ChunkingHelper() => System.Diagnostics.Debug.Assert(false);
+            ~ChunkingHelper()
+            {
+                System.Diagnostics.Debug.Assert(false);
+
+                //Dispose(false);
+            }
 
             public void Load(
                 Queue<ChunkLocation> newChunks, Queue<ChunkLocation> outOfRangeChunks,
@@ -390,11 +395,11 @@ namespace MinecraftServerEngine
             switch (packetId)
             {
                 default:
-                    
+
                     /*throw new NotImplementedException();*/
                     buffer.Flush();
                     break;
-                case ServerboundPlayingPacket.TeleportAcceptPacketd:
+                case ServerboundPlayingPacket.TeleportAcceptPacketId:
                     {
                         TeleportAcceptPacket packet = TeleportAcceptPacket.Read(buffer);
 
@@ -420,6 +425,13 @@ namespace MinecraftServerEngine
                         {
                             player.Unsprint(world);
                         }
+                    }
+                    break;
+                case ServerboundPlayingPacket.ServerboundChatMessagePacketId:
+                    {
+                        ServerboundChatMessagePacket packet = ServerboundChatMessagePacket.Read(buffer);
+
+                        throw new System.NotImplementedException();
                     }
                     break;
                 case ServerboundPlayingPacket.SettingsPacketId:

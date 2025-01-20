@@ -251,6 +251,8 @@ namespace MinecraftServerEngine
         private readonly ObjectQueue Objects = new();  // Disposable
 
         internal readonly ConcurrentTable<int, Entity> EntitiesById = new();  // Disposable
+        internal readonly ConcurrentTable<UserId, AbstractPlayer> PlayersByUserId = new();  // Disposable
+        internal readonly ConcurrentTable<string, AbstractPlayer> PlayersByUsername = new();  // Disposable
 
         private readonly ConcurrentTable<UserId, AbstractPlayer> DisconnectedPlayers = new(); // Disposable
 
@@ -367,31 +369,84 @@ namespace MinecraftServerEngine
 
         internal void HandleDisconnections()
         {
+            bool despawned = DetermineToDespawnPlayerOnDisconnect();
+            bool cleanup;
+
             while (Objects.DequeuePlayer(out AbstractPlayer player))
             {
                 System.Diagnostics.Debug.Assert(player != null);
 
-                if (player.HandleDisconnection(out UserId id, this))
+                if (despawned == false)
                 {
-                    System.Diagnostics.Debug.Assert(id != UserId.Null);
-                    System.Diagnostics.Debug.Assert(!DisconnectedPlayers.Contains(id));
-                    DisconnectedPlayers.Insert(id, player);
-
-                    if (DetermineToDespawnPlayerOnDisconnect())
+                    if (player.HandleDisconnection(out UserId userId, this) == true)
                     {
-                        PlayerList.Remove(id);
+                        System.Diagnostics.Debug.Assert(userId != UserId.Null);
 
-                        AbstractPlayer playerExtracted = DisconnectedPlayers.Extract(id);
-                        System.Diagnostics.Debug.Assert(ReferenceEquals(playerExtracted, player));
+                        DisconnectedPlayers.Insert(userId, player);
+                    }
+                }
+                else
+                {
+                    cleanup = false;
+
+                    if (DisconnectedPlayers.Contains(player.UserId) == true)
+                    {
+                        DisconnectedPlayers.Extract(player.UserId);
+
+                        cleanup = true;
+                    }
+                    else if (player.HandleDisconnection(out UserId userId, this) == true)
+                    {
+                        cleanup = true;
+                    }
+
+                    if (cleanup == true)
+                    {
+                        PlayerList.Remove(player.UserId);
+
+                        PlayersByUserId.Extract(player.UserId);
+                        PlayersByUsername.Extract(player.Username);
 
                         ObjectDespawningPool.Enqueue(player);
 
                         continue;
                     }
+
+
                 }
+
 
                 Objects.Enqueue(player);
             }
+
+            //while (Objects.DequeuePlayer(out AbstractPlayer player))
+            //{
+            //    System.Diagnostics.Debug.Assert(player != null);
+
+            //    if (player.HandleDisconnection(out UserId userId, this))
+            //    {
+            //        System.Diagnostics.Debug.Assert(userId != UserId.Null);
+            //        System.Diagnostics.Debug.Assert(!DisconnectedPlayers.Contains(userId));
+            //        DisconnectedPlayers.Insert(userId, player);
+
+            //        if (DetermineToDespawnPlayerOnDisconnect())
+            //        {
+            //            PlayerList.Remove(userId);
+
+            //            PlayersByUserId.Extract(userId);
+            //            PlayersByUsername.Extract(player.Username);
+
+            //            AbstractPlayer playerExtracted = DisconnectedPlayers.Extract(userId);
+            //            System.Diagnostics.Debug.Assert(ReferenceEquals(playerExtracted, player));
+
+            //            ObjectDespawningPool.Enqueue(player);
+
+            //            continue;
+            //        }
+            //    }
+
+            //    Objects.Enqueue(player);
+            //}
         }
 
         internal void DestroyObjects()
@@ -434,34 +489,37 @@ namespace MinecraftServerEngine
 
         }
 
-        protected abstract AbstractPlayer CreatePlayer(UserId id);
+        protected abstract AbstractPlayer CreatePlayer(UserId userId, string username);
 
-        internal void ConnectPlayer(Client client, string username, UserId id)
+        internal void ConnectPlayer(Client client, string username, UserId userId)
         {
             System.Diagnostics.Debug.Assert(client != null);
             System.Diagnostics.Debug.Assert(username != "");
-            System.Diagnostics.Debug.Assert(id != UserId.Null);
+            System.Diagnostics.Debug.Assert(userId != UserId.Null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
             AbstractPlayer player;
 
-            if (DisconnectedPlayers.Contains(id))
+            if (DisconnectedPlayers.Contains(userId))
             {
-                player = DisconnectedPlayers.Extract(id);
+                player = DisconnectedPlayers.Extract(userId);
                 System.Diagnostics.Debug.Assert(player != null);
             }
             else
             {
-                player = CreatePlayer(id);
+                player = CreatePlayer(userId, username);
                 System.Diagnostics.Debug.Assert(player != null);
 
                 ObjectSpawningPool.Enqueue(player);
 
-                PlayerList.Add(id, username);
+                PlayerList.Add(userId, username);
+
+                PlayersByUserId.Insert(userId, player);
+                PlayersByUsername.Insert(username, player);
             }
 
-            player.Connect(client, this, id);
+            player.Connect(client, this, userId);
 
         }
 
@@ -526,6 +584,8 @@ namespace MinecraftServerEngine
                     Objects.Dispose();
 
                     EntitiesById.Dispose();
+                    PlayersByUserId.Dispose();
+                    PlayersByUsername.Dispose();
 
                     DisconnectedPlayers.Dispose();
 

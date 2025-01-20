@@ -14,9 +14,14 @@ namespace TestMinecraftServerApplication
         private static ShopInventory shopInventory = new();
 
 
-        public Guest(UserId id, Vector p, Angles look)
-            : base(id, p, look, Gamemode.Adventure)
+        public Guest(
+            UserId userId, string username,
+            Vector p, Angles look)
+            : base(userId, username, p, look, Gamemode.Adventure)
         {
+            System.Diagnostics.Debug.Assert(userId != UserId.Null);
+            System.Diagnostics.Debug.Assert(username != null && string.IsNullOrEmpty(username) == false);
+
             //ApplyBlockAppearance(Block.Dirt);
         }
 

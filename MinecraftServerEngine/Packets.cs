@@ -213,7 +213,8 @@ namespace MinecraftServerEngine
 
     internal abstract class ServerboundPlayingPacket(int id) : PlayingPacket(id)
     {
-        public const int TeleportAcceptPacketd = 0x00;
+        public const int TeleportAcceptPacketId = 0x00;
+        public const int ServerboundChatMessagePacketId = 0x02;
         public const int SettingsPacketId = 0x04;
         public const int ServerboundConfirmTransactionPacketId = 0x05;
         public const int ClickWindowPacketId = 0x07;
@@ -1822,9 +1823,38 @@ namespace MinecraftServerEngine
             return new(buffer.ReadInt(true));
         }
 
-        public TeleportAcceptPacket(int payload) : base(TeleportAcceptPacketd)
+        public TeleportAcceptPacket(int payload) : base(TeleportAcceptPacketId)
         {
             Payload = payload;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            throw new System.NotImplementedException();
+        }
+
+    }
+
+    internal sealed class ServerboundChatMessagePacket : ServerboundPlayingPacket
+    {
+        public readonly string Text;
+
+        /// <summary>
+        /// TODO: Add description.
+        /// </summary>
+        /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
+        internal static ServerboundChatMessagePacket Read(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            return new(buffer.ReadString());
+        }
+
+        public ServerboundChatMessagePacket(string text) : base(ServerboundChatMessagePacketId)
+        {
+            Text = text;
         }
 
         protected override void WriteData(Buffer buffer)

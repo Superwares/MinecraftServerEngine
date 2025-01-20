@@ -39,6 +39,9 @@ namespace MinecraftServerEngine
         protected readonly PlayerInventory Inventory = new();
 
 
+        public readonly UserId UserId;
+        public readonly string Username;
+
         private Connection Conn;
         public bool Disconnected => (Conn == null);
         public bool Connected => !Disconnected;
@@ -52,15 +55,20 @@ namespace MinecraftServerEngine
         public Gamemode Gamemode => _gamemode;
 
 
-        protected AbstractPlayer(UserId id, Vector p, Angles look, Gamemode gamemode)
+        protected AbstractPlayer(
+            UserId userId, string username,
+            Vector p, Angles look, Gamemode gamemode)
             : base(
-                  id.Data,
+                  userId.Data,
                   p, look,
                   false,  // noGravity
                   gamemode == Gamemode.Spectator ? GetSpectatorHitbox() : GetAdventureHitbox(false),
                   DefaultMass, DefaultMaxStepLevel)
         {
-            System.Diagnostics.Debug.Assert(id != UserId.Null);
+            System.Diagnostics.Debug.Assert(userId != UserId.Null);
+            System.Diagnostics.Debug.Assert(username != null && string.IsNullOrEmpty(username) == false);
+            userId = UserId;
+            Username = username;
 
             System.Diagnostics.Debug.Assert(!Sneaking);
             System.Diagnostics.Debug.Assert(!Sprinting);
@@ -277,22 +285,15 @@ namespace MinecraftServerEngine
 
         }
 
-        public bool HandleDisconnection(out UserId id, World world)
+        public bool HandleDisconnection(out UserId userId, World world)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(world != null);
 
-            if (Disconnected)
+            if (Conn != null && Conn.Disconnected == true)
             {
-                id = UserId.Null;
-                return false;
-            }
-
-            System.Diagnostics.Debug.Assert(Conn != null);
-            if (Conn.Disconnected)
-            {
-                Conn.Flush(out id, world, Inventory);
+                Conn.Flush(out userId, world, Inventory);
                 Conn.Dispose();
 
                 Conn = null;
@@ -300,7 +301,7 @@ namespace MinecraftServerEngine
                 return true;
             }
 
-            id = UserId.Null;
+            userId = UserId.Null;
             return false;
         }
 
