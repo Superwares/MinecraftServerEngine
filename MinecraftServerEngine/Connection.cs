@@ -5,6 +5,7 @@ using Sync;
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
+    using System.Text.Json;
 
     internal sealed class Connection : System.IDisposable
     {
@@ -372,7 +373,9 @@ namespace MinecraftServerEngine
             //Dispose(false);
         }
 
-        private string HandleCommandLineText(string text)
+        private string HandleCommandLineText(
+            string text,
+            World world, AbstractPlayer player)
         {
             if (text == null || string.IsNullOrEmpty(text))
             {
@@ -391,30 +394,31 @@ namespace MinecraftServerEngine
             switch (command)
             {
                 default:
-                    return $"Error: Unknown command '{command}'!";
+                    return $"Error: Unknown command \"{command}\"!";
                 case "teleport":
                 case "tp":
                     {
-                        const string usage =
-"""
-Usage:
-/teleport <x> <y> <z>
-    Teleports the command issuer (you) to the specified coordinates <x>, <y>, and <z>.
-
-/teleport <x> <y> <z> <player's username>
-    Teleports the specified player to the coordinates <x>, <y>, and <z>.
-
-/teleport <from player's username> <to player's username>
-    Teleports the player specified as <from player's username> to the location of the player specified as <to player's username>.
-""";
-
+                        const string usage = "\n" +
+"Usage:\n" +
+"\n" +
+"/teleport <x> <y> <z> \n" +
+"\n" +
+"    Teleports the command issuer (you) to the specified coordinates <x>, <y>, and <z>. \n" +
+"\n" +
+"/teleport <x> <y> <z> <player's username> \n" +
+"\n" +
+"    Teleports the specified player to the coordinates <x>, <y>, and <z>. \n" +
+"\n" +
+"/teleport <from player's username> <to player's username> \n" +
+"\n" +
+"    Teleports the player specified as <from player's username> to the location of the player specified as <to player's username>. \n";
                         if (args.Length == 4)
                         {
                             if (float.TryParse(args[1], out float x) &&
                                 float.TryParse(args[2], out float y) &&
                                 float.TryParse(args[3], out float z))
                             {
-                                throw new System.NotImplementedException();
+                                player.Teleport(new Vector(x, y, z), player.Look);
                             }
                             else
                             {
@@ -524,18 +528,29 @@ Usage:
                     {
                         ServerboundChatMessagePacket packet = ServerboundChatMessagePacket.Read(buffer);
 
-                        string text = packet.Text;
+                        string text = packet.Text, output = null;
                         if (text.StartsWith('/') == true)
                         {
                             text = text.Substring(1);
-                            HandleCommandLineText(text);
+                            output = HandleCommandLineText(text, world, player);
                         }
                         else
                         {
                             MyConsole.Warn("Handling of normal chat messages is not implemented yet...");
                         }
 
-                        throw new System.NotImplementedException();
+                        if (output != null)
+                        {
+                            var data = new
+                            {
+                                text = output,
+                            };
+
+                            string jsonString = JsonSerializer.Serialize(data);
+
+                            OutPackets.Enqueue(new ClientboundChatmessagePacket(
+                                jsonString, 0));
+                        }
                     }
                     break;
                 case ServerboundPlayingPacket.SettingsPacketId:

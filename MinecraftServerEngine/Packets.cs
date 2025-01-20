@@ -176,6 +176,7 @@ namespace MinecraftServerEngine
         public const int SpawnEntityPacketId = 0x00;
         public const int SpawnNamedEntityPacketId = 0x05;
         public const int BlockChangePacketId = 0x0B;
+        public const int ClientboundChatmessagePacketId = 0x0F;
         public const int ClientboundConfirmTransactionPacketId = 0x11;
         public const int ClientboundCloseWindowPacketId = 0x12;
         public const int OpenWindowPacketId = 0x13;
@@ -731,6 +732,37 @@ namespace MinecraftServerEngine
 
             buffer.WritePosition(X, Y, Z);
             buffer.WriteInt(BlockId, true);
+        }
+
+    }
+    
+    internal sealed class ClientboundChatmessagePacket : ClientboundPlayingPacket
+    {
+        public readonly string Data;
+        public readonly byte Position;
+
+        public static ClientboundChatmessagePacket Read(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            throw new System.NotImplementedException();
+        }
+
+        public ClientboundChatmessagePacket(
+            string data,
+            byte position)
+            : base(ClientboundChatmessagePacketId)
+        {
+            Data = data;
+            Position = position;
+        }
+
+        protected override void WriteData(Buffer buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            buffer.WriteString(Data);
+            buffer.WriteByte(Position);
         }
 
     }
