@@ -405,13 +405,13 @@ namespace MinecraftServerEngine
 "\n" +
 "    Teleports the command issuer (you) to the specified coordinates <x>, <y>, and <z>. \n" +
 "\n" +
-"/teleport <x> <y> <z> <player's username> \n" +
+"/teleport <x> <y> <z> <username> \n" +
 "\n" +
 "    Teleports the specified player to the coordinates <x>, <y>, and <z>. \n" +
 "\n" +
-"/teleport <from player's username> <to player's username> \n" +
+"/teleport <from username> <to username> \n" +
 "\n" +
-"    Teleports the player specified as <from player's username> to the location of the player specified as <to player's username>. \n";
+"    Teleports the player specified as <from username> to the location of the player specified as <to username>. \n";
                         if (args.Length == 4)
                         {
                             if (float.TryParse(args[1], out float x) &&
