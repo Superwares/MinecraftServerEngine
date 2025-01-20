@@ -322,13 +322,13 @@ namespace MinecraftServerEngine
             int idEntity,
             float health,
             Vector p, Angles look,
-            PlayerInventory invPlayer,
+            PlayerInventory playerInventory,
             Gamemode gamemode)
         {
             System.Diagnostics.Debug.Assert(id != UserId.Null);
             System.Diagnostics.Debug.Assert(client != null);
             System.Diagnostics.Debug.Assert(world != null);
-            System.Diagnostics.Debug.Assert(invPlayer != null);
+            System.Diagnostics.Debug.Assert(playerInventory != null);
 
             Id = id;
 
@@ -343,7 +343,7 @@ namespace MinecraftServerEngine
 
             ChunkingHelprt = new ChunkingHelper(loc, _dChunkRendering);
 
-            Window = new Window(OutPackets, invPlayer);
+            Window = new Window(OutPackets, playerInventory);
 
             world.Connect(Id, OutPackets);
 
@@ -372,6 +372,99 @@ namespace MinecraftServerEngine
             //Dispose(false);
         }
 
+        private string HandleCommandLineText(string text)
+        {
+            if (text == null || string.IsNullOrEmpty(text))
+            {
+                return null;
+            }
+
+            string[] args = text.Split(' ', System.StringSplitOptions.TrimEntries | System.StringSplitOptions.RemoveEmptyEntries);
+
+            if (args.Length == 0)
+            {
+                return null;
+            }
+
+            string command = args[0];
+
+            switch (command)
+            {
+                default:
+                    return $"Error: Unknown command '{command}'!";
+                case "teleport":
+                case "tp":
+                    {
+                        const string usage =
+"""
+Usage:
+/teleport <x> <y> <z>
+    Teleports the command issuer (you) to the specified coordinates <x>, <y>, and <z>.
+
+/teleport <x> <y> <z> <player's username>
+    Teleports the specified player to the coordinates <x>, <y>, and <z>.
+
+/teleport <from player's username> <to player's username>
+    Teleports the player specified as <from player's username> to the location of the player specified as <to player's username>.
+""";
+
+                        if (args.Length == 4)
+                        {
+                            if (float.TryParse(args[1], out float x) &&
+                                float.TryParse(args[2], out float y) &&
+                                float.TryParse(args[3], out float z))
+                            {
+                                throw new System.NotImplementedException();
+                            }
+                            else
+                            {
+                                return $"Error: Invalid arguments!\n {usage}";
+                            }
+                        }
+                        else if (args.Length == 5)
+                        {
+                            if (float.TryParse(args[1], out float x) &&
+                                float.TryParse(args[2], out float y) &&
+                                float.TryParse(args[3], out float z) &&
+                                args[4] != null && string.IsNullOrEmpty(args[4]))
+                            {
+                                string username = args[4];
+
+                                throw new System.NotImplementedException();
+                            }
+                            else
+                            {
+                                return $"Error: Invalid arguments!\n {usage}";
+                            }
+                        }
+                        else if (args.Length == 3)
+                        {
+                            if (args[1] != null && string.IsNullOrEmpty(args[1]) &&
+                                args[2] != null && string.IsNullOrEmpty(args[2]))
+                            {
+                                string fromUsername = args[1];
+                                string toUsername = args[2];
+
+                                throw new System.NotImplementedException();
+                            }
+                            else
+                            {
+                                return $"Error: Invalid arguments!\n {usage}";
+                            }
+                        }
+                        else
+                        {
+                            return $"Error: Invalid arguments!\n {usage}";
+                        }
+                    }
+
+                    return null;
+                case "gamemode":
+                case "gm":
+                    throw new System.NotImplementedException();
+            }
+        }
+
         private void RecvDataAndHandle(
             Buffer buffer,
             World world, AbstractPlayer player, PlayerInventory playerInventory)
@@ -390,7 +483,7 @@ namespace MinecraftServerEngine
 
             int packetId = buffer.ReadInt(true);
 
-            MyConsole.Debug($"Received packet Id: 0x{packetId:X}");
+            //MyConsole.Debug($"Received packet Id: 0x{packetId:X}");
 
             switch (packetId)
             {
@@ -430,6 +523,17 @@ namespace MinecraftServerEngine
                 case ServerboundPlayingPacket.ServerboundChatMessagePacketId:
                     {
                         ServerboundChatMessagePacket packet = ServerboundChatMessagePacket.Read(buffer);
+
+                        string text = packet.Text;
+                        if (text.StartsWith('/') == true)
+                        {
+                            text = text.Substring(1);
+                            HandleCommandLineText(text);
+                        }
+                        else
+                        {
+                            MyConsole.Warn("Handling of normal chat messages is not implemented yet...");
+                        }
 
                         throw new System.NotImplementedException();
                     }

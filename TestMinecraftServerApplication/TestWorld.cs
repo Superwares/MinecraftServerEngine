@@ -11,6 +11,9 @@ namespace TestMinecraftServerApplication
 
         private bool _disposed = false;
 
+        private static Time _INTERVAL = Time.FromSeconds(10);
+        private Time _start = Time.Now();
+
         public Lobby() : base() { }
 
         ~Lobby()
@@ -31,7 +34,15 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            return true;
+            Time end = Time.Now();
+
+            if (end - _start >= _INTERVAL)
+            {
+                _start = end;
+                return true;
+            }
+
+            return false;
         }
 
         protected override void StartRoutine()

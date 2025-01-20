@@ -67,7 +67,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(userId != UserId.Null);
             System.Diagnostics.Debug.Assert(username != null && string.IsNullOrEmpty(username) == false);
-            userId = UserId;
+            UserId = userId;
             Username = username;
 
             System.Diagnostics.Debug.Assert(!Sneaking);
