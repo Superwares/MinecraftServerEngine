@@ -419,8 +419,8 @@ namespace MinecraftServerEngine
 "\n";
                         if (args.Length == 6)
                         {
-                            if (Vector.TryParse(args[1], args[2], args[3], out Vector v) &&
-                                Angles.TryParse(args[4], args[5], out Angles angles))
+                            if (Vector.TryParse(args[1], args[2], args[3], out Vector v) == true &&
+                                Angles.TryParse(args[4], args[5], out Angles angles) == true)
                             {
                                 player.Teleport(v, angles);
                             }
@@ -431,8 +431,8 @@ namespace MinecraftServerEngine
                         }
                         else if (args.Length == 7)
                         {
-                            if (Vector.TryParse(args[1], args[2], args[3], out Vector v) &&
-                                Angles.TryParse(args[4], args[5], out Angles angles) &&
+                            if (Vector.TryParse(args[1], args[2], args[3], out Vector v) == true &&
+                                Angles.TryParse(args[4], args[5], out Angles angles) == true &&
                                 args[6] != null && string.IsNullOrEmpty(args[6]) == false)
                             {
                                 string username = args[6];
@@ -502,7 +502,9 @@ namespace MinecraftServerEngine
 
                         if (args.Length == 2)
                         {
-                            if (System.Enum.TryParse(args[1], out Gamemode gamemode))
+                            if (
+                                System.Enum.TryParse(args[1], out Gamemode gamemode) == true &&
+                                System.Enum.IsDefined(typeof(Gamemode), gamemode) == true)
                             {
                                 player.SwitchGamemode(gamemode);
                             }
@@ -516,8 +518,8 @@ namespace MinecraftServerEngine
                             return $"Error: Invalid arguments!\n {usage}";
                         }
 
-                        throw new System.NotImplementedException();
                     }
+                    break;
                 case "give":
                     {
                         const string usage = "\n" +
@@ -536,12 +538,13 @@ namespace MinecraftServerEngine
 "            is outside this range, it will be adjusted to the nearest valid value.\n" +
 "\n";
 
-                        if (args.Length == 2)
+                        if (args.Length == 4)
                         {
                             if (
-                                System.Enum.TryParse(args[1], out ItemType itemType) &&
-                                args[2] != null && string.IsNullOrEmpty(args[2]) &&
-                                int.TryParse(args[3], out int amount))
+                                System.Enum.TryParse(args[1], out ItemType itemType) == true &&
+                                System.Enum.IsDefined(typeof(ItemType), itemType) == true &&
+                                args[2] != null && string.IsNullOrEmpty(args[2]) == false &&
+                                int.TryParse(args[3], out int amount) == true)
                             {
                                 string name = args[2];
 
@@ -567,9 +570,11 @@ namespace MinecraftServerEngine
                             return $"Error: Invalid arguments!\n {usage}";
                         }
 
-                        throw new System.NotImplementedException();
                     }
+                    break;
             }
+
+            return null;
         }
 
         private void RecvDataAndHandle(
