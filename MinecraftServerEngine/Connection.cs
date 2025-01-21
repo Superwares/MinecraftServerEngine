@@ -399,6 +399,18 @@ namespace MinecraftServerEngine
             {
                 default:
                     return $"Error: Unknown command \"{command}\"!";
+                case "item-types":
+                    {
+                        string output = "Item types:\n";
+
+                        foreach (ItemType item in System.Enum.GetValues(typeof(ItemType)))
+                        {
+                            string formattedItem = $"{(int)item}: {item}\n";
+                            output += formattedItem;
+                        }
+
+                        return output;
+                    }
                 case "teleport":
                 case "tp":
                     {
@@ -525,9 +537,9 @@ namespace MinecraftServerEngine
                         const string usage = "\n" +
 "Usage:\n" +
 "\n" +
-"/give <item-type> <name> <amount> \n" +
+"/give <item-type> <name> <amount> [username] \n" +
 "\n" +
-"    Gives the specified item to the command issuer (you).\n" +
+"    Gives the specified item to the command issuer (you) or to another player if a username is specified.\n" +
 "    - <item-type>: The name of the item type you want to receive.\n" +
 "      Example: 'DiamondSword', 'Stick', 'Snowball'.\n" +
 "    - <name>: An optional custom name for the item.\n" +
@@ -536,9 +548,11 @@ namespace MinecraftServerEngine
 "      Example: 1, 32, 64.\n" +
 "      Note: Each item has a predefined minimum and maximum amount. If the specified amount\n" +
 "            is outside this range, it will be adjusted to the nearest valid value.\n" +
+"    - [username]: An optional username of the player to receive the item.\n" +
+"      If specified, the item will be given to the specified player instead of you.\n" +
 "\n";
 
-                        if (args.Length == 4)
+                        if (args.Length >= 4)
                         {
                             if (
                                 System.Enum.TryParse(args[1], out ItemType itemType) == true &&
@@ -558,7 +572,25 @@ namespace MinecraftServerEngine
                                     amount = ItemStack.MinCount;
                                 }
 
-                                player.GiveItem(new ItemStack(itemType, name, amount));
+                                string username = args.Length >= 5 ? args[4] : null;
+
+                                try
+                                {
+                                    if (username == null)
+                                    {
+                                        player.GiveItem(new ItemStack(itemType, name, amount));
+                                    }
+                                    else
+                                    {
+                                        AbstractPlayer targetPlayer = world.PlayersByUsername.Lookup(username);
+                                        targetPlayer.GiveItem(new ItemStack(itemType, name, amount));
+                                    }
+
+                                }
+                                catch (KeyNotFoundException)
+                                {
+                                    return $"Error: Player \"{username}\" not found!\n {usage}";
+                                }
                             }
                             else
                             {
