@@ -1390,11 +1390,12 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (_disconnected)
+            if (_disconnected == true)
             {
                 return;
             }
 
+            System.Diagnostics.Debug.Assert(OutPackets != null);
             OutPackets.Enqueue(new UpdateHealthPacket(health, 20, 5.0F));
         }
 
@@ -1406,11 +1407,12 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(level >= 0);
 
 
-            if (_disconnected)
+            if (_disconnected == true)
             {
                 return;
             }
 
+            System.Diagnostics.Debug.Assert(OutPackets != null);
             OutPackets.Enqueue(new SetExperiencePacket(ratio, level, 0));
         }
 
@@ -1418,7 +1420,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (_disconnected)
+            if (_disconnected == true)
             {
                 return;
             }
@@ -1438,6 +1440,7 @@ namespace MinecraftServerEngine
                 metadata.AddByte(0, 0x00);
             }
 
+            System.Diagnostics.Debug.Assert(OutPackets != null);
             OutPackets.Enqueue(new EntityMetadataPacket(idEntity, metadata.WriteData()));
             OutPackets.Enqueue(new AbilitiesPacket(
                     false, canFly, canFly, false, 0.1F, 0.0F));
