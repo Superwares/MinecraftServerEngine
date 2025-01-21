@@ -488,9 +488,88 @@ namespace MinecraftServerEngine
                     return null;
                 case "gamemode":
                 case "gm":
-                    throw new System.NotImplementedException();
+                    {
+                        const string usage = "\n" +
+"Usage:\n" +
+"\n" +
+"/gamemode <Adventure|Spectator> \n" +
+"\n" +
+"    Changes the game mode of the command issuer (you) to the specified mode.\n" +
+"    - Adventure: Sets your game mode to adventure mode, where you can interact\n" +
+"      with objects but cannot break or place blocks.\n" +
+"    - Spectator: Sets your game mode to spectator mode, where you can fly\n" +
+"      around and observe the world without interacting with it.\n" +
+"\n";
+
+                        if (args.Length == 2)
+                        {
+                            if (System.Enum.TryParse(args[1], out Gamemode gamemode))
+                            {
+                                player.SwitchGamemode(gamemode);
+                            }
+                            else
+                            {
+                                return $"Error: Invalid arguments!\n {usage}";
+                            }
+                        }
+                        else
+                        {
+                            return $"Error: Invalid arguments!\n {usage}";
+                        }
+
+                        throw new System.NotImplementedException();
+                    }
                 case "give":
-                    throw new System.NotImplementedException();
+                    {
+                        const string usage = "\n" +
+"Usage:\n" +
+"\n" +
+"/give <item-type> <name> <amount> \n" +
+"\n" +
+"    Gives the specified item to the command issuer (you).\n" +
+"    - <item-type>: The name of the item type you want to receive.\n" +
+"      Example: 'DiamondSword', 'Stick', 'Snowball'.\n" +
+"    - <name>: An optional custom name for the item.\n" +
+"      Example: 'Excalibur', 'Magic Wand'.\n" +
+"    - <amount>: The number of items to give.\n" +
+"      Example: 1, 32, 64.\n" +
+"      Note: Each item has a predefined minimum and maximum amount. If the specified amount\n" +
+"            is outside this range, it will be adjusted to the nearest valid value.\n" +
+"\n";
+
+                        if (args.Length == 2)
+                        {
+                            if (
+                                System.Enum.TryParse(args[1], out ItemType itemType) &&
+                                args[2] != null && string.IsNullOrEmpty(args[2]) &&
+                                int.TryParse(args[3], out int amount))
+                            {
+                                string name = args[2];
+
+                                if (amount > itemType.GetMaxCount())
+                                {
+                                    amount = itemType.GetMaxCount();
+                                }
+
+                                if (amount < ItemStack.MinCount)
+                                {
+                                    amount = ItemStack.MinCount;
+                                }
+
+                                player.GiveItem(new ItemStack(itemType, name, amount));
+                            }
+                            else
+                            {
+                                return $"Error: Invalid arguments!\n {usage}";
+                            }
+                        }
+                        else
+                        {
+                            return $"Error: Invalid arguments!\n {usage}";
+                        }
+
+                        throw new System.NotImplementedException();
+                    }
             }
         }
 
