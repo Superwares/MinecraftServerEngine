@@ -35,7 +35,7 @@ namespace MinecraftServerEngine
 
             ref ItemStack stackCursor = ref cursor._stack;
 
-            if (!Empty)
+            if (Empty == false)
             {
                 if (stackCursor == null)
                 {
@@ -65,7 +65,7 @@ namespace MinecraftServerEngine
 
             if (stackCursor == null)
             {
-                if (!Empty && !_stack.DivideHalf(ref stackCursor))
+                if (Empty == false && _stack.DivideHalf(ref stackCursor) == false)
                 {
                     stackCursor = _stack;
                     _stack = null;
@@ -73,9 +73,9 @@ namespace MinecraftServerEngine
             }
             else
             {
-                if (Empty)
+                if (Empty == true)
                 {
-                    if (!stackCursor.DivideMinToEmpty(ref _stack))
+                    if (stackCursor.DivideMinToEmpty(ref _stack) == false)
                     {
                         _stack = stackCursor;
                         stackCursor = null;
@@ -83,7 +83,7 @@ namespace MinecraftServerEngine
                 }
                 else
                 {
-                    if (!_stack.DivideMinFrom(ref stackCursor))
+                    if (_stack.DivideMinFrom(ref stackCursor) == false)
                     {
                         ItemStack stackTemp = stackCursor;
                         stackCursor = _stack;
@@ -106,7 +106,7 @@ namespace MinecraftServerEngine
 
             ref ItemStack stackFrom = ref from._stack;
 
-            if (Empty)
+            if (Empty == true)
             {
                 _stack = stackFrom;
                 stackFrom = null;
@@ -124,7 +124,7 @@ namespace MinecraftServerEngine
                 return;
             }
 
-            if (Empty)
+            if (Empty == true)
             {
                 _stack = from;
                 from = null;
@@ -135,7 +135,7 @@ namespace MinecraftServerEngine
             _stack.Move(ref from);
         }
 
-        internal int PreMove(ItemType type, int count)
+        internal int PreMove(ItemType type, string name, int count)
         {
             System.Diagnostics.Debug.Assert(count >= 0);
 
@@ -146,7 +146,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(count >= ItemStack.MinCount);
 
-            if (type != _stack.Type || _stack.IsFull() == true)
+            if (type != _stack.Type || name != _stack.Name || _stack.IsFull() == true)
             {
                 return count;
             }
@@ -169,7 +169,7 @@ namespace MinecraftServerEngine
             {
                 stack.Spend(1);
 
-                return new ItemStack(stack.Type, 1);
+                return new ItemStack(stack.Type, stack.Name, 1);
             }
 
             _stack = null;

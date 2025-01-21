@@ -122,7 +122,7 @@ namespace TestMinecraftServerApplication
 
             MyConsole.Debug("Use item!");
 
-            GiveItem(new ItemStack(ItemType.DiamondSword));
+            GiveItem(new ItemStack(ItemType.DiamondSword, "Good Stick!"));
         }
 
         protected override void OnUseEntity(World world, Entity entity)

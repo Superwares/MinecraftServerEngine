@@ -8,31 +8,38 @@ namespace MinecraftServerEngine
 
         public readonly ItemType Type;
 
-        /*private readonly string Name;*/
+        public readonly string Name;
+
+        public int MaxCount => Type.GetMaxCount();
+        public const int MinCount = 1;
 
         private int _count;
         public int Count => _count;
-        public const int MinCount = 1;
-        public readonly int MaxCount;
 
-        public ItemStack(ItemType type, int count)
+        public ItemStack(ItemType type, string name, int count)
         {
-            Type = type;
-            MaxCount = Type.GetMaxCount();
+            System.Diagnostics.Debug.Assert(name != null && string.IsNullOrEmpty(name) == false);
 
-            System.Diagnostics.Debug.Assert(MaxCount >= MinCount);
+            Type = type;
+
+            Name = name;
+
+            System.Diagnostics.Debug.Assert(Type.GetMaxCount() >= MinCount);
             System.Diagnostics.Debug.Assert(count >= MinCount);
-            System.Diagnostics.Debug.Assert(count <= MaxCount);
+            System.Diagnostics.Debug.Assert(count <= Type.GetMaxCount());
             _count = count;
         }
 
-        public ItemStack(ItemType type)
+        public ItemStack(ItemType type, string name)
         {
-            Type = type;
-            MaxCount = Type.GetMaxCount();
+            System.Diagnostics.Debug.Assert(name != null && string.IsNullOrEmpty(name) == false);
 
-            System.Diagnostics.Debug.Assert(MaxCount >= MinCount);
-            _count = MaxCount;
+            Type = type;
+
+            Name = name;
+
+            System.Diagnostics.Debug.Assert(Type.GetMaxCount() >= MinCount);
+            _count = Type.GetMaxCount();
         }
 
         internal bool IsFull()
@@ -92,7 +99,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(from != null);
 
-            if (Type != from.Type)
+            if (Type != from.Type || Name != from.Name)
             {
                 return false;
             }
@@ -126,7 +133,7 @@ namespace MinecraftServerEngine
             _count /= 2;
             int count = _count + a;
 
-            to = new ItemStack(Type, count);
+            to = new ItemStack(Type, to.Name, count);
 
             return true;
         }
@@ -141,7 +148,7 @@ namespace MinecraftServerEngine
             }
 
             Spend(MinCount);
-            to = new ItemStack(Type, MinCount);
+            to = new ItemStack(Type, to.Name, MinCount);
 
             return true;
         }
@@ -150,7 +157,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(from != null);
 
-            if (Type != from.Type)
+            if (Type != from.Type || Name != from.Name)
             {
                 return false;
             }

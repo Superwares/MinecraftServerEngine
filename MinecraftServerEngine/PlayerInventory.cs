@@ -37,8 +37,8 @@ namespace MinecraftServerEngine
 
         internal PlayerInventory() : base(TotalSlotCount)
         {
-            GiveFromLeftInPrimary(new ItemStack(ItemType.Stick));
-            GiveFromLeftInPrimary(new ItemStack(ItemType.DiamondSword));
+            GiveFromLeftInPrimary(new ItemStack(ItemType.Stick, "Stick!"));
+            GiveFromLeftInPrimary(new ItemStack(ItemType.DiamondSword, "Hello Sword!"));
             /*GiveFromLeftInPrimary(new ItemStack(ItemType.Snowball));*/
         }
 
@@ -454,7 +454,7 @@ namespace MinecraftServerEngine
                     continue;
                 }
 
-                int restCount = slotInside.PreMove(stack.Type, prevCount);
+                int restCount = slotInside.PreMove(stack.Type, stack.Name, prevCount);
 
                 if (prevCount == restCount)
                 {
