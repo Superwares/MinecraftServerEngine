@@ -13,7 +13,7 @@ namespace MinecraftServerEngine
         private static Hitbox GetAdventureHitbox(bool sneaking)
         {
             double w = HitboxWidth, h;
-            if (sneaking)
+            if (sneaking == true)
             {
                 h = 1.65D;
             }
@@ -72,8 +72,8 @@ namespace MinecraftServerEngine
             UserId = userId;
             Username = username;
 
-            System.Diagnostics.Debug.Assert(!Sneaking);
-            System.Diagnostics.Debug.Assert(!Sprinting);
+            System.Diagnostics.Debug.Assert(Sneaking == false);
+            System.Diagnostics.Debug.Assert(Sprinting == false);
 
             _nextGamemode = gamemode;
             _gamemode = gamemode;
@@ -88,7 +88,7 @@ namespace MinecraftServerEngine
 
         internal void Respawn()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(Gamemode != Gamemode.Spectator);
 
@@ -136,7 +136,7 @@ namespace MinecraftServerEngine
 
         private protected override Hitbox GetHitbox()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             return (_nextGamemode == Gamemode.Spectator) ?
                 GetSpectatorHitbox() : GetAdventureHitbox(false);
@@ -158,7 +158,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(renderer != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(_gamemode == Gamemode.Adventure);
             renderer.SpawnPlayer(
@@ -170,7 +170,7 @@ namespace MinecraftServerEngine
 
         internal void Connect(MinecraftClient client, World world, UserId id)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(client != null);
             System.Diagnostics.Debug.Assert(world != null);
@@ -190,7 +190,7 @@ namespace MinecraftServerEngine
 
         public void SwitchGamemode(Gamemode gamemode)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             LockerGamemode.Hold();
 
@@ -204,7 +204,7 @@ namespace MinecraftServerEngine
 
         public override void ApplyForce(Vector force)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (Connected)
             {
@@ -218,7 +218,7 @@ namespace MinecraftServerEngine
 
         internal override void Move(BoundingVolume volume, Vector v)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(volume != null);
 
@@ -251,7 +251,7 @@ namespace MinecraftServerEngine
 
         public override void Teleport(Vector p, Angles look)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             LockerTeleport.Hold();
 
@@ -269,14 +269,14 @@ namespace MinecraftServerEngine
 
         internal void ControlMovement(Vector p)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             _pControl = p;
         }
 
         internal void Control(World world)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (Connected == true)
             {
@@ -289,7 +289,7 @@ namespace MinecraftServerEngine
 
         public bool HandleDisconnection(out UserId userId, World world)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(world != null);
 
@@ -309,7 +309,7 @@ namespace MinecraftServerEngine
 
         public void LoadAndSendData(World world)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (Disconnected)
             {
@@ -325,7 +325,7 @@ namespace MinecraftServerEngine
 
         public bool OpenInventory(SharedInventory sharedInventory)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(sharedInventory != null);
 
