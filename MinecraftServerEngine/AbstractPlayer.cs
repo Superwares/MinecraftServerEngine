@@ -157,7 +157,7 @@ namespace MinecraftServerEngine
             _experienceBarRatio = ratio;
             _experienceLevel = level;
 
-            Conn.OutPackets.Enqueue(new SetExperiencePacket(ratio, level, 0));
+            SetExperience(ratio, level);
         }
 
         private protected override Hitbox GetHitbox()
@@ -213,7 +213,7 @@ namespace MinecraftServerEngine
                 Inventory,
                 _gamemode);
 
-            Conn.OutPackets.Enqueue(new SetExperiencePacket(ExperienceBarRatio, ExperienceLevel, 0));
+            SetExperience(ExperienceBarRatio, ExperienceLevel);
         }
 
         public void SwitchGamemode(Gamemode gamemode)

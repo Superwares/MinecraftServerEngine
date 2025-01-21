@@ -1398,6 +1398,22 @@ namespace MinecraftServerEngine
             OutPackets.Enqueue(new UpdateHealthPacket(health, 20, 5.0F));
         }
 
+        internal void SetExperience(float ratio, int level)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(ratio >= 0 && ratio <= 1);
+            System.Diagnostics.Debug.Assert(level >= 0);
+
+
+            if (_disconnected)
+            {
+                return;
+            }
+
+            OutPackets.Enqueue(new SetExperiencePacket(ratio, level, 0));
+        }
+
         internal void Set(int idEntity, Gamemode gamemode)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
