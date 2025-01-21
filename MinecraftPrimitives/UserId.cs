@@ -1,4 +1,4 @@
-﻿namespace MinecraftServerEngine
+﻿namespace MinecraftPrimitives
 {
     public readonly struct UserId : System.IEquatable<UserId>
     {
@@ -19,16 +19,16 @@
             return new(System.Guid.NewGuid());
         }
 
-        internal readonly System.Guid Data;
+        public readonly System.Guid Value;
 
         public UserId(System.Guid guid)
         {
-            Data = guid;
+            Value = guid;
         }
 
         public readonly bool Equals(UserId other)
         {
-            return Data.Equals(other.Data);
+            return Value.Equals(other.Value);
         }
 
         public readonly override bool Equals(object obj)
@@ -48,7 +48,7 @@
 
         public readonly override string ToString()
         {
-            return Data.ToString();
+            return Value.ToString();
         }
     }
 }

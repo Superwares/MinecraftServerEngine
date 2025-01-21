@@ -1,71 +1,26 @@
 ﻿
 
+using Common;
+
 namespace MinecraftServerEngine
 {
-    public abstract class MinecraftProtocolException : System.Exception
+    public abstract class MinecraftServerEngineException : CommonException
     {
-        public MinecraftProtocolException(string message) : base(message) { }
+        public MinecraftServerEngineException(string message) : base(message) { }
     }
 
-    public class UnexpectedClientBehaviorExecption : MinecraftProtocolException
+    public abstract class EngineNetworkException : CommonException
     {
-        public UnexpectedClientBehaviorExecption(string msg) : base(msg) { }
+        public EngineNetworkException(string message) : base(message) { }
     }
 
-    internal class DataRecvTimeoutException : UnexpectedClientBehaviorExecption
-    {
-        public DataRecvTimeoutException() : base("A timeout occurred while attempting to recv data.") { }
-    }
 
-    internal class UnexpectedValueException : UnexpectedClientBehaviorExecption
-    {
-        public UnexpectedValueException(string name) : base($"Value {name} is out of range.") { }
-    }
-
-    internal class UnexpectedPacketException : UnexpectedClientBehaviorExecption
-    {
-        public UnexpectedPacketException() : base("Encountered an unexpected packet.") { }
-    }
-
-    internal class InvalidEncodingException : UnexpectedClientBehaviorExecption
-    {
-        public InvalidEncodingException() : base("Failed to decode the data due to invalid encoding.") { }
-    }
-
-    internal class BufferOverflowException : UnexpectedClientBehaviorExecption
-    {
-        public BufferOverflowException() : base("Unexpected buffer overflow occurred due to excessive data.") { }
-    }
-
-    internal class EmptyBufferException : UnexpectedClientBehaviorExecption
-    {
-        public EmptyBufferException() : base("Attempting to read from an empty buffer.") { }
-    }
-
-    internal class TeleportationConfirmTimeoutException : UnexpectedClientBehaviorExecption
-    {
-        // TODO: Add description.
-        public TeleportationConfirmTimeoutException() : base("TeleportationConfirmTimeoutException") { }
-    }
-
-    internal class KeepAliveTimeoutException : UnexpectedClientBehaviorExecption
-    {
-        // TODO: Add description.
-        public KeepAliveTimeoutException() : base("KeepAliveTimeoutException") { }
-    }
-
-    internal class KeepaliveTimeoutException : UnexpectedClientBehaviorExecption
-    {
-        // TODO: Add description.
-        public KeepaliveTimeoutException() : base("KeepaliveTimeoutException") { }
-    }
-
-    public class DisconnectedClientException : MinecraftProtocolException
+    public class DisconnectedClientException : EngineNetworkException
     {
         public DisconnectedClientException() : base("The connection with the client has been terminated.") { }
     }
 
-    public class TryAgainException : MinecraftProtocolException
+    public class TryAgainException : EngineNetworkException
     {
         public TryAgainException() : base("No data is waiting to be received.") { }
     }

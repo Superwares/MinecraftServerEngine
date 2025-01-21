@@ -2,6 +2,8 @@
 using Containers;
 using Sync;
 
+using MinecraftPrimitives;
+
 namespace MinecraftServerEngine
 {
     internal sealed class Window : System.IDisposable

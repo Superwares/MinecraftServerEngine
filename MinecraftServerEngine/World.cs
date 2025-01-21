@@ -2,6 +2,8 @@
 using Containers;
 using Sync;
 
+using MinecraftPrimitives;
+
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
@@ -491,7 +493,7 @@ namespace MinecraftServerEngine
 
         protected abstract AbstractPlayer CreatePlayer(UserId userId, string username);
 
-        internal void ConnectPlayer(Client client, string username, UserId userId)
+        internal void ConnectPlayer(MinecraftClient client, string username, UserId userId)
         {
             System.Diagnostics.Debug.Assert(client != null);
             System.Diagnostics.Debug.Assert(username != "");

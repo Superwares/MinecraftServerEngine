@@ -68,6 +68,7 @@ namespace MinecraftPrimitives
                 _disposed = true;
             }
 
-            base.Dispose
+            base.Dispose(disposing);
+        }
     }
-    }
+}

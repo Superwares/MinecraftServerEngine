@@ -1,6 +1,8 @@
 ﻿using Common;
 using Containers;
 
+using MinecraftPrimitives;
+
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
@@ -37,14 +39,14 @@ namespace MinecraftServerEngine
             long ms = ticks * 50;
             System.Diagnostics.Debug.Assert(ms >= int.MinValue);
             System.Diagnostics.Debug.Assert(ms <= int.MaxValue);
-            Render(new PlayerListItemAddPacket(id.Data, username, (int)ms));
+            Render(new PlayerListItemAddPacket(id.Value, username, (int)ms));
         }
 
         internal void RemovePlayer(UserId id)
         {
             System.Diagnostics.Debug.Assert(id != UserId.Null);
 
-            Render(new PlayerListItemRemovePacket(id.Data));
+            Render(new PlayerListItemRemovePacket(id.Value));
         }
 
         internal void UpdatePlayerLatency(UserId id, long ticks)
@@ -56,7 +58,7 @@ namespace MinecraftServerEngine
             long ms = ticks * 50;
             System.Diagnostics.Debug.Assert(ms >= int.MinValue);
             System.Diagnostics.Debug.Assert(ms <= int.MaxValue);
-            Render(new PlayerListItemUpdateLatencyPacket(id.Data, (int)ms));
+            Render(new PlayerListItemUpdateLatencyPacket(id.Value, (int)ms));
         }
     }
 

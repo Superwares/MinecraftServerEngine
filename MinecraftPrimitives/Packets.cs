@@ -1,10 +1,10 @@
 ﻿using Containers;
 using Sync;
 
-namespace MinecraftServerEngine
+namespace MinecraftPrimitives
 {
 
-    /*internal sealed class SlotData
+    /*public sealed class SlotData
     {
         public readonly short Id;
         public readonly byte Count;
@@ -59,7 +59,7 @@ namespace MinecraftServerEngine
 
 
 
-    internal abstract class Packet
+    public abstract class Packet
     {
         protected const string MinecraftVersion = "1.12.2";
         protected const int ProtocolVersion = 340;
@@ -92,7 +92,7 @@ namespace MinecraftServerEngine
 
         protected abstract void WriteData(MinecraftDataStream buffer);
 
-        internal void Write(MinecraftDataStream buffer)
+        public void Write(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -102,56 +102,92 @@ namespace MinecraftServerEngine
 
     }
 
-    internal abstract class HandshakingPacket(int id) : Packet(id)
+    public abstract class HandshakingPacket : Packet
     {
         public override States State => States.Handshaking;
 
+        internal HandshakingPacket(int id) : base(id)
+        {
+
+        }
+
     }
 
-    internal abstract class StatusPacket(int id) : Packet(id)
+    public abstract class StatusPacket : Packet
     {
         public override States State => States.Status;
 
+        internal StatusPacket(int id) : base(id)
+        {
+
+        }
+
     }
 
-    internal abstract class LoginPacket(int id) : Packet(id)
+    public abstract class LoginPacket : Packet
     {
         public override States State => States.Login;
 
+        internal LoginPacket(int id) : base(id)
+        {
+
+        }
+
     }
 
-    internal abstract class PlayingPacket(int id) : Packet(id)
+    public abstract class PlayingPacket : Packet
     {
         public override States State => States.Playing;
+
+        internal PlayingPacket(int id) : base(id)
+        {
+
+        }
     }
 
-    internal abstract class ServerboundHandshakingPacket(int id) : HandshakingPacket(id)
+    public abstract class ServerboundHandshakingPacket : HandshakingPacket
     {
         public const int SetProtocolPacketId = 0x00;
+
+        internal ServerboundHandshakingPacket(int id) : base(id)
+        {
+
+        }
 
         public override WhereBound BoundTo { get { return WhereBound.Serverbound; } }
 
     }
 
-    internal abstract class ClientboundStatusPacket(int id) : StatusPacket(id)
+    public abstract class ClientboundStatusPacket : StatusPacket
     {
         public const int ResponsePacketId = 0x00;
         public const int PongPacketId = 0x01;
 
         public override WhereBound BoundTo { get { return WhereBound.Clientbound; } }
 
+        internal ClientboundStatusPacket(int id) : base(id)
+        {
+
+        }
+
     }
 
-    internal abstract class ServerboundStatusPacket(int id) : StatusPacket(id)
+    public abstract class ServerboundStatusPacket : StatusPacket
     {
         public const int RequestPacketId = 0x00;
         public const int PingPacketId = 0x01;
 
         public override WhereBound BoundTo { get { return WhereBound.Serverbound; } }
 
+        internal ServerboundStatusPacket(int id) : base(id)
+        {
+
+        }
+
+
     }
 
-    internal abstract class ClientboundLoginPacket(int id) : LoginPacket(id)
+    public abstract class ClientboundLoginPacket : LoginPacket
     {
         public const int DisconnectPacketId = 0x00;
         public const int EncryptionRequestPacketId = 0x01;
@@ -160,18 +196,30 @@ namespace MinecraftServerEngine
 
         public override WhereBound BoundTo => WhereBound.Clientbound;
 
+        internal ClientboundLoginPacket(int id) : base(id)
+        {
+
+        }
+
+
     }
 
-    internal abstract class ServerboundLoginPacket(int id) : LoginPacket(id)
+    public abstract class ServerboundLoginPacket : LoginPacket
     {
         public const int StartLoginPacketId = 0x00;
         public const int EncryptionResponsePacketId = 0x01;
 
         public override WhereBound BoundTo => WhereBound.Clientbound;
 
+        internal ServerboundLoginPacket(int id) : base(id)
+        {
+
+        }
+
+
     }
 
-    internal abstract class ClientboundPlayingPacket(int id) : PlayingPacket(id)
+    public abstract class ClientboundPlayingPacket : PlayingPacket
     {
         public const int SpawnEntityPacketId = 0x00;
         public const int SpawnNamedEntityPacketId = 0x05;
@@ -210,9 +258,13 @@ namespace MinecraftServerEngine
 
         public override WhereBound BoundTo => WhereBound.Clientbound;
 
+        internal ClientboundPlayingPacket(int id) : base(id)
+        {
+        }
+
     }
 
-    internal abstract class ServerboundPlayingPacket(int id) : PlayingPacket(id)
+    public abstract class ServerboundPlayingPacket : PlayingPacket
     {
         public const int TeleportAcceptPacketId = 0x00;
         public const int ServerboundChatMessagePacketId = 0x02;
@@ -236,9 +288,13 @@ namespace MinecraftServerEngine
 
         public override WhereBound BoundTo => WhereBound.Serverbound;
 
+        internal ServerboundPlayingPacket(int id) : base(id)
+        {
+        }
+
     }
 
-    internal sealed class SetProtocolPacket : ServerboundHandshakingPacket
+    public sealed class SetProtocolPacket : ServerboundHandshakingPacket
     {
         public readonly int Version;
         public readonly string Hostname;
@@ -263,7 +319,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static SetProtocolPacket Read(MinecraftDataStream buffer)
+        public static SetProtocolPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -312,7 +368,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class ResponsePacket : ClientboundStatusPacket
+    public sealed class ResponsePacket : ClientboundStatusPacket
     {
 
         public readonly int MaxPlayers;
@@ -320,7 +376,7 @@ namespace MinecraftServerEngine
         public readonly string Description;
 
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static ResponsePacket Read(MinecraftDataStream buffer)
+        public static ResponsePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -351,7 +407,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class PongPacket : ClientboundStatusPacket
+    public sealed class PongPacket : ClientboundStatusPacket
     {
         public readonly long Payload;
 
@@ -359,7 +415,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static PongPacket Read(MinecraftDataStream buffer)
+        public static PongPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -380,13 +436,13 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class RequestPacket : ServerboundStatusPacket
+    public sealed class RequestPacket : ServerboundStatusPacket
     {
         /// <summary>
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static RequestPacket Read(MinecraftDataStream buffer)
+        public static RequestPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -402,7 +458,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class PingPacket : ServerboundStatusPacket
+    public sealed class PingPacket : ServerboundStatusPacket
     {
         public readonly long Payload;
 
@@ -410,7 +466,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static PingPacket Read(MinecraftDataStream buffer)
+        public static PingPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -433,7 +489,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class DisconnectPacket : ClientboundLoginPacket
+    public sealed class DisconnectPacket : ClientboundLoginPacket
     {
         public readonly string Reason;
 
@@ -441,7 +497,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static DisconnectPacket Read(MinecraftDataStream buffer)
+        public static DisconnectPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -462,13 +518,13 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class EncryptionRequestPacket : ClientboundLoginPacket
+    public sealed class EncryptionRequestPacket : ClientboundLoginPacket
     {
         /// <summary>
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static EncryptionRequestPacket Read(MinecraftDataStream buffer)
+        public static EncryptionRequestPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -489,7 +545,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class LoginSuccessPacket : ClientboundLoginPacket
+    public sealed class LoginSuccessPacket : ClientboundLoginPacket
     {
         public readonly System.Guid UserId;
         public readonly string Username;
@@ -498,7 +554,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static LoginSuccessPacket Read(MinecraftDataStream buffer)
+        public static LoginSuccessPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -524,7 +580,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class SetCompressionPacket : ClientboundLoginPacket
+    public sealed class SetCompressionPacket : ClientboundLoginPacket
     {
         public readonly int Threshold;
 
@@ -532,7 +588,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static SetCompressionPacket Read(MinecraftDataStream buffer)
+        public static SetCompressionPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -554,7 +610,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class StartLoginPacket : ServerboundLoginPacket
+    public sealed class StartLoginPacket : ServerboundLoginPacket
     {
         public readonly string Username;
 
@@ -562,7 +618,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static StartLoginPacket Read(MinecraftDataStream buffer)
+        public static StartLoginPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -584,13 +640,13 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal sealed class EncryptionResponsePacket : ServerboundLoginPacket
+    public sealed class EncryptionResponsePacket : ServerboundLoginPacket
     {
         /// <summary>
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static EncryptionResponsePacket Read(MinecraftDataStream buffer)
+        public static EncryptionResponsePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -612,7 +668,7 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal sealed class SpawnEntityPacket : ClientboundPlayingPacket
+    public sealed class SpawnEntityPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly System.Guid UniqueId;
@@ -665,7 +721,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class SpawnNamedEntityPacket : ClientboundPlayingPacket
+    public sealed class SpawnNamedEntityPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly System.Guid UniqueId;
@@ -707,7 +763,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class BlockChangePacket : ClientboundPlayingPacket
+    public sealed class BlockChangePacket : ClientboundPlayingPacket
     {
         public readonly int X, Y, Z;
         public readonly int BlockId;
@@ -737,8 +793,8 @@ namespace MinecraftServerEngine
         }
 
     }
-    
-    internal sealed class ClientboundChatmessagePacket : ClientboundPlayingPacket
+
+    public sealed class ClientboundChatmessagePacket : ClientboundPlayingPacket
     {
         public readonly string Data;
         public readonly byte Position;
@@ -769,7 +825,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class ClientboundConfirmTransactionPacket : ClientboundPlayingPacket
+    public sealed class ClientboundConfirmTransactionPacket : ClientboundPlayingPacket
     {
         public readonly sbyte WindowId;
         public readonly short ActionNumber;
@@ -802,7 +858,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class ClientboundCloseWindowPacket : ClientboundPlayingPacket
+    public sealed class ClientboundCloseWindowPacket : ClientboundPlayingPacket
     {
         public readonly byte WindowId;
 
@@ -828,7 +884,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class OpenWindowPacket : ClientboundPlayingPacket
+    public sealed class OpenWindowPacket : ClientboundPlayingPacket
     {
         public readonly byte WindowId;
         public readonly string WindowType;
@@ -866,7 +922,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class WindowItemsPacket : ClientboundPlayingPacket
+    public sealed class WindowItemsPacket : ClientboundPlayingPacket
     {
         public readonly byte WindowId;
         public readonly int Count;
@@ -909,7 +965,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class SetSlotPacket : ClientboundPlayingPacket
+    public sealed class SetSlotPacket : ClientboundPlayingPacket
     {
         public readonly sbyte WindowId;
         public readonly short SlotNumber;
@@ -944,13 +1000,12 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class NamedSoundEffectPacket : ClientboundPlayingPacket
+    public sealed class NamedSoundEffectPacket : ClientboundPlayingPacket
     {
         public readonly string SoundName;
         public readonly int SoundCategory;
         public readonly int EffectX, EffectY, EffectZ;
         public readonly float Volume, Pitch;
-
 
         public static NamedSoundEffectPacket Read(MinecraftDataStream buffer)
         {
@@ -986,19 +1041,19 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class EntityStatusPacket : ClientboundPlayingPacket
+    public sealed class EntityStatusPacket : ClientboundPlayingPacket
     {
-        internal readonly int EntityId;
-        internal readonly byte Status;
+        public readonly int EntityId;
+        public readonly byte Status;
 
-        internal static EntityStatusPacket Read(MinecraftDataStream buffer)
+        public static EntityStatusPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
             throw new System.NotImplementedException();
         }
 
-        internal EntityStatusPacket(int idEntity, byte status) : base(EntityStatusPacketId)
+        public EntityStatusPacket(int idEntity, byte status) : base(EntityStatusPacketId)
         {
             EntityId = idEntity;
             Status = status;
@@ -1013,22 +1068,22 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal sealed class UnloadChunkPacket : ClientboundPlayingPacket
+    public sealed class UnloadChunkPacket : ClientboundPlayingPacket
     {
-        internal readonly int XChunk, ZChunk;
+        public readonly int XChunk, ZChunk;
 
         /// <summary>
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static UnloadChunkPacket Read(MinecraftDataStream buffer)
+        public static UnloadChunkPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
             throw new System.NotImplementedException();
         }
 
-        internal UnloadChunkPacket(int xChunk, int zChunk) : base(UnloadChunkPacketId)
+        public UnloadChunkPacket(int xChunk, int zChunk) : base(UnloadChunkPacketId)
         {
             XChunk = xChunk;
             ZChunk = zChunk;
@@ -1044,12 +1099,12 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class GameStatePacket : ClientboundPlayingPacket
+    public sealed class GameStatePacket : ClientboundPlayingPacket
     {
-        internal readonly byte Reason;
-        internal readonly float Value;
+        public readonly byte Reason;
+        public readonly float Value;
 
-        internal static GameStatePacket Read(MinecraftDataStream buffer)
+        public static GameStatePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1072,11 +1127,11 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class ClientboundKeepAlivePacket : ClientboundPlayingPacket
+    public sealed class ClientboundKeepAlivePacket : ClientboundPlayingPacket
     {
         public readonly long Payload;
 
-        internal static ClientboundKeepAlivePacket Read(MinecraftDataStream buffer)
+        public static ClientboundKeepAlivePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1096,7 +1151,7 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal sealed class LoadChunkPacket : ClientboundPlayingPacket
+    public sealed class LoadChunkPacket : ClientboundPlayingPacket
     {
         public readonly int XChunk, ZChunk;
         public readonly bool Continuous;
@@ -1107,7 +1162,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static LoadChunkPacket Read(MinecraftDataStream buffer)
+        public static LoadChunkPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1144,16 +1199,16 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class ParticlesPacket : ClientboundPlayingPacket
+    public sealed class ParticlesPacket : ClientboundPlayingPacket
     {
-        internal readonly int ParticleId;
-        internal readonly bool Flag;  // ExtendedRange?
-        internal readonly float X, Y, Z;
-        internal readonly float OffsetX, OffsetY, OffsetZ;
-        internal readonly float Extra;
-        internal readonly int Count;
+        public readonly int ParticleId;
+        public readonly bool Flag;  // ExtendedRange?
+        public readonly float X, Y, Z;
+        public readonly float OffsetX, OffsetY, OffsetZ;
+        public readonly float Extra;
+        public readonly int Count;
 
-        internal static ParticlesPacket Read(MinecraftDataStream buffer)
+        public static ParticlesPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1188,7 +1243,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class JoinGamePacket : ClientboundPlayingPacket
+    public sealed class JoinGamePacket : ClientboundPlayingPacket
     {
         private readonly int _entityId;
         private readonly byte _gamemode;
@@ -1201,7 +1256,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static JoinGamePacket Read(MinecraftDataStream buffer)
+        public static JoinGamePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1241,11 +1296,11 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal sealed class EntityPacket : ClientboundPlayingPacket
+    public sealed class EntityPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
 
-        internal static EntityPacket Read(MinecraftDataStream buffer)
+        public static EntityPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1266,13 +1321,13 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class EntityRelMovePacket : ClientboundPlayingPacket
+    public sealed class EntityRelMovePacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly short DeltaX, DeltaY, DeltaZ;
         public readonly bool OnGround;
 
-        internal static EntityRelMovePacket Read(MinecraftDataStream buffer)
+        public static EntityRelMovePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1300,14 +1355,14 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class EntityRelMoveLookPacket : ClientboundPlayingPacket
+    public sealed class EntityRelMoveLookPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly short DeltaX, DeltaY, DeltaZ;
         public readonly byte Yaw, Pitch;
         public readonly bool OnGround;
 
-        internal static EntityRelMoveLookPacket Read(MinecraftDataStream buffer)
+        public static EntityRelMoveLookPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1338,13 +1393,13 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class EntityLookPacket : ClientboundPlayingPacket
+    public sealed class EntityLookPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly byte Yaw, Pitch;
         public readonly bool OnGround;
 
-        internal static EntityLookPacket Read(MinecraftDataStream buffer)
+        public static EntityLookPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1373,7 +1428,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class AbilitiesPacket : ClientboundPlayingPacket
+    public sealed class AbilitiesPacket : ClientboundPlayingPacket
     {
         private readonly byte _flags;
         private readonly float _flyingSpeed;
@@ -1383,7 +1438,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static AbilitiesPacket Read(MinecraftDataStream buffer)
+        public static AbilitiesPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1431,13 +1486,13 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class PlayerListItemAddPacket : ClientboundPlayingPacket
+    public sealed class PlayerListItemAddPacket : ClientboundPlayingPacket
     {
         public readonly System.Guid UniqueId;
         public readonly string Username;
         public readonly int Ping;
 
-        internal static PlayerListItemAddPacket Read(MinecraftDataStream buffer)
+        public static PlayerListItemAddPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1469,12 +1524,12 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class PlayerListItemUpdateLatencyPacket : ClientboundPlayingPacket
+    public sealed class PlayerListItemUpdateLatencyPacket : ClientboundPlayingPacket
     {
         public readonly System.Guid UniqueId;
         public readonly int Laytency;
 
-        internal static PlayerListItemUpdateLatencyPacket Read(MinecraftDataStream buffer)
+        public static PlayerListItemUpdateLatencyPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1500,11 +1555,11 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class PlayerListItemRemovePacket : ClientboundPlayingPacket
+    public sealed class PlayerListItemRemovePacket : ClientboundPlayingPacket
     {
         public readonly System.Guid UniqueId;
 
-        internal static PlayerListItemRemovePacket Read(MinecraftDataStream buffer)
+        public static PlayerListItemRemovePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1527,7 +1582,7 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal sealed class TeleportPacket : ClientboundPlayingPacket
+    public sealed class TeleportPacket : ClientboundPlayingPacket
     {
         public readonly double X, Y, Z;
         public readonly float Yaw, Pitch;
@@ -1538,7 +1593,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static TeleportPacket Read(MinecraftDataStream buffer)
+        public static TeleportPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1590,11 +1645,11 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class DestroyEntitiesPacket : ClientboundPlayingPacket
+    public sealed class DestroyEntitiesPacket : ClientboundPlayingPacket
     {
         public readonly int[] EntityIds;
 
-        internal static DestroyEntitiesPacket Read(MinecraftDataStream buffer)
+        public static DestroyEntitiesPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1617,14 +1672,14 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class RespawnPacket : ClientboundPlayingPacket
+    public sealed class RespawnPacket : ClientboundPlayingPacket
     {
-        internal readonly int Dimension;
-        internal readonly byte Difficulty;
-        internal readonly byte Gamemode;
-        internal readonly string LevelType;
+        public readonly int Dimension;
+        public readonly byte Difficulty;
+        public readonly byte Gamemode;
+        public readonly string LevelType;
 
-        internal static RespawnPacket Read(MinecraftDataStream buffer)
+        public static RespawnPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1653,12 +1708,12 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class EntityHeadLookPacket : ClientboundPlayingPacket
+    public sealed class EntityHeadLookPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly byte Yaw;
 
-        internal static EntityHeadLookPacket Read(MinecraftDataStream buffer)
+        public static EntityHeadLookPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1682,12 +1737,12 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class EntityMetadataPacket : ClientboundPlayingPacket
+    public sealed class EntityMetadataPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly byte[] Data;
 
-        internal static EntityMetadataPacket Read(MinecraftDataStream buffer)
+        public static EntityMetadataPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1711,12 +1766,12 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class EntityVelocityPacket : ClientboundPlayingPacket
+    public sealed class EntityVelocityPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly short X, Y, Z;
 
-        internal static EntityVelocityPacket Read(MinecraftDataStream buffer)
+        public static EntityVelocityPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1740,13 +1795,13 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class EntityEquipmentPacket : ClientboundPlayingPacket
+    public sealed class EntityEquipmentPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly int Slot;
         public readonly byte[] Data;
 
-        internal static EntityEquipmentPacket Read(MinecraftDataStream buffer)
+        public static EntityEquipmentPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1773,20 +1828,20 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal sealed class UpdateHealthPacket : ClientboundPlayingPacket
+    public sealed class UpdateHealthPacket : ClientboundPlayingPacket
     {
-        internal readonly float Health;
-        internal readonly int Food;
-        internal readonly float FoodSaturation;
+        public readonly float Health;
+        public readonly int Food;
+        public readonly float FoodSaturation;
 
-        internal static UpdateHealthPacket Read(MinecraftDataStream buffer)
+        public static UpdateHealthPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
             throw new System.NotImplementedException();
         }
 
-        internal UpdateHealthPacket(
+        public UpdateHealthPacket(
             float health, int food, float foodSaturation) : base(UpdateHealthPacketId)
         {
             Health = health;
@@ -1804,14 +1859,14 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal sealed class EntityTeleportPacket : ClientboundPlayingPacket
+    public sealed class EntityTeleportPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly double X, Y, Z;
         public readonly byte Yaw, Pitch;
         public readonly bool OnGround;
 
-        internal static EntityTeleportPacket Read(MinecraftDataStream buffer)
+        public static EntityTeleportPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1842,7 +1897,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class TeleportAcceptPacket : ServerboundPlayingPacket
+    public sealed class TeleportAcceptPacket : ServerboundPlayingPacket
     {
         public readonly int Payload;
 
@@ -1850,7 +1905,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static TeleportAcceptPacket Read(MinecraftDataStream buffer)
+        public static TeleportAcceptPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1871,7 +1926,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class ServerboundChatMessagePacket : ServerboundPlayingPacket
+    public sealed class ServerboundChatMessagePacket : ServerboundPlayingPacket
     {
         public readonly string Text;
 
@@ -1879,7 +1934,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static ServerboundChatMessagePacket Read(MinecraftDataStream buffer)
+        public static ServerboundChatMessagePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1900,7 +1955,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class SettingsPacket : ServerboundPlayingPacket
+    public sealed class SettingsPacket : ServerboundPlayingPacket
     {
         public readonly byte RenderDistance;
 
@@ -1908,7 +1963,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static SettingsPacket Read(MinecraftDataStream buffer)
+        public static SettingsPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1936,13 +1991,13 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal sealed class ServerboundConfirmTransactionPacket : ServerboundPlayingPacket
+    public sealed class ServerboundConfirmTransactionPacket : ServerboundPlayingPacket
     {
         public readonly sbyte WindowId;
         public readonly short ActionNumber;
         public readonly bool Accepted;
 
-        internal static ServerboundConfirmTransactionPacket Read(MinecraftDataStream buffer)
+        public static ServerboundConfirmTransactionPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1967,7 +2022,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class ClickWindowPacket : ServerboundPlayingPacket
+    public sealed class ClickWindowPacket : ServerboundPlayingPacket
     {
         public readonly byte WindowId;
         public readonly short Slot;
@@ -1976,7 +2031,7 @@ namespace MinecraftServerEngine
         public readonly int Mode;
         public readonly byte[] Data;
 
-        internal static ClickWindowPacket Read(MinecraftDataStream buffer)
+        public static ClickWindowPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2008,11 +2063,11 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class ServerboundCloseWindowPacket : ServerboundPlayingPacket
+    public sealed class ServerboundCloseWindowPacket : ServerboundPlayingPacket
     {
         public readonly byte WindowId;
 
-        internal static ServerboundCloseWindowPacket Read(MinecraftDataStream buffer)
+        public static ServerboundCloseWindowPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2034,13 +2089,13 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class UseEntityPacket : ServerboundPlayingPacket
+    public sealed class UseEntityPacket : ServerboundPlayingPacket
     {
-        internal readonly int EntityId;
-        internal readonly int Type;
-        internal readonly int Hand;
+        public readonly int EntityId;
+        public readonly int Type;
+        public readonly int Hand;
 
-        internal static UseEntityPacket Read(MinecraftDataStream buffer)
+        public static UseEntityPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2081,7 +2136,7 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal sealed class ServerboundKeepAlivePacket : ServerboundPlayingPacket
+    public sealed class ServerboundKeepAlivePacket : ServerboundPlayingPacket
     {
         public readonly long Payload;
 
@@ -2089,7 +2144,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static ServerboundKeepAlivePacket Read(MinecraftDataStream buffer)
+        public static ServerboundKeepAlivePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2110,7 +2165,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class PlayerPacket : ServerboundPlayingPacket
+    public sealed class PlayerPacket : ServerboundPlayingPacket
     {
         public readonly bool OnGround;
 
@@ -2118,7 +2173,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static PlayerPacket Read(MinecraftDataStream buffer)
+        public static PlayerPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2139,7 +2194,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class PlayerPositionPacket : ServerboundPlayingPacket
+    public sealed class PlayerPositionPacket : ServerboundPlayingPacket
     {
         public readonly double X, Y, Z;
         public readonly bool OnGround;
@@ -2148,7 +2203,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static PlayerPositionPacket Read(MinecraftDataStream buffer)
+        public static PlayerPositionPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2173,7 +2228,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class PlayerPosAndLookPacket : ServerboundPlayingPacket
+    public sealed class PlayerPosAndLookPacket : ServerboundPlayingPacket
     {
         public readonly double X, Y, Z;
         public readonly float Yaw, Pitch;
@@ -2183,7 +2238,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static PlayerPosAndLookPacket Read(MinecraftDataStream buffer)
+        public static PlayerPosAndLookPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2213,7 +2268,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class PlayerLookPacket : ServerboundPlayingPacket
+    public sealed class PlayerLookPacket : ServerboundPlayingPacket
     {
         public readonly float Yaw, Pitch;
         public readonly bool OnGround;
@@ -2222,7 +2277,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static PlayerLookPacket Read(MinecraftDataStream buffer)
+        public static PlayerLookPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2248,7 +2303,7 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal sealed class PlayerDigPacket : ServerboundPlayingPacket
+    public sealed class PlayerDigPacket : ServerboundPlayingPacket
     {
         public readonly int Status;
         // TODO: Make x as a 26-bit integer,
@@ -2258,7 +2313,7 @@ namespace MinecraftServerEngine
         public readonly byte[] Position;
         public readonly byte Face;
 
-        internal static PlayerDigPacket Read(MinecraftDataStream buffer)
+        public static PlayerDigPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2281,13 +2336,13 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal sealed class EntityActionPacket : ServerboundPlayingPacket
+    public sealed class EntityActionPacket : ServerboundPlayingPacket
     {
         public readonly int EntityId;
         public readonly int ActionId;
         public readonly int JumpBoost;
 
-        internal static EntityActionPacket Read(MinecraftDataStream buffer)
+        public static EntityActionPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2311,11 +2366,11 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class ServerboundHeldItemSlotPacket : ServerboundPlayingPacket
+    public sealed class ServerboundHeldItemSlotPacket : ServerboundPlayingPacket
     {
         public readonly int Slot;
 
-        internal static ServerboundHeldItemSlotPacket Read(MinecraftDataStream buffer)
+        public static ServerboundHeldItemSlotPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2335,11 +2390,11 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal sealed class AnimationPacket : ServerboundPlayingPacket
+    public sealed class AnimationPacket : ServerboundPlayingPacket
     {
         public readonly int Hand;
 
-        internal static AnimationPacket Read(MinecraftDataStream buffer)
+        public static AnimationPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2359,11 +2414,11 @@ namespace MinecraftServerEngine
         }
     }
 
-    internal sealed class UseItemPacket : ServerboundPlayingPacket
+    public sealed class UseItemPacket : ServerboundPlayingPacket
     {
         public readonly int Hand;
 
-        internal static UseItemPacket Read(MinecraftDataStream buffer)
+        public static UseItemPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 

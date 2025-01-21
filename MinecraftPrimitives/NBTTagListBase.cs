@@ -8,7 +8,7 @@ namespace MinecraftPrimitives
 
         private bool _disposed = false;
 
-        private NBTTagListBase()
+        internal NBTTagListBase()
         {
         }
 

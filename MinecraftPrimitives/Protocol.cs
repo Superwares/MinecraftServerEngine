@@ -1,9 +1,9 @@
 ﻿
 using Common;
 using Containers;
-using Sync;
 
-namespace MinecraftServerEngine
+
+namespace MinecraftPrimitives
 {
     internal static class SocketMethods
     {
@@ -19,7 +19,7 @@ namespace MinecraftServerEngine
         public static System.Net.Sockets.Socket Establish(ushort port)
         {
             System.Net.Sockets.Socket socket = new(
-                System.Net.Sockets.SocketType.Stream, 
+                System.Net.Sockets.SocketType.Stream,
                 System.Net.Sockets.ProtocolType.Tcp);
 
             System.Net.IPEndPoint localEndPoint = new(System.Net.IPAddress.Any, port);
@@ -53,7 +53,7 @@ namespace MinecraftServerEngine
             /*System.Diagnostics.Debug.Assert(false);*/
         }
 
-        public static bool Poll(System.Net.Sockets.Socket socket, System.TimeSpan span)  
+        public static bool Poll(System.Net.Sockets.Socket socket, System.TimeSpan span)
         {
             System.Diagnostics.Debug.Assert(socket != null);
 
@@ -87,7 +87,7 @@ namespace MinecraftServerEngine
         /// <exception cref="DisconnectedClientException"></exception>
         /// <exception cref="TryAgainException"></exception>
         public static int RecvBytes(
-            System.Net.Sockets.Socket socket, 
+            System.Net.Sockets.Socket socket,
             byte[] buffer, int offset, int size)
         {
             System.Diagnostics.Debug.Assert(socket != null);
@@ -183,7 +183,7 @@ namespace MinecraftServerEngine
 
     }
 
-    internal sealed class Client : System.IDisposable
+    public sealed class MinecraftClient : System.IDisposable
     {
         private bool _disposed = false;
 
@@ -201,7 +201,7 @@ namespace MinecraftServerEngine
         public int LocalPort => SocketMethods.GetLocalPort(Socket);
 
         /// <exception cref="TryAgainException"></exception>
-        internal static Client Accept(System.Net.Sockets.Socket socket)
+        internal static MinecraftClient Accept(System.Net.Sockets.Socket socket)
         {
             //TODO: Check the socket is Binding and listening correctly.
 
@@ -214,13 +214,13 @@ namespace MinecraftServerEngine
             return new(newSocket);
         }
 
-        private Client(System.Net.Sockets.Socket socket)
+        private MinecraftClient(System.Net.Sockets.Socket socket)
         {
             System.Diagnostics.Debug.Assert(SocketMethods.IsBlocking(socket) == false);
             Socket = socket;
         }
 
-        ~Client() => System.Diagnostics.Debug.Assert(false);
+        ~MinecraftClient() => System.Diagnostics.Debug.Assert(false);
 
 
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
@@ -254,7 +254,7 @@ namespace MinecraftServerEngine
                     if (position >= 32)
                     {
                         throw new InvalidEncodingException();
-                    }    
+                    }
 
                     System.Diagnostics.Debug.Assert(position > 0);
                 }
@@ -387,60 +387,17 @@ namespace MinecraftServerEngine
 
     }
 
-    internal readonly struct User(Client client, System.Guid userId, string username)
+    public readonly struct User(MinecraftClient client, System.Guid userId, string username)
     {
-        public readonly Client Client = client;
+        public readonly MinecraftClient Client = client;
         public readonly UserId Id = new(userId);
         public readonly string Username = username;
     }
 
-    public sealed class ConnectionListener : System.IDisposable
+    public interface IConnectionListener : System.IDisposable
     {
-        private bool _disposed = false;
 
-        private readonly ConcurrentQueue<User> Users = new();
-
-        ~ConnectionListener() => System.Diagnostics.Debug.Assert(false);
-
-        internal void AddUser(Client client, System.Guid userId, string username)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Users.Enqueue(new User(client, userId, username));
-        }
-
-        public void Accept(World world)
-        {
-            System.Diagnostics.Debug.Assert(world != null);
-
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            while (Users.Dequeue(out User user))
-            {
-                if (!world.CanJoinWorld())
-                {
-                    // TODO: Send message why disconnected.
-                    user.Client.Dispose();
-
-                    continue;
-                }
-
-                world.ConnectPlayer(user.Client, user.Username, user.Id);
-            } 
-        }
-
-        public void Dispose()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            // Assertion.
-
-            // Release resources.
-
-            // Finish
-            System.GC.SuppressFinalize(this);
-            _disposed = true;
-        }
+        public void AddUser(MinecraftClient client, System.Guid userId, string username);
 
     }
 
@@ -450,12 +407,12 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
-        private readonly ConnectionListener ConnListener;
+        private readonly IConnectionListener _ConnectionListener;
 
 
         private readonly System.Net.Sockets.Socket Socket;  // Disposable
 
-        private readonly Queue<Client> Visitors;  // Disposable
+        private readonly Queue<MinecraftClient> Visitors;  // Disposable
 
         /*
          * 0: Handshake
@@ -466,9 +423,9 @@ namespace MinecraftServerEngine
         private readonly Queue<int> LevelQueue;  // Disposable
 
 
-        public ClientListener(ConnectionListener connListener, ushort port)
+        public ClientListener(IConnectionListener connListener, ushort port)
         {
-            ConnListener = connListener;
+            _ConnectionListener = connListener;
 
             Socket = SocketMethods.Establish(port);
             Visitors = new();
@@ -493,7 +450,7 @@ namespace MinecraftServerEngine
             {
                 close = success = false;
 
-                Client client = Visitors.Dequeue();
+                MinecraftClient client = Visitors.Dequeue();
                 int level = LevelQueue.Dequeue();
 
                 /*Console.WriteLine($"count: {count}, level: {level}");*/
@@ -618,8 +575,7 @@ namespace MinecraftServerEngine
                         using System.IO.Stream stream = response.Content.ReadAsStream();
                         using System.IO.StreamReader reader = new(stream);
                         string str = reader.ReadToEnd();
-                        System.Collections.Generic.Dictionary<string, string> dictionary =
-                            System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, string>>(str);
+                        System.Collections.Generic.Dictionary<string, string> dictionary = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, string>>(str);
                         System.Diagnostics.Debug.Assert(dictionary != null);
 
                         System.Guid userId = System.Guid.Parse(dictionary["id"]);
@@ -637,7 +593,7 @@ namespace MinecraftServerEngine
                         client.Send(buffer);
 
                         // TODO: Must dealloc id when connection is disposed.
-                        ConnListener.AddUser(client, userId, username);
+                        _ConnectionListener.AddUser(client, userId, username);
 
                         success = true;
                     }
@@ -700,7 +656,7 @@ namespace MinecraftServerEngine
 
                     continue;
                 }
-                    
+
                 System.Diagnostics.Debug.Assert(close == false);
 
             }
@@ -724,7 +680,7 @@ namespace MinecraftServerEngine
 
                 if (SocketMethods.Poll(Socket, PendingTimeout))
                 {
-                    Client client = Client.Accept(Socket);
+                    MinecraftClient client = MinecraftClient.Accept(Socket);
                     Visitors.Enqueue(client);
                     LevelQueue.Enqueue(0);
 
@@ -736,7 +692,7 @@ namespace MinecraftServerEngine
                 /*Console.WriteLine("TryAgainException!");*/
             }
 
-            
+
         }
 
         public void Flush()

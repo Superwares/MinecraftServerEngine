@@ -1,7 +1,7 @@
 ﻿
 using Common;
 
-namespace MinecraftServerEngine
+namespace MinecraftPrimitives
 {
 
     // TODO: Check system is little- or big-endian.
@@ -177,11 +177,26 @@ namespace MinecraftServerEngine
         }
 
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
-        internal byte[] ReadData()
+        public byte[] ReadData()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             return ExtractBytes(Size);
+        }
+
+        /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
+        public byte[] ReadData(int size)
+        {
+            System.Diagnostics.Debug.Assert(size >= 0);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (size == 0)
+            {
+                return [];
+            }
+
+            return ExtractBytes(size);
         }
 
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
@@ -403,7 +418,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             // 1. Read 2 bytes indicating the length of the string to be read (Big-Endian)
-            int utfLength = ReadByte(s) << 8 | ReadByte(s);
+            int utfLength = ReadByte() << 8 | ReadByte();
 
             // 2. Initialize StringBuilder to hold the string
             System.Text.StringBuilder result = new(utfLength);
@@ -413,7 +428,7 @@ namespace MinecraftServerEngine
             while (bytesRead < utfLength)
             {
                 // Read the first byte
-                byte a = (byte)ReadByte(s);
+                byte a = ReadByte();
                 bytesRead++;
 
                 if ((a & 0x80) == 0)
@@ -424,12 +439,12 @@ namespace MinecraftServerEngine
                 else if ((a & 0xE0) == 0xC0)
                 {
                     // 2-byte character (110xxxxx 10xxxxxx)
-                    byte b = (byte)ReadByte(s);
+                    byte b = ReadByte();
                     bytesRead++;
 
                     if ((b & 0xC0) != 0x80)
                     {
-                        throw new System.FormatException("Invalid UTF-8 sequence");
+                        throw new InvalidDecodingException("Invalid UTF-8 sequence");
                     }
 
                     char decodedChar = (char)(((a & 0x1F) << 6) | (b & 0x3F));
@@ -438,13 +453,13 @@ namespace MinecraftServerEngine
                 else if ((a & 0xF0) == 0xE0)
                 {
                     // 3-byte character (1110xxxx 10xxxxxx 10xxxxxx)
-                    byte b = (byte)ReadByte(s);
-                    byte c = (byte)ReadByte(s);
+                    byte b = ReadByte();
+                    byte c = ReadByte();
                     bytesRead += 2;
 
                     if ((b & 0xC0) != 0x80 || (c & 0xC0) != 0x80)
                     {
-                        throw new System.FormatException("Invalid UTF-8 sequence");
+                        throw new InvalidDecodingException("Invalid UTF-8 sequence");
                     }
 
                     char decodedChar = (char)(((a & 0x0F) << 12) | ((b & 0x3F) << 6) | (c & 0x3F));
@@ -453,7 +468,7 @@ namespace MinecraftServerEngine
                 else
                 {
                     // Invalid byte
-                    throw new System.FormatException("Invalid UTF-8 sequence");
+                    throw new InvalidDecodingException("Invalid UTF-8 sequence");
                 }
             }
 
@@ -471,22 +486,7 @@ namespace MinecraftServerEngine
             return new System.Guid(data);
         }
 
-        /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
-        internal byte[] ReadData(int size)
-        {
-            System.Diagnostics.Debug.Assert(size >= 0);
-
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            if (size == 0)
-            {
-                return [];
-            }
-
-            return ExtractBytes(size);
-        }
-
-        internal void WriteData(byte[] data)
+        public void WriteData(byte[] data)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 

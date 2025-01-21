@@ -2,10 +2,11 @@
 using Containers;
 using Sync;
 
+using MinecraftPrimitives;
+
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
-    using System.Text.Json;
 
     internal sealed class Connection : System.IDisposable
     {
@@ -282,7 +283,7 @@ namespace MinecraftServerEngine
 
         private readonly UserId Id;
 
-        private readonly Client Client;  // Dispoasble
+        private readonly MinecraftClient Client;  // Dispoasble
 
 
 
@@ -318,7 +319,7 @@ namespace MinecraftServerEngine
 
         internal Connection(
             UserId id,
-            Client client,
+            MinecraftClient client,
             World world,
             int idEntity,
             float health,
@@ -546,7 +547,7 @@ namespace MinecraftServerEngine
                                 text = output,
                             };
 
-                            string jsonString = JsonSerializer.Serialize(data);
+                            string jsonString = System.Text.Json.JsonSerializer.Serialize(data);
 
                             OutPackets.Enqueue(new ClientboundChatmessagePacket(
                                 jsonString, 0));
@@ -743,33 +744,33 @@ namespace MinecraftServerEngine
                         var packet = PlayerDigPacket.Read(buffer);
 
                         /*Console.Printl("PlayerDigPacket!");
-                        Console.Printl($"\tStatus: {packet.Status}");*/
-                        switch (packet.Status)
-                        {
-                            default:
-                                throw new System.NotImplementedException();
-                            case 0:  // Started digging
-                                if (_startDigging)
-                                {
-                                    throw new UnexpectedValueException("PlayerDigPacket.Status");
-                                }
+                        //Console.Printl($"\tStatus: {packet.Status}");*/
+                        //switch (packet.Status)
+                        //{
+                        //    default:
+                        //        throw new System.NotImplementedException();
+                        //    case 0:  // Started digging
+                        //        if (_startDigging)
+                        //        {
+                        //            throw new UnexpectedValueException("PlayerDigPacket.Status");
+                        //        }
 
-                                _startDigging = true;
-                                System.Diagnostics.Debug.Assert(!_attackWhenDigging);
-                                break;
-                            case 1:  // Cancelled digging
+                        //        _startDigging = true;
+                        //        System.Diagnostics.Debug.Assert(!_attackWhenDigging);
+                        //        break;
+                        //    case 1:  // Cancelled digging
 
-                                _startDigging = false;
-                                _attackWhenDigging = false;
-                                break;
-                            case 2:  // Finished digging
+                        //        _startDigging = false;
+                        //        _attackWhenDigging = false;
+                        //        break;
+                        //    case 2:  // Finished digging
 
-                                // TODO: Send Block Change Packet, 0x0B.
+                        //        // TODO: Send Block Change Packet, 0x0B.
 
-                                _startDigging = false;
-                                _attackWhenDigging = false;
-                                break;
-                        }
+                        //        _startDigging = false;
+                        //        _attackWhenDigging = false;
+                        //        break;
+                        //}
                     }
                     break;
                 case ServerboundPlayingPacket.EntityActionPacketId:

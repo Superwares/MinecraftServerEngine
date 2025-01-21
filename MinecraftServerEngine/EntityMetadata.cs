@@ -1,6 +1,8 @@
 ﻿
 using Containers;
 
+using MinecraftPrimitives;
+
 namespace MinecraftServerEngine
 {
     internal sealed class EntityMetadata : System.IDisposable

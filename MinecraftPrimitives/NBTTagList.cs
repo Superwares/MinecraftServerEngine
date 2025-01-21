@@ -1,8 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
-
-namespace MinecraftPrimitives
+﻿namespace MinecraftPrimitives
 {
     public sealed class NBTTagList<T> : NBTTagListBase, IReadableNBTTag<NBTTagList<T>>
         where T : NBTTagBase, IReadableNBTTag<T>
@@ -11,13 +7,13 @@ namespace MinecraftPrimitives
 
         public readonly T[] Data;
 
-        public static NBTTagList<T> Read(Stream s, int depth)
+        public static NBTTagList<T> Read(System.IO.Stream s, int depth)
         {
             System.Diagnostics.Debug.Assert(s != null);
             System.Diagnostics.Debug.Assert(depth >= 0);
             if (depth > 512)
             {
-                throw new Exception("Tried to read NBT tag with too high complexity, depth > 512");
+                throw new NBTTagException("Tried to read NBT tag with too high complexity, depth > 512");
             }
 
             int length = DataInputStreamUtils.ReadInt(s);
@@ -33,18 +29,27 @@ namespace MinecraftPrimitives
         }
 
 
-        public NBTTagList(T[] data)
+        public NBTTagList(T[] data) : base()
         {
             Data = data;
         }
 
-        public override void Write(Stream s)
+        ~NBTTagList()
         {
-            throw new NotImplementedException();
+            System.Diagnostics.Debug.Assert(false);
+
+            Dispose(false);
+        }
+
+        public override void Write(System.IO.Stream s)
+        {
+            throw new System.NotImplementedException();
         }
 
         public override string ToString()
         {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
             string tab = "    ";
 
             string str = $"NBTTagList<{typeof(T).Name}>({Data.Length})";
@@ -56,7 +61,7 @@ namespace MinecraftPrimitives
                 {
                     string _str = Data[i].ToString();
                     string indentedStr = string.Join($"\n{tab}",
-                        _str.Split('\n', StringSplitOptions.RemoveEmptyEntries));
+                        _str.Split('\n', System.StringSplitOptions.RemoveEmptyEntries));
 
                     str += $"\n{tab}{indentedStr}";
 
@@ -73,20 +78,35 @@ namespace MinecraftPrimitives
             return str;
         }
 
-        public override void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            // Assertions.
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            // Release resources
-            foreach (T item in Data)
+            // Check to see if Dispose has already been called.
+            if (_disposed == false)
             {
-                item.Dispose();
+
+                // If disposing equals true, dispose all managed
+                // and unmanaged resources.
+                if (disposing == true)
+                {
+                    // Dispose managed resources.
+                    foreach (T item in Data)
+                    {
+                        item.Dispose();
+                    }
+                }
+
+                // Call the appropriate methods to clean up
+                // unmanaged resources here.
+                // If disposing is false,
+                // only the following code is executed.
+                //CloseHandle(handle);
+                //handle = IntPtr.Zero;
+
+                // Note disposing has been done.
+                _disposed = true;
             }
 
-            // Finish.
-            base.Dispose();
-            _disposed = true;
+            base.Dispose(disposing);
         }
 
     }

@@ -2,6 +2,8 @@
 
 using Common;
 
+using MinecraftPrimitives;
+
 using MinecraftServerEngine;
 
 namespace TestMinecraftServerApplication

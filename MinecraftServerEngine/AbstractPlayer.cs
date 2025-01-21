@@ -1,5 +1,7 @@
 ﻿using Sync;
 
+using MinecraftPrimitives;
+
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
@@ -59,7 +61,7 @@ namespace MinecraftServerEngine
             UserId userId, string username,
             Vector p, Angles look, Gamemode gamemode)
             : base(
-                  userId.Data,
+                  userId.Value,
                   p, look,
                   false,  // noGravity
                   gamemode == Gamemode.Spectator ? GetSpectatorHitbox() : GetAdventureHitbox(false),
@@ -166,7 +168,7 @@ namespace MinecraftServerEngine
                 Inventory.GetEquipmentsData());
         }
 
-        internal void Connect(Client client, World world, UserId id)
+        internal void Connect(MinecraftClient client, World world, UserId id)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
