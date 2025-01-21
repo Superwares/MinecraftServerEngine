@@ -676,19 +676,15 @@ namespace MinecraftPrimitives
                 return;
             }
 
-            byte[] utf8Bytes = System.Text.Encoding.UTF8.GetBytes(value);
-            if (utf8Bytes.Length > ushort.MaxValue)
+            if (value.Length > 0xFFFF)
             {
-                throw new System.ArgumentException("String is too long for UTF-8 encoding.");
+                throw new System.ArgumentOutOfRangeException(nameof(value), "String is too long.");
             }
 
-            int length = utf8Bytes.Length;
+            WriteShort((short)value.Length);
 
-            System.Diagnostics.Debug.Assert(length <= short.MaxValue);
-            System.Diagnostics.Debug.Assert(length >= short.MinValue);
-            WriteShort((short)utf8Bytes.Length);
-
-            WriteData(utf8Bytes);
+            byte[] data = System.Text.Encoding.UTF8.GetBytes(value);
+            InsertBytes(data);
         }
 
         public void WritePosition(int x, int y, int z)

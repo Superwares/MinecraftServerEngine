@@ -190,7 +190,7 @@ namespace MinecraftServerEngine
             s.WriteByte((byte)_count);
 
             s.WriteShort(0);  // damage
-            //buffer.WriteByte(0x00);  // no NBT
+            //s.WriteByte(0x00);  // no NBT
 
             using NBTTagCompound compound = new();
             NBTTagCompound displayCompound = new();
@@ -199,7 +199,7 @@ namespace MinecraftServerEngine
 
             compound.Add("display", displayCompound);
 
-            compound.Write(s);
+            compound.WriteAsRoot(s);
         }
 
         internal byte[] WriteData()

@@ -157,6 +157,70 @@ namespace MinecraftPrimitives
             Dispose(false);
         }
 
+        public void WriteAsRoot(MinecraftDataStream s)
+        {
+            System.Diagnostics.Debug.Assert(s != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            s.WriteByte(NBTTagCompound.TypeId);
+            s.WriteModifiedString("");
+
+            foreach ((string key, NBTTagBase value) in _map.GetElements())
+            {
+
+                switch (value)
+                {
+                    default:
+                        throw new NBTTagException("Unknown type");
+                    case NBTTagEnd:
+                        throw new NBTTagException("Unexpected tag type");
+                    case NBTTagByte:
+                        s.WriteByte(NBTTagByte.TypeId);
+                        break;
+                    case NBTTagShort:
+                        s.WriteByte(NBTTagShort.TypeId);
+                        break;
+                    case NBTTagInt:
+                        s.WriteByte(NBTTagInt.TypeId);
+                        break;
+                    case NBTTagLong:
+                        s.WriteByte(NBTTagLong.TypeId);
+                        break;
+                    case NBTTagFloat:
+                        s.WriteByte(NBTTagFloat.TypeId);
+                        break;
+                    case NBTTagDouble:
+                        s.WriteByte(NBTTagDouble.TypeId);
+                        break;
+                    case NBTTagByteArray:
+                        s.WriteByte(NBTTagByteArray.TypeId);
+                        break;
+                    case NBTTagString:
+                        s.WriteByte(NBTTagString.TypeId);
+                        break;
+                    case NBTTagListBase:
+                        s.WriteByte(NBTTagListBase.TypeId);
+                        break;
+                    case NBTTagCompound:
+                        s.WriteByte(NBTTagCompound.TypeId);
+                        break;
+                    case NBTTagIntArray:
+                        s.WriteByte(NBTTagIntArray.TypeId);
+                        break;
+                    case NBTTagLongArray:
+                        s.WriteByte(NBTTagLongArray.TypeId);
+                        break;
+                }
+
+
+                s.WriteModifiedString(key);
+                value.Write(s);
+            }
+
+            s.WriteByte(NBTTagEnd.TypeId);
+        }
+
         public override void Write(MinecraftDataStream s)
         {
             System.Diagnostics.Debug.Assert(s != null);
@@ -231,7 +295,7 @@ namespace MinecraftPrimitives
 
             _map.Insert(key, value);
         }
-    
+
         public T GetNBTTag<T>(string key) where T : NBTTagBase
         {
             try

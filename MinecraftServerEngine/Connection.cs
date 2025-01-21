@@ -596,7 +596,6 @@ namespace MinecraftServerEngine
             switch (packetId)
             {
                 default:
-
                     /*throw new NotImplementedException();*/
                     buffer.Flush();
                     break;

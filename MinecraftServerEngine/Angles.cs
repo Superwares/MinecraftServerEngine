@@ -59,7 +59,7 @@ namespace MinecraftServerEngine
             //System.Diagnostics.Debug.Assert(pitch >= MinPitch);
             //System.Diagnostics.Debug.Assert(pitch <= MaxPitch);
 
-            if (yaw < MinYaw || MaxYaw < yaw)
+            if (pitch < MinPitch || MaxPitch < pitch)
             {
                 throw new System.ArgumentOutOfRangeException(nameof(yaw));
             }
