@@ -411,6 +411,18 @@ namespace MinecraftServerEngine
                         output += "]";
                         return output;
                     }
+                case "blocks":
+                    {
+                        string output = "Blocks: [\n";
+
+                        foreach (Block item in System.Enum.GetValues(typeof(Block)))
+                        {
+                            output += $"{(int)item}: {item},\n";
+                        }
+
+                        output += "]";
+                        return output;
+                    }
                 case "gamemodes":
                     {
                         string output = "Gamemodes: [\n";
@@ -518,7 +530,7 @@ namespace MinecraftServerEngine
 "\n" +
 "* Changes the game mode of the command issuer (you) to the specified mode.\n" +
 "- Adventure: Sets your game mode to adventure mode, where you can interact with objects but cannot break or place blocks.\n" +
-"- Spectator: Sets your game mode to spectator mode, where you can fly around and observe the world without interacting with it.\n" ;
+"- Spectator: Sets your game mode to spectator mode, where you can fly around and observe the world without interacting with it.\n";
 
                         if (args.Length == 2)
                         {
@@ -555,7 +567,7 @@ namespace MinecraftServerEngine
 "- <amount>: The number of items to give.\n" +
 "  Example: 1, 32, 64.\n" +
 "  Note: Each item has a predefined minimum and maximum amount. If the specified amount is outside this range, it will be adjusted to the nearest valid value.\n" +
-"- [username]: An optional username of the player to receive the item. If specified, the item will be given to the specified player instead of you.\n" ;
+"- [username]: An optional username of the player to receive the item. If specified, the item will be given to the specified player instead of you.\n";
 
                         if (args.Length >= 4)
                         {
