@@ -192,7 +192,7 @@ namespace MinecraftServerEngine
             s.WriteShort(0);  // damage
             //buffer.WriteByte(0x00);  // no NBT
 
-            NBTTagCompound compound = new();
+            using NBTTagCompound compound = new();
             NBTTagCompound displayCompound = new();
 
             displayCompound.Add("Name", new NBTTagString(Name));

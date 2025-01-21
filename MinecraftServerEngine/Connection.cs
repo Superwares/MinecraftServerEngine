@@ -371,7 +371,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(false);
 
-            //Dispose(false);
+            Dispose(false);
         }
 
         private string HandleCommandLineText(
@@ -738,41 +738,41 @@ namespace MinecraftServerEngine
                     }
                     break;
                 case ServerboundPlayingPacket.PlayerDigPacketId:
-                    {
-                        throw new UnexpectedPacketException();
+                    throw new UnexpectedPacketException();
+                    //{
 
-                        var packet = PlayerDigPacket.Read(buffer);
+                    //    var packet = PlayerDigPacket.Read(buffer);
 
-                        /*Console.Printl("PlayerDigPacket!");
-                        //Console.Printl($"\tStatus: {packet.Status}");*/
-                        //switch (packet.Status)
-                        //{
-                        //    default:
-                        //        throw new System.NotImplementedException();
-                        //    case 0:  // Started digging
-                        //        if (_startDigging)
-                        //        {
-                        //            throw new UnexpectedValueException("PlayerDigPacket.Status");
-                        //        }
+                    //    Console.Printl("PlayerDigPacket!");
+                    //    Console.Printl($"\tStatus: {packet.Status}");
+                    //    switch (packet.Status)
+                    //    {
+                    //        default:
+                    //            throw new System.NotImplementedException();
+                    //        case 0:  // Started digging
+                    //            if (_startDigging)
+                    //            {
+                    //                throw new UnexpectedValueException("PlayerDigPacket.Status");
+                    //            }
 
-                        //        _startDigging = true;
-                        //        System.Diagnostics.Debug.Assert(!_attackWhenDigging);
-                        //        break;
-                        //    case 1:  // Cancelled digging
+                    //            _startDigging = true;
+                    //            System.Diagnostics.Debug.Assert(!_attackWhenDigging);
+                    //            break;
+                    //        case 1:  // Cancelled digging
 
-                        //        _startDigging = false;
-                        //        _attackWhenDigging = false;
-                        //        break;
-                        //    case 2:  // Finished digging
+                    //            _startDigging = false;
+                    //            _attackWhenDigging = false;
+                    //            break;
+                    //        case 2:  // Finished digging
 
-                        //        // TODO: Send Block Change Packet, 0x0B.
+                    //            // TODO: Send Block Change Packet, 0x0B.
 
-                        //        _startDigging = false;
-                        //        _attackWhenDigging = false;
-                        //        break;
-                        //}
-                    }
-                    break;
+                    //            _startDigging = false;
+                    //            _attackWhenDigging = false;
+                    //            break;
+                    //    }
+                    //}
+                    //break;
                 case ServerboundPlayingPacket.EntityActionPacketId:
                     {
                         EntityActionPacket packet = EntityActionPacket.Read(buffer);
@@ -1377,24 +1377,43 @@ namespace MinecraftServerEngine
 
         public void Dispose()
         {
-            // Assertions.
-            System.Diagnostics.Debug.Assert(!_disposed);
-            System.Diagnostics.Debug.Assert(_disconnected);
-
-            // Release Resources.
-            Client.Dispose();
-
-            LoadChunkPackets.Dispose();
-            OutPackets.Dispose();
-
-            ChunkingHelprt.Dispose();
-            TeleportRecords.Dispose();
-
-            Window.Dispose();
-
-            // Finish.
+            Dispose(true);
             System.GC.SuppressFinalize(this);
-            _disposed = true;
+        }
+
+        private void Dispose(bool disposing)
+        {
+            // Check to see if Dispose has already been called.
+            if (_disposed == false)
+            {
+                System.Diagnostics.Debug.Assert(_disconnected == true);
+
+                // If disposing equals true, dispose all managed
+                // and unmanaged resources.
+                if (disposing == true)
+                {
+                    // Dispose managed resources.
+                    Client.Dispose();
+
+                    LoadChunkPackets.Dispose();
+                    OutPackets.Dispose();
+
+                    ChunkingHelprt.Dispose();
+                    TeleportRecords.Dispose();
+
+                    Window.Dispose();
+                }
+
+                // Call the appropriate methods to clean up
+                // unmanaged resources here.
+                // If disposing is false,
+                // only the following code is executed.
+                //CloseHandle(handle);
+                //handle = IntPtr.Zero;
+
+                // Note disposing has been done.
+                _disposed = true;
+            }
         }
 
     }

@@ -1,4 +1,6 @@
 ﻿
+using Sync;
+
 namespace Containers
 {
     public sealed class ConcurrentTree<K> : Tree<K>

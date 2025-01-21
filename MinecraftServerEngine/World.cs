@@ -529,7 +529,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            while (ObjectSpawningPool.Dequeue(out PhysicsObject obj))
+            while (ObjectSpawningPool.Dequeue(out PhysicsObject obj) == true)
             {
                 System.Diagnostics.Debug.Assert(obj != null);
 

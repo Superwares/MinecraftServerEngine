@@ -44,7 +44,7 @@ namespace Common
         {
             System.Diagnostics.Debug.Assert(t != null);
 
-            //t.Priority = System.Threading.ThreadPriority.Highest;
+            t.Priority = System.Threading.ThreadPriority.Highest;
             SystemThread = t;
         }
 

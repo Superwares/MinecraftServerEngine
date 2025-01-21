@@ -25,7 +25,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            while (Users.Dequeue(out User user))
+            while (Users.Dequeue(out User user) == true)
             {
                 if (!world.CanJoinWorld())
                 {

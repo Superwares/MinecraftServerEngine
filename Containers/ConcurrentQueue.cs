@@ -27,9 +27,15 @@ namespace Containers
 
             Locker.Hold();
 
-            base.Enqueue(value);
+            try
+            {
+                base.Enqueue(value);
 
-            Locker.Release();
+            }
+            finally
+            {
+                Locker.Release();
+            }
         }
 
         /// <summary>
@@ -46,28 +52,28 @@ namespace Containers
 
             Locker.Hold();
 
-            T v;
             try
             {
-                v = base.Dequeue();
+                return base.Dequeue();
             }
             finally
             {
                 Locker.Release();
             }
-
-            return v;
         }
 
         public override bool Dequeue(out T value)
         {
             Locker.Hold();
 
-            bool f = base.Dequeue(out value);
-
-            Locker.Release();
-
-            return f;
+            try
+            {
+                return base.Dequeue(out value);
+            }
+            finally
+            {
+                Locker.Release();
+            }
         }
 
         public override T[] Flush()
@@ -79,11 +85,15 @@ namespace Containers
 
             Locker.Hold();
 
-            T[] arr = base.Flush();
+            try
+            {
+                return base.Flush();
+            }
+            finally
+            {
+                Locker.Release();
+            }
 
-            Locker.Release();
-
-            return arr;
         }
 
         public new System.Collections.Generic.IEnumerable<T> GetValues()
@@ -95,23 +105,28 @@ namespace Containers
 
             Locker.Read();
 
-            if (!Empty)
+            try
             {
-                System.Diagnostics.Debug.Assert(_inNode != null);
-                System.Diagnostics.Debug.Assert(_outNode != null);
-
-                Node current = _outNode;
-                do
+                if (Empty == false)
                 {
-                    System.Diagnostics.Debug.Assert(current != null);
+                    System.Diagnostics.Debug.Assert(_inNode != null);
+                    System.Diagnostics.Debug.Assert(_outNode != null);
 
-                    yield return current.Value;
+                    Node current = _outNode;
+                    do
+                    {
+                        System.Diagnostics.Debug.Assert(current != null);
 
-                    current = current.NextNode;
-                } while (current != null);
+                        yield return current.Value;
+
+                        current = current.NextNode;
+                    } while (current != null);
+                }
             }
-
-            Locker.Release();
+            finally
+            {
+                Locker.Release();
+            }
         }
 
         protected override void Dispose(bool disposing)
