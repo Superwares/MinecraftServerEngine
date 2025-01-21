@@ -30,13 +30,13 @@ namespace MinecraftPrimitives
             Dispose(false);
         }
 
-        public override void Write(System.IO.Stream s)
+        public override void Write(MinecraftDataStream s)
         {
             System.Diagnostics.Debug.Assert(s != null);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            throw new System.NotImplementedException();
+            s.WriteFloat(Value);
         }
 
         public override string ToString()

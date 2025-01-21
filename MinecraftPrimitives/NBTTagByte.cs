@@ -7,7 +7,7 @@ namespace MinecraftPrimitives
 
         private bool _disposed = false;
 
-        public readonly int Value;
+        public readonly byte Value;
 
         public static NBTTagByte Read(System.IO.Stream s, int depth)
         {
@@ -15,10 +15,13 @@ namespace MinecraftPrimitives
             System.Diagnostics.Debug.Assert(depth >= 0);
 
             int value = DataInputStreamUtils.ReadByte(s);
-            return new NBTTagByte(value);
+
+            System.Diagnostics.Debug.Assert(value <= byte.MaxValue);
+            System.Diagnostics.Debug.Assert(value >= byte.MinValue);
+            return new NBTTagByte((byte)value);
         }
 
-        private NBTTagByte(int value)
+        private NBTTagByte(byte value)
         {
             Value = value;
         }
@@ -30,13 +33,13 @@ namespace MinecraftPrimitives
             Dispose(false);
         }
 
-        public override void Write(System.IO.Stream s)
+        public override void Write(MinecraftDataStream s)
         {
             System.Diagnostics.Debug.Assert(s != null);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            throw new System.NotImplementedException();
+            s.WriteByte(Value);
         }
 
         public override string ToString()

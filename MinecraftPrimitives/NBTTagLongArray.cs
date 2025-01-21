@@ -41,9 +41,18 @@ namespace MinecraftPrimitives
             Dispose(false);
         }
 
-        public override void Write(System.IO.Stream s)
+        public override void Write(MinecraftDataStream s)
         {
-            throw new System.NotImplementedException();
+            System.Diagnostics.Debug.Assert(s != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            s.WriteInt(Data.Length);
+
+            foreach (long value in Data)
+            {
+                s.WriteLong(value);
+            }
         }
 
         public override string ToString()
