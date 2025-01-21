@@ -109,7 +109,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(playerInventory != null);
             System.Diagnostics.Debug.Assert(cursor != null);
 
-            using Buffer buffer = new();
+            using MinecraftDataStream buffer = new();
 
             if (sharedInventory == null)
             {

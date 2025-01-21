@@ -167,7 +167,7 @@ namespace MinecraftServerEngine
             return true;
         }
 
-        internal void WriteData(Buffer buffer)
+        internal void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -187,7 +187,7 @@ namespace MinecraftServerEngine
 
         internal byte[] WriteData()
         {
-            using Buffer buffer = new();
+            using MinecraftDataStream buffer = new();
             WriteData(buffer);
             return buffer.ReadData();
         }

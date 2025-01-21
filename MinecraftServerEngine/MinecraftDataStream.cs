@@ -5,7 +5,7 @@ namespace MinecraftServerEngine
 {
 
     // TODO: Check system is little- or big-endian.
-    internal sealed class Buffer : System.IDisposable
+    public class MinecraftDataStream : System.IDisposable
     {
         private const int _EXPANSION_FACTOR = 2;
         private const float _LOAD_FACTOR = 0.7F;
@@ -13,9 +13,9 @@ namespace MinecraftServerEngine
         private const byte _SEGMENT_BITS = 0x7F;
         private const byte _CONTINUE_BIT = 0x80;
 
-        /*private const int _BOOL_DATATYPE_SIZE = 1;
+        private const int _BOOL_DATATYPE_SIZE = 1;
         private const int _SBYTE_DATATYPE_SIZE = 1;
-        private const int _BYTE_DATATYPE_SIZE = 1;*/
+        private const int _BYTE_DATATYPE_SIZE = 1;
         private const int _SHORT_DATATYPE_SIZE = 2;
         private const int _USHORT_DATATYPE_SIZE = 2;
         private const int _INT_DATATYPE_SIZE = 4;
@@ -36,7 +36,7 @@ namespace MinecraftServerEngine
         {
             get
             {
-                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_disposed == false);
 
                 System.Diagnostics.Debug.Assert(_first >= 0);
                 System.Diagnostics.Debug.Assert(_last >= _first);
@@ -46,17 +46,22 @@ namespace MinecraftServerEngine
 
         public bool Empty => (Size == 0);
 
-        public Buffer()
+        public MinecraftDataStream()
         {
             _size = _INIT_DATASIZE;
             _data = new byte[_INIT_DATASIZE];
         }
 
-        ~Buffer() => System.Diagnostics.Debug.Assert(false);
+        ~MinecraftDataStream()
+        {
+            System.Diagnostics.Debug.Assert(false);
+
+            Dispose(false);
+        }
 
         public bool IsEmpty()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(Size >= 0);
             return (Size == 0);
@@ -65,7 +70,7 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
         private byte ExtractByte()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(_last >= _first);
             if (_first == _last)
@@ -79,7 +84,7 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
         private byte[] ExtractBytes(int size)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(size >= 0);
             if (size == 0)
@@ -107,7 +112,7 @@ namespace MinecraftServerEngine
 
         private void ExpandData(int addedSize)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(addedSize >= 0);
             if (addedSize == 0)
@@ -151,7 +156,7 @@ namespace MinecraftServerEngine
 
         private void InsertByte(byte data)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(_last >= _first);
 
@@ -161,7 +166,7 @@ namespace MinecraftServerEngine
 
         private void InsertBytes(byte[] data)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(_last >= _first);
 
@@ -172,9 +177,17 @@ namespace MinecraftServerEngine
         }
 
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
+        internal byte[] ReadData()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            return ExtractBytes(Size);
+        }
+
+        /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
         public bool ReadBool()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             byte data = ExtractByte();
             System.Diagnostics.Debug.Assert(data != 0x01 | data != 0x00);
@@ -184,7 +197,7 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
         public sbyte ReadSbyte()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             return (sbyte)ExtractByte();
         }
@@ -192,7 +205,7 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
         public byte ReadByte()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             return (byte)ExtractByte();
         }
@@ -200,7 +213,7 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
         public short ReadShort()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             byte[] data = ExtractBytes(_SHORT_DATATYPE_SIZE);
             System.Diagnostics.Debug.Assert(data.Length == _SHORT_DATATYPE_SIZE);
@@ -213,7 +226,7 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
         public ushort ReadUshort()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             byte[] data = ExtractBytes(_USHORT_DATATYPE_SIZE);
             System.Diagnostics.Debug.Assert(data.Length == _USHORT_DATATYPE_SIZE);
@@ -226,7 +239,7 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
         public int ReadInt()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             byte[] data = ExtractBytes(_INT_DATATYPE_SIZE);
             System.Diagnostics.Debug.Assert(data.Length == _INT_DATATYPE_SIZE);
@@ -241,7 +254,7 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
         public long ReadLong()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             byte[] data = ExtractBytes(_LONG_DATATYPE_SIZE);
             System.Diagnostics.Debug.Assert(data.Length == _LONG_DATATYPE_SIZE);
@@ -260,7 +273,7 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
         public float ReadFloat()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             byte[] data = ExtractBytes(_FLOAT_DATATYPE_SIZE);
             System.Diagnostics.Debug.Assert(data.Length == _FLOAT_DATATYPE_SIZE);
@@ -271,7 +284,7 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
         public double ReadDouble()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             byte[] data = ExtractBytes(_DOUBLE_DATATYPE_SIZE);
             System.Diagnostics.Debug.Assert(data.Length == _DOUBLE_DATATYPE_SIZE);
@@ -282,7 +295,7 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
         public int ReadInt(bool decode)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (decode == false)
             {
@@ -318,7 +331,7 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
         public long ReadLong(bool decode)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (decode == false)
             {
@@ -349,10 +362,27 @@ namespace MinecraftServerEngine
             return (long)uvalue;
         }
 
-        /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
+
+        /**
+          * Size:
+          * ≥ 1 
+          * ≤ (n×3) + 3
+          * 
+          * Encodes:
+          * A sequence of Unicode scalar values
+          * 
+          * UTF-8 string prefixed with its size in bytes as a VarInt. Maximum length of n characters, which varies b
+          * context. The encoding used on the wire is regular UTF-8, not Java's "slight modification". However, the
+          * length of the string for purposes of the length limit is its number of UTF-16 code units, that is, scala
+          * values > U+FFFF are counted as two. Up to n × 3 bytes can be used to encode a UTF-8 string comprising n
+          * code units when converted to UTF-16, and both of those limits are checked. Maximum n value is 32767. 
+          * The + 3 is due to the max size of a valid length VarInt.
+          * 
+          * <exception cref="UnexpectedClientBehaviorExecption"></exception>
+          */
         public string ReadString()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
 
             int size = ReadInt(true);
@@ -362,10 +392,78 @@ namespace MinecraftServerEngine
             return System.Text.Encoding.UTF8.GetString(data);
         }
 
+        /**
+         * Modified UTF-8
+         * 
+         * References:
+         * https://docs.oracle.com/en/java/javase/18/docs/api/java.base/java/io/DataInput.html#modified-utf-8
+         */
+        public string ReadModifiedString()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            // 1. Read 2 bytes indicating the length of the string to be read (Big-Endian)
+            int utfLength = ReadByte(s) << 8 | ReadByte(s);
+
+            // 2. Initialize StringBuilder to hold the string
+            System.Text.StringBuilder result = new(utfLength);
+
+            // 3. Decode as UTF-8
+            int bytesRead = 0;
+            while (bytesRead < utfLength)
+            {
+                // Read the first byte
+                byte a = (byte)ReadByte(s);
+                bytesRead++;
+
+                if ((a & 0x80) == 0)
+                {
+                    // 1-byte character (0xxxxxxx)
+                    result.Append((char)a);
+                }
+                else if ((a & 0xE0) == 0xC0)
+                {
+                    // 2-byte character (110xxxxx 10xxxxxx)
+                    byte b = (byte)ReadByte(s);
+                    bytesRead++;
+
+                    if ((b & 0xC0) != 0x80)
+                    {
+                        throw new System.FormatException("Invalid UTF-8 sequence");
+                    }
+
+                    char decodedChar = (char)(((a & 0x1F) << 6) | (b & 0x3F));
+                    result.Append(decodedChar);
+                }
+                else if ((a & 0xF0) == 0xE0)
+                {
+                    // 3-byte character (1110xxxx 10xxxxxx 10xxxxxx)
+                    byte b = (byte)ReadByte(s);
+                    byte c = (byte)ReadByte(s);
+                    bytesRead += 2;
+
+                    if ((b & 0xC0) != 0x80 || (c & 0xC0) != 0x80)
+                    {
+                        throw new System.FormatException("Invalid UTF-8 sequence");
+                    }
+
+                    char decodedChar = (char)(((a & 0x0F) << 12) | ((b & 0x3F) << 6) | (c & 0x3F));
+                    result.Append(decodedChar);
+                }
+                else
+                {
+                    // Invalid byte
+                    throw new System.FormatException("Invalid UTF-8 sequence");
+                }
+            }
+
+            return result.ToString();
+        }
+
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
         public System.Guid ReadGuid()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             byte[] data = ExtractBytes(_GUID_DATATYPE_SIZE);
             System.Diagnostics.Debug.Assert(data.Length == _GUID_DATATYPE_SIZE);
@@ -378,7 +476,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(size >= 0);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (size == 0)
             {
@@ -388,17 +486,21 @@ namespace MinecraftServerEngine
             return ExtractBytes(size);
         }
 
-        /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
-        internal byte[] ReadData()
+        internal void WriteData(byte[] data)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
-            return ExtractBytes(Size);
+            if (data == null)
+            {
+                return;
+            }
+
+            InsertBytes(data);
         }
 
         public void WriteBool(bool value)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (value == true)
             {
@@ -412,21 +514,21 @@ namespace MinecraftServerEngine
 
         public void WriteSbyte(sbyte value)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             InsertByte((byte)value);
         }
 
         public void WriteByte(byte value)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             InsertByte((byte)value);
         }
 
         public void WriteShort(short value)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             byte[] data = System.BitConverter.GetBytes(value);
             System.Diagnostics.Debug.Assert(data.Length == _SHORT_DATATYPE_SIZE);
@@ -436,7 +538,7 @@ namespace MinecraftServerEngine
 
         public void WriteUshort(ushort value)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             byte[] data = System.BitConverter.GetBytes(value);
             System.Diagnostics.Debug.Assert(data.Length == _USHORT_DATATYPE_SIZE);
@@ -446,7 +548,7 @@ namespace MinecraftServerEngine
 
         public void WriteInt(int value)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             byte[] data = System.BitConverter.GetBytes(value);
             System.Diagnostics.Debug.Assert(data.Length == _INT_DATATYPE_SIZE);
@@ -456,7 +558,7 @@ namespace MinecraftServerEngine
 
         public void WriteLong(long value)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             byte[] data = System.BitConverter.GetBytes(value);
             System.Diagnostics.Debug.Assert(data.Length == _LONG_DATATYPE_SIZE);
@@ -466,7 +568,7 @@ namespace MinecraftServerEngine
 
         public void WriteFloat(float value)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             byte[] data = System.BitConverter.GetBytes(value);
             System.Diagnostics.Debug.Assert(data.Length == _FLOAT_DATATYPE_SIZE);
@@ -476,7 +578,7 @@ namespace MinecraftServerEngine
 
         public void WriteDouble(double value)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             byte[] data = System.BitConverter.GetBytes(value);
             System.Diagnostics.Debug.Assert(data.Length == _DOUBLE_DATATYPE_SIZE);
@@ -486,7 +588,7 @@ namespace MinecraftServerEngine
 
         public void WriteInt(int value, bool encode)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (encode == false)
             {
@@ -512,7 +614,7 @@ namespace MinecraftServerEngine
 
         public void WriteLong(long value, bool encode)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (encode == false)
             {
@@ -534,15 +636,59 @@ namespace MinecraftServerEngine
             }
         }
 
+        /**
+         * Size:
+         * ≥ 1 
+         * ≤ (n×3) + 3
+         * 
+         * Encodes:
+         * A sequence of Unicode scalar values
+         * 
+         * UTF-8 string prefixed with its size in bytes as a VarInt. Maximum length of n characters, which varies b
+         * context. The encoding used on the wire is regular UTF-8, not Java's "slight modification". However, the
+         * length of the string for purposes of the length limit is its number of UTF-16 code units, that is, scala
+         * values > U+FFFF are counted as two. Up to n × 3 bytes can be used to encode a UTF-8 string comprising n
+         * code units when converted to UTF-16, and both of those limits are checked. Maximum n value is 32767. 
+         * The + 3 is due to the max size of a valid length VarInt.
+         */
         public void WriteString(string value)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (value == null)
+            {
+                return;
+            }
 
             int size = value.Length;
             WriteInt(size, true);
 
             byte[] data = System.Text.Encoding.UTF8.GetBytes(value);
             InsertBytes(data);
+        }
+
+        public void WriteModifiedString(string value)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (value == null)
+            {
+                return;
+            }
+
+            byte[] utf8Bytes = System.Text.Encoding.UTF8.GetBytes(value);
+            if (utf8Bytes.Length > ushort.MaxValue)
+            {
+                throw new System.ArgumentException("String is too long for UTF-8 encoding.");
+            }
+
+            int length = utf8Bytes.Length;
+
+            System.Diagnostics.Debug.Assert(length <= short.MaxValue);
+            System.Diagnostics.Debug.Assert(length >= short.MinValue);
+            WriteShort((short)utf8Bytes.Length);
+
+            WriteData(utf8Bytes);
         }
 
         public void WritePosition(int x, int y, int z)
@@ -572,23 +718,16 @@ namespace MinecraftServerEngine
 
         public void WriteGuid(System.Guid value)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             byte[] data = value.ToByteArray();
             System.Diagnostics.Debug.Assert(data.Length == _GUID_DATATYPE_SIZE);
             InsertBytes(data);
         }
 
-        internal void WriteData(byte[] data)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            InsertBytes(data);
-        }
-
         public void Flush()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(_size >= _INIT_DATASIZE);
             if (Size == 0)
@@ -602,21 +741,36 @@ namespace MinecraftServerEngine
 
         public void Dispose()
         {
-            // Assertions.
-            System.Diagnostics.Debug.Assert(!_disposed);
+            Dispose(true);
+            System.GC.SuppressFinalize(this);
+        }
 
-            if (!Empty)
+        protected virtual void Dispose(bool disposing)
+        {
+            // Check to see if Dispose has already been called.
+            if (_disposed == false)
             {
-                throw new BufferOverflowException();
+
+                // If disposing equals true, dispose all managed
+                // and unmanaged resources.
+                if (disposing == true)
+                {
+                    // Dispose managed resources.
+                }
+
+                // Call the appropriate methods to clean up
+                // unmanaged resources here.
+                // If disposing is false,
+                // only the following code is executed.
+                //CloseHandle(handle);
+                //handle = IntPtr.Zero;
+
+                // Note disposing has been done.
+                _disposed = true;
             }
 
-            // Release resources.
-            _data = null;
-
-            // Finish.
-            System.GC.SuppressFinalize(this);
-            _disposed = true;
         }
+
 
     }
 

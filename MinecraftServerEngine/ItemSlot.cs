@@ -103,7 +103,7 @@ namespace MinecraftServerEngine
             return new ItemSlot(Item, 1);
         }
 
-        public void WriteData(Buffer buffer)
+        public void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 

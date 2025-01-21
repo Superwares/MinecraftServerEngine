@@ -2,12 +2,12 @@
 
 namespace MinecraftServerEngine
 {
-    public abstract class ProtocolException : System.Exception
+    public abstract class MinecraftProtocolException : System.Exception
     {
-        public ProtocolException(string message) : base(message) { }
+        public MinecraftProtocolException(string message) : base(message) { }
     }
 
-    public class UnexpectedClientBehaviorExecption : ProtocolException
+    public class UnexpectedClientBehaviorExecption : MinecraftProtocolException
     {
         public UnexpectedClientBehaviorExecption(string msg) : base(msg) { }
     }
@@ -60,12 +60,12 @@ namespace MinecraftServerEngine
         public KeepaliveTimeoutException() : base("KeepaliveTimeoutException") { }
     }
 
-    public class DisconnectedClientException : ProtocolException
+    public class DisconnectedClientException : MinecraftProtocolException
     {
         public DisconnectedClientException() : base("The connection with the client has been terminated.") { }
     }
 
-    public class TryAgainException : ProtocolException
+    public class TryAgainException : MinecraftProtocolException
     {
         public TryAgainException() : base("No data is waiting to be received.") { }
     }

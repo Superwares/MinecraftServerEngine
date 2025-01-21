@@ -470,7 +470,7 @@ namespace MinecraftServerEngine
         }
 
         private void RecvDataAndHandle(
-            Buffer buffer,
+            MinecraftDataStream buffer,
             World world, AbstractPlayer player, PlayerInventory playerInventory)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
@@ -1008,7 +1008,7 @@ namespace MinecraftServerEngine
                 SendPacket(buffer2, packet);
             }*/
 
-            using Buffer buffer = new();
+            using MinecraftDataStream buffer = new();
 
             try
             {
@@ -1127,7 +1127,7 @@ namespace MinecraftServerEngine
         /// <param name="packet"></param>
         /// <exception cref="DisconnectedClientException"></exception>
         /// <exception cref="TryAgainException"></exception>
-        private void SendPacket(Buffer buffer, ClientboundPlayingPacket packet)
+        private void SendPacket(MinecraftDataStream buffer, ClientboundPlayingPacket packet)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
             System.Diagnostics.Debug.Assert(packet != null);
@@ -1156,7 +1156,7 @@ namespace MinecraftServerEngine
                 (short)(v.Y * 8000),
                 (short)(v.Z * 8000));
 
-            using Buffer buffer = new();
+            using MinecraftDataStream buffer = new();
 
             bool tryAgain;
 
@@ -1203,7 +1203,7 @@ namespace MinecraftServerEngine
                 false, false, false, false, false,
                 payload);
 
-            using Buffer buffer = new();
+            using MinecraftDataStream buffer = new();
 
             bool tryAgain;
 
@@ -1301,7 +1301,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
             System.Diagnostics.Debug.Assert(!_disconnected);
 
-            using Buffer buffer = new();
+            using MinecraftDataStream buffer = new();
 
             try
             {

@@ -44,7 +44,7 @@ namespace MinecraftServerEngine
 
             try
             {
-                using Buffer buffer = new();
+                using MinecraftDataStream buffer = new();
 
                 System.Diagnostics.Debug.Assert(Slots != null);
                 foreach (InventorySlot slot in Slots)

@@ -9,20 +9,20 @@ namespace MinecraftServerEngine
         {
             public readonly byte Index = index;
 
-            public void Write(Buffer buffer)
+            public void Write(MinecraftDataStream buffer)
             {
                 buffer.WriteByte(Index);
                 WriteData(buffer);
             }
 
-            public abstract void WriteData(Buffer buffer);
+            public abstract void WriteData(MinecraftDataStream buffer);
         }
 
         private class ByteItem(byte index, byte value) : Item(index)
         {
             private readonly byte Value = value;
 
-            public override void WriteData(Buffer buffer)
+            public override void WriteData(MinecraftDataStream buffer)
             {
                 System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -36,7 +36,7 @@ namespace MinecraftServerEngine
         {
             private readonly int Value = value;
 
-            public override void WriteData(Buffer buffer)
+            public override void WriteData(MinecraftDataStream buffer)
             {
                 System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -50,7 +50,7 @@ namespace MinecraftServerEngine
         {
             private readonly float Value = value;
 
-            public override void WriteData(Buffer buffer)
+            public override void WriteData(MinecraftDataStream buffer)
             {
                 System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -64,7 +64,7 @@ namespace MinecraftServerEngine
         {
             private readonly string Value = value;
 
-            public override void WriteData(Buffer buffer)
+            public override void WriteData(MinecraftDataStream buffer)
             {
                 System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -77,7 +77,7 @@ namespace MinecraftServerEngine
         {
             private readonly ItemStack Value = value;
 
-            public override void WriteData(Buffer buffer)
+            public override void WriteData(MinecraftDataStream buffer)
             {
                 System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -90,7 +90,7 @@ namespace MinecraftServerEngine
         {
             private readonly bool Value = value;
 
-            public override void WriteData(Buffer buffer)
+            public override void WriteData(MinecraftDataStream buffer)
             {
                 System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -163,7 +163,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            using Buffer buffer = new();
+            using MinecraftDataStream buffer = new();
 
             while (!Items.Empty)
             {

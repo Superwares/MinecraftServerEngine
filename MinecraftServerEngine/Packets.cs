@@ -90,9 +90,9 @@ namespace MinecraftServerEngine
             Id = id;
         }
 
-        protected abstract void WriteData(Buffer buffer);
+        protected abstract void WriteData(MinecraftDataStream buffer);
 
-        internal void Write(Buffer buffer)
+        internal void Write(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -245,14 +245,16 @@ namespace MinecraftServerEngine
         public readonly ushort Port;
         public readonly States NextState;
 
-        private static States ReadNextState(Buffer buffer)
+        private static States ReadNextState(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
             int a = buffer.ReadInt(true);
             States nextState = (a == 1 ? States.Status : States.Login);
             if (!(a == 1 || a == 2))
+            {
                 throw new InvalidEncodingException();
+            }
 
             return nextState;
         }
@@ -261,7 +263,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static SetProtocolPacket Read(Buffer buffer)
+        internal static SetProtocolPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -292,7 +294,7 @@ namespace MinecraftServerEngine
             : this(ProtocolVersion, hostname, port, nextState)
         { }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -318,7 +320,7 @@ namespace MinecraftServerEngine
         public readonly string Description;
 
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static ResponsePacket Read(Buffer buffer)
+        internal static ResponsePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -337,7 +339,7 @@ namespace MinecraftServerEngine
             Description = description;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -357,7 +359,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static PongPacket Read(Buffer buffer)
+        internal static PongPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -369,7 +371,7 @@ namespace MinecraftServerEngine
             Payload = payload;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -384,7 +386,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static RequestPacket Read(Buffer buffer)
+        internal static RequestPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -393,7 +395,7 @@ namespace MinecraftServerEngine
 
         public RequestPacket() : base(RequestPacketId) { }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
         }
@@ -408,7 +410,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static PingPacket Read(Buffer buffer)
+        internal static PingPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -422,7 +424,7 @@ namespace MinecraftServerEngine
 
         public PingPacket() : this(System.DateTime.Now.Ticks) { }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -439,7 +441,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static DisconnectPacket Read(Buffer buffer)
+        internal static DisconnectPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -451,7 +453,7 @@ namespace MinecraftServerEngine
             Reason = reason;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -466,7 +468,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static EncryptionRequestPacket Read(Buffer buffer)
+        internal static EncryptionRequestPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -478,7 +480,7 @@ namespace MinecraftServerEngine
             throw new System.NotImplementedException();
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -496,7 +498,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static LoginSuccessPacket Read(Buffer buffer)
+        internal static LoginSuccessPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -512,7 +514,7 @@ namespace MinecraftServerEngine
             Username = username;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -530,7 +532,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static SetCompressionPacket Read(Buffer buffer)
+        internal static SetCompressionPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -543,7 +545,7 @@ namespace MinecraftServerEngine
             Threshold = threshold;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -560,7 +562,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static StartLoginPacket Read(Buffer buffer)
+        internal static StartLoginPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -574,7 +576,7 @@ namespace MinecraftServerEngine
             Username = username;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -588,7 +590,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static EncryptionResponsePacket Read(Buffer buffer)
+        internal static EncryptionResponsePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -602,7 +604,7 @@ namespace MinecraftServerEngine
             throw new System.NotImplementedException();
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -620,7 +622,7 @@ namespace MinecraftServerEngine
         public readonly int Data;
         public readonly short VelocityX, VelocityY, VelocityZ;
 
-        public static SpawnEntityPacket Read(Buffer buffer)
+        public static SpawnEntityPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -643,7 +645,7 @@ namespace MinecraftServerEngine
             VelocityX = vx; VelocityY = vy; VelocityZ = vz;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -671,7 +673,7 @@ namespace MinecraftServerEngine
         public readonly byte Yaw, Pitch;
         public readonly byte[] Data;
 
-        public static SpawnNamedEntityPacket Read(Buffer buffer)
+        public static SpawnNamedEntityPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -692,7 +694,7 @@ namespace MinecraftServerEngine
             Data = data;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -710,7 +712,7 @@ namespace MinecraftServerEngine
         public readonly int X, Y, Z;
         public readonly int BlockId;
 
-        public static BlockChangePacket Read(Buffer buffer)
+        public static BlockChangePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -726,7 +728,7 @@ namespace MinecraftServerEngine
             BlockId = blockId;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -741,7 +743,7 @@ namespace MinecraftServerEngine
         public readonly string Data;
         public readonly byte Position;
 
-        public static ClientboundChatmessagePacket Read(Buffer buffer)
+        public static ClientboundChatmessagePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -757,7 +759,7 @@ namespace MinecraftServerEngine
             Position = position;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -773,7 +775,7 @@ namespace MinecraftServerEngine
         public readonly short ActionNumber;
         public readonly bool Accepted;
 
-        public static ClientboundConfirmTransactionPacket Read(Buffer buffer)
+        public static ClientboundConfirmTransactionPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -789,7 +791,7 @@ namespace MinecraftServerEngine
             Accepted = accepted;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -804,7 +806,7 @@ namespace MinecraftServerEngine
     {
         public readonly byte WindowId;
 
-        public static ClientboundCloseWindowPacket Read(Buffer buffer)
+        public static ClientboundCloseWindowPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -817,7 +819,7 @@ namespace MinecraftServerEngine
             WindowId = windowId;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -833,7 +835,7 @@ namespace MinecraftServerEngine
         public readonly string WindowTitle;
         public readonly byte SlotCount;
 
-        public static OpenWindowPacket Read(Buffer buffer)
+        public static OpenWindowPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -851,7 +853,7 @@ namespace MinecraftServerEngine
             SlotCount = slotCount;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -870,7 +872,7 @@ namespace MinecraftServerEngine
         public readonly int Count;
         public readonly byte[] Data;
 
-        public static WindowItemsPacket Read(Buffer buffer)
+        public static WindowItemsPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -889,7 +891,7 @@ namespace MinecraftServerEngine
             Data = data;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -913,7 +915,7 @@ namespace MinecraftServerEngine
         public readonly short SlotNumber;
         public readonly byte[] Data;
 
-        public static SetSlotPacket Read(Buffer buffer)
+        public static SetSlotPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -931,7 +933,7 @@ namespace MinecraftServerEngine
             Data = data;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -950,7 +952,7 @@ namespace MinecraftServerEngine
         public readonly float Volume, Pitch;
 
 
-        public static NamedSoundEffectPacket Read(Buffer buffer)
+        public static NamedSoundEffectPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -969,7 +971,7 @@ namespace MinecraftServerEngine
             Volume = volume; Pitch = pitch;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -989,7 +991,7 @@ namespace MinecraftServerEngine
         internal readonly int EntityId;
         internal readonly byte Status;
 
-        internal static EntityStatusPacket Read(Buffer buffer)
+        internal static EntityStatusPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1002,7 +1004,7 @@ namespace MinecraftServerEngine
             Status = status;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1019,7 +1021,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static UnloadChunkPacket Read(Buffer buffer)
+        internal static UnloadChunkPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1032,7 +1034,7 @@ namespace MinecraftServerEngine
             ZChunk = zChunk;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1047,7 +1049,7 @@ namespace MinecraftServerEngine
         internal readonly byte Reason;
         internal readonly float Value;
 
-        internal static GameStatePacket Read(Buffer buffer)
+        internal static GameStatePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1060,7 +1062,7 @@ namespace MinecraftServerEngine
             Value = value;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1074,7 +1076,7 @@ namespace MinecraftServerEngine
     {
         public readonly long Payload;
 
-        internal static ClientboundKeepAlivePacket Read(Buffer buffer)
+        internal static ClientboundKeepAlivePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1086,7 +1088,7 @@ namespace MinecraftServerEngine
             Payload = payload;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1105,7 +1107,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static LoadChunkPacket Read(Buffer buffer)
+        internal static LoadChunkPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1127,7 +1129,7 @@ namespace MinecraftServerEngine
             Data = data;  // TODO: move semantics
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1151,7 +1153,7 @@ namespace MinecraftServerEngine
         internal readonly float Extra;
         internal readonly int Count;
 
-        internal static ParticlesPacket Read(Buffer buffer)
+        internal static ParticlesPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1172,7 +1174,7 @@ namespace MinecraftServerEngine
             Count = extra;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1199,7 +1201,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static JoinGamePacket Read(Buffer buffer)
+        internal static JoinGamePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1225,7 +1227,7 @@ namespace MinecraftServerEngine
             _reducedDebugInfo = reducedDebugInfo;
 
         }
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1243,7 +1245,7 @@ namespace MinecraftServerEngine
     {
         public readonly int EntityId;
 
-        internal static EntityPacket Read(Buffer buffer)
+        internal static EntityPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1255,7 +1257,7 @@ namespace MinecraftServerEngine
             EntityId = entityId;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1270,7 +1272,7 @@ namespace MinecraftServerEngine
         public readonly short DeltaX, DeltaY, DeltaZ;
         public readonly bool OnGround;
 
-        internal static EntityRelMovePacket Read(Buffer buffer)
+        internal static EntityRelMovePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1287,7 +1289,7 @@ namespace MinecraftServerEngine
             OnGround = onGround;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1305,7 +1307,7 @@ namespace MinecraftServerEngine
         public readonly byte Yaw, Pitch;
         public readonly bool OnGround;
 
-        internal static EntityRelMoveLookPacket Read(Buffer buffer)
+        internal static EntityRelMoveLookPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1324,7 +1326,7 @@ namespace MinecraftServerEngine
             OnGround = onGround;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1342,7 +1344,7 @@ namespace MinecraftServerEngine
         public readonly byte Yaw, Pitch;
         public readonly bool OnGround;
 
-        internal static EntityLookPacket Read(Buffer buffer)
+        internal static EntityLookPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1359,7 +1361,7 @@ namespace MinecraftServerEngine
             OnGround = onGround;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1381,7 +1383,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static AbilitiesPacket Read(Buffer buffer)
+        internal static AbilitiesPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1418,7 +1420,7 @@ namespace MinecraftServerEngine
             _fovModifier = fovModifier;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1435,7 +1437,7 @@ namespace MinecraftServerEngine
         public readonly string Username;
         public readonly int Ping;
 
-        internal static PlayerListItemAddPacket Read(Buffer buffer)
+        internal static PlayerListItemAddPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1451,7 +1453,7 @@ namespace MinecraftServerEngine
             Ping = ms;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1472,7 +1474,7 @@ namespace MinecraftServerEngine
         public readonly System.Guid UniqueId;
         public readonly int Laytency;
 
-        internal static PlayerListItemUpdateLatencyPacket Read(Buffer buffer)
+        internal static PlayerListItemUpdateLatencyPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1486,7 +1488,7 @@ namespace MinecraftServerEngine
             Laytency = laytency;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1502,7 +1504,7 @@ namespace MinecraftServerEngine
     {
         public readonly System.Guid UniqueId;
 
-        internal static PlayerListItemRemovePacket Read(Buffer buffer)
+        internal static PlayerListItemRemovePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1515,7 +1517,7 @@ namespace MinecraftServerEngine
             UniqueId = uniqueId;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1536,7 +1538,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static TeleportPacket Read(Buffer buffer)
+        internal static TeleportPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1572,7 +1574,7 @@ namespace MinecraftServerEngine
             Payload = payload;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1592,7 +1594,7 @@ namespace MinecraftServerEngine
     {
         public readonly int[] EntityIds;
 
-        internal static DestroyEntitiesPacket Read(Buffer buffer)
+        internal static DestroyEntitiesPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1604,7 +1606,7 @@ namespace MinecraftServerEngine
             EntityIds = entityIds;  // TODO: Copy
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1622,7 +1624,7 @@ namespace MinecraftServerEngine
         internal readonly byte Gamemode;
         internal readonly string LevelType;
 
-        internal static RespawnPacket Read(Buffer buffer)
+        internal static RespawnPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1639,7 +1641,7 @@ namespace MinecraftServerEngine
             LevelType = levelType;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1656,7 +1658,7 @@ namespace MinecraftServerEngine
         public readonly int EntityId;
         public readonly byte Yaw;
 
-        internal static EntityHeadLookPacket Read(Buffer buffer)
+        internal static EntityHeadLookPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1670,7 +1672,7 @@ namespace MinecraftServerEngine
             Yaw = yaw;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1685,7 +1687,7 @@ namespace MinecraftServerEngine
         public readonly int EntityId;
         public readonly byte[] Data;
 
-        internal static EntityMetadataPacket Read(Buffer buffer)
+        internal static EntityMetadataPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1699,7 +1701,7 @@ namespace MinecraftServerEngine
             Data = data;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1714,7 +1716,7 @@ namespace MinecraftServerEngine
         public readonly int EntityId;
         public readonly short X, Y, Z;
 
-        internal static EntityVelocityPacket Read(Buffer buffer)
+        internal static EntityVelocityPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1728,7 +1730,7 @@ namespace MinecraftServerEngine
             X = x; Y = y; Z = z;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1744,7 +1746,7 @@ namespace MinecraftServerEngine
         public readonly int Slot;
         public readonly byte[] Data;
 
-        internal static EntityEquipmentPacket Read(Buffer buffer)
+        internal static EntityEquipmentPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1761,7 +1763,7 @@ namespace MinecraftServerEngine
             Data = data;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1777,7 +1779,7 @@ namespace MinecraftServerEngine
         internal readonly int Food;
         internal readonly float FoodSaturation;
 
-        internal static UpdateHealthPacket Read(Buffer buffer)
+        internal static UpdateHealthPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1792,7 +1794,7 @@ namespace MinecraftServerEngine
             FoodSaturation = foodSaturation;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1809,7 +1811,7 @@ namespace MinecraftServerEngine
         public readonly byte Yaw, Pitch;
         public readonly bool OnGround;
 
-        internal static EntityTeleportPacket Read(Buffer buffer)
+        internal static EntityTeleportPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1828,7 +1830,7 @@ namespace MinecraftServerEngine
             OnGround = onGround;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1848,7 +1850,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static TeleportAcceptPacket Read(Buffer buffer)
+        internal static TeleportAcceptPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1860,7 +1862,7 @@ namespace MinecraftServerEngine
             Payload = payload;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1877,7 +1879,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static ServerboundChatMessagePacket Read(Buffer buffer)
+        internal static ServerboundChatMessagePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1889,7 +1891,7 @@ namespace MinecraftServerEngine
             Text = text;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1906,7 +1908,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static SettingsPacket Read(Buffer buffer)
+        internal static SettingsPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1926,7 +1928,7 @@ namespace MinecraftServerEngine
             RenderDistance = renderDistance;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1940,7 +1942,7 @@ namespace MinecraftServerEngine
         public readonly short ActionNumber;
         public readonly bool Accepted;
 
-        internal static ServerboundConfirmTransactionPacket Read(Buffer buffer)
+        internal static ServerboundConfirmTransactionPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1956,7 +1958,7 @@ namespace MinecraftServerEngine
             Accepted = accepted;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1974,7 +1976,7 @@ namespace MinecraftServerEngine
         public readonly int Mode;
         public readonly byte[] Data;
 
-        internal static ClickWindowPacket Read(Buffer buffer)
+        internal static ClickWindowPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -1997,7 +1999,7 @@ namespace MinecraftServerEngine
             Data = data;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2010,7 +2012,7 @@ namespace MinecraftServerEngine
     {
         public readonly byte WindowId;
 
-        internal static ServerboundCloseWindowPacket Read(Buffer buffer)
+        internal static ServerboundCloseWindowPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2023,7 +2025,7 @@ namespace MinecraftServerEngine
             WindowId = windowId;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2038,7 +2040,7 @@ namespace MinecraftServerEngine
         internal readonly int Type;
         internal readonly int Hand;
 
-        internal static UseEntityPacket Read(Buffer buffer)
+        internal static UseEntityPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2071,7 +2073,7 @@ namespace MinecraftServerEngine
             Hand = hand;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2087,7 +2089,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static ServerboundKeepAlivePacket Read(Buffer buffer)
+        internal static ServerboundKeepAlivePacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2099,7 +2101,7 @@ namespace MinecraftServerEngine
             Payload = payload;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2116,7 +2118,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static PlayerPacket Read(Buffer buffer)
+        internal static PlayerPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2128,7 +2130,7 @@ namespace MinecraftServerEngine
             OnGround = onGround;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2146,7 +2148,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static PlayerPositionPacket Read(Buffer buffer)
+        internal static PlayerPositionPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2162,7 +2164,7 @@ namespace MinecraftServerEngine
             OnGround = onGround;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2181,7 +2183,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static PlayerPosAndLookPacket Read(Buffer buffer)
+        internal static PlayerPosAndLookPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2202,7 +2204,7 @@ namespace MinecraftServerEngine
             OnGround = onGround;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2220,7 +2222,7 @@ namespace MinecraftServerEngine
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        internal static PlayerLookPacket Read(Buffer buffer)
+        internal static PlayerLookPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2238,7 +2240,7 @@ namespace MinecraftServerEngine
             OnGround = onGround;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2256,7 +2258,7 @@ namespace MinecraftServerEngine
         public readonly byte[] Position;
         public readonly byte Face;
 
-        internal static PlayerDigPacket Read(Buffer buffer)
+        internal static PlayerDigPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2271,7 +2273,7 @@ namespace MinecraftServerEngine
             Face = face;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2285,7 +2287,7 @@ namespace MinecraftServerEngine
         public readonly int ActionId;
         public readonly int JumpBoost;
 
-        internal static EntityActionPacket Read(Buffer buffer)
+        internal static EntityActionPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2300,7 +2302,7 @@ namespace MinecraftServerEngine
             JumpBoost = jumpBoost;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2313,7 +2315,7 @@ namespace MinecraftServerEngine
     {
         public readonly int Slot;
 
-        internal static ServerboundHeldItemSlotPacket Read(Buffer buffer)
+        internal static ServerboundHeldItemSlotPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2325,7 +2327,7 @@ namespace MinecraftServerEngine
             Slot = slot;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2337,7 +2339,7 @@ namespace MinecraftServerEngine
     {
         public readonly int Hand;
 
-        internal static AnimationPacket Read(Buffer buffer)
+        internal static AnimationPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2349,7 +2351,7 @@ namespace MinecraftServerEngine
             Hand = hand;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2361,7 +2363,7 @@ namespace MinecraftServerEngine
     {
         public readonly int Hand;
 
-        internal static UseItemPacket Read(Buffer buffer)
+        internal static UseItemPacket Read(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -2373,7 +2375,7 @@ namespace MinecraftServerEngine
             Hand = hand;
         }
 
-        protected override void WriteData(Buffer buffer)
+        protected override void WriteData(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 

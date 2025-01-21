@@ -298,7 +298,7 @@ namespace MinecraftServerEngine
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
         /// <exception cref="DisconnectedClientException"></exception>
         /// <exception cref="TryAgainException"></exception>
-        public void Recv(Buffer buffer)
+        public void Recv(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -362,7 +362,7 @@ namespace MinecraftServerEngine
 
         /// <exception cref="DisconnectedClientException"></exception>
         /// <exception cref="TryAgainException"></exception>
-        public void Send(Buffer buffer)
+        public void Send(MinecraftDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -499,7 +499,7 @@ namespace MinecraftServerEngine
                 /*Console.WriteLine($"count: {count}, level: {level}");*/
 
                 System.Diagnostics.Debug.Assert(level >= 0);
-                using Buffer buffer = new();
+                using MinecraftDataStream buffer = new();
 
                 try
                 {
