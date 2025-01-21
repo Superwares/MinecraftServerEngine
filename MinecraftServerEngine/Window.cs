@@ -10,10 +10,10 @@ namespace MinecraftServerEngine
     {
         private bool _disposed = false;
 
-        private readonly Locker Locker = new();  // Disposable
+        private readonly Locker _Locker = new();  // Disposable
 
-        private readonly WindowRenderer Renderer;
-        private readonly InventorySlot Cursor = new();
+        private readonly WindowRenderer _Renderer;
+        private readonly InventorySlot _Cursor = new();
 
         private SharedInventory _sharedInventory = null;
 
@@ -25,7 +25,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(outPackets != null);
             System.Diagnostics.Debug.Assert(invPlayer != null);
 
-            Renderer = new WindowRenderer(outPackets, invPlayer, Cursor);
+            _Renderer = new WindowRenderer(outPackets, invPlayer, _Cursor);
         }
 
         ~Window()
@@ -46,7 +46,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(playerInventory != null);
             System.Diagnostics.Debug.Assert(sharedInventory != null);
 
-            Locker.Hold();
+            _Locker.Hold();
             sharedInventory.Locker.Hold();
 
             try
@@ -58,7 +58,7 @@ namespace MinecraftServerEngine
 
 
                 sharedInventory.Open(userId, playerInventory, outPackets);
-                Renderer.Open(sharedInventory, playerInventory, Cursor);
+                _Renderer.Open(sharedInventory, playerInventory, _Cursor);
 
                 _sharedInventory = sharedInventory;
 
@@ -67,7 +67,7 @@ namespace MinecraftServerEngine
             finally
             {
                 sharedInventory.Locker.Release();
-                Locker.Release();
+                _Locker.Release();
             }
         }
 
@@ -84,8 +84,8 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(Renderer != null);
-            System.Diagnostics.Debug.Assert(Cursor != null);
+            System.Diagnostics.Debug.Assert(_Renderer != null);
+            System.Diagnostics.Debug.Assert(_Cursor != null);
 
             if (_sharedInventory != null)
             {
@@ -110,10 +110,10 @@ namespace MinecraftServerEngine
                                     default:
                                         throw new UnexpectedValueException($"Invalid button number: {button}, in mode {mode}");
                                     case 0:
-                                        dropItem = Cursor.DropFull();
+                                        dropItem = _Cursor.DropFull();
                                         break;
                                     case 1:
-                                        dropItem = Cursor.DropSingle();
+                                        dropItem = _Cursor.DropSingle();
                                         break;
                                     
                                 }
@@ -128,21 +128,21 @@ namespace MinecraftServerEngine
                             case 0:
                                 if (_sharedInventory == null)
                                 {
-                                    playerInventory.LeftClick(i, Cursor);
+                                    playerInventory.LeftClick(i, _Cursor);
                                 }
                                 else
                                 {
-                                    _sharedInventory.LeftClick(userId, player, playerInventory, i, Cursor);
+                                    _sharedInventory.LeftClick(userId, player, playerInventory, i, _Cursor);
                                 }
                                 break;
                             case 1:
                                 if (_sharedInventory == null)
                                 {
-                                    playerInventory.RightClick(i, Cursor);
+                                    playerInventory.RightClick(i, _Cursor);
                                 }
                                 else
                                 {
-                                    _sharedInventory.RightClick(userId, player, playerInventory, i, Cursor);
+                                    _sharedInventory.RightClick(userId, player, playerInventory, i, _Cursor);
                                 }
                                 break;
                         }
@@ -234,7 +234,7 @@ namespace MinecraftServerEngine
 
                 player.UpdateEntityEquipmentsData(playerInventory.GetEquipmentsData());
 
-                Renderer.Update(_sharedInventory, playerInventory, Cursor);
+                _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
 
                 {
                     if (_sharedInventory == null)
@@ -242,7 +242,7 @@ namespace MinecraftServerEngine
                         playerInventory.Print();
                     }
 
-                    MyConsole.Debug($"Cursor: {Cursor}");
+                    MyConsole.Debug($"Cursor: {_Cursor}");
                 }
             }
             finally
@@ -267,7 +267,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(invPlayer != null);
 
-            Locker.Hold();
+            _Locker.Hold();
 
             try
             {
@@ -323,7 +323,7 @@ namespace MinecraftServerEngine
             }
             finally
             {
-                Locker.Release();
+                _Locker.Release();
             }
         }
 
@@ -337,7 +337,7 @@ namespace MinecraftServerEngine
                 return true;
             }
 
-            Locker.Hold();
+            _Locker.Hold();
             if (_sharedInventory != null)
             {
                 _sharedInventory.Locker.Hold();
@@ -347,7 +347,7 @@ namespace MinecraftServerEngine
             {
                 bool f = playerInventory.GiveItem(stack);
 
-                Renderer.Update(_sharedInventory, playerInventory, Cursor);
+                _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
 
                 return f;
             }
@@ -357,7 +357,7 @@ namespace MinecraftServerEngine
                 {
                     _sharedInventory.Locker.Release();
                 }
-                Locker.Release();
+                _Locker.Release();
             }
         }
 
@@ -374,7 +374,7 @@ namespace MinecraftServerEngine
 
             SharedInventory sharedInventory = _sharedInventory;
 
-            Locker.Hold();
+            _Locker.Hold();
             if (sharedInventory != null)
             {
                 sharedInventory.Locker.Hold();
@@ -411,14 +411,14 @@ namespace MinecraftServerEngine
                     _sharedInventory.Close(invPrivate);
                 }
 
-                ItemStack dropItem = Cursor.DropFull();
+                ItemStack dropItem = _Cursor.DropFull();
 
                 if (dropItem != null)
                 {
                     world.SpawnObject(new ItemEntity(dropItem, player.Position));
                 }
 
-                Renderer.Reset(invPrivate, Cursor);
+                _Renderer.Reset(invPrivate, _Cursor);
                 _sharedInventory = null;
 
             }
@@ -428,7 +428,7 @@ namespace MinecraftServerEngine
                 {
                     sharedInventory.Locker.Release();
                 }
-                Locker.Release();
+                _Locker.Release();
             }
         }
 
@@ -446,7 +446,7 @@ namespace MinecraftServerEngine
                 _sharedInventory = null;
             }
 
-            if (!Cursor.Empty)
+            if (!_Cursor.Empty)
             {
                 // TODO: Drop Item.
 
@@ -461,10 +461,10 @@ namespace MinecraftServerEngine
 
             // Assertion.
             System.Diagnostics.Debug.Assert(_sharedInventory == null);
-            System.Diagnostics.Debug.Assert(Cursor.Empty);
+            System.Diagnostics.Debug.Assert(_Cursor.Empty);
 
             // Release Resources.
-            Locker.Dispose();
+            _Locker.Dispose();
 
             System.GC.SuppressFinalize(this);
             _disposed = true;
