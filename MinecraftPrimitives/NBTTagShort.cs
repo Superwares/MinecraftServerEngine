@@ -21,7 +21,7 @@ namespace MinecraftPrimitives
             return new NBTTagShort((short)value);
         }
 
-        private NBTTagShort(short value)
+        public NBTTagShort(short value)
         {
             Value = value;
         }

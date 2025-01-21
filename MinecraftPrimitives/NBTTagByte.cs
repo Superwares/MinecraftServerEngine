@@ -21,7 +21,7 @@ namespace MinecraftPrimitives
             return new NBTTagByte((byte)value);
         }
 
-        private NBTTagByte(byte value)
+        public NBTTagByte(byte value)
         {
             Value = value;
         }

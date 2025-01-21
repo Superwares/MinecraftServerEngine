@@ -18,7 +18,7 @@ namespace MinecraftPrimitives
             return new NBTTagFloat(value);
         }
 
-        private NBTTagFloat(float value)
+        public NBTTagFloat(float value)
         {
             Value = value;
         }

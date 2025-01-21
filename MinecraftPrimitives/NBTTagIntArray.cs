@@ -26,7 +26,7 @@ namespace MinecraftPrimitives
             return new NBTTagIntArray(data);
         }
 
-        private NBTTagIntArray(int[] data)
+        public NBTTagIntArray(int[] data)
         {
             System.Diagnostics.Debug.Assert(data != null);
 

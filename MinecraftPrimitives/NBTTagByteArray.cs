@@ -22,7 +22,7 @@ namespace MinecraftPrimitives
             return new NBTTagByteArray(data);
         }
 
-        private NBTTagByteArray(byte[] data)
+        public NBTTagByteArray(byte[] data)
         {
             System.Diagnostics.Debug.Assert(data != null);
 

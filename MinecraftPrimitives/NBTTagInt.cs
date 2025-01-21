@@ -19,7 +19,7 @@ namespace MinecraftPrimitives
             return new NBTTagInt(value);
         }
 
-        private NBTTagInt(int value)
+        public NBTTagInt(int value)
         {
             Value = value;
         }

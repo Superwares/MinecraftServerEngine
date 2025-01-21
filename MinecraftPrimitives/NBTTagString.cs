@@ -18,7 +18,7 @@ namespace MinecraftPrimitives
             return new NBTTagString(value);
         }
 
-        private NBTTagString(string value)
+        public NBTTagString(string value)
         {
             System.Diagnostics.Debug.Assert(value != null);
             System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(value) == false);

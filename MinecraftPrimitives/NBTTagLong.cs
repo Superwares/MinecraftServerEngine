@@ -18,7 +18,7 @@ namespace MinecraftPrimitives
             return new NBTTagLong(value);
         }
 
-        private NBTTagLong(long value)
+        public NBTTagLong(long value)
         {
             Value = value;
         }

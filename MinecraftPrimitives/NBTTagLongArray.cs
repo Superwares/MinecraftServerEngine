@@ -27,7 +27,7 @@ namespace MinecraftPrimitives
             return new NBTTagLongArray(data);
         }
 
-        private NBTTagLongArray(long[] data)
+        public NBTTagLongArray(long[] data)
         {
             System.Diagnostics.Debug.Assert(data != null);
 

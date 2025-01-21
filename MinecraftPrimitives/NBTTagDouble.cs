@@ -18,7 +18,7 @@ namespace MinecraftPrimitives
             return new NBTTagDouble(value);
         }
 
-        private NBTTagDouble(double value)
+        public NBTTagDouble(double value)
         {
             Value = value;
         }
