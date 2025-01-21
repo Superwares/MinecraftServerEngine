@@ -61,8 +61,8 @@ namespace MinecraftPrimitives
 
     public abstract class Packet
     {
-        protected const string MinecraftVersion = "1.12.2";
-        protected const int ProtocolVersion = 340;
+        public const string MinecraftVersion = "1.12.2";
+        public const int ProtocolVersion = 340;
 
         public enum States
         {

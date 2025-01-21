@@ -14,7 +14,7 @@ namespace MinecraftPrimitives
             Dispose(false);
         }
 
-        public abstract void Write(System.IO.Stream s);
+        public abstract void Write(MinecraftDataStream s);
 
         public override string ToString()
         {

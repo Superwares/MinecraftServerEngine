@@ -17,8 +17,7 @@ namespace MinecraftPrimitives
 
         private bool _disposed = false;
 
-        private readonly Table<string, NBTTagBase> _tagTable;
-        private readonly List<TagListItem> _tagList;
+        private readonly Map<string, NBTTagBase> _map;
 
         private static NBTTagBase ReadNBTTagList(System.IO.Stream s, int depth)
         {
@@ -70,8 +69,7 @@ namespace MinecraftPrimitives
                 throw new NBTTagException("Tried to read NBT tag with too high complexity, depth > 512");
             }
 
-            Table<string, NBTTagBase> tagTable = new();
-            List<TagListItem> tagList = new();
+            Map<string, NBTTagBase> map = new();
 
             int id;
 
@@ -91,8 +89,7 @@ namespace MinecraftPrimitives
                     default:
                         throw new NBTTagException("Unknown type Id");
                     case NBTTagEnd.TypeId:
-                        value = NBTTagEnd.Read(s, depth + 1);
-                        break;
+                        throw new NBTTagException("Unexpected tag type");
                     case NBTTagByte.TypeId:
                         value = NBTTagByte.Read(s, depth + 1);
                         break;
@@ -131,24 +128,20 @@ namespace MinecraftPrimitives
                         break;
                 }
 
-                if (tagTable.Contains(key) == true)
+                if (map.Contains(key) == true)
                 {
                     throw new NBTTagException("Duplicate item in NBT compound");
                 }
 
-                tagTable.Insert(key, value);
-                tagList.Append(new TagListItem(key, value));
+                map.Insert(key, value);
             }
 
-            return new NBTTagCompound(tagTable, tagList);
+            return new NBTTagCompound(map);
         }
 
-        private NBTTagCompound(
-            Table<string, NBTTagBase> tagTable,
-            List<TagListItem> tagList)
+        private NBTTagCompound(Map<string, NBTTagBase> map)
         {
-            _tagTable = tagTable;
-            _tagList = tagList;
+            _map = map;
         }
 
         ~NBTTagCompound()
@@ -158,20 +151,72 @@ namespace MinecraftPrimitives
             Dispose(false);
         }
 
-        public override void Write(System.IO.Stream s)
+        public override void Write(MinecraftDataStream s)
         {
             System.Diagnostics.Debug.Assert(s != null);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            throw new System.NotImplementedException();
+            foreach ((string key, NBTTagBase value) in _map.GetElements())
+            {
+
+                switch (value)
+                {
+                    default:
+                        throw new NBTTagException("Unknown type");
+                    case NBTTagEnd:
+                        throw new NBTTagException("Unexpected tag type");
+                    case NBTTagByte:
+                        s.WriteByte(NBTTagByte.TypeId);
+                        break;
+                    case NBTTagShort:
+                        s.WriteByte(NBTTagShort.TypeId);
+                        break;
+                    case NBTTagInt:
+                        s.WriteByte(NBTTagInt.TypeId);
+                        break;
+                    case NBTTagLong:
+                        s.WriteByte(NBTTagLong.TypeId);
+                        break;
+                    case NBTTagFloat:
+                        s.WriteByte(NBTTagFloat.TypeId);
+                        break;
+                    case NBTTagDouble:
+                        s.WriteByte(NBTTagDouble.TypeId);
+                        break;
+                    case NBTTagByteArray:
+                        s.WriteByte(NBTTagByteArray.TypeId);
+                        break;
+                    case NBTTagString:
+                        s.WriteByte(NBTTagString.TypeId);
+                        break;
+                    case NBTTagListBase:
+                        s.WriteByte(NBTTagListBase.TypeId);
+                        break;
+                    case NBTTagCompound:
+                        s.WriteByte(NBTTagCompound.TypeId);
+                        break;
+                    case NBTTagIntArray:
+                        s.WriteByte(NBTTagIntArray.TypeId);
+                        break;
+                    case NBTTagLongArray:
+                        s.WriteByte(NBTTagLongArray.TypeId);
+                        break;
+                }
+
+
+                s.WriteModifiedString(key);
+                value.Write(s);
+            }
+
+            s.WriteByte(NBTTagEnd.TypeId);
         }
 
         public T GetNBTTag<T>(string key) where T : NBTTagBase
         {
             try
             {
-                NBTTagBase nbtBase = _tagTable.Lookup(key);
+                NBTTagBase nbtBase = _map.Lookup(key);
 
                 return (T)nbtBase;
             }
@@ -192,22 +237,23 @@ namespace MinecraftPrimitives
 
             string str = "{\n";
 
-            foreach (TagListItem item in _tagList)
+            foreach ((string name, NBTTagBase tag) in _map.GetElements())
             {
-                string _str = item.Value.ToString();
+                string _str = tag.ToString();
 
                 string indentedStr = string.Join($"\n{tab}",
                     _str.Split('\n', System.StringSplitOptions.None));
 
-                //Console.WriteLine($"{item.Key} : {item.Value}");
+                //Console.WriteLine($"{tag.Key} : {tag}");
 
-                str += $"{tab}{item.Key}: {indentedStr}";
+                str += $"{tab}{name}: {indentedStr}";
 
-                if (item.Key != System.Linq.Enumerable.Last(_tagList).Key)
-                {
-                    str += $", ";
-                }
+                //if (name != System.Linq.Enumerable.Last(_map.GetElements()).Item1)
+                //{
+                //    str += $", ";
+                //}
 
+                str += $", ";
                 str += "\n";
             }
 
@@ -227,12 +273,11 @@ namespace MinecraftPrimitives
                 if (disposing == true)
                 {
                     // Dispose managed resources.
-                    foreach (TagListItem item in _tagList)
+                    foreach (NBTTagBase tag in _map.GetValues())
                     {
-                        item.Value.Dispose();
+                        tag.Dispose();
                     }
-                    _tagTable.Dispose();
-                    _tagList.Dispose();
+                    _map.Dispose();
                 }
 
                 // Call the appropriate methods to clean up
