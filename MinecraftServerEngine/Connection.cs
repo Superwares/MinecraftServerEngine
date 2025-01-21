@@ -417,7 +417,7 @@ namespace MinecraftServerEngine
 "\n" +
 "    Teleports the player specified as <from username> to the location of the player specified as <to username>. \n" +
 "\n";
-                        if (args.Length == 4)
+                        if (args.Length == 6)
                         {
                             if (Vector.TryParse(args[1], args[2], args[3], out Vector v) &&
                                 Angles.TryParse(args[4], args[5], out Angles angles))
@@ -429,7 +429,7 @@ namespace MinecraftServerEngine
                                 return $"Error: Invalid arguments!\n {usage}";
                             }
                         }
-                        else if (args.Length == 5)
+                        else if (args.Length == 7)
                         {
                             if (Vector.TryParse(args[1], args[2], args[3], out Vector v) &&
                                 Angles.TryParse(args[4], args[5], out Angles angles) &&
