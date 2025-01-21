@@ -133,7 +133,7 @@ namespace MinecraftServerEngine
             _count /= 2;
             int count = _count + a;
 
-            to = new ItemStack(Type, to.Name, count);
+            to = new ItemStack(Type, Name, count);
 
             return true;
         }
@@ -148,7 +148,7 @@ namespace MinecraftServerEngine
             }
 
             Spend(MinCount);
-            to = new ItemStack(Type, to.Name, MinCount);
+            to = new ItemStack(Type, Name, MinCount);
 
             return true;
         }
@@ -218,5 +218,6 @@ namespace MinecraftServerEngine
 
             return $"{Name}({Type})*{_count}";
         }
+
     }
 }
