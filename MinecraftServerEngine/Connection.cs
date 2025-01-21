@@ -401,14 +401,26 @@ namespace MinecraftServerEngine
                     return $"Error: Unknown command \"{command}\"!";
                 case "item-types":
                     {
-                        string output = "Item types:\n";
+                        string output = "Item types: [\n";
 
                         foreach (ItemType item in System.Enum.GetValues(typeof(ItemType)))
                         {
-                            string formattedItem = $"{(int)item}: {item}\n";
-                            output += formattedItem;
+                            output += $"{(int)item}: {item},\n";
                         }
 
+                        output += "]";
+                        return output;
+                    }
+                case "gamemodes":
+                    {
+                        string output = "Gamemodes: [\n";
+
+                        foreach (Gamemode item in System.Enum.GetValues(typeof(Gamemode)))
+                        {
+                            output += $"{(int)item}: {item},\n";
+                        }
+
+                        output += "]";
                         return output;
                     }
                 case "teleport":
@@ -419,16 +431,15 @@ namespace MinecraftServerEngine
 "\n" +
 "/teleport <x> <y> <z> <yaw> <pitch> \n" +
 "\n" +
-"    Teleports the command issuer (you) to the specified coordinates <x>, <y>, <z>, <yaw>, and <pitch>. \n" +
+"* Teleports the command issuer (you) to the specified coordinates <x>, <y>, <z>, <yaw>, and <pitch>. \n" +
 "\n" +
 "/teleport <x> <y> <z> <yaw> <pitch> <username> \n" +
 "\n" +
-"    Teleports the specified player to the coordinates <x>, <y>, <z>, <yaw>, and <pitch>. \n" +
+"* Teleports the specified player to the coordinates <x>, <y>, <z>, <yaw>, and <pitch>. \n" +
 "\n" +
 "/teleport <from username> <to username> \n" +
 "\n" +
-"    Teleports the player specified as <from username> to the location of the player specified as <to username>. \n" +
-"\n";
+"* Teleports the player specified as <from username> to the location of the player specified as <to username>. \n";
                         if (args.Length == 6)
                         {
                             if (Vector.TryParse(args[1], args[2], args[3], out Vector v) == true &&
@@ -496,7 +507,7 @@ namespace MinecraftServerEngine
                         }
                     }
 
-                    return null;
+                    break;
                 case "gamemode":
                 case "gm":
                     {
@@ -505,12 +516,9 @@ namespace MinecraftServerEngine
 "\n" +
 "/gamemode <Adventure|Spectator> \n" +
 "\n" +
-"    Changes the game mode of the command issuer (you) to the specified mode.\n" +
-"    - Adventure: Sets your game mode to adventure mode, where you can interact\n" +
-"      with objects but cannot break or place blocks.\n" +
-"    - Spectator: Sets your game mode to spectator mode, where you can fly\n" +
-"      around and observe the world without interacting with it.\n" +
-"\n";
+"* Changes the game mode of the command issuer (you) to the specified mode.\n" +
+"- Adventure: Sets your game mode to adventure mode, where you can interact with objects but cannot break or place blocks.\n" +
+"- Spectator: Sets your game mode to spectator mode, where you can fly around and observe the world without interacting with it.\n" ;
 
                         if (args.Length == 2)
                         {
@@ -539,18 +547,15 @@ namespace MinecraftServerEngine
 "\n" +
 "/give <item-type> <name> <amount> [username] \n" +
 "\n" +
-"    Gives the specified item to the command issuer (you) or to another player if a username is specified.\n" +
-"    - <item-type>: The name of the item type you want to receive.\n" +
-"      Example: 'DiamondSword', 'Stick', 'Snowball'.\n" +
-"    - <name>: An optional custom name for the item.\n" +
-"      Example: 'Excalibur', 'Magic Wand'.\n" +
-"    - <amount>: The number of items to give.\n" +
-"      Example: 1, 32, 64.\n" +
-"      Note: Each item has a predefined minimum and maximum amount. If the specified amount\n" +
-"            is outside this range, it will be adjusted to the nearest valid value.\n" +
-"    - [username]: An optional username of the player to receive the item.\n" +
-"      If specified, the item will be given to the specified player instead of you.\n" +
-"\n";
+"* Gives the specified item to the command issuer (you) or to another player if a username is specified.\n" +
+"- <item-type>: The name of the item type you want to receive.\n" +
+"  Example: 'DiamondSword', 'Stick', 'Snowball'.\n" +
+"- <name>: An optional custom name for the item.\n" +
+"  Example: 'Excalibur', 'Magic Wand'.\n" +
+"- <amount>: The number of items to give.\n" +
+"  Example: 1, 32, 64.\n" +
+"  Note: Each item has a predefined minimum and maximum amount. If the specified amount is outside this range, it will be adjusted to the nearest valid value.\n" +
+"- [username]: An optional username of the player to receive the item. If specified, the item will be given to the specified player instead of you.\n" ;
 
                         if (args.Length >= 4)
                         {
@@ -671,7 +676,7 @@ namespace MinecraftServerEngine
                         if (text.StartsWith('/') == true)
                         {
                             text = text.Substring(1);
-                            output = HandleCommandLineText(text, world, player);
+                            output = HandleCommandLineText(text, world, player).TrimEnd('\n');
                         }
                         else
                         {
