@@ -433,7 +433,7 @@ namespace MinecraftServerEngine
                         {
                             if (Vector.TryParse(args[1], args[2], args[3], out Vector v) &&
                                 Angles.TryParse(args[4], args[5], out Angles angles) &&
-                                args[6] != null && string.IsNullOrEmpty(args[6]))
+                                args[6] != null && string.IsNullOrEmpty(args[6]) == false)
                             {
                                 string username = args[6];
 
@@ -447,7 +447,6 @@ namespace MinecraftServerEngine
                                     return $"Error: Player \"{username}\" not found!\n {usage}";
                                 }
 
-                                throw new System.NotImplementedException();
                             }
                             else
                             {
@@ -456,8 +455,8 @@ namespace MinecraftServerEngine
                         }
                         else if (args.Length == 3)
                         {
-                            if (args[1] != null && string.IsNullOrEmpty(args[1]) &&
-                                args[2] != null && string.IsNullOrEmpty(args[2]))
+                            if (args[1] != null && string.IsNullOrEmpty(args[1]) == false &&
+                                args[2] != null && string.IsNullOrEmpty(args[2]) == false)
                             {
                                 string fromUsername = args[1];
                                 string toUsername = args[2];
@@ -689,7 +688,7 @@ namespace MinecraftServerEngine
                 case ServerboundPlayingPacket.ClickWindowPacketId:
                     {
                         ClickWindowPacket packet = ClickWindowPacket.Read(buffer);
-                        
+
                         {
                             MyConsole.NewLine();
                             MyConsole.Printl(
