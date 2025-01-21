@@ -293,7 +293,7 @@ namespace MinecraftServerEngine
 
         private JoinGamePacket JoinGamePacket = null;
         private readonly Queue<LoadChunkPacket> LoadChunkPackets = new();  // Dispoasble
-        private readonly ConcurrentQueue<ClientboundPlayingPacket> OutPackets = new();  // Dispoasble
+        internal readonly ConcurrentQueue<ClientboundPlayingPacket> OutPackets = new();  // Dispoasble
 
 
         private const int MAxEntityRanderDistance = 7;
@@ -707,6 +707,8 @@ namespace MinecraftServerEngine
                             OutPackets.Enqueue(new ClientboundChatmessagePacket(
                                 jsonString, 0));
                         }
+
+                        
                     }
                     break;
                 case ServerboundPlayingPacket.SettingsPacketId:

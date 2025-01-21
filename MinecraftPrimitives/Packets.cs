@@ -253,6 +253,7 @@ namespace MinecraftPrimitives
         public const int EntityMetadataPacketId = 0x3C;
         public const int EntityVelocityPacketId = 0x3E;
         public const int EntityEquipmentPacketId = 0x3F;
+        public const int SetExperiencePacketId = 0x40;
         public const int UpdateHealthPacketId = 0x41;
         public const int EntityTeleportPacketId = 0x4C;
 
@@ -1826,6 +1827,53 @@ namespace MinecraftPrimitives
             buffer.WriteInt(Slot, true);
             buffer.WriteData(Data);
         }
+    }
+
+    public sealed class SetExperiencePacket : ClientboundPlayingPacket
+    {
+        public readonly float Ratio;
+        public readonly int Level;
+        public readonly int TotalExperience;
+
+        public static SetExperiencePacket Read(MinecraftDataStream buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            throw new System.NotImplementedException();
+        }
+
+        public SetExperiencePacket(
+            float ratio, int level, int totalExperience) : base(SetExperiencePacketId)
+        {
+            if (ratio < 0 || ratio > 1)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(ratio));
+            }
+
+            if (level < 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(level));
+            }
+
+            if (totalExperience < 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(level));
+            }
+
+            Ratio = ratio;
+            Level = level;
+            TotalExperience = totalExperience;
+        }
+
+        protected override void WriteData(MinecraftDataStream buffer)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+
+            buffer.WriteFloat(Ratio);
+            buffer.WriteInt(Level, true);
+            buffer.WriteInt(TotalExperience, true);
+        }
+
     }
 
     public sealed class UpdateHealthPacket : ClientboundPlayingPacket

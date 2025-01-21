@@ -5,6 +5,7 @@ using MinecraftPrimitives;
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
+    using System.Reflection.Emit;
 
     public abstract class AbstractPlayer : LivingEntity
     {
@@ -55,6 +56,13 @@ namespace MinecraftServerEngine
         private Locker LockerGamemode = new();
         private Gamemode _nextGamemode, _gamemode;
         public Gamemode Gamemode => _gamemode;
+
+
+        private float _experienceBarRatio = 0.0F;
+        private int _experienceLevel = 0;
+        public float ExperienceBarRatio => _experienceBarRatio;
+        public int ExperienceLevel => _experienceLevel;
+
 
 
         protected AbstractPlayer(
@@ -134,6 +142,24 @@ namespace MinecraftServerEngine
 
         }
 
+        public void SetExperience(float ratio, int level)
+        {
+            if (ratio < 0 || ratio > 1)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(ratio));
+            }
+
+            if (level < 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(level));
+            }
+
+            _experienceBarRatio = ratio;
+            _experienceLevel = level;
+
+            Conn.OutPackets.Enqueue(new SetExperiencePacket(ratio, level, 0));
+        }
+
         private protected override Hitbox GetHitbox()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
@@ -186,6 +212,8 @@ namespace MinecraftServerEngine
                 Position, Look,
                 Inventory,
                 _gamemode);
+
+            Conn.OutPackets.Enqueue(new SetExperiencePacket(ExperienceBarRatio, ExperienceLevel, 0));
         }
 
         public void SwitchGamemode(Gamemode gamemode)
