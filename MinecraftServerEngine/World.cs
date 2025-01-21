@@ -256,6 +256,8 @@ namespace MinecraftServerEngine
         internal readonly ConcurrentTable<UserId, AbstractPlayer> PlayersByUserId = new();  // Disposable
         internal readonly ConcurrentTable<string, AbstractPlayer> PlayersByUsername = new();  // Disposable
 
+        internal readonly ConcurrentMap<UserId, WorldRenderer> WorldRenderersByUserId = new();  // Disposable
+
         private readonly ConcurrentTable<UserId, AbstractPlayer> DisconnectedPlayers = new(); // Disposable
 
         internal readonly BlockContext BlockContext;  // Disposable
@@ -279,8 +281,21 @@ namespace MinecraftServerEngine
             PlayerListRenderer plRenderer = new(OutPackets);
             PlayerList.Connect(id, plRenderer);
 
+            WorldRenderer renderer = new(OutPackets);
+            WorldRenderersByUserId.Insert(id, renderer);
+
             // TODO: world border
             // TODO: Boss Bar
+        }
+
+        public void PlaySound(string name, int category, Vector p, float volume, float pitch)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
+            {
+                renderer.PlaySound(name, category, p, volume, pitch);
+            }
         }
 
         internal void Disconnect(UserId id)
@@ -288,6 +303,8 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             PlayerList.Disconnect(id);
+
+            WorldRenderersByUserId.Extract(id);
 
             // TODO: world border
             // TODO: Boss Bar

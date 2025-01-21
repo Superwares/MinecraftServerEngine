@@ -689,16 +689,7 @@ namespace MinecraftServerEngine
                 case ServerboundPlayingPacket.ClickWindowPacketId:
                     {
                         ClickWindowPacket packet = ClickWindowPacket.Read(buffer);
-
-                        //double x = 10.0D, y = 0.0D, z = 10.0D;
-
-                        //OutPackets.Enqueue(new NamedSoundEffectPacket(
-                        //    "entity.player.attack.strong",
-                        //    7,
-                        //    (int)(x * 8), (int)(y * 8), (int)(z * 8),
-                        //    0.5F,
-                        //    2.0F));
-
+                        
                         {
                             MyConsole.NewLine();
                             MyConsole.Printl(

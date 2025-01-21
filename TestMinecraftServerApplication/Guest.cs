@@ -96,6 +96,8 @@ namespace TestMinecraftServerApplication
                 entity.Damage(1.0F);
                 entity.ApplyForce(d);
             }
+
+            world.PlaySound("entity.player.attack.strong", 7, Position, 1.0F, 2.0F);
         }
 
         protected override void OnAttack(World world, ItemStack stack)
