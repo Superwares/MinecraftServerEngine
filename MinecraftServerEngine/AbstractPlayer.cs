@@ -94,19 +94,26 @@ namespace MinecraftServerEngine
             Dispose(false);
         }
 
+        public virtual void OnRespawn()
+        {
+
+        }
+
         internal void Respawn()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(Gamemode != Gamemode.Spectator);
 
-            if (Connected)
+            if (Connected == true)
             {
                 Conn.UpdateHealth(MaxHealth);
             }
 
             _nextGamemode = Gamemode.Spectator;
             _health = MaxHealth;
+
+            OnRespawn();
         }
 
         public override void Damage(float amount)
@@ -250,7 +257,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(volume != null);
 
-            if (Connected)
+            if (Connected == true)
             {
                 // TODO: Check the difference between _p and p. and predict movement....
                 /*Console.Printl($"p: {p}, _p: {_p}, ");
@@ -283,7 +290,7 @@ namespace MinecraftServerEngine
 
             LockerTeleport.Hold();
 
-            if (Connected)
+            if (Connected == true)
             {
                 _pControl = p;
 
