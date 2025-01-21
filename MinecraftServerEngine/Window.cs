@@ -40,7 +40,7 @@ namespace MinecraftServerEngine
             ConcurrentQueue<ClientboundPlayingPacket> outPackets,
             PlayerInventory playerInventory, SharedInventory sharedInventory)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(outPackets != null);
             System.Diagnostics.Debug.Assert(playerInventory != null);
@@ -82,7 +82,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(player != null);
             System.Diagnostics.Debug.Assert(playerInventory != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(_Renderer != null);
             System.Diagnostics.Debug.Assert(_Cursor != null);
@@ -261,7 +261,7 @@ namespace MinecraftServerEngine
             PlayerInventory invPlayer,
             int idWindow, int mode, int button, int i)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(id != UserId.Null);
             System.Diagnostics.Debug.Assert(world != null);
@@ -366,7 +366,7 @@ namespace MinecraftServerEngine
             World world, AbstractPlayer player,
             int idWindow, PlayerInventory invPrivate)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(outPackets != null);
             System.Diagnostics.Debug.Assert(world != null);
@@ -435,7 +435,7 @@ namespace MinecraftServerEngine
 
         public void Flush(World world, PlayerInventory invPlayer)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(invPlayer != null);
@@ -457,7 +457,7 @@ namespace MinecraftServerEngine
 
         public void Dispose()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             // Assertion.
             System.Diagnostics.Debug.Assert(_sharedInventory == null);
