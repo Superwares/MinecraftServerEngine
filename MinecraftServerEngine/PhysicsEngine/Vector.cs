@@ -4,6 +4,11 @@ namespace MinecraftServerEngine.PhysicsEngine
 {
     public readonly struct Vector : System.IEquatable<Vector>
     {
+
+        public static readonly Vector Zero = new(0.0D, 0.0D, 0.0D);
+
+        public readonly double X, Y, Z;
+
         public static bool operator !=(Vector v1, Vector v2)
         {
             return v1.X != v2.X || v1.Y != v2.Y || v1.Z != v2.Z;
@@ -58,9 +63,20 @@ namespace MinecraftServerEngine.PhysicsEngine
             return Math.Sqrt(s);
         }
 
-        public static readonly Vector Zero = new(0.0D, 0.0D, 0.0D);
+        public static bool TryParse(string _x, string _y, string _z, out Vector v)
+        {
+            if (
+                double.TryParse(_x, out double x) == false ||
+                double.TryParse(_y, out double y) == false ||
+                double.TryParse(_z, out double z) == false)
+            {
+                v = Zero;
+                return false;
+            }
 
-        public readonly double X, Y, Z;
+            v = new Vector(x, y, z);
+            return true;
+        }
 
         public Vector(double x, double y, double z)
         {

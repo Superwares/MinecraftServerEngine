@@ -378,6 +378,9 @@ namespace MinecraftServerEngine
             string text,
             World world, AbstractPlayer player)
         {
+            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(player != null);
+
             if (text == null || string.IsNullOrEmpty(text))
             {
                 return null;
@@ -402,24 +405,24 @@ namespace MinecraftServerEngine
                         const string usage = "\n" +
 "Usage:\n" +
 "\n" +
-"/teleport <x> <y> <z> \n" +
+"/teleport <x> <y> <z> <yaw> <pitch> \n" +
 "\n" +
-"    Teleports the command issuer (you) to the specified coordinates <x>, <y>, and <z>. \n" +
+"    Teleports the command issuer (you) to the specified coordinates <x>, <y>, <z>, <yaw>, and <pitch>. \n" +
 "\n" +
-"/teleport <x> <y> <z> <username> \n" +
+"/teleport <x> <y> <z> <yaw> <pitch> <username> \n" +
 "\n" +
-"    Teleports the specified player to the coordinates <x>, <y>, and <z>. \n" +
+"    Teleports the specified player to the coordinates <x>, <y>, <z>, <yaw>, and <pitch>. \n" +
 "\n" +
 "/teleport <from username> <to username> \n" +
 "\n" +
-"    Teleports the player specified as <from username> to the location of the player specified as <to username>. \n";
+"    Teleports the player specified as <from username> to the location of the player specified as <to username>. \n" +
+"\n";
                         if (args.Length == 4)
                         {
-                            if (float.TryParse(args[1], out float x) &&
-                                float.TryParse(args[2], out float y) &&
-                                float.TryParse(args[3], out float z))
+                            if (Vector.TryParse(args[1], args[2], args[3], out Vector v) &&
+                                Angles.TryParse(args[4], args[5], out Angles angles))
                             {
-                                player.Teleport(new Vector(x, y, z), player.Look);
+                                player.Teleport(v, angles);
                             }
                             else
                             {
@@ -428,12 +431,21 @@ namespace MinecraftServerEngine
                         }
                         else if (args.Length == 5)
                         {
-                            if (float.TryParse(args[1], out float x) &&
-                                float.TryParse(args[2], out float y) &&
-                                float.TryParse(args[3], out float z) &&
-                                args[4] != null && string.IsNullOrEmpty(args[4]))
+                            if (Vector.TryParse(args[1], args[2], args[3], out Vector v) &&
+                                Angles.TryParse(args[4], args[5], out Angles angles) &&
+                                args[6] != null && string.IsNullOrEmpty(args[6]))
                             {
-                                string username = args[4];
+                                string username = args[6];
+
+                                try
+                                {
+                                    AbstractPlayer targetPlayer = world.PlayersByUsername.Lookup(username);
+                                    targetPlayer.Teleport(v, angles);
+                                }
+                                catch (KeyNotFoundException)
+                                {
+                                    return $"Error: Player \"{username}\" not found!\n {usage}";
+                                }
 
                                 throw new System.NotImplementedException();
                             }
@@ -450,7 +462,17 @@ namespace MinecraftServerEngine
                                 string fromUsername = args[1];
                                 string toUsername = args[2];
 
-                                throw new System.NotImplementedException();
+                                try
+                                {
+                                    AbstractPlayer fromPlayer = world.PlayersByUsername.Lookup(fromUsername);
+                                    AbstractPlayer toPlayer = world.PlayersByUsername.Lookup(toUsername);
+                                    fromPlayer.Teleport(toPlayer.Position, toPlayer.Look);
+                                }
+                                catch (KeyNotFoundException)
+                                {
+                                    return $"Error: Player \"{fromUsername}\" or \"{toUsername}\" not found!\n {usage}";
+                                }
+
                             }
                             else
                             {
@@ -466,6 +488,8 @@ namespace MinecraftServerEngine
                     return null;
                 case "gamemode":
                 case "gm":
+                    throw new System.NotImplementedException();
+                case "give":
                     throw new System.NotImplementedException();
             }
         }
@@ -739,40 +763,40 @@ namespace MinecraftServerEngine
                     break;
                 case ServerboundPlayingPacket.PlayerDigPacketId:
                     throw new UnexpectedPacketException();
-                    //{
+                //{
 
-                    //    var packet = PlayerDigPacket.Read(buffer);
+                //    var packet = PlayerDigPacket.Read(buffer);
 
-                    //    Console.Printl("PlayerDigPacket!");
-                    //    Console.Printl($"\tStatus: {packet.Status}");
-                    //    switch (packet.Status)
-                    //    {
-                    //        default:
-                    //            throw new System.NotImplementedException();
-                    //        case 0:  // Started digging
-                    //            if (_startDigging)
-                    //            {
-                    //                throw new UnexpectedValueException("PlayerDigPacket.Status");
-                    //            }
+                //    Console.Printl("PlayerDigPacket!");
+                //    Console.Printl($"\tStatus: {packet.Status}");
+                //    switch (packet.Status)
+                //    {
+                //        default:
+                //            throw new System.NotImplementedException();
+                //        case 0:  // Started digging
+                //            if (_startDigging)
+                //            {
+                //                throw new UnexpectedValueException("PlayerDigPacket.Status");
+                //            }
 
-                    //            _startDigging = true;
-                    //            System.Diagnostics.Debug.Assert(!_attackWhenDigging);
-                    //            break;
-                    //        case 1:  // Cancelled digging
+                //            _startDigging = true;
+                //            System.Diagnostics.Debug.Assert(!_attackWhenDigging);
+                //            break;
+                //        case 1:  // Cancelled digging
 
-                    //            _startDigging = false;
-                    //            _attackWhenDigging = false;
-                    //            break;
-                    //        case 2:  // Finished digging
+                //            _startDigging = false;
+                //            _attackWhenDigging = false;
+                //            break;
+                //        case 2:  // Finished digging
 
-                    //            // TODO: Send Block Change Packet, 0x0B.
+                //            // TODO: Send Block Change Packet, 0x0B.
 
-                    //            _startDigging = false;
-                    //            _attackWhenDigging = false;
-                    //            break;
-                    //    }
-                    //}
-                    //break;
+                //            _startDigging = false;
+                //            _attackWhenDigging = false;
+                //            break;
+                //    }
+                //}
+                //break;
                 case ServerboundPlayingPacket.EntityActionPacketId:
                     {
                         EntityActionPacket packet = EntityActionPacket.Read(buffer);
