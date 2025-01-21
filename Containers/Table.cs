@@ -4,7 +4,7 @@ using Sync;
 namespace Containers
 {
 
-    public class Table<K, T> : System.IDisposable 
+    public class Table<K, T> : System.IDisposable
         where K : notnull
     {
         private bool _disposed = false;
@@ -26,7 +26,10 @@ namespace Containers
         {
             get
             {
-                System.Diagnostics.Debug.Assert(!_disposed);
+                if (_disposed == true)
+                {
+                    throw new System.ObjectDisposedException(GetType().Name);
+                }
                 return _count;
             }
         }
@@ -43,18 +46,29 @@ namespace Containers
             Comparer = comparer;
         }
 
-        ~Table() => System.Diagnostics.Debug.Assert(false);
+        ~Table()
+        {
+            System.Diagnostics.Debug.Assert(false);
+
+            Dispose(false);
+        }
 
         private int Hash(K key)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             return System.Math.Abs(key.GetHashCode() * Constant);
         }
 
         private void Resize(int newLength)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
             System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
@@ -117,7 +131,10 @@ namespace Containers
         /// <exception cref="DuplicateKeyException"></exception>
         public virtual void Insert(K key, T value)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
             System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
@@ -174,7 +191,10 @@ namespace Containers
         /// <exception cref="KeyNotFoundException"></exception>
         public virtual T Extract(K key)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
             System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
@@ -270,7 +290,10 @@ namespace Containers
         /// <exception cref="KeyNotFoundException"></exception>
         public virtual T Lookup(K key)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
             System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
@@ -309,7 +332,10 @@ namespace Containers
 
         public virtual bool Contains(K key)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
             System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
@@ -347,7 +373,10 @@ namespace Containers
 
         public virtual (K, T)[] Flush()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
             System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
@@ -389,7 +418,10 @@ namespace Containers
 
         public System.Collections.Generic.IEnumerable<(K, T)> GetElements()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
             System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
@@ -422,7 +454,10 @@ namespace Containers
 
         public System.Collections.Generic.IEnumerable<K> GetKeys()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
             System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
@@ -455,7 +490,10 @@ namespace Containers
 
         public System.Collections.Generic.IEnumerable<T> GetValues()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
             System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
@@ -486,247 +524,39 @@ namespace Containers
 
         }
 
-        public virtual void Dispose()
+        public void Dispose()
         {
-            // Assertions.
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            // Release resources.
-            _flags = null;
-            _keys = null;
-            _values = null;
-
-            // Finish.
+            Dispose(true);
             System.GC.SuppressFinalize(this);
-            _disposed = true;
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            // Check to see if Dispose has already been called.
+            if (_disposed == false)
+            {
+                // If disposing equals true, dispose all managed
+                // and unmanaged resources.
+                if (disposing == true)
+                {
+                    // Dispose managed resources.
+                    _flags = null;
+                    _keys = null;
+                    _values = null;
+                }
+
+                // Call the appropriate methods to clean up
+                // unmanaged resources here.
+                // If disposing is false,
+                // only the following code is executed.
+                //CloseHandle(handle);
+                //handle = IntPtr.Zero;
+
+                // Note disposing has been done.
+                _disposed = true;
+            }
         }
 
     }
 
-    public sealed class ConcurrentTable<K, T> : Table<K, T>
-        where K : notnull
-    {
-        private bool _disposed = false;
-
-        private readonly ReadLocker Locker = new();
-
-        public ConcurrentTable() { }
-
-        ~ConcurrentTable() => System.Diagnostics.Debug.Assert(false);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <exception cref="DuplicateKeyException"></exception>
-        public override void Insert(K key, T value)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Locker.Hold();
-
-            try
-            {
-                base.Insert(key, value);
-            }
-            finally
-            {
-                Locker.Release();
-            }
-
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        /// <exception cref="KeyNotFoundException"></exception>
-        public override T Extract(K key)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Locker.Hold();
-
-            T v;
-
-            try
-            {
-                v = base.Extract(key);
-            }
-            finally
-            {
-                Locker.Release();
-            }
-
-            return v;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        /// <exception cref="KeyNotFoundException"></exception>
-        public override T Lookup(K key)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Locker.Read();
-
-            T v;
-            try
-            {
-                v = base.Lookup(key);
-            }
-            finally
-            {
-                Locker.Release();
-            }
-
-            return v;
-        }
-
-        public override bool Contains(K key)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Locker.Read();
-
-            bool f = base.Contains(key);
-
-            Locker.Release();
-
-            return f;
-        }
-
-        public override (K, T)[] Flush()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Locker.Hold();
-
-            var ret = base.Flush();
-
-            Locker.Release();
-
-            return ret;
-        }
-
-        public new System.Collections.Generic.IEnumerable<(K, T)> GetElements()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_values.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_length >= MinLength);
-            System.Diagnostics.Debug.Assert(_count >= 0);
-
-            Locker.Read();
-
-            if (!Empty)
-            {
-                int i = 0;
-                for (int j = 0; j < _length; ++j)
-                {
-                    if (!_flags[j])
-                    {
-                        continue;
-                    }
-
-                    yield return (_keys[j], _values[j]);
-
-                    if (++i == _count)
-                    {
-                        break;
-                    }
-                }
-            }
-
-            Locker.Release();
-        }
-
-        public new System.Collections.Generic.IEnumerable<K> GetKeys()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_values.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_length >= MinLength);
-            System.Diagnostics.Debug.Assert(_count >= 0);
-
-            Locker.Read();
-
-            if (!Empty)
-            {
-                int i = 0;
-                for (int j = 0; j < _length; ++j)
-                {
-                    if (!_flags[j])
-                    {
-                        continue;
-                    }
-
-                    yield return _keys[j];
-
-                    if (++i == _count)
-                    {
-                        break;
-                    }
-                }
-            }
-
-            Locker.Release();
-        }
-
-        public new System.Collections.Generic.IEnumerable<T> GetValues()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_values.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_length >= MinLength);
-            System.Diagnostics.Debug.Assert(_count >= 0);
-
-            Locker.Read();
-
-            if (!Empty)
-            {
-                int i = 0;
-                for (int j = 0; j < _length; ++j)
-                {
-                    if (!_flags[j])
-                    {
-                        continue;
-                    }
-
-                    yield return _values[j];
-
-                    if (++i == _count)
-                    {
-                        break;
-                    }
-                }
-            }
-
-            Locker.Release();
-        }
-
-        public override void Dispose()
-        {
-            // Assertions.
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            // Release resources.
-            Locker.Dispose();
-
-            // Finish.
-            base.Dispose();
-            _disposed = true;
-        }
-    }
 }

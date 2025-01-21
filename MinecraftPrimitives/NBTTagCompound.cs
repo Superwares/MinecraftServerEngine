@@ -144,6 +144,12 @@ namespace MinecraftPrimitives
             _map = map;
         }
 
+        public NBTTagCompound()
+        {
+            _map = new Map<string, NBTTagBase>();
+
+        }
+
         ~NBTTagCompound()
         {
             System.Diagnostics.Debug.Assert(false);
@@ -212,6 +218,20 @@ namespace MinecraftPrimitives
             s.WriteByte(NBTTagEnd.TypeId);
         }
 
+        public void Add(string key, NBTTagBase value)
+        {
+            if (key == null || string.IsNullOrEmpty(key) == true)
+            {
+                throw new System.ArgumentNullException(nameof(key));
+            }
+            if (value == null)
+            {
+                throw new System.ArgumentNullException(nameof(value));
+            }
+
+            _map.Insert(key, value);
+        }
+    
         public T GetNBTTag<T>(string key) where T : NBTTagBase
         {
             try

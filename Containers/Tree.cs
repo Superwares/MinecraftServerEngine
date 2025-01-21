@@ -5,7 +5,7 @@ using Sync;
 namespace Containers
 {
 
-    public class Tree<K> : System.IDisposable 
+    public class Tree<K> : System.IDisposable
         where K : notnull
     {
         private bool _disposed = false;
@@ -26,7 +26,10 @@ namespace Containers
         {
             get
             {
-                System.Diagnostics.Debug.Assert(!_disposed);
+                if (_disposed == true)
+                {
+                    throw new System.ObjectDisposedException(GetType().Name);
+                }
 
                 return _count;
             }
@@ -43,11 +46,19 @@ namespace Containers
             Comparer = comparer;
         }
 
-        ~Tree() => System.Diagnostics.Debug.Assert(false);
+        ~Tree()
+        {
+            System.Diagnostics.Debug.Assert(false);
+
+            Dispose(false);
+        }
 
         private int Hash(K key)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             /*Debug.Assert(key != null);*/
             int hashCode = key.GetHashCode();
@@ -56,7 +67,10 @@ namespace Containers
 
         private void Resize(int newLength)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
             System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
@@ -109,7 +123,10 @@ namespace Containers
         /// <exception cref="DuplicateKeyException"></exception>
         public virtual void Insert(K key)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
             System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
@@ -164,7 +181,10 @@ namespace Containers
         /// <exception cref="KeyNotFoundException"></exception>
         public virtual void Extract(K key)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
             System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
@@ -250,7 +270,10 @@ namespace Containers
 
         public virtual bool Contains(K key)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
             System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
@@ -286,7 +309,10 @@ namespace Containers
 
         public virtual K[] Flush()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
             System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
@@ -326,7 +352,10 @@ namespace Containers
 
         public System.Collections.Generic.IEnumerable<K> GetKeys()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
             System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
@@ -356,149 +385,39 @@ namespace Containers
 
         }
 
-        public virtual void Dispose()
+        public void Dispose()
         {
-            // Assertions.
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            // Release reousrces.
-            _flags = null;
-            _keys = null;
-
-            // Finish.
+            Dispose(true);
             System.GC.SuppressFinalize(this);
-            _disposed = true;
         }
 
-    }
-
-    public sealed class ConcurrentTree<K> : Tree<K>
-        where K : notnull
-    {
-        private bool _disposed = false;
-
-        private readonly ReadLocker Locker = new();
-
-        public ConcurrentTree() { }
-
-        ~ConcurrentTree() => System.Diagnostics.Debug.Assert(false);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <exception cref="DuplicateKeyException"></exception>
-        public override void Insert(K key)
+        protected virtual void Dispose(bool disposing)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Locker.Hold();
-
-            try
+            // Check to see if Dispose has already been called.
+            if (_disposed == false)
             {
-                base.Insert(key);
-            }
-            finally
-            {
-                Locker.Release();
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        /// <exception cref="KeyNotFoundException"></exception>
-        public override void Extract(K key)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Locker.Hold();
-
-            try
-            {
-                base.Extract(key);
-            }
-            finally
-            {
-                Locker.Release();
-            }
-        }
-
-        public override bool Contains(K key)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Locker.Read();
-
-            bool f = base.Contains(key);
-
-            Locker.Release();
-
-            return f;
-        }
-
-        public override K[] Flush()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Locker.Hold();
-
-            K[] keys = base.Flush();
-
-            Locker.Release();
-
-            return keys;
-        }
-
-        public new System.Collections.Generic.IEnumerable<K> GetKeys()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_length >= MinLength);
-            System.Diagnostics.Debug.Assert(_count >= 0);
-
-            Locker.Read();
-
-            if (!Empty)
-            {
-                int i = 0;
-                for (int j = 0; j < _length; ++j)
+                // If disposing equals true, dispose all managed
+                // and unmanaged resources.
+                if (disposing == true)
                 {
-                    if (!_flags[j])
-                    {
-                        continue;
-                    }
-
-                    yield return _keys[j];
-
-                    if (++i == _count)
-                    {
-                        break;
-                    }
+                    // Dispose managed resources.
+                    _flags = null;
+                    _keys = null;
                 }
+
+                // Call the appropriate methods to clean up
+                // unmanaged resources here.
+                // If disposing is false,
+                // only the following code is executed.
+                //CloseHandle(handle);
+                //handle = IntPtr.Zero;
+
+                // Note disposing has been done.
+                _disposed = true;
             }
-
-            Locker.Release();
-        }
-
-        public override void Dispose()
-        {
-            // Assertions.
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            // Release resources.
-            Locker.Dispose();
-
-            // Finish.
-            base.Dispose();
-            _disposed = true;
         }
 
     }
+
 
 }

@@ -24,7 +24,10 @@ namespace Containers
         {
             get
             {
-                System.Diagnostics.Debug.Assert(!_disposed);
+                if (_disposed == true)
+                {
+                    throw new System.ObjectDisposedException(GetType().Name);
+                }
 
                 return _count;
             }
@@ -34,13 +37,24 @@ namespace Containers
 
         public Queue() { }
 
-        ~Queue() => System.Diagnostics.Debug.Assert(false);
+        ~Queue()
+        {
+            System.Diagnostics.Debug.Assert(false);
+
+            Dispose(false);
+        }
 
         public virtual void Enqueue(T value)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
-            System.Diagnostics.Debug.Assert(value != null);
+            if (value == null)
+            {
+                throw new System.ArgumentNullException(nameof(value));
+            }
 
             Node newNode = new(value);
 
@@ -70,7 +84,10 @@ namespace Containers
         /// <exception cref="EmptyContainerException">The Queue<T> is empty.</exception>
         public virtual T Dequeue()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             if (_count == 0)
             {
@@ -99,7 +116,10 @@ namespace Containers
 
         public virtual bool Dequeue(out T value)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             if (_count == 0)
             {
@@ -129,7 +149,10 @@ namespace Containers
 
         public virtual T[] Flush()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             if (_count == 0)
             {
@@ -160,7 +183,10 @@ namespace Containers
 
         public System.Collections.Generic.IEnumerable<T> GetValues()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             if (_count == 0)
             {
@@ -182,127 +208,38 @@ namespace Containers
 
         }
 
-        public virtual void Dispose()
+        public void Dispose()
         {
-            // Assertions.
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            // Release resources.
-            _outNode = _inNode = null;
-
-            // Finish.
+            Dispose(true);
             System.GC.SuppressFinalize(this);
-            _disposed = true;
         }
 
-    }
-
-    public sealed class ConcurrentQueue<T> : Queue<T>
-    {
-        private bool _disposed = false;
-
-        private readonly ReadLocker Locker = new();
-
-        public ConcurrentQueue() { }
-
-        ~ConcurrentQueue() => System.Diagnostics.Debug.Assert(false);
-
-        public override void Enqueue(T value)
+        protected virtual void Dispose(bool disposing)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Locker.Hold();
-
-            base.Enqueue(value);
-
-            Locker.Release();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="EmptyContainerException">The Queue<T> is empty.</exception>
-        public override T Dequeue()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Locker.Hold();
-
-            T v;
-            try
+            // Check to see if Dispose has already been called.
+            if (_disposed == false)
             {
-                v = base.Dequeue();
-            }
-            finally
-            {
-                Locker.Release();
-            }
-
-            return v;
-        }
-
-        public override bool Dequeue(out T value)
-        {
-            Locker.Hold();
-
-            bool f = base.Dequeue(out value);
-
-            Locker.Release();
-
-            return f;
-        }
-
-        public override T[] Flush()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Locker.Hold();
-
-            T[] arr = base.Flush();
-
-            Locker.Release();
-
-            return arr;
-        }
-
-        public new System.Collections.Generic.IEnumerable<T> GetValues()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            Locker.Read();
-
-            if (!Empty)
-            {
-                System.Diagnostics.Debug.Assert(_inNode != null);
-                System.Diagnostics.Debug.Assert(_outNode != null);
-
-                Node current = _outNode;
-                do
+                // If disposing equals true, dispose all managed
+                // and unmanaged resources.
+                if (disposing == true)
                 {
-                    System.Diagnostics.Debug.Assert(current != null);
+                    // Dispose managed resources.
+                    _outNode = _inNode = null;
+                }
 
-                    yield return current.Value;
+                // Call the appropriate methods to clean up
+                // unmanaged resources here.
+                // If disposing is false,
+                // only the following code is executed.
+                //CloseHandle(handle);
+                //handle = IntPtr.Zero;
 
-                    current = current.NextNode;
-                } while (current != null);
+                // Note disposing has been done.
+                _disposed = true;
             }
-
-            Locker.Release();
         }
 
-        public override void Dispose()
-        {
-            // Assertions.
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            // Release resources.
-            Locker.Dispose();
-
-            // Finish.
-            base.Dispose();
-            _disposed = true;
-        }
     }
+
 
 }

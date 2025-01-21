@@ -175,22 +175,27 @@ namespace MinecraftServerEngine
             return true;
         }
 
-        internal void WriteData(MinecraftDataStream buffer)
+        internal void WriteData(MinecraftDataStream s)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            System.Diagnostics.Debug.Assert(s != null);
 
             int id = Type.GetId();
 
             System.Diagnostics.Debug.Assert(id >= short.MinValue);
             System.Diagnostics.Debug.Assert(id <= short.MaxValue);
-            buffer.WriteShort((short)id);
+            s.WriteShort((short)id);
 
             System.Diagnostics.Debug.Assert(_count >= byte.MinValue);
             System.Diagnostics.Debug.Assert(_count <= byte.MaxValue);
-            buffer.WriteByte((byte)_count);
+            s.WriteByte((byte)_count);
 
-            buffer.WriteShort(0);  // damage
-            buffer.WriteByte(0x00);  // no NBT
+            s.WriteShort(0);  // damage
+            //buffer.WriteByte(0x00);  // no NBT
+
+            NBTTagCompound compound = new();
+            compound.Add()
+
+            compound.Write(s);
         }
 
         internal byte[] WriteData()
@@ -207,7 +212,7 @@ namespace MinecraftServerEngine
                 return $"{Type}";
             }*/
 
-            return $"{Type}*{_count}";
+            return $"{Name}({Type})*{_count}";
         }
     }
 }
