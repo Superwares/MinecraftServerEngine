@@ -50,13 +50,13 @@ namespace TestMinecraftServerApplication
 
             if (f == true)
             {
-                ApplyBlockAppearance(Block.Dirt);
+                //ApplyBlockAppearance(Block.Dirt);
                 //OpenInventory(chestInventory);
                 //OpenInventory(shopInventory);s
 
                 //SetExperience(0.6F, 123456789);
 
-                AddEffect(26, 255, 100, 0x02);
+                AddEffect(1, 1, 1800, 2);
             }
             else
             {
