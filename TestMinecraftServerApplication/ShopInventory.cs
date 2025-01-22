@@ -12,9 +12,9 @@ namespace TestMinecraftServerApplication
     {
         public override string Title => "Shop";
 
-        public ShopInventory() : base(3)
+        public ShopInventory() : base(4)
         {
-
+            
         }
 
         protected override void OnLeftClickSharedItem(
@@ -37,8 +37,10 @@ namespace TestMinecraftServerApplication
             MyConsole.Debug($"i: {i}, Item: {item}, count: {count}");
 
             playerInventory.GiveItem(new ItemStack(ItemType.DiamondSword, "Bad Stick!"));
+            playerInventory.GiveItem(new ItemStack(ItemType.DiamondSword, "Bad Stick!"));
+            playerInventory.GiveItem(new ItemStack(ItemType.DiamondSword, "Bad Stick!"));
 
-            ItemStack[] itemStacks = playerInventory.TakeItemsInPrimary(ItemType.DiamondSword, "Bad Stick!", 10);
+            ItemStack[] itemStacks = playerInventory.TakeItemsInPrimary(ItemType.DiamondSword, "Bad Stick!", 4);
         }
     }
 }

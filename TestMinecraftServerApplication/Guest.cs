@@ -52,9 +52,9 @@ namespace TestMinecraftServerApplication
             {
                 ApplyBlockAppearance(Block.Dirt);
                 //OpenInventory(chestInventory);
-                //OpenInventory(shopInventory);
+                OpenInventory(shopInventory);
 
-                SetExperience(0.6F, 123456789);
+                //SetExperience(0.6F, 123456789);
             }
             else
             {

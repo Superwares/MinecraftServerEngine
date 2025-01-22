@@ -216,7 +216,7 @@ namespace MinecraftServerEngine
                 return $"{Type}";
             }*/
 
-            return $"{Name}({Type})*{_count}";
+            return $"{Type}({Name})*{_count}";
         }
 
     }

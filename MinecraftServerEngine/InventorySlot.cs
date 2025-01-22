@@ -179,9 +179,10 @@ namespace MinecraftServerEngine
 
             if (_stack.Count <= count)
             {
+                int temp = _stack.Count;
                 itemStack = _stack;
                 _stack = null;
-                return _stack.Count;
+                return temp;
             }
 
             itemStack = new ItemStack(_stack.Type, _stack.Name, count);

@@ -164,7 +164,7 @@ namespace MinecraftServerEngine
             _experienceBarRatio = ratio;
             _experienceLevel = level;
 
-            SetExperience(ratio, level);
+            Conn.SetExperience(ratio, level);
         }
 
         private protected override Hitbox GetHitbox()
