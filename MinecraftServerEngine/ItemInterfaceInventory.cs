@@ -17,7 +17,7 @@ namespace MinecraftServerEngine
             ItemStack a = new ItemStack(ItemType.Stick, "Hello");
 
             // TODO: remove
-            Slots[10].Move(ref a);
+            //Slots[10].Move(ref a);
 
         }
 
