@@ -94,7 +94,10 @@ namespace MinecraftPrimitives
 
         public void Write(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(Id, true);
             WriteData(buffer);
@@ -248,6 +251,7 @@ namespace MinecraftPrimitives
         public const int PlayerListItemRemovePacketId = 0x2E;
         public const int TeleportPacketId = 0x2F;
         public const int DestroyEntitiesPacketId = 0x32;
+        public const int RemoveEntityEffectPacketId = 0x33;
         public const int RespawnPacketId = 0x35;
         public const int EntityHeadLookPacketId = 0x36;
         public const int EntityMetadataPacketId = 0x3C;
@@ -256,6 +260,7 @@ namespace MinecraftPrimitives
         public const int SetExperiencePacketId = 0x40;
         public const int UpdateHealthPacketId = 0x41;
         public const int EntityTeleportPacketId = 0x4C;
+        public const int EntityEffectPacketId = 0x4F;
 
         public override WhereBound BoundTo => WhereBound.Clientbound;
 
@@ -304,7 +309,10 @@ namespace MinecraftPrimitives
 
         private static States ReadNextState(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             int a = buffer.ReadInt(true);
             States nextState = (a == 1 ? States.Status : States.Login);
@@ -322,7 +330,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static SetProtocolPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new SetProtocolPacket(
                 buffer.ReadInt(true),
@@ -353,7 +364,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             System.Diagnostics.Debug.Assert(Id == SetProtocolPacketId);
             System.Diagnostics.Debug.Assert(
@@ -379,7 +393,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static ResponsePacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             /*string jsonString = buffer.ReadString();*/
             // TODO
@@ -398,7 +415,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             // TODO: Using json serialization.
             string jsonString = "{\"version\":{\"name\":\"1.12.2\",\"protocol\":340},\"players\":{\"max\":100,\"online\":0,\"sample\":[]},\"description\":{\"text\":\"Hello, World!\"},\"favicon\":\"data:image/png;base64,<data>\",\"enforcesSecureChat\":true,\"previewsChat\":true}";
@@ -418,7 +438,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static PongPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new(buffer.ReadLong());
         }
@@ -430,7 +453,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteLong(Payload);
         }
@@ -445,7 +471,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static RequestPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new();
         }
@@ -454,7 +483,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
         }
 
     }
@@ -469,7 +501,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static PingPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new(buffer.ReadLong());
         }
@@ -483,7 +518,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteLong(Payload);
         }
@@ -500,7 +538,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static DisconnectPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new(buffer.ReadString());
         }
@@ -512,7 +553,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteString(Reason);
         }
@@ -527,7 +571,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static EncryptionRequestPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -539,7 +586,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -557,7 +607,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static LoginSuccessPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new(
                 System.Guid.Parse(buffer.ReadString()),
@@ -573,7 +626,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteString(UserId.ToString());
             buffer.WriteString(Username);
@@ -591,7 +647,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static SetCompressionPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new(buffer.ReadInt(true));
         }
@@ -604,7 +663,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(Threshold, true);
         }
@@ -621,7 +683,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static StartLoginPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             // TODO: Check the conditions of variables. If not correct, throw exception.
             return new(buffer.ReadString());
@@ -635,7 +700,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteString(Username);
         }
@@ -649,7 +717,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static EncryptionResponsePacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             // TODO: Check the conditions of variables. If not correct, throw exception.
             throw new System.NotImplementedException();
@@ -663,7 +734,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -681,7 +755,10 @@ namespace MinecraftPrimitives
 
         public static SpawnEntityPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -704,7 +781,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(EntityId, true);
             buffer.WriteGuid(UniqueId);
@@ -732,7 +812,10 @@ namespace MinecraftPrimitives
 
         public static SpawnNamedEntityPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -753,7 +836,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(EntityId, true);
             buffer.WriteGuid(UniqueId);
@@ -771,7 +857,10 @@ namespace MinecraftPrimitives
 
         public static BlockChangePacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -787,7 +876,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WritePosition(X, Y, Z);
             buffer.WriteInt(BlockId, true);
@@ -802,7 +894,10 @@ namespace MinecraftPrimitives
 
         public static ClientboundChatmessagePacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -818,7 +913,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteString(Data);
             buffer.WriteByte(Position);
@@ -834,7 +932,10 @@ namespace MinecraftPrimitives
 
         public static ClientboundConfirmTransactionPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -850,7 +951,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteSbyte(WindowId);
             buffer.WriteShort(ActionNumber);
@@ -865,7 +969,10 @@ namespace MinecraftPrimitives
 
         public static ClientboundCloseWindowPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -878,7 +985,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteByte(WindowId);
         }
@@ -894,7 +1004,10 @@ namespace MinecraftPrimitives
 
         public static OpenWindowPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -912,7 +1025,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             System.Diagnostics.Debug.Assert(WindowId > 0);
             buffer.WriteByte(WindowId);
@@ -931,7 +1047,10 @@ namespace MinecraftPrimitives
 
         public static WindowItemsPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -950,9 +1069,15 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteByte(WindowId);
 
@@ -974,7 +1099,10 @@ namespace MinecraftPrimitives
 
         public static SetSlotPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -992,7 +1120,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteSbyte(WindowId);
             buffer.WriteShort(SlotNumber);
@@ -1010,7 +1141,10 @@ namespace MinecraftPrimitives
 
         public static NamedSoundEffectPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1029,7 +1163,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteString(SoundName);
             buffer.WriteInt(SoundCategory, true);
@@ -1049,7 +1186,10 @@ namespace MinecraftPrimitives
 
         public static EntityStatusPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1062,7 +1202,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(EntityId);
             buffer.WriteByte(Status);
@@ -1079,7 +1222,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static UnloadChunkPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1092,7 +1238,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(XChunk);
             buffer.WriteInt(ZChunk);
@@ -1107,7 +1256,10 @@ namespace MinecraftPrimitives
 
         public static GameStatePacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1120,7 +1272,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteByte(Reason);
             buffer.WriteFloat(Value);
@@ -1134,7 +1289,10 @@ namespace MinecraftPrimitives
 
         public static ClientboundKeepAlivePacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1146,7 +1304,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteLong(Payload);
         }
@@ -1165,7 +1326,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static LoadChunkPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             // TODO: Check the conditions of variables. If not correct, throw exception.
             throw new System.NotImplementedException();
@@ -1187,7 +1351,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(XChunk);
             buffer.WriteInt(ZChunk);
@@ -1211,7 +1378,10 @@ namespace MinecraftPrimitives
 
         public static ParticlesPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1232,7 +1402,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(ParticleId);
             buffer.WriteBool(Flag);
@@ -1259,7 +1432,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static JoinGamePacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             // TODO: Check the conditions of variables. If not correct, throw exception.
             throw new System.NotImplementedException();
@@ -1285,7 +1461,10 @@ namespace MinecraftPrimitives
         }
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(_entityId);
             buffer.WriteByte(_gamemode);
@@ -1303,7 +1482,10 @@ namespace MinecraftPrimitives
 
         public static EntityPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1315,7 +1497,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(EntityId, true);
         }
@@ -1330,7 +1515,10 @@ namespace MinecraftPrimitives
 
         public static EntityRelMovePacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1347,7 +1535,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(EntityId, true);
             buffer.WriteShort(DeltaX); buffer.WriteShort(DeltaY); buffer.WriteShort(DeltaZ);
@@ -1365,7 +1556,10 @@ namespace MinecraftPrimitives
 
         public static EntityRelMoveLookPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1384,7 +1578,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(EntityId, true);
             buffer.WriteShort(DeltaX); buffer.WriteShort(DeltaY); buffer.WriteShort(DeltaZ);
@@ -1402,7 +1599,10 @@ namespace MinecraftPrimitives
 
         public static EntityLookPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1419,7 +1619,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
 
             buffer.WriteInt(EntityId, true);
@@ -1441,7 +1644,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static AbilitiesPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             // TODO: Check the conditions of variables. If not correct, throw exception.
             throw new System.NotImplementedException();
@@ -1478,7 +1684,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteByte(_flags);
             buffer.WriteFloat(_flyingSpeed);
@@ -1495,7 +1704,10 @@ namespace MinecraftPrimitives
 
         public static PlayerListItemAddPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1511,7 +1723,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(0, true);
             buffer.WriteInt(1, true);
@@ -1532,7 +1747,10 @@ namespace MinecraftPrimitives
 
         public static PlayerListItemUpdateLatencyPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1546,7 +1764,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(2, true);
             buffer.WriteInt(1, true);
@@ -1562,7 +1783,10 @@ namespace MinecraftPrimitives
 
         public static PlayerListItemRemovePacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1575,7 +1799,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(4, true);
             buffer.WriteInt(1, true);
@@ -1596,7 +1823,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static TeleportPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             // TODO: Check the conditions of variables. If not correct, throw exception.
             throw new System.NotImplementedException();
@@ -1632,7 +1862,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteDouble(X);
             buffer.WriteDouble(Y);
@@ -1652,7 +1885,10 @@ namespace MinecraftPrimitives
 
         public static DestroyEntitiesPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1664,11 +1900,50 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(EntityIds.Length, true);
             foreach (int id in EntityIds)
                 buffer.WriteInt(id, true);
+        }
+
+    }
+
+    public sealed class RemoveEntityEffectPacket : ClientboundPlayingPacket
+    {
+        public readonly int EntityId;
+        public readonly byte EffectId;
+
+        public static RemoveEntityEffectPacket Read(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public RemoveEntityEffectPacket(
+            int entityId,
+            byte effectId) : base(RemoveEntityEffectPacketId)
+        {
+            EntityId = entityId;
+            EffectId = effectId;
+        }
+
+        protected override void WriteData(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteInt(EntityId, true);
+            buffer.WriteByte(EffectId);
         }
 
     }
@@ -1682,7 +1957,10 @@ namespace MinecraftPrimitives
 
         public static RespawnPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1699,7 +1977,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(Dimension);
             buffer.WriteByte(Difficulty);
@@ -1716,7 +1997,10 @@ namespace MinecraftPrimitives
 
         public static EntityHeadLookPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1730,7 +2014,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(EntityId, true);
             buffer.WriteByte(Yaw);
@@ -1745,7 +2032,10 @@ namespace MinecraftPrimitives
 
         public static EntityMetadataPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1759,7 +2049,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(EntityId, true);
             buffer.WriteData(Data);
@@ -1774,7 +2067,10 @@ namespace MinecraftPrimitives
 
         public static EntityVelocityPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1788,7 +2084,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(EntityId, true);
             buffer.WriteShort(X); buffer.WriteShort(Y); buffer.WriteShort(Z);
@@ -1804,7 +2103,10 @@ namespace MinecraftPrimitives
 
         public static EntityEquipmentPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1821,7 +2123,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(EntityId, true);
             buffer.WriteInt(Slot, true);
@@ -1837,7 +2142,10 @@ namespace MinecraftPrimitives
 
         public static SetExperiencePacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1867,7 +2175,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteFloat(Ratio);
             buffer.WriteInt(Level, true);
@@ -1884,7 +2195,10 @@ namespace MinecraftPrimitives
 
         public static UpdateHealthPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1899,7 +2213,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteFloat(Health);
             buffer.WriteInt(Food, true);
@@ -1916,7 +2233,10 @@ namespace MinecraftPrimitives
 
         public static EntityTeleportPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1935,12 +2255,63 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.WriteInt(EntityId, true);
             buffer.WriteDouble(X); buffer.WriteDouble(Y); buffer.WriteDouble(Z);
             buffer.WriteByte(Yaw); buffer.WriteByte(Pitch);
             buffer.WriteBool(OnGround);
+        }
+
+    }
+
+    public sealed class EntityEffectPacket : ClientboundPlayingPacket
+    {
+        public readonly int EntityId;
+        public readonly byte EffectId;
+        public readonly byte Amplifier;
+        public readonly int Duration;
+        public readonly byte Flags;
+
+        public static EntityEffectPacket Read(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public EntityEffectPacket(
+            int entityId,
+            byte effectId,
+            byte amplifier,
+            int duration,
+            byte flags) : base(EntityEffectPacketId)
+        {
+            EntityId = entityId;
+            EffectId = effectId;
+            Amplifier = amplifier;
+            Duration = duration;
+            Flags = flags;
+        }
+
+        protected override void WriteData(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteInt(EntityId, true);
+            buffer.WriteByte(EffectId);
+            buffer.WriteByte(Amplifier);
+            buffer.WriteInt(Duration, true);
+            buffer.WriteByte(Flags);
         }
 
     }
@@ -1955,7 +2326,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static TeleportAcceptPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new(buffer.ReadInt(true));
         }
@@ -1967,7 +2341,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -1984,7 +2361,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static ServerboundChatMessagePacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new(buffer.ReadString());
         }
@@ -1996,7 +2376,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -2013,7 +2396,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static SettingsPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             buffer.ReadString();  // TODO
             byte renderDistance = buffer.ReadByte();
@@ -2033,7 +2419,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -2047,7 +2436,10 @@ namespace MinecraftPrimitives
 
         public static ServerboundConfirmTransactionPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new(buffer.ReadSbyte(), buffer.ReadShort(), buffer.ReadBool());
         }
@@ -2063,7 +2455,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -2081,7 +2476,10 @@ namespace MinecraftPrimitives
 
         public static ClickWindowPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new(
                 buffer.ReadByte(),
@@ -2104,7 +2502,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -2117,7 +2518,10 @@ namespace MinecraftPrimitives
 
         public static ServerboundCloseWindowPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new(buffer.ReadByte());
         }
@@ -2130,7 +2534,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -2145,7 +2552,10 @@ namespace MinecraftPrimitives
 
         public static UseEntityPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             int entityid = buffer.ReadInt(true);
             int type = buffer.ReadInt(true);
@@ -2178,7 +2588,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -2194,7 +2607,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static ServerboundKeepAlivePacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new(buffer.ReadLong());
         }
@@ -2206,7 +2622,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -2223,7 +2642,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static PlayerPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new(buffer.ReadBool());
         }
@@ -2235,7 +2657,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -2253,7 +2678,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static PlayerPositionPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new(
                 buffer.ReadDouble(), buffer.ReadDouble(), buffer.ReadDouble(),
@@ -2269,7 +2697,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -2288,7 +2719,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static PlayerPosAndLookPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new(
                 buffer.ReadDouble(), buffer.ReadDouble(), buffer.ReadDouble(),
@@ -2309,7 +2743,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -2327,7 +2764,10 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
         public static PlayerLookPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new(
                 buffer.ReadFloat(), buffer.ReadFloat(),
@@ -2345,7 +2785,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -2363,7 +2806,10 @@ namespace MinecraftPrimitives
 
         public static PlayerDigPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new(buffer.ReadInt(true), buffer.ReadData(8), buffer.ReadByte());
         }
@@ -2378,7 +2824,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -2392,7 +2841,10 @@ namespace MinecraftPrimitives
 
         public static EntityActionPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new(buffer.ReadInt(true), buffer.ReadInt(true), buffer.ReadInt(true));
         }
@@ -2407,7 +2859,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -2420,7 +2875,10 @@ namespace MinecraftPrimitives
 
         public static ServerboundHeldItemSlotPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new((int)buffer.ReadShort());
         }
@@ -2432,7 +2890,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -2444,7 +2905,10 @@ namespace MinecraftPrimitives
 
         public static AnimationPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new(buffer.ReadInt(true));
         }
@@ -2456,7 +2920,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
@@ -2468,7 +2935,10 @@ namespace MinecraftPrimitives
 
         public static UseItemPacket Read(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             return new(buffer.ReadInt(true));
         }
@@ -2480,7 +2950,10 @@ namespace MinecraftPrimitives
 
         protected override void WriteData(MinecraftDataStream buffer)
         {
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
 
             throw new System.NotImplementedException();
         }
