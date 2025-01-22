@@ -40,7 +40,7 @@ namespace TestMinecraftServerApplication
             playerInventory.GiveItem(new ItemStack(ItemType.DiamondSword, "Bad Stick!"));
             playerInventory.GiveItem(new ItemStack(ItemType.DiamondSword, "Bad Stick!"));
 
-            ItemStack[] itemStacks = playerInventory.TakeItemsInPrimary(ItemType.DiamondSword, "Bad Stick!", 4);
+            ItemStack[] itemStacks = playerInventory.TakeItemsInPrimary(ItemType.DiamondSword, "Bad Stick!", 2);
         }
     }
 }
