@@ -28,15 +28,33 @@ namespace MinecraftServerEngine
             Dispose(false);
         }
 
+        public void ResetSlot(int index, ItemStack itemStack)
+        {
+            if (index < 0 || index >= GetTotalSlotCount())
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(index));
+            }
+
+            if (itemStack == null)
+            {
+                Slots[index].Reset(null);
+            } else
+            {
+                Slots[index].Reset(itemStack);
+            }
+
+
+        }
+
         protected abstract void OnLeftClickSharedItem(
             UserId userId, AbstractPlayer player,
             PlayerInventory playerInventory,
-            int i, ItemType item, int count);
+            int i, ItemStack itemStack);
 
         protected abstract void OnRightClickSharedItem(
             UserId userId, AbstractPlayer player,
             PlayerInventory playerInventory,
-            int i, ItemType item, int count);
+            int i, ItemStack itemStack);
 
         internal override void LeftClick(
             UserId userId, AbstractPlayer player, PlayerInventory playerInventory,
@@ -68,7 +86,7 @@ namespace MinecraftServerEngine
                     {
                         OnLeftClickSharedItem(
                             userId, player, playerInventory,
-                            i, slot.Stack.Type, slot.Stack.Count);
+                            i, slot.Stack);
                     }
 
                 }
@@ -112,7 +130,7 @@ namespace MinecraftServerEngine
                     {
                         OnRightClickSharedItem(
                             userId, player, playerInventory,
-                            i, slot.Stack.Type, slot.Stack.Count);
+                            i, slot.Stack);
                     }
 
                 }
