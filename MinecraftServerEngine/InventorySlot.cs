@@ -29,6 +29,13 @@ namespace MinecraftServerEngine
             Level = level;
         }*/
 
+        internal ItemStack Reset(ItemStack stack)
+        {
+            ItemStack stackTemp = _stack;
+            _stack = stack;
+            return stackTemp;
+        }
+
         internal void LeftClick(InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(cursor != null);
