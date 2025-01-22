@@ -1399,6 +1399,18 @@ namespace MinecraftServerEngine
             OutPackets.Enqueue(new UpdateHealthPacket(health, 20, 5.0F));
         }
 
+        internal void AddEffect(
+            int entityId, byte effectId, byte amplifier, int duration, byte flags)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disconnected == true)
+            {
+                return;
+            }
+            System.Diagnostics.Debug.Assert(OutPackets != null);
+            OutPackets.Enqueue(new EntityEffectPacket(entityId, effectId, amplifier, duration, flags));
+        }
+
         internal void SetExperience(float ratio, int level)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);

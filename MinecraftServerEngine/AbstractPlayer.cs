@@ -149,6 +149,30 @@ namespace MinecraftServerEngine
 
         }
 
+        internal override void _AddEffect(
+            byte effectId,
+            byte amplifier, int duration, byte flags)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            base._AddEffect(effectId, amplifier, duration, flags);
+
+            if (Connected)
+            {
+                Conn.AddEffect(Id, effectId, amplifier, duration, flags);
+            }
+        }
+
+        public void AddEffect(byte effectId, byte amplifier, int duration, byte flags)
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().FullName);
+            }
+
+            _AddEffect(effectId, amplifier, duration, flags);
+        }
+
         public void SetExperience(float ratio, int level)
         {
             if (ratio < 0 || ratio > 1)

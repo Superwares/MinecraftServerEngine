@@ -66,7 +66,7 @@ namespace MinecraftServerEngine
         private bool _hasMovement = false;
         private bool _noRendering = false;
 
-        private readonly ConcurrentTree<EntityRenderer> Renderers = new();  // Disposable
+        internal readonly ConcurrentTree<EntityRenderer> Renderers = new();  // Disposable
 
 
         private readonly Locker LockerRotate = new();
@@ -586,6 +586,26 @@ namespace MinecraftServerEngine
                 }
             }
 
+        }
+
+        internal virtual void _AddEffect(
+            byte effectId,
+            byte amplifier, int duration, byte flags)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(
+                _noRendering == false
+                || (_noRendering == true && Renderers.Empty == true));
+            if (_noRendering == false)
+            {
+                System.Diagnostics.Debug.Assert(Renderers != null);
+                foreach (EntityRenderer renderer in Renderers.GetKeys())
+                {
+                    System.Diagnostics.Debug.Assert(renderer != null);
+                    renderer.AddEffect(Id, effectId, amplifier, duration, flags);
+                }
+            }
         }
 
         protected void EmitParticles(Particle particle, int count)

@@ -486,6 +486,15 @@ namespace MinecraftServerEngine
                 id, metadata.WriteData()));
         }
 
+        internal void AddEffect(
+            int entityId, byte effectId,
+            byte amplifier, int duration, byte flags)
+        {
+            System.Diagnostics.Debug.Assert(Disconnected == false);
+
+            Render(new EntityEffectPacket(entityId, effectId, amplifier, duration, flags));
+        }
+
         internal void DestroyEntity(int id)
         {
             System.Diagnostics.Debug.Assert(!Disconnected);
