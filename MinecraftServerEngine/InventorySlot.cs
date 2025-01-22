@@ -161,6 +161,57 @@ namespace MinecraftServerEngine
             return count - canMovedAmount;
         }
 
+        internal int Take(out ItemStack itemStack, int count)
+        {
+            System.Diagnostics.Debug.Assert(count >= 0);
+
+            if (count == 0)
+            {
+                itemStack = null;
+                return 0;
+            }
+
+            if (_stack == null)
+            {
+                itemStack = null;
+                return 0;
+            }
+
+            if (_stack.Count <= count)
+            {
+                itemStack = _stack;
+                _stack = null;
+                return _stack.Count;
+            }
+
+            itemStack = new ItemStack(_stack.Type, _stack.Name, count);
+            _stack.Spend(count);
+
+            return count;
+        }
+
+        internal int PreTake(int count)
+        {
+            System.Diagnostics.Debug.Assert(count >= 0);
+
+            if (count == 0)
+            {
+                return 0;
+            }
+
+            if (_stack == null)
+            {
+                return 0;
+            }
+
+            if (_stack.Count <= count)
+            {
+                return _stack.Count;
+            }
+
+            return count;
+        }
+
         internal ItemStack DropSingle()
         {
             ItemStack stack = _stack;

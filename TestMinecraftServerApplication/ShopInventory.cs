@@ -18,7 +18,7 @@ namespace TestMinecraftServerApplication
         }
 
         protected override void OnLeftClickSharedItem(
-            UserId userId, AbstractPlayer player, PlayerInventory playerInventory, 
+            UserId userId, AbstractPlayer player, PlayerInventory playerInventory,
             int i, ItemType item, int count)
         {
             System.Diagnostics.Debug.Assert(count >= 0);
@@ -37,6 +37,8 @@ namespace TestMinecraftServerApplication
             MyConsole.Debug($"i: {i}, Item: {item}, count: {count}");
 
             playerInventory.GiveItem(new ItemStack(ItemType.DiamondSword, "Bad Stick!"));
+
+            ItemStack[] itemStacks = playerInventory.TakeItemsInPrimary(ItemType.DiamondSword, "Bad Stick!", 10);
         }
     }
 }

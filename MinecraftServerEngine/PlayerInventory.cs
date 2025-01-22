@@ -1,7 +1,6 @@
 ﻿
 
 using Containers;
-using System.Collections;
 
 namespace MinecraftServerEngine
 {
@@ -451,7 +450,7 @@ namespace MinecraftServerEngine
                     {
                         j = i;
                     }
-                  
+
                     continue;
                 }
 
@@ -516,6 +515,105 @@ namespace MinecraftServerEngine
             }
 
             return GiveFromLeftInPrimary(stack);
+        }
+
+        public ItemStack[] TakeItemsInPrimary(ItemType itemType, string name, int count)
+        {
+            if (name == null || string.IsNullOrEmpty(name))
+            {
+                throw new System.ArgumentNullException(nameof(name));
+            }
+
+            if (count < 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(count));
+            }
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (count == 0)
+            {
+                return [];
+            }
+
+            System.Diagnostics.Debug.Assert(itemType.GetMaxCount() > 0);
+            int minLength = (int)System.Math.Ceiling((double)count / (double)itemType.GetMaxCount());
+            ItemStack[] itemStacks = new ItemStack[minLength];
+
+            int leftCount = count;
+
+            InventorySlot invSlot;
+            ItemStack targetItemStack;
+
+            for (int i = 0; i < PrimarySlotCount && leftCount > 0; ++i)
+            {
+                invSlot = GetPrimarySlot(i);
+                System.Diagnostics.Debug.Assert(invSlot != null);
+
+                if (invSlot.Empty == true)
+                {
+                    continue;
+                }
+
+                targetItemStack = invSlot.Stack;
+
+                if (targetItemStack.Type == itemType && targetItemStack.Name == name)
+                {
+                    int takedCount = invSlot.PreTake(leftCount);
+
+                    System.Diagnostics.Debug.Assert(takedCount >= 0);
+                    System.Diagnostics.Debug.Assert(takedCount <= count);
+
+                    if (takedCount > 0)
+                    {
+                        leftCount -= takedCount;
+                    }
+                }
+
+            }
+
+            if (leftCount > 0)
+            {
+                return [];
+            }
+
+            leftCount = count;
+            int k = 0;
+
+            for (int i = 0; i < PrimarySlotCount && leftCount > 0; ++i)
+            {
+                invSlot = GetPrimarySlot(i);
+                System.Diagnostics.Debug.Assert(invSlot != null);
+
+                if (invSlot.Empty == true)
+                {
+                    continue;
+                }
+
+                targetItemStack = invSlot.Stack;
+
+                if (targetItemStack.Type == itemType && targetItemStack.Name == name)
+                {
+                    int takedCount = invSlot.Take(out ItemStack takedItemStack, leftCount);
+
+                    System.Diagnostics.Debug.Assert(takedCount >= 0);
+                    System.Diagnostics.Debug.Assert(takedCount <= count);
+
+                    if (takedCount > 0)
+                    {
+                        System.Diagnostics.Debug.Assert(takedItemStack != null);
+
+                        itemStacks[k++] = takedItemStack;
+
+                        leftCount -= takedCount;
+                    }
+                }
+
+            }
+
+            System.Diagnostics.Debug.Assert(leftCount == 0);
+
+            return itemStacks;
         }
 
         internal void QuickMoveFromLeftInPrimary(InventorySlot slot)
