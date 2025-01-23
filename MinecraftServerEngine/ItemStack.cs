@@ -197,11 +197,11 @@ namespace MinecraftServerEngine
 
             displayCompound.Add("Name", new NBTTagString($"HELL3O"));
 
-            NBTTagList<NBTTagString> loreList = new([
-                new NBTTagString("HELLO"),
-                new NBTTagString("WORLD")
-                ]);
-            displayCompound.Add("Lore", loreList);
+            //NBTTagList<NBTTagString> loreList = new([
+            //    new NBTTagString("HELLO"),
+            //    new NBTTagString("DURABILITY"),
+            //    ]);
+            //displayCompound.Add("Lore", loreList);
 
 
             compound.Add("display", displayCompound);
