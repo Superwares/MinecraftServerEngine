@@ -205,7 +205,7 @@ namespace MinecraftServerEngine
 
             if (Sneaking == true)
             {
-                value = -0.08D;
+                value += -0.08D;
             }
 
             return value;
@@ -396,6 +396,11 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(Conn != null);
             return Conn.Open(Inventory, sharedInventory);
         }
+
+        //public void SetItemDamage(ItemStack stack)
+        //{
+        //    System
+        //}
 
         public bool GiveItem(ItemStack stack)
         {

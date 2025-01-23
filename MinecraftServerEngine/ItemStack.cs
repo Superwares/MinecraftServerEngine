@@ -195,7 +195,14 @@ namespace MinecraftServerEngine
             using NBTTagCompound compound = new();
             NBTTagCompound displayCompound = new();
 
-            displayCompound.Add("Name", new NBTTagString(Name));
+            displayCompound.Add("Name", new NBTTagString($"HELL3O"));
+
+            NBTTagList<NBTTagString> loreList = new([
+                new NBTTagString("HELLO"),
+                new NBTTagString("WORLD")
+                ]);
+            displayCompound.Add("Lore", loreList);
+
 
             compound.Add("display", displayCompound);
 
@@ -216,7 +223,7 @@ namespace MinecraftServerEngine
                 return $"{Type}";
             }*/
 
-            return $"{Type}({Name})*{_count}";
+            return $"{Type}(\"{Name}\")*{_count}";
         }
 
     }

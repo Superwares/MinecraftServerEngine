@@ -19,6 +19,8 @@ namespace MinecraftPrimitives
 
         private readonly Map<string, NBTTagBase> _map;
 
+        public static byte GetTypeId() => TypeId;
+
         private static NBTTagBase ReadNBTTagList(System.IO.Stream s, int depth)
         {
             System.Diagnostics.Debug.Assert(s != null);

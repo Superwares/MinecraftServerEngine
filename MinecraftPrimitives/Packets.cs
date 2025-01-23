@@ -233,6 +233,7 @@ namespace MinecraftPrimitives
         public const int OpenWindowPacketId = 0x13;
         public const int WindowItemsPacketId = 0x14;
         public const int SetSlotPacketId = 0x16;
+        public const int SetCooldownPacketId = 0x17;
         public const int NamedSoundEffectPacketId = 0x19;
         public const int EntityStatusPacketId = 0x1B;
         public const int UnloadChunkPacketId = 0x1D;
@@ -261,6 +262,7 @@ namespace MinecraftPrimitives
         public const int UpdateHealthPacketId = 0x41;
         public const int EntityTeleportPacketId = 0x4C;
         public const int EntityEffectPacketId = 0x4F;
+        
 
         public override WhereBound BoundTo => WhereBound.Clientbound;
 

@@ -9,6 +9,8 @@ namespace MinecraftPrimitives
 
         private bool _disposed = false;
 
+        public static byte GetTypeId() => TypeId;
+
         public static NBTTagEnd Read(System.IO.Stream s, int depth)
         {
             System.Diagnostics.Debug.Assert(s != null);

@@ -9,6 +9,8 @@ namespace MinecraftPrimitives
 
         public readonly int[] Data;
 
+        public static byte GetTypeId() => TypeId;
+
         public static NBTTagIntArray Read(System.IO.Stream s, int depth)
         {
             System.Diagnostics.Debug.Assert(s != null);

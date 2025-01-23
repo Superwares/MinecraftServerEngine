@@ -9,6 +9,8 @@ namespace MinecraftPrimitives
 
         public readonly short Value;
 
+        public static byte GetTypeId() => TypeId;
+
         public static NBTTagShort Read(System.IO.Stream s, int depth)
         {
             System.Diagnostics.Debug.Assert(s != null);

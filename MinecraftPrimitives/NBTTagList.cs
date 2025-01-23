@@ -7,6 +7,8 @@
 
         public readonly T[] Data;
 
+        public static byte GetTypeId() => TypeId;
+
         public static NBTTagList<T> Read(System.IO.Stream s, int depth)
         {
             System.Diagnostics.Debug.Assert(s != null);
@@ -46,6 +48,8 @@
             System.Diagnostics.Debug.Assert(s != null);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
+
+            s.WriteByte(T.GetTypeId());
 
             s.WriteInt(Data.Length);
 
