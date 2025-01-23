@@ -226,6 +226,7 @@ namespace MinecraftPrimitives
     {
         public const int SpawnEntityPacketId = 0x00;
         public const int SpawnNamedEntityPacketId = 0x05;
+        public const int ClientboundAnimationPacketId = 0x06;
         public const int BlockChangePacketId = 0x0B;
         public const int ClientboundChatmessagePacketId = 0x0F;
         public const int ClientboundConfirmTransactionPacketId = 0x11;
@@ -290,7 +291,7 @@ namespace MinecraftPrimitives
         public const int PlayerDigPacketId = 0x14;
         public const int EntityActionPacketId = 0x15;
         public const int ServerboundHeldItemSlotPacketId = 0x1A;
-        public const int AnimationPacketId = 0x1D;
+        public const int ServerboundAnimationPacketId = 0x1D;
         public const int BlockPlacementPacketId = 0x1F;
         public const int UseItemPacketId = 0x20;
 
@@ -848,6 +849,51 @@ namespace MinecraftPrimitives
             buffer.WriteDouble(X); buffer.WriteDouble(Y); buffer.WriteDouble(Z);
             buffer.WriteByte(Yaw); buffer.WriteByte(Pitch);
             buffer.WriteData(Data);
+        }
+
+    }    
+    
+    public sealed class ClientboundAnimationPacket : ClientboundPlayingPacket
+    {
+        public readonly int EntityId;
+
+        /**
+         * 0: Swing main arm
+         * 1: Take damage
+         * 2: Leave bed
+         * 3: Swing offhand
+         * 4: Critical effect
+         * 5: Magic critical effect
+         */
+        public readonly byte Data;
+
+        public static ClientboundAnimationPacket Read(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public ClientboundAnimationPacket(
+            int entityId,
+            byte data) : base(ClientboundAnimationPacketId)
+        {
+            EntityId = entityId;
+            Data = data;
+        }
+
+        protected override void WriteData(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteInt(EntityId, true);
+            buffer.WriteByte(Data);
         }
 
     }
@@ -2901,11 +2947,11 @@ namespace MinecraftPrimitives
         }
     }
 
-    public sealed class AnimationPacket : ServerboundPlayingPacket
+    public sealed class ServerboundAnimationPacket : ServerboundPlayingPacket
     {
         public readonly int Hand;
 
-        public static AnimationPacket Read(MinecraftDataStream buffer)
+        public static ServerboundAnimationPacket Read(MinecraftDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2915,7 +2961,7 @@ namespace MinecraftPrimitives
             return new(buffer.ReadInt(true));
         }
 
-        internal AnimationPacket(int hand) : base(AnimationPacketId)
+        internal ServerboundAnimationPacket(int hand) : base(ServerboundAnimationPacketId)
         {
             Hand = hand;
         }

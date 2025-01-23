@@ -995,9 +995,9 @@ namespace MinecraftServerEngine
                         player.UpdateEntityEquipmentsData(playerInventory.GetEquipmentsData());
                     }
                     break;
-                case ServerboundPlayingPacket.AnimationPacketId:
+                case ServerboundPlayingPacket.ServerboundAnimationPacketId:
                     {
-                        var packet = AnimationPacket.Read(buffer);
+                        var packet = ServerboundAnimationPacket.Read(buffer);
 
                         /*Console.Printl("AnimationPacket!");
                         Console.Printl($"\tHand: {packet.Hand}");*/
