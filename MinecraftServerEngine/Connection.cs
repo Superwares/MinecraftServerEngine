@@ -1012,14 +1012,14 @@ namespace MinecraftServerEngine
                                     /*Console.Printl("Attack!");*/
 
                                     ItemStack stack = playerInventory.GetMainHandSlot().Stack;
-
+                                    
                                     if (stack != null)
                                     {
-                                        player.OnAttack(world, stack);
+                                        player._Attack(world, stack);
                                     }
                                     else
                                     {
-                                        player.OnAttack(world);
+                                        player._Attack(world);
                                     }
 
                                     _attackWhenDigging = true;
@@ -1032,13 +1032,15 @@ namespace MinecraftServerEngine
 
                                 ItemStack stack = playerInventory.GetMainHandSlot().Stack;
 
+                                
+
                                 if (stack != null)
                                 {
-                                    player.OnAttack(world, stack);
+                                    player._Attack(world, stack);
                                 }
                                 else
                                 {
-                                    player.OnAttack(world);
+                                    player._Attack(world);
                                 }
                             }
                         }
