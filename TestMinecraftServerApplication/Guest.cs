@@ -2,7 +2,6 @@
 using Containers;
 
 using MinecraftPrimitives;
-
 using MinecraftServerEngine;
 using MinecraftServerEngine.PhysicsEngine;
 
@@ -40,6 +39,8 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            
+
         }
 
         protected override void OnSneak(World world, bool f)
@@ -56,7 +57,10 @@ namespace TestMinecraftServerApplication
 
                 //SetExperience(0.6F, 123456789);
 
-                AddEffect(1, 1, 1800, 2);
+                //EmitParticles(Particle.Cloud, 1.0F, 100);
+                EmitParticles(Particle.Largeexplode, 1.0F, 1);
+
+                //AddEffect(1, 1, 1800, 2);
             }
             else
             {
