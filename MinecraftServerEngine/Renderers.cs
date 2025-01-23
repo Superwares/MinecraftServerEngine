@@ -410,9 +410,9 @@ namespace MinecraftServerEngine
         }
 
         internal void ShowParticles(
-            Particle particle, 
+            Particle particle,
             Vector v,
-            float speed, int count, 
+            float speed, int count,
             float r, float g, float b)
         {
             System.Diagnostics.Debug.Assert(r >= 0.0D);
@@ -536,9 +536,16 @@ namespace MinecraftServerEngine
             Render(new EntityEffectPacket(entityId, effectId, amplifier, duration, flags));
         }
 
+        internal void Animate(int id, EntityAnimation animation)
+        {
+            System.Diagnostics.Debug.Assert(Disconnected == false);
+
+            Render(new ClientboundAnimationPacket(id, (byte)animation));
+        }
+
         internal void DestroyEntity(int id)
         {
-            System.Diagnostics.Debug.Assert(!Disconnected);
+            System.Diagnostics.Debug.Assert(Disconnected == false);
 
             Render(new DestroyEntitiesPacket(id));
         }
@@ -555,9 +562,9 @@ namespace MinecraftServerEngine
         }
 
         internal void Move(
-            Particle particle, 
-            Vector[] points, 
-            float speed, int count, 
+            Particle particle,
+            Vector[] points,
+            float speed, int count,
             float r, float g, float b)
         {
             System.Diagnostics.Debug.Assert(r >= 0.0D);
@@ -570,7 +577,8 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(speed <= 1.0F);
             System.Diagnostics.Debug.Assert(count >= 0);
 
-            if (count == 0) {
+            if (count == 0)
+            {
                 return;
             }
 
