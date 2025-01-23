@@ -1,7 +1,7 @@
 ﻿
 namespace MinecraftServerEngine
 {
-    internal enum EntityAnimation : byte
+    public enum EntityAnimation : byte
     {
         SwingMainArm = 0,
         TakeDamage = 1,

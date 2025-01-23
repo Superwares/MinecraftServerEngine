@@ -608,6 +608,34 @@ namespace MinecraftServerEngine
             ChangeForms(_sneaking, _sprinting);
         }
 
+        internal virtual void _Animate(EntityAnimation animation)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (_noRendering == true)
+            {
+                System.Diagnostics.Debug.Assert(Renderers.Empty);
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(Renderers != null);
+            foreach (EntityRenderer renderer in Renderers.GetKeys())
+            {
+                System.Diagnostics.Debug.Assert(renderer != null);
+                renderer.Animate(Id, animation);
+            }
+        }
+
+        public void Animate(EntityAnimation animation)
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            _Animate(animation);
+        }
+
         internal void UpdateEntityEquipmentsData((
             byte[] mainHand, byte[] offHand) equipmentsData)
         {

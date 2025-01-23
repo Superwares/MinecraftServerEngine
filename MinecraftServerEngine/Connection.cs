@@ -1401,6 +1401,19 @@ namespace MinecraftServerEngine
             OutPackets.Enqueue(new UpdateHealthPacket(health, 20, 5.0F));
         }
 
+        internal void Animate(int entityId, EntityAnimation animation)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (_disconnected == true)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(OutPackets != null);
+            OutPackets.Enqueue(new ClientboundAnimationPacket(entityId, (byte)animation));
+        }
+
         internal void AddEffect(
             int entityId, byte effectId, byte amplifier, int duration, byte flags)
         {

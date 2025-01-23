@@ -181,8 +181,8 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             base._EmitParticles(
-                particle,  v,
-                speed, count, 
+                particle, v,
+                speed, count,
                 r, g, b);
 
             if (Connected == true)
@@ -459,6 +459,18 @@ namespace MinecraftServerEngine
 
 
 
+        }
+
+        internal override void _Animate(EntityAnimation animation)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            base._Animate(animation);
+
+            if (Connected == true)
+            {
+                Conn.Animate(Id, animation);
+            }
         }
 
         protected override void Dispose(bool disposing)
