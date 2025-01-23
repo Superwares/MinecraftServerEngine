@@ -163,6 +163,34 @@ namespace MinecraftServerEngine
             }
         }
 
+        internal override void _EmitParticles(
+            Particle particle, Vector v,
+            float speed, int count,
+            float r, float g, float b)
+        {
+            System.Diagnostics.Debug.Assert(r >= 0.0D);
+            System.Diagnostics.Debug.Assert(r <= 1.0D);
+            System.Diagnostics.Debug.Assert(g >= 0.0D);
+            System.Diagnostics.Debug.Assert(g <= 1.0D);
+            System.Diagnostics.Debug.Assert(b >= 0.0D);
+            System.Diagnostics.Debug.Assert(b <= 1.0D);
+            System.Diagnostics.Debug.Assert(speed >= 0.0F);
+            System.Diagnostics.Debug.Assert(speed <= 1.0F);
+            System.Diagnostics.Debug.Assert(count >= 0);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            base._EmitParticles(
+                particle,  v,
+                speed, count, 
+                r, g, b);
+
+            if (Connected == true)
+            {
+                Conn.EmitParticles(particle, v, speed, count, r, g, b);
+            }
+        }
+
         public void AddEffect(byte effectId, byte amplifier, int duration, byte flags)
         {
             if (_disposed == true)

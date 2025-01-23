@@ -217,7 +217,7 @@ namespace MinecraftServerEngine
             ConcurrentQueue<ClientboundPlayingPacket> outPackets)
             : base(outPackets) { }
 
-        // title, worldboarder, chattings, sound
+        // title, worldboarder, chattings, sound, particles
 
         internal void PlaySound(string name, int category, Vector p, float volume, float pitch)
         {
@@ -409,6 +409,47 @@ namespace MinecraftServerEngine
             Render(new EntityMetadataPacket(id, metadata.WriteData()));
         }
 
+        internal void ShowParticles(
+            Particle particle, 
+            Vector v,
+            float speed, int count, 
+            float r, float g, float b)
+        {
+            System.Diagnostics.Debug.Assert(r >= 0.0D);
+            System.Diagnostics.Debug.Assert(r <= 1.0D);
+            System.Diagnostics.Debug.Assert(g >= 0.0D);
+            System.Diagnostics.Debug.Assert(g <= 1.0D);
+            System.Diagnostics.Debug.Assert(b >= 0.0D);
+            System.Diagnostics.Debug.Assert(b <= 1.0D);
+            System.Diagnostics.Debug.Assert(speed >= 0.0F);
+            System.Diagnostics.Debug.Assert(speed <= 1.0F);
+            System.Diagnostics.Debug.Assert(count >= 0);
+
+            if (count == 0)
+            {
+                return;
+            }
+
+            if (particle != Particle.Reddust)
+            {
+                r = 0.0F;
+                g = 0.0F;
+                b = 0.0F;
+            }
+
+            System.Diagnostics.Debug.Assert(v.X >= float.MinValue);
+            System.Diagnostics.Debug.Assert(v.X <= float.MaxValue);
+            System.Diagnostics.Debug.Assert(v.Y >= float.MinValue);
+            System.Diagnostics.Debug.Assert(v.Y <= float.MaxValue);
+            System.Diagnostics.Debug.Assert(v.Z >= float.MinValue);
+            System.Diagnostics.Debug.Assert(v.Z <= float.MaxValue);
+            Render(new ParticlesPacket(
+                (int)particle, true,
+                (float)v.X, (float)v.Y, (float)v.Z,
+                r, g, b,
+                speed, count));
+        }
+
         internal void SetEquipmentsData(
             int id,
             (byte[] mainHand, byte[] offHand) equipmentsData)
@@ -513,14 +554,32 @@ namespace MinecraftServerEngine
         {
         }
 
-        internal void Move(Vector[] points, float r, float g, float b)
+        internal void Move(
+            Particle particle, 
+            Vector[] points, 
+            float speed, int count, 
+            float r, float g, float b)
         {
-            System.Diagnostics.Debug.Assert(r > 0.0D);
+            System.Diagnostics.Debug.Assert(r >= 0.0D);
             System.Diagnostics.Debug.Assert(r <= 1.0D);
-            System.Diagnostics.Debug.Assert(g > 0.0D);
+            System.Diagnostics.Debug.Assert(g >= 0.0D);
             System.Diagnostics.Debug.Assert(g <= 1.0D);
-            System.Diagnostics.Debug.Assert(b > 0.0D);
+            System.Diagnostics.Debug.Assert(b >= 0.0D);
             System.Diagnostics.Debug.Assert(b <= 1.0D);
+            System.Diagnostics.Debug.Assert(speed >= 0.0F);
+            System.Diagnostics.Debug.Assert(speed <= 1.0F);
+            System.Diagnostics.Debug.Assert(count >= 0);
+
+            if (count == 0) {
+                return;
+            }
+
+            if (particle != Particle.Reddust)
+            {
+                r = 0.0F;
+                g = 0.0F;
+                b = 0.0F;
+            }
 
             foreach (Vector p in points)
             {
@@ -531,10 +590,10 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(p.Z >= float.MinValue);
                 System.Diagnostics.Debug.Assert(p.Z <= float.MaxValue);
                 Render(new ParticlesPacket(
-                    30, true,
+                    (int)particle, true,
                     (float)p.X, (float)p.Y, (float)p.Z,
                     r, g, b,
-                    1.0F, 0));
+                    speed, count));
             }
         }
 

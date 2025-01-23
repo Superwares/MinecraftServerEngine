@@ -1392,14 +1392,14 @@ namespace MinecraftPrimitives
             int particleId, bool extendedRange,
             float x, float y, float z,
             float offsetX, float offsetY, float offsetZ,
-            float speed, int extra) : base(ParticlesPacketId)
+            float speed, int count) : base(ParticlesPacketId)
         {
             ParticleId = particleId;
             Flag = extendedRange;
             X = x; Y = y; Z = z;
             OffsetX = offsetX; OffsetY = offsetY; OffsetZ = offsetZ;
             Extra = speed;
-            Count = extra;
+            Count = count;
         }
 
         protected override void WriteData(MinecraftDataStream buffer)

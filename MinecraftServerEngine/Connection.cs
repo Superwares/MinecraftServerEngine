@@ -708,7 +708,7 @@ namespace MinecraftServerEngine
                                 jsonString, 0));
                         }
 
-                        
+
                     }
                     break;
                 case ServerboundPlayingPacket.SettingsPacketId:
@@ -1402,13 +1402,33 @@ namespace MinecraftServerEngine
         internal void AddEffect(
             int entityId, byte effectId, byte amplifier, int duration, byte flags)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
             if (_disconnected == true)
             {
                 return;
             }
+
             System.Diagnostics.Debug.Assert(OutPackets != null);
             OutPackets.Enqueue(new EntityEffectPacket(entityId, effectId, amplifier, duration, flags));
+        }
+
+        internal void EmitParticles(
+            Particle particle, Vector v,
+            float speed, int count,
+            float r, float g, float b)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+            if (_disconnected == true)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(OutPackets != null);
+            OutPackets.Enqueue(new ParticlesPacket(
+                (int)particle, true,
+                (float)v.X, (float)v.Y, (float)v.Z,
+                r, g, b,
+                speed, count));
         }
 
         internal void SetExperience(float ratio, int level)

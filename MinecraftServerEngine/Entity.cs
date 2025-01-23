@@ -608,11 +608,117 @@ namespace MinecraftServerEngine
             }
         }
 
-        protected void EmitParticles(Particle particle, int count)
+        internal virtual void _EmitParticles(
+            Particle particle, Vector v,
+            float speed, int count,
+            float r, float g, float b)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(r >= 0.0D);
+            System.Diagnostics.Debug.Assert(r <= 1.0D);
+            System.Diagnostics.Debug.Assert(g >= 0.0D);
+            System.Diagnostics.Debug.Assert(g <= 1.0D);
+            System.Diagnostics.Debug.Assert(b >= 0.0D);
+            System.Diagnostics.Debug.Assert(b <= 1.0D);
+            System.Diagnostics.Debug.Assert(speed >= 0.0F);
+            System.Diagnostics.Debug.Assert(speed <= 1.0F);
+            System.Diagnostics.Debug.Assert(count >= 0);
 
-            throw new System.NotImplementedException();
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(
+                _noRendering == false
+                || (_noRendering == true && Renderers.Empty == true));
+            if (_noRendering == false)
+            {
+                System.Diagnostics.Debug.Assert(Renderers != null);
+                foreach (EntityRenderer renderer in Renderers.GetKeys())
+                {
+                    System.Diagnostics.Debug.Assert(renderer != null);
+                    renderer.ShowParticles(particle, v, speed, count, r, g, b);
+                }
+            }
+        }
+
+        public void EmitParticles(
+            Particle particle, Vector offset,
+            float speed, int count,
+            float red, float green, float blue)
+        {
+            if (speed < 0.0F || speed > 1.0F)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(speed));
+            }
+            if (count < 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(count));
+            }
+
+            if (red < 0.0D || red > 1.0D)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(red));
+            }
+            if (green < 0.0D || green > 1.0D)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(green));
+            }
+            if (blue < 0.0D || blue > 1.0D)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(blue));
+            }
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _EmitParticles(particle, Position + offset, speed, count, red, green, blue);
+        }
+
+        public void EmitParticles(
+            Particle particle, Vector offset,
+            float speed, int count)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            EmitParticles(particle, offset, speed, count, 0.0F, 0.0F, 0.0F);
+        }
+
+        public void EmitParticles(
+            Particle particle,
+            float speed, int count,
+            float red, float green, float blue)
+        {
+            if (speed < 0.0F || speed > 1.0F)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(speed));
+            }
+            if (count < 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(count));
+            }
+
+            if (red < 0.0D || red > 1.0D)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(red));
+            }
+            if (green < 0.0D || green > 1.0D)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(green));
+            }
+            if (blue < 0.0D || blue > 1.0D)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(blue));
+            }
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _EmitParticles(particle, Position, speed, count, red, green, blue);
+        }
+
+        public void EmitParticles(
+            Particle particle,
+            float speed, int count)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            EmitParticles(particle, speed, count, 0.0F, 0.0F, 0.0F);
         }
 
         public void ResetBlockAppearance()

@@ -83,7 +83,7 @@ namespace MinecraftServerEngine
                 foreach (ParticleObjectRenderer renderer in Renderers.GetKeys())
                 {
                     System.Diagnostics.Debug.Assert(renderer != null);
-                    renderer.Move(points, r, g, b);
+                    renderer.Move(Particle.Reddust, points, 1.0F, 1, r, g, b);
                 }
 
             }
