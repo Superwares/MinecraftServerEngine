@@ -94,6 +94,31 @@ namespace MinecraftServerEngine
             Dispose(false);
         }
 
+        public void PlaySound(string name, int category, float volume, float pitch)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            if (volume < 0.0F || volume > 1.0F)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(volume));
+            }
+
+            if (volume < 0.5F || volume > 2.0F)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(volume));
+            }
+
+            Vector p = new(Position.X, Position.Y + GetEyeHeight(), Position.Z);
+
+            Conn.PlaySound(name, category, p, volume, pitch);
+        }
+
+
         public virtual void OnRespawn()
         {
 
@@ -139,7 +164,7 @@ namespace MinecraftServerEngine
         //    }
 
 
-            
+
         //}
 
         public override void Damage(float amount)

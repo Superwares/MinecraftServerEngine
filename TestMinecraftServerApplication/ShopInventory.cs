@@ -51,6 +51,8 @@ namespace TestMinecraftServerApplication
             //MyConsole.Debug($"UserId: {userId}");
             //MyConsole.Debug($"i: {i}, ItemStack: {itemStack}");
 
+            player.PlaySound("entity.item.pickup", 7, 1.0F, 2.0F);
+
 
             switch (i)
             {

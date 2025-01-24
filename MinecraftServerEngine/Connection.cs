@@ -1451,6 +1451,30 @@ namespace MinecraftServerEngine
             OutPackets.Enqueue(new EntityEffectPacket(entityId, effectId, amplifier, duration, flags));
         }
 
+        internal void PlaySound(
+            string name, int category, Vector p, float volume, float pitch)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+            if (_disconnected == true)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(name != null);
+            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(name) == false);
+            System.Diagnostics.Debug.Assert(volume >= 0.0F);
+            System.Diagnostics.Debug.Assert(volume <= 1.0F);
+            System.Diagnostics.Debug.Assert(pitch >= 0.5F);
+            System.Diagnostics.Debug.Assert(pitch <= 2.0F);
+
+            System.Diagnostics.Debug.Assert(OutPackets != null);
+            OutPackets.Enqueue(new NamedSoundEffectPacket(
+                //"entity.player.attack.strong", 7,
+                name, category,
+                (int)(p.X * 8), (int)(p.Y * 8), (int)(p.Z * 8),
+                volume, pitch));
+        }
+
         internal void EmitParticles(
             Particle particle, Vector v,
             float speed, int count,
