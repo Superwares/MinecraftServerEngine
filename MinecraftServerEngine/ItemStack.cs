@@ -405,7 +405,7 @@ namespace MinecraftServerEngine
 
             if (IsBreakable == true)
             {
-                loreLines += 1;
+                loreLines += 2;
             }
 
             bool StartBr = loreLines > 0;
@@ -437,6 +437,7 @@ namespace MinecraftServerEngine
 
             if (IsBreakable == true)
             {
+                _lore[currentLoreLine++] = new NBTTagString("");
                 _lore[currentLoreLine++] = new NBTTagString($"Durability ({CurrentDurability}/{MaxDurability})");
             }
 
