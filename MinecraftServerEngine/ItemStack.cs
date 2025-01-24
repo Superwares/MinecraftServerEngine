@@ -1,5 +1,6 @@
 ﻿
 using MinecraftPrimitives;
+using System.Reflection.Metadata;
 
 namespace MinecraftServerEngine
 {
@@ -10,8 +11,9 @@ namespace MinecraftServerEngine
 
         public readonly string Name;
 
-        public readonly string Description;
-        public readonly (string, string)[] Attributes;
+        //public readonly string Description;
+        //public readonly (string, string)[] Attributes;
+        public readonly string[] Lore;
 
         public int MaxCount => Type.GetMaxCount();
         public const int MinCount = 1;
@@ -21,7 +23,8 @@ namespace MinecraftServerEngine
 
         public ItemStack(
             ItemType type, string name, int count,
-            string description, params (string, string)[] attributes)
+            //string description, params (string, string)[] attributes,
+            params string[] lore)
         {
             System.Diagnostics.Debug.Assert(name != null && string.IsNullOrEmpty(name) == false);
 
@@ -29,8 +32,9 @@ namespace MinecraftServerEngine
 
             Name = name;
 
-            Description = description;
-            Attributes = attributes;
+            //Description = description;
+            //Attributes = attributes;
+            Lore = lore;
 
             System.Diagnostics.Debug.Assert(Type.GetMaxCount() >= MinCount);
             System.Diagnostics.Debug.Assert(count >= MinCount);
@@ -38,8 +42,7 @@ namespace MinecraftServerEngine
             _count = count;
         }
 
-        public ItemStack(
-            ItemType type, string name, int count)
+        public ItemStack(ItemType type, string name, int count)
         {
             System.Diagnostics.Debug.Assert(name != null && string.IsNullOrEmpty(name) == false);
 
@@ -47,8 +50,9 @@ namespace MinecraftServerEngine
 
             Name = name;
 
-            Description = null;
-            Attributes = null;
+            //Description = null;
+            //Attributes = null;
+            Lore = null;
 
             System.Diagnostics.Debug.Assert(Type.GetMaxCount() >= MinCount);
             System.Diagnostics.Debug.Assert(count >= MinCount);
@@ -58,7 +62,8 @@ namespace MinecraftServerEngine
 
         public ItemStack(
             ItemType type, string name,
-            string description, params (string, string)[] attributes)
+            //string description, params (string, string)[] attributes,
+            params string[] lore)
         {
             System.Diagnostics.Debug.Assert(name != null && string.IsNullOrEmpty(name) == false);
 
@@ -66,15 +71,15 @@ namespace MinecraftServerEngine
 
             Name = name;
 
-            Description = description;
-            Attributes = attributes;
+            //Description = description;
+            //Attributes = attributes;
+            Lore = lore;
 
             System.Diagnostics.Debug.Assert(Type.GetMaxCount() >= MinCount);
             _count = Type.GetMaxCount();
         }
 
-        public ItemStack(
-       ItemType type, string name)
+        public ItemStack(ItemType type, string name)
         {
             System.Diagnostics.Debug.Assert(name != null && string.IsNullOrEmpty(name) == false);
 
@@ -82,8 +87,7 @@ namespace MinecraftServerEngine
 
             Name = name;
 
-            Description = null;
-            Attributes = null;
+            Lore = null;
 
             System.Diagnostics.Debug.Assert(Type.GetMaxCount() >= MinCount);
             _count = Type.GetMaxCount();
@@ -180,7 +184,7 @@ namespace MinecraftServerEngine
             _count /= 2;
             int count = _count + a;
 
-            to = new ItemStack(Type, Name, count, Description, Attributes);
+            to = new ItemStack(Type, Name, count, Lore);
 
             return true;
         }
@@ -195,7 +199,7 @@ namespace MinecraftServerEngine
             }
 
             Spend(MinCount);
-            to = new ItemStack(Type, Name, MinCount, Description, Attributes);
+            to = new ItemStack(Type, Name, MinCount, Lore);
 
             return true;
         }
@@ -242,7 +246,20 @@ namespace MinecraftServerEngine
             using NBTTagCompound compound = new();
             NBTTagCompound displayCompound = new();
 
-            displayCompound.Add("Name", new NBTTagString($"HELL3O"));
+            displayCompound.Add("Name", new NBTTagString(Name));
+
+            if (Lore != null)
+            {
+                NBTTagString[] _lore = new NBTTagString[Lore.Length];
+
+                for (int i = 0; i < Lore.Length; ++i)
+                {
+                    _lore[i] = new NBTTagString(Lore[i]);
+                }
+
+                NBTTagList<NBTTagString> lore = new(_lore);
+                displayCompound.Add("Lore", lore);
+            }
 
             //NBTTagList<NBTTagString> lore = new([
             //    new NBTTagString("HELLO"),
@@ -250,33 +267,63 @@ namespace MinecraftServerEngine
             //    ]);
             //displayCompound.Add("Lore", lore);
 
-            if (Description != null)
-            {
-                int offset = 2;
-                NBTTagString[] _lore = new NBTTagString[offset + Attributes.Length];
-                _lore[0] = new NBTTagString(Description);
-                _lore[1] = new NBTTagString("");
+            //if (Description != null)
+            //{
 
-                int maxKeyLength = 0;
-                int maxValueLength = 0;
 
-                foreach (var (key, value) in Attributes)
-                {
-                    maxKeyLength = System.Math.Max(maxKeyLength, key.Length);
-                    maxValueLength = System.Math.Max(maxValueLength, value.Length);
-                }
+            //    int minWidth = 20;
+            //    int maxKeyLength = 0;
+            //    int maxValueLength = 0;
 
-                for (int i = 0; i < Attributes.Length; ++i)
-                {
-                    (string, string) attribute = Attributes[i];
+            //    foreach (var (key, value) in Attributes)
+            //    {
+            //        maxKeyLength = System.Math.Max(maxKeyLength, key.Length);
+            //        maxValueLength = System.Math.Max(maxValueLength, value.Length);
+            //    }
 
-                    _lore[i + offset] = new NBTTagString($"{attribute.Item1.PadRight(maxKeyLength + 2)}{attribute.Item2.PadLeft(maxValueLength)}");
-                }
+            //    if (maxKeyLength + maxValueLength < minWidth)
+            //    {
+            //        maxKeyLength += minWidth - (maxKeyLength + maxValueLength);
+            //    }
 
-                NBTTagList<NBTTagString> lore = new(_lore);
+            //    int width = maxKeyLength + maxValueLength;
 
-                displayCompound.Add("Lore", lore);
-            }
+            //    int minLines = (int)System.Math.Ceiling((double)Description.Length / (double)width);
+
+            //    int br = 1;
+
+            //    string line;
+
+            //    int startIndex;
+            //    int currentIndex = 0;
+            //    NBTTagString[] _lore = new NBTTagString[minLines + br + Attributes.Length];
+
+            //    for (int i = 0; i < minLines; ++i)
+            //    {
+            //        startIndex = i * width;
+            //        int length = System.Math.Min(width, Description.Length - startIndex);
+            //        line = Description.Substring(startIndex, length).Replace(" ", "  ");
+
+            //        _lore[currentIndex++] = new NBTTagString(line);
+            //    }
+
+            //    for (int i = 0; i < br; ++i)
+            //    {
+            //        _lore[currentIndex++] = new NBTTagString("");
+            //    }
+
+            //    for (int i = 0; i < Attributes.Length; ++i)
+            //    {
+            //        (string, string) attribute = Attributes[i];
+
+            //        line = $"{attribute.Item1.PadRight(maxKeyLength)}{attribute.Item2.PadLeft(maxValueLength - 2)}".Replace(" ", "  ");
+            //        _lore[currentIndex++] = new NBTTagString(line);
+            //    }
+
+            //    NBTTagList<NBTTagString> lore = new(_lore);
+
+            //    displayCompound.Add("Lore", lore);
+            //}
 
 
             compound.Add("HideFlags", new NBTTagInt(0xFF));

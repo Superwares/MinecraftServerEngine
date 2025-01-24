@@ -660,10 +660,8 @@ namespace MinecraftPrimitives
                 return;
             }
 
-            int size = value.Length;
-            WriteInt(size, true);
-
             byte[] data = System.Text.Encoding.UTF8.GetBytes(value);
+            WriteInt(data.Length, true);
             InsertBytes(data);
         }
 
@@ -681,9 +679,8 @@ namespace MinecraftPrimitives
                 throw new System.ArgumentOutOfRangeException(nameof(value), "String is too long.");
             }
 
-            WriteShort((short)value.Length);
-
             byte[] data = System.Text.Encoding.UTF8.GetBytes(value);
+            WriteShort((short)data.Length);
             InsertBytes(data);
         }
 

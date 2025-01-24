@@ -14,10 +14,12 @@ namespace TestMinecraftServerApplication
 
         public ShopInventory() : base(4)
         {
-            ResetSlot(35, new ItemStack(ItemType.Stick, "Good hElllo", "Good", [
-                ("Price", "10$"),
-                ("Durability", "100"),
-                ("Owner", "John"),
+            ResetSlot(35, new ItemStack(ItemType.DiamondSword,
+                "풍선망치",  // Balloon Basher
+                [
+                    "가볍지만 강력한 한 방으로 적을 날려버리세요!",
+                    "",
+                    "Price                         30 COINS",
                 ]));
         }
 
