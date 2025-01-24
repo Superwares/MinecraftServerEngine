@@ -17,5 +17,7 @@ namespace MinecraftServerEngine
         Stick,
 
         /*Snowball,*/  // This item is handled by clientside.
+
+        GoldNugget,
     }
 }

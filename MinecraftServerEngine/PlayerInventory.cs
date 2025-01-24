@@ -580,6 +580,8 @@ namespace MinecraftServerEngine
             leftCount = count;
             int k = 0;
 
+            ItemStack takedItemStack = null;
+
             for (int i = 0; i < PrimarySlotCount && leftCount > 0; ++i)
             {
                 invSlot = GetPrimarySlot(i);
@@ -594,7 +596,7 @@ namespace MinecraftServerEngine
 
                 if (targetItemStack.Type == itemType && targetItemStack.Name == name)
                 {
-                    int takedCount = invSlot.Take(out ItemStack takedItemStack, leftCount);
+                    int takedCount = takedItemStack == null ? invSlot.Take(out takedItemStack, leftCount) : takedItemStack.Count;
 
                     System.Diagnostics.Debug.Assert(takedCount >= 0);
                     System.Diagnostics.Debug.Assert(takedCount <= count);
@@ -603,9 +605,38 @@ namespace MinecraftServerEngine
                     {
                         System.Diagnostics.Debug.Assert(takedItemStack != null);
 
-                        itemStacks[k++] = takedItemStack;
+                        if (itemStacks[k] == null)
+                        {
+                            itemStacks[k] = takedItemStack;
 
-                        leftCount -= takedCount;
+                            leftCount -= takedCount;
+
+                            takedItemStack = null;
+                        } 
+                        else
+                        {
+                            itemStacks[k].Move(ref takedItemStack);
+
+                            if (takedItemStack == null)
+                            {
+                                leftCount -= takedCount;
+
+                                takedItemStack = null;
+                            } else
+                            {
+                                leftCount -= (takedCount - takedItemStack.Count);
+                            }
+                        }
+
+                        System.Diagnostics.Debug.Assert(itemStacks[k].Count <= itemStacks[k].MaxCount);
+                        if (itemStacks[k].Count == itemStacks[k].MaxCount)
+                        {
+                            ++k;
+                        }
+
+                        //itemStacks[k++] = takedItemStack;
+
+                   
                     }
                 }
 

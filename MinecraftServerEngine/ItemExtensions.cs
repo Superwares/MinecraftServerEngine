@@ -3,7 +3,7 @@ using Containers;
 
 namespace MinecraftServerEngine
 {
-    internal static class ItemExtensions
+    public static class ItemExtensions
     {
         // TODO: Replace as IReadOnlyTable
         // TODO: 프로그램이 종료되었을 때 자원 해제하기. static destructor?
@@ -25,12 +25,19 @@ namespace MinecraftServerEngine
 
             /*_ITEM_ENUM_TO_ID_MAP.Insert(ItemType.Snowball, 332);*/
 
+            _ITEM_ENUM_TO_ID_MAP.Insert(ItemType.GoldNugget, 371);
+
             foreach ((ItemType item, int id) in _ITEM_ENUM_TO_ID_MAP.GetElements())
             {
                 _ITEM_ID_TO_ENUM_MAP.Insert(id, item);
             }
 
             System.Diagnostics.Debug.Assert(_ITEM_ENUM_TO_ID_MAP.Count == _ITEM_ID_TO_ENUM_MAP.Count);
+        }
+
+        public static int GetMinCount(this ItemType item)
+        {
+            return ItemStack.MinCount;
         }
 
         public static int GetMaxCount(this ItemType item)
@@ -59,10 +66,13 @@ namespace MinecraftServerEngine
 
                 /*case ItemType.Snowball:
                     return 16;*/
+
+                case ItemType.GoldNugget:
+                    return 64;
             }
         }
 
-        public static int GetId(this ItemType item)
+        internal static int GetId(this ItemType item)
         {
             System.Diagnostics.Debug.Assert(_ITEM_ENUM_TO_ID_MAP.Contains(item));
             int id = _ITEM_ENUM_TO_ID_MAP.Lookup(item);
