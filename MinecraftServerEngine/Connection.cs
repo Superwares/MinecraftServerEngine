@@ -1051,14 +1051,18 @@ namespace MinecraftServerEngine
                                 mainHandItemStack != null &&
                                 mainHandItemStack.IsBreaked == true)
                             {
+                                player.OnItemBreak(world, mainHandItemStack);
+
                                 Window.UpdateMainHandSlot(playerInventory);
+
+                                MyConsole.Debug("Item break!");
                             }
                             else if (
                                  mainHandItemStack != null &&
                                  mainHandItemStackHash != null &&
-                                 mainHandItemStack.CheckHash(mainHandItemStackHash) == true)
+                                 mainHandItemStack.CheckHash(mainHandItemStackHash) == false)
                             {
-                                //MyConsole.Debug("Different status of prev and current item!");
+                                MyConsole.Debug("Different status of prev and current item!");
                                 Window.UpdateMainHandSlot(playerInventory);
                             }
 

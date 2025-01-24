@@ -130,6 +130,7 @@ namespace MinecraftServerEngine
 
         protected internal virtual void OnAttack(World world) { }
         protected internal virtual void OnAttack(World world, ItemStack stack) { }
+        protected internal virtual void OnItemBreak(World world, ItemStack stack) { }
         protected internal virtual void OnUseItem(World world, ItemStack stack) { }
         protected internal virtual void OnUseEntity(World world, Entity entity) { }
 

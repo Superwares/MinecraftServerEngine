@@ -205,7 +205,7 @@ namespace MinecraftServerEngine
             Update(null, playerInventory, cursor);
         }
 
-        internal void HandleMainHandSlot(PlayerInventory playerInventory)
+        internal bool HandleMainHandSlot(PlayerInventory playerInventory)
         {
             System.Diagnostics.Debug.Assert(playerInventory != null);
 
@@ -223,6 +223,8 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(slot >= short.MinValue);
             System.Diagnostics.Debug.Assert(slot <= short.MaxValue);
             Render(new SetSlotPacket((sbyte)windowId, (short)slot, buffer.ReadData()));
+
+            return mainSlot.Empty;
         }
 
     }

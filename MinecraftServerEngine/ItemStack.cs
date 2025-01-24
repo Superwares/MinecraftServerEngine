@@ -1,6 +1,7 @@
 ﻿
 using MinecraftPrimitives;
 using System.Diagnostics;
+using System.Xml.Linq;
 
 namespace MinecraftServerEngine
 {
@@ -40,7 +41,8 @@ namespace MinecraftServerEngine
 
 
 
-        internal readonly byte[] Hash;
+        internal byte[] _hash;
+        internal byte[] Hash => _hash;
 
         // TODO: Check  additional validation or safeguards should be implemented.
         private static byte[] GenerateHash(string input)
@@ -167,7 +169,7 @@ namespace MinecraftServerEngine
             //Attributes = attributes;
             Lore = lore;
 
-            Hash = GenerateItemStackHash(type, name, maxDurability, currentDurability, lore);
+            _hash = GenerateItemStackHash(type, name, maxDurability, currentDurability, lore);
         }
 
         public ItemStack(
@@ -230,6 +232,8 @@ namespace MinecraftServerEngine
             }
 
             System.Diagnostics.Debug.Assert(_currentDurability >= 0);
+
+            _hash = GenerateItemStackHash(Type, Name, MaxDurability, CurrentDurability, Lore);
         }
 
         internal int Stack(int count)
