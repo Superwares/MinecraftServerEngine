@@ -12,6 +12,9 @@ namespace TestMinecraftServerApplication
     {
         public override string Title => "Shop";
 
+        public ItemType Coin = ItemType.GoldNugget;
+        public string CoinName = "COIN";
+
         public ShopInventory() : base(4)
         {
             ResetSlot(0, new ItemStack(ItemType.DiamondSword,
@@ -20,12 +23,13 @@ namespace TestMinecraftServerApplication
                 [
                     "가볍지만 강력한 한 방으로 적을 날려버리세요!",
                     "",
-                    "Price                         30 Coins",
+                    "왼클릭(구매)                     30 코인",
+                    "우클릭(판매)                      5 코인",
                 ]));
 
-            ResetSlot(35, new ItemStack(ItemType.GoldNugget,
-               "무료코인",  // Balloon Basher
-               ItemType.DiamondSword.GetMaxCount(),
+            ResetSlot(35, new ItemStack(Coin,
+               CoinName,  // Balloon Basher
+               Coin.GetMaxCount(),
                [
                     "테스트용 무료로 코인입니다.",
                     "",
@@ -45,11 +49,30 @@ namespace TestMinecraftServerApplication
 
             switch (i)
             {
-                default:
-                    System.Diagnostics.Debug.Assert(false);
+                case 0:
+                    {
+                        int amount = 30;
+
+                        System.Diagnostics.Debug.Assert(amount >= Coin.GetMinCount());
+                        System.Diagnostics.Debug.Assert(amount <= Coin.GetMaxCount());
+
+                        ItemStack[] coins = playerInventory.TakeItemsInPrimary(
+                            Coin, CoinName, amount);
+
+                        System.Diagnostics.Debug.Assert(coins != null);
+                        if (coins.Length > 0)
+                        {
+                            System.Diagnostics.Debug.Assert(coins.Length == 1);
+                            System.Diagnostics.Debug.Assert(coins[0].Count == amount);
+
+                            playerInventory.GiveItem(new ItemStack(itemStack.Type, itemStack.Name, itemStack.Count));
+
+                        }
+
+                    }
                     break;
                 case 35:
-                    playerInventory.GiveItem(new ItemStack(ItemType.GoldNugget, "COIN"));
+                    playerInventory.GiveItem(new ItemStack(itemStack.Type, itemStack.Name, itemStack.Count));
                     break;
 
             }
@@ -77,12 +100,30 @@ namespace TestMinecraftServerApplication
 
             switch (i)
             {
-                default:
-                    System.Diagnostics.Debug.Assert(false);
+                case 0:
+                    {
+                        int amount = 5;
+
+                        System.Diagnostics.Debug.Assert(amount >= Coin.GetMinCount());
+                        System.Diagnostics.Debug.Assert(amount <= Coin.GetMaxCount());
+
+                        ItemStack[] taked = playerInventory.TakeItemsInPrimary(
+                            itemStack.Type, itemStack.Name, itemStack.Count);
+
+                        System.Diagnostics.Debug.Assert(taked != null);
+                        if (taked.Length > 0)
+                        {
+                            System.Diagnostics.Debug.Assert(taked.Length == 1);
+                            System.Diagnostics.Debug.Assert(taked[0].Count == itemStack.Count);
+
+                            playerInventory.GiveItem(new ItemStack(Coin, CoinName, amount));
+                        }
+
+                    }
                     break;
                 case 35:
                     playerInventory.TakeItemsInPrimary(
-                        ItemType.GoldNugget, "COIN", ItemType.GoldNugget.GetMaxCount());
+                        itemStack.Type, itemStack.Name, itemStack.Count);
                     break;
 
             }
