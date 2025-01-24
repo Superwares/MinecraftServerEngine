@@ -5,7 +5,6 @@ using MinecraftPrimitives;
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
-    using System.Reflection.Emit;
 
     public abstract class AbstractPlayer : LivingEntity
     {
@@ -169,6 +168,11 @@ namespace MinecraftServerEngine
 
         public override void Damage(float amount)
         {
+            if (amount < 0.0F)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
+            }
+
             System.Diagnostics.Debug.Assert(amount >= 0.0D);
 
             if (amount == 0.0D)
