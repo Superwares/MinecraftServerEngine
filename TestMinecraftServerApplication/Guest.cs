@@ -79,6 +79,12 @@ namespace TestMinecraftServerApplication
             //Switch(Gamemode.Adventure);
         }
 
+        protected override void OnItemBreak(World world, ItemStack stack)
+        {
+
+            world.PlaySound("entity.item.break", 7, Position, 1.0F, 2.0F);
+        }
+
         protected override void OnAttack(World world)
         {
             System.Diagnostics.Debug.Assert(world != null);
@@ -120,9 +126,12 @@ namespace TestMinecraftServerApplication
             Vector d = Look.GetUnitVector();
             Vector eyeOrigin = GetEyeOrigin();
 
-            world.SpawnObject(new Flame(eyeOrigin, d, this));
+            //world.SpawnObject(new Flame(eyeOrigin, d, this));
 
             stack.Damage(1);
+
+            //EmitParticles(Particle.Take, 1.0F, 100);
+
         }
 
         protected override void OnUseItem(World world, ItemStack stack)
