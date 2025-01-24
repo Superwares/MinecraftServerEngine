@@ -442,7 +442,7 @@ namespace MinecraftServerEngine
             if (IsBreakable == true)
             {
                 _lore[currentLoreLine++] = new NBTTagString("");
-                _lore[currentLoreLine++] = new NBTTagString($"Durability ({CurrentDurability}/{MaxDurability})");
+                _lore[currentLoreLine++] = new NBTTagString($"Durability [{CurrentDurability}/{MaxDurability}]");
             }
 
             if (EndBr == true)

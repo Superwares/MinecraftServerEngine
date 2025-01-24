@@ -15,31 +15,40 @@ namespace TestMinecraftServerApplication
         public ItemType Coin = ItemType.GoldNugget;
         public string CoinName = "COIN";
 
+        public readonly ItemStack BalloonBasher = new(ItemType.DiamondSword,
+                "Balloon Basher",
+                110, 110,
+                ItemType.DiamondSword.GetMinStackCount(),
+                [
+                    "Tier              Basic",  // Quality Tier
+                    "Damage             3.00",
+                ]);
+
         public ShopInventory() : base(4)
         {
             ResetSlot(0, new ItemStack(ItemType.DiamondSword,
-                "Balloon Basher",
-                ItemType.DiamondSword.GetMinStackCount(),
+                BalloonBasher.Name,
+                BalloonBasher.Count,
                 [
-                    "가볍지만 강력한 한 방으로 적을 날려버리세요!",
-                    "",
-                    "데미지                             3.00",  // Damage
-                    "내구도                              110",  // Durability
-                    "",
-                    "구매 상태                          0/10",  // Purchase Status
-                    "",
-                    "왼클릭(구매)                     30 코인",
-                    "우클릭(판매)                      5 코인",
+                    $"가볍지만 강력한 한 방으로 적을 날려버리세요!",
+                    $"",
+                    $"데미지                             3.00",  // Damage
+                    $"내구도                             {BalloonBasher.MaxDurability}",  // Durability
+                    $"",
+                    //$"구매 상태                          0/10",  // Purchase Status
+                    $"",
+                    $"왼클릭(구매)                     30 코인",
+                    $"우클릭(판매)                      5 코인",
                 ]));
 
             ResetSlot(35, new ItemStack(Coin,
                CoinName,
                Coin.GetMaxStackCount(),
                [
-                    "테스트용 무료로 코인입니다.",
+                    "테스트용 무료 코인입니다.",
                     "",
-                    "왼클릭               지급",
-                    "우클릭               차감",
+                    "왼클릭             지급",
+                    "우클릭             차감",
                ]));
         }
 
