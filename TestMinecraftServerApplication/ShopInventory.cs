@@ -14,7 +14,11 @@ namespace TestMinecraftServerApplication
 
         public ShopInventory() : base(4)
         {
-            ResetSlot(35, new ItemStack(ItemType.Stick, "Good hElllo"));
+            ResetSlot(35, new ItemStack(ItemType.Stick, "Good hElllo", "Good", [
+                ("Price", "10$"),
+                ("Durability", "100"),
+                ("Owner", "John"),
+                ]));
         }
 
         protected override void OnLeftClickSharedItem(
@@ -22,24 +26,24 @@ namespace TestMinecraftServerApplication
             int i, ItemStack itemStack)
         {
 
-            MyConsole.Debug($"UserId: {userId}");
-            MyConsole.Debug($"i: {i}, ItemStack: {itemStack}");
+            //MyConsole.Debug($"UserId: {userId}");
+            //MyConsole.Debug($"i: {i}, ItemStack: {itemStack}");
         }
 
         protected override void OnRightClickSharedItem(
             UserId userId, AbstractPlayer player, PlayerInventory playerInventory,
             int i, ItemStack itemStack)
         {
-            MyConsole.Debug($"UserId: {userId}");
-            MyConsole.Debug($"i: {i}, ItemStack: {itemStack}");
+            //MyConsole.Debug($"UserId: {userId}");
+            //MyConsole.Debug($"i: {i}, ItemStack: {itemStack}");
 
             //playerInventory.GiveItem(new ItemStack(ItemType.DiamondSword, "Bad Stick!"));
             //playerInventory.GiveItem(new ItemStack(ItemType.DiamondSword, "Bad Stick!"));
             //playerInventory.GiveItem(new ItemStack(ItemType.DiamondSword, "Bad Stick!"));
 
-            ResetSlot(35, new ItemStack(ItemType.Stick, "Good hElllo", itemStack.Count - 1));
+            //ResetSlot(35, new ItemStack(ItemType.Stick, "Good hElllo", itemStack.Count - 1));
 
-            playerInventory.GiveItem(new ItemStack(ItemType.Stick, "Good hElllo", 1));
+            //playerInventory.GiveItem(new ItemStack(ItemType.Stick, "Good hElllo", 1));
 
 
             //ItemStack[] itemStacks0 = playerInventory.TakeItemsInPrimary(ItemType.DiamondSword, "Bad Stick!", 2);

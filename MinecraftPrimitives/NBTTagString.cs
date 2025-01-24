@@ -23,7 +23,7 @@ namespace MinecraftPrimitives
         public NBTTagString(string value)
         {
             System.Diagnostics.Debug.Assert(value != null);
-            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(value) == false);
+            //System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(value) == false);
 
             Value = value;
         }

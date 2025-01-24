@@ -10,19 +10,27 @@ namespace MinecraftServerEngine
 
         public readonly string Name;
 
+        public readonly string Description;
+        public readonly (string, string)[] Attributes;
+
         public int MaxCount => Type.GetMaxCount();
         public const int MinCount = 1;
 
         private int _count;
         public int Count => _count;
 
-        public ItemStack(ItemType type, string name, int count)
+        public ItemStack(
+            ItemType type, string name, int count,
+            string description, params (string, string)[] attributes)
         {
             System.Diagnostics.Debug.Assert(name != null && string.IsNullOrEmpty(name) == false);
 
             Type = type;
 
             Name = name;
+
+            Description = description;
+            Attributes = attributes;
 
             System.Diagnostics.Debug.Assert(Type.GetMaxCount() >= MinCount);
             System.Diagnostics.Debug.Assert(count >= MinCount);
@@ -30,13 +38,52 @@ namespace MinecraftServerEngine
             _count = count;
         }
 
-        public ItemStack(ItemType type, string name)
+        public ItemStack(
+            ItemType type, string name, int count)
         {
             System.Diagnostics.Debug.Assert(name != null && string.IsNullOrEmpty(name) == false);
 
             Type = type;
 
             Name = name;
+
+            Description = null;
+            Attributes = null;
+
+            System.Diagnostics.Debug.Assert(Type.GetMaxCount() >= MinCount);
+            System.Diagnostics.Debug.Assert(count >= MinCount);
+            System.Diagnostics.Debug.Assert(count <= Type.GetMaxCount());
+            _count = count;
+        }
+
+        public ItemStack(
+            ItemType type, string name,
+            string description, params (string, string)[] attributes)
+        {
+            System.Diagnostics.Debug.Assert(name != null && string.IsNullOrEmpty(name) == false);
+
+            Type = type;
+
+            Name = name;
+
+            Description = description;
+            Attributes = attributes;
+
+            System.Diagnostics.Debug.Assert(Type.GetMaxCount() >= MinCount);
+            _count = Type.GetMaxCount();
+        }
+
+        public ItemStack(
+       ItemType type, string name)
+        {
+            System.Diagnostics.Debug.Assert(name != null && string.IsNullOrEmpty(name) == false);
+
+            Type = type;
+
+            Name = name;
+
+            Description = null;
+            Attributes = null;
 
             System.Diagnostics.Debug.Assert(Type.GetMaxCount() >= MinCount);
             _count = Type.GetMaxCount();
@@ -133,7 +180,7 @@ namespace MinecraftServerEngine
             _count /= 2;
             int count = _count + a;
 
-            to = new ItemStack(Type, Name, count);
+            to = new ItemStack(Type, Name, count, Description, Attributes);
 
             return true;
         }
@@ -148,7 +195,7 @@ namespace MinecraftServerEngine
             }
 
             Spend(MinCount);
-            to = new ItemStack(Type, Name, MinCount);
+            to = new ItemStack(Type, Name, MinCount, Description, Attributes);
 
             return true;
         }
@@ -197,13 +244,42 @@ namespace MinecraftServerEngine
 
             displayCompound.Add("Name", new NBTTagString($"HELL3O"));
 
-            //NBTTagList<NBTTagString> loreList = new([
+            //NBTTagList<NBTTagString> lore = new([
             //    new NBTTagString("HELLO"),
             //    new NBTTagString("DURABILITY"),
             //    ]);
-            //displayCompound.Add("Lore", loreList);
+            //displayCompound.Add("Lore", lore);
+
+            if (Description != null)
+            {
+                int offset = 2;
+                NBTTagString[] _lore = new NBTTagString[offset + Attributes.Length];
+                _lore[0] = new NBTTagString(Description);
+                _lore[1] = new NBTTagString("");
+
+                int maxKeyLength = 0;
+                int maxValueLength = 0;
+
+                foreach (var (key, value) in Attributes)
+                {
+                    maxKeyLength = System.Math.Max(maxKeyLength, key.Length);
+                    maxValueLength = System.Math.Max(maxValueLength, value.Length);
+                }
+
+                for (int i = 0; i < Attributes.Length; ++i)
+                {
+                    (string, string) attribute = Attributes[i];
+
+                    _lore[i + offset] = new NBTTagString($"{attribute.Item1.PadRight(maxKeyLength + 2)}{attribute.Item2.PadLeft(maxValueLength)}");
+                }
+
+                NBTTagList<NBTTagString> lore = new(_lore);
+
+                displayCompound.Add("Lore", lore);
+            }
 
 
+            compound.Add("HideFlags", new NBTTagInt(0xFF));
             compound.Add("display", displayCompound);
 
             compound.WriteAsRoot(s);

@@ -53,7 +53,7 @@ namespace TestMinecraftServerApplication
             {
                 //ApplyBlockAppearance(Block.Dirt);
                 //OpenInventory(chestInventory);
-                //OpenInventory(shopInventory);s
+                OpenInventory(shopInventory); 
 
                 //SetExperience(0.6F, 123456789);
 
@@ -132,7 +132,7 @@ namespace TestMinecraftServerApplication
 
             MyConsole.Debug("Use item!");
 
-            GiveItem(new ItemStack(ItemType.DiamondSword, "Good Stick!"));
+            GiveItem(new ItemStack(ItemType.DiamondSword, "Good Stick!", ""));
         }
 
         protected override void OnUseEntity(World world, Entity entity)
