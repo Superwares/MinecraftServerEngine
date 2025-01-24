@@ -109,6 +109,7 @@ namespace TestMinecraftServerApplication
             //ItemStack[] itemStacks0 = playerInventory.TakeItemsInPrimary(ItemType.DiamondSword, "Bad Stick!", 2);
             //ItemStack[] itemStacks1 = playerInventory.TakeItemsInPrimary(ItemType.Stick, "Stick!", 2);
 
+            player.PlaySound("entity.item.pickup", 7, 1.0F, 2.0F);
 
             switch (i)
             {

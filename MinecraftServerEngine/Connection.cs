@@ -1055,7 +1055,7 @@ namespace MinecraftServerEngine
 
                                 Window.UpdateMainHandSlot(playerInventory);
 
-                                MyConsole.Debug("Item break!");
+                                //MyConsole.Debug("Item break!");
                             }
                             else if (
                                  mainHandItemStack != null &&
