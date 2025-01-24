@@ -161,7 +161,7 @@ namespace MinecraftServerEngine
 
             OnAttack(world, stack);
 
-            if (_noRendering)
+            if (_noRendering == true)
             {
                 System.Diagnostics.Debug.Assert(Renderers.Empty);
                 return;

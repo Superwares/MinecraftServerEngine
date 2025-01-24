@@ -1004,6 +1004,9 @@ namespace MinecraftServerEngine
 
                         if (packet.Hand == 0)
                         {
+                            ItemStack mainHandItemStack = null;
+                            byte[] mainHandItemStackHash = null;
+
                             if (_startDigging)
                             {
                                 if (!_attackWhenDigging)
@@ -1011,11 +1014,12 @@ namespace MinecraftServerEngine
                                     // Attack!
                                     /*Console.Printl("Attack!");*/
 
-                                    ItemStack stack = playerInventory.GetMainHandSlot().Stack;
-                                    
-                                    if (stack != null)
+                                    mainHandItemStack = Window.HandleMainHandSlot(playerInventory);
+
+                                    if (mainHandItemStack != null)
                                     {
-                                        player._Attack(world, stack);
+                                        mainHandItemStackHash = mainHandItemStack.Hash;
+                                        player._Attack(world, mainHandItemStack);
                                     }
                                     else
                                     {
@@ -1030,19 +1034,35 @@ namespace MinecraftServerEngine
                                 // Attack!
                                 /*Console.Printl("Attack!");*/
 
-                                ItemStack stack = playerInventory.GetMainHandSlot().Stack;
+                                mainHandItemStack = Window.HandleMainHandSlot(playerInventory);
 
-                                
-
-                                if (stack != null)
+                                if (mainHandItemStack != null)
                                 {
-                                    player._Attack(world, stack);
+                                    mainHandItemStackHash = mainHandItemStack.Hash;
+                                    player._Attack(world, mainHandItemStack);
                                 }
                                 else
                                 {
                                     player._Attack(world);
                                 }
                             }
+
+                            if (
+                                mainHandItemStack != null &&
+                                mainHandItemStack.IsBreaked == true)
+                            {
+                                Window.UpdateMainHandSlot(playerInventory);
+                            }
+                            else if (
+                                 mainHandItemStack != null &&
+                                 mainHandItemStackHash != null &&
+                                 mainHandItemStack.CheckHash(mainHandItemStackHash) == true)
+                            {
+                                //MyConsole.Debug("Different status of prev and current item!");
+                                Window.UpdateMainHandSlot(playerInventory);
+                            }
+
+
                         }
                         else if (packet.Hand == 1)  // offhand
                         {

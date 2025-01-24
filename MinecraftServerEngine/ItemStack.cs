@@ -1,5 +1,6 @@
 ﻿
 using MinecraftPrimitives;
+using System.Diagnostics;
 
 namespace MinecraftServerEngine
 {
@@ -25,11 +26,21 @@ namespace MinecraftServerEngine
         public int _currentDurability;
         public int CurrentDurability => _currentDurability;
         public bool IsBreakable => MaxDurability > 0;
-        public bool IsBreaked => MaxDurability > 0 && _currentDurability == 0;
+        public bool IsBreaked
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(MaxDurability >= 0);
+                System.Diagnostics.Debug.Assert(CurrentDurability >= 0);
+                System.Diagnostics.Debug.Assert(MaxDurability >= CurrentDurability);
+
+                return MaxDurability > 0 && CurrentDurability == 0;
+            }
+        }
 
 
 
-        private readonly byte[] Hash;
+        internal readonly byte[] Hash;
 
         // TODO: Check  additional validation or safeguards should be implemented.
         private static byte[] GenerateHash(string input)
@@ -189,11 +200,36 @@ namespace MinecraftServerEngine
 
         }
 
+        internal bool CheckHash(byte[] hash)
+        {
+            if (hash == null)
+            {
+                System.Diagnostics.Debug.Assert(Hash != null);
+                return false;
+            }
+
+            return AreByteArraysEqual(Hash, hash);
+        }
+
         internal bool IsFull()
         {
             System.Diagnostics.Debug.Assert(_count >= MinCount);
             System.Diagnostics.Debug.Assert(_count <= MaxCount);
             return _count == MaxCount;
+        }
+
+        public void Damage(int amount)
+        {
+            if (_currentDurability - amount <= 0)
+            {
+                _currentDurability = 0;
+            }
+            else
+            {
+                _currentDurability -= amount;
+            }
+
+            System.Diagnostics.Debug.Assert(_currentDurability >= 0);
         }
 
         internal int Stack(int count)

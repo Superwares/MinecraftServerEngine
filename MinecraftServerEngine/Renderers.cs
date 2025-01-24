@@ -164,6 +164,8 @@ namespace MinecraftServerEngine
             Render(new SetSlotPacket(-1, 0, buffer.ReadData()));
         }
 
+
+
         public WindowRenderer(ConcurrentQueue<ClientboundPlayingPacket> outPackets,
             PlayerInventory invPrivate, InventorySlot cursor)
             : base(outPackets)
@@ -201,6 +203,26 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(cursor.Empty);
 
             Update(null, playerInventory, cursor);
+        }
+
+        internal void HandleMainHandSlot(PlayerInventory playerInventory)
+        {
+            System.Diagnostics.Debug.Assert(playerInventory != null);
+
+            using MinecraftDataStream buffer = new();
+
+            InventorySlot mainSlot = playerInventory.HandleMainHandSlot2();
+
+            mainSlot.WriteData(buffer);
+
+            int slot = PlayerInventory.HotbarSlotsOffset + playerInventory.IndexMainHandSlot;
+
+            int windowId = 0;
+            System.Diagnostics.Debug.Assert(windowId >= sbyte.MinValue);
+            System.Diagnostics.Debug.Assert(windowId <= sbyte.MaxValue);
+            System.Diagnostics.Debug.Assert(slot >= short.MinValue);
+            System.Diagnostics.Debug.Assert(slot <= short.MaxValue);
+            Render(new SetSlotPacket((sbyte)windowId, (short)slot, buffer.ReadData()));
         }
 
     }

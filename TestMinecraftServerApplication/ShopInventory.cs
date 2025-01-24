@@ -72,7 +72,7 @@ namespace TestMinecraftServerApplication
 
                             playerInventory.GiveItem(new ItemStack(
                                 itemStack.Type, itemStack.Name, itemStack.Count,
-                                100, 99,
+                                100, 9,
                                 [
                                     "가볍지만 강력한 한 방으로 적을 날려버리세요!",
                                 ]));

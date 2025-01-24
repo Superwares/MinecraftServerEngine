@@ -115,12 +115,14 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            MyConsole.Debug($"stack: {stack}");
+            //MyConsole.Debug($"stack: {stack}");
 
             Vector d = Look.GetUnitVector();
             Vector eyeOrigin = GetEyeOrigin();
 
             world.SpawnObject(new Flame(eyeOrigin, d, this));
+
+            stack.Damage(1);
         }
 
         protected override void OnUseItem(World world, ItemStack stack)

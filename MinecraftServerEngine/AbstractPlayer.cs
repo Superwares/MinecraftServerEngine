@@ -39,7 +39,7 @@ namespace MinecraftServerEngine
         private bool _disposed = false;
 
         private readonly Locker InventoryLocker = new();
-        protected readonly PlayerInventory Inventory = new();
+        internal readonly PlayerInventory Inventory = new();
 
 
         public readonly UserId UserId;
@@ -115,6 +115,32 @@ namespace MinecraftServerEngine
 
             OnRespawn();
         }
+
+        //internal override void _Attack(World world, ItemStack stack)
+        //{
+        //    System.Diagnostics.Debug.Assert(world != null);
+        //    System.Diagnostics.Debug.Assert(stack != null);
+
+
+        //    if (stack.IsBreaked == true)
+        //    {
+        //        throw new System.NotImplementedException();
+
+        //        _Attack(world);
+        //    }
+        //    else
+        //    {
+        //        base._Attack(world, stack);
+        //    }
+
+        //    if (stack.IsBreaked == true)
+        //    {
+        //        throw new System.NotImplementedException();
+        //    }
+
+
+            
+        //}
 
         public override void Damage(float amount)
         {

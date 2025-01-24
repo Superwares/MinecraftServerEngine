@@ -115,7 +115,7 @@ namespace MinecraftServerEngine
                                     case 1:
                                         dropItem = _Cursor.DropSingle();
                                         break;
-                                    
+
                                 }
                             }
 
@@ -327,9 +327,73 @@ namespace MinecraftServerEngine
             }
         }
 
+        internal ItemStack HandleMainHandSlot(PlayerInventory playerInventory)
+        {
+            System.Diagnostics.Debug.Assert(playerInventory != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _Locker.Hold();
+            //if (_sharedInventory != null)
+            //{
+            //    _sharedInventory.Locker.Hold();
+            //}
+
+            try
+            {
+                (ItemStack itemStack, bool changed) = playerInventory.HandleMainHandSlot();
+
+                if (changed == true)
+                {
+                    //_Renderer.Update(_sharedInventory, playerInventory, _Cursor);
+
+                    _Renderer.HandleMainHandSlot(playerInventory);
+                }
+
+
+                return itemStack;
+            }
+            finally
+            {
+                //if (_sharedInventory != null)
+                //{
+                //    _sharedInventory.Locker.Release();
+                //}
+                _Locker.Release();
+            }
+        }
+
+        internal void UpdateMainHandSlot(PlayerInventory playerInventory)
+        {
+            System.Diagnostics.Debug.Assert(playerInventory != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _Locker.Hold();
+            //if (_sharedInventory != null)
+            //{
+            //    _sharedInventory.Locker.Hold();
+            //}
+
+            try
+            {
+                _Renderer.HandleMainHandSlot(playerInventory);
+            }
+            finally
+            {
+                //if (_sharedInventory != null)
+                //{
+                //    _sharedInventory.Locker.Release();
+                //}
+                _Locker.Release();
+            }
+        }
 
         internal bool GiveItem(PlayerInventory playerInventory, ItemStack stack)
         {
+            System.Diagnostics.Debug.Assert(playerInventory != null);
+            System.Diagnostics.Debug.Assert(stack != null);
+
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (stack == null)

@@ -32,6 +32,7 @@ namespace MinecraftServerEngine
         private bool _disposed = false;
 
         private int _indexMainHandSlot = 0;  // 0-8
+        internal int IndexMainHandSlot => _indexMainHandSlot;
 
 
         internal PlayerInventory() : base(TotalSlotCount)
@@ -195,6 +196,49 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_indexMainHandSlot < HotbarSlotCount);
 
             return Slots[_indexMainHandSlot + HotbarSlotsOffset];
+        }
+
+        internal (ItemStack, bool) HandleMainHandSlot()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            InventorySlot mainSlot = GetMainHandSlot();
+
+            if (mainSlot.Empty == false && mainSlot.Stack.IsBreaked == true)
+            {
+                mainSlot.Reset(null);
+                return (null, true);
+            }
+
+            return (mainSlot.Stack, false);
+
+            //else
+            //{
+
+            //    return (null, true);
+            //}
+
+            //if (mainSlot.Stack.IsBreaked == true)
+            //{
+            //    mainSlot.Reset(null);
+            //    return (null, true);
+            //}
+
+            //throw new System.NotImplementedException();
+        }
+
+        internal InventorySlot HandleMainHandSlot2()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            InventorySlot mainSlot = GetMainHandSlot();
+
+            if (mainSlot.Empty == false && mainSlot.Stack.IsBreaked == true)
+            {
+                mainSlot.Reset(null);
+            }
+
+            return mainSlot;
         }
 
         internal (byte[], byte[]) GetEquipmentsData()
