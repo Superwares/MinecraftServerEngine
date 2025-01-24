@@ -1,10 +1,9 @@
 ﻿
 using MinecraftPrimitives;
-using System.Reflection.Metadata;
 
 namespace MinecraftServerEngine
 {
-    public sealed class ItemStack
+    public sealed class ItemStack : System.IEquatable<ItemStack>
     {
 
         public readonly ItemType Type;
@@ -15,82 +14,179 @@ namespace MinecraftServerEngine
         //public readonly (string, string)[] Attributes;
         public readonly string[] Lore;
 
-        public int MaxCount => Type.GetMaxCount();
-        public const int MinCount = 1;
+        public int MaxCount => Type.GetMaxStackCount();
+        public int MinCount => Type.GetMinStackCount();
 
         private int _count;
         public int Count => _count;
 
+
+        public readonly int MaxDurability;
+        public int _currentDurability;
+        public int CurrentDurability => _currentDurability;
+        public bool IsBreakable => MaxDurability > 0;
+        public bool IsBreaked => MaxDurability > 0 && _currentDurability == 0;
+
+
+
+        private readonly byte[] Hash;
+
+        // TODO: Check  additional validation or safeguards should be implemented.
+        private static byte[] GenerateHash(string input)
+        {
+            using (System.Security.Cryptography.SHA256 sha256 = System.Security.Cryptography.SHA256.Create())
+            {
+                byte[] inputBytes = System.Text.Encoding.UTF8.GetBytes(input);
+                byte[] hashBytes = sha256.ComputeHash(inputBytes);
+
+                // Convert byte array to a hexadecimal string
+                //StringBuilder sb = new StringBuilder();
+                //foreach (byte b in hashBytes)
+                //{
+                //    sb.Append(b.ToString("x2"));
+                //}
+                //return sb.ToString();
+
+                return hashBytes;
+            }
+        }
+
+        private byte[] GenerateItemStackHash(
+            ItemType type, string name,
+            int maxDurability, int currentDurability,
+            string[] lore)
+        {
+
+            string hashString = $"{type.ToString()}_{name}_";
+
+
+            System.Diagnostics.Debug.Assert(maxDurability >= 0);
+            System.Diagnostics.Debug.Assert(maxDurability >= currentDurability);
+            if (maxDurability > 0)
+            {
+                hashString += $"Breakable_{maxDurability.ToString()}_{currentDurability.ToString()}";
+            }
+
+            hashString += "@";
+
+            foreach (string line in lore)
+            {
+                hashString += line + "\n";
+            }
+
+            return GenerateHash(hashString);
+        }
+
+        private static bool AreByteArraysEqual(byte[] array1, byte[] array2)
+        {
+            if (array1 == null && array2 == null)
+            {
+                return true;
+            }
+
+            // Check if the references are the same (or both are null)
+            if (ReferenceEquals(array1, array2))
+            {
+                return true;
+            }
+
+            // If either is null or lengths are different, return false
+            if (array1 == null || array2 == null || array1.Length != array2.Length)
+            {
+                return false;
+            }
+
+            // Compare each element
+            for (int i = 0; i < array1.Length; i++)
+            {
+                if (array1[i] != array2[i])
+                {
+                    return false;
+                }
+            }
+
+            //array1.SequenceEqual(array2)
+
+            return true;
+        }
+
         public ItemStack(
             ItemType type, string name, int count,
+            int maxDurability, int currentDurability,
             //string description, params (string, string)[] attributes,
             params string[] lore)
         {
+            System.Diagnostics.Debug.Assert(type.GetMaxStackCount() >= type.GetMinStackCount());
+            //if (breakable == true && type.GetMaxStackCount() > 1)
+            //{
+            //    throw new System.ArgumentException(
+            //        "The item is breakable and cannot have a maximum stack count greater than 1.",
+            //        nameof(breakable));
+            //}
+
+            if (maxDurability < 0)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(maxDurability),
+                    "Max durability must be greater than or equal to 0.");
+            }
+
+            if (currentDurability < 0 || maxDurability < currentDurability)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(currentDurability),
+                    "Current durability must be greater than 0 and less than or equal to max durability.");
+            }
+
             System.Diagnostics.Debug.Assert(name != null && string.IsNullOrEmpty(name) == false);
 
             Type = type;
 
             Name = name;
+
+
+            System.Diagnostics.Debug.Assert(count >= type.GetMinStackCount());
+            System.Diagnostics.Debug.Assert(count <= type.GetMaxStackCount());
+            _count = count;
+
+            MaxDurability = maxDurability;
+            _currentDurability = currentDurability;
 
             //Description = description;
             //Attributes = attributes;
             Lore = lore;
 
-            System.Diagnostics.Debug.Assert(Type.GetMaxCount() >= MinCount);
-            System.Diagnostics.Debug.Assert(count >= MinCount);
-            System.Diagnostics.Debug.Assert(count <= Type.GetMaxCount());
-            _count = count;
+            Hash = GenerateItemStackHash(type, name, maxDurability, currentDurability, lore);
         }
 
-        public ItemStack(ItemType type, string name, int count)
+        public ItemStack(
+        ItemType type, string name, int count,
+        //string description, params (string, string)[] attributes,
+        params string[] lore)
+        : this(type, name, count, 0, 0, lore)
         {
-            System.Diagnostics.Debug.Assert(name != null && string.IsNullOrEmpty(name) == false);
 
-            Type = type;
-
-            Name = name;
-
-            //Description = null;
-            //Attributes = null;
-            Lore = null;
-
-            System.Diagnostics.Debug.Assert(Type.GetMaxCount() >= MinCount);
-            System.Diagnostics.Debug.Assert(count >= MinCount);
-            System.Diagnostics.Debug.Assert(count <= Type.GetMaxCount());
-            _count = count;
         }
+
+
+        public ItemStack(
+          ItemType type, string name,
+          bool breakable, int maxDurability, int currentDurability,
+          //string description, params (string, string)[] attributes,
+          params string[] lore)
+          : this(type, name, type.GetMaxStackCount(), maxDurability, currentDurability, lore)
+        {
+
+        }
+
 
         public ItemStack(
             ItemType type, string name,
             //string description, params (string, string)[] attributes,
             params string[] lore)
+            : this(type, name, type.GetMaxStackCount(), 0, 0, lore)
         {
-            System.Diagnostics.Debug.Assert(name != null && string.IsNullOrEmpty(name) == false);
 
-            Type = type;
-
-            Name = name;
-
-            //Description = description;
-            //Attributes = attributes;
-            Lore = lore;
-
-            System.Diagnostics.Debug.Assert(Type.GetMaxCount() >= MinCount);
-            _count = Type.GetMaxCount();
-        }
-
-        public ItemStack(ItemType type, string name)
-        {
-            System.Diagnostics.Debug.Assert(name != null && string.IsNullOrEmpty(name) == false);
-
-            Type = type;
-
-            Name = name;
-
-            Lore = null;
-
-            System.Diagnostics.Debug.Assert(Type.GetMaxCount() >= MinCount);
-            _count = Type.GetMaxCount();
         }
 
         internal bool IsFull()
@@ -150,7 +246,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(from != null);
 
-            if (Type != from.Type || Name != from.Name)
+            if (AreByteArraysEqual(Hash, from.Hash) == false)
             {
                 return false;
             }
@@ -184,7 +280,7 @@ namespace MinecraftServerEngine
             _count /= 2;
             int count = _count + a;
 
-            to = new ItemStack(Type, Name, count, Lore);
+            to = Clone(count);
 
             return true;
         }
@@ -199,7 +295,7 @@ namespace MinecraftServerEngine
             }
 
             Spend(MinCount);
-            to = new ItemStack(Type, Name, MinCount, Lore);
+            to = Clone(MinCount);
 
             return true;
         }
@@ -208,7 +304,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(from != null);
 
-            if (Type != from.Type || Name != from.Name)
+            if (AreByteArraysEqual(Hash, from.Hash) == false)
             {
                 return false;
             }
@@ -224,6 +320,19 @@ namespace MinecraftServerEngine
             }
 
             return true;
+        }
+
+        public ItemStack Clone(int count)
+        {
+            return new ItemStack(
+                Type, Name, count,
+                MaxDurability, CurrentDurability,
+                Lore);
+        }
+
+        public ItemStack Clone()
+        {
+            return Clone(Count);
         }
 
         internal void WriteData(MinecraftDataStream s)
@@ -248,18 +357,60 @@ namespace MinecraftServerEngine
 
             displayCompound.Add("Name", new NBTTagString(Name));
 
+            int currentLoreLine = 0;
+            int loreLines = 0;
+
+            const bool EndBr = true;
+
             if (Lore != null)
             {
-                NBTTagString[] _lore = new NBTTagString[Lore.Length];
+                loreLines += Lore.Length;
+            }
 
+            if (IsBreakable == true)
+            {
+                loreLines += 1;
+            }
+
+            bool StartBr = loreLines > 0;
+
+            if (StartBr == true)
+            {
+                loreLines++;
+            }
+
+            if (EndBr == true)
+            {
+                loreLines++;
+            }
+
+            NBTTagString[] _lore = new NBTTagString[loreLines];
+
+            if (StartBr == true)
+            {
+                _lore[currentLoreLine++] = new NBTTagString("");
+            }
+
+            if (Lore != null)
+            {
                 for (int i = 0; i < Lore.Length; ++i)
                 {
-                    _lore[i] = new NBTTagString(Lore[i]);
+                    _lore[currentLoreLine++] = new NBTTagString(Lore[i]);
                 }
-
-                NBTTagList<NBTTagString> lore = new(_lore);
-                displayCompound.Add("Lore", lore);
             }
+
+            if (IsBreakable == true)
+            {
+                _lore[currentLoreLine++] = new NBTTagString($"Durability ({CurrentDurability}/{MaxDurability})");
+            }
+
+            if (EndBr == true)
+            {
+                _lore[currentLoreLine++] = new NBTTagString("");
+            }
+
+            NBTTagList<NBTTagString> lore = new(_lore);
+            displayCompound.Add("Lore", lore);
 
             //NBTTagList<NBTTagString> lore = new([
             //    new NBTTagString("HELLO"),
@@ -347,6 +498,45 @@ namespace MinecraftServerEngine
             }*/
 
             return $"{Type}(\"{Name}\")*{_count}";
+        }
+
+        public bool Equals(ItemStack other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return AreByteArraysEqual(other.Hash, Hash);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is ItemStack other)
+            {
+                return this.Equals(other);
+            }
+
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            System.Diagnostics.Debug.Assert(Hash != null);
+            if (Hash.Length == 0)
+            {
+                return 0;
+            }
+
+            unchecked
+            {
+                int hash = 17;
+                foreach (byte b in Hash)
+                {
+                    hash = hash * 31 + b;
+                }
+                return hash;
+            }
         }
 
     }

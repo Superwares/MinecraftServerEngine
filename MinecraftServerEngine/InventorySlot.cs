@@ -142,7 +142,7 @@ namespace MinecraftServerEngine
             _stack.Move(ref from);
         }
 
-        internal int PreMove(ItemType type, string name, int count)
+        internal int PreMove(ItemStack from, int count)
         {
             System.Diagnostics.Debug.Assert(count >= 0);
 
@@ -151,9 +151,7 @@ namespace MinecraftServerEngine
                 return 0;
             }
 
-            System.Diagnostics.Debug.Assert(count >= ItemStack.MinCount);
-
-            if (type != _stack.Type || name != _stack.Name || _stack.IsFull() == true)
+            if (from.Equals(_stack) == false || _stack.IsFull() == true)
             {
                 return count;
             }
@@ -192,7 +190,7 @@ namespace MinecraftServerEngine
                 return temp;
             }
 
-            itemStack = new ItemStack(_stack.Type, _stack.Name, count);
+            itemStack = _stack.Clone(count);
             _stack.Spend(count);
 
             return count;
@@ -228,7 +226,7 @@ namespace MinecraftServerEngine
             {
                 stack.Spend(1);
 
-                return new ItemStack(stack.Type, stack.Name, 1);
+                return _stack.Clone(1);
             }
 
             _stack = null;

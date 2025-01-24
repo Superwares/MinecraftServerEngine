@@ -579,14 +579,14 @@ namespace MinecraftServerEngine
                             {
                                 string name = args[2];
 
-                                if (amount > itemType.GetMaxCount())
+                                if (amount > itemType.GetMaxStackCount())
                                 {
-                                    amount = itemType.GetMaxCount();
+                                    amount = itemType.GetMaxStackCount();
                                 }
 
-                                if (amount < ItemStack.MinCount)
+                                if (amount < itemType.GetMinStackCount())
                                 {
-                                    amount = ItemStack.MinCount;
+                                    amount = itemType.GetMinStackCount();
                                 }
 
                                 string username = args.Length >= 5 ? args[4] : null;
@@ -745,15 +745,15 @@ namespace MinecraftServerEngine
                     {
                         ClickWindowPacket packet = ClickWindowPacket.Read(buffer);
 
-                        {
-                            MyConsole.NewLine();
-                            MyConsole.Printl(
-                                $"WindowId: {packet.WindowId}, " +
-                                $"SlotNumber: {packet.Slot}, " +
-                                $"ButtonNumber: {packet.Button}, " +
-                                $"ActionNumber: {packet.Action}, " +
-                                $"ModeNumber: {packet.Mode}");
-                        }
+                        //{
+                        //    MyConsole.NewLine();
+                        //    MyConsole.Printl(
+                        //        $"WindowId: {packet.WindowId}, " +
+                        //        $"SlotNumber: {packet.Slot}, " +
+                        //        $"ButtonNumber: {packet.Button}, " +
+                        //        $"ActionNumber: {packet.Action}, " +
+                        //        $"ModeNumber: {packet.Mode}");
+                        //}
 
                         System.Diagnostics.Debug.Assert(Window != null);
                         Window.Handle(

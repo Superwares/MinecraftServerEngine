@@ -18,18 +18,23 @@ namespace TestMinecraftServerApplication
         public ShopInventory() : base(4)
         {
             ResetSlot(0, new ItemStack(ItemType.DiamondSword,
-                "풍선망치",  // Balloon Basher
-                ItemType.DiamondSword.GetMinCount(),
+                "Balloon Basher",
+                ItemType.DiamondSword.GetMinStackCount(),
                 [
                     "가볍지만 강력한 한 방으로 적을 날려버리세요!",
+                    "",
+                    "데미지                             3.00",  // Damage
+                    "내구도                              110",  // Durability
+                    "",
+                    "구매 상태                          0/10",  // Purchase Status
                     "",
                     "왼클릭(구매)                     30 코인",
                     "우클릭(판매)                      5 코인",
                 ]));
 
             ResetSlot(35, new ItemStack(Coin,
-               CoinName,  // Balloon Basher
-               Coin.GetMaxCount(),
+               CoinName,
+               Coin.GetMaxStackCount(),
                [
                     "테스트용 무료로 코인입니다.",
                     "",
@@ -53,8 +58,8 @@ namespace TestMinecraftServerApplication
                     {
                         int amount = 30;
 
-                        System.Diagnostics.Debug.Assert(amount >= Coin.GetMinCount());
-                        System.Diagnostics.Debug.Assert(amount <= Coin.GetMaxCount());
+                        System.Diagnostics.Debug.Assert(amount >= Coin.GetMinStackCount());
+                        System.Diagnostics.Debug.Assert(amount <= Coin.GetMaxStackCount());
 
                         ItemStack[] coins = playerInventory.TakeItemsInPrimary(
                             Coin, CoinName, amount);
@@ -65,7 +70,12 @@ namespace TestMinecraftServerApplication
                             System.Diagnostics.Debug.Assert(coins.Length == 1);
                             System.Diagnostics.Debug.Assert(coins[0].Count == amount);
 
-                            playerInventory.GiveItem(new ItemStack(itemStack.Type, itemStack.Name, itemStack.Count));
+                            playerInventory.GiveItem(new ItemStack(
+                                itemStack.Type, itemStack.Name, itemStack.Count,
+                                100, 99,
+                                [
+                                    "가볍지만 강력한 한 방으로 적을 날려버리세요!",
+                                ]));
 
                         }
 
@@ -104,8 +114,8 @@ namespace TestMinecraftServerApplication
                     {
                         int amount = 5;
 
-                        System.Diagnostics.Debug.Assert(amount >= Coin.GetMinCount());
-                        System.Diagnostics.Debug.Assert(amount <= Coin.GetMaxCount());
+                        System.Diagnostics.Debug.Assert(amount >= Coin.GetMinStackCount());
+                        System.Diagnostics.Debug.Assert(amount <= Coin.GetMaxStackCount());
 
                         ItemStack[] taked = playerInventory.TakeItemsInPrimary(
                             itemStack.Type, itemStack.Name, itemStack.Count);

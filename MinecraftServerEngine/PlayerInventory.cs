@@ -454,7 +454,7 @@ namespace MinecraftServerEngine
                     continue;
                 }
 
-                int restCount = slotInside.PreMove(stack.Type, stack.Name, prevCount);
+                int restCount = slotInside.PreMove(stack, prevCount);
 
                 if (prevCount == restCount)
                 {
@@ -536,8 +536,8 @@ namespace MinecraftServerEngine
                 return [];
             }
 
-            System.Diagnostics.Debug.Assert(itemType.GetMaxCount() > 0);
-            int minLength = (int)System.Math.Ceiling((double)count / (double)itemType.GetMaxCount());
+            System.Diagnostics.Debug.Assert(itemType.GetMaxStackCount() > 0);
+            int minLength = (int)System.Math.Ceiling((double)count / (double)itemType.GetMaxStackCount());
             ItemStack[] itemStacks = new ItemStack[minLength];
 
             int leftCount = count;

@@ -35,12 +35,12 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_ITEM_ENUM_TO_ID_MAP.Count == _ITEM_ID_TO_ENUM_MAP.Count);
         }
 
-        public static int GetMinCount(this ItemType item)
+        public static int GetMinStackCount(this ItemType item)
         {
-            return ItemStack.MinCount;
+            return 1;
         }
 
-        public static int GetMaxCount(this ItemType item)
+        public static int GetMaxStackCount(this ItemType item)
         {
             switch (item)
             {

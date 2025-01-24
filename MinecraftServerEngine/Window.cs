@@ -236,14 +236,14 @@ namespace MinecraftServerEngine
 
                 _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
 
-                {
-                    if (_sharedInventory == null)
-                    {
-                        playerInventory.Print();
-                    }
+                //{
+                //    if (_sharedInventory == null)
+                //    {
+                //        playerInventory.Print();
+                //    }
 
-                    MyConsole.Debug($"Cursor: {_Cursor}");
-                }
+                //    MyConsole.Debug($"Cursor: {_Cursor}");
+                //}
             }
             finally
             {
