@@ -948,9 +948,23 @@ public abstract class EntityHuman extends EntityLiving {
                     f1 = EnchantmentManager.a(this.getItemInMainHand(), EnumMonsterType.UNDEFINED);
                 }
 
-                float f2 = this.n(0.5F);
+                // Attack Indicator, ATTACK INDICATOR, AttackIndicator
+                //
+                // Calculate a dynamic multiplier based on attack speed.
+                // `this.n(0.5F)` returns a value (likely related to attack cooldown or progress),
+                // which is stored in `f2`. This value represents how "ready" the attack is.
 
-                f *= 0.2F + f2 * f2 * 0.8F;
+                // Square the value of `f2` and scale it to emphasize higher attack readiness
+                // while minimizing the impact of lower readiness. The result is combined with a
+                // base multiplier (0.2F) to calculate the final attack damage factor.
+
+                // The attack damage (`f`) is then scaled by the computed factor.
+                // This ensures that attacks with lower readiness deal less damage,
+                // while fully charged attacks can deal significantly higher damage.
+
+                float f2 = this.n(0.5F);  // Get attack readiness (0.0 to 1.0 based on cooldown or progress).
+
+                f *= 0.2F + f2 * f2 * 0.8F;  // Scale the attack damage by a readiness-based multiplier.
                 f1 *= f2;
                 this.ds();
                 if (f > 0.0F || f1 > 0.0F) {
