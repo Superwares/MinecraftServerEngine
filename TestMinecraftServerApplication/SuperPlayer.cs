@@ -168,12 +168,19 @@ namespace TestMinecraftServerApplication
             //Vector d = Look.GetUnitVector();
             //Vector eyeOrigin = GetEyeOrigin();
 
-            double damage = DefaultAttackDamage;
+            double damage;
 
             switch (stack.Type)
             {
+                default:
+                    {
+                        damage = DefaultAttackDamage;
+                    }
+                    break;
                 case BalloonBasher.Type:
-                    damage *= BalloonBasher.Damage;
+                    {
+                        damage = BalloonBasher.Damage;
+                    }
                     break;
             }
 
