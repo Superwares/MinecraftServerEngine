@@ -1014,6 +1014,10 @@ namespace MinecraftServerEngine
                                     // Attack!
                                     /*Console.Printl("Attack!");*/
 
+                                    /**
+                                     * Handle breakable of item before attacks. 
+                                     * Because this item can be broken by another places (ex. Inventory interface).
+                                     */
                                     mainHandItemStack = Window.HandleMainHandSlot(playerInventory);
 
                                     if (mainHandItemStack != null)
@@ -1034,6 +1038,10 @@ namespace MinecraftServerEngine
                                 // Attack!
                                 /*Console.Printl("Attack!");*/
 
+                                /**
+                                 * Handle breakable of item before attacks. 
+                                 * Because this item can be broken by another places (ex. Inventory interface).
+                                 */
                                 mainHandItemStack = Window.HandleMainHandSlot(playerInventory);
 
                                 if (mainHandItemStack != null)
