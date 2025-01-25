@@ -19,8 +19,8 @@ namespace TestMinecraftServerApplication
                 $"",
                 $"가볍지만 강력한 한 방으로 적을 날려버리세요!",
                 $"",
-                $"왼클릭(구매)          30 코인",
-                $"우클릭(판매)          5 코인",
+                $"왼클릭(구매)          {BalloonBasher.PurchasePrice} 코인",
+                $"우클릭(판매)          {BalloonBasher.SellPrice} 코인",
                 ]));
 
             ResetSlot(35, Coin.Create([
@@ -50,7 +50,7 @@ namespace TestMinecraftServerApplication
             {
                 case 0:
                     {
-                        const int coinAmount = 30;
+                        const int coinAmount = BalloonBasher.PurchasePrice;
 
                         taked = playerInventory.TakeItemStacksInPrimary(
                            Coin.Item, Coin.DefaultCount * coinAmount);
@@ -79,7 +79,7 @@ namespace TestMinecraftServerApplication
                     break;
                 case 35:
                     {
-                        const int coinAmount = 64;
+                        int coinAmount = Coin.Type.GetMaxStackCount();
 
                         giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * coinAmount);
                         success = playerInventory.GiveItem(giveItem);
@@ -108,7 +108,7 @@ namespace TestMinecraftServerApplication
             {
                 case 0:
                     {
-                        const int coinAmount = 5;
+                        const int coinAmount = BalloonBasher.SellPrice;
 
                         System.Diagnostics.Debug.Assert(coinAmount >= Coin.Type.GetMinStackCount());
                         System.Diagnostics.Debug.Assert(coinAmount <= Coin.Type.GetMaxStackCount());
@@ -139,7 +139,7 @@ namespace TestMinecraftServerApplication
                     break;
                 case 35:
                     {
-                        const int coinAmount = 64;
+                        int coinAmount = Coin.Type.GetMaxStackCount();
 
                         taked = playerInventory.TakeItemStacksInPrimary(Coin.Item, Coin.DefaultCount * coinAmount);
 

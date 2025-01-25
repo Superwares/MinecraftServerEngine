@@ -17,6 +17,8 @@ namespace TestMinecraftServerApplication.Items
         public const float Damage = 3.0F;
 
         public const int MaxPurchaseCount = 10;
+        public const int PurchasePrice = 30;
+        public const int SellPrice = 5;
 
         public readonly static IReadOnlyItem Item = new Item(
             Type,
