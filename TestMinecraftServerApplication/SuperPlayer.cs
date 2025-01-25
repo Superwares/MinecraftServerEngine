@@ -159,10 +159,12 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(directionScale > 0.0F);
             System.Diagnostics.Debug.Assert(knockbackScale > 0.0F);
 
+            //MyConsole.Debug($"Damage: {damage:F2}");
             if (damage == 0.0F)
             {
                 return;
             }
+
 
             Vector o = GetEyeOrigin();
             Vector d = Look.GetUnitVector();
@@ -184,7 +186,7 @@ namespace TestMinecraftServerApplication
 
                 world.PlaySound("entity.player.attack.strong", 7, v, 1.0F, 2.0F);
 
-                EmitParticles(Particle.Explode, 1.0, 10);
+                livingEntity.EmitParticles(Particle.Explode, 1.0, 1);
             }
         }
 
