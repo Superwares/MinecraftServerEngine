@@ -10,10 +10,10 @@ namespace MinecraftServerEngine
         private bool _disposed = false;
 
         protected readonly Locker LockerHealth = new();
-        protected float _maxHealth = 20.0F;
-        protected float _health;
-        public float MaxHealth => _maxHealth;
-        public float Health => _health;
+        protected double _maxHealth = 20.0F;
+        protected double _health;
+        public double MaxHealth => _maxHealth;
+        public double Health => _health;
 
         private Time _lastAttackTime = Time.Now();
 
@@ -136,7 +136,7 @@ namespace MinecraftServerEngine
             OnItemBreak(world, stack);
         }
 
-        public virtual void Damage(float amount)
+        public virtual void Damage(double amount)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

@@ -49,7 +49,7 @@ namespace MinecraftServerEngine
                 }
             }
 
-            public void Print()
+            public void Print(Time interval)
             {
                 System.Diagnostics.Debug.Assert(_i == 0);
                 System.Diagnostics.Debug.Assert(_count > 0);
@@ -74,6 +74,11 @@ namespace MinecraftServerEngine
                 }
 
                 MyConsole.Info(msg);
+
+                if (average > interval)
+                {
+                    MyConsole.Warn($"The task is taking longer!");
+                }
 
                 _count = 0;
             }
@@ -303,10 +308,10 @@ namespace MinecraftServerEngine
                 accumulated += elapsed;
                 total += elapsed;
 
-                if (elapsed > interval)
-                {
-                    MyConsole.Warn($"The task is taking longer, Elapsed: {elapsed}!");
-                }
+                //if (elapsed > interval)
+                //{
+                //    MyConsole.Warn($"The task is taking longer, Elapsed: {elapsed}!");
+                //}
 
                 if (f)
                 {
@@ -318,7 +323,7 @@ namespace MinecraftServerEngine
                     /*Console.Printl($"total % Time.FromSeconds(5): {total % Time.FromSeconds(5)}");*/
                     if (ticks % (20 * 5) == 0)
                     {
-                        sys.Print();
+                        sys.Print(interval);
                     }
                 }
 

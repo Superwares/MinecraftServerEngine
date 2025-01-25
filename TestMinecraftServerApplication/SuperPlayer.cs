@@ -4,11 +4,16 @@ using Containers;
 using MinecraftPrimitives;
 using MinecraftServerEngine;
 using MinecraftServerEngine.PhysicsEngine;
+using TestMinecraftServerApplication.Items;
 
 namespace TestMinecraftServerApplication
 {
     public sealed class SuperPlayer : AbstractPlayer
     {
+
+        public const double DefaultAttackDamage = 1.0;
+
+
         private bool _disposed = false;
 
         //private static ChestInventory chestInventory = new();
@@ -60,7 +65,7 @@ namespace TestMinecraftServerApplication
             {
                 ApplyBlockAppearance(Block.Dirt);
                 //OpenInventory(chestInventory);
-                //OpenInventory(ShopInventory);
+                OpenInventory(ShopInventory);
 
                 //SetExperience(0.6F, 123456789);
 
@@ -93,8 +98,8 @@ namespace TestMinecraftServerApplication
 
         private void HandleAttack(
             World world,
-            float damage,
-            float directionScale, float knockbackScale)
+            double damage,
+            double directionScale, double knockbackScale)
         {
             System.Diagnostics.Debug.Assert(world != null);
 
@@ -138,13 +143,16 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            float randomDamage = (float)GenerateRandomValueBetween(0.7, 1.0);
+            double damage = DefaultAttackDamage;
+            damage *= (attackCharge * attackCharge);
+            damage *= GenerateRandomValueBetween(0.98, 1.0);
 
-            MyConsole.Debug($"Attack charge: {attackCharge:F2}");
+            //MyConsole.Debug($"Attack charge: {attackCharge:F2}");
+            //MyConsole.Debug($"Damage: {damage:F2}");
 
             HandleAttack(
                 world,
-                randomDamage,
+                damage,
                 3, 0.3F);
         }
 
@@ -157,14 +165,30 @@ namespace TestMinecraftServerApplication
 
             //MyConsole.Debug($"stack: {stack}");
 
-            Vector d = Look.GetUnitVector();
-            Vector eyeOrigin = GetEyeOrigin();
+            //Vector d = Look.GetUnitVector();
+            //Vector eyeOrigin = GetEyeOrigin();
 
-            //world.SpawnObject(new Flame(eyeOrigin, d, this));
+            double damage = DefaultAttackDamage;
+
+            switch (stack.Type)
+            {
+                case BalloonBasher.Type:
+                    damage *= BalloonBasher.Damage;
+                    break;
+            }
+
+            damage *= (attackCharge * attackCharge);
+            damage *= GenerateRandomValueBetween(0.98, 1.0);
+
+            MyConsole.Debug($"Attack charge: {attackCharge:F2}");
+            MyConsole.Debug($"Damage: {damage:F2}");
+
+            HandleAttack(
+              world,
+              damage,
+              3, 0.3F);
 
             stack.Damage(1);
-
-            //EmitParticles(Particle.Take, 1.0F, 100);
 
         }
 

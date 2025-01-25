@@ -322,7 +322,7 @@ namespace MinecraftServerEngine
             MinecraftClient client,
             World world,
             int idEntity,
-            float health,
+            double health,
             Vector p, Angles look,
             PlayerInventory playerInventory,
             Gamemode gamemode)
@@ -1431,7 +1431,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(buffer.Empty);
         }
 
-        internal void UpdateHealth(float health)
+        internal void UpdateHealth(double health)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -1441,7 +1441,7 @@ namespace MinecraftServerEngine
             }
 
             System.Diagnostics.Debug.Assert(OutPackets != null);
-            OutPackets.Enqueue(new UpdateHealthPacket(health, 20, 5.0F));
+            OutPackets.Enqueue(new UpdateHealthPacket((float)health, 20, 5.0F));
         }
 
         internal void Animate(int entityId, EntityAnimation animation)

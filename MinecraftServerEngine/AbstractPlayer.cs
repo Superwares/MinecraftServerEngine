@@ -166,7 +166,7 @@ namespace MinecraftServerEngine
 
         //}
 
-        public override void Damage(float amount)
+        public override void Damage(double amount)
         {
             if (amount < 0.0F)
             {
