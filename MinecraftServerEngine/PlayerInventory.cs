@@ -561,11 +561,11 @@ namespace MinecraftServerEngine
             return GiveFromLeftInPrimary(stack);
         }
 
-        public ItemStack[] TakeItemsInPrimary(ItemType itemType, string name, int count)
+        public ItemStack[] TakeItemStacksInPrimary(IReadOnlyItem item, int count)
         {
-            if (name == null || string.IsNullOrEmpty(name))
+            if (item == null)
             {
-                throw new System.ArgumentNullException(nameof(name));
+                throw new System.ArgumentNullException(nameof(item));
             }
 
             if (count < 0)
@@ -580,8 +580,8 @@ namespace MinecraftServerEngine
                 return [];
             }
 
-            System.Diagnostics.Debug.Assert(itemType.GetMaxStackCount() > 0);
-            int minLength = (int)System.Math.Ceiling((double)count / (double)itemType.GetMaxStackCount());
+            System.Diagnostics.Debug.Assert(item.Type.GetMaxStackCount() > 0);
+            int minLength = (int)System.Math.Ceiling((double)count / (double)item.Type.GetMaxStackCount());
             ItemStack[] itemStacks = new ItemStack[minLength];
 
             int leftCount = count;
@@ -601,7 +601,7 @@ namespace MinecraftServerEngine
 
                 targetItemStack = invSlot.Stack;
 
-                if (targetItemStack.Type == itemType && targetItemStack.Name == name)
+                if (targetItemStack.Equals(item) == true)
                 {
                     int takedCount = invSlot.PreTake(leftCount);
 
@@ -638,7 +638,7 @@ namespace MinecraftServerEngine
 
                 targetItemStack = invSlot.Stack;
 
-                if (targetItemStack.Type == itemType && targetItemStack.Name == name)
+                if (targetItemStack.Equals(item) == true)
                 {
                     int takedCount = takedItemStack == null ? invSlot.Take(out takedItemStack, leftCount) : takedItemStack.Count;
 
@@ -656,7 +656,7 @@ namespace MinecraftServerEngine
                             leftCount -= takedCount;
 
                             takedItemStack = null;
-                        } 
+                        }
                         else
                         {
                             itemStacks[k].Move(ref takedItemStack);
@@ -666,7 +666,8 @@ namespace MinecraftServerEngine
                                 leftCount -= takedCount;
 
                                 takedItemStack = null;
-                            } else
+                            }
+                            else
                             {
                                 leftCount -= (takedCount - takedItemStack.Count);
                             }
@@ -680,7 +681,7 @@ namespace MinecraftServerEngine
 
                         //itemStacks[k++] = takedItemStack;
 
-                   
+
                     }
                 }
 

@@ -1,197 +1,46 @@
 ﻿
 using MinecraftPrimitives;
-using System.Diagnostics;
-using System.Xml.Linq;
+using System.Linq;
 
 namespace MinecraftServerEngine
 {
-    public sealed class ItemStack : System.IEquatable<ItemStack>
+    public sealed class ItemStack : Item
     {
-
-        public readonly ItemType Type;
-
-        public readonly string Name;
-
-        //public readonly string Description;
-        //public readonly (string, string)[] Attributes;
-        public readonly string[] Lore;
-
-        public int MaxCount => Type.GetMaxStackCount();
-        public int MinCount => Type.GetMinStackCount();
 
         private int _count;
         public int Count => _count;
 
-
-        public readonly int MaxDurability;
-        public int _currentDurability;
-        public int CurrentDurability => _currentDurability;
-        public bool IsBreakable => MaxDurability > 0;
-        public bool IsBreaked
-        {
-            get
-            {
-                System.Diagnostics.Debug.Assert(MaxDurability >= 0);
-                System.Diagnostics.Debug.Assert(CurrentDurability >= 0);
-                System.Diagnostics.Debug.Assert(MaxDurability >= CurrentDurability);
-
-                return MaxDurability > 0 && CurrentDurability == 0;
-            }
-        }
-
-
-
-        internal byte[] _hash;
-        internal byte[] Hash => _hash;
-
-        // TODO: Check  additional validation or safeguards should be implemented.
-        private static byte[] GenerateHash(string input)
-        {
-            using (System.Security.Cryptography.SHA256 sha256 = System.Security.Cryptography.SHA256.Create())
-            {
-                byte[] inputBytes = System.Text.Encoding.UTF8.GetBytes(input);
-                byte[] hashBytes = sha256.ComputeHash(inputBytes);
-
-                // Convert byte array to a hexadecimal string
-                //StringBuilder sb = new StringBuilder();
-                //foreach (byte b in hashBytes)
-                //{
-                //    sb.Append(b.ToString("x2"));
-                //}
-                //return sb.ToString();
-
-                return hashBytes;
-            }
-        }
-
-        private byte[] GenerateItemStackHash(
-            ItemType type, string name,
-            int maxDurability, int currentDurability,
-            string[] lore)
-        {
-
-            string hashString = $"{type.ToString()}_{name}_";
-
-
-            System.Diagnostics.Debug.Assert(maxDurability >= 0);
-            System.Diagnostics.Debug.Assert(maxDurability >= currentDurability);
-            if (maxDurability > 0)
-            {
-                hashString += $"Breakable_{maxDurability.ToString()}_{currentDurability.ToString()}";
-            }
-
-            hashString += "@";
-
-            foreach (string line in lore)
-            {
-                hashString += line + "\n";
-            }
-
-            return GenerateHash(hashString);
-        }
-
-        private static bool AreByteArraysEqual(byte[] array1, byte[] array2)
-        {
-            if (array1 == null && array2 == null)
-            {
-                return true;
-            }
-
-            // Check if the references are the same (or both are null)
-            if (ReferenceEquals(array1, array2))
-            {
-                return true;
-            }
-
-            // If either is null or lengths are different, return false
-            if (array1 == null || array2 == null || array1.Length != array2.Length)
-            {
-                return false;
-            }
-
-            // Compare each element
-            for (int i = 0; i < array1.Length; i++)
-            {
-                if (array1[i] != array2[i])
-                {
-                    return false;
-                }
-            }
-
-            //array1.SequenceEqual(array2)
-
-            return true;
-        }
 
         public ItemStack(
             ItemType type, string name, int count,
             int maxDurability, int currentDurability,
             //string description, params (string, string)[] attributes,
             params string[] lore)
+            : base(type, name, maxDurability, currentDurability, lore)
         {
-            System.Diagnostics.Debug.Assert(type.GetMaxStackCount() >= type.GetMinStackCount());
-            //if (breakable == true && type.GetMaxStackCount() > 1)
-            //{
-            //    throw new System.ArgumentException(
-            //        "The item is breakable and cannot have a maximum stack count greater than 1.",
-            //        nameof(breakable));
-            //}
-
-            if (maxDurability < 0)
-            {
-                throw new System.ArgumentOutOfRangeException(
-                    nameof(maxDurability),
-                    "Max durability must be greater than or equal to 0.");
-            }
-
-            if (currentDurability < 0 || maxDurability < currentDurability)
-            {
-                throw new System.ArgumentOutOfRangeException(
-                    nameof(currentDurability),
-                    "Current durability must be greater than 0 and less than or equal to max durability.");
-            }
-
-            System.Diagnostics.Debug.Assert(name != null && string.IsNullOrEmpty(name) == false);
-
-            Type = type;
-
-            Name = name;
-
-
             System.Diagnostics.Debug.Assert(count >= type.GetMinStackCount());
             System.Diagnostics.Debug.Assert(count <= type.GetMaxStackCount());
             _count = count;
-
-            MaxDurability = maxDurability;
-            _currentDurability = currentDurability;
-
-            //Description = description;
-            //Attributes = attributes;
-            Lore = lore;
-
-            _hash = GenerateItemStackHash(type, name, maxDurability, currentDurability, lore);
         }
 
         public ItemStack(
-        ItemType type, string name, int count,
-        //string description, params (string, string)[] attributes,
-        params string[] lore)
-        : this(type, name, count, 0, 0, lore)
+            ItemType type, string name, int count,
+            //string description, params (string, string)[] attributes,
+            params string[] lore)
+            : this(type, name, count, 0, 0, lore)
         {
 
         }
 
-
         public ItemStack(
-          ItemType type, string name,
-          bool breakable, int maxDurability, int currentDurability,
-          //string description, params (string, string)[] attributes,
-          params string[] lore)
-          : this(type, name, type.GetMaxStackCount(), maxDurability, currentDurability, lore)
+            ItemType type, string name,
+            int maxDurability, int currentDurability,
+            //string description, params (string, string)[] attributes,
+            params string[] lore)
+            : this(type, name, type.GetMaxStackCount(), maxDurability, currentDurability, lore)
         {
 
         }
-
 
         public ItemStack(
             ItemType type, string name,
@@ -202,15 +51,28 @@ namespace MinecraftServerEngine
 
         }
 
-        internal bool CheckHash(byte[] hash)
+        public static ItemStack Create(
+            IReadOnlyItem item, int count,
+            params string[] additionalLore)
         {
-            if (hash == null)
-            {
-                System.Diagnostics.Debug.Assert(Hash != null);
-                return false;
-            }
+            string[] lore = item.Lore.Concat(additionalLore).ToArray();
 
-            return AreByteArraysEqual(Hash, hash);
+            return new ItemStack(
+                item.Type, item.Name, count,
+                item.MaxDurability, item.CurrentDurability,
+                lore);
+        }
+
+        public static ItemStack Create(
+            IReadOnlyItem item,
+            params string[] additionalLore)
+        {
+            string[] lore = item.Lore.Concat(additionalLore).ToArray();
+
+            return new ItemStack(
+                item.Type, item.Name,
+                item.MaxDurability, item.CurrentDurability,
+                lore);
         }
 
         internal bool IsFull()
@@ -218,22 +80,6 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_count >= MinCount);
             System.Diagnostics.Debug.Assert(_count <= MaxCount);
             return _count == MaxCount;
-        }
-
-        public void Damage(int amount)
-        {
-            if (_currentDurability - amount <= 0)
-            {
-                _currentDurability = 0;
-            }
-            else
-            {
-                _currentDurability -= amount;
-            }
-
-            System.Diagnostics.Debug.Assert(_currentDurability >= 0);
-
-            _hash = GenerateItemStackHash(Type, Name, MaxDurability, CurrentDurability, Lore);
         }
 
         internal int Stack(int count)
@@ -541,44 +387,6 @@ namespace MinecraftServerEngine
             return $"{Type}(\"{Name}\")*{_count}";
         }
 
-        public bool Equals(ItemStack other)
-        {
-            if (other == null)
-            {
-                return false;
-            }
-
-            return AreByteArraysEqual(other.Hash, Hash);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is ItemStack other)
-            {
-                return this.Equals(other);
-            }
-
-            return false;
-        }
-
-        public override int GetHashCode()
-        {
-            System.Diagnostics.Debug.Assert(Hash != null);
-            if (Hash.Length == 0)
-            {
-                return 0;
-            }
-
-            unchecked
-            {
-                int hash = 17;
-                foreach (byte b in Hash)
-                {
-                    hash = hash * 31 + b;
-                }
-                return hash;
-            }
-        }
 
     }
 }
