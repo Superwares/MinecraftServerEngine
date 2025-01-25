@@ -132,7 +132,7 @@ namespace TestMinecraftServerApplication
             }
         }
 
-        protected override void OnAttack(World world)
+        protected override void OnAttack(World world, double attackCharge)
         {
             System.Diagnostics.Debug.Assert(world != null);
 
@@ -140,13 +140,15 @@ namespace TestMinecraftServerApplication
 
             float randomDamage = (float)GenerateRandomValueBetween(0.7, 1.0);
 
+            MyConsole.Debug($"Attack charge: {attackCharge:F2}");
+
             HandleAttack(
                 world,
                 randomDamage,
                 3, 0.3F);
         }
 
-        protected override void OnAttack(World world, ItemStack stack)
+        protected override void OnAttack(World world, ItemStack stack, double attackCharge)
         {
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(stack != null);

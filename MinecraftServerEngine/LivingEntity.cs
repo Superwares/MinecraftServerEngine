@@ -1,4 +1,5 @@
-﻿using Sync;
+﻿using Common;
+using Sync;
 
 namespace MinecraftServerEngine
 {
@@ -13,6 +14,8 @@ namespace MinecraftServerEngine
         protected float _health;
         public float MaxHealth => _maxHealth;
         public float Health => _health;
+
+        private Time _lastAttackTime = Time.Now();
 
         private protected LivingEntity(
             System.Guid uniqueId,
@@ -50,6 +53,87 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
 
             return _health <= 0.0D;
+        }
+
+        protected internal virtual void OnAttack(World world, double attackCharge) { }
+        protected internal virtual void OnAttack(World world, ItemStack stack, double attackCharge) { }
+        protected internal virtual void OnItemBreak(World world, ItemStack stack) { }
+        protected internal virtual void OnUseItem(World world, ItemStack stack) { }
+        protected internal virtual void OnUseEntity(World world, Entity entity) { }
+
+        private double CalculateAttackCharge()
+        {
+            Time currentTime = Time.Now();
+            Time MaxTime = Time.FromMilliseconds(250);
+            //Time MaxTime = Time.FromSeconds(1);
+
+            Time elapsedTime = currentTime - _lastAttackTime;
+
+            //MyConsole.Debug($"elapsedTime: {elapsedTime:F2}");
+            double normalized = (double)elapsedTime.Amount / (double)MaxTime.Amount;
+
+            //MyConsole.Debug($"normalized: {normalized:F2}");
+            return System.Math.Clamp(normalized, 0.0, 1.0); // Clamp to [0, 1]
+        }
+
+
+        internal virtual void _Attack(World world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            double attackCharge = CalculateAttackCharge();
+
+            OnAttack(world, attackCharge);
+
+            if (_noRendering)
+            {
+                System.Diagnostics.Debug.Assert(Renderers.Empty);
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(Renderers != null);
+            foreach (EntityRenderer renderer in Renderers.GetKeys())
+            {
+                System.Diagnostics.Debug.Assert(renderer != null);
+                renderer.Animate(Id, EntityAnimation.SwingMainArm);
+                //renderer.Animate(Id, EntityAnimation.TakeDamage);
+            }
+
+            _lastAttackTime = Time.Now();
+        }
+
+        internal virtual void _Attack(World world, ItemStack stack)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(stack != null);
+
+            double attackCharge = CalculateAttackCharge();
+
+            OnAttack(world, stack, attackCharge);
+
+            if (_noRendering == true)
+            {
+                System.Diagnostics.Debug.Assert(Renderers.Empty);
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(Renderers != null);
+            foreach (EntityRenderer renderer in Renderers.GetKeys())
+            {
+                System.Diagnostics.Debug.Assert(renderer != null);
+                renderer.Animate(Id, EntityAnimation.SwingMainArm);
+            }
+
+            _lastAttackTime = Time.Now();
+        }
+
+        internal virtual void _ItemBreak(World world, ItemStack stack)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(stack != null);
+
+            OnItemBreak(world, stack);
         }
 
         public virtual void Damage(float amount)

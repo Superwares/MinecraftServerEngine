@@ -369,6 +369,7 @@ namespace MinecraftServerEngine
                 idEntity,
                 [
                     ("generic.attackSpeed", 4.0F),   // 5 ticks, 0.25 seconds
+                    //("generic.attackSpeed", 1.0F),   // 20 ticks, 1 seconds
                 ]));
         }
 

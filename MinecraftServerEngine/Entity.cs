@@ -65,7 +65,7 @@ namespace MinecraftServerEngine
         internal readonly System.Guid UniqueId;
 
         private bool _hasMovement = false;
-        private bool _noRendering = false;
+        private protected bool _noRendering = false;
 
         internal readonly ConcurrentTree<EntityRenderer> Renderers = new();  // Disposable
 
@@ -128,69 +128,13 @@ namespace MinecraftServerEngine
         protected virtual void OnSneak(World world, bool f) { }
         protected virtual void OnSprint(World world, bool f) { }
 
-        protected internal virtual void OnAttack(World world) { }
-        protected internal virtual void OnAttack(World world, ItemStack stack) { }
-        protected internal virtual void OnItemBreak(World world, ItemStack stack) { }
-        protected internal virtual void OnUseItem(World world, ItemStack stack) { }
-        protected internal virtual void OnUseEntity(World world, Entity entity) { }
 
-        internal virtual void _Attack(World world)
-        {
-            System.Diagnostics.Debug.Assert(world != null);
-
-            OnAttack(world);
-
-            if (_noRendering)
-            {
-                System.Diagnostics.Debug.Assert(Renderers.Empty);
-                return;
-            }
-
-            System.Diagnostics.Debug.Assert(Renderers != null);
-            foreach (EntityRenderer renderer in Renderers.GetKeys())
-            {
-                System.Diagnostics.Debug.Assert(renderer != null);
-                renderer.Animate(Id, EntityAnimation.SwingMainArm);
-                //renderer.Animate(Id, EntityAnimation.TakeDamage);
-            }
-        }
-
-        internal virtual void _Attack(World world, ItemStack stack)
-        {
-            System.Diagnostics.Debug.Assert(world != null);
-            System.Diagnostics.Debug.Assert(stack != null);
-
-            OnAttack(world, stack);
-
-            if (_noRendering == true)
-            {
-                System.Diagnostics.Debug.Assert(Renderers.Empty);
-                return;
-            }
-
-            System.Diagnostics.Debug.Assert(Renderers != null);
-            foreach (EntityRenderer renderer in Renderers.GetKeys())
-            {
-                System.Diagnostics.Debug.Assert(renderer != null);
-                renderer.Animate(Id, EntityAnimation.SwingMainArm);
-            }
-        }
 
         //protected (Vector, Vector) GetRay()
         //{
         //    throw new System.NotImplementedException();
         //    /*return (origin, u);*/
         //}
-
-        internal virtual void _ItemBreak(World world, ItemStack stack)
-        {
-            System.Diagnostics.Debug.Assert(world != null);
-
-            System.Diagnostics.Debug.Assert(stack != null);
-
-            OnItemBreak(world, stack);
-
-        }
 
         internal void ApplyRenderer(EntityRenderer renderer)
         {

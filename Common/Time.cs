@@ -97,11 +97,17 @@ namespace Common
 
         public static Time Zero => new(0);
 
-        private readonly long Amount;
+        public readonly long Amount;
 
         private Time(long amount)
         {
             Amount = amount;
+        }
+
+        public readonly Time Clamp(Time min, Time max)
+        {
+            long amount = System.Math.Clamp(Amount, min.Amount, max.Amount);
+            return new Time(amount);
         }
 
         public readonly string FormatToISO8601()
