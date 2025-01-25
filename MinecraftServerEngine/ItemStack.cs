@@ -285,7 +285,7 @@ namespace MinecraftServerEngine
                 }
             }
 
-            if (IsBreakable == true)
+            if (MaxDurability > 1)
             {
                 _lore[currentLoreLine++] = new NBTTagString("");
                 _lore[currentLoreLine++] = new NBTTagString($"Durability [{CurrentDurability}/{MaxDurability}]");
