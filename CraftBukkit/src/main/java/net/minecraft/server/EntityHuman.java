@@ -962,11 +962,11 @@ public abstract class EntityHuman extends EntityLiving {
                 // This ensures that attacks with lower readiness deal less damage,
                 // while fully charged attacks can deal significantly higher damage.
 
-                float f2 = this.n(0.5F);  // Get attack readiness (0.0 to 1.0 based on cooldown or progress).
+                float f2 = this.n(0.5F);  // Get attack readiness with offset 0.5F (0.0 to 1.0 based on cooldown or progress).
 
                 f *= 0.2F + f2 * f2 * 0.8F;  // Scale the attack damage by a readiness-based multiplier.
                 f1 *= f2;
-                this.ds();
+                this.ds();  //
                 if (f > 0.0F || f1 > 0.0F) {
                     boolean flag = f2 > 0.9F;
                     boolean flag1 = false;
@@ -1906,10 +1906,17 @@ public abstract class EntityHuman extends EntityLiving {
         this.datawatcher.set(EntityHuman.bu, nbttagcompound);
     }
 
+    // This calculates the total time (in ticks) required for a full attack cooldown.
+    // The value is derived from the player's attack speed attribute (`GenericAttributes.g`).
+    // Higher attack speed reduces the cooldown duration, while lower attack speed increases it.
     public float dr() {
         return (float) (1.0D / this.getAttributeInstance(GenericAttributes.g).getValue() * 20.0D);
+        // Converts the attack speed attribute into a cooldown time in ticks. (seconds -> ticks, 20 ticks per second)
     }
 
+    // `aE` is a counter that increments by 1 every game tick (20 ticks per second).
+    // It represents the elapsed time (in ticks) since the last attack or a related action.
+    // This variable is used to track how much time has passed to determine the readiness of an attack.
     public float n(float f) {
         return MathHelper.a(((float) this.aE + f) / this.dr(), 0.0F, 1.0F);
     }
