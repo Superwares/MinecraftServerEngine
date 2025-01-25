@@ -145,7 +145,7 @@ namespace TestMinecraftServerApplication
 
             double damage = DefaultAttackDamage;
             damage *= (attackCharge * attackCharge);
-            damage *= GenerateRandomValueBetween(0.98, 1.0);
+            damage *= GenerateRandomValueBetween(0.98, 1.01);
 
             //MyConsole.Debug($"Attack charge: {attackCharge:F2}");
             //MyConsole.Debug($"Damage: {damage:F2}");
@@ -178,7 +178,7 @@ namespace TestMinecraftServerApplication
             }
 
             damage *= (attackCharge * attackCharge);
-            damage *= GenerateRandomValueBetween(0.98, 1.0);
+            damage *= GenerateRandomValueBetween(0.98, 1.01);
 
             MyConsole.Debug($"Attack charge: {attackCharge:F2}");
             MyConsole.Debug($"Damage: {damage:F2}");
