@@ -31,8 +31,6 @@ namespace TestMinecraftServerApplication
                 $"왼클릭(구매)          {BalloonBasher.PurchasePrice} 코인",
                 $"우클릭(판매)          {BalloonBasher.SellPrice} 코인",
                 ]));
-
-
         }
 
         protected override void OnLeftClickSharedItem(

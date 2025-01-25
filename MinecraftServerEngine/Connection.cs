@@ -364,7 +364,12 @@ namespace MinecraftServerEngine
 
             UpdateHealth(health);
             Set(idEntity, gamemode);
-
+            
+            OutPackets.Enqueue(new EntityPropertiesPacket(
+                idEntity,
+                [
+                    ("generic.attackSpeed", 4.0F),   // 5 ticks, 0.25 seconds
+                ]));
         }
 
         ~Connection()

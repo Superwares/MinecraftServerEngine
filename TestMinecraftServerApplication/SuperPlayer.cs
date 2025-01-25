@@ -11,8 +11,9 @@ namespace TestMinecraftServerApplication
     {
         private bool _disposed = false;
 
-        private static ChestInventory chestInventory = new();
-        private static ShopInventory shopInventory = new();
+        //private static ChestInventory chestInventory = new();
+        private static readonly ShopInventory ShopInventory = new();
+
 
 
         public SuperPlayer(
@@ -57,14 +58,14 @@ namespace TestMinecraftServerApplication
 
             if (f == true)
             {
-                //ApplyBlockAppearance(Block.Dirt);
+                ApplyBlockAppearance(Block.Dirt);
                 //OpenInventory(chestInventory);
-                OpenInventory(shopInventory);
+                //OpenInventory(ShopInventory);
 
                 //SetExperience(0.6F, 123456789);
 
                 //EmitParticles(Particle.Cloud, 1.0F, 100);
-                EmitParticles(Particle.Largeexplode, 1.0F, 1);
+                //EmitParticles(Particle.Largeexplode, 1.0F, 1);
 
                 //AddEffect(1, 1, 1800, 2);
             }

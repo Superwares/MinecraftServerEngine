@@ -262,8 +262,10 @@ namespace MinecraftPrimitives
         public const int SetExperiencePacketId = 0x40;
         public const int UpdateHealthPacketId = 0x41;
         public const int EntityTeleportPacketId = 0x4C;
+        public const int EntityPropertiesPacketId = 0x4E;
         public const int EntityEffectPacketId = 0x4F;
-        
+
+
 
         public override WhereBound BoundTo => WhereBound.Clientbound;
 
@@ -851,8 +853,8 @@ namespace MinecraftPrimitives
             buffer.WriteData(Data);
         }
 
-    }    
-    
+    }
+
     public sealed class ClientboundAnimationPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
@@ -2312,6 +2314,49 @@ namespace MinecraftPrimitives
             buffer.WriteDouble(X); buffer.WriteDouble(Y); buffer.WriteDouble(Z);
             buffer.WriteByte(Yaw); buffer.WriteByte(Pitch);
             buffer.WriteBool(OnGround);
+        }
+
+    }
+    
+    public sealed class EntityPropertiesPacket : ClientboundPlayingPacket
+    {
+        public readonly int EntityId;
+        public readonly (string, double)[] Properties;
+
+        public static EntityPropertiesPacket Read(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public EntityPropertiesPacket(
+            int entityId,
+            (string, double)[] properties) : base(EntityPropertiesPacketId)
+        {
+            EntityId = entityId;
+            Properties = properties;
+        }
+        
+        protected override void WriteData(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteInt(EntityId, true);
+            buffer.WriteInt(Properties.Length);
+            foreach ((string key, double value) in Properties)
+            {
+                buffer.WriteString(key);
+                buffer.WriteDouble(value);
+                buffer.WriteInt(0, true);
+            }
+
         }
 
     }
