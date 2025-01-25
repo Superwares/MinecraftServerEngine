@@ -364,7 +364,7 @@ namespace MinecraftServerEngine
 
             UpdateHealth(health);
             Set(idEntity, gamemode);
-            
+
             OutPackets.Enqueue(new EntityPropertiesPacket(
                 idEntity,
                 [
@@ -1471,7 +1471,7 @@ namespace MinecraftServerEngine
         }
 
         internal void PlaySound(
-            string name, int category, Vector p, float volume, float pitch)
+            string name, int category, Vector p, double volume, double pitch)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
             if (_disconnected == true)
@@ -1491,13 +1491,13 @@ namespace MinecraftServerEngine
                 //"entity.player.attack.strong", 7,
                 name, category,
                 (int)(p.X * 8), (int)(p.Y * 8), (int)(p.Z * 8),
-                volume, pitch));
+                (float)volume, (float)pitch));
         }
 
         internal void EmitParticles(
             Particle particle, Vector v,
-            float speed, int count,
-            float r, float g, float b)
+            double speed, int count,
+            double r, double g, double b)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
             if (_disconnected == true)
@@ -1509,11 +1509,11 @@ namespace MinecraftServerEngine
             OutPackets.Enqueue(new ParticlesPacket(
                 (int)particle, true,
                 (float)v.X, (float)v.Y, (float)v.Z,
-                r, g, b,
-                speed, count));
+                (float)r, (float)g, (float)b,
+                (float)speed, count));
         }
 
-        internal void SetExperience(float ratio, int level)
+        internal void SetExperience(double ratio, int level)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
@@ -1527,7 +1527,7 @@ namespace MinecraftServerEngine
             }
 
             System.Diagnostics.Debug.Assert(OutPackets != null);
-            OutPackets.Enqueue(new SetExperiencePacket(ratio, level, 0));
+            OutPackets.Enqueue(new SetExperiencePacket((float)ratio, level, 0));
         }
 
         internal void Set(int idEntity, Gamemode gamemode)

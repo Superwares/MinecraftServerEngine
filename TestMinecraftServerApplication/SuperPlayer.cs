@@ -96,16 +96,20 @@ namespace TestMinecraftServerApplication
             world.PlaySound("entity.item.break", 7, Position, 1.0F, 2.0F);
         }
 
-        private void HandleAttack(
-            World world,
-            double damage,
-            double directionScale, double knockbackScale)
+        private void HandleDefaultAttack(World world, double attackCharge)
         {
             System.Diagnostics.Debug.Assert(world != null);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            double damage = DefaultAttackDamage;
+            damage *= (attackCharge * attackCharge);
+            damage *= GenerateRandomValueBetween(0.98, 1.01);
+
             System.Diagnostics.Debug.Assert(damage >= 0.0F);
+
+            double directionScale = 3.0;
+            double knockbackScale = 0.3;
 
             System.Diagnostics.Debug.Assert(directionScale > 0.0F);
             System.Diagnostics.Debug.Assert(knockbackScale > 0.0F);
@@ -137,23 +141,65 @@ namespace TestMinecraftServerApplication
             }
         }
 
+        private void HandleBalloonBasherAttack(World world, double attackCharge)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            double damage = BalloonBasher.Damage;
+            damage *= (attackCharge * attackCharge);
+            damage *= GenerateRandomValueBetween(0.98, 1.01);
+
+            System.Diagnostics.Debug.Assert(damage >= 0.0F);
+
+            double directionScale = 3.0;
+            double knockbackScale = 0.3;
+
+            System.Diagnostics.Debug.Assert(directionScale > 0.0F);
+            System.Diagnostics.Debug.Assert(knockbackScale > 0.0F);
+
+            if (damage == 0.0F)
+            {
+                return;
+            }
+
+            Vector o = GetEyeOrigin();
+            Vector d = Look.GetUnitVector();
+            Vector d_prime = d * directionScale;
+
+            //MyConsole.Debug($"Eye origin: {eyeOrigin}, Scaled direction vector: {scaled_d}");
+
+            PhysicsObject obj = world.SearchClosestObject(o, d_prime, this);
+
+            if (obj != null && obj is LivingEntity livingEntity)
+            {
+                livingEntity.Damage(damage);
+                livingEntity.ApplyForce(d * knockbackScale);
+
+                Vector v = new(
+                    livingEntity.Position.X,
+                    livingEntity.Position.Y + livingEntity.GetEyeHeight(),
+                    livingEntity.Position.Z);
+
+                world.PlaySound("entity.player.attack.strong", 7, v, 1.0F, 2.0F);
+
+                EmitParticles(Particle.Explode, 1.0, 10);
+            }
+        }
+
         protected override void OnAttack(World world, double attackCharge)
         {
             System.Diagnostics.Debug.Assert(world != null);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            double damage = DefaultAttackDamage;
-            damage *= (attackCharge * attackCharge);
-            damage *= GenerateRandomValueBetween(0.98, 1.01);
+
 
             //MyConsole.Debug($"Attack charge: {attackCharge:F2}");
             //MyConsole.Debug($"Damage: {damage:F2}");
 
-            HandleAttack(
-                world,
-                damage,
-                3, 0.3F);
+            HandleDefaultAttack(world, attackCharge);
         }
 
         protected override void OnAttack(World world, ItemStack stack, double attackCharge)
@@ -168,35 +214,17 @@ namespace TestMinecraftServerApplication
             //Vector d = Look.GetUnitVector();
             //Vector eyeOrigin = GetEyeOrigin();
 
-            double damage;
-
             switch (stack.Type)
             {
                 default:
-                    {
-                        damage = DefaultAttackDamage;
-                    }
+                    HandleDefaultAttack(world, attackCharge);
                     break;
                 case BalloonBasher.Type:
-                    {
-                        damage = BalloonBasher.Damage;
-                    }
+                    HandleBalloonBasherAttack(world, attackCharge);
                     break;
             }
 
-            damage *= (attackCharge * attackCharge);
-            damage *= GenerateRandomValueBetween(0.98, 1.01);
-
-            MyConsole.Debug($"Attack charge: {attackCharge:F2}");
-            MyConsole.Debug($"Damage: {damage:F2}");
-
-            HandleAttack(
-              world,
-              damage,
-              3, 0.3F);
-
             stack.Damage(1);
-
         }
 
         protected override void OnUseItem(World world, ItemStack stack)

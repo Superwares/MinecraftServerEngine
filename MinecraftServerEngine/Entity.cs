@@ -636,8 +636,8 @@ namespace MinecraftServerEngine
 
         internal virtual void _EmitParticles(
             Particle particle, Vector v,
-            float speed, int count,
-            float r, float g, float b)
+            double speed, int count,
+            double r, double g, double b)
         {
             System.Diagnostics.Debug.Assert(r >= 0.0D);
             System.Diagnostics.Debug.Assert(r <= 1.0D);
@@ -660,17 +660,17 @@ namespace MinecraftServerEngine
                 foreach (EntityRenderer renderer in Renderers.GetKeys())
                 {
                     System.Diagnostics.Debug.Assert(renderer != null);
-                    renderer.ShowParticles(particle, v, speed, count, r, g, b);
+                    renderer.ShowParticles(particle, v, (float)speed, count, (float)r, (float)g, (float)b);
                 }
             }
         }
 
         public void EmitParticles(
             Particle particle, Vector offset,
-            float speed, int count,
-            float red, float green, float blue)
+            double speed, int count,
+            double red, double green, double blue)
         {
-            if (speed < 0.0F || speed > 1.0F)
+            if (speed < 0.0 || speed > 1.0)
             {
                 throw new System.ArgumentOutOfRangeException(nameof(speed));
             }
@@ -679,15 +679,15 @@ namespace MinecraftServerEngine
                 throw new System.ArgumentOutOfRangeException(nameof(count));
             }
 
-            if (red < 0.0D || red > 1.0D)
+            if (red < 0.0 || red > 1.0)
             {
                 throw new System.ArgumentOutOfRangeException(nameof(red));
             }
-            if (green < 0.0D || green > 1.0D)
+            if (green < 0.0 || green > 1.0)
             {
                 throw new System.ArgumentOutOfRangeException(nameof(green));
             }
-            if (blue < 0.0D || blue > 1.0D)
+            if (blue < 0.0 || blue > 1.0)
             {
                 throw new System.ArgumentOutOfRangeException(nameof(blue));
             }
@@ -699,7 +699,7 @@ namespace MinecraftServerEngine
 
         public void EmitParticles(
             Particle particle, Vector offset,
-            float speed, int count)
+            double speed, int count)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
@@ -708,8 +708,8 @@ namespace MinecraftServerEngine
 
         public void EmitParticles(
             Particle particle,
-            float speed, int count,
-            float red, float green, float blue)
+            double speed, int count,
+            double red, double green, double blue)
         {
             if (speed < 0.0F || speed > 1.0F)
             {
@@ -740,7 +740,7 @@ namespace MinecraftServerEngine
 
         public void EmitParticles(
             Particle particle,
-            float speed, int count)
+            double speed, int count)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 

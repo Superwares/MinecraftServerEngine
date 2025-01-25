@@ -14,7 +14,7 @@ namespace TestMinecraftServerApplication.Items
         //public const int MaxDurability = 110;
         public const int MaxDurability = 10;
 
-        public const float Damage = 3.0F;
+        public const double Damage = 3.0;
 
         public const int MaxPurchaseCount = 10;
         public const int PurchasePrice = 30;

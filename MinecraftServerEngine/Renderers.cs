@@ -243,7 +243,7 @@ namespace MinecraftServerEngine
 
         // title, worldboarder, chattings, sound, particles
 
-        internal void PlaySound(string name, int category, Vector p, float volume, float pitch)
+        internal void PlaySound(string name, int category, Vector p, double volume, double pitch)
         {
             System.Diagnostics.Debug.Assert(name != null);
             System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(name) == false);
@@ -256,7 +256,7 @@ namespace MinecraftServerEngine
                 //"entity.player.attack.strong", 7,
                 name, category,
                 (int)(p.X * 8), (int)(p.Y * 8), (int)(p.Z * 8),
-                volume, pitch));
+                (float)volume, (float)pitch));
         }
 
     }
@@ -436,8 +436,8 @@ namespace MinecraftServerEngine
         internal void ShowParticles(
             Particle particle,
             Vector v,
-            float speed, int count,
-            float r, float g, float b)
+            double speed, int count,
+            double r, double g, double b)
         {
             System.Diagnostics.Debug.Assert(r >= 0.0D);
             System.Diagnostics.Debug.Assert(r <= 1.0D);
@@ -461,17 +461,17 @@ namespace MinecraftServerEngine
                 b = 0.0F;
             }
 
-            System.Diagnostics.Debug.Assert(v.X >= float.MinValue);
-            System.Diagnostics.Debug.Assert(v.X <= float.MaxValue);
-            System.Diagnostics.Debug.Assert(v.Y >= float.MinValue);
-            System.Diagnostics.Debug.Assert(v.Y <= float.MaxValue);
-            System.Diagnostics.Debug.Assert(v.Z >= float.MinValue);
-            System.Diagnostics.Debug.Assert(v.Z <= float.MaxValue);
+            System.Diagnostics.Debug.Assert(v.X >= double.MinValue);
+            System.Diagnostics.Debug.Assert(v.X <= double.MaxValue);
+            System.Diagnostics.Debug.Assert(v.Y >= double.MinValue);
+            System.Diagnostics.Debug.Assert(v.Y <= double.MaxValue);
+            System.Diagnostics.Debug.Assert(v.Z >= double.MinValue);
+            System.Diagnostics.Debug.Assert(v.Z <= double.MaxValue);
             Render(new ParticlesPacket(
                 (int)particle, true,
                 (float)v.X, (float)v.Y, (float)v.Z,
-                r, g, b,
-                speed, count));
+                (float)r, (float)g, (float)b,
+                (float)speed, count));
         }
 
         internal void SetEquipmentsData(
@@ -588,8 +588,8 @@ namespace MinecraftServerEngine
         internal void Move(
             Particle particle,
             Vector[] points,
-            float speed, int count,
-            float r, float g, float b)
+            double speed, int count,
+            double r, double g, double b)
         {
             System.Diagnostics.Debug.Assert(r >= 0.0D);
             System.Diagnostics.Debug.Assert(r <= 1.0D);
@@ -615,17 +615,17 @@ namespace MinecraftServerEngine
 
             foreach (Vector p in points)
             {
-                System.Diagnostics.Debug.Assert(p.X >= float.MinValue);
-                System.Diagnostics.Debug.Assert(p.X <= float.MaxValue);
-                System.Diagnostics.Debug.Assert(p.Y >= float.MinValue);
-                System.Diagnostics.Debug.Assert(p.Y <= float.MaxValue);
-                System.Diagnostics.Debug.Assert(p.Z >= float.MinValue);
-                System.Diagnostics.Debug.Assert(p.Z <= float.MaxValue);
+                System.Diagnostics.Debug.Assert(p.X >= double.MinValue);
+                System.Diagnostics.Debug.Assert(p.X <= double.MaxValue);
+                System.Diagnostics.Debug.Assert(p.Y >= double.MinValue);
+                System.Diagnostics.Debug.Assert(p.Y <= double.MaxValue);
+                System.Diagnostics.Debug.Assert(p.Z >= double.MinValue);
+                System.Diagnostics.Debug.Assert(p.Z <= double.MaxValue);
                 Render(new ParticlesPacket(
                     (int)particle, true,
                     (float)p.X, (float)p.Y, (float)p.Z,
-                    r, g, b,
-                    speed, count));
+                    (float)r, (float)g, (float)b,
+                   (float)speed, count));
             }
         }
 
