@@ -246,6 +246,8 @@ namespace MinecraftServerEngine
             int currentLoreLine = 0;
             int loreLines = 0;
 
+            bool displayDurability = MaxDurability > 1;
+
             const bool EndBr = true;
 
             if (Lore != null)
@@ -253,7 +255,7 @@ namespace MinecraftServerEngine
                 loreLines += Lore.Length;
             }
 
-            if (IsBreakable == true)
+            if (displayDurability)
             {
                 loreLines += 2;
             }
@@ -285,7 +287,7 @@ namespace MinecraftServerEngine
                 }
             }
 
-            if (MaxDurability > 1)
+            if (displayDurability)
             {
                 _lore[currentLoreLine++] = new NBTTagString("");
                 _lore[currentLoreLine++] = new NBTTagString($"Durability [{CurrentDurability}/{MaxDurability}]");

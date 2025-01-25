@@ -154,7 +154,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(damage >= 0.0F);
 
             double directionScale = 3.0;
-            double knockbackScale = 0.3;
+            double knockbackScale = GenerateRandomValueBetween(0.1, 0.3123);
 
             System.Diagnostics.Debug.Assert(directionScale > 0.0F);
             System.Diagnostics.Debug.Assert(knockbackScale > 0.0F);
@@ -170,6 +170,8 @@ namespace TestMinecraftServerApplication
             Vector d = Look.GetUnitVector();
             Vector d_prime = d * directionScale;
 
+            Vector k = new(0.0, 1.0, 0.0);
+
             //MyConsole.Debug($"Eye origin: {eyeOrigin}, Scaled direction vector: {scaled_d}");
 
             PhysicsObject obj = world.SearchClosestObject(o, d_prime, this);
@@ -177,7 +179,7 @@ namespace TestMinecraftServerApplication
             if (obj != null && obj is LivingEntity livingEntity)
             {
                 livingEntity.Damage(damage);
-                livingEntity.ApplyForce(d * knockbackScale);
+                livingEntity.ApplyForce(k * knockbackScale);
 
                 Vector v = new(
                     livingEntity.Position.X,
@@ -223,10 +225,11 @@ namespace TestMinecraftServerApplication
                     break;
                 case BalloonBasher.Type:
                     HandleBalloonBasherAttack(world, attackCharge);
+                    stack.Damage(1);
                     break;
             }
 
-            stack.Damage(1);
+            
         }
 
         protected override void OnUseItem(World world, ItemStack stack)
