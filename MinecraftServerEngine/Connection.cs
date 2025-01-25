@@ -1051,9 +1051,12 @@ namespace MinecraftServerEngine
                                 mainHandItemStack != null &&
                                 mainHandItemStack.IsBreaked == true)
                             {
-                                player.OnItemBreak(world, mainHandItemStack);
 
                                 Window.UpdateMainHandSlot(playerInventory);
+
+                                player._ItemBreak(world, mainHandItemStack);
+
+                                player.UpdateEntityEquipmentsData(playerInventory.GetEquipmentsData());
 
                                 //MyConsole.Debug("Item break!");
                             }
@@ -1064,6 +1067,8 @@ namespace MinecraftServerEngine
                             {
                                 MyConsole.Debug("Different status of prev and current item!");
                                 Window.UpdateMainHandSlot(playerInventory);
+
+                                player.UpdateEntityEquipmentsData(playerInventory.GetEquipmentsData());
                             }
 
 

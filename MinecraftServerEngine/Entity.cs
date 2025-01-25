@@ -182,6 +182,16 @@ namespace MinecraftServerEngine
         //    /*return (origin, u);*/
         //}
 
+        internal virtual void _ItemBreak(World world, ItemStack stack)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(stack != null);
+
+            OnItemBreak(world, stack);
+
+        }
+
         internal void ApplyRenderer(EntityRenderer renderer)
         {
             System.Diagnostics.Debug.Assert(renderer != null);
