@@ -181,12 +181,7 @@ namespace TestMinecraftServerApplication
                 livingEntity.Damage(damage);
                 livingEntity.ApplyForce(k * knockbackScale);
 
-                Vector v = new(
-                    livingEntity.Position.X,
-                    livingEntity.Position.Y + livingEntity.GetEyeHeight(),
-                    livingEntity.Position.Z);
-
-                world.PlaySound("entity.generic.explode", 7, v, 0.2, 0.5);
+                world.PlaySound("entity.generic.explode", 7, livingEntity.Position, 0.2, 0.5);
 
                 livingEntity.EmitParticles(Particle.LargeExplode, 1.0, 1);
             }
