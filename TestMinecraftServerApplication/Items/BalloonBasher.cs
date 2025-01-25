@@ -11,7 +11,8 @@ namespace TestMinecraftServerApplication.Items
         public const ItemType Type = ItemType.DiamondSword;
         public const string Name = "Balloon Basher";
 
-        public const int MaxDurability = 110;
+        //public const int MaxDurability = 110;
+        public const int MaxDurability = 10;
 
         public const float Damage = 3.0F;
 

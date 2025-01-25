@@ -44,6 +44,7 @@ namespace TestMinecraftServerApplication
             bool success = false;
 
             ItemStack giveItem;
+            ItemStack[] taked;
 
             switch (i)
             {
@@ -51,19 +52,27 @@ namespace TestMinecraftServerApplication
                     {
                         const int coinAmount = 30;
 
-                        ItemStack[] coins = playerInventory.TakeItemStacksInPrimary(
-                            Coin.Item, Coin.DefaultCount * coinAmount);
+                        taked = playerInventory.TakeItemStacksInPrimary(
+                           Coin.Item, Coin.DefaultCount * coinAmount);
 
-                        System.Diagnostics.Debug.Assert(coins != null);
-                        if (coins.Length > 0)
+                        System.Diagnostics.Debug.Assert(taked != null);
+                        if (taked.Length > 0)
                         {
-                            System.Diagnostics.Debug.Assert(coins.Length == 1);
-                            System.Diagnostics.Debug.Assert(coins[0].Count == coinAmount);
+                            System.Diagnostics.Debug.Assert(taked.Length == 1);
+                            System.Diagnostics.Debug.Assert(taked[0].Count == coinAmount);
 
                             giveItem = ItemStack.Create(BalloonBasher.Item, BalloonBasher.DefaultCount);
-                            playerInventory.GiveItem(giveItem);
+                            success = playerInventory.GiveItem(giveItem);
 
-                            success = true;
+                            if (success == false)
+                            {
+                                giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * coinAmount);
+                                success = playerInventory.GiveItem(giveItem);
+
+                                System.Diagnostics.Debug.Assert(success == true);
+
+                                success = false;
+                            }
                         }
 
                     }
@@ -73,7 +82,8 @@ namespace TestMinecraftServerApplication
                         const int coinAmount = 64;
 
                         giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * coinAmount);
-                        playerInventory.GiveItem(giveItem);
+                        success = playerInventory.GiveItem(giveItem);
+
                     }
                     break;
 
@@ -91,6 +101,9 @@ namespace TestMinecraftServerApplication
         {
             bool success = false;
 
+            ItemStack giveItem;
+            ItemStack[] taked;
+
             switch (i)
             {
                 case 0:
@@ -100,19 +113,26 @@ namespace TestMinecraftServerApplication
                         System.Diagnostics.Debug.Assert(coinAmount >= Coin.Type.GetMinStackCount());
                         System.Diagnostics.Debug.Assert(coinAmount <= Coin.Type.GetMaxStackCount());
 
-                        ItemStack[] taked = playerInventory.TakeItemStacksInPrimary(
+                        taked = playerInventory.TakeItemStacksInPrimary(
                             BalloonBasher.Item, BalloonBasher.DefaultCount);
 
-                        System.Diagnostics.Debug.Assert(taked != null);
-                        if (taked.Length > 0)
+                        if (taked != null && taked.Length > 0)
                         {
                             System.Diagnostics.Debug.Assert(taked.Length == 1);
                             System.Diagnostics.Debug.Assert(taked[0].Count == itemStack.Count);
 
-                            ItemStack giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * coinAmount);
-                            playerInventory.GiveItem(giveItem);
+                            giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * coinAmount);
+                            success = playerInventory.GiveItem(giveItem);
 
-                            success = true;
+                            if (success == false)
+                            {
+                                giveItem = ItemStack.Create(BalloonBasher.Item, BalloonBasher.DefaultCount);
+                                success = playerInventory.GiveItem(giveItem);
+
+                                System.Diagnostics.Debug.Assert(success == true);
+
+                                success = false;
+                            }
                         }
 
                     }
@@ -121,7 +141,12 @@ namespace TestMinecraftServerApplication
                     {
                         const int coinAmount = 64;
 
-                        playerInventory.TakeItemStacksInPrimary(Coin.Item, Coin.DefaultCount * coinAmount);
+                        taked = playerInventory.TakeItemStacksInPrimary(Coin.Item, Coin.DefaultCount * coinAmount);
+
+                        if (taked != null && taked.Length > 0)
+                        {
+                            success = true;
+                        }
                     }
                     break;
 

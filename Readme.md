@@ -103,4 +103,8 @@ If disposable objects were used as members of class and struct, they must be dis
 ## Notes
 ### TODO
 * Buffer 의 expandData 에서 capNew == buf.cap 일시 함수가 끝나야됨.
+* PlayerList.Connect 이 실행되기 전에 PlayerList.Add 되는 문제
+
+### Done 
+
 * DetermineToDespawnPlayerOnDisconnect 가 동적으로 적용되나 테스트해야됨.
