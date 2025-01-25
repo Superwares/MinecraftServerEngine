@@ -367,6 +367,7 @@ namespace MinecraftServerEngine
 
 
             compound.Add("HideFlags", new NBTTagInt(0xFF));
+            compound.Add("Unbreakable", new NBTTagInt(0x01));
             compound.Add("display", displayCompound);
 
             compound.WriteAsRoot(s);
