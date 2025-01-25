@@ -288,7 +288,7 @@ namespace MinecraftServerEngine
             // TODO: Boss Bar
         }
 
-        public void PlaySound(string name, int category, Vector p, float volume, float pitch)
+        public void PlaySound(string name, int category, Vector p, double volume, double pitch)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 

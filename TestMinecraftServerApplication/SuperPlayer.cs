@@ -186,9 +186,9 @@ namespace TestMinecraftServerApplication
                     livingEntity.Position.Y + livingEntity.GetEyeHeight(),
                     livingEntity.Position.Z);
 
-                world.PlaySound("entity.player.attack.strong", 7, v, 1.0F, 2.0F);
+                world.PlaySound("entity.generic.explode", 7, v, 0.2, 0.5);
 
-                livingEntity.EmitParticles(Particle.Explode, 1.0, 1);
+                livingEntity.EmitParticles(Particle.LargeExplode, 1.0, 1);
             }
         }
 
