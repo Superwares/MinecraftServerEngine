@@ -11,6 +11,11 @@ namespace MinecraftServerEngine
 
         public ItemInterfaceInventory(int totalLineCount) : base(totalLineCount)
         {
+            if (totalLineCount < 0 || totalLineCount > MaxLineCount)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(totalLineCount));
+            }
+
             System.Diagnostics.Debug.Assert(totalLineCount > 0);
             System.Diagnostics.Debug.Assert(totalLineCount <= MaxLineCount);
 

@@ -10,7 +10,8 @@ namespace MinecraftServerEngine
 
     public abstract class SharedInventory : Inventory
     {
-        internal const int MaxLineCount = 6;
+        public const int MaxLineCount = 6;
+
 
         public abstract string Title { get; }
 

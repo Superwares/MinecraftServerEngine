@@ -13,9 +13,18 @@ namespace TestMinecraftServerApplication
     {
         public override string Title => "Shop";
 
-        public ShopInventory() : base(4)
+        public ShopInventory() : base(MaxLineCount)
         {
-            ResetSlot(0, BalloonBasher.Create([
+            ResetSlot(0, Coin.Create([
+                $"",
+                $"테스트용 무료 코인입니다.",
+                $"",
+                $"왼클릭          지급",
+                $"우클릭          차감",
+                ]));
+
+
+            ResetSlot(9 + 1, BalloonBasher.Create([
                 $"",
                 $"가볍지만 강력한 한 방으로 적을 날려버리세요!",
                 $"",
@@ -23,13 +32,6 @@ namespace TestMinecraftServerApplication
                 $"우클릭(판매)          {BalloonBasher.SellPrice} 코인",
                 ]));
 
-            ResetSlot(35, Coin.Create([
-                $"",
-                $"테스트용 무료 코인입니다.",
-                $"",
-                $"왼클릭          지급",
-                $"우클릭          차감",
-                ]));
 
         }
 
@@ -49,6 +51,15 @@ namespace TestMinecraftServerApplication
             switch (i)
             {
                 case 0:
+                    {
+                        int coinAmount = Coin.Type.GetMaxStackCount();
+
+                        giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * coinAmount);
+                        success = playerInventory.GiveItem(giveItem);
+
+                    }
+                    break;
+                case 9 + 1:
                     {
                         const int coinAmount = BalloonBasher.PurchasePrice;
 
@@ -77,15 +88,7 @@ namespace TestMinecraftServerApplication
 
                     }
                     break;
-                case 35:
-                    {
-                        int coinAmount = Coin.Type.GetMaxStackCount();
 
-                        giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * coinAmount);
-                        success = playerInventory.GiveItem(giveItem);
-
-                    }
-                    break;
 
             }
 
@@ -107,6 +110,18 @@ namespace TestMinecraftServerApplication
             switch (i)
             {
                 case 0:
+                    {
+                        int coinAmount = Coin.Type.GetMaxStackCount();
+
+                        taked = playerInventory.TakeItemStacksInPrimary(Coin.Item, Coin.DefaultCount * coinAmount);
+
+                        if (taked != null && taked.Length > 0)
+                        {
+                            success = true;
+                        }
+                    }
+                    break;
+                case 9 + 1:
                     {
                         const int coinAmount = BalloonBasher.SellPrice;
 
@@ -137,18 +152,7 @@ namespace TestMinecraftServerApplication
 
                     }
                     break;
-                case 35:
-                    {
-                        int coinAmount = Coin.Type.GetMaxStackCount();
 
-                        taked = playerInventory.TakeItemStacksInPrimary(Coin.Item, Coin.DefaultCount * coinAmount);
-
-                        if (taked != null && taked.Length > 0)
-                        {
-                            success = true;
-                        }
-                    }
-                    break;
 
             }
 

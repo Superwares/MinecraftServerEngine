@@ -7,7 +7,8 @@ namespace MinecraftServerEngine
 
     public abstract class Inventory : System.IDisposable
     {
-        internal const int SlotCountPerLine = 9;
+        public const int SlotCountPerLine = 9;
+
 
 
         private bool _disposed = false;
@@ -96,7 +97,7 @@ namespace MinecraftServerEngine
 
         }
 
- 
+
 
     }
 
