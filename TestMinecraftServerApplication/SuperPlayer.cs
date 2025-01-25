@@ -7,7 +7,7 @@ using MinecraftServerEngine.PhysicsEngine;
 
 namespace TestMinecraftServerApplication
 {
-    public sealed class Guest : AbstractPlayer
+    public sealed class SuperPlayer : AbstractPlayer
     {
         private bool _disposed = false;
 
@@ -15,7 +15,7 @@ namespace TestMinecraftServerApplication
         private static ShopInventory shopInventory = new();
 
 
-        public Guest(
+        public SuperPlayer(
             UserId userId, string username,
             Vector p, Angles look)
             : base(userId, username, p, look, Gamemode.Adventure)
@@ -26,11 +26,17 @@ namespace TestMinecraftServerApplication
             //ApplyBlockAppearance(Block.Dirt);
         }
 
-        ~Guest()
+        ~SuperPlayer()
         {
             System.Diagnostics.Debug.Assert(false);
 
             Dispose(false);
+        }
+
+        private double GenerateRandomValueBetween(double min, double max)
+        {
+            System.Random random = new System.Random();
+            return min + (random.NextDouble() * (max - min));
         }
 
         public override void StartRoutine(PhysicsWorld world)
@@ -39,7 +45,7 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            
+
 
         }
 
@@ -53,7 +59,7 @@ namespace TestMinecraftServerApplication
             {
                 //ApplyBlockAppearance(Block.Dirt);
                 //OpenInventory(chestInventory);
-                OpenInventory(shopInventory); 
+                OpenInventory(shopInventory);
 
                 //SetExperience(0.6F, 123456789);
 
@@ -81,37 +87,62 @@ namespace TestMinecraftServerApplication
 
         protected override void OnItemBreak(World world, ItemStack stack)
         {
-
             world.PlaySound("entity.item.break", 7, Position, 1.0F, 2.0F);
+        }
+
+        private void HandleAttack(
+            World world,
+            float damage,
+            float directionScale, float knockbackScale)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(damage >= 0.0F);
+
+            System.Diagnostics.Debug.Assert(directionScale > 0.0F);
+            System.Diagnostics.Debug.Assert(knockbackScale > 0.0F);
+
+            if (damage == 0.0F)
+            {
+                return;
+            }
+
+            Vector o = GetEyeOrigin();
+            Vector d = Look.GetUnitVector();
+            Vector d_prime = d * directionScale;
+
+            //MyConsole.Debug($"Eye origin: {eyeOrigin}, Scaled direction vector: {scaled_d}");
+
+            PhysicsObject obj = world.SearchClosestObject(o, d_prime, this);
+
+            if (obj != null && obj is LivingEntity livingEntity)
+            {
+                livingEntity.Damage(damage);
+                livingEntity.ApplyForce(d * knockbackScale);
+
+                Vector v = new(
+                    livingEntity.Position.X,
+                    livingEntity.Position.Y + livingEntity.GetEyeHeight(),
+                    livingEntity.Position.Z);
+
+                world.PlaySound("entity.player.attack.strong", 7, v, 1.0F, 2.0F);
+            }
         }
 
         protected override void OnAttack(World world)
         {
             System.Diagnostics.Debug.Assert(world != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
-            MyConsole.Printl("Attack!");
+            float randomDamage = (float)GenerateRandomValueBetween(0.7, 1.0);
 
-            //Damage(5.0F);
-
-            //double eyeHeight = GetEyeHeight();
-
-            Vector eyeOrigin = GetEyeOrigin();
-            Vector d = Look.GetUnitVector();
-            Vector scaled_d = d * 3;
-
-            //MyConsole.Debug($"Eye origin: {eyeOrigin}, Scaled direction vector: {scaled_d}");
-
-            PhysicsObject obj = world.SearchClosestObject(eyeOrigin, scaled_d, this);
-
-            if (obj != null && obj is LivingEntity entity)
-            {
-                entity.Damage(1.0F);
-                entity.ApplyForce(d);
-            }
-
-            world.PlaySound("entity.player.attack.strong", 7, Position, 1.0F, 2.0F);
+            HandleAttack(
+                world,
+                randomDamage,
+                3, 0.3F);
         }
 
         protected override void OnAttack(World world, ItemStack stack)

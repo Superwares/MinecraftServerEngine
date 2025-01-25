@@ -104,6 +104,7 @@ If disposable objects were used as members of class and struct, they must be dis
 ### TODO
 * Buffer 의 expandData 에서 capNew == buf.cap 일시 함수가 끝나야됨.
 * PlayerList.Connect 이 실행되기 전에 PlayerList.Add 되는 문제
+* Abstract Player 의 Guest 와 SuperPlayer 두 객체를 넘어갈 수 있도록 구현
 
 ### Done 
 

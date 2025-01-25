@@ -62,7 +62,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(userId != UserId.Null);
             System.Diagnostics.Debug.Assert(username != null && string.IsNullOrEmpty(username) == false);
 
-            return new Guest(userId, username, PosSpawning, LookSpawning);
+            return new SuperPlayer(userId, username, PosSpawning, LookSpawning);
         }
 
         protected override void Dispose(bool disposing)
