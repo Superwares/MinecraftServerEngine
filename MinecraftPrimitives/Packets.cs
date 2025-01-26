@@ -1,6 +1,4 @@
-﻿using Containers;
-using Sync;
-
+﻿
 namespace MinecraftPrimitives
 {
 
@@ -261,6 +259,7 @@ namespace MinecraftPrimitives
         public const int EntityEquipmentPacketId = 0x3F;
         public const int SetExperiencePacketId = 0x40;
         public const int UpdateHealthPacketId = 0x41;
+        public const int TitlePacketId = 0x48;
         public const int EntityTeleportPacketId = 0x4C;
         public const int EntityPropertiesPacketId = 0x4E;
         public const int EntityEffectPacketId = 0x4F;
@@ -2274,6 +2273,192 @@ namespace MinecraftPrimitives
         }
     }
 
+    public sealed class SetTitlePacket : ClientboundPlayingPacket
+    {
+        public readonly string Data;
+
+        public static SetTitlePacket Read(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public SetTitlePacket(string data) : base(TitlePacketId)
+        {
+            Data = data;
+        }
+
+        protected override void WriteData(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteInt(0, true);
+            buffer.WriteString(Data);
+        }
+    }
+
+    public sealed class SetSubtitlePacket : ClientboundPlayingPacket
+    {
+        public readonly string Data;
+
+        public static SetSubtitlePacket Read(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public SetSubtitlePacket(string data) : base(TitlePacketId)
+        {
+            Data = data;
+        }
+
+        protected override void WriteData(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteInt(1, true);
+            buffer.WriteString(Data);
+        }
+    }
+
+    public sealed class SetActionBarPacket : ClientboundPlayingPacket
+    {
+        public readonly string Data;
+
+        public static SetActionBarPacket Read(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public SetActionBarPacket(string data) : base(TitlePacketId)
+        {
+            Data = data;
+        }
+
+        protected override void WriteData(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteInt(2, true);
+            buffer.WriteString(Data);
+        }
+    }
+
+    public sealed class SetTimesAndDisplayTitlePacket : ClientboundPlayingPacket
+    {
+        public readonly int FadeIn;
+        public readonly int Stay;
+        public readonly int FadeOut;
+
+        public static SetTimesAndDisplayTitlePacket Read(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public SetTimesAndDisplayTitlePacket(int fadeIn, int stay, int fadeOut) : base(TitlePacketId)
+        {
+            FadeIn = fadeIn;
+            Stay = stay;
+            FadeOut = fadeOut;
+        }
+
+        protected override void WriteData(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteInt(3, true);
+            buffer.WriteInt(FadeIn);
+            buffer.WriteInt(Stay);
+            buffer.WriteInt(FadeOut);
+        }
+    }
+
+    public sealed class HideTitlePacket : ClientboundPlayingPacket
+    {
+
+        public static HideTitlePacket Read(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public HideTitlePacket() : base(TitlePacketId)
+        {
+        }
+
+        protected override void WriteData(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteInt(4, true);
+        }
+    }
+
+    public sealed class ResetTitlePacket : ClientboundPlayingPacket
+    {
+
+        public static ResetTitlePacket Read(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public ResetTitlePacket() : base(TitlePacketId)
+        {
+        }
+
+        protected override void WriteData(MinecraftDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteInt(5, true);
+        }
+    }
+
     public sealed class EntityTeleportPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
@@ -2317,7 +2502,7 @@ namespace MinecraftPrimitives
         }
 
     }
-    
+
     public sealed class EntityPropertiesPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
@@ -2340,7 +2525,7 @@ namespace MinecraftPrimitives
             EntityId = entityId;
             Properties = properties;
         }
-        
+
         protected override void WriteData(MinecraftDataStream buffer)
         {
             if (buffer == null)
