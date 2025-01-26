@@ -259,6 +259,13 @@ namespace MinecraftServerEngine
                 (float)volume, (float)pitch));
         }
 
+        internal void DisplayTitle(string data)
+        {
+            System.Diagnostics.Debug.Assert(data != null);
+            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(data) == false);
+
+            Render(new SetTitlePacket(data));
+        }
     }
 
     internal abstract class ObjectRenderer : Renderer

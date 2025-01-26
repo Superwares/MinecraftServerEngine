@@ -7,6 +7,7 @@ using MinecraftPrimitives;
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
+    using System.Xml.Linq;
 
     public abstract class World : PhysicsWorld
     {
@@ -290,12 +291,52 @@ namespace MinecraftServerEngine
 
         public void PlaySound(string name, int category, Vector p, double volume, double pitch)
         {
-            System.Diagnostics.Debug.Assert(_disposed == false);
+            if (volume < 0.0 || volume > 1.0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(volume));
+            }
+            if (pitch < 0.5 || pitch > 2.0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(pitch));
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
             {
                 renderer.PlaySound(name, category, p, volume, pitch);
             }
+        }
+
+        public void DisplayTitle(string text, TextColor color, bool bold)
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            if (text == null || string.IsNullOrEmpty(text) == true)
+            {
+                return;
+            }
+        
+            var title = new
+            {
+                text = text,
+                color = color.GetName(),
+                bold = bold == true ? "true" : "false",
+            };
+
+            string data = System.Text.Json.JsonSerializer.Serialize(title);
+
+            foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
+            {
+                renderer.DisplayTitle(data);
+            }
+
         }
 
         internal void Disconnect(UserId id)
