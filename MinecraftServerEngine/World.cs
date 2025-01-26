@@ -311,30 +311,51 @@ namespace MinecraftServerEngine
             }
         }
 
-        public void DisplayTitle(string text, TextColor color, bool bold)
+        public void DisplayTitle(
+            Time fadeIn, Time stay, Time fadeOut,
+            params TextComponent[] components)
         {
             if (_disposed == true)
             {
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            if (text == null || string.IsNullOrEmpty(text) == true)
+            if (components.Length == 0)
             {
                 return;
             }
-        
-            var title = new
+
+            var extra = new object[components.Length];
+
+            for (int i = 0; i < components.Length; ++i)
             {
-                text = text,
-                color = color.GetName(),
-                bold = bold == true ? "true" : "false",
+                TextComponent component = components[i];
+
+                extra[i] = new
+                {
+                    text = component.Text,
+                    color = component.Color.GetName(),
+                };
+            }
+
+            var chat = new
+            {
+                text = "",
+                extra = extra,
             };
 
-            string data = System.Text.Json.JsonSerializer.Serialize(title);
+            string data = System.Text.Json.JsonSerializer.Serialize(chat);
+
+            // TODO: 1tick = 50ms, make this variable to single constant.
+            const int microsecondsPerTick = 50 * 1000;
 
             foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
             {
-                renderer.DisplayTitle(data);
+                renderer.DisplayTitle(
+                    (int)(fadeIn.Amount / microsecondsPerTick),
+                    (int)(stay.Amount / microsecondsPerTick),
+                    (int)(fadeOut.Amount / microsecondsPerTick),
+                    data);
             }
 
         }

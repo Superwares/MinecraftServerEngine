@@ -63,9 +63,9 @@ namespace TestMinecraftServerApplication
 
             if (f == true)
             {
-                ApplyBlockAppearance(Block.Dirt);
+                //ApplyBlockAppearance(Block.Dirt);
                 //OpenInventory(chestInventory);
-                OpenInventory(ShopInventory);
+                //OpenInventory(ShopInventory);
 
                 //SetExperience(0.6F, 123456789);
 
@@ -73,6 +73,10 @@ namespace TestMinecraftServerApplication
                 //EmitParticles(Particle.Largeexplode, 1.0F, 1);
 
                 //AddEffect(1, 1, 1800, 2);
+
+                world.DisplayTitle(
+                    Time.FromSeconds(0), Time.FromSeconds(1), Time.FromSeconds(0),
+                    new TextComponent("good", TextColor.Blue));
             }
             else
             {
@@ -224,7 +228,7 @@ namespace TestMinecraftServerApplication
                     break;
             }
 
-            
+
         }
 
         protected override void OnUseItem(World world, ItemStack stack)

@@ -259,11 +259,16 @@ namespace MinecraftServerEngine
                 (float)volume, (float)pitch));
         }
 
-        internal void DisplayTitle(string data)
+        internal void DisplayTitle(int fadeIn, int stay, int fadeOut, string data)
         {
+            System.Diagnostics.Debug.Assert(fadeIn >= 0);
+            System.Diagnostics.Debug.Assert(stay >= 0);
+            System.Diagnostics.Debug.Assert(fadeOut >= 0);
+
             System.Diagnostics.Debug.Assert(data != null);
             System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(data) == false);
 
+            Render(new SetTimesAndDisplayTitlePacket(fadeIn, stay, fadeOut));
             Render(new SetTitlePacket(data));
         }
     }

@@ -288,7 +288,9 @@ namespace MinecraftServerEngine
             Time total, interval, accumulated, start, end, elapsed;
 
             total = Time.Zero;
-            interval = accumulated = Time.FromMilliseconds(50);
+
+            // TODO: 1tick = 50ms, make this variable to single constant.
+            interval = accumulated = Time.FromMilliseconds(50); 
             start = Time.Now();
 
             while (_running)

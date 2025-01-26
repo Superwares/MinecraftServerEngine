@@ -52,7 +52,7 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-
+           
         }
 
         protected override AbstractPlayer CreatePlayer(UserId userId, string username)
