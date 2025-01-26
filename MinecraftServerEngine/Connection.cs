@@ -1106,7 +1106,7 @@ namespace MinecraftServerEngine
                                  mainHandItemStackHash != null &&
                                  mainHandItemStack.CheckHash(mainHandItemStackHash) == false)
                             {
-                                MyConsole.Debug("Different status of prev and current item!");
+                                //MyConsole.Debug("Different status of prev and current item!");
                                 Window.UpdateMainHandSlot(playerInventory);
 
                                 player.UpdateEntityEquipmentsData(playerInventory.GetEquipmentsData());

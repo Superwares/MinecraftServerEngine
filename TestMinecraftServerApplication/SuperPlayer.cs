@@ -87,7 +87,7 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            MyConsole.Printl("Sprint!");
+            //MyConsole.Printl("Sprint!");
             //Switch(Gamemode.Adventure);
         }
 
