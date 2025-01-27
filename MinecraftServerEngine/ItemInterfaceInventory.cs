@@ -33,24 +33,6 @@ namespace MinecraftServerEngine
             Dispose(false);
         }
 
-        public void ResetSlot(int index, ItemStack itemStack)
-        {
-            if (index < 0 || index >= GetTotalSlotCount())
-            {
-                throw new System.ArgumentOutOfRangeException(nameof(index));
-            }
-
-            if (itemStack == null)
-            {
-                Slots[index].Reset(null);
-            }
-            else
-            {
-                Slots[index].Reset(itemStack);
-            }
-
-
-        }
 
         protected virtual void OnLeftClickSharedItem(
             UserId userId, AbstractPlayer player,
@@ -79,7 +61,7 @@ namespace MinecraftServerEngine
 
             //base.LeftClick(userId, playerInventory, i, cursor);
 
-            Locker.Hold();
+            HoldLocker();
 
             try
             {
@@ -101,9 +83,7 @@ namespace MinecraftServerEngine
             }
             finally
             {
-                UpdateRendering(userId, playerInventory);
-
-                Locker.Release();
+                ReleaseLocker(userId);
             }
 
         }
@@ -123,7 +103,7 @@ namespace MinecraftServerEngine
 
             //base.RightClick(userId, playerInventory, i, cursor);
 
-            Locker.Hold();
+            HoldLocker();
 
             try
             {
@@ -145,9 +125,7 @@ namespace MinecraftServerEngine
             }
             finally
             {
-                UpdateRendering(userId, playerInventory);
-
-                Locker.Release();
+                ReleaseLocker(userId);
             }
 
         }
@@ -155,35 +133,11 @@ namespace MinecraftServerEngine
         internal override void QuickMove(UserId userId, PlayerInventory playerInventory, int i)
         {
             //base.QuickMove(userId, playerInventory, i);
-
-            Locker.Hold();
-
-            try
-            {
-            }
-            finally
-            {
-                UpdateRendering(userId, playerInventory);
-
-                Locker.Release();
-            }
         }
 
         internal override void SwapItems(UserId userId, PlayerInventory playerInventory, int i, int j)
         {
             //base.SwapItems(userId, playerInventory, i, j);
-
-            Locker.Hold();
-
-            try
-            {
-            }
-            finally
-            {
-                UpdateRendering(userId, playerInventory);
-
-                Locker.Release();
-            }
         }
 
         protected override void Dispose(bool disposing)

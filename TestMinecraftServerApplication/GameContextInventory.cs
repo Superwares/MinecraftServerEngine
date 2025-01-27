@@ -14,7 +14,7 @@ namespace TestMinecraftServerApplication
 
         public GameContextInventory() : base(MaxLineCount)
         {
-            ResetSlot(0, new ItemStack(ItemType.PlayerSkull, "welcomehyunseo", 1));
+            SetSlot(0, new ItemStack(ItemType.PlayerSkull, "welcomehyunseo", 1));
 
         }
 

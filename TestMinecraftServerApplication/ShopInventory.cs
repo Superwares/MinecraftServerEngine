@@ -15,7 +15,7 @@ namespace TestMinecraftServerApplication
 
         public ShopInventory() : base(MaxLineCount)
         {
-            ResetSlot(0, Coin.Create([
+            SetSlot(0, Coin.Create([
                 $"",
                 $"테스트용 무료 코인입니다.",
                 $"",
@@ -23,7 +23,7 @@ namespace TestMinecraftServerApplication
                 $"우클릭          차감",
                 ]));
 
-            ResetSlot(9 + 1, BalloonBasher.Create([
+            SetSlot(9 + 1, BalloonBasher.Create([
                 $"",
                 $"가볍지만 강력한 한 방으로 적을 날려버리세요!",
                 $"",

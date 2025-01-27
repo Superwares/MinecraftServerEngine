@@ -19,7 +19,7 @@ namespace TestMinecraftServerApplication
         //public readonly int RoundCount;
 
         private bool _started = false;
-        public bool Started => _started;
+        public bool IsStarted => _started;
         //private Time _startTime = Time.Zero;
 
         //public Time StartTime
