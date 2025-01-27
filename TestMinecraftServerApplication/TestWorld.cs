@@ -9,6 +9,8 @@ namespace TestMinecraftServerApplication
 {
     public sealed class TestWorld : World
     {
+        public readonly static GameContextInventory GameContextInventory = new();
+
         private static readonly Vector PosSpawning = new(0.0D, 3.0D, 0.0D);
         private static readonly Angles LookSpawning = new(0.0F, 0.0F);
 

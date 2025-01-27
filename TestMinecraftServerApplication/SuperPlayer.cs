@@ -65,7 +65,8 @@ namespace TestMinecraftServerApplication
             {
                 //ApplyBlockAppearance(Block.Dirt);
                 //OpenInventory(chestInventory);
-                OpenInventory(ShopInventory);
+                //OpenInventory(ShopInventory);
+                OpenInventory(TestWorld.GameContextInventory);
 
                 //SetExperience(0.6F, 123456789);
 
