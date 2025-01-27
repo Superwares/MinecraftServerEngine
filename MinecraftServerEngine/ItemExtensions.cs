@@ -36,7 +36,6 @@ namespace MinecraftServerEngine
         // TODO: Replace as IReadOnlyTable
         // TODO: 프로그램이 종료되었을 때 자원 해제하기. static destructor?
         private readonly static Table<ItemType, ItemContext> _ITEM_ENUM_TO_CTX_MAP = new();
-        private readonly static Table<int, ItemType> _ITEM_ID_TO_ENUM_MAP = new();
 
         static ItemExtensions()
         {
@@ -216,12 +215,6 @@ namespace MinecraftServerEngine
                 1, 64,
                 3));
 
-            foreach ((ItemType item, ItemContext ctx) in _ITEM_ENUM_TO_CTX_MAP.GetElements())
-            {
-                _ITEM_ID_TO_ENUM_MAP.Insert(ctx.Id, item);
-            }
-
-            System.Diagnostics.Debug.Assert(_ITEM_ENUM_TO_CTX_MAP.Count == _ITEM_ID_TO_ENUM_MAP.Count);
         }
 
         public static int GetMinStackCount(this ItemType item)
