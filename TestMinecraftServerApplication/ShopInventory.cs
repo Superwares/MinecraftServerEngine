@@ -3,12 +3,12 @@
 using Common;
 
 using MinecraftPrimitives;
-
 using MinecraftServerEngine;
-using TestMinecraftServerApplication.Items;
 
 namespace TestMinecraftServerApplication
 {
+    using Items;
+
     public sealed class ShopInventory : ItemInterfaceInventory
     {
         public override string Title => "Shop";
@@ -22,7 +22,6 @@ namespace TestMinecraftServerApplication
                 $"왼클릭          지급",
                 $"우클릭          차감",
                 ]));
-
 
             ResetSlot(9 + 1, BalloonBasher.Create([
                 $"",
@@ -159,5 +158,7 @@ namespace TestMinecraftServerApplication
                 player.PlaySound("entity.item.pickup", 7, 1.0F, 2.0F);
             }
         }
+
+
     }
 }

@@ -43,7 +43,8 @@ namespace MinecraftServerEngine
             if (itemStack == null)
             {
                 Slots[index].Reset(null);
-            } else
+            }
+            else
             {
                 Slots[index].Reset(itemStack);
             }
@@ -51,15 +52,17 @@ namespace MinecraftServerEngine
 
         }
 
-        protected abstract void OnLeftClickSharedItem(
+        protected virtual void OnLeftClickSharedItem(
             UserId userId, AbstractPlayer player,
             PlayerInventory playerInventory,
-            int i, ItemStack itemStack);
+            int i, ItemStack itemStack)
+        { }
 
-        protected abstract void OnRightClickSharedItem(
+        protected virtual void OnRightClickSharedItem(
             UserId userId, AbstractPlayer player,
             PlayerInventory playerInventory,
-            int i, ItemStack itemStack);
+            int i, ItemStack itemStack)
+        { }
 
         internal override void LeftClick(
             UserId userId, AbstractPlayer player, PlayerInventory playerInventory,
