@@ -123,22 +123,22 @@ namespace MinecraftServerEngine
 
         }
 
-        internal void Respawn()
-        {
-            System.Diagnostics.Debug.Assert(_disposed == false);
+        //internal void Respawn()
+        //{
+        //    System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(Gamemode != Gamemode.Spectator);
+        //    System.Diagnostics.Debug.Assert(Gamemode != Gamemode.Spectator);
 
-            if (Connected == true)
-            {
-                Conn.UpdateHealth(MaxHealth);
-            }
+        //    if (Connected == true)
+        //    {
+        //        Conn.UpdateHealth(MaxHealth);
+        //    }
 
-            _nextGamemode = Gamemode.Spectator;
-            _health = MaxHealth;
+        //    _nextGamemode = Gamemode.Spectator;
+        //    _health = MaxHealth;
 
-            OnRespawn();
-        }
+        //    OnRespawn();
+        //}
 
         //internal override void _Attack(World world, ItemStack stack)
         //{
@@ -166,7 +166,7 @@ namespace MinecraftServerEngine
 
         //}
 
-        public override void Damage(double amount)
+        public override (bool, double) Damage(double amount)
         {
             if (amount < 0.0F)
             {
@@ -175,27 +175,23 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(amount >= 0.0D);
 
-            if (amount == 0.0D)
-            {
-                return;
-            }
-
             LockerHealth.Hold();
 
             try
             {
-
                 if (Gamemode == Gamemode.Spectator)
                 {
-                    return;
+                    return (false, _health);
                 }
 
-                base.Damage(amount);
+                (bool damaged, double health) = base.Damage(amount);
 
-                if (Connected && Health > 0.0F)
+                if (Connected == true)
                 {
                     Conn.UpdateHealth(_health);
                 }
+
+                return (damaged, health);
             }
             finally
             {

@@ -48,7 +48,7 @@ namespace MinecraftServerEngine
             return new Vector(x, y, z);
         }
 
-        protected internal override bool IsDead()
+        protected internal override bool HandleDeath()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -136,7 +136,7 @@ namespace MinecraftServerEngine
             OnItemBreak(world, stack);
         }
 
-        public virtual void Damage(double amount)
+        public virtual (bool, double) Damage(double amount)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -148,6 +148,18 @@ namespace MinecraftServerEngine
 
             try
             {
+
+                if (amount == 0.0D)
+                {
+                    return (false, _health);
+                }
+
+                System.Diagnostics.Debug.Assert(_health >= 0.0);
+                if (_health == 0.0)
+                {
+                    return (false, 0.0);
+                }
+
                 _health -= amount;
 
                 SetEntityStatus(2);
@@ -163,8 +175,10 @@ namespace MinecraftServerEngine
 
                     //UpdateEntityEquipmentsData((data, data));
                     //SetEntityStatus(3);
+
                 }
 
+                return (true, _health);
             }
             finally
             {

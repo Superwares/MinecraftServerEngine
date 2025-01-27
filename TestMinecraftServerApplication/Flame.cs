@@ -29,7 +29,7 @@ namespace TestMinecraftServerApplication
             Dispose(false);
         }
 
-        protected override bool IsDead()
+        protected override bool HandleDeath()
         {
             return (ticks >= (20 * 1));
         }

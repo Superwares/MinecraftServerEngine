@@ -427,12 +427,12 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(obj != null);
 
-                if (obj.IsDead())
+                if (obj.HandleDeath())
                 {
-                    if (obj is AbstractPlayer player)
-                    {
-                        player.Respawn();
-                    }
+                    //if (obj is AbstractPlayer player)
+                    //{
+                    //    player.Respawn();
+                    //}
 
                     obj.OnDeath(this);
 

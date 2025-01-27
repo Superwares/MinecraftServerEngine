@@ -133,7 +133,14 @@ namespace TestMinecraftServerApplication
 
             if (obj != null && obj is LivingEntity livingEntity)
             {
-                livingEntity.Damage(damage);
+                (bool damaged, double health) = livingEntity.Damage(damage);
+
+                System.Diagnostics.Debug.Assert(health >= 0.0);
+                if (damaged == true && health == 0.0)
+                {
+
+                }
+
                 livingEntity.ApplyForce(d * knockbackScale);
 
                 Vector v = new(
@@ -182,7 +189,14 @@ namespace TestMinecraftServerApplication
 
             if (obj != null && obj is LivingEntity livingEntity)
             {
-                livingEntity.Damage(damage);
+                (bool damaged, double health) = livingEntity.Damage(damage);
+
+                System.Diagnostics.Debug.Assert(health >= 0.0);
+                if (damaged == true && health == 0.0)
+                {
+
+                }
+
                 livingEntity.ApplyForce(k * knockbackScale);
 
                 world.PlaySound("entity.generic.explode", 7, livingEntity.Position, 0.2, 0.5);

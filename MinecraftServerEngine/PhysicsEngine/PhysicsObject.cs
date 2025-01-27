@@ -120,7 +120,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             Dispose(false);
         }
 
-        protected internal virtual bool IsDead()
+        protected internal virtual bool HandleDeath()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
