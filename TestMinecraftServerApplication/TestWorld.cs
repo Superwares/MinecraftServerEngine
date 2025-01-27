@@ -7,19 +7,20 @@ using MinecraftServerEngine.PhysicsEngine;
 
 namespace TestMinecraftServerApplication
 {
-    internal sealed class Lobby : World
+    public sealed class TestWorld : World
     {
         private static readonly Vector PosSpawning = new(0.0D, 3.0D, 0.0D);
         private static readonly Angles LookSpawning = new(0.0F, 0.0F);
 
         private bool _disposed = false;
 
-        private static Time _INTERVAL = Time.FromSeconds(10);
-        private Time _start = Time.Now();
 
-        public Lobby() : base() { }
+        public readonly GameContext Context = new();
 
-        ~Lobby()
+
+        public TestWorld() : base() { }
+
+        ~TestWorld()
         {
             System.Diagnostics.Debug.Assert(false);
 
@@ -28,29 +29,22 @@ namespace TestMinecraftServerApplication
 
         public override bool CanJoinWorld()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             return true;
         }
 
         protected override bool DetermineToDespawnPlayerOnDisconnect()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
-            Time end = Time.Now();
-
-            if (end - _start >= _INTERVAL)
-            {
-                _start = end;
-                return true;
-            }
-
-            return false;
+            System.Diagnostics.Debug.Assert(Context != null);
+            return Context.IsStarted == false;
         }
 
         protected override void StartRoutine()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
            
         }

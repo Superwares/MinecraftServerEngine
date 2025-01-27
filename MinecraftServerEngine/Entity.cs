@@ -61,8 +61,8 @@ namespace MinecraftServerEngine
         private bool _disposed = false;
 
 
-        internal readonly int Id;
-        internal readonly System.Guid UniqueId;
+        public readonly int Id;
+        public readonly System.Guid UniqueId;
 
         private bool _hasMovement = false;
         private protected bool _noRendering = false;
