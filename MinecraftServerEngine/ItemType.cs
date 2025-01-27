@@ -19,5 +19,7 @@ namespace MinecraftServerEngine
         /*Snowball,*/  // This item is handled by clientside.
 
         GoldNugget,
+
+        PlayerSkull,
     }
 }

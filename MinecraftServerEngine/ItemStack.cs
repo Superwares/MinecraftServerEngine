@@ -14,7 +14,6 @@ namespace MinecraftServerEngine
         public ItemStack(
             ItemType type, string name, int count,
             int maxDurability, int currentDurability,
-            //string description, params (string, string)[] attributes,
             params string[] lore)
             : base(type, name, maxDurability, currentDurability, lore)
         {
@@ -25,7 +24,6 @@ namespace MinecraftServerEngine
 
         public ItemStack(
             ItemType type, string name, int count,
-            //string description, params (string, string)[] attributes,
             params string[] lore)
             : this(type, name, count, 0, 0, lore)
         {
@@ -35,7 +33,6 @@ namespace MinecraftServerEngine
         public ItemStack(
             ItemType type, string name,
             int maxDurability, int currentDurability,
-            //string description, params (string, string)[] attributes,
             params string[] lore)
             : this(type, name, type.GetMaxStackCount(), maxDurability, currentDurability, lore)
         {
@@ -44,7 +41,6 @@ namespace MinecraftServerEngine
 
         public ItemStack(
             ItemType type, string name,
-            //string description, params (string, string)[] attributes,
             params string[] lore)
             : this(type, name, type.GetMaxStackCount(), 0, 0, lore)
         {
@@ -365,6 +361,10 @@ namespace MinecraftServerEngine
             //    displayCompound.Add("Lore", lore);
             //}
 
+            if (Type == ItemType.PlayerSkull)
+            {
+                compound.Add("SkullOwner", new NBTTagString(Name));
+            }
 
             compound.Add("HideFlags", new NBTTagInt(0xFF));
             compound.Add("Unbreakable", new NBTTagInt(0x01));

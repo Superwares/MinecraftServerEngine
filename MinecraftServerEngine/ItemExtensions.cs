@@ -27,6 +27,8 @@ namespace MinecraftServerEngine
 
             _ITEM_ENUM_TO_ID_MAP.Insert(ItemType.GoldNugget, 371);
 
+            _ITEM_ENUM_TO_ID_MAP.Insert(ItemType.PlayerSkull, 397);
+
             foreach ((ItemType item, int id) in _ITEM_ENUM_TO_ID_MAP.GetElements())
             {
                 _ITEM_ID_TO_ENUM_MAP.Insert(id, item);
@@ -68,6 +70,9 @@ namespace MinecraftServerEngine
                     return 16;*/
 
                 case ItemType.GoldNugget:
+                    return 64;
+
+                case ItemType.PlayerSkull:
                     return 64;
             }
         }
