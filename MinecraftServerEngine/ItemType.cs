@@ -38,6 +38,22 @@ namespace MinecraftServerEngine
         RedTerracotta,       // 159
         BlackTerracotta,     // 159
 
+        WhiteStainedGlassPane,     // 159
+        OrangeStainedGlassPane,    // 159
+        MagentaStainedGlassPane,   // 159
+        LightBlueStainedGlassPane, // 159
+        YellowStainedGlassPane,    // 159
+        LimeStainedGlassPane,      // 159
+        PinkStainedGlassPane,      // 159
+        GrayStainedGlassPane,      // 159
+        LightGrayStainedGlassPane, // 159
+        CyanStainedGlassPane,      // 159
+        PurpleStainedGlassPane,    // 159
+        BlueStainedGlassPane,      // 159
+        BrownStainedGlassPane,     // 159
+        GreenStainedGlassPane,     // 159
+        RedStainedGlassPane,       // 159
+        BlackStainedGlassPane,     // 159
 
         IronSword,      // 267
         WoodenSword,    // 268

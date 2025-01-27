@@ -1,5 +1,9 @@
 ﻿
+using Common;
 using Containers;
+using System.ComponentModel;
+using System.Net.NetworkInformation;
+using System;
 
 namespace MinecraftServerEngine
 {
@@ -167,7 +171,72 @@ namespace MinecraftServerEngine
             _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.BlackTerracotta, new ItemContext(
                 ItemType.BlackTerracotta, 159, "stained_hardened_clay",
                 1, 64,
-                15));
+            15));
+
+            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.WhiteStainedGlassPane, new ItemContext(
+                   ItemType.WhiteStainedGlassPane, 160, "stained_glass_pane",
+                   1, 64,
+                   0));
+            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.OrangeStainedGlassPane, new ItemContext(
+                   ItemType.OrangeStainedGlassPane, 160, "stained_glass_pane",
+                   1, 64,
+                   1));
+            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.MagentaStainedGlassPane, new ItemContext(
+                   ItemType.MagentaStainedGlassPane, 160, "stained_glass_pane",
+                   1, 64,
+                   2));
+            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.LightBlueStainedGlassPane, new ItemContext(
+                   ItemType.LightBlueStainedGlassPane, 160, "stained_glass_pane",
+                   1, 64,
+                   3));
+            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.YellowStainedGlassPane, new ItemContext(
+                   ItemType.YellowStainedGlassPane, 160, "stained_glass_pane",
+                   1, 64,
+                   4));
+            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.LimeStainedGlassPane, new ItemContext(
+                   ItemType.LimeStainedGlassPane, 160, "stained_glass_pane",
+                   1, 64,
+                   5));
+            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.PinkStainedGlassPane, new ItemContext(
+                   ItemType.PinkStainedGlassPane, 160, "stained_glass_pane",
+                   1, 64,
+                   6));
+            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.GrayStainedGlassPane, new ItemContext(
+                   ItemType.GrayStainedGlassPane, 160, "stained_glass_pane",
+                   1, 64,
+                   7));
+            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.LightGrayStainedGlassPane, new ItemContext(
+                   ItemType.LightGrayStainedGlassPane, 160, "stained_glass_pane",
+                   1, 64,
+                   8));
+            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.CyanStainedGlassPane, new ItemContext(
+                   ItemType.CyanStainedGlassPane, 160, "stained_glass_pane",
+                   1, 64,
+                   9));
+            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.PurpleStainedGlassPane, new ItemContext(
+                   ItemType.PurpleStainedGlassPane, 160, "stained_glass_pane",
+                   1, 64,
+                   10));
+            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.BlueStainedGlassPane, new ItemContext(
+                   ItemType.BlueStainedGlassPane, 160, "stained_glass_pane",
+                   1, 64,
+                   11));
+            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.BrownStainedGlassPane, new ItemContext(
+                   ItemType.BrownStainedGlassPane, 160, "stained_glass_pane",
+                   1, 64,
+                   12));
+            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.GreenStainedGlassPane, new ItemContext(
+                   ItemType.GreenStainedGlassPane, 160, "stained_glass_pane",
+                   1, 64,
+                   13));
+            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.RedStainedGlassPane, new ItemContext(
+                   ItemType.RedStainedGlassPane, 160, "stained_glass_pane",
+                   1, 64,
+                   14));
+            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.BlackStainedGlassPane, new ItemContext(
+                   ItemType.BlackStainedGlassPane, 160, "stained_glass_pane",
+                   1, 64,
+                   15));
 
 
             _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.IronSword, new ItemContext(
