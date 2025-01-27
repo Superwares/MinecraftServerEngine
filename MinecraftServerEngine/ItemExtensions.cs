@@ -77,6 +77,41 @@ namespace MinecraftServerEngine
             }
         }
 
+        public static int GetMetadata(this ItemType item)
+        {
+            switch (item)
+            {
+                default:
+                    throw new System.NotImplementedException();
+
+                case ItemType.IronSword:
+                    return 0;
+                case ItemType.WoodenSword:
+                    return 0;
+
+                case ItemType.StoneSword:
+                    return 0;
+
+                case ItemType.DiamondSword:
+                    return 0;
+
+                case ItemType.GoldenSword:
+                    return 0;
+
+                case ItemType.Stick:
+                    return 0;
+
+                /*case ItemType.Snowball:
+                    return 0;*/
+
+                case ItemType.GoldNugget:
+                    return 0;
+
+                case ItemType.PlayerSkull:
+                    return 3;
+            }
+        }
+
         internal static int GetId(this ItemType item)
         {
             System.Diagnostics.Debug.Assert(_ITEM_ENUM_TO_ID_MAP.Contains(item));

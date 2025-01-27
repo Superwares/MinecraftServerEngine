@@ -14,13 +14,7 @@ namespace TestMinecraftServerApplication
 
         public GameContextInventory() : base(MaxLineCount)
         {
-            ResetSlot(0, Coin.Create([
-                $"",
-                $"테스트용 무료 코인입니다.",
-                $"",
-                $"왼클릭          지급",
-                $"우클릭          차감",
-                ]));
+            ResetSlot(0, new ItemStack(ItemType.PlayerSkull, "welcomehyunseo"));
 
             ResetSlot(9 + 1, BalloonBasher.Create([
                 $"",

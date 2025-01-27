@@ -23,6 +23,8 @@ namespace TestMinecraftServerApplication
                 $"우클릭          차감",
                 ]));
 
+            ResetSlot(1, new ItemStack(ItemType.PlayerSkull, "welcomehyunseo"));
+
             ResetSlot(9 + 1, BalloonBasher.Create([
                 $"",
                 $"가볍지만 강력한 한 방으로 적을 날려버리세요!",

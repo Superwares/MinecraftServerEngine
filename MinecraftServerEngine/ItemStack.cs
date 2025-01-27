@@ -231,7 +231,11 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_count <= byte.MaxValue);
             s.WriteByte((byte)_count);
 
-            s.WriteShort(0);  // damage
+            int metadata = Type.GetMetadata();
+
+            System.Diagnostics.Debug.Assert(metadata >= short.MinValue);
+            System.Diagnostics.Debug.Assert(metadata <= short.MaxValue);
+            s.WriteShort((short)metadata);  // can be damage
             //s.WriteByte(0x00);  // no NBT
 
             using NBTTagCompound compound = new();
