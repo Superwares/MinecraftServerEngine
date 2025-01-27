@@ -490,6 +490,8 @@ namespace MinecraftServerEngine
 
                         ObjectDespawningPool.Enqueue(player);
 
+                        player.OnDisconnected();
+
                         continue;
                     }
 

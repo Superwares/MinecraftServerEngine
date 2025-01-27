@@ -95,8 +95,6 @@ namespace MinecraftServerEngine
 
         public void PlaySound(string name, int category, float volume, float pitch)
         {
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
             if (_disposed == true)
             {
                 throw new System.ObjectDisposedException(GetType().Name);
@@ -423,6 +421,14 @@ namespace MinecraftServerEngine
                 Conn.Control(world, this, Inventory);
             }
 
+        }
+
+        public virtual void OnDisconnected()
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
         }
 
         public bool HandleDisconnection(out UserId userId, World world)
