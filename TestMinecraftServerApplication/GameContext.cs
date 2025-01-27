@@ -10,6 +10,7 @@ namespace TestMinecraftServerApplication
         private bool _disposed = false;
 
         public const int MinPlayers = 2;
+        public const int MaxPlayers = 14;
 
         private readonly Locker LockerPlayers = new();
         private readonly Map<int, SuperPlayer> _playersById = new();
