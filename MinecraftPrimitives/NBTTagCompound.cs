@@ -159,7 +159,7 @@ namespace MinecraftPrimitives
             Dispose(false);
         }
 
-        public void WriteAsRoot(MinecraftDataStream s)
+        public void WriteAsRoot(MinecraftProtocolDataStream s)
         {
             System.Diagnostics.Debug.Assert(s != null);
 
@@ -223,7 +223,7 @@ namespace MinecraftPrimitives
             s.WriteByte(NBTTagEnd.TypeId);
         }
 
-        public override void Write(MinecraftDataStream s)
+        public override void Write(MinecraftProtocolDataStream s)
         {
             System.Diagnostics.Debug.Assert(s != null);
 

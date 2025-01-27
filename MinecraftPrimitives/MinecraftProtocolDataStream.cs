@@ -5,7 +5,7 @@ namespace MinecraftPrimitives
 {
 
     // TODO: Check system is little- or big-endian.
-    public class MinecraftDataStream : System.IDisposable
+    public class MinecraftProtocolDataStream : System.IDisposable
     {
         private const int _EXPANSION_FACTOR = 2;
         private const float _LOAD_FACTOR = 0.7F;
@@ -46,13 +46,13 @@ namespace MinecraftPrimitives
 
         public bool Empty => (Size == 0);
 
-        public MinecraftDataStream()
+        public MinecraftProtocolDataStream()
         {
             _size = _INIT_DATASIZE;
             _data = new byte[_INIT_DATASIZE];
         }
 
-        ~MinecraftDataStream()
+        ~MinecraftProtocolDataStream()
         {
             System.Diagnostics.Debug.Assert(false);
 

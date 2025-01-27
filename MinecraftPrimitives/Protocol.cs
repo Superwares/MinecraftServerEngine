@@ -298,7 +298,7 @@ namespace MinecraftPrimitives
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
         /// <exception cref="DisconnectedClientException"></exception>
         /// <exception cref="TryAgainException"></exception>
-        public void Recv(MinecraftDataStream buffer)
+        public void Recv(MinecraftProtocolDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -362,7 +362,7 @@ namespace MinecraftPrimitives
 
         /// <exception cref="DisconnectedClientException"></exception>
         /// <exception cref="TryAgainException"></exception>
-        public void Send(MinecraftDataStream buffer)
+        public void Send(MinecraftProtocolDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -456,7 +456,7 @@ namespace MinecraftPrimitives
                 /*Console.WriteLine($"count: {count}, level: {level}");*/
 
                 System.Diagnostics.Debug.Assert(level >= 0);
-                using MinecraftDataStream buffer = new();
+                using MinecraftProtocolDataStream buffer = new();
 
                 try
                 {

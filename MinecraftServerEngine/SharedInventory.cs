@@ -37,7 +37,7 @@ namespace MinecraftServerEngine
 
         internal void UpdateRendering(UserId userId)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             //Locker.Hold();
 
@@ -45,7 +45,7 @@ namespace MinecraftServerEngine
 
             try
             {
-                using MinecraftDataStream buffer = new();
+                using MinecraftProtocolDataStream buffer = new();
 
                 System.Diagnostics.Debug.Assert(Slots != null);
                 foreach (InventorySlot slot in Slots)
@@ -82,7 +82,7 @@ namespace MinecraftServerEngine
             PlayerInventory playerInventory,
             ConcurrentQueue<ClientboundPlayingPacket> outPackets)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(playerInventory != null);
             System.Diagnostics.Debug.Assert(outPackets != null);
@@ -106,7 +106,7 @@ namespace MinecraftServerEngine
 
         internal void Close(PlayerInventory inv)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(inv != null);
 
@@ -215,7 +215,7 @@ namespace MinecraftServerEngine
             UserId userId, AbstractPlayer player, PlayerInventory playerInventory,
             int i, InventorySlot cursor)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(userId != UserId.Null);
             System.Diagnostics.Debug.Assert(playerInventory != null);
@@ -259,7 +259,7 @@ namespace MinecraftServerEngine
             UserId userId, AbstractPlayer player, PlayerInventory playerInventory,
             int i, InventorySlot cursor)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(userId != UserId.Null);
             System.Diagnostics.Debug.Assert(playerInventory != null);
@@ -302,7 +302,7 @@ namespace MinecraftServerEngine
 
         private void QuickMoveFromLeft(InventorySlot slot)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(slot != null);
 
@@ -355,7 +355,7 @@ namespace MinecraftServerEngine
             UserId userId, PlayerInventory playerInventory,
             int i)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(userId != UserId.Null);
             System.Diagnostics.Debug.Assert(playerInventory != null);

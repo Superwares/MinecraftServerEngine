@@ -36,7 +36,7 @@ namespace MinecraftPrimitives
         }
 
 
-        public override void Write(MinecraftDataStream s)
+        public override void Write(MinecraftProtocolDataStream s)
         {
             System.Diagnostics.Debug.Assert(s != null);
 

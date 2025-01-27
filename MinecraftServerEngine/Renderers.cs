@@ -110,7 +110,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(playerInventory != null);
             System.Diagnostics.Debug.Assert(cursor != null);
 
-            using MinecraftDataStream buffer = new();
+            using MinecraftProtocolDataStream buffer = new();
 
             if (sharedInventory == null)
             {
@@ -209,7 +209,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(playerInventory != null);
 
-            using MinecraftDataStream buffer = new();
+            using MinecraftProtocolDataStream buffer = new();
 
             InventorySlot mainSlot = playerInventory.HandleMainHandSlot2();
 

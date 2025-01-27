@@ -88,9 +88,9 @@ namespace MinecraftPrimitives
             Id = id;
         }
 
-        protected abstract void WriteData(MinecraftDataStream buffer);
+        protected abstract void WriteData(MinecraftProtocolDataStream buffer);
 
-        public void Write(MinecraftDataStream buffer)
+        public void Write(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -311,7 +311,7 @@ namespace MinecraftPrimitives
         public readonly ushort Port;
         public readonly States NextState;
 
-        private static States ReadNextState(MinecraftDataStream buffer)
+        private static States ReadNextState(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -332,7 +332,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static SetProtocolPacket Read(MinecraftDataStream buffer)
+        public static SetProtocolPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -366,7 +366,7 @@ namespace MinecraftPrimitives
             : this(ProtocolVersion, hostname, port, nextState)
         { }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -395,7 +395,7 @@ namespace MinecraftPrimitives
         public readonly string Description;
 
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static ResponsePacket Read(MinecraftDataStream buffer)
+        public static ResponsePacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -417,7 +417,7 @@ namespace MinecraftPrimitives
             Description = description;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -440,7 +440,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static PongPacket Read(MinecraftDataStream buffer)
+        public static PongPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -455,7 +455,7 @@ namespace MinecraftPrimitives
             Payload = payload;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -473,7 +473,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static RequestPacket Read(MinecraftDataStream buffer)
+        public static RequestPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -485,7 +485,7 @@ namespace MinecraftPrimitives
 
         public RequestPacket() : base(RequestPacketId) { }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -503,7 +503,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static PingPacket Read(MinecraftDataStream buffer)
+        public static PingPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -520,7 +520,7 @@ namespace MinecraftPrimitives
 
         public PingPacket() : this(System.DateTime.Now.Ticks) { }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -540,7 +540,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static DisconnectPacket Read(MinecraftDataStream buffer)
+        public static DisconnectPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -555,7 +555,7 @@ namespace MinecraftPrimitives
             Reason = reason;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -573,7 +573,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static EncryptionRequestPacket Read(MinecraftDataStream buffer)
+        public static EncryptionRequestPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -588,7 +588,7 @@ namespace MinecraftPrimitives
             throw new System.NotImplementedException();
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -609,7 +609,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static LoginSuccessPacket Read(MinecraftDataStream buffer)
+        public static LoginSuccessPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -628,7 +628,7 @@ namespace MinecraftPrimitives
             Username = username;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -649,7 +649,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static SetCompressionPacket Read(MinecraftDataStream buffer)
+        public static SetCompressionPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -665,7 +665,7 @@ namespace MinecraftPrimitives
             Threshold = threshold;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -685,7 +685,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static StartLoginPacket Read(MinecraftDataStream buffer)
+        public static StartLoginPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -702,7 +702,7 @@ namespace MinecraftPrimitives
             Username = username;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -719,7 +719,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static EncryptionResponsePacket Read(MinecraftDataStream buffer)
+        public static EncryptionResponsePacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -736,7 +736,7 @@ namespace MinecraftPrimitives
             throw new System.NotImplementedException();
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -757,7 +757,7 @@ namespace MinecraftPrimitives
         public readonly int Data;
         public readonly short VelocityX, VelocityY, VelocityZ;
 
-        public static SpawnEntityPacket Read(MinecraftDataStream buffer)
+        public static SpawnEntityPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -783,7 +783,7 @@ namespace MinecraftPrimitives
             VelocityX = vx; VelocityY = vy; VelocityZ = vz;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -814,7 +814,7 @@ namespace MinecraftPrimitives
         public readonly byte Yaw, Pitch;
         public readonly byte[] Data;
 
-        public static SpawnNamedEntityPacket Read(MinecraftDataStream buffer)
+        public static SpawnNamedEntityPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -838,7 +838,7 @@ namespace MinecraftPrimitives
             Data = data;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -868,7 +868,7 @@ namespace MinecraftPrimitives
          */
         public readonly byte Data;
 
-        public static ClientboundAnimationPacket Read(MinecraftDataStream buffer)
+        public static ClientboundAnimationPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -886,7 +886,7 @@ namespace MinecraftPrimitives
             Data = data;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -904,7 +904,7 @@ namespace MinecraftPrimitives
         public readonly int X, Y, Z;
         public readonly int BlockId;
 
-        public static BlockChangePacket Read(MinecraftDataStream buffer)
+        public static BlockChangePacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -923,7 +923,7 @@ namespace MinecraftPrimitives
             BlockId = blockId;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -941,7 +941,7 @@ namespace MinecraftPrimitives
         public readonly string Data;
         public readonly byte Position;
 
-        public static ClientboundChatmessagePacket Read(MinecraftDataStream buffer)
+        public static ClientboundChatmessagePacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -960,7 +960,7 @@ namespace MinecraftPrimitives
             Position = position;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -979,7 +979,7 @@ namespace MinecraftPrimitives
         public readonly short ActionNumber;
         public readonly bool Accepted;
 
-        public static ClientboundConfirmTransactionPacket Read(MinecraftDataStream buffer)
+        public static ClientboundConfirmTransactionPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -998,7 +998,7 @@ namespace MinecraftPrimitives
             Accepted = accepted;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1016,7 +1016,7 @@ namespace MinecraftPrimitives
     {
         public readonly byte WindowId;
 
-        public static ClientboundCloseWindowPacket Read(MinecraftDataStream buffer)
+        public static ClientboundCloseWindowPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1032,7 +1032,7 @@ namespace MinecraftPrimitives
             WindowId = windowId;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1051,7 +1051,7 @@ namespace MinecraftPrimitives
         public readonly string WindowTitle;
         public readonly byte SlotCount;
 
-        public static OpenWindowPacket Read(MinecraftDataStream buffer)
+        public static OpenWindowPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1072,7 +1072,7 @@ namespace MinecraftPrimitives
             SlotCount = slotCount;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1094,7 +1094,7 @@ namespace MinecraftPrimitives
         public readonly int Count;
         public readonly byte[] Data;
 
-        public static WindowItemsPacket Read(MinecraftDataStream buffer)
+        public static WindowItemsPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1116,7 +1116,7 @@ namespace MinecraftPrimitives
             Data = data;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1146,7 +1146,7 @@ namespace MinecraftPrimitives
         public readonly short SlotNumber;
         public readonly byte[] Data;
 
-        public static SetSlotPacket Read(MinecraftDataStream buffer)
+        public static SetSlotPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1167,7 +1167,7 @@ namespace MinecraftPrimitives
             Data = data;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1188,7 +1188,7 @@ namespace MinecraftPrimitives
         public readonly int EffectX, EffectY, EffectZ;
         public readonly float Volume, Pitch;
 
-        public static NamedSoundEffectPacket Read(MinecraftDataStream buffer)
+        public static NamedSoundEffectPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1210,7 +1210,7 @@ namespace MinecraftPrimitives
             Volume = volume; Pitch = pitch;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1233,7 +1233,7 @@ namespace MinecraftPrimitives
         public readonly int EntityId;
         public readonly byte Status;
 
-        public static EntityStatusPacket Read(MinecraftDataStream buffer)
+        public static EntityStatusPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1249,7 +1249,7 @@ namespace MinecraftPrimitives
             Status = status;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1269,7 +1269,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static UnloadChunkPacket Read(MinecraftDataStream buffer)
+        public static UnloadChunkPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1285,7 +1285,7 @@ namespace MinecraftPrimitives
             ZChunk = zChunk;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1303,7 +1303,7 @@ namespace MinecraftPrimitives
         public readonly byte Reason;
         public readonly float Value;
 
-        public static GameStatePacket Read(MinecraftDataStream buffer)
+        public static GameStatePacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1319,7 +1319,7 @@ namespace MinecraftPrimitives
             Value = value;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1336,7 +1336,7 @@ namespace MinecraftPrimitives
     {
         public readonly long Payload;
 
-        public static ClientboundKeepAlivePacket Read(MinecraftDataStream buffer)
+        public static ClientboundKeepAlivePacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1351,7 +1351,7 @@ namespace MinecraftPrimitives
             Payload = payload;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1373,7 +1373,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static LoadChunkPacket Read(MinecraftDataStream buffer)
+        public static LoadChunkPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1398,7 +1398,7 @@ namespace MinecraftPrimitives
             Data = data;  // TODO: move semantics
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1425,7 +1425,7 @@ namespace MinecraftPrimitives
         public readonly float Extra;
         public readonly int Count;
 
-        public static ParticlesPacket Read(MinecraftDataStream buffer)
+        public static ParticlesPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1449,7 +1449,7 @@ namespace MinecraftPrimitives
             Count = count;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1479,7 +1479,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static JoinGamePacket Read(MinecraftDataStream buffer)
+        public static JoinGamePacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1508,7 +1508,7 @@ namespace MinecraftPrimitives
             _reducedDebugInfo = reducedDebugInfo;
 
         }
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1529,7 +1529,7 @@ namespace MinecraftPrimitives
     {
         public readonly int EntityId;
 
-        public static EntityPacket Read(MinecraftDataStream buffer)
+        public static EntityPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1544,7 +1544,7 @@ namespace MinecraftPrimitives
             EntityId = entityId;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1562,7 +1562,7 @@ namespace MinecraftPrimitives
         public readonly short DeltaX, DeltaY, DeltaZ;
         public readonly bool OnGround;
 
-        public static EntityRelMovePacket Read(MinecraftDataStream buffer)
+        public static EntityRelMovePacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1582,7 +1582,7 @@ namespace MinecraftPrimitives
             OnGround = onGround;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1603,7 +1603,7 @@ namespace MinecraftPrimitives
         public readonly byte Yaw, Pitch;
         public readonly bool OnGround;
 
-        public static EntityRelMoveLookPacket Read(MinecraftDataStream buffer)
+        public static EntityRelMoveLookPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1625,7 +1625,7 @@ namespace MinecraftPrimitives
             OnGround = onGround;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1646,7 +1646,7 @@ namespace MinecraftPrimitives
         public readonly byte Yaw, Pitch;
         public readonly bool OnGround;
 
-        public static EntityLookPacket Read(MinecraftDataStream buffer)
+        public static EntityLookPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1666,7 +1666,7 @@ namespace MinecraftPrimitives
             OnGround = onGround;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1691,7 +1691,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static AbilitiesPacket Read(MinecraftDataStream buffer)
+        public static AbilitiesPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1731,7 +1731,7 @@ namespace MinecraftPrimitives
             _fovModifier = fovModifier;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1751,7 +1751,7 @@ namespace MinecraftPrimitives
         public readonly string Username;
         public readonly int Ping;
 
-        public static PlayerListItemAddPacket Read(MinecraftDataStream buffer)
+        public static PlayerListItemAddPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1770,7 +1770,7 @@ namespace MinecraftPrimitives
             Ping = ms;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1794,7 +1794,7 @@ namespace MinecraftPrimitives
         public readonly System.Guid UniqueId;
         public readonly int Laytency;
 
-        public static PlayerListItemUpdateLatencyPacket Read(MinecraftDataStream buffer)
+        public static PlayerListItemUpdateLatencyPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1811,7 +1811,7 @@ namespace MinecraftPrimitives
             Laytency = laytency;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1830,7 +1830,7 @@ namespace MinecraftPrimitives
     {
         public readonly System.Guid UniqueId;
 
-        public static PlayerListItemRemovePacket Read(MinecraftDataStream buffer)
+        public static PlayerListItemRemovePacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1846,7 +1846,7 @@ namespace MinecraftPrimitives
             UniqueId = uniqueId;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1870,7 +1870,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static TeleportPacket Read(MinecraftDataStream buffer)
+        public static TeleportPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1909,7 +1909,7 @@ namespace MinecraftPrimitives
             Payload = payload;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1932,7 +1932,7 @@ namespace MinecraftPrimitives
     {
         public readonly int[] EntityIds;
 
-        public static DestroyEntitiesPacket Read(MinecraftDataStream buffer)
+        public static DestroyEntitiesPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1947,7 +1947,7 @@ namespace MinecraftPrimitives
             EntityIds = entityIds;  // TODO: Copy
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1966,7 +1966,7 @@ namespace MinecraftPrimitives
         public readonly int EntityId;
         public readonly byte EffectId;
 
-        public static RemoveEntityEffectPacket Read(MinecraftDataStream buffer)
+        public static RemoveEntityEffectPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -1984,7 +1984,7 @@ namespace MinecraftPrimitives
             EffectId = effectId;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2004,7 +2004,7 @@ namespace MinecraftPrimitives
         public readonly byte Gamemode;
         public readonly string LevelType;
 
-        public static RespawnPacket Read(MinecraftDataStream buffer)
+        public static RespawnPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2024,7 +2024,7 @@ namespace MinecraftPrimitives
             LevelType = levelType;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2044,7 +2044,7 @@ namespace MinecraftPrimitives
         public readonly int EntityId;
         public readonly byte Yaw;
 
-        public static EntityHeadLookPacket Read(MinecraftDataStream buffer)
+        public static EntityHeadLookPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2061,7 +2061,7 @@ namespace MinecraftPrimitives
             Yaw = yaw;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2079,7 +2079,7 @@ namespace MinecraftPrimitives
         public readonly int EntityId;
         public readonly byte[] Data;
 
-        public static EntityMetadataPacket Read(MinecraftDataStream buffer)
+        public static EntityMetadataPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2096,7 +2096,7 @@ namespace MinecraftPrimitives
             Data = data;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2114,7 +2114,7 @@ namespace MinecraftPrimitives
         public readonly int EntityId;
         public readonly short X, Y, Z;
 
-        public static EntityVelocityPacket Read(MinecraftDataStream buffer)
+        public static EntityVelocityPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2131,7 +2131,7 @@ namespace MinecraftPrimitives
             X = x; Y = y; Z = z;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2150,7 +2150,7 @@ namespace MinecraftPrimitives
         public readonly int Slot;
         public readonly byte[] Data;
 
-        public static EntityEquipmentPacket Read(MinecraftDataStream buffer)
+        public static EntityEquipmentPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2170,7 +2170,7 @@ namespace MinecraftPrimitives
             Data = data;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2189,7 +2189,7 @@ namespace MinecraftPrimitives
         public readonly int Level;
         public readonly int TotalExperience;
 
-        public static SetExperiencePacket Read(MinecraftDataStream buffer)
+        public static SetExperiencePacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2222,7 +2222,7 @@ namespace MinecraftPrimitives
             TotalExperience = totalExperience;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2242,7 +2242,7 @@ namespace MinecraftPrimitives
         public readonly int Food;
         public readonly float FoodSaturation;
 
-        public static UpdateHealthPacket Read(MinecraftDataStream buffer)
+        public static UpdateHealthPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2260,7 +2260,7 @@ namespace MinecraftPrimitives
             FoodSaturation = foodSaturation;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2277,7 +2277,7 @@ namespace MinecraftPrimitives
     {
         public readonly string Data;
 
-        public static SetTitlePacket Read(MinecraftDataStream buffer)
+        public static SetTitlePacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2292,7 +2292,7 @@ namespace MinecraftPrimitives
             Data = data;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2308,7 +2308,7 @@ namespace MinecraftPrimitives
     {
         public readonly string Data;
 
-        public static SetSubtitlePacket Read(MinecraftDataStream buffer)
+        public static SetSubtitlePacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2323,7 +2323,7 @@ namespace MinecraftPrimitives
             Data = data;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2339,7 +2339,7 @@ namespace MinecraftPrimitives
     {
         public readonly string Data;
 
-        public static SetActionBarPacket Read(MinecraftDataStream buffer)
+        public static SetActionBarPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2354,7 +2354,7 @@ namespace MinecraftPrimitives
             Data = data;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2372,7 +2372,7 @@ namespace MinecraftPrimitives
         public readonly int Stay;
         public readonly int FadeOut;
 
-        public static SetTimesAndDisplayTitlePacket Read(MinecraftDataStream buffer)
+        public static SetTimesAndDisplayTitlePacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2389,7 +2389,7 @@ namespace MinecraftPrimitives
             FadeOut = fadeOut;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2406,7 +2406,7 @@ namespace MinecraftPrimitives
     public sealed class HideTitlePacket : ClientboundPlayingPacket
     {
 
-        public static HideTitlePacket Read(MinecraftDataStream buffer)
+        public static HideTitlePacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2420,7 +2420,7 @@ namespace MinecraftPrimitives
         {
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2434,7 +2434,7 @@ namespace MinecraftPrimitives
     public sealed class ResetTitlePacket : ClientboundPlayingPacket
     {
 
-        public static ResetTitlePacket Read(MinecraftDataStream buffer)
+        public static ResetTitlePacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2448,7 +2448,7 @@ namespace MinecraftPrimitives
         {
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2466,7 +2466,7 @@ namespace MinecraftPrimitives
         public readonly byte Yaw, Pitch;
         public readonly bool OnGround;
 
-        public static EntityTeleportPacket Read(MinecraftDataStream buffer)
+        public static EntityTeleportPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2488,7 +2488,7 @@ namespace MinecraftPrimitives
             OnGround = onGround;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2508,7 +2508,7 @@ namespace MinecraftPrimitives
         public readonly int EntityId;
         public readonly (string, double)[] Properties;
 
-        public static EntityPropertiesPacket Read(MinecraftDataStream buffer)
+        public static EntityPropertiesPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2526,7 +2526,7 @@ namespace MinecraftPrimitives
             Properties = properties;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2554,7 +2554,7 @@ namespace MinecraftPrimitives
         public readonly int Duration;
         public readonly byte Flags;
 
-        public static EntityEffectPacket Read(MinecraftDataStream buffer)
+        public static EntityEffectPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2578,7 +2578,7 @@ namespace MinecraftPrimitives
             Flags = flags;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2602,7 +2602,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static TeleportAcceptPacket Read(MinecraftDataStream buffer)
+        public static TeleportAcceptPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2617,7 +2617,7 @@ namespace MinecraftPrimitives
             Payload = payload;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2637,7 +2637,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static ServerboundChatMessagePacket Read(MinecraftDataStream buffer)
+        public static ServerboundChatMessagePacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2652,7 +2652,7 @@ namespace MinecraftPrimitives
             Text = text;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2672,7 +2672,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static SettingsPacket Read(MinecraftDataStream buffer)
+        public static SettingsPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2695,7 +2695,7 @@ namespace MinecraftPrimitives
             RenderDistance = renderDistance;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2712,7 +2712,7 @@ namespace MinecraftPrimitives
         public readonly short ActionNumber;
         public readonly bool Accepted;
 
-        public static ServerboundConfirmTransactionPacket Read(MinecraftDataStream buffer)
+        public static ServerboundConfirmTransactionPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2731,7 +2731,7 @@ namespace MinecraftPrimitives
             Accepted = accepted;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2752,7 +2752,7 @@ namespace MinecraftPrimitives
         public readonly int Mode;
         public readonly byte[] Data;
 
-        public static ClickWindowPacket Read(MinecraftDataStream buffer)
+        public static ClickWindowPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2778,7 +2778,7 @@ namespace MinecraftPrimitives
             Data = data;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2794,7 +2794,7 @@ namespace MinecraftPrimitives
     {
         public readonly byte WindowId;
 
-        public static ServerboundCloseWindowPacket Read(MinecraftDataStream buffer)
+        public static ServerboundCloseWindowPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2810,7 +2810,7 @@ namespace MinecraftPrimitives
             WindowId = windowId;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2828,7 +2828,7 @@ namespace MinecraftPrimitives
         public readonly int Type;
         public readonly int Hand;
 
-        public static UseEntityPacket Read(MinecraftDataStream buffer)
+        public static UseEntityPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2864,7 +2864,7 @@ namespace MinecraftPrimitives
             Hand = hand;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2883,7 +2883,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static ServerboundKeepAlivePacket Read(MinecraftDataStream buffer)
+        public static ServerboundKeepAlivePacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2898,7 +2898,7 @@ namespace MinecraftPrimitives
             Payload = payload;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2918,7 +2918,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static PlayerPacket Read(MinecraftDataStream buffer)
+        public static PlayerPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2933,7 +2933,7 @@ namespace MinecraftPrimitives
             OnGround = onGround;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2954,7 +2954,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static PlayerPositionPacket Read(MinecraftDataStream buffer)
+        public static PlayerPositionPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2973,7 +2973,7 @@ namespace MinecraftPrimitives
             OnGround = onGround;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -2995,7 +2995,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static PlayerPosAndLookPacket Read(MinecraftDataStream buffer)
+        public static PlayerPosAndLookPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -3019,7 +3019,7 @@ namespace MinecraftPrimitives
             OnGround = onGround;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -3040,7 +3040,7 @@ namespace MinecraftPrimitives
         /// TODO: Add description.
         /// </summary>
         /// <exception cref="UnexpectedDataException">TODO: Why it's thrown.</exception>
-        public static PlayerLookPacket Read(MinecraftDataStream buffer)
+        public static PlayerLookPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -3061,7 +3061,7 @@ namespace MinecraftPrimitives
             OnGround = onGround;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -3082,7 +3082,7 @@ namespace MinecraftPrimitives
         public readonly byte[] Position;
         public readonly byte Face;
 
-        public static PlayerDigPacket Read(MinecraftDataStream buffer)
+        public static PlayerDigPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -3100,7 +3100,7 @@ namespace MinecraftPrimitives
             Face = face;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -3117,7 +3117,7 @@ namespace MinecraftPrimitives
         public readonly int ActionId;
         public readonly int JumpBoost;
 
-        public static EntityActionPacket Read(MinecraftDataStream buffer)
+        public static EntityActionPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -3135,7 +3135,7 @@ namespace MinecraftPrimitives
             JumpBoost = jumpBoost;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -3151,7 +3151,7 @@ namespace MinecraftPrimitives
     {
         public readonly int Slot;
 
-        public static ServerboundHeldItemSlotPacket Read(MinecraftDataStream buffer)
+        public static ServerboundHeldItemSlotPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -3166,7 +3166,7 @@ namespace MinecraftPrimitives
             Slot = slot;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -3181,7 +3181,7 @@ namespace MinecraftPrimitives
     {
         public readonly int Hand;
 
-        public static ServerboundAnimationPacket Read(MinecraftDataStream buffer)
+        public static ServerboundAnimationPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -3196,7 +3196,7 @@ namespace MinecraftPrimitives
             Hand = hand;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -3211,7 +3211,7 @@ namespace MinecraftPrimitives
     {
         public readonly int Hand;
 
-        public static UseItemPacket Read(MinecraftDataStream buffer)
+        public static UseItemPacket Read(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {
@@ -3226,7 +3226,7 @@ namespace MinecraftPrimitives
             Hand = hand;
         }
 
-        protected override void WriteData(MinecraftDataStream buffer)
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
         {
             if (buffer == null)
             {

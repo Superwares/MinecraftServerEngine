@@ -217,7 +217,7 @@ namespace MinecraftServerEngine
             return Clone(Count);
         }
 
-        internal void WriteData(MinecraftDataStream s)
+        internal void WriteData(MinecraftProtocolDataStream s)
         {
             System.Diagnostics.Debug.Assert(s != null);
 
@@ -379,7 +379,7 @@ namespace MinecraftServerEngine
 
         internal byte[] WriteData()
         {
-            using MinecraftDataStream buffer = new();
+            using MinecraftProtocolDataStream buffer = new();
             WriteData(buffer);
             return buffer.ReadData();
         }

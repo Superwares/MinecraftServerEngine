@@ -105,7 +105,7 @@ namespace MinecraftServerEngine
             return new ItemSlot(Item, 1);
         }
 
-        public void WriteData(MinecraftDataStream buffer)
+        public void WriteData(MinecraftProtocolDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 

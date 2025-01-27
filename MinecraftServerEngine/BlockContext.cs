@@ -98,7 +98,7 @@ namespace MinecraftServerEngine
                     return new SectionData(bitsPerBlock, palette, data, blockLights, skyLights);
                 }
 
-                public static void Write(MinecraftDataStream buffer, SectionData sectionData)
+                public static void Write(MinecraftProtocolDataStream buffer, SectionData sectionData)
                 {
                     byte bitCount = sectionData._bitsPerBlock;
                     buffer.WriteByte(bitCount);
@@ -567,7 +567,7 @@ namespace MinecraftServerEngine
 
             public static (int, byte[]) Write(ChunkData chunkData)
             {
-                using MinecraftDataStream buffer = new();
+                using MinecraftProtocolDataStream buffer = new();
 
                 int mask = 0;
                 for (int i = 0; i < SectionCount; ++i)
@@ -593,7 +593,7 @@ namespace MinecraftServerEngine
 
             public static (int, byte[]) Write()
             {
-                using MinecraftDataStream buffer = new();
+                using MinecraftProtocolDataStream buffer = new();
 
                 int mask = 0;
                 System.Diagnostics.Debug.Assert(SectionCount == 16);

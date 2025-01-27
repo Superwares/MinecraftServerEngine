@@ -660,7 +660,7 @@ namespace MinecraftServerEngine
         }
 
         private void RecvDataAndHandle(
-            MinecraftDataStream buffer,
+            MinecraftProtocolDataStream buffer,
             World world, AbstractPlayer player, PlayerInventory playerInventory)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
@@ -1229,7 +1229,7 @@ namespace MinecraftServerEngine
                 SendPacket(buffer2, packet);
             }*/
 
-            using MinecraftDataStream buffer = new();
+            using MinecraftProtocolDataStream buffer = new();
 
             try
             {
@@ -1348,7 +1348,7 @@ namespace MinecraftServerEngine
         /// <param name="packet"></param>
         /// <exception cref="DisconnectedClientException"></exception>
         /// <exception cref="TryAgainException"></exception>
-        private void SendPacket(MinecraftDataStream buffer, ClientboundPlayingPacket packet)
+        private void SendPacket(MinecraftProtocolDataStream buffer, ClientboundPlayingPacket packet)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
             System.Diagnostics.Debug.Assert(packet != null);
@@ -1377,7 +1377,7 @@ namespace MinecraftServerEngine
                 (short)(v.Y * 8000),
                 (short)(v.Z * 8000));
 
-            using MinecraftDataStream buffer = new();
+            using MinecraftProtocolDataStream buffer = new();
 
             bool tryAgain;
 
@@ -1424,7 +1424,7 @@ namespace MinecraftServerEngine
                 false, false, false, false, false,
                 payload);
 
-            using MinecraftDataStream buffer = new();
+            using MinecraftProtocolDataStream buffer = new();
 
             bool tryAgain;
 
@@ -1610,7 +1610,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(!_disposed);
             System.Diagnostics.Debug.Assert(!_disconnected);
 
-            using MinecraftDataStream buffer = new();
+            using MinecraftProtocolDataStream buffer = new();
 
             try
             {

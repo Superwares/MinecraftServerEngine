@@ -243,7 +243,7 @@ namespace MinecraftServerEngine
             return stack;
         }
 
-        internal void WriteData(MinecraftDataStream buffer)
+        internal void WriteData(MinecraftProtocolDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
@@ -258,7 +258,7 @@ namespace MinecraftServerEngine
 
         internal byte[] WriteData()
         {
-            using MinecraftDataStream buffer = new();
+            using MinecraftProtocolDataStream buffer = new();
             WriteData(buffer);
             return buffer.ReadData();
         }
