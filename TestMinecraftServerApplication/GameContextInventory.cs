@@ -93,7 +93,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(GameSwitchSlot < GameContextInventoryMaxLineCount * SlotCountPerLine);
             slots[GameSwitchSlot] = (true, GetGameSwitchOffItemStack(
                 GameContext.MinPlayers, GameContext.MaxPlayers,
-                TestWorld.GameContext.CurrentPlayers));
+                SuperWorld.GameContext.CurrentPlayers));
 
             System.Diagnostics.Debug.Assert(GameContext.MaxPlayers % SlotCountPerLine == 0);
             for (int i = 0; i < GameContext.MaxPlayers; ++i)
@@ -125,10 +125,10 @@ namespace TestMinecraftServerApplication
                     {
                         if (_player is SuperPlayer player)
                         {
-                            bool f = TestWorld.GameContext.Add(player);
+                            bool f = SuperWorld.GameContext.Add(player);
                             if (f == false)
                             {
-                                TestWorld.GameContext.Remove(player.UserId);
+                                SuperWorld.GameContext.Remove(player.UserId);
                             }
 
                             success = true;
@@ -138,9 +138,9 @@ namespace TestMinecraftServerApplication
                     break;
                 case GameSwitchSlot:
                     {
-                        if (TestWorld.GameContext.CanStart == true)
+                        if (SuperWorld.GameContext.CanStart == true)
                         {
-                            success = TestWorld.GameContext.Start();
+                            success = SuperWorld.GameContext.Start();
                         }
                     }
                     break;
@@ -161,7 +161,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(GameSwitchSlot < GameContextInventoryMaxLineCount * SlotCountPerLine);
             slots[GameSwitchSlot] = (true, GetGameSwitchOffItemStack(
                 GameContext.MinPlayers, GameContext.MaxPlayers,
-                TestWorld.GameContext.CurrentPlayers));
+                SuperWorld.GameContext.CurrentPlayers));
 
             SetSlots(slots);
         }

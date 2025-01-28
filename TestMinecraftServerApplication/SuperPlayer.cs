@@ -49,7 +49,7 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(world != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
 
 
@@ -59,14 +59,14 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(world != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (f == true)
             {
                 //ApplyBlockAppearance(Block.Dirt);
                 //OpenInventory(chestInventory);
                 //OpenInventory(ShopInventory);
-                OpenInventory(TestWorld.GameContextInventory);
+                OpenInventory(SuperWorld.GameContextInventory);
 
                 //SetExperience(0.6F, 123456789);
 
@@ -90,7 +90,7 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(world != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             //MyConsole.Printl("Sprint!");
             //Switch(Gamemode.Adventure);
@@ -101,11 +101,18 @@ namespace TestMinecraftServerApplication
             world.PlaySound("entity.item.break", 7, Position, 1.0F, 2.0F);
         }
 
-        private void HandleDefaultAttack(World world, double attackCharge)
+        private void HandleDefaultAttack(SuperWorld world, double attackCharge)
         {
             System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(attackCharge >= 0.0);
+            System.Diagnostics.Debug.Assert(attackCharge <= 1.0);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (world.CanCombat == false)
+            {
+                return;
+            }
 
             double damage = DefaultAttackDamage;
             damage *= (attackCharge * attackCharge);
@@ -153,11 +160,18 @@ namespace TestMinecraftServerApplication
             }
         }
 
-        private void HandleBalloonBasherAttack(World world, double attackCharge)
+        private void HandleBalloonBasherAttack(SuperWorld world, double attackCharge)
         {
             System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(attackCharge >= 0.0);
+            System.Diagnostics.Debug.Assert(attackCharge <= 1.0);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (world.CanCombat == false)
+            {
+                return;
+            }
 
             double damage = BalloonBasher.Damage;
             damage *= (attackCharge * attackCharge);
@@ -206,43 +220,44 @@ namespace TestMinecraftServerApplication
             }
         }
 
-        protected override void OnAttack(World world, double attackCharge)
+        protected override void OnAttack(World _world, double attackCharge)
         {
-            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(_world != null);
+            System.Diagnostics.Debug.Assert(attackCharge >= 0.0);
+            System.Diagnostics.Debug.Assert(attackCharge <= 1.0);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
 
-
-            //MyConsole.Debug($"Attack charge: {attackCharge:F2}");
-            //MyConsole.Debug($"Damage: {damage:F2}");
-
-            HandleDefaultAttack(world, attackCharge);
+            if (_world is SuperWorld world)
+            {
+                HandleDefaultAttack(world, attackCharge);
+            }
         }
 
-        protected override void OnAttack(World world, ItemStack stack, double attackCharge)
+        protected override void OnAttack(World _world, ItemStack stack, double attackCharge)
         {
-            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(_world != null);
             System.Diagnostics.Debug.Assert(stack != null);
+            System.Diagnostics.Debug.Assert(attackCharge >= 0.0);
+            System.Diagnostics.Debug.Assert(attackCharge <= 1.0);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
-            //MyConsole.Debug($"stack: {stack}");
-
-            //Vector d = Look.GetUnitVector();
-            //Vector eyeOrigin = GetEyeOrigin();
-
-            switch (stack.Type)
+            if (_world is SuperWorld world)
             {
-                default:
-                    HandleDefaultAttack(world, attackCharge);
-                    break;
-                case BalloonBasher.Type:
-                    HandleBalloonBasherAttack(world, attackCharge);
-                    stack.Damage(1);
-                    break;
-            }
+                switch (stack.Type)
+                {
+                    default:
+                        HandleDefaultAttack(world, attackCharge);
+                        break;
+                    case BalloonBasher.Type:
+                        HandleBalloonBasherAttack(world, attackCharge);
+                        break;
+                }
 
+                stack.Damage(1);
+            }
 
         }
 
@@ -251,7 +266,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(stack != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             MyConsole.Debug("Use item!");
 
@@ -263,7 +278,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(entity != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             MyConsole.Debug("Use entity!");
 
@@ -280,7 +295,7 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(world != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             MyConsole.Printl("Death!");
 

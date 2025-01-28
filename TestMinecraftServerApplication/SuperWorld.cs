@@ -7,7 +7,7 @@ using MinecraftServerEngine.PhysicsEngine;
 
 namespace TestMinecraftServerApplication
 {
-    public sealed class TestWorld : World
+    public sealed class SuperWorld : World
     {
         public readonly static GameContext GameContext = new();
         public readonly static GameContextInventory GameContextInventory = new();
@@ -17,13 +17,25 @@ namespace TestMinecraftServerApplication
 
         private bool _disposed = false;
 
+        private bool _canCombat = false;
+        public bool CanCombat
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(_disposed == false);
+                return _canCombat;
+            }
+        }
+
+
+        private IGameProgressNode _currentGameProgressNode = new LobbyNode();
 
         public readonly GameContext Context = new();
 
 
-        public TestWorld() : base() { }
+        public SuperWorld() : base() { }
 
-        ~TestWorld()
+        ~SuperWorld()
         {
             System.Diagnostics.Debug.Assert(false);
 
@@ -49,7 +61,12 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-           
+            bool canNext = _currentGameProgressNode.StartRoutine(GameContext, this);
+
+            if (canNext == true)
+            {
+                _currentGameProgressNode = _currentGameProgressNode.CreateNextNode(GameContext);
+            }
         }
 
         protected override AbstractPlayer CreatePlayer(UserId userId, string username)

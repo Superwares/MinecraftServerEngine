@@ -17,6 +17,7 @@ namespace TestMinecraftServerApplication
 
         private readonly List<SuperPlayer> _players = new();
 
+
         public int CurrentPlayers
         {
             get
@@ -35,6 +36,8 @@ namespace TestMinecraftServerApplication
                 }
             }
         }
+
+        public int TotalRounds => CurrentPlayers;
 
         public bool CanStart
         {
@@ -98,7 +101,7 @@ namespace TestMinecraftServerApplication
                     System.Diagnostics.Debug.Assert(_players != null);
                     _players.Append(player);
 
-                    TestWorld.GameContextInventory.ResetPlayerSeats(_players);
+                    SuperWorld.GameContextInventory.ResetPlayerSeats(_players);
                 }
 
                 return exists == false;
@@ -132,7 +135,7 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_players != null);
                 _players.Extract(player => player.UserId == userId, null);
 
-                TestWorld.GameContextInventory.ResetPlayerSeats(_players);
+                SuperWorld.GameContextInventory.ResetPlayerSeats(_players);
             }
             catch (KeyNotFoundException)
             {
@@ -170,7 +173,7 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_started == false);
                 _started = true;
 
-                TestWorld.GameContextInventory.StartGame(_players);
+                SuperWorld.GameContextInventory.StartGame(_players);
 
                 return true;
             }
@@ -196,7 +199,7 @@ namespace TestMinecraftServerApplication
                 _started = false;
 
                 _players.Flush();
-                TestWorld.GameContextInventory.ResetPlayerSeats(null);
+                SuperWorld.GameContextInventory.ResetPlayerSeats(null);
 
             }
             finally

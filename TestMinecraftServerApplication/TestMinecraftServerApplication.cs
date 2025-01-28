@@ -14,7 +14,7 @@ MyConsole.Info("Hello, World!");
 
 const ushort port = 25565;
 
-using World world = new TestWorld();
+using World world = new SuperWorld();
 
 using ServerFramework framework = new(world);
 framework.Run(port);
