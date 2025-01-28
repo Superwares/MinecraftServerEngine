@@ -142,15 +142,16 @@ namespace TestMinecraftServerApplication
                     {
                         if (TestWorld.GameContext.CanStart == true)
                         {
-                            SetSlot(GameSwitchSlot, new ItemStack(
-                                GameSwitchOnItemType,
-                                "게임 진행 중...",  // Game in progress...
-                                1, [
-                                ]));
+                            success = TestWorld.GameContext.Start();
 
-                            TestWorld.GameContext.Start();
-
-                            success = true;
+                            if (success == true)
+                            {
+                                SetSlot(GameSwitchSlot, new ItemStack(
+                                    GameSwitchOnItemType,
+                                    "게임 진행 중...",  // Game in progress...
+                                    1, [
+                                    ]));
+                            }
                         }
                     }
                     break;

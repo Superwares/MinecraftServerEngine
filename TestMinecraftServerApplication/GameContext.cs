@@ -13,15 +13,16 @@ namespace TestMinecraftServerApplication
         public const int MinPlayers = 2;
         public const int MaxPlayers = 18;
 
-        private readonly Locker LockerPlayers = new();
+        private readonly Locker Locker = new();
+
         private readonly List<SuperPlayer> _players = new();
 
         public int CurrentPlayers
         {
             get
             {
-                System.Diagnostics.Debug.Assert(LockerPlayers != null);
-                LockerPlayers.Hold();
+                System.Diagnostics.Debug.Assert(Locker != null);
+                Locker.Hold();
 
                 try
                 {
@@ -29,8 +30,8 @@ namespace TestMinecraftServerApplication
                 }
                 finally
                 {
-                    System.Diagnostics.Debug.Assert(LockerPlayers != null);
-                    LockerPlayers.Release();
+                    System.Diagnostics.Debug.Assert(Locker != null);
+                    Locker.Release();
                 }
             }
         }
@@ -39,8 +40,8 @@ namespace TestMinecraftServerApplication
         {
             get
             {
-                System.Diagnostics.Debug.Assert(LockerPlayers != null);
-                LockerPlayers.Hold();
+                System.Diagnostics.Debug.Assert(Locker != null);
+                Locker.Hold();
 
                 try
                 {
@@ -48,47 +49,15 @@ namespace TestMinecraftServerApplication
                 }
                 finally
                 {
-                    System.Diagnostics.Debug.Assert(LockerPlayers != null);
-                    LockerPlayers.Release();
+                    System.Diagnostics.Debug.Assert(Locker != null);
+                    Locker.Release();
                 }
             }
         }
 
-        //public readonly Time RoundInterval;
-        //public readonly int RoundCount;
 
         private bool _started = false;
         public bool IsStarted => _started;
-        //private Time _startTime = Time.Zero;
-
-        //public Time StartTime
-        //{
-        //    get
-        //    {
-        //        System.Diagnostics.Debug.Assert(_started == true);
-        //        System.Diagnostics.Debug.Assert(_startTime > Time.Zero);
-        //        return _startTime;
-        //    }
-        //}
-
-        //public Time ElapsedTime
-        //{
-        //    get
-        //    {
-        //        System.Diagnostics.Debug.Assert(_started == true);
-        //        System.Diagnostics.Debug.Assert(_startTime > Time.Zero);
-        //        return Time.Now() - _startTime;
-        //    }
-        //}
-
-        //public GameContext(Time roundInterval, int roundCount)
-        //{
-        //    System.Diagnostics.Debug.Assert(roundInterval > Time.Zero);
-        //    RoundInterval = roundInterval;
-
-        //    System.Diagnostics.Debug.Assert(roundCount > 0);
-        //    RoundCount = roundCount;
-        //}
 
         public GameContext()
         {
@@ -107,18 +76,16 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            if (_started == true)
-            {
-                return false;
-            }
-
-            System.Diagnostics.Debug.Assert(_started == false);
-
-            System.Diagnostics.Debug.Assert(LockerPlayers != null);
-            LockerPlayers.Hold();
+            System.Diagnostics.Debug.Assert(Locker != null);
+            Locker.Hold();
 
             try
             {
+                if (_started == true)
+                {
+                    return false;
+                }
+
                 if (_players.Count > MaxPlayers)
                 {
                     return false;
@@ -142,8 +109,8 @@ namespace TestMinecraftServerApplication
             }
             finally
             {
-                System.Diagnostics.Debug.Assert(LockerPlayers != null);
-                LockerPlayers.Release();
+                System.Diagnostics.Debug.Assert(Locker != null);
+                Locker.Release();
             }
 
         }
@@ -152,18 +119,16 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            if (_started == true)
-            {
-                return;
-            }
-
-            System.Diagnostics.Debug.Assert(_started == false);
-
-            System.Diagnostics.Debug.Assert(LockerPlayers != null);
-            LockerPlayers.Hold();
+            System.Diagnostics.Debug.Assert(Locker != null);
+            Locker.Hold();
 
             try
             {
+                if (_started == true)
+                {
+                    return;
+                }
+
                 System.Diagnostics.Debug.Assert(_players != null);
                 _players.Extract(player => player.UserId == userId, null);
 
@@ -174,35 +139,69 @@ namespace TestMinecraftServerApplication
             }
             finally
             {
-                System.Diagnostics.Debug.Assert(LockerPlayers != null);
-                LockerPlayers.Release();
+                System.Diagnostics.Debug.Assert(Locker != null);
+                Locker.Release();
             }
 
         }
 
-        public void Start()
+        public bool Start()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(_players.Count >= MinPlayers);
+            System.Diagnostics.Debug.Assert(Locker != null);
+            Locker.Hold();
 
-            System.Diagnostics.Debug.Assert(_started == false);
-            _started = true;
+            try
+            {
+                if (_started == true)
+                {
+                    return false;
+                }
 
-            //_startTime = Time.Now();
+                if (_players.Count < MinPlayers)
+                {
+                    return false;
+                }
+
+                System.Diagnostics.Debug.Assert(_players.Count >= MinPlayers);
+                System.Diagnostics.Debug.Assert(_players.Count <= MaxPlayers);
+
+                System.Diagnostics.Debug.Assert(_started == false);
+                _started = true;
+
+                return true;
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(Locker != null);
+                Locker.Release();
+            }
+
         }
 
         public void Stop()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(_started == true);
-            _started = false;
+            System.Diagnostics.Debug.Assert(Locker != null);
+            Locker.Hold();
 
-            _players.Flush();
+            try
+            {
 
-            //System.Diagnostics.Debug.Assert(_startTime > Time.Zero);
-            //_startTime = Time.Zero;
+                System.Diagnostics.Debug.Assert(_started == true);
+                _started = false;
+
+                _players.Flush();
+                TestWorld.GameContextInventory.ResetPlayerSeats(null);
+
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(Locker != null);
+                Locker.Release();
+            }
         }
 
         public void Dispose()
@@ -223,7 +222,7 @@ namespace TestMinecraftServerApplication
                 if (disposing == true)
                 {
                     // Dispose managed resources.
-                    LockerPlayers.Dispose();
+                    Locker.Dispose();
                     _players.Dispose();
                 }
 
