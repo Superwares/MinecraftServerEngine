@@ -34,7 +34,7 @@ namespace TestMinecraftServerApplication
         {
             return new ItemStack(
                 GameSwitchOffItemType, "게임 시작!", 1, [
-                    $"클릭하여 게임 시작합니다.",
+                    $"클릭하여 게임을 시작합니다.",
                     $"",
                     $"최소/최대 인원 수     {minPlayers}/{maxPlayers}",
                     $"현재 인원 수          {currentPlayers}",
@@ -63,8 +63,6 @@ namespace TestMinecraftServerApplication
                     slots[slot] = (true, new ItemStack(
                         PlayerSeatItemType, player.Username, 1, [
                             "현재 참여한 플레이어입니다.",
-                        "",
-                        "클릭하여 게임 탈퇴합니다.",
                         ]));
                 }
             }
@@ -76,7 +74,7 @@ namespace TestMinecraftServerApplication
 
                 slots[slot] = (true, new ItemStack(
                     EmptySeatItemType, "빈자리", 1, [
-                        "클릭하여 게임 참여합니다.",
+                        "클릭하여 게임에 참여 또는 탈퇴합니다.",
                     ]));
             }
         }
@@ -143,15 +141,6 @@ namespace TestMinecraftServerApplication
                         if (TestWorld.GameContext.CanStart == true)
                         {
                             success = TestWorld.GameContext.Start();
-
-                            if (success == true)
-                            {
-                                SetSlot(GameSwitchSlot, new ItemStack(
-                                    GameSwitchOnItemType,
-                                    "게임 진행 중...",  // Game in progress...
-                                    1, [
-                                    ]));
-                            }
                         }
                     }
                     break;
@@ -173,6 +162,32 @@ namespace TestMinecraftServerApplication
             slots[GameSwitchSlot] = (true, GetGameSwitchOffItemStack(
                 GameContext.MinPlayers, GameContext.MaxPlayers,
                 TestWorld.GameContext.CurrentPlayers));
+
+            SetSlots(slots);
+        }
+
+        public void StartGame(List<SuperPlayer> players)
+        {
+            (bool, ItemStack)[] slots = new (bool, ItemStack)[GetTotalSlotCount()];
+
+            slots[GameSwitchSlot] = (true, new ItemStack(
+                GameSwitchOnItemType,
+                "게임 진행 중...",  // Game in progress...
+                1, [
+                ]));
+
+            System.Diagnostics.Debug.Assert(GameContext.MaxPlayers % SlotCountPerLine == 0);
+            System.Diagnostics.Debug.Assert(players.Count >= GameContext.MinPlayers);
+            System.Diagnostics.Debug.Assert(players.Count <= GameContext.MaxPlayers);
+            for (int i = 0; i < players.Count; ++i)
+            {
+                int slot = i + RoundIndicatorSlotOffset;
+                System.Diagnostics.Debug.Assert(slot < GameContextInventoryMaxLineCount * SlotCountPerLine);
+
+                slots[slot] = (true, new ItemStack(
+                    ItemType.RedStainedGlassPane, "시작하지 않은 라운드", 1, [
+                    ]));
+            }
 
             SetSlots(slots);
         }

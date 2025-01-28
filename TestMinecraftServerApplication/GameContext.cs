@@ -170,6 +170,8 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_started == false);
                 _started = true;
 
+                TestWorld.GameContextInventory.StartGame(_players);
+
                 return true;
             }
             finally
