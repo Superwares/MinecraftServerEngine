@@ -55,6 +55,7 @@ namespace TestMinecraftServerApplication
 
             if (players != null)
             {
+                System.Diagnostics.Debug.Assert(players.Count <= GameContext.MaxPlayers);
                 foreach (SuperPlayer player in players)
                 {
                     int slot = i++ + PlayerSeatSlotOffset;
@@ -87,7 +88,7 @@ namespace TestMinecraftServerApplication
             //SetSlot((9 * 1) + 1, new ItemStack(
             //    ItemType.PlayerSkull, "welcomehyunseo", 1, [
             //        "Click to leave the game",
-            //    ]));
+            //    ]));o
 
             ResetPlayerSeatSlots(slots, null);
 
@@ -113,22 +114,39 @@ namespace TestMinecraftServerApplication
 
         protected override void OnLeftClickSharedItem(
             UserId userId,
-            AbstractPlayer player, PlayerInventory playerInventory,
+            AbstractPlayer _player, PlayerInventory playerInventory,
             int i, ItemStack itemStack)
         {
             bool success = false;
 
             switch (i)
             {
+                case int playerSeat when (
+                    playerSeat >= PlayerSeatSlotOffset &&
+                    playerSeat <= PlayerSeatSlotOffset + GameContext.MaxPlayers):
+                    {
+                        if (_player is SuperPlayer player)
+                        {
+                            bool f = TestWorld.GameContext.Add(player);
+                            if (f == false)
+                            {
+                                TestWorld.GameContext.Remove(player.UserId);
+                            }
+
+                            success = true;
+                        }
+
+                    }
+                    break;
                 case GameSwitchSlot:
                     {
                         if (TestWorld.GameContext.CanStart == true)
                         {
                             SetSlot(GameSwitchSlot, new ItemStack(
-                            GameSwitchOnItemType,
-                            "게임 진행 중...",  // Game in progress...
-                            1, [
-                            ]));
+                                GameSwitchOnItemType,
+                                "게임 진행 중...",  // Game in progress...
+                                1, [
+                                ]));
 
                             TestWorld.GameContext.Start();
 
@@ -140,10 +158,18 @@ namespace TestMinecraftServerApplication
 
             if (success == true)
             {
-                player.PlaySound("entity.item.pickup", 7, 1.0F, 2.0F);
+                _player.PlaySound("entity.item.pickup", 7, 1.0F, 2.0F);
             }
         }
 
+        public void ResetPlayerSeats(List<SuperPlayer> players)
+        {
+            (bool, ItemStack)[] slots = new (bool, ItemStack)[GetTotalSlotCount()];
+
+            ResetPlayerSeatSlots(slots, players);
+
+            SetSlots(slots);
+        }
 
     }
 }

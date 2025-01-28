@@ -1,6 +1,7 @@
 ﻿
 using Common;
 using Containers;
+using MinecraftPrimitives;
 using Sync;
 
 namespace TestMinecraftServerApplication
@@ -118,10 +119,22 @@ namespace TestMinecraftServerApplication
 
             try
             {
-                System.Diagnostics.Debug.Assert(_players != null);
-                _players.Append(player);
+                if (_players.Count > MaxPlayers)
+                {
+                    return false;
+                }
 
-                //TestWorld.GameContextInventory.ResetPlayerSeats();
+                bool exists = _players.Find(_player => _player.UserId == player.UserId, null) != null;
+
+                if (exists == false)
+                {
+                    System.Diagnostics.Debug.Assert(_players != null);
+                    _players.Append(player);
+
+                    TestWorld.GameContextInventory.ResetPlayerSeats(_players);
+                }
+
+                return exists == false;
             }
             catch (DuplicateKeyException)
             {
@@ -133,10 +146,9 @@ namespace TestMinecraftServerApplication
                 LockerPlayers.Release();
             }
 
-            return true;
         }
 
-        public void Remove(int entityId)
+        public void Remove(UserId userId)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
@@ -153,9 +165,9 @@ namespace TestMinecraftServerApplication
             try
             {
                 System.Diagnostics.Debug.Assert(_players != null);
-                _players.Extract(player => player.Id == entityId, null);
+                _players.Extract(player => player.UserId == userId, null);
 
-                
+                TestWorld.GameContextInventory.ResetPlayerSeats(_players);
             }
             catch (KeyNotFoundException)
             {
