@@ -12,7 +12,6 @@ namespace TestMinecraftServerApplication.Items
         public readonly static IReadOnlyItem Item = new Item(
             Type,
             Name,
-            Type.GetMinStackCount(),
             [
             ]);
 

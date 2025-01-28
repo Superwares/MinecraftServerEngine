@@ -4,6 +4,8 @@ using Containers;
 using System.ComponentModel;
 using System.Net.NetworkInformation;
 using System;
+using static System.Reflection.Metadata.BlobBuilder;
+using System.IO;
 
 namespace MinecraftServerEngine
 {
@@ -285,6 +287,55 @@ namespace MinecraftServerEngine
                     ItemType.PlayerSkull, 397, "skull",
                     1, 64,
                     3),
+
+                new ItemContext(
+                    ItemType.MusicDisc_C418_13, 2256, "record_13",
+                    1, 1,
+                    0),
+                new ItemContext(
+                    ItemType.MusicDisc_C418_cat, 2257, "record_cat",
+                    1, 1,
+                    0),
+                new ItemContext(
+                    ItemType.MusicDisc_C418_blocks, 2258, "record_blocks",
+                    1, 1,
+                    0),
+                new ItemContext(
+                    ItemType.MusicDisc_C418_chirp, 2259, "record_chirp",
+                    1, 1,
+                    0),
+                new ItemContext(
+                    ItemType.MusicDisc_C418_far, 2260, "record_far",
+                    1, 1,
+                    0),
+                new ItemContext(
+                    ItemType.MusicDisc_C418_mall, 2261, "record_mall",
+                    1, 1,
+                    0),
+                new ItemContext(
+                    ItemType.MusicDisc_C418_mellohi, 2262, "record_mellohi",
+                    1, 1,
+                    0),
+                new ItemContext(
+                    ItemType.MusicDisc_C418_stal, 2263, "record_stal",
+                    1, 1,
+                    0),
+                new ItemContext(
+                    ItemType.MusicDisc_C418_strad, 2264, "record_strad",
+                    1, 1,
+                    0),
+                new ItemContext(
+                    ItemType.MusicDisc_C418_ward, 2265, "record_ward",
+                    1, 1,
+                    0),
+                new ItemContext(
+                    ItemType.MusicDisc_C418_11, 2266, "record_11",
+                    1, 1,
+                    0),
+                new ItemContext(
+                    ItemType.MusicDisc_C418_wait, 2267, "record_wait",
+                    1, 1,
+                    0),
 
             };
 

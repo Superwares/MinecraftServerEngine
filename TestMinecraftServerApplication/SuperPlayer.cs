@@ -13,6 +13,8 @@ namespace TestMinecraftServerApplication
 
         public const double DefaultAttackDamage = 1.0;
 
+        public const ItemType ShopItemType = ItemType.MusicDisc_C418_13;
+
 
         private bool _disposed = false;
 
@@ -30,6 +32,10 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(username != null && string.IsNullOrEmpty(username) == false);
 
             //ApplyBlockAppearance(Block.Dirt);
+
+            GiveItem(new ItemStack(ShopItemType, "Shop", [
+                "우클릭하여 상점을 이용할 수 있습니다!"
+                ]));
         }
 
         ~SuperPlayer()
@@ -261,16 +267,24 @@ namespace TestMinecraftServerApplication
 
         }
 
-        protected override void OnUseItem(World world, ItemStack stack)
+        protected override void OnUseItem(World _world, ItemStack stack)
         {
-            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(_world != null);
             System.Diagnostics.Debug.Assert(stack != null);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             MyConsole.Debug("Use item!");
 
-            GiveItem(new ItemStack(ItemType.DiamondSword, "Good Stick!", ""));
+            if (_world is SuperWorld world)
+            {
+                switch (stack.Type)
+                {
+                    case ShopItemType:
+                        OpenInventory(ShopInventory);
+                        break;
+                }
+            }
         }
 
         protected override void OnUseEntity(World world, Entity entity)

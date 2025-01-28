@@ -79,5 +79,20 @@ namespace MinecraftServerEngine
         GoldNugget,                // 371  minecraft:gold_nugget
 
         PlayerSkull,               // 397  minecraft:skull
+
+
+        MusicDisc_C418_13,         // 2256  minecraft:record_13 
+        MusicDisc_C418_cat,        // 2257  minecraft:record_cat 
+        MusicDisc_C418_blocks,     // 2258  minecraft:record_blocks 
+        MusicDisc_C418_chirp,      // 2259  minecraft:record_chirp 
+        MusicDisc_C418_far,        // 2260  minecraft:record_far 
+        MusicDisc_C418_mall,       // 2261  minecraft:record_mall 
+        MusicDisc_C418_mellohi,    // 2262  minecraft:record_mellohi 
+        MusicDisc_C418_stal,       // 2263  minecraft:record_stal 
+        MusicDisc_C418_strad,      // 2264  minecraft:record_strad 
+        MusicDisc_C418_ward,       // 2265  minecraft:record_ward 
+        MusicDisc_C418_11,         // 2266  minecraft:record_11 
+        MusicDisc_C418_wait,       // 2267  minecraft:record_wait 
+
     }
 }
