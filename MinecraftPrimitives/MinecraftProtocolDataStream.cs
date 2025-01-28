@@ -671,7 +671,7 @@ namespace MinecraftPrimitives
 
             if (value == null)
             {
-                return;
+                value = "";
             }
 
             if (value.Length > 0xFFFF)

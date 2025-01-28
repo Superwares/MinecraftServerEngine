@@ -4,6 +4,8 @@ using Containers;
 using Sync;
 
 using MinecraftPrimitives;
+using System;
+using System.Reflection;
 
 namespace MinecraftServerEngine
 {
@@ -141,6 +143,41 @@ namespace MinecraftServerEngine
             }
 
             Locker.Release();
+        }
+
+        public void SetSlots((bool, ItemStack)[] slots)
+        {
+            if (slots == null)
+            {
+                throw new System.ArgumentNullException(nameof(slots));
+            }
+
+            if (slots.Length != GetTotalSlotCount())
+            {
+                throw new System.ArgumentException(
+                    "The length of itemStacks does not match the total slot count.",
+                    nameof(slots));
+            }
+
+            HoldLocker();
+
+            try
+            {
+                for (int i = 0; i < GetTotalSlotCount(); ++i)
+                {
+                    (bool applied, ItemStack itemStack) = slots[i];
+
+                    if (applied == true)
+                    {
+                        Slots[i].Reset(itemStack);
+                    }
+
+                }
+            }
+            finally
+            {
+                ReleaseLocker(UserId.Null);
+            }
         }
 
         public void SetSlot(int index, ItemStack itemStack)

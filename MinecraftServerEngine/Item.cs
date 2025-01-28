@@ -1,6 +1,5 @@
 ﻿
 
-using System;
 
 namespace MinecraftServerEngine
 {
@@ -135,7 +134,10 @@ namespace MinecraftServerEngine
                     "Current durability must be greater than 0 and less than or equal to max durability.");
             }
 
-            System.Diagnostics.Debug.Assert(name != null && string.IsNullOrEmpty(name) == false);
+            if (name == null)
+            {
+                name = "";
+            }
 
             Type = type;
 

@@ -1,4 +1,6 @@
 ﻿
+using System.Xml.Linq;
+
 namespace MinecraftPrimitives
 {
     public sealed class NBTTagString : NBTTagBase, IReadableNBTTag<NBTTagString>
@@ -24,6 +26,11 @@ namespace MinecraftPrimitives
         {
             System.Diagnostics.Debug.Assert(value != null);
             //System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(value) == false);
+
+            if (value == null)
+            {
+                value = "";
+            }
 
             Value = value;
         }

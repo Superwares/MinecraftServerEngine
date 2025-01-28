@@ -39,271 +39,280 @@ namespace MinecraftServerEngine
 
         // TODO: Replace as IReadOnlyTable
         // TODO: 프로그램이 종료되었을 때 자원 해제하기. static destructor?
-        private readonly static Table<ItemType, ItemContext> _ITEM_ENUM_TO_CTX_MAP = new();
+        private readonly static Table<ItemType, ItemContext> _ITEM_TYPE_ENUM_TO_CTX_MAP = new();
 
         static ItemExtensions()
         {
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.WhiteWool, new ItemContext(
-                ItemType.WhiteWool, 35, "wool",
-                1, 64,
-                0));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.OrangeWool, new ItemContext(
-                ItemType.OrangeWool, 35, "wool",
-                1, 64,
-                1));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.MagentaWool, new ItemContext(
-                ItemType.MagentaWool, 35, "wool",
-                1, 64,
-                2));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.LightBlueWool, new ItemContext(
-                ItemType.LightBlueWool, 35, "wool",
-                1, 64,
-                3));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.YellowWool, new ItemContext(
-                ItemType.YellowWool, 35, "wool",
-                1, 64,
-                4));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.LimeWool, new ItemContext(
-                ItemType.LimeWool, 35, "wool",
-                1, 64,
-                5));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.PinkWool, new ItemContext(
-                ItemType.PinkWool, 35, "wool",
-                1, 64,
-                6));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.GrayWool, new ItemContext(
-                ItemType.GrayWool, 35, "wool",
-                1, 64,
-                7));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.LightGrayWool, new ItemContext(
-                ItemType.LightGrayWool, 35, "wool",
-                1, 64,
-                8));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.CyanWool, new ItemContext(
-                ItemType.CyanWool, 35, "wool",
-                1, 64,
-                9));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.PurpleWool, new ItemContext(
-                ItemType.PurpleWool, 35, "wool",
-                1, 64,
-                10));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.BlueWool, new ItemContext(
-                ItemType.BlueWool, 35, "wool",
-                1, 64,
-                11));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.BrownWool, new ItemContext(
-                ItemType.BrownWool, 35, "wool",
-                1, 64,
-                12));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.GreenWool, new ItemContext(
-                ItemType.GreenWool, 35, "wool",
-                1, 64,
-                13));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.RedWool, new ItemContext(
-                ItemType.RedWool, 35, "wool",
-                1, 64,
-                14));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.BlackWool, new ItemContext(
-                ItemType.BlackWool, 35, "wool",
-                1, 64,
-                15));
+            ItemContext[] list =
+            {
+                new ItemContext(
+                    ItemType.WhiteWool, 35, "wool",
+                    1, 64,
+                    0),
+                new ItemContext(
+                    ItemType.OrangeWool, 35, "wool",
+                    1, 64,
+                    1),
+                new ItemContext(
+                    ItemType.MagentaWool, 35, "wool",
+                    1, 64,
+                    2),
+                new ItemContext(
+                    ItemType.LightBlueWool, 35, "wool",
+                    1, 64,
+                    3),
+                new ItemContext(
+                    ItemType.YellowWool, 35, "wool",
+                    1, 64,
+                    4),
+                new ItemContext(
+                    ItemType.LimeWool, 35, "wool",
+                    1, 64,
+                    5),
+                new ItemContext(
+                    ItemType.PinkWool, 35, "wool",
+                    1, 64,
+                    6),
+                new ItemContext(
+                    ItemType.GrayWool, 35, "wool",
+                    1, 64,
+                    7),
+                new ItemContext(
+                    ItemType.LightGrayWool, 35, "wool",
+                    1, 64,
+                    8),
+                new ItemContext(
+                    ItemType.CyanWool, 35, "wool",
+                    1, 64,
+                    9),
+                new ItemContext(
+                    ItemType.PurpleWool, 35, "wool",
+                    1, 64,
+                    10),
+                new ItemContext(
+                    ItemType.BlueWool, 35, "wool",
+                    1, 64,
+                    11),
+                new ItemContext(
+                    ItemType.BrownWool, 35, "wool",
+                    1, 64,
+                    12),
+                new ItemContext(
+                    ItemType.GreenWool, 35, "wool",
+                    1, 64,
+                    13),
+                new ItemContext(
+                    ItemType.RedWool, 35, "wool",
+                    1, 64,
+                    14),
+                new ItemContext(
+                    ItemType.BlackWool, 35, "wool",
+                    1, 64,
+                    15),
+                new ItemContext(
+                    ItemType.Pumpkin, 86, "pumpkin",
+                    1, 64,
+                    0),
+                new ItemContext(
+                    ItemType.JackOLantern, 91, "lit_pumpkin",
+                    1, 64,
+                    0),
+                new ItemContext(
+                    ItemType.IronBars, 101, "iron_bars",
+                    1, 64,
+                    0),
+                new ItemContext(
+                    ItemType.WhiteTerracotta, 159, "stained_hardened_clay",
+                    1, 64,
+                    0),
+                new ItemContext(
+                    ItemType.OrangeTerracotta, 159, "stained_hardened_clay",
+                    1, 64,
+                    1),
+                new ItemContext(
+                    ItemType.MagentaTerracotta, 159, "stained_hardened_clay",
+                    1, 64,
+                    2),
+                new ItemContext(
+                    ItemType.LightBlueTerracotta, 159, "stained_hardened_clay",
+                    1, 64,
+                    3),
+                new ItemContext(
+                    ItemType.YellowTerracotta, 159, "stained_hardened_clay",
+                    1, 64,
+                    4),
+                new ItemContext(
+                    ItemType.LimeTerracotta, 159, "stained_hardened_clay",
+                    1, 64,
+                    5),
+                new ItemContext(
+                    ItemType.PinkTerracotta, 159, "stained_hardened_clay",
+                    1, 64,
+                    6),
+                new ItemContext(
+                    ItemType.GrayTerracotta, 159, "stained_hardened_clay",
+                    1, 64,
+                    7),
+                new ItemContext(
+                    ItemType.LightGrayTerracotta, 159, "stained_hardened_clay",
+                    1, 64,
+                    8),
+                new ItemContext(
+                    ItemType.CyanTerracotta, 159, "stained_hardened_clay",
+                    1, 64,
+                    9),
+                new ItemContext(
+                    ItemType.PurpleTerracotta, 159, "stained_hardened_clay",
+                    1, 64,
+                    10),
+                new ItemContext(
+                    ItemType.BlueTerracotta, 159, "stained_hardened_clay",
+                    1, 64,
+                    11),
+                new ItemContext(
+                    ItemType.BrownTerracotta, 159, "stained_hardened_clay",
+                    1, 64,
+                    12),
+                new ItemContext(
+                    ItemType.GreenTerracotta, 159, "stained_hardened_clay",
+                    1, 64,
+                    13),
+                new ItemContext(
+                    ItemType.RedTerracotta, 159, "stained_hardened_clay",
+                    1, 64,
+                    14),
+                new ItemContext(
+                    ItemType.BlackTerracotta, 159, "stained_hardened_clay",
+                    1, 64,
+                    15),
+                new ItemContext(
+                    ItemType.WhiteStainedGlassPane, 160, "stained_glass_pane",
+                    1, 64,
+                    0),
+                new ItemContext(
+                    ItemType.OrangeStainedGlassPane, 160, "stained_glass_pane",
+                    1, 64,
+                    1),
+                new ItemContext(
+                    ItemType.MagentaStainedGlassPane, 160, "stained_glass_pane",
+                    1, 64,
+                    2),
+                new ItemContext(
+                    ItemType.LightBlueStainedGlassPane, 160, "stained_glass_pane",
+                    1, 64,
+                    3),
+                new ItemContext(
+                    ItemType.YellowStainedGlassPane, 160, "stained_glass_pane",
+                    1, 64,
+                    4),
+                new ItemContext(
+                    ItemType.LimeStainedGlassPane, 160, "stained_glass_pane",
+                    1, 64,
+                    5),
+                new ItemContext(
+                    ItemType.PinkStainedGlassPane, 160, "stained_glass_pane",
+                    1, 64,
+                    6),
+                new ItemContext(
+                    ItemType.GrayStainedGlassPane, 160, "stained_glass_pane",
+                    1, 64,
+                    7),
+                new ItemContext(
+                    ItemType.LightGrayStainedGlassPane, 160, "stained_glass_pane",
+                    1, 64,
+                    8),
+                new ItemContext(
+                    ItemType.CyanStainedGlassPane, 160, "stained_glass_pane",
+                    1, 64,
+                    9),
+                new ItemContext(
+                    ItemType.PurpleStainedGlassPane, 160, "stained_glass_pane",
+                    1, 64,
+                    10),
+                new ItemContext(
+                    ItemType.BlueStainedGlassPane, 160, "stained_glass_pane",
+                    1, 64,
+                    11),
+                new ItemContext(
+                    ItemType.BrownStainedGlassPane, 160, "stained_glass_pane",
+                    1, 64,
+                    12),
+                new ItemContext(
+                    ItemType.GreenStainedGlassPane, 160, "stained_glass_pane",
+                    1, 64,
+                    13),
+                new ItemContext(
+                    ItemType.RedStainedGlassPane, 160, "stained_glass_pane",
+                    1, 64,
+                    14),
+                new ItemContext(
+                    ItemType.BlackStainedGlassPane, 160, "stained_glass_pane",
+                    1, 64,
+                    15),
+                new ItemContext(
+                    ItemType.IronSword, 267, "iron_sword",
+                    1, 1,
+                    0),
+                new ItemContext(
+                    ItemType.WoodenSword, 268, "wooden_sword",
+                    1, 1,
+                    0),
+                new ItemContext(
+                    ItemType.StoneSword, 272, "stone_sword",
+                    1, 1,
+                    0),
+                new ItemContext(
+                    ItemType.DiamondSword, 276, "diamond_sword",
+                    1, 1,
+                    0),
+                new ItemContext(
+                    ItemType.GoldenSword, 283, "golden_sword",
+                    1, 1,
+                    0),
+                new ItemContext(
+                    ItemType.Stick, 280, "stick",
+                    1, 64,
+                    0),
+                //new ItemContext(
+                //    ItemType.Snowball, 332, "snowball",
+                //    1, 16,
+                //    0),
+                new ItemContext(
+                    ItemType.GoldNugget, 371, "gold_nugget",
+                    1, 64,
+                    0),
+                new ItemContext(
+                    ItemType.PlayerSkull, 397, "skull",
+                    1, 64,
+                    3),
 
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.WhiteTerracotta, new ItemContext(
-                ItemType.WhiteTerracotta, 159, "stained_hardened_clay",
-                1, 64,
-                0));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.OrangeTerracotta, new ItemContext(
-                ItemType.OrangeTerracotta, 159, "stained_hardened_clay",
-                1, 64,
-                1));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.MagentaTerracotta, new ItemContext(
-                ItemType.MagentaTerracotta, 159, "stained_hardened_clay",
-                1, 64,
-                2));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.LightBlueTerracotta, new ItemContext(
-                ItemType.LightBlueTerracotta, 159, "stained_hardened_clay",
-                1, 64,
-                3));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.YellowTerracotta, new ItemContext(
-                ItemType.YellowTerracotta, 159, "stained_hardened_clay",
-                1, 64,
-                4));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.LimeTerracotta, new ItemContext(
-                ItemType.LimeTerracotta, 159, "stained_hardened_clay",
-                1, 64,
-                5));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.PinkTerracotta, new ItemContext(
-                ItemType.PinkTerracotta, 159, "stained_hardened_clay",
-                1, 64,
-                6));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.GrayTerracotta, new ItemContext(
-                ItemType.GrayTerracotta, 159, "stained_hardened_clay",
-                1, 64,
-                7));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.LightGrayTerracotta, new ItemContext(
-                ItemType.LightGrayTerracotta, 159, "stained_hardened_clay",
-                1, 64,
-                8));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.CyanTerracotta, new ItemContext(
-                ItemType.CyanTerracotta, 159, "stained_hardened_clay",
-                1, 64,
-                9));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.PurpleTerracotta, new ItemContext(
-                ItemType.PurpleTerracotta, 159, "stained_hardened_clay",
-                1, 64,
-                10));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.BlueTerracotta, new ItemContext(
-                ItemType.BlueTerracotta, 159, "stained_hardened_clay",
-                1, 64,
-                11));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.BrownTerracotta, new ItemContext(
-                ItemType.BrownTerracotta, 159, "stained_hardened_clay",
-                1, 64,
-                12));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.GreenTerracotta, new ItemContext(
-                ItemType.GreenTerracotta, 159, "stained_hardened_clay",
-                1, 64,
-                13));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.RedTerracotta, new ItemContext(
-                ItemType.RedTerracotta, 159, "stained_hardened_clay",
-                1, 64,
-                14));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.BlackTerracotta, new ItemContext(
-                ItemType.BlackTerracotta, 159, "stained_hardened_clay",
-                1, 64,
-            15));
+            };
 
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.WhiteStainedGlassPane, new ItemContext(
-                   ItemType.WhiteStainedGlassPane, 160, "stained_glass_pane",
-                   1, 64,
-                   0));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.OrangeStainedGlassPane, new ItemContext(
-                   ItemType.OrangeStainedGlassPane, 160, "stained_glass_pane",
-                   1, 64,
-                   1));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.MagentaStainedGlassPane, new ItemContext(
-                   ItemType.MagentaStainedGlassPane, 160, "stained_glass_pane",
-                   1, 64,
-                   2));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.LightBlueStainedGlassPane, new ItemContext(
-                   ItemType.LightBlueStainedGlassPane, 160, "stained_glass_pane",
-                   1, 64,
-                   3));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.YellowStainedGlassPane, new ItemContext(
-                   ItemType.YellowStainedGlassPane, 160, "stained_glass_pane",
-                   1, 64,
-                   4));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.LimeStainedGlassPane, new ItemContext(
-                   ItemType.LimeStainedGlassPane, 160, "stained_glass_pane",
-                   1, 64,
-                   5));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.PinkStainedGlassPane, new ItemContext(
-                   ItemType.PinkStainedGlassPane, 160, "stained_glass_pane",
-                   1, 64,
-                   6));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.GrayStainedGlassPane, new ItemContext(
-                   ItemType.GrayStainedGlassPane, 160, "stained_glass_pane",
-                   1, 64,
-                   7));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.LightGrayStainedGlassPane, new ItemContext(
-                   ItemType.LightGrayStainedGlassPane, 160, "stained_glass_pane",
-                   1, 64,
-                   8));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.CyanStainedGlassPane, new ItemContext(
-                   ItemType.CyanStainedGlassPane, 160, "stained_glass_pane",
-                   1, 64,
-                   9));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.PurpleStainedGlassPane, new ItemContext(
-                   ItemType.PurpleStainedGlassPane, 160, "stained_glass_pane",
-                   1, 64,
-                   10));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.BlueStainedGlassPane, new ItemContext(
-                   ItemType.BlueStainedGlassPane, 160, "stained_glass_pane",
-                   1, 64,
-                   11));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.BrownStainedGlassPane, new ItemContext(
-                   ItemType.BrownStainedGlassPane, 160, "stained_glass_pane",
-                   1, 64,
-                   12));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.GreenStainedGlassPane, new ItemContext(
-                   ItemType.GreenStainedGlassPane, 160, "stained_glass_pane",
-                   1, 64,
-                   13));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.RedStainedGlassPane, new ItemContext(
-                   ItemType.RedStainedGlassPane, 160, "stained_glass_pane",
-                   1, 64,
-                   14));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.BlackStainedGlassPane, new ItemContext(
-                   ItemType.BlackStainedGlassPane, 160, "stained_glass_pane",
-                   1, 64,
-                   15));
-
-
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.IronSword, new ItemContext(
-                ItemType.IronSword, 267, "iron_sword",
-                1, 1,
-                0));
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.WoodenSword, new ItemContext(
-                ItemType.WoodenSword, 268, "wooden_sword",
-                1, 1,
-                0));
-
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.StoneSword, new ItemContext(
-                ItemType.StoneSword, 272, "stone_sword",
-                1, 1,
-                0));
-
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.DiamondSword, new ItemContext(
-                ItemType.DiamondSword, 276, "diamond_sword",
-                1, 1,
-                0));
-
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.GoldenSword, new ItemContext(
-                ItemType.GoldenSword, 283, "golden_sword",
-                1, 1,
-                0));
-
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.Stick, new ItemContext(
-                ItemType.Stick, 280, "stick",
-                1, 64,
-                0));
-
-            // This item is handled by clientside.
-            //_ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.Snowball, new ItemContext(
-            //    ItemType.Snowball, 332, "snowball",
-            //    1, 16,
-            //    0));
-
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.GoldNugget, new ItemContext(
-                ItemType.GoldNugget, 371, "gold_nugget",
-                1, 64,
-                0));
-
-            _ITEM_ENUM_TO_CTX_MAP.Insert(ItemType.PlayerSkull, new ItemContext(
-                ItemType.PlayerSkull, 397, "skull",
-                1, 64,
-                3));
+            foreach (ItemContext ctx in list)
+            {
+                _ITEM_TYPE_ENUM_TO_CTX_MAP.Insert(ctx.Type, ctx);
+            }
 
         }
 
         public static int GetMinStackCount(this ItemType item)
         {
-            return _ITEM_ENUM_TO_CTX_MAP.Lookup(item).MinStackCount;
+            return _ITEM_TYPE_ENUM_TO_CTX_MAP.Lookup(item).MinStackCount;
         }
 
         public static int GetMaxStackCount(this ItemType item)
         {
-            return _ITEM_ENUM_TO_CTX_MAP.Lookup(item).MaxStackCount;
+            return _ITEM_TYPE_ENUM_TO_CTX_MAP.Lookup(item).MaxStackCount;
         }
 
         public static int GetMetadata(this ItemType item)
         {
-            return _ITEM_ENUM_TO_CTX_MAP.Lookup(item).Metadata;
+            return _ITEM_TYPE_ENUM_TO_CTX_MAP.Lookup(item).Metadata;
         }
 
         internal static int GetId(this ItemType item)
         {
-            return _ITEM_ENUM_TO_CTX_MAP.Lookup(item).Id;
+            return _ITEM_TYPE_ENUM_TO_CTX_MAP.Lookup(item).Id;
         }
     }
 }

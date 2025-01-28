@@ -4,72 +4,80 @@ namespace MinecraftServerEngine
 {
     public enum ItemType : int
     {
-        WhiteWool,      // 35
-        OrangeWool,     // 35
-        MagentaWool,    // 35
-        LightBlueWool,  // 35
-        YellowWool,     // 35
-        LimeWool,       // 35
-        PinkWool,       // 35
-        GrayWool,       // 35
-        LightGrayWool,  // 35
-        CyanWool,       // 35
-        PurpleWool,     // 35
-        BlueWool,       // 35
-        BrownWool,      // 35
-        GreenWool,      // 35
-        RedWool,        // 35
-        BlackWool,      // 35
+        WhiteWool,                 // 35  minecraft:wool
+        OrangeWool,                // 35  minecraft:wool
+        MagentaWool,               // 35  minecraft:wool
+        LightBlueWool,             // 35  minecraft:wool
+        YellowWool,                // 35  minecraft:wool
+        LimeWool,                  // 35  minecraft:wool
+        PinkWool,                  // 35  minecraft:wool
+        GrayWool,                  // 35  minecraft:wool
+        LightGrayWool,             // 35  minecraft:wool
+        CyanWool,                  // 35  minecraft:wool
+        PurpleWool,                // 35  minecraft:wool
+        BlueWool,                  // 35  minecraft:wool
+        BrownWool,                 // 35  minecraft:wool
+        GreenWool,                 // 35  minecraft:wool
+        RedWool,                   // 35  minecraft:wool
+        BlackWool,                 // 35  minecraft:wool
 
-        WhiteTerracotta,     // 159
-        OrangeTerracotta,    // 159
-        MagentaTerracotta,   // 159
-        LightBlueTerracotta, // 159
-        YellowTerracotta,    // 159
-        LimeTerracotta,      // 159
-        PinkTerracotta,      // 159
-        GrayTerracotta,      // 159
-        LightGrayTerracotta, // 159
-        CyanTerracotta,      // 159
-        PurpleTerracotta,    // 159
-        BlueTerracotta,      // 159
-        BrownTerracotta,     // 159
-        GreenTerracotta,     // 159
-        RedTerracotta,       // 159
-        BlackTerracotta,     // 159
+        Pumpkin,                   // 86  minecraft:pumpkin
 
-        WhiteStainedGlassPane,     // 160
-        OrangeStainedGlassPane,    // 160
-        MagentaStainedGlassPane,   // 160
-        LightBlueStainedGlassPane, // 160
-        YellowStainedGlassPane,    // 160
-        LimeStainedGlassPane,      // 160
-        PinkStainedGlassPane,      // 160
-        GrayStainedGlassPane,      // 160
-        LightGrayStainedGlassPane, // 160
-        CyanStainedGlassPane,      // 160
-        PurpleStainedGlassPane,    // 160
-        BlueStainedGlassPane,      // 160
-        BrownStainedGlassPane,     // 160
-        GreenStainedGlassPane,     // 160
-        RedStainedGlassPane,       // 160
-        BlackStainedGlassPane,     // 160
+        JackOLantern,              // 91  minecraft:lit_pumpkin
 
-        IronSword,      // 267
-        WoodenSword,    // 268
+        IronBars,                  // 101 minecraft:iron_bars
 
-        StoneSword,     // 272
+        WhiteTerracotta,           // 159  minecraft:stained_hardened_clay
+        OrangeTerracotta,          // 159  minecraft:stained_hardened_clay
+        MagentaTerracotta,         // 159  minecraft:stained_hardened_clay
+        LightBlueTerracotta,       // 159  minecraft:stained_hardened_clay
+        YellowTerracotta,          // 159  minecraft:stained_hardened_clay
+        LimeTerracotta,            // 159  minecraft:stained_hardened_clay
+        PinkTerracotta,            // 159  minecraft:stained_hardened_clay
+        GrayTerracotta,            // 159  minecraft:stained_hardened_clay
+        LightGrayTerracotta,       // 159  minecraft:stained_hardened_clay
+        CyanTerracotta,            // 159  minecraft:stained_hardened_clay
+        PurpleTerracotta,          // 159  minecraft:stained_hardened_clay
+        BlueTerracotta,            // 159  minecraft:stained_hardened_clay
+        BrownTerracotta,           // 159  minecraft:stained_hardened_clay
+        GreenTerracotta,           // 159  minecraft:stained_hardened_clay
+        RedTerracotta,             // 159  minecraft:stained_hardened_clay
+        BlackTerracotta,           // 159  minecraft:stained_hardened_clay
 
-        DiamondSword,   // 276
+        WhiteStainedGlassPane,     // 160  minecraft:stained_glass_pane
+        OrangeStainedGlassPane,    // 160  minecraft:stained_glass_pane
+        MagentaStainedGlassPane,   // 160  minecraft:stained_glass_pane
+        LightBlueStainedGlassPane, // 160  minecraft:stained_glass_pane
+        YellowStainedGlassPane,    // 160  minecraft:stained_glass_pane
+        LimeStainedGlassPane,      // 160  minecraft:stained_glass_pane
+        PinkStainedGlassPane,      // 160  minecraft:stained_glass_pane
+        GrayStainedGlassPane,      // 160  minecraft:stained_glass_pane
+        LightGrayStainedGlassPane, // 160  minecraft:stained_glass_pane
+        CyanStainedGlassPane,      // 160  minecraft:stained_glass_pane
+        PurpleStainedGlassPane,    // 160  minecraft:stained_glass_pane
+        BlueStainedGlassPane,      // 160  minecraft:stained_glass_pane
+        BrownStainedGlassPane,     // 160  minecraft:stained_glass_pane
+        GreenStainedGlassPane,     // 160  minecraft:stained_glass_pane
+        RedStainedGlassPane,       // 160  minecraft:stained_glass_pane
+        BlackStainedGlassPane,     // 160  minecraft:stained_glass_pane
 
-        GoldenSword,    // 283
+        IronSword,                 // 267  minecraft:iron_sword
+        WoodenSword,               // 268  minecraft:wooden_sword
 
-        Stick,          // 280
+        StoneSword,                // 272  minecraft:stone_sword
 
-        /*Snowball,       // 332 */  // This item is handled by clientside.
+        DiamondSword,              // 276  minecraft:diamond_sword
 
-        GoldNugget,     // 371
+        GoldenSword,               // 283  minecraft:golden_sword
 
-        PlayerSkull,    // 397
+        Stick,                     // 280  minecraft:stick
+
+        /*  // This item is handled by clientside.
+        Snowball,                  // 332  minecraft:snowball
+        */
+
+        GoldNugget,                // 371  minecraft:gold_nugget
+
+        PlayerSkull,               // 397  minecraft:skull
     }
 }
