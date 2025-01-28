@@ -201,7 +201,7 @@ namespace MinecraftServerEngine
                 {
                     System.Diagnostics.Debug.Assert(renderer != null);
 
-                    if (renderer.CanRender(p))
+                    if (renderer.CanRender(p) == true)
                     {
                         continue;
                     }

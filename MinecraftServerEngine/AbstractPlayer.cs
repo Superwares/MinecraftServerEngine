@@ -63,6 +63,9 @@ namespace MinecraftServerEngine
         public int ExperienceLevel => _experienceLevel;
 
 
+        private bool _blindness = false;
+
+        public bool Blindness => _blindness;
 
         protected AbstractPlayer(
             UserId userId, string username,
@@ -318,6 +321,7 @@ namespace MinecraftServerEngine
                 Id,
                 Health,
                 Position, Look,
+                Blindness,
                 Inventory,
                 _gamemode);
 
@@ -336,6 +340,19 @@ namespace MinecraftServerEngine
             }
 
             LockerGamemode.Release();
+        }
+
+        public void ApplyBilndness(bool f)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _blindness = f;
+
+            if (Connected == true)
+            {
+                System.Diagnostics.Debug.Assert(Conn != null);
+                Conn.ApplyBilndness(_blindness);
+            }
         }
 
         public override void ApplyForce(Vector force)
@@ -455,7 +472,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            if (Disconnected)
+            if (Disconnected == true)
             {
                 return;
             }
@@ -464,7 +481,8 @@ namespace MinecraftServerEngine
             Conn.LoadAndSendData(
                 world,
                 Id,
-                Position, Look);
+                Position, Look,
+                Blindness);
         }
 
         public bool OpenInventory(SharedInventory sharedInventory)

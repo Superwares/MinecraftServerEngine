@@ -326,6 +326,7 @@ namespace MinecraftServerEngine
             int idEntity,
             double health,
             Vector p, Angles look,
+            bool blindness,
             PlayerInventory playerInventory,
             Gamemode gamemode)
         {
@@ -342,7 +343,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(MaxRenderDistance >= MAxEntityRanderDistance);
 
             ChunkLocation loc = ChunkLocation.Generate(p);
-            EntityRenderer = new EntityRenderer(OutPackets, loc, _dEntityRendering);
+            EntityRenderer = new EntityRenderer(OutPackets, loc, _dEntityRendering, blindness);
             ParticleObjectRenderer = new ParticleObjectRenderer(OutPackets, loc, _dEntityRendering);
 
             ChunkingHelprt = new ChunkingHelper(loc, _dChunkRendering);
@@ -1277,7 +1278,7 @@ namespace MinecraftServerEngine
 
         }
 
-        private void LoadWorld(int idEntitySelf, World world, Vector p)
+        private void LoadWorld(int idEntitySelf, World world, Vector p, bool blindness)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -1290,31 +1291,36 @@ namespace MinecraftServerEngine
 
             ChunkLocation loc = ChunkLocation.Generate(p);
 
-            /*Console.Printl($"_dEntityRendering: {_dEntityRendering}");*/
-            ChunkGrid grid = ChunkGrid.Generate(loc, _dEntityRendering);
-            /*Console.Printl($"grid: {grid}");*/
-
-            AxisAlignedBoundingBox aabbTotal = grid.GetMinBoundingBox();
-            using Tree<PhysicsObject> objs = new();
-            world.SearchObjects(objs, aabbTotal);
-            /*Console.Printl($"count: {objs.Count}");*/
-            foreach (PhysicsObject obj in objs.GetKeys())
+            if (blindness == false)
             {
-                switch (obj)
+
+                /*Console.Printl($"_dEntityRendering: {_dEntityRendering}");*/
+                ChunkGrid grid = ChunkGrid.Generate(loc, _dEntityRendering);
+                /*Console.Printl($"grid: {grid}");*/
+
+                AxisAlignedBoundingBox aabbTotal = grid.GetMinBoundingBox();
+                using Tree<PhysicsObject> objs = new();
+                world.SearchObjects(objs, aabbTotal);
+                /*Console.Printl($"count: {objs.Count}");*/
+                foreach (PhysicsObject obj in objs.GetKeys())
                 {
-                    default:
-                        throw new System.NotImplementedException();
-                    case ParticleObject particleObj:
-                        particleObj.ApplyRenderer(ParticleObjectRenderer);
-                        break;
-                    case Entity entity:
-                        if (entity.Id != idEntitySelf)
-                        {
-                            entity.ApplyRenderer(EntityRenderer);
-                        }
-                        break;
+                    switch (obj)
+                    {
+                        default:
+                            throw new System.NotImplementedException();
+                        case ParticleObject particleObj:
+                            particleObj.ApplyRenderer(ParticleObjectRenderer);
+                            break;
+                        case Entity entity:
+                            if (entity.Id != idEntitySelf)
+                            {
+                                entity.ApplyRenderer(EntityRenderer);
+                            }
+                            break;
+                    }
                 }
             }
+
 
             using Queue<ChunkLocation> newChunkPositions = new();
             using Queue<ChunkLocation> outOfRangeChunks = new();
@@ -1407,6 +1413,13 @@ namespace MinecraftServerEngine
             } while (tryAgain);
 
             System.Diagnostics.Debug.Assert(buffer.Empty);
+        }
+
+        internal void ApplyBilndness(bool f)
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            EntityRenderer.ApplyBlindness(f);
         }
 
         internal void Teleport(Vector p, Angles look)
@@ -1603,7 +1616,8 @@ namespace MinecraftServerEngine
         internal void LoadAndSendData(
             World world,
             int idEntitySelf,
-            Vector p, Angles look)
+            Vector p, Angles look,
+            bool blindness)
         {
             System.Diagnostics.Debug.Assert(world != null);
 
@@ -1626,7 +1640,7 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(JoinGamePacket == null);
 
-                LoadWorld(idEntitySelf, world, p);
+                LoadWorld(idEntitySelf, world, p, blindness);
 
                 while (!LoadChunkPackets.Empty)
                 {
