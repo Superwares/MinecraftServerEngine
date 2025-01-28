@@ -168,6 +168,11 @@ namespace TestMinecraftServerApplication
 
             ResetPlayerSeatSlots(slots, players);
 
+            System.Diagnostics.Debug.Assert(GameSwitchSlot < GameContextInventoryMaxLineCount * SlotCountPerLine);
+            slots[GameSwitchSlot] = (true, GetGameSwitchOffItemStack(
+                GameContext.MinPlayers, GameContext.MaxPlayers,
+                TestWorld.GameContext.CurrentPlayers));
+
             SetSlots(slots);
         }
 
