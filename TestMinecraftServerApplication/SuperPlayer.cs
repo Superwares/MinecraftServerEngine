@@ -166,6 +166,67 @@ namespace TestMinecraftServerApplication
             }
         }
 
+        private void HandleWoodenSwordAttack(SuperWorld world, double attackCharge)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(attackCharge >= 0.0);
+            System.Diagnostics.Debug.Assert(attackCharge <= 1.0);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (world.CanCombat == false)
+            {
+                return;
+            }
+
+            double damage = WoodenSword.Damage;
+            damage *= (attackCharge * attackCharge);
+            damage *= GenerateRandomValueBetween(0.98, 1.01);
+
+            System.Diagnostics.Debug.Assert(damage >= 0.0F);
+
+            double directionScale = 3.0;
+            double knockbackScale = GenerateRandomValueBetween(0.1, 0.3123);
+
+            System.Diagnostics.Debug.Assert(directionScale > 0.0F);
+            System.Diagnostics.Debug.Assert(knockbackScale > 0.0F);
+
+            //MyConsole.Debug($"Damage: {damage:F2}");
+            if (damage == 0.0F)
+            {
+                return;
+            }
+
+
+            Vector o = GetEyeOrigin();
+            Vector d = Look.GetUnitVector();
+            Vector d_prime = d * directionScale;
+
+            //MyConsole.Debug($"Eye origin: {eyeOrigin}, Scaled direction vector: {scaled_d}");
+
+            PhysicsObject obj = world.SearchClosestObject(o, d_prime, this);
+
+            if (obj != null && obj is LivingEntity livingEntity)
+            {
+                (bool damaged, double health) = livingEntity.Damage(damage);
+
+                System.Diagnostics.Debug.Assert(health >= 0.0);
+                if (damaged == true && health == 0.0)
+                {
+
+                }
+
+                livingEntity.ApplyForce(d * knockbackScale);
+
+                Vector v = new(
+                    livingEntity.Position.X,
+                    livingEntity.Position.Y + livingEntity.GetEyeHeight(),
+                    livingEntity.Position.Z);
+
+                world.PlaySound("entity.player.attack.strong", 7, v, 1.0F, 2.0F);
+            }
+        }
+
         private void HandleBalloonBasherAttack(SuperWorld world, double attackCharge)
         {
             System.Diagnostics.Debug.Assert(world != null);
@@ -256,6 +317,9 @@ namespace TestMinecraftServerApplication
                 {
                     default:
                         HandleDefaultAttack(world, attackCharge);
+                        break;
+                    case WoodenSword.Type:
+                        HandleWoodenSwordAttack(world, attackCharge);
                         break;
                     case BalloonBasher.Type:
                         HandleBalloonBasherAttack(world, attackCharge);

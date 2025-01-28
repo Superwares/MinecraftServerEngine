@@ -23,7 +23,15 @@ namespace TestMinecraftServerApplication
                 $"우클릭          차감",
                 ]));
 
-            SetSlot((SlotCountPerLine * 1) + 1, BalloonBasher.CreateShopItemStack([
+            SetSlot((SlotCountPerLine * 1) + 1, WoodenSword.CreateShopItemStack([
+                $"",
+                $"평범한 나무검입니다!",
+                $"",
+                $"왼클릭(구매)          {WoodenSword.PurchasePrice} 코인",
+                $"우클릭(판매)          {WoodenSword.SellPrice} 코인",
+                ]));
+
+            SetSlot((SlotCountPerLine * 1) + 3, BalloonBasher.CreateShopItemStack([
                 $"",
                 $"가볍지만 강력한 한 방으로 적을 날려버리세요!",
                 $"",
@@ -54,6 +62,37 @@ namespace TestMinecraftServerApplication
 
                     }
                     break;
+                case WoodenSword.Type:
+                    {
+                        const int coinAmount = WoodenSword.PurchasePrice;
+
+                        taked = playerInventory.TakeItemStacksInPrimary(
+                           Coin.Item, Coin.DefaultCount * coinAmount);
+
+                        System.Diagnostics.Debug.Assert(taked != null);
+                        if (taked.Length > 0)
+                        {
+                            System.Diagnostics.Debug.Assert(taked.Length == 1);
+                            System.Diagnostics.Debug.Assert(taked[0].Count == coinAmount);
+
+                            giveItem = ItemStack.Create(
+                                WoodenSword.Item,
+                                WoodenSword.DefaultCount * itemStack.Count);
+                            success = playerInventory.GiveItem(giveItem);
+
+                            if (success == false)
+                            {
+                                giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * coinAmount);
+                                success = playerInventory.GiveItem(giveItem);
+
+                                System.Diagnostics.Debug.Assert(success == true);
+
+                                success = false;
+                            }
+                        }
+
+                    }
+                    break;
                 case BalloonBasher.Type:
                     {
                         const int coinAmount = BalloonBasher.PurchasePrice;
@@ -68,7 +107,7 @@ namespace TestMinecraftServerApplication
                             System.Diagnostics.Debug.Assert(taked[0].Count == coinAmount);
 
                             giveItem = ItemStack.Create(
-                                BalloonBasher.Item, 
+                                BalloonBasher.Item,
                                 BalloonBasher.DefaultCount * itemStack.Count);
                             success = playerInventory.GiveItem(giveItem);
 
@@ -115,6 +154,39 @@ namespace TestMinecraftServerApplication
                         {
                             success = true;
                         }
+                    }
+                    break;
+                case WoodenSword.Type:
+                    {
+                        const int coinAmount = WoodenSword.SellPrice;
+
+                        System.Diagnostics.Debug.Assert(coinAmount >= Coin.Type.GetMinStackCount());
+                        System.Diagnostics.Debug.Assert(coinAmount <= Coin.Type.GetMaxStackCount());
+
+                        taked = playerInventory.TakeItemStacksInPrimary(
+                            WoodenSword.Item, WoodenSword.DefaultCount);
+
+                        if (taked != null && taked.Length > 0)
+                        {
+                            System.Diagnostics.Debug.Assert(taked.Length == 1);
+                            System.Diagnostics.Debug.Assert(taked[0].Count == itemStack.Count);
+
+                            giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * coinAmount);
+                            success = playerInventory.GiveItem(giveItem);
+
+                            if (success == false)
+                            {
+                                giveItem = ItemStack.Create(
+                                    WoodenSword.Item,
+                                    WoodenSword.DefaultCount * itemStack.Count);
+                                success = playerInventory.GiveItem(giveItem);
+
+                                System.Diagnostics.Debug.Assert(success == true);
+
+                                success = false;
+                            }
+                        }
+
                     }
                     break;
                 case BalloonBasher.Type:

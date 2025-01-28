@@ -1,29 +1,27 @@
-﻿
-
-using MinecraftServerEngine;
+﻿using MinecraftServerEngine;
 
 namespace TestMinecraftServerApplication.Items
 {
-
-    public static class BalloonBasher
+    public static class WoodenSword
     {
         public const ItemQualityTier Tier = ItemQualityTier.Basic;
-        public const ItemType Type = ItemType.DiamondSword;
-        public const string Name = "Balloon Basher";
+        public const ItemType Type = ItemType.WoodenSword;
+        public const string Name = "Wooden Sword";
 
-        public const int MaxDurability = 110;
+        public const int MaxDurability = 200;
+        //public const int MaxDurability = 10;  // for debug
 
-        public const double Damage = 3.0;
+        public const double Damage = 2.0;
 
         public const int MaxPurchaseCount = 10;
-        public const int PurchasePrice = 30;
-        public const int SellPrice = 5;
+        public const int PurchasePrice = 5;
+        public const int SellPrice = 1;
 
         public readonly static IReadOnlyItem Item = new Item(
             Type,
             Name,
-            MaxDurability,
-            [
+        MaxDurability,
+        [
                 $"Tier            {Tier.ToString()}",  // Quality Tier
                 $"Damage          {Damage:F2}",
             ]);
@@ -46,7 +44,5 @@ namespace TestMinecraftServerApplication.Items
                     ..descriptions,
                 ]);
         }
-
     }
-
 }
