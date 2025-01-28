@@ -37,10 +37,15 @@ namespace TestMinecraftServerApplication.Items
             return ItemStack.Create(Item, DefaultCount);
         }
 
-        public static ItemStack Create(string[] additionalLore)
+        public static ItemStack CreateShopItemStack(string[] descriptions)
         {
             System.Diagnostics.Debug.Assert(Damage >= 0);
-            return ItemStack.Create(Item, DefaultCount, additionalLore);
+            return ItemStack.Create(
+                Item,
+                DefaultCount,
+                [
+                    ..descriptions,
+                ]);
         }
 
     }

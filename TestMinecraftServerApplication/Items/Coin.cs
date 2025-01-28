@@ -23,20 +23,20 @@ namespace TestMinecraftServerApplication.Items
             System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(Name) == false);
             return new(Type,
                 Name,
-                ItemType.DiamondSword.GetMinStackCount(),
+                DefaultCount,
                 [
                 ]);
         }
 
-        public static ItemStack Create(string[] lore)
+        public static ItemStack CreateShopItemStack(string[] descriptions)
         {
             System.Diagnostics.Debug.Assert(Name != null);
             System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(Name) == false);
             return new(Type,
                 Name,
-                ItemType.DiamondSword.GetMinStackCount(),
+                Type.GetMaxStackCount(),
                 [
-                    ..lore,
+                    ..descriptions,
                 ]);
         }
 
