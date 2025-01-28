@@ -88,7 +88,8 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
-            return new RoundStartNode(_currentRoundIndex);
+            List<SuperPlayer> prevSeekers = new();
+            return new RoundStartNode(_currentRoundIndex, prevSeekers);
         }
 
         public bool StartRoutine(GameContext ctx, SuperWorld world)
@@ -111,9 +112,14 @@ namespace TestMinecraftServerApplication
     {
         private int _currentRoundIndex;
 
-        public RoundStartNode(int currentRoundIndex)
+        private readonly List<SuperPlayer> _PrevSeekers;
+
+        public RoundStartNode(int currentRoundIndex, List<SuperPlayer> prevSeekers)
         {
             _currentRoundIndex = currentRoundIndex;
+
+            System.Diagnostics.Debug.Assert(prevSeekers != null);
+            _PrevSeekers = prevSeekers;
         }
 
         public IGameProgressNode CreateNextNode(GameContext ctx)
@@ -121,7 +127,9 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(ctx != null);
 
             System.Diagnostics.Debug.Assert(_currentRoundIndex >= 0);
-            return new RandomSeekerNode(ctx, _currentRoundIndex);
+            System.Diagnostics.Debug.Assert(_currentRoundIndex < ctx.TotalRounds);
+            System.Diagnostics.Debug.Assert(_PrevSeekers != null);
+            return new RandomSeekerNode(ctx, _currentRoundIndex, _PrevSeekers);
         }
 
         public bool StartRoutine(GameContext ctx, SuperWorld world)
@@ -139,6 +147,8 @@ namespace TestMinecraftServerApplication
     {
         private int _currentRoundIndex;
 
+        private readonly List<SuperPlayer> _PrevSeekers;
+
         private List<int> _playerIndices;
 
         private Time _intervalTime = Time.FromMilliseconds(250);
@@ -146,19 +156,37 @@ namespace TestMinecraftServerApplication
 
         private readonly System.Random _Random = new();
 
-        private SuperPlayer _player = null;
+        private SuperPlayer _seeker = null;
 
         private int _repeat = 3;
         private int i = 0;
 
-        public RandomSeekerNode(GameContext ctx, int currentRoundIndex)
+        public RandomSeekerNode(GameContext ctx, int currentRoundIndex, List<SuperPlayer> prevSeekers)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
-            int length = ctx.Players.Length;
+            int length = ctx.Players.Length - prevSeekers.Length;
             _playerIndices = new List<int>(length);
-            for (int i = 0; i < length; ++i)
+
+            bool prevSeeker = false;
+            for (int i = 0; i < ctx.Players.Length; ++i)
             {
+                for (int j = 0; j < prevSeekers.Length; ++j)
+                {
+                    if (object.ReferenceEquals(prevSeekers[j], ctx.Players[i]) == true)
+                    {
+                        prevSeeker = true;
+                        break;
+                    }
+
+
+                }
+
+                if (prevSeeker == true)
+                {
+                    continue;
+                }
+
                 _playerIndices[i] = i;
             }
 
@@ -166,6 +194,9 @@ namespace TestMinecraftServerApplication
 
             _intervalTime /= length;
             _time = Time.Now() - _intervalTime;
+
+            System.Diagnostics.Debug.Assert(prevSeekers != null);
+            _PrevSeekers = prevSeekers;
         }
 
         public IGameProgressNode CreateNextNode(GameContext ctx)
@@ -175,10 +206,11 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(_playerIndices != null);
             _playerIndices.Dispose();
 
+            System.Diagnostics.Debug.Assert(_seeker != null);
             System.Diagnostics.Debug.Assert(_currentRoundIndex >= 0);
             System.Diagnostics.Debug.Assert(_currentRoundIndex < ctx.TotalRounds);
-            System.Diagnostics.Debug.Assert(_player != null);
-            return new SeekerCountNode(_player, _currentRoundIndex);
+            System.Diagnostics.Debug.Assert(_PrevSeekers != null);
+            return new SeekerCountNode(_seeker, _currentRoundIndex, _PrevSeekers);
         }
 
         public bool StartRoutine(GameContext ctx, SuperWorld world)
@@ -190,7 +222,18 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(ctx.Players != null);
             IReadOnlyList<SuperPlayer> players = ctx.Players;
 
-            SuperPlayer player;
+            if (_playerIndices.Length == 1)
+            {
+                int j = _playerIndices[0];
+
+                _seeker = players[j];
+
+                world.DisplayTitle(
+                    Time.Zero, Time.FromSeconds(1), Time.FromSeconds(1),
+                    new TextComponent($"{_seeker.Username}", TextColor.DarkGreen));
+
+                return true;
+            }
 
             if (i >= _playerIndices.Length * _repeat)
             {
@@ -205,19 +248,6 @@ namespace TestMinecraftServerApplication
 
                 //_repeat += 1;
                 i = 0;
-
-                if (_playerIndices.Length == 1)
-                {
-                    j = _playerIndices[0];
-
-                    _player = players[j];
-
-                    world.DisplayTitle(
-                        Time.Zero, Time.FromSeconds(1), Time.FromSeconds(1),
-                        new TextComponent($"{_player.Username}", TextColor.DarkGreen));
-
-                    return true;
-                }
             }
             else
             {
@@ -228,9 +258,9 @@ namespace TestMinecraftServerApplication
                     int j = i % _playerIndices.Length;
                     int k = _playerIndices[j];
 
-                    MyConsole.Debug($"j: {j}");
+                    //MyConsole.Debug($"j: {j}");
 
-                    player = players[k];
+                    SuperPlayer player = players[k];
 
                     world.DisplayTitle(
                         Time.Zero, _intervalTime, Time.Zero,
@@ -256,24 +286,32 @@ namespace TestMinecraftServerApplication
 
         private int _currentRoundIndex;
 
-        private readonly SuperPlayer Seeker;
+        private readonly List<SuperPlayer> _PrevSeekers;
+
+        private readonly SuperPlayer _Seeker;
 
 
-        public SeekerCountNode(SuperPlayer player, int currentRoundIndex)
+        public SeekerCountNode(SuperPlayer player, int currentRoundIndex, List<SuperPlayer> prevSeekers)
         {
-            Seeker = player;
+            System.Diagnostics.Debug.Assert(player != null);
+            _Seeker = player;
 
             System.Diagnostics.Debug.Assert(currentRoundIndex >= 0);
             _currentRoundIndex = currentRoundIndex;
+
+            System.Diagnostics.Debug.Assert(prevSeekers != null);
+            _PrevSeekers = prevSeekers;
         }
 
         public IGameProgressNode CreateNextNode(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
+            System.Diagnostics.Debug.Assert(_Seeker != null);
             System.Diagnostics.Debug.Assert(_currentRoundIndex >= 0);
             System.Diagnostics.Debug.Assert(_currentRoundIndex < ctx.TotalRounds);
-            return new FindHidersNode(_currentRoundIndex);
+            System.Diagnostics.Debug.Assert(_PrevSeekers != null);
+            return new FindHidersNode(_Seeker, _currentRoundIndex, _PrevSeekers);
         }
 
         public bool StartRoutine(GameContext ctx, SuperWorld world)
@@ -309,22 +347,33 @@ namespace TestMinecraftServerApplication
 
         private int _currentRoundIndex;
 
+        private readonly List<SuperPlayer> _PrevSeekers;
+
+        private readonly SuperPlayer _Seeker;
+
         private bool _alertBurningTime = false;
 
-        public FindHidersNode(int currentRoundIndex)
+        public FindHidersNode(SuperPlayer player, int currentRoundIndex, List<SuperPlayer> prevSeekers)
         {
-            System.Diagnostics.Debug.Assert(currentRoundIndex >= 0);
+            System.Diagnostics.Debug.Assert(player != null);
+            _Seeker = player;
 
+            System.Diagnostics.Debug.Assert(currentRoundIndex >= 0);
             _currentRoundIndex = currentRoundIndex;
+
+            System.Diagnostics.Debug.Assert(prevSeekers != null);
+            _PrevSeekers = prevSeekers;
         }
 
         public IGameProgressNode CreateNextNode(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
+            System.Diagnostics.Debug.Assert(_Seeker != null);
             System.Diagnostics.Debug.Assert(_currentRoundIndex >= 0);
             System.Diagnostics.Debug.Assert(_currentRoundIndex < ctx.TotalRounds);
-            return new RoundEndNode(_currentRoundIndex);
+            System.Diagnostics.Debug.Assert(_PrevSeekers != null);
+            return new RoundEndNode(_Seeker, _currentRoundIndex, _PrevSeekers);
         }
 
         public bool StartRoutine(GameContext ctx, SuperWorld world)
@@ -362,11 +411,20 @@ namespace TestMinecraftServerApplication
     {
         private int _currentRoundIndex;
 
-        public RoundEndNode(int currentRoundIndex)
-        {
-            System.Diagnostics.Debug.Assert(currentRoundIndex >= 0);
+        private readonly List<SuperPlayer> _PrevSeekers;
 
+        private readonly SuperPlayer Seeker;
+
+        public RoundEndNode(SuperPlayer player, int currentRoundIndex, List<SuperPlayer> prevSeekers)
+        {
+            System.Diagnostics.Debug.Assert(player != null);
+            Seeker = player;
+
+            System.Diagnostics.Debug.Assert(currentRoundIndex >= 0);
             _currentRoundIndex = currentRoundIndex;
+
+            System.Diagnostics.Debug.Assert(prevSeekers != null);
+            _PrevSeekers = prevSeekers;
         }
 
         public IGameProgressNode CreateNextNode(GameContext ctx)
@@ -378,9 +436,14 @@ namespace TestMinecraftServerApplication
 
             int finalRound = ctx.TotalRounds - 1;
 
+            _PrevSeekers.Append(Seeker);
+
+            System.Diagnostics.Debug.Assert(_currentRoundIndex >= 0);
+            System.Diagnostics.Debug.Assert(_currentRoundIndex < ctx.TotalRounds);
+            System.Diagnostics.Debug.Assert(_PrevSeekers != null);
             if (_currentRoundIndex < finalRound)
             {
-                return new RoundStartNode(_currentRoundIndex);
+                return new RoundStartNode(_currentRoundIndex, _PrevSeekers);
             }
             else
             {
