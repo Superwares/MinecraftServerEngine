@@ -94,6 +94,13 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(ctx != null);
             System.Diagnostics.Debug.Assert(world != null);
 
+            foreach (SuperPlayer player in ctx.Players)
+            {
+                player.FlushItems();
+
+                SuperPlayer.GiveDefaultItems(player);
+            }
+
             return true;
         }
     }

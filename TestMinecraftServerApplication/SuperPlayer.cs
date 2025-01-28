@@ -22,6 +22,11 @@ namespace TestMinecraftServerApplication
         private static readonly ShopInventory ShopInventory = new();
 
 
+        public static void GiveDefaultItems(SuperPlayer player)
+        {
+            player.GiveItem(ShopItem.Create(1));
+            player.GiveItem(Coin.Create(10));
+        }
 
         public SuperPlayer(
             UserId userId, string username,
@@ -33,9 +38,7 @@ namespace TestMinecraftServerApplication
 
             //ApplyBlockAppearance(Block.Dirt);
 
-            GiveItem(new ItemStack(ShopItemType, "Shop", [
-                "우클릭하여 상점을 이용할 수 있습니다!"
-                ]));
+            GiveDefaultItems(this);
         }
 
         ~SuperPlayer()
@@ -337,8 +340,6 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(stack != null);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
-
-            MyConsole.Debug("Use item!");
 
             if (_world is SuperWorld world)
             {

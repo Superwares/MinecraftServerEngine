@@ -43,6 +43,21 @@ namespace MinecraftServerEngine
             return _totalSlotCount;
         }
 
+        public void FlushItems()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            int totalSlotCount = GetTotalSlotCount();
+
+            System.Diagnostics.Debug.Assert(totalSlotCount > 0);
+
+            for (int i = 0; i < totalSlotCount; ++i)
+            {
+                Slots[i].Reset(null);
+            }
+
+        }
+
         public void Print()
         {
             int totalSlots = GetTotalSlotCount();

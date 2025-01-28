@@ -514,7 +514,29 @@ namespace MinecraftServerEngine
                 InventoryLocker.Release();
             }
 
+        }
 
+        public void FlushItems()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            InventoryLocker.Hold();
+
+            try
+            {
+                if (Conn != null)
+                {
+                    Conn.Window.FlushItems(Inventory);
+                }
+                else
+                {
+                    Inventory.FlushItems();
+                }
+            }
+            finally
+            {
+                InventoryLocker.Release();
+            }
 
         }
 

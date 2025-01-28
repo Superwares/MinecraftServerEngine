@@ -15,7 +15,7 @@ namespace TestMinecraftServerApplication
 
         public ShopInventory() : base(MaxLineCount)
         {
-            SetSlot((SlotCountPerLine * 0) + 0, Coin.CreateShopItemStack([
+            SetSlot((SlotCountPerLine * 0) + 0, Coin.CreateForShop([
                 $"",
                 $"테스트용 무료 코인입니다.",
                 $"",
@@ -31,7 +31,7 @@ namespace TestMinecraftServerApplication
                 $"우클릭(판매)          {WoodenSword.SellPrice} 코인",
                 ]));
 
-            SetSlot((SlotCountPerLine * 1) + 3, BalloonBasher.CreateShopItemStack([
+            SetSlot((SlotCountPerLine * 1) + 3, BalloonBasher.CreateForShop([
                 $"",
                 $"가볍지만 강력한 한 방으로 적을 날려버리세요!",
                 $"",

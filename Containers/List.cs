@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-
+﻿
 namespace Containers
 {
 
     // TODO: Modify to use an array that is allocated and deallocated
     // according to a factor,
     // like a hash table, instead of using a simple array.
-    public class List<T> : System.Collections.Generic.IEnumerable<T>, System.IDisposable
+    public class List<T> : IReadOnlyList<T>, System.IDisposable
 
     {
         private bool _disposed = false;
@@ -59,14 +55,14 @@ namespace Containers
         ~List() => System.Diagnostics.Debug.Assert(false);
 
 
-
         public void Append(T item)
         {
-            _items = _items.Concat(new T[] { item }).ToArray();
+            _items = System.Linq.Enumerable.ToArray(
+                System.Linq.Enumerable.Concat(_items, new T[] { item }));
         }
 
-        //public T Find(Func<T, bool> predicate, T defaultValue = default(T))
-        public T Find(Func<T, bool> predicate, T defaultValue)
+        //public T Find(System.Func<T, bool> predicate, T defaultValue = default(T))
+        public T Find(System.Func<T, bool> predicate, T defaultValue)
         {
             foreach (T item in _items)
             {
@@ -79,14 +75,15 @@ namespace Containers
             return defaultValue;
         }
 
-        public T Extract(Func<T, bool> predicate, T defaultValue)
+        public T Extract(System.Func<T, bool> predicate, T defaultValue)
         {
             for (int i = 0; i < _items.Length; i++)
             {
                 if (predicate(_items[i]))
                 {
                     T item = _items[i];
-                    _items = _items.Where((_, index) => index != i).ToArray();
+                    _items = System.Linq.Enumerable.ToArray(
+                        System.Linq.Enumerable.Where(_items, (_, index) => index != i));
                     return item;
                 }
             }
@@ -98,7 +95,7 @@ namespace Containers
             return _items;
         }
 
-        public IEnumerator<T> GetEnumerator()
+        public System.Collections.Generic.IEnumerator<T> GetEnumerator()
         {
             foreach (T value in _items)
             {
@@ -106,7 +103,7 @@ namespace Containers
             }
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }

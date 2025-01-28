@@ -425,6 +425,35 @@ namespace MinecraftServerEngine
             }
         }
 
+        internal void FlushItems(PlayerInventory playerInventory)
+        {
+            System.Diagnostics.Debug.Assert(playerInventory != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _Locker.Hold();
+            if (_sharedInventory != null)
+            {
+                _sharedInventory.Locker.Hold();
+            }
+
+            try
+            {
+                playerInventory.FlushItems();
+
+                _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
+
+            }
+            finally
+            {
+                if (_sharedInventory != null)
+                {
+                    _sharedInventory.Locker.Release();
+                }
+                _Locker.Release();
+            }
+        }
+
         internal void Reset(
             ConcurrentQueue<ClientboundPlayingPacket> outPackets,
             World world, AbstractPlayer player,

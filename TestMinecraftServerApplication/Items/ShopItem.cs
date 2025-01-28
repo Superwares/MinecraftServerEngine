@@ -1,38 +1,29 @@
-﻿
-
-using MinecraftServerEngine;
+﻿using MinecraftServerEngine;
 
 namespace TestMinecraftServerApplication.Items
 {
-
-    public static class BalloonBasher
+    public static class ShopItem
     {
-        public const ItemQualityTier Tier = ItemQualityTier.Basic;
-        public const ItemType Type = ItemType.DiamondSword;
-        public const string Name = "Balloon Basher";
+        public const ItemType Type = ItemType.MusicDisc_C418_13;
+        public const string Name = "SHOP";
 
-        public const int MaxDurability = 110;
-
-        public const double Damage = 3.0;
-
-        public const int MaxPurchaseCount = 10;
-        public const int PurchasePrice = 30;
-        public const int SellPrice = 5;
+        public const int MaxPurchaseCount = int.MaxValue;
+        public const int PurchasePrice = 0;
+        public const int SellPrice = 0;
 
         public readonly static IReadOnlyItem Item = new Item(
             Type,
             Name,
-            MaxDurability,
             [
-                $"Tier            {Tier.ToString()}",  // Quality Tier
-                $"Damage          {Damage:F2}",
+                $"우클릭하여 상점을 이용할 수 있습니다!",
             ]);
 
         public static readonly int DefaultCount = Item.Type.GetMinStackCount();
 
         public static ItemStack Create(int count = 1)
         {
-            System.Diagnostics.Debug.Assert(Damage >= 0);
+            System.Diagnostics.Debug.Assert(Name != null);
+            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(Name) == false);
             System.Diagnostics.Debug.Assert(count >= Type.GetMinStackCount());
 
             return ItemStack.Create(Item, DefaultCount * count);
@@ -40,7 +31,8 @@ namespace TestMinecraftServerApplication.Items
 
         public static ItemStack CreateForShop(string[] descriptions)
         {
-            System.Diagnostics.Debug.Assert(Damage >= 0);
+            System.Diagnostics.Debug.Assert(Name != null);
+            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(Name) == false);
             return ItemStack.Create(
                 Item,
                 DefaultCount,
@@ -50,5 +42,4 @@ namespace TestMinecraftServerApplication.Items
         }
 
     }
-
 }

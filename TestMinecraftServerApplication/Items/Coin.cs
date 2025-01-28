@@ -17,24 +17,22 @@ namespace TestMinecraftServerApplication.Items
 
         public static readonly int DefaultCount = Item.Type.GetMinStackCount();
 
-        public static ItemStack Create()
+        public static ItemStack Create(int count = 1)
         {
             System.Diagnostics.Debug.Assert(Name != null);
             System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(Name) == false);
-            return new(Type,
-                Name,
-                DefaultCount,
-                [
-                ]);
+            System.Diagnostics.Debug.Assert(count >= Type.GetMinStackCount());
+
+            return ItemStack.Create(Item, DefaultCount * count);
         }
 
-        public static ItemStack CreateShopItemStack(string[] descriptions)
+        public static ItemStack CreateForShop(string[] descriptions)
         {
             System.Diagnostics.Debug.Assert(Name != null);
             System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(Name) == false);
-            return new(Type,
-                Name,
-                Type.GetMaxStackCount(),
+            return ItemStack.Create(
+                Item,
+                DefaultCount * Type.GetMaxStackCount(),
                 [
                     ..descriptions,
                 ]);

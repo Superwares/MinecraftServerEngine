@@ -17,6 +17,8 @@ namespace TestMinecraftServerApplication
 
         private readonly List<SuperPlayer> _players = new();
 
+        public IReadOnlyList<SuperPlayer> Players => _players;
+
 
         public int CurrentPlayers
         {
