@@ -10,9 +10,9 @@ namespace Containers
     {
         private bool _disposed = false;
 
-        private T[] _items = [];
+        private T[] _items;
 
-        public int Count
+        public int Length
         {
             get
             {
@@ -48,15 +48,43 @@ namespace Containers
             }
         }
 
-        public List()
+        public List(int length)
+        {
+            if (length < 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(length));
+            }
+
+            _items = new T[length];
+        }
+
+        public List() : this(0)
         {
         }
 
         ~List() => System.Diagnostics.Debug.Assert(false);
 
 
+        public void Fill(T item)
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            for (int i = 0; i < _items.Length; ++i)
+            {
+                _items[i] = item;
+            }
+        }
+
         public void Append(T item)
         {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
             _items = System.Linq.Enumerable.ToArray(
                 System.Linq.Enumerable.Concat(_items, new T[] { item }));
         }
@@ -64,6 +92,11 @@ namespace Containers
         //public T Find(System.Func<T, bool> predicate, T defaultValue = default(T))
         public T Find(System.Func<T, bool> predicate, T defaultValue)
         {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
             foreach (T item in _items)
             {
                 if (predicate(item))
@@ -77,6 +110,11 @@ namespace Containers
 
         public T Extract(System.Func<T, bool> predicate, T defaultValue)
         {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
             for (int i = 0; i < _items.Length; i++)
             {
                 if (predicate(_items[i]))
@@ -92,11 +130,21 @@ namespace Containers
 
         public T[] ToArray()
         {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
             return _items;
         }
 
         public System.Collections.Generic.IEnumerator<T> GetEnumerator()
         {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
             foreach (T value in _items)
             {
                 yield return value;
@@ -105,11 +153,21 @@ namespace Containers
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
             return GetEnumerator();
         }
 
         public T[] Flush()
         {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
             try
             {
                 return _items;
@@ -118,6 +176,18 @@ namespace Containers
             {
                 _items = [];
             }
+        }
+
+        public List<T> Clone()
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            List<T> clone = new List<T>(_items.Length);
+            System.Array.Copy(_items, clone._items, _items.Length);
+            return clone;
         }
 
         public virtual void Dispose()

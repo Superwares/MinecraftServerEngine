@@ -55,7 +55,7 @@ namespace TestMinecraftServerApplication
 
             if (players != null)
             {
-                System.Diagnostics.Debug.Assert(players.Count <= GameContext.MaxPlayers);
+                System.Diagnostics.Debug.Assert(players.Length <= GameContext.MaxPlayers);
                 foreach (SuperPlayer player in players)
                 {
                     int slot = i++ + PlayerSeatSlotOffset;
@@ -68,7 +68,7 @@ namespace TestMinecraftServerApplication
             }
 
 
-            for (; i < GameContext.MaxPlayers; ++i)
+            for (; i < GameContext.MaxRounds; ++i)
             {
                 int slot = i + PlayerSeatSlotOffset;
 
@@ -93,10 +93,10 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(GameSwitchSlot < GameContextInventoryMaxLineCount * SlotCountPerLine);
             slots[GameSwitchSlot] = (true, GetGameSwitchOffItemStack(
                 GameContext.MinPlayers, GameContext.MaxPlayers,
-                SuperWorld.GameContext.CurrentPlayers));
+                SuperWorld.GameContext.Players.Length));
 
             System.Diagnostics.Debug.Assert(GameContext.MaxPlayers % SlotCountPerLine == 0);
-            for (int i = 0; i < GameContext.MaxPlayers; ++i)
+            for (int i = 0; i < GameContext.MaxRounds; ++i)
             {
                 int slot = i + RoundIndicatorSlotOffset;
                 System.Diagnostics.Debug.Assert(slot < GameContextInventoryMaxLineCount * SlotCountPerLine);
@@ -161,7 +161,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(GameSwitchSlot < GameContextInventoryMaxLineCount * SlotCountPerLine);
             slots[GameSwitchSlot] = (true, GetGameSwitchOffItemStack(
                 GameContext.MinPlayers, GameContext.MaxPlayers,
-                SuperWorld.GameContext.CurrentPlayers));
+                SuperWorld.GameContext.Players.Length));
 
             SetSlots(slots);
         }
@@ -177,9 +177,9 @@ namespace TestMinecraftServerApplication
                 ]));
 
             System.Diagnostics.Debug.Assert(GameContext.MaxPlayers % SlotCountPerLine == 0);
-            System.Diagnostics.Debug.Assert(players.Count >= GameContext.MinPlayers);
-            System.Diagnostics.Debug.Assert(players.Count <= GameContext.MaxPlayers);
-            for (int i = 0; i < players.Count; ++i)
+            System.Diagnostics.Debug.Assert(players.Length >= GameContext.MinPlayers);
+            System.Diagnostics.Debug.Assert(players.Length <= GameContext.MaxPlayers);
+            for (int i = 0; i < players.Length; ++i)
             {
                 int slot = i + RoundIndicatorSlotOffset;
                 System.Diagnostics.Debug.Assert(slot < GameContextInventoryMaxLineCount * SlotCountPerLine);

@@ -1,6 +1,8 @@
 ﻿
 
 using Common;
+using Containers;
+
 using MinecraftServerEngine;
 using MinecraftPrimitives;
 
@@ -119,7 +121,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(ctx != null);
 
             System.Diagnostics.Debug.Assert(_currentRoundIndex >= 0);
-            return new SeekerCountNode(_currentRoundIndex);
+            return new RandomSeekerNode(ctx, _currentRoundIndex);
         }
 
         public bool StartRoutine(GameContext ctx, SuperWorld world)
@@ -133,6 +135,118 @@ namespace TestMinecraftServerApplication
         }
     }
 
+    public sealed class RandomSeekerNode : IGameProgressNode
+    {
+        private int _currentRoundIndex;
+
+        private List<int> _playerIndices;
+
+        private Time _intervalTime = Time.FromMilliseconds(250);
+        private Time _time;
+
+        private readonly System.Random _Random = new();
+
+        private SuperPlayer _player = null;
+
+        private int _repeat = 3;
+        private int i = 0;
+
+        public RandomSeekerNode(GameContext ctx, int currentRoundIndex)
+        {
+            System.Diagnostics.Debug.Assert(ctx != null);
+
+            int length = ctx.Players.Length;
+            _playerIndices = new List<int>(length);
+            for (int i = 0; i < length; ++i)
+            {
+                _playerIndices[i] = i;
+            }
+
+            _currentRoundIndex = currentRoundIndex;
+
+            _intervalTime /= length;
+            _time = Time.Now() - _intervalTime;
+        }
+
+        public IGameProgressNode CreateNextNode(GameContext ctx)
+        {
+            System.Diagnostics.Debug.Assert(ctx != null);
+
+            System.Diagnostics.Debug.Assert(_playerIndices != null);
+            _playerIndices.Dispose();
+
+            System.Diagnostics.Debug.Assert(_currentRoundIndex >= 0);
+            System.Diagnostics.Debug.Assert(_currentRoundIndex < ctx.TotalRounds);
+            System.Diagnostics.Debug.Assert(_player != null);
+            return new SeekerCountNode(_player, _currentRoundIndex);
+        }
+
+        public bool StartRoutine(GameContext ctx, SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(ctx != null);
+            System.Diagnostics.Debug.Assert(world != null);
+
+
+            System.Diagnostics.Debug.Assert(ctx.Players != null);
+            IReadOnlyList<SuperPlayer> players = ctx.Players;
+
+            SuperPlayer player;
+
+            if (i >= _playerIndices.Length * _repeat)
+            {
+                int j = _Random.Next(_playerIndices.Length);
+                int k = _playerIndices[j];
+
+                _playerIndices.Extract(_j => _j == j, -1);
+
+                //SuperPlayer player = players[k];
+
+                _intervalTime += Time.FromMilliseconds(100);
+
+                //_repeat += 1;
+                i = 0;
+
+                if (_playerIndices.Length == 1)
+                {
+                    j = _playerIndices[0];
+
+                    _player = players[j];
+
+                    world.DisplayTitle(
+                        Time.Zero, Time.FromSeconds(1), Time.FromSeconds(1),
+                        new TextComponent($"{_player.Username}", TextColor.DarkGreen));
+
+                    return true;
+                }
+            }
+            else
+            {
+                Time time = Time.Now() - _time;
+
+                if (time > _intervalTime)
+                {
+                    int j = i % _playerIndices.Length;
+                    int k = _playerIndices[j];
+
+                    MyConsole.Debug($"j: {j}");
+
+                    player = players[k];
+
+                    world.DisplayTitle(
+                        Time.Zero, _intervalTime, Time.Zero,
+                        new TextComponent($"{player.Username}", TextColor.Gray));
+
+                    ++i;
+
+                    _time = Time.Now();
+                }
+
+            }
+
+            return false;
+        }
+    }
+
     // The seeker closes their eyes and counts to a number.
     public sealed class SeekerCountNode : IGameProgressNode
     {
@@ -142,11 +256,14 @@ namespace TestMinecraftServerApplication
 
         private int _currentRoundIndex;
 
+        private readonly SuperPlayer Seeker;
 
-        public SeekerCountNode(int currentRoundIndex)
+
+        public SeekerCountNode(SuperPlayer player, int currentRoundIndex)
         {
-            System.Diagnostics.Debug.Assert(currentRoundIndex >= 0);
+            Seeker = player;
 
+            System.Diagnostics.Debug.Assert(currentRoundIndex >= 0);
             _currentRoundIndex = currentRoundIndex;
         }
 
@@ -154,6 +271,8 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
+            System.Diagnostics.Debug.Assert(_currentRoundIndex >= 0);
+            System.Diagnostics.Debug.Assert(_currentRoundIndex < ctx.TotalRounds);
             return new FindHidersNode(_currentRoundIndex);
         }
 
@@ -205,7 +324,6 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(_currentRoundIndex >= 0);
             System.Diagnostics.Debug.Assert(_currentRoundIndex < ctx.TotalRounds);
-
             return new RoundEndNode(_currentRoundIndex);
         }
 

@@ -1,8 +1,9 @@
 ﻿
 using Common;
 using Containers;
-using MinecraftPrimitives;
 using Sync;
+
+using MinecraftPrimitives;
 
 namespace TestMinecraftServerApplication
 {
@@ -12,34 +13,11 @@ namespace TestMinecraftServerApplication
 
         public const int MinPlayers = 2;
         public const int MaxPlayers = 18;
+        public const int MaxRounds = MaxPlayers;
 
         private readonly Locker Locker = new();
 
         private readonly List<SuperPlayer> _players = new();
-
-        public IReadOnlyList<SuperPlayer> Players => _players;
-
-
-        public int CurrentPlayers
-        {
-            get
-            {
-                System.Diagnostics.Debug.Assert(Locker != null);
-                Locker.Hold();
-
-                try
-                {
-                    return _players.Count;
-                }
-                finally
-                {
-                    System.Diagnostics.Debug.Assert(Locker != null);
-                    Locker.Release();
-                }
-            }
-        }
-
-        public int TotalRounds => CurrentPlayers;
 
         public bool CanStart
         {
@@ -50,7 +28,7 @@ namespace TestMinecraftServerApplication
 
                 try
                 {
-                    return _players.Count >= MinPlayers;
+                    return _players.Length >= MinPlayers;
                 }
                 finally
                 {
@@ -63,6 +41,27 @@ namespace TestMinecraftServerApplication
 
         private bool _started = false;
         public bool IsStarted => _started;
+
+
+        public IReadOnlyList<SuperPlayer> Players
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(_disposed == false);
+
+                return _players;
+            }
+        }
+
+        public int TotalRounds
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(_disposed == false);
+
+                return _players.Length;
+            }
+        }
 
         public GameContext()
         {
@@ -91,7 +90,7 @@ namespace TestMinecraftServerApplication
                     return false;
                 }
 
-                if (_players.Count > MaxPlayers)
+                if (_players.Length > MaxPlayers)
                 {
                     return false;
                 }
@@ -164,13 +163,13 @@ namespace TestMinecraftServerApplication
                     return false;
                 }
 
-                if (_players.Count < MinPlayers)
+                if (_players.Length < MinPlayers)
                 {
                     return false;
                 }
 
-                System.Diagnostics.Debug.Assert(_players.Count >= MinPlayers);
-                System.Diagnostics.Debug.Assert(_players.Count <= MaxPlayers);
+                System.Diagnostics.Debug.Assert(_players.Length >= MinPlayers);
+                System.Diagnostics.Debug.Assert(_players.Length <= MaxPlayers);
 
                 System.Diagnostics.Debug.Assert(_started == false);
                 _started = true;
@@ -200,8 +199,7 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_started == true);
                 _started = false;
 
-                _players.Flush();
-                SuperWorld.GameContextInventory.ResetPlayerSeats(null);
+                SuperWorld.GameContextInventory.ResetPlayerSeats(_players);
 
             }
             finally
