@@ -1,4 +1,5 @@
 ﻿
+
 namespace Containers
 {
 
@@ -57,12 +58,12 @@ namespace Containers
 
             _items = new T[length];
         }
-        
+
         public List() : this(0)
         {
         }
 
-        public List(T[] data): this(data != null ? data.Length : 0)
+        public List(T[] data) : this(data != null ? data.Length : 0)
         {
             if (data != null)
             {
@@ -114,6 +115,43 @@ namespace Containers
             }
 
             return defaultValue;
+        }
+
+        public T Shift(T defaultValue)
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            if (Length == 0)
+            {
+                return defaultValue;
+            }
+
+            T firstItem = _items[0];
+            _items = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Skip(_items, 1));
+            return firstItem;
+        }
+
+        public T Extract(int i, T defaultValue)
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            if (i >= Length)
+            {
+                return defaultValue;
+            }
+
+            T item = _items[i];
+            _items = System.Linq.Enumerable.ToArray(
+                System.Linq.Enumerable.Where(_items, (_, index) => index != i));
+            return item;
+
+
         }
 
         public T Extract(System.Func<T, bool> predicate, T defaultValue)
@@ -212,6 +250,7 @@ namespace Containers
             System.GC.SuppressFinalize(this);
             _disposed = true;
         }
+
 
 
     }

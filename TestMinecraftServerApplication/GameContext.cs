@@ -397,6 +397,54 @@ namespace TestMinecraftServerApplication
             Inventory.EndRound(_players, TotalRounds, _currentRoundIndex);
         }
 
+        public void DetermineWinners(List<SuperPlayer> players)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_started == true);
+
+            System.Diagnostics.Debug.Assert(IsFinalRound == true);
+
+            System.Diagnostics.Debug.Assert(_LockerPlayers != null);
+            _LockerPlayers.Hold();
+            System.Diagnostics.Debug.Assert(_LockerScoreboard != null);
+            _LockerScoreboard.Hold();
+
+            try
+            {
+                int totalPoints = int.MinValue;
+
+                System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
+                foreach ((UserId _, ScoreboardPlayerRow row) in _ScoreboardByUserId.GetElements())
+                {
+                    if (totalPoints < row.TotalPoints)
+                    {
+                        totalPoints = row.TotalPoints;
+                    }
+                }
+
+                foreach (SuperPlayer player in _players)
+                {
+                    System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
+                    ScoreboardPlayerRow row = _ScoreboardByUserId.Lookup(player.UserId);
+
+                    if (totalPoints == row.TotalPoints)
+                    {
+                        players.Append(player);
+                    }
+                }
+
+                System.Diagnostics.Debug.Assert(players.Length > 0);
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(_LockerPlayers != null);
+                _LockerPlayers.Release();
+                System.Diagnostics.Debug.Assert(_LockerScoreboard != null);
+                _LockerScoreboard.Release();
+            }
+        }
+
         public void End()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);

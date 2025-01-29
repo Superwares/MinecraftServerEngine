@@ -5,6 +5,7 @@ using Containers;
 
 using MinecraftServerEngine;
 using MinecraftPrimitives;
+using System;
 
 namespace TestMinecraftServerApplication
 {
@@ -128,7 +129,7 @@ namespace TestMinecraftServerApplication
 
             foreach (SuperPlayer player in ctx.Players)
             {
-                
+
 
                 player.Reset();
             }
@@ -416,10 +417,10 @@ namespace TestMinecraftServerApplication
 
     public sealed class FindHidersNode : IGameProgressNode
     {
-        public readonly static Time NormalTimeDuration = Time.FromMinutes(2);
+        //public readonly static Time NormalTimeDuration = Time.FromMinutes(2);
         //public readonly static Time BurningTimeDuration = Time.FromMinutes(1);
 
-        //public readonly static Time NormalTimeDuration = Time.FromSeconds(5);  // for debug
+        public readonly static Time NormalTimeDuration = Time.FromSeconds(5);  // for debug
         public readonly static Time BurningTimeDuration = Time.FromSeconds(5);  // for debug
 
         private readonly Time _StartTime = Time.Now();
@@ -429,6 +430,7 @@ namespace TestMinecraftServerApplication
             new TextComponent($"============SUPERDEK=============\n", TextColor.DarkGray),
             new TextComponent($"\n", TextColor.White),
             new TextComponent($"버닝 타임 시작! \n",  TextColor.Red),
+            new TextComponent($"\n", TextColor.White),
             new TextComponent($"이제 잘못된 ", TextColor.White),
             new TextComponent($"공격", TextColor.DarkRed),
             new TextComponent($"으로 인해 체력이 감소하지 \n", TextColor.White),
@@ -589,7 +591,7 @@ namespace TestMinecraftServerApplication
 
             if (ctx.IsFinalRound == true)
             {
-                return new GameEndNode();
+                return new WinnerNode();
             }
             else
             {
@@ -626,6 +628,144 @@ namespace TestMinecraftServerApplication
         }
     }
 
+    public sealed class WinnerNode : IGameProgressNode
+    {
+        public readonly static Time WinnerDisplayDuration = Time.FromSeconds(5);
+
+        private readonly System.Random _Random = new();
+
+        private Time _startTime = Time.Now();
+
+
+        private readonly List<SuperPlayer> _Winners = new();
+        private bool _displayWinner = false;
+        private SuperPlayer _winner = null;
+
+        private bool _init = false;
+
+
+        private Time _intervalTime = Time.FromMilliseconds(250);
+        private Time _time;
+
+        private int _repeat = 3;
+        private int i = 0;
+
+
+        public IGameProgressNode CreateNextNode(GameContext ctx)
+        {
+            System.Diagnostics.Debug.Assert(ctx != null);
+
+            _Winners.Dispose();
+
+            return new GameEndNode();
+        }
+
+        public bool StartRoutine(GameContext ctx, SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(ctx != null);
+            System.Diagnostics.Debug.Assert(world != null);
+
+            Time elapsedTime = Time.Now() - _startTime;
+
+            if (_winner != null)
+            {
+                if (_displayWinner == false)
+                {
+                    System.Diagnostics.Debug.Assert(_winner != null);
+                    world.DisplayTitle(
+                        Time.Zero, Time.FromSeconds(5), Time.FromSeconds(5),
+                        new TextComponent($"! {_winner.Username} !", TextColor.BrightGreen));
+
+                    _displayWinner = true;
+                }
+
+                if (elapsedTime > WinnerDisplayDuration)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
+
+            if (_Winners.Length > 0)
+            {
+                if (_Winners.Length == 1)
+                {
+                    _winner = _Winners.Shift(null);
+
+                    System.Diagnostics.Debug.Assert(_winner != null);
+
+                    _startTime = Time.Now();
+
+                    return false;
+                }
+
+                if (i >= _Winners.Length * _repeat)
+                {
+                    int j = _Random.Next(_Winners.Length);
+
+                    SuperPlayer extracted = _Winners.Extract(j, null);
+
+                    System.Diagnostics.Debug.Assert(extracted != null);
+
+                    _intervalTime += Time.FromMilliseconds(100);
+
+                    //_repeat += 1;
+                    i = 0;
+                }
+                else
+                {
+                    Time time = Time.Now() - _time;
+
+                    if (time > _intervalTime)
+                    {
+                        int j = i % _Winners.Length;
+                        SuperPlayer player = _Winners[j];
+
+                        //MyConsole.Debug($"j: {j}");
+
+                        world.DisplayTitle(
+                            Time.Zero, _intervalTime, Time.Zero,
+                            new TextComponent($"{player.Username}", TextColor.Gray));
+
+                        ++i;
+
+                        _time = Time.Now();
+                    }
+
+                }
+
+                return false;
+            }
+
+
+
+            if (_init == false)
+            {
+                world.DisplayTitle(
+                    Time.Zero, Time.FromSeconds(4), Time.FromSeconds(1),
+                    new TextComponent($"우승자는!", TextColor.Gold));
+
+                _init = true;
+            }
+
+            if (elapsedTime > Time.FromSeconds(5))
+            {
+                System.Diagnostics.Debug.Assert(_Winners.Length == 0);
+                ctx.DetermineWinners(_Winners);
+
+                System.Diagnostics.Debug.Assert(_Winners.Length > 0);
+
+                _intervalTime /= _Winners.Length;
+                _time = Time.Now() - _intervalTime;
+
+            }
+
+            return false;
+        }
+    }
+
     public sealed class GameEndNode : IGameProgressNode
     {
         //public readonly static Time Duration = Time.FromSeconds(30);
@@ -637,7 +777,7 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
-            throw new System.NotImplementedException();
+            return new LobbyNode();
         }
 
         public bool StartRoutine(GameContext ctx, SuperWorld world)
