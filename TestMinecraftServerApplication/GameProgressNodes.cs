@@ -162,6 +162,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(ctx != null);
 
             System.Diagnostics.Debug.Assert(_NonSeekerIndexList != null);
+            _NonSeekerIndexList.Flush();
             _NonSeekerIndexList.Dispose();
 
             return new SeekerCountNode();
@@ -240,6 +241,10 @@ namespace TestMinecraftServerApplication
 
         private readonly Time _StartTime = Time.Now();
 
+        private readonly System.Guid _BossBarId = System.Guid.NewGuid();
+
+        private bool _init = false;
+
 
         public SeekerCountNode()
         {
@@ -259,13 +264,43 @@ namespace TestMinecraftServerApplication
 
             Time elapsedTime = Time.Now() - _StartTime;
 
-            if (elapsedTime < Duration)
+            double progressBar;
+
+            if (_init == false)
             {
                 ctx.StartSeekerCount(world);
+
+                progressBar = 1.0 - (elapsedTime.Amount / Duration.Amount);
+                System.Diagnostics.Debug.Assert(progressBar >= 0.0);
+                System.Diagnostics.Debug.Assert(progressBar <= 1.0);
+
+                world.OpenBossBar(
+                    _BossBarId,
+                    [
+                        new TextComponent("hello", TextColor.DarkGray),
+                    ],
+                    progressBar,
+                    BossBarColor.Red,
+                    BossBarDivision.Notches_20);
+
+                _init = true;
+            }
+
+            if (elapsedTime < Duration)
+            {
+                progressBar = 1.0 - ((double)elapsedTime.Amount / (double)Duration.Amount);
+                System.Diagnostics.Debug.Assert(progressBar >= 0.0);
+                System.Diagnostics.Debug.Assert(progressBar <= 1.0);
+
+                world.UpdateBossBarHealth(
+                    _BossBarId,
+                    progressBar);
             }
             else
             {
                 ctx.EndSeekerCount(world);
+
+                world.CloseBossBar(_BossBarId);
 
                 return true;
             }

@@ -7,7 +7,6 @@ using MinecraftPrimitives;
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
-    using System.Xml.Linq;
 
     public abstract class World : PhysicsWorld
     {
@@ -263,6 +262,8 @@ namespace MinecraftServerEngine
 
         internal readonly BlockContext BlockContext;  // Disposable
 
+        private readonly ConcurrentSet<System.Guid> BossBars = new();  // Disposable
+
         public World()
         {
             BlockContext = BlockContext.LoadWithRegionFiles(@"region");
@@ -320,7 +321,7 @@ namespace MinecraftServerEngine
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            if (components.Length == 0)
+            if (components == null || components.Length == 0)
             {
                 return;
             }
@@ -351,6 +352,7 @@ namespace MinecraftServerEngine
 
             foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
             {
+                System.Diagnostics.Debug.Assert(renderer != null);
                 renderer.DisplayTitle(
                     (int)(fadeIn.Amount / microsecondsPerTick),
                     (int)(stay.Amount / microsecondsPerTick),
@@ -358,6 +360,111 @@ namespace MinecraftServerEngine
                     data);
             }
 
+        }
+
+        public void OpenBossBar(
+            System.Guid id, TextComponent[] title, double health,
+            BossBarColor color, BossBarDivision division)
+        {
+            if (id == System.Guid.Empty)
+            {
+                throw new System.ArgumentNullException(nameof(id));
+            }
+            if (health < 0.0 || health > 1.0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(health));
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            if (title == null)
+            {
+                title = [];
+            }
+
+            var extra = new object[title.Length];
+
+            for (int i = 0; i < title.Length; ++i)
+            {
+                TextComponent component = title[i];
+
+                extra[i] = new
+                {
+                    text = component.Text,
+                    color = component.Color.GetName(),
+                };
+            }
+
+            var _titleChat = new
+            {
+                text = "",
+                extra = extra,
+            };
+
+            string titleChat = System.Text.Json.JsonSerializer.Serialize(_titleChat);
+
+            foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
+            {
+                System.Diagnostics.Debug.Assert(renderer != null);
+                renderer.OpenBossBar(
+                    id, titleChat, health, color, division);
+            }
+
+            System.Diagnostics.Debug.Assert(BossBars != null);
+            BossBars.Insert(id);
+        }
+
+        public void UpdateBossBarHealth(System.Guid id, double health)
+        {
+            if (id == System.Guid.Empty)
+            {
+                throw new System.ArgumentNullException(nameof(id));
+            }
+            if (health < 0.0 || health > 1.0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(health));
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+
+            foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
+            {
+                System.Diagnostics.Debug.Assert(renderer != null);
+                renderer.UpdateBossBarHealth(id, health);
+            }
+
+            System.Diagnostics.Debug.Assert(BossBars != null);
+            BossBars.Contains(id);
+        }
+
+        public void CloseBossBar(System.Guid id)
+        {
+            if (id == System.Guid.Empty)
+            {
+                throw new System.ArgumentNullException(nameof(id));
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+
+            foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
+            {
+                System.Diagnostics.Debug.Assert(renderer != null);
+                renderer.CloseBossBar(id);
+            }
+
+            System.Diagnostics.Debug.Assert(BossBars != null);
+            BossBars.Extract(id);
         }
 
         internal void Disconnect(UserId id)
@@ -673,6 +780,8 @@ namespace MinecraftServerEngine
                     DisconnectedPlayers.Dispose();
 
                     BlockContext.Dispose();
+
+                    BossBars.Dispose();
                 }
 
                 // Call the appropriate methods to clean up

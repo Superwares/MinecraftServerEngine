@@ -271,6 +271,33 @@ namespace MinecraftServerEngine
             Render(new SetTimesAndDisplayTitlePacket(fadeIn, stay, fadeOut));
             Render(new SetTitlePacket(data));
         }
+
+        internal void OpenBossBar(System.Guid id, string title, double health,
+            BossBarColor color, BossBarDivision division)
+        {
+            System.Diagnostics.Debug.Assert(id != System.Guid.Empty);
+            System.Diagnostics.Debug.Assert(title != null);
+            System.Diagnostics.Debug.Assert(health >= 0.0);
+            System.Diagnostics.Debug.Assert(health <= 1.0);
+
+            Render(new OpenBossBarPacket(id, title, (float)health, (int)color, (int)division, 0x01));
+        }
+
+        internal void UpdateBossBarHealth(System.Guid id, double health)
+        {
+            System.Diagnostics.Debug.Assert(id != System.Guid.Empty);
+            System.Diagnostics.Debug.Assert(health >= 0.0);
+            System.Diagnostics.Debug.Assert(health <= 1.0);
+
+            Render(new UpdateBossBarHealthPacket(id, (float)health));
+        }
+
+        internal void CloseBossBar(System.Guid id)
+        {
+            System.Diagnostics.Debug.Assert(id != System.Guid.Empty);
+
+            Render(new CloseBossBarPacket(id));
+        }
     }
 
     internal abstract class ObjectRenderer : Renderer

@@ -261,6 +261,9 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(_currentSeeker != null);
             _currentSeeker.ApplyBilndness(true);
+
+            System.Guid id = System.Guid.NewGuid();
+            
         }
 
         public void EndSeekerCount(SuperWorld world)
