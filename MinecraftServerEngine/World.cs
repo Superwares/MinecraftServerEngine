@@ -738,35 +738,32 @@ namespace MinecraftServerEngine
 
         protected abstract AbstractPlayer CreatePlayer(UserId userId, string username);
 
-        internal void ConnectPlayer(MinecraftClient client, string username, UserId userId)
+        internal void ConnectPlayer(User user)
         {
-            System.Diagnostics.Debug.Assert(client != null);
-            System.Diagnostics.Debug.Assert(username != "");
-            System.Diagnostics.Debug.Assert(userId != UserId.Null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
             AbstractPlayer player;
 
-            if (DisconnectedPlayers.Contains(userId))
+            if (DisconnectedPlayers.Contains(user.Id))
             {
-                player = DisconnectedPlayers.Extract(userId);
+                player = DisconnectedPlayers.Extract(user.Id);
                 System.Diagnostics.Debug.Assert(player != null);
             }
             else
             {
-                player = CreatePlayer(userId, username);
+                player = CreatePlayer(user.Id, user.Username);
                 System.Diagnostics.Debug.Assert(player != null);
 
                 ObjectSpawningPool.Enqueue(player);
 
-                PlayerList.Add(userId, username);
+                PlayerList.Add(user.Id, user.Username, user.Properties);
 
-                PlayersByUserId.Insert(userId, player);
-                PlayersByUsername.Insert(username, player);
+                PlayersByUserId.Insert(user.Id, player);
+                PlayersByUsername.Insert(user.Username, player);
             }
 
-            player.Connect(client, this, userId);
+            player.Connect(user.Client, this, user.Id);
 
         }
 

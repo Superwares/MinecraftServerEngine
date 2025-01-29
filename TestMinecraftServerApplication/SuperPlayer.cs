@@ -88,14 +88,14 @@ namespace TestMinecraftServerApplication
 
             //ResetBlockAppearance();
 
-            if (Sneaking == true)
-            {
-                BlockLocation _belowBlockLoc = BlockLocation.Generate(Position);
-                BlockLocation belowBlockLoc = new(_belowBlockLoc.X, _belowBlockLoc.Y - 1, _belowBlockLoc.Z);
-                Block belowBlock = world.BlockContext.GetBlock(belowBlockLoc);
+            //if (Sneaking == true)
+            //{
+            //    BlockLocation _belowBlockLoc = BlockLocation.Generate(Position);
+            //    BlockLocation belowBlockLoc = new(_belowBlockLoc.X, _belowBlockLoc.Y - 1, _belowBlockLoc.Z);
+            //    Block belowBlock = world.BlockContext.GetBlock(belowBlockLoc);
 
-                ApplyBlockAppearance(belowBlock);
-            }
+            //    ApplyBlockAppearance(belowBlock);
+            //}
         }
 
         protected override void OnSneak(World world, bool f)
@@ -110,7 +110,7 @@ namespace TestMinecraftServerApplication
                 BlockLocation belowBlockLoc = new(_belowBlockLoc.X, _belowBlockLoc.Y - 1, _belowBlockLoc.Z);
                 Block belowBlock = world.BlockContext.GetBlock(belowBlockLoc);
 
-                ApplyBlockAppearance(belowBlock);
+                //ApplyBlockAppearance(belowBlock);
 
                 //OpenInventory(chestInventory);
                 //OpenInventory(ShopInventory);

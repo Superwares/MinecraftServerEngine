@@ -375,6 +375,11 @@ namespace MinecraftServerEngine
                     //("generic.attackSpeed", 1.0F),   // 20 ticks, 1 seconds
                 ]));
 
+            using EntityMetadata metadata = new();
+            metadata.AddByte(17, 0xFF);
+
+            OutPackets.Enqueue(new EntityMetadataPacket(idEntity, metadata.WriteData()));
+
             //var title = new
             //{
             //    text = "",

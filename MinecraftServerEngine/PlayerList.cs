@@ -50,16 +50,16 @@ namespace MinecraftServerEngine
                 return Renderers.Contains(id);
             }
 
-            internal void AddPlayerWithLaytency(UserId id, string username, long ticks)
+            internal void AddPlayerWithLaytency(UserId id, string username, UserProperty[] properties, long ticks)
             {
                 System.Diagnostics.Debug.Assert(id != UserId.Null);
                 System.Diagnostics.Debug.Assert(username != null && !string.IsNullOrEmpty(username));
 
                 System.Diagnostics.Debug.Assert(!_disposed);
-                
+
                 foreach (PlayerListRenderer renderer in Renderers.GetValues())
                 {
-                    renderer.AddPlayerWithLaytency(id, username, ticks);
+                    renderer.AddPlayerWithLaytency(id, username, properties, ticks);
                 }
             }
 
@@ -107,16 +107,19 @@ namespace MinecraftServerEngine
         {
             public readonly UserId Id;
             public readonly string Username;
+            public readonly UserProperty[] Properties;
+
             private long _laytency = -1;
             public long Laytency => _laytency;
 
-            public Info(UserId id, string username)
+            public Info(UserId id, string username, UserProperty[] properties)
             {
                 System.Diagnostics.Debug.Assert(id != UserId.Null);
                 System.Diagnostics.Debug.Assert(username != null && !string.IsNullOrEmpty(username));
 
                 Id = id;
                 Username = username;
+                Properties = properties != null ? properties : [];
             }
 
             internal void Connect()
@@ -159,7 +162,7 @@ namespace MinecraftServerEngine
             return !Manager.Contains(id);
         }
 
-        internal void Add(UserId id, string username)
+        internal void Add(UserId id, string username, UserProperty[] properties)
         {
             System.Diagnostics.Debug.Assert(id != UserId.Null);
             System.Diagnostics.Debug.Assert(username != null && !string.IsNullOrEmpty(username));
@@ -168,12 +171,12 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(IsDisconnected(id));
 
-            Info info = new(id, username);
+            Info info = new(id, username, properties);
             System.Diagnostics.Debug.Assert(!Infos.Contains(id));
             /*Console.Printl("PlayerList::Add 1!");*/
             Infos.Insert(id, info);
             /*Console.Printl("PlayerList::Add 2!");*/
-            Manager.AddPlayerWithLaytency(id, username, info.Laytency);
+            Manager.AddPlayerWithLaytency(id, username, properties, info.Laytency);
         }
 
         internal void Connect(UserId id, PlayerListRenderer renderer)
@@ -187,7 +190,7 @@ namespace MinecraftServerEngine
 
             foreach (Info info in Infos.GetValues())
             {
-                renderer.AddPlayerWithLaytency(info.Id, info.Username, info.Laytency);
+                renderer.AddPlayerWithLaytency(info.Id, info.Username, info.Properties, info.Laytency);
             }
 
             System.Diagnostics.Debug.Assert(Infos.Contains(id));

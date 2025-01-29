@@ -6,6 +6,7 @@ using MinecraftPrimitives;
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
+    using System.Security.Principal;
 
     internal abstract class Renderer
     {
@@ -28,17 +29,34 @@ namespace MinecraftServerEngine
             ConcurrentQueue<ClientboundPlayingPacket> outPackets)
             : base(outPackets) { }
 
-        internal void AddPlayerWithLaytency(UserId id, string username, long ticks)
+        internal void AddPlayerWithLaytency(
+            UserId userId, string username,
+            UserProperty[] properties,
+            long ticks)
         {
-            System.Diagnostics.Debug.Assert(id != UserId.Null);
+            System.Diagnostics.Debug.Assert(userId != UserId.Null);
             System.Diagnostics.Debug.Assert(username != "");
             System.Diagnostics.Debug.Assert(ticks <= int.MaxValue);
             System.Diagnostics.Debug.Assert(ticks >= int.MinValue);
 
+            if (properties == null)
+            {
+                properties = [];
+            }
+
+            (string Name, string Value, string Signature)[] _properties =
+                new (string Name, string Value, string Signature)[properties.Length];
+
+            for (int i = 0; i < properties.Length; ++i)
+            {
+                UserProperty property = properties[i];
+                _properties[i] = (Name: property.Name, Value: property.Value, Signature: property.Signature);
+            }
+
             long ms = ticks * 50;
             System.Diagnostics.Debug.Assert(ms >= int.MinValue);
             System.Diagnostics.Debug.Assert(ms <= int.MaxValue);
-            Render(new PlayerListItemAddPacket(id.Value, username, (int)ms));
+            Render(new PlayerListItemAddPacket(userId.Value, username, _properties, (int)ms));
         }
 
         internal void RemovePlayer(UserId id)
@@ -583,6 +601,8 @@ namespace MinecraftServerEngine
 
             using EntityMetadata metadata = new();
             metadata.AddByte(0, flags);
+
+            metadata.AddByte(17, 0b01111111);
 
             (byte x, byte y) = look.ConvertToProtocolFormat();
             Render(new SpawnNamedEntityPacket(

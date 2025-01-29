@@ -1988,6 +1988,7 @@ namespace MinecraftPrimitives
     {
         public readonly System.Guid UniqueId;
         public readonly string Username;
+        public readonly (string Name, string Value, string Signature)[] Properties;
         public readonly int Ping;
 
         public static PlayerListItemAddPacket Read(MinecraftProtocolDataStream buffer)
@@ -2001,11 +2002,14 @@ namespace MinecraftPrimitives
         }
 
         public PlayerListItemAddPacket(
-            System.Guid uniqueId, string username, int ms)
+            System.Guid uniqueId, string username,
+            (string Name, string Value, string Signature)[] properties,
+            int ms)
             : base(PlayerListItemAddPacketId)
         {
             UniqueId = uniqueId;
             Username = username;
+            Properties = properties != null ? properties : [];
             Ping = ms;
         }
 
@@ -2020,7 +2024,17 @@ namespace MinecraftPrimitives
             buffer.WriteInt(1, true);
             buffer.WriteGuid(UniqueId);
             buffer.WriteString(Username);
-            buffer.WriteInt(0, true);
+            buffer.WriteInt(Properties.Length, true);
+            foreach ((string Name, string Value, string Signature) in Properties)
+            {
+                buffer.WriteString(Name);
+                buffer.WriteString(Value);
+                buffer.WriteBool(Signature != null);
+                if (Signature != null)
+                {
+                    buffer.WriteString(Signature);
+                 }
+            }
             buffer.WriteInt(2, true);  // gamemode
             buffer.WriteInt(Ping, true);  // latency
             buffer.WriteBool(false);

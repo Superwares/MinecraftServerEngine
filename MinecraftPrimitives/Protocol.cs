@@ -1,6 +1,7 @@
 ﻿
 using Common;
 using Containers;
+using System.Xml.Linq;
 
 
 namespace MinecraftPrimitives
@@ -391,17 +392,62 @@ namespace MinecraftPrimitives
 
     }
 
-    public readonly struct User(MinecraftClient client, System.Guid userId, string username)
+    public readonly struct UserProperty
     {
-        public readonly MinecraftClient Client = client;
-        public readonly UserId Id = new(userId);
-        public readonly string Username = username;
+        public readonly string Name;
+        public readonly string Value;
+        public readonly string Signature;
+
+        internal UserProperty(string name, string value, string signature)
+        {
+            System.Diagnostics.Debug.Assert(name != null);
+            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(name) == false);
+            System.Diagnostics.Debug.Assert(value != null);
+            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(value) == false);
+
+            Name = name;
+            Value = value;
+            Signature = signature;
+        }
+    }
+
+    public readonly struct User
+    {
+        public readonly MinecraftClient Client;
+        public readonly UserId Id;
+        public readonly string Username;
+
+        public readonly UserProperty[] Properties;
+
+        internal User(
+            MinecraftClient client,
+            System.Guid userId, string username,
+            params UserProperty[] properties)
+        {
+            System.Diagnostics.Debug.Assert(client != null);
+            System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+            System.Diagnostics.Debug.Assert(username != null);
+            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(username) == false);
+
+            if (properties == null)
+            {
+                properties = [];
+            }
+
+            Client = client;
+            Id = new UserId(userId);
+            Username = username;
+
+            Properties = new UserProperty[properties.Length];
+            System.Array.Copy(properties, Properties, properties.Length);
+        }
+
     }
 
     public interface IConnectionListener : System.IDisposable
     {
 
-        public void AddUser(MinecraftClient client, System.Guid userId, string username);
+        public void AddUser(User user);
 
     }
 
@@ -564,40 +610,95 @@ namespace MinecraftPrimitives
 
                         // TODO: Check username is empty or invalid.
 
-                        MyConsole.Printl("Start http request!");
+                        System.Guid userId = System.Guid.Empty;
+                        System.Diagnostics.Debug.Assert(inPacket.Username != null);
+                        System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(inPacket.Username) == false);
+                        string username = inPacket.Username;
 
-                        // TODO: Use own http client in common library.
-                        using System.Net.Http.HttpClient httpClient = new();
-                        string url = string.Format("https://api.mojang.com/users/profiles/minecraft/{0}", inPacket.Username);
-                        /*Console.Printll(inPacket.Username);*/
-                        /*Console.Printl($"url: {url}");*/
-                        using System.Net.Http.HttpRequestMessage request = new(System.Net.Http.HttpMethod.Get, url);
+                        try
+                        {
+                            // TODO: Refactoring
 
-                        // TODO: handle HttpRequestException
-                        using System.Net.Http.HttpResponseMessage response = httpClient.Send(request);
+                            // TODO: Use own http client in common library.
+                            using System.Net.Http.HttpClient httpClient = new();
+                            string url = string.Format(
+                                "https://api.mojang.com/users/profiles/minecraft/{0}",
+                                username);
 
-                        using System.IO.Stream stream = response.Content.ReadAsStream();
-                        using System.IO.StreamReader reader = new(stream);
-                        string str = reader.ReadToEnd();
-                        System.Collections.Generic.Dictionary<string, string> dictionary = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, string>>(str);
-                        System.Diagnostics.Debug.Assert(dictionary != null);
+                            using System.Net.Http.HttpRequestMessage request = new(System.Net.Http.HttpMethod.Get, url);
 
-                        System.Guid userId = System.Guid.Parse(dictionary["id"]);
-                        string username = dictionary["name"];  // TODO: check username is valid
-                        /*Console.Printll($"userId: {userId}");
-                        Console.Printll($"username: {username}");*/
+                            // TODO: handle HttpRequestException
+                            using System.Net.Http.HttpResponseMessage response = httpClient.Send(request);
 
-                        // TODO: Handle to throw exception
-                        /*System.Diagnostics.Debug.Assert(inPacket.Username == username);*/
+                            using System.IO.Stream stream = response.Content.ReadAsStream();
+                            using System.IO.StreamReader reader = new(stream);
+                            string str = reader.ReadToEnd();
+                            System.Collections.Generic.Dictionary<string, string> dictionary = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, string>>(str);
+                            System.Diagnostics.Debug.Assert(dictionary != null);
 
-                        MyConsole.Printl("Finish http request!");
+                            userId = System.Guid.Parse(dictionary["id"]);
 
+                            //System.Diagnostics.Debug.Assert(string.Equals(dictionary["name"], username) == true);
+                            username = dictionary["name"];  // TODO: check username is valid
+
+                            // TODO: Handle to throw exception
+                            /*System.Diagnostics.Debug.Assert(inPacket.Username == username);*/
+                        }
+                        catch (System.Exception e)
+                        {
+                            MyConsole.Warn(e.Message);
+
+                            userId = System.Guid.NewGuid();
+                        }
+
+                        System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+                        System.Diagnostics.Debug.Assert(username != null);
+                        System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(username) == false);
                         LoginSuccessPacket outPacket1 = new(userId, username);
                         outPacket1.Write(buffer);
+
                         client.Send(buffer);
 
+                        UserProperty[] properties = null;
+
+                        try
+                        {
+                            // TODO: Refactoring
+
+                            using System.Net.Http.HttpClient httpClient = new();
+                            string url = string.Format(
+                                "https://sessionserver.mojang.com/session/minecraft/profile/{0}?unsigned=false",
+                                userId.ToString());
+
+                            using System.Net.Http.HttpRequestMessage request = new(System.Net.Http.HttpMethod.Get, url);
+
+                            // TODO: handle HttpRequestException
+                            using System.Net.Http.HttpResponseMessage response = httpClient.Send(request);
+
+                            using System.IO.Stream stream = response.Content.ReadAsStream();
+                            using System.IO.StreamReader reader = new(stream);
+                            string str = reader.ReadToEnd();
+                            var jsonResponse = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(str);
+
+                            var propertiesArray = jsonResponse.GetProperty("properties").EnumerateArray();
+                            properties = System.Linq.Enumerable.ToArray(
+                                System.Linq.Enumerable.Select(propertiesArray,
+                                prop => new UserProperty(
+                                    prop.GetProperty("name").GetString(),
+                                    prop.GetProperty("value").GetString(),
+                                    prop.GetProperty("signature").GetString()
+                                )));
+
+                        }
+                        catch (System.Exception e)
+                        {
+                            MyConsole.Warn(e.Message);
+                        }
+
+                        User user = new(client, userId, username, properties);
+
                         // TODO: Must dealloc id when connection is disposed.
-                        _ConnectionListener.AddUser(client, userId, username);
+                        _ConnectionListener.AddUser(user);
 
                         success = true;
                     }
@@ -605,7 +706,10 @@ namespace MinecraftPrimitives
 
                     System.Diagnostics.Debug.Assert(buffer.Size == 0);
 
-                    if (!success) close = true;
+                    if (success == false)
+                    {
+                        close = true;
+                    }
 
                 }
                 catch (TryAgainException)

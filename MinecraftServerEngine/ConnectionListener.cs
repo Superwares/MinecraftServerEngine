@@ -12,11 +12,11 @@ namespace MinecraftServerEngine
 
         ~ConnectionListener() => System.Diagnostics.Debug.Assert(false);
 
-        public void AddUser(MinecraftClient client, System.Guid userId, string username)
+        public void AddUser(User user)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Users.Enqueue(new User(client, userId, username));
+            Users.Enqueue(user);
         }
 
         public void Accept(World world)
@@ -35,7 +35,7 @@ namespace MinecraftServerEngine
                     continue;
                 }
 
-                world.ConnectPlayer(user.Client, user.Username, user.Id);
+                world.ConnectPlayer(user);
             }
         }
 
