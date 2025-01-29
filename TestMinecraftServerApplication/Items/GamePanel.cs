@@ -1,19 +1,21 @@
 ﻿using MinecraftServerEngine;
-using static System.Net.Mime.MediaTypeNames;
-
 
 namespace TestMinecraftServerApplication.Items
 {
-    public static class Coin
+    public static class GamePanel
     {
-        public const ItemType Type = ItemType.GoldNugget;
-        public const string Name = "COIN";
+        public const ItemType Type = ItemType.MusicDisc_C418_cat;
+        public const string Name = "Game Panel";
+
+        public const int MaxPurchaseCount = int.MaxValue;
+        public const int PurchasePrice = 0;
+        public const int SellPrice = 0;
 
         public readonly static IReadOnlyItem Item = new Item(
             Type,
             Name,
             [
-                "게임의 기본 재화입니다!",
+                $"우클릭하여 게임의 자세한 정보를 확인할 수 있습니다!",
             ]);
 
         public static readonly int DefaultCount = Item.Type.GetMinStackCount();
@@ -33,12 +35,10 @@ namespace TestMinecraftServerApplication.Items
             System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(Name) == false);
             return ItemStack.Create(
                 Item,
-                DefaultCount * Type.GetMaxStackCount(),
+                DefaultCount,
                 [
                     ..descriptions,
                 ]);
         }
-
     }
-
 }

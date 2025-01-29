@@ -14,13 +14,11 @@ namespace TestMinecraftServerApplication
 
         public const double DefaultAttackDamage = 1.0;
 
-        public const ItemType ShopItemType = ItemType.MusicDisc_C418_13;
-
 
         private bool _disposed = false;
 
-        //private static ChestInventory chestInventory = new();
-        private static readonly ShopInventory ShopInventory = new();
+        private readonly static ChestInventory ChestInventory = new();
+        private readonly static ShopInventory ShopInventory = new();
 
 
         public static void GiveDefaultItems(SuperPlayer player)
@@ -73,10 +71,10 @@ namespace TestMinecraftServerApplication
 
             if (f == true)
             {
-                //ApplyBlockAppearance(Block.Dirt);
+                ApplyBlockAppearance(Block.Dirt);
                 //OpenInventory(chestInventory);
                 //OpenInventory(ShopInventory);
-                OpenInventory(GameContext.Inventory);
+                //OpenInventory(GameContext.Inventory);
 
                 //SetExperience(0.6F, 123456789);
 
@@ -85,9 +83,9 @@ namespace TestMinecraftServerApplication
 
                 //AddEffect(1, 1, 1800, 2);
 
-                world.DisplayTitle(
-                    Time.FromSeconds(0), Time.FromSeconds(1), Time.FromSeconds(0),
-                    new TextComponent("good", TextColor.Blue));
+                //world.DisplayTitle(
+                //    Time.FromSeconds(0), Time.FromSeconds(1), Time.FromSeconds(0),
+                //    new TextComponent("good", TextColor.Blue));
 
                 //ApplyBilndness(true);
             }
@@ -349,8 +347,14 @@ namespace TestMinecraftServerApplication
             {
                 switch (stack.Type)
                 {
-                    case ShopItemType:
+                    case ShopItem.Type:
                         OpenInventory(ShopInventory);
+                        break;
+                    case GamePanel.Type:
+                        OpenInventory(GameContext.Inventory);
+                        break;
+                    case GlobalChestItem.Type:
+                        OpenInventory(ChestInventory);
                         break;
                 }
             }

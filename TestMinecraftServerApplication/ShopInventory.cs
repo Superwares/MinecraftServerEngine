@@ -38,6 +38,18 @@ namespace TestMinecraftServerApplication
                 $"왼클릭(구매)          {BalloonBasher.PurchasePrice} 코인",
                 $"우클릭(판매)          {BalloonBasher.SellPrice} 코인",
                 ]));
+
+            SetSlot((SlotCountPerLine * (MaxLineCount - 1)) + 8, ShopItem.CreateForShop([
+                $"",
+                $"왼클릭          지급",
+                $"우클릭          차감",
+                ]));
+
+            SetSlot((SlotCountPerLine * (MaxLineCount - 1)) + 7, GlobalChestItem.CreateForShop([
+                $"",
+                $"왼클릭          지급",
+                $"우클릭          차감",
+                ]));
         }
 
         protected override void OnLeftClickSharedItem(
@@ -60,6 +72,18 @@ namespace TestMinecraftServerApplication
                         giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * itemStack.Count);
                         success = playerInventory.GiveItem(giveItem);
 
+                    }
+                    break;
+                case ShopItem.Type:
+                    {
+                        giveItem = ItemStack.Create(ShopItem.Item, ShopItem.DefaultCount * itemStack.Count);
+                        success = playerInventory.GiveItem(giveItem);
+                    }
+                    break;
+                case GlobalChestItem.Type:
+                    {
+                        giveItem = ItemStack.Create(GlobalChestItem.Item, GlobalChestItem.DefaultCount * itemStack.Count);
+                        success = playerInventory.GiveItem(giveItem);
                     }
                     break;
                 case WoodenSword.Type:
@@ -149,6 +173,28 @@ namespace TestMinecraftServerApplication
                     {
                         taked = playerInventory.TakeItemStacksInPrimary(
                             Coin.Item, Coin.DefaultCount * itemStack.Count);
+
+                        if (taked != null && taked.Length > 0)
+                        {
+                            success = true;
+                        }
+                    }
+                    break;
+                case ShopItem.Type:
+                    {
+                        taked = playerInventory.TakeItemStacksInPrimary(
+                            ShopItem.Item, ShopItem.DefaultCount * itemStack.Count);
+
+                        if (taked != null && taked.Length > 0)
+                        {
+                            success = true;
+                        }
+                    }
+                    break;
+                case GlobalChestItem.Type:
+                    {
+                        taked = playerInventory.TakeItemStacksInPrimary(
+                            GlobalChestItem.Item, GlobalChestItem.DefaultCount * itemStack.Count);
 
                         if (taked != null && taked.Length > 0)
                         {
