@@ -21,10 +21,16 @@ namespace TestMinecraftServerApplication
         private readonly static ShopInventory ShopInventory = new();
 
 
-        public static void GiveDefaultItems(SuperPlayer player)
+        public void Reset()
         {
-            player.GiveItem(ShopItem.Create(1));
-            player.GiveItem(Coin.Create(GameContext.DefaultCoinAmount));
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            FlushItems();
+
+            SwitchGamemode(Gamemode.Adventure);
+
+            GiveItem(ShopItem.Create(1));
+            GiveItem(Coin.Create(GameContext.DefaultCoinAmount));
         }
 
         public SuperPlayer(
@@ -37,7 +43,7 @@ namespace TestMinecraftServerApplication
 
             //ApplyBlockAppearance(Block.Dirt);
 
-            GiveDefaultItems(this);
+            Reset();
         }
 
         ~SuperPlayer()
@@ -46,6 +52,10 @@ namespace TestMinecraftServerApplication
 
             Dispose(false);
         }
+
+
+
+
 
         private double GenerateRandomValueBetween(double min, double max)
         {
@@ -63,6 +73,24 @@ namespace TestMinecraftServerApplication
 
         }
 
+        protected override void OnMove(World world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            //ResetBlockAppearance();
+
+            if (Sneaking == true)
+            {
+                BlockLocation _belowBlockLoc = BlockLocation.Generate(Position);
+                BlockLocation belowBlockLoc = new(_belowBlockLoc.X, _belowBlockLoc.Y - 1, _belowBlockLoc.Z);
+                Block belowBlock = world.BlockContext.GetBlock(belowBlockLoc);
+
+                ApplyBlockAppearance(belowBlock);
+            }
+        }
+
         protected override void OnSneak(World world, bool f)
         {
             System.Diagnostics.Debug.Assert(world != null);
@@ -71,7 +99,12 @@ namespace TestMinecraftServerApplication
 
             if (f == true)
             {
-                ApplyBlockAppearance(Block.Dirt);
+                BlockLocation _belowBlockLoc = BlockLocation.Generate(Position);
+                BlockLocation belowBlockLoc = new(_belowBlockLoc.X, _belowBlockLoc.Y - 1, _belowBlockLoc.Z);
+                Block belowBlock = world.BlockContext.GetBlock(belowBlockLoc);
+
+                ApplyBlockAppearance(belowBlock);
+
                 //OpenInventory(chestInventory);
                 //OpenInventory(ShopInventory);
                 //OpenInventory(GameContext.Inventory);
@@ -155,9 +188,11 @@ namespace TestMinecraftServerApplication
                 (bool damaged, double health) = livingEntity.Damage(damage);
 
                 System.Diagnostics.Debug.Assert(health >= 0.0);
-                if (damaged == true && health == 0.0)
+                if (damaged == true && health == 0.0 && SuperWorld.GameContext.IsStarted == true)
                 {
-
+                    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+                    SuperWorld.GameContext.IncreaseKillPoint(UserId);
                 }
 
                 livingEntity.ApplyForce(d * knockbackScale);
@@ -216,9 +251,11 @@ namespace TestMinecraftServerApplication
                 (bool damaged, double health) = livingEntity.Damage(damage);
 
                 System.Diagnostics.Debug.Assert(health >= 0.0);
-                if (damaged == true && health == 0.0)
+                if (damaged == true && health == 0.0 && SuperWorld.GameContext.IsStarted == true)
                 {
-
+                    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+                    SuperWorld.GameContext.IncreaseKillPoint(UserId);
                 }
 
                 livingEntity.ApplyForce(d * knockbackScale);
@@ -279,9 +316,11 @@ namespace TestMinecraftServerApplication
                 (bool damaged, double health) = livingEntity.Damage(damage);
 
                 System.Diagnostics.Debug.Assert(health >= 0.0);
-                if (damaged == true && health == 0.0)
+                if (damaged == true && health == 0.0 && SuperWorld.GameContext.IsStarted == true)
                 {
-
+                    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+                    SuperWorld.GameContext.IncreaseKillPoint(UserId);
                 }
 
                 livingEntity.ApplyForce(k * knockbackScale);
@@ -384,19 +423,16 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            MyConsole.Printl("Death!");
-
-            /*Teleport(new Vector(0.0D, 110.0D, 0.0D), new Look(30.0F, 20.0F));*/
-
-            if (Gamemode == Gamemode.Adventure)
+            if (SuperWorld.GameContext.IsStarted == false)
             {
-                SwitchGamemode(Gamemode.Spectator);
+                return;
             }
-            else
-            {
-                System.Diagnostics.Debug.Assert(Gamemode == Gamemode.Spectator);
-                SwitchGamemode(Gamemode.Adventure);
-            }
+
+            SwitchGamemode(Gamemode.Spectator);
+
+            System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+            System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+            SuperWorld.GameContext.IncreaseDeathPoint(UserId);
         }
 
         protected override void Dispose(bool disposing)

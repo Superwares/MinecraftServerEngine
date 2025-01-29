@@ -8,10 +8,12 @@ namespace TestMinecraftServerApplication
         public const int PointsPerKill = 3;
         public const int PointsPerDeath = -2;
 
+        public const int DefaultAdditionalPoints = 30;
+
         public readonly UserId UserId;
         public readonly string Username;
         public int Kills, Deaths;
-        public int AdditionalPoints;
+        public int AdditionalPoints = DefaultAdditionalPoints;
 
         public int TotalPoints
         {
@@ -30,7 +32,7 @@ namespace TestMinecraftServerApplication
             UserId = id;
             Username = username;
             Kills = 0; Deaths = 0;
-            AdditionalPoints = 0;
+            AdditionalPoints = DefaultAdditionalPoints;
         }
     }
 

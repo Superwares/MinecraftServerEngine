@@ -125,6 +125,9 @@ namespace MinecraftServerEngine
 
         private protected abstract void RenderSpawning(EntityRenderer renderer);
 
+
+        protected virtual void OnMove(World world) { }
+
         protected virtual void OnSneak(World world, bool f) { }
         protected virtual void OnSprint(World world, bool f) { }
 
@@ -281,8 +284,9 @@ namespace MinecraftServerEngine
 
         }
 
-        internal override void Move(BoundingVolume volume, Vector v)
+        internal override void Move(PhysicsWorld _world, BoundingVolume volume, Vector v)
         {
+            System.Diagnostics.Debug.Assert(_world != null);
             System.Diagnostics.Debug.Assert(volume != null);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
@@ -297,6 +301,9 @@ namespace MinecraftServerEngine
                 volume, out Vector p);
 
             BlockLocation blockLocatioin = BlockLocation.Generate(p);
+
+            bool moved = p.Equals(_p) == false;  // TODO: Compare with machine epsilon.
+            bool blockMoved = prevBlockLocation.Equals(blockLocatioin) == false;
 
             if (hasMovementRendering == true)
             {
@@ -323,9 +330,6 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(_hasMovement == true);
                 System.Diagnostics.Debug.Assert(_noRendering == false);
-
-                bool moved = p.Equals(_p) == false;  // TODO: Compare with machine epsilon.
-                bool blockMoved = prevBlockLocation.Equals(blockLocatioin) == false;
 
                 if (_fakeBlockApplied == true)
                 {
@@ -438,7 +442,12 @@ namespace MinecraftServerEngine
             _prevFakeBlockApplied = _fakeBlockApplied;
             _prevFakeBlock = _fakeBlock;
 
-            base.Move(volume, v);
+            base.Move(_world, volume, v);
+
+            if (moved == true && _world is World world)
+            {
+                OnMove(world);
+            }
         }
 
         internal void SetEntityStatus(byte v)

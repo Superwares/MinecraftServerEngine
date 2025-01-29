@@ -16,7 +16,7 @@ namespace TestMinecraftServerApplication
 
         private bool _disposed = false;
 
-        private bool _canCombat = false;
+        private bool _canCombat = true;
         public bool CanCombat
         {
             get

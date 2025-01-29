@@ -260,7 +260,7 @@ namespace MinecraftServerEngine
 
         private readonly ConcurrentTable<UserId, AbstractPlayer> DisconnectedPlayers = new(); // Disposable
 
-        internal readonly BlockContext BlockContext;  // Disposable
+        public readonly BlockContext BlockContext;  // Disposable
 
 
         private readonly ReadLocker LockerProgressBars = new();  // Disposable
@@ -727,7 +727,7 @@ namespace MinecraftServerEngine
 
                 (BoundingVolume volume, Vector v) = IntegrateObject(BlockContext, obj);
 
-                obj.Move(volume, v);
+                obj.Move(this, volume, v);
 
                 UpdateObjectMapping(obj);
 

@@ -128,9 +128,9 @@ namespace TestMinecraftServerApplication
 
             foreach (SuperPlayer player in ctx.Players)
             {
-                player.FlushItems();
+                
 
-                SuperPlayer.GiveDefaultItems(player);
+                player.Reset();
             }
 
             return true;

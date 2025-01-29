@@ -9,9 +9,9 @@ using MinecraftServerEngine.PhysicsEngine;
 namespace MinecraftServerEngine
 {
 
-    internal sealed class BlockContext : Terrain
+    public sealed class BlockContext : Terrain
     {
-    
+
         private sealed class ChunkData : System.IDisposable
         {
             private sealed class SectionData : System.IDisposable
@@ -893,9 +893,12 @@ namespace MinecraftServerEngine
             chunk.SetId(DefaultBlock.GetId(), x, y, z, block.GetId());
         }
 
-        private Block GetBlock(BlockLocation loc)
+        public Block GetBlock(BlockLocation loc)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             ChunkLocation locChunk = BlockToChunk(loc);
             if (!Chunks.Contains(locChunk))
@@ -959,7 +962,7 @@ namespace MinecraftServerEngine
         private (BlockDirection, bool, int) DetermineStairsBlockShape(
             BlockLocation loc, Block block)
         {
-            System.Diagnostics.Debug.Assert(block.IsStairs()  == true);
+            System.Diagnostics.Debug.Assert(block.IsStairs() == true);
 
             BlockDirection d = block.GetStairsDirection();
             bool bottom = block.IsBottomStairs();

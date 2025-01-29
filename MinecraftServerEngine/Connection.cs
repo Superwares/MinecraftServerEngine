@@ -722,7 +722,7 @@ namespace MinecraftServerEngine
                         if (text.StartsWith('/') == true)
                         {
                             text = text.Substring(1);
-                            output = HandleCommandLineText(text, world, player).TrimEnd('\n');
+                            output = HandleCommandLineText(text, world, player);
                         }
                         else
                         {
@@ -733,7 +733,7 @@ namespace MinecraftServerEngine
                         {
                             var data = new
                             {
-                                text = output,
+                                text = output.TrimEnd('\n'),
                             };
 
                             string jsonString = System.Text.Json.JsonSerializer.Serialize(data);

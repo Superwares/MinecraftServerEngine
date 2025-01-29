@@ -369,8 +369,9 @@ namespace MinecraftServerEngine
             base.ApplyForce(force);
         }
 
-        internal override void Move(BoundingVolume volume, Vector v)
+        internal override void Move(PhysicsWorld world, BoundingVolume volume, Vector v)
         {
+            System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(volume != null);
@@ -399,7 +400,7 @@ namespace MinecraftServerEngine
 
             _gamemode = _nextGamemode;
 
-            base.Move(volume, v);
+            base.Move(world, volume, v);
         }
 
         public override void Teleport(Vector p, Angles look)

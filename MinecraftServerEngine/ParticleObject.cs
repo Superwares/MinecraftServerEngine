@@ -228,8 +228,9 @@ namespace MinecraftServerEngine
             return (BoundingVolume, true);
         }
 
-        internal override void Move(BoundingVolume volume, Vector v)
+        internal override void Move(PhysicsWorld world, BoundingVolume volume, Vector v)
         {
+            System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(volume != null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -243,7 +244,7 @@ namespace MinecraftServerEngine
             /*GetPoints(p, Radius);*/
             Manager.Move(GetPoints(p, Radius), Red, Green, Blue);
 
-            base.Move(volume, v);
+            base.Move(world, volume, v);
         }
 
         // TODO: set color

@@ -10,6 +10,7 @@ namespace TestMinecraftServerApplication
     public sealed class GameContext : System.IDisposable
     {
         public const int DefaultCoinAmount = 10;
+        
 
         public const int MinPlayers = 2;
         public const int MaxPlayers = 18;

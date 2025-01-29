@@ -177,8 +177,9 @@ namespace MinecraftServerEngine.PhysicsEngine
             return (volume, v);
         }
 
-        internal virtual void Move(BoundingVolume volume, Vector v)
+        internal virtual void Move(PhysicsWorld world, BoundingVolume volume, Vector v)
         {
+            System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(volume != null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
