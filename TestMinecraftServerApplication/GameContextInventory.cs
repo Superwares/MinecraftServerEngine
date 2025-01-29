@@ -101,10 +101,12 @@ namespace TestMinecraftServerApplication
 
             ResetPlayerSeatSlots(slots, players);
 
+            int currentPlayers = players == null ? 0 : players.Length;
+
             System.Diagnostics.Debug.Assert(GameSwitchSlot < GameContextInventoryMaxLineCount * SlotCountPerLine);
             slots[GameSwitchSlot] = (true, GetGameSwitchOffItemStack(
                 minPlayers, maxPlayers,
-                players.Length));
+                currentPlayers));
 
             System.Diagnostics.Debug.Assert(maxRounds % SlotCountPerLine == 0);
             for (int i = 0; i < maxRounds; ++i)
@@ -156,10 +158,7 @@ namespace TestMinecraftServerApplication
                     break;
                 case GameSwitchSlot:
                     {
-                        if (SuperWorld.GameContext.CanStart == true)
-                        {
-                            success = SuperWorld.GameContext.Start();
-                        }
+                        success = SuperWorld.GameContext.Start();
                     }
                     break;
             }

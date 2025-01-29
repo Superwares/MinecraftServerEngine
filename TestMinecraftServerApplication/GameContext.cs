@@ -4,6 +4,7 @@ using Containers;
 using Sync;
 
 using MinecraftPrimitives;
+using System.Numerics;
 
 namespace TestMinecraftServerApplication
 {
@@ -14,32 +15,16 @@ namespace TestMinecraftServerApplication
         public const int MaxPlayers = 18;
         public const int MaxRounds = MaxPlayers;
 
+
         public readonly static GameContextInventory Inventory = new(MinPlayers, MaxPlayers, MaxRounds);
-        
+
+
         private bool _disposed = false;
 
         private readonly Locker Locker = new();
 
         private readonly List<SuperPlayer> _players = new();
 
-        public bool CanStart
-        {
-            get
-            {
-                System.Diagnostics.Debug.Assert(Locker != null);
-                Locker.Hold();
-
-                try
-                {
-                    return _players.Length >= MinPlayers;
-                }
-                finally
-                {
-                    System.Diagnostics.Debug.Assert(Locker != null);
-                    Locker.Release();
-                }
-            }
-        }
 
 
         private bool _started = false;
@@ -63,6 +48,22 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_disposed == false);
 
                 return _players.Length;
+            }
+        }
+
+
+        private List<SuperPlayer> _prevSeekers = null;
+        private SuperPlayer _currentSeeker = null;
+        private int _currentRoundIndex = -1;
+        public bool IsFinalRound
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(_disposed == false);
+
+                System.Diagnostics.Debug.Assert(_started == true);
+
+                return _currentRoundIndex == TotalRounds - 1;
             }
         }
 
@@ -105,7 +106,7 @@ namespace TestMinecraftServerApplication
                     System.Diagnostics.Debug.Assert(_players != null);
                     _players.Append(player);
 
-                    SuperWorld.GameContextInventory.ResetPlayerSeatsBeforeGame(_players, MinPlayers, MaxPlayers);
+                    Inventory.ResetPlayerSeatsBeforeGame(_players, MinPlayers, MaxPlayers);
                 }
 
                 return exists == false;
@@ -139,7 +140,7 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_players != null);
                 _players.Extract(player => player.UserId == userId, null);
 
-                SuperWorld.GameContextInventory.ResetPlayerSeatsBeforeGame(_players, MinPlayers, MaxPlayers);
+                Inventory.ResetPlayerSeatsBeforeGame(_players, MinPlayers, MaxPlayers);
             }
             catch (KeyNotFoundException)
             {
@@ -177,7 +178,11 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_started == false);
                 _started = true;
 
-                SuperWorld.GameContextInventory.StartGame(_players, TotalRounds);
+                _prevSeekers = new List<SuperPlayer>();
+                System.Diagnostics.Debug.Assert(_currentSeeker == null);
+                System.Diagnostics.Debug.Assert(_currentRoundIndex < 0);
+
+                Inventory.StartGame(_players, TotalRounds);
 
                 return true;
             }
@@ -187,6 +192,78 @@ namespace TestMinecraftServerApplication
                 Locker.Release();
             }
 
+        }
+
+        public void StartRound()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_started == true);
+
+            System.Diagnostics.Debug.Assert(_prevSeekers != null);
+            System.Diagnostics.Debug.Assert(_currentSeeker == null);
+            ++_currentRoundIndex;
+        }
+
+        public int MakeNonSeekerIndexList(List<int> indices)
+        {
+            System.Diagnostics.Debug.Assert(indices != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_started == true);
+
+            bool prevSeeker = false;
+            for (int i = 0; i < _players.Length; ++i)
+            {
+                for (int j = 0; j < _prevSeekers.Length; ++j)
+                {
+                    if (object.ReferenceEquals(_prevSeekers[j], _players[i]) == true)
+                    {
+                        prevSeeker = true;
+                        break;
+                    }
+
+
+                }
+
+                if (prevSeeker == true)
+                {
+                    prevSeeker = false;
+                    continue;
+                }
+
+                indices.Append(i);
+            }
+
+            return _players.Length - _prevSeekers.Length;
+        }
+
+        public void SeletSeeker(SuperPlayer player)
+        {
+            System.Diagnostics.Debug.Assert(player != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_started == true);
+
+            System.Diagnostics.Debug.Assert(_currentSeeker == null);
+            _currentSeeker = player;
+        }
+
+        public void EndRound()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_started == true);
+
+            System.Diagnostics.Debug.Assert(_prevSeekers != null);
+            System.Diagnostics.Debug.Assert(_currentSeeker != null);
+            _prevSeekers.Append(_currentSeeker);
+
+            _currentSeeker = null;
+
+            System.Diagnostics.Debug.Assert(_currentRoundIndex >= 0);
         }
 
         public void Stop()
@@ -202,7 +279,11 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_started == true);
                 _started = false;
 
-                SuperWorld.GameContextInventory.Reset(_players, MinPlayers, MaxPlayers, MaxRounds);
+                Inventory.Reset(_players, MinPlayers, MaxPlayers, MaxRounds);
+
+                _prevSeekers = null;
+                _currentSeeker = null;
+                _currentRoundIndex = -1;
 
             }
             finally
@@ -232,6 +313,8 @@ namespace TestMinecraftServerApplication
                     // Dispose managed resources.
                     Locker.Dispose();
                     _players.Dispose();
+
+                    _prevSeekers.Dispose();
                 }
 
                 // Call the appropriate methods to clean up

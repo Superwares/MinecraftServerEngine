@@ -57,9 +57,17 @@ namespace Containers
 
             _items = new T[length];
         }
-
+        
         public List() : this(0)
         {
+        }
+
+        public List(T[] data): this(data != null ? data.Length : 0)
+        {
+            if (data != null)
+            {
+                System.Array.Copy(_items, data, _items.Length);
+            }
         }
 
         ~List() => System.Diagnostics.Debug.Assert(false);

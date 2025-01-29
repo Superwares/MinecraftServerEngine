@@ -4,10 +4,11 @@ using Containers;
 using MinecraftPrimitives;
 using MinecraftServerEngine;
 using MinecraftServerEngine.PhysicsEngine;
-using TestMinecraftServerApplication.Items;
 
 namespace TestMinecraftServerApplication
 {
+    using Items;
+
     public sealed class SuperPlayer : AbstractPlayer
     {
 
@@ -75,7 +76,7 @@ namespace TestMinecraftServerApplication
                 //ApplyBlockAppearance(Block.Dirt);
                 //OpenInventory(chestInventory);
                 //OpenInventory(ShopInventory);
-                OpenInventory(SuperWorld.GameContextInventory);
+                OpenInventory(GameContext.Inventory);
 
                 //SetExperience(0.6F, 123456789);
 
