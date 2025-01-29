@@ -29,8 +29,6 @@ namespace TestMinecraftServerApplication
 
         private IGameProgressNode _currentGameProgressNode = new LobbyNode();
 
-        public readonly GameContext Context = new();
-
 
         public SuperWorld() : base() { }
 
@@ -52,8 +50,8 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(Context != null);
-            return Context.IsStarted == false;
+            System.Diagnostics.Debug.Assert(GameContext != null);
+            return GameContext.IsStarted == false;
         }
 
         protected override void StartRoutine()

@@ -27,8 +27,8 @@ namespace TestMinecraftServerApplication
 
 
 
-        private bool _started = false;
         public bool IsStarted => _started;
+        private bool _started = false;
 
 
         public IReadOnlyList<SuperPlayer> Players
@@ -251,10 +251,8 @@ namespace TestMinecraftServerApplication
             _currentSeeker = player;
         }
 
-        public void StartSeekerCount(SuperWorld world)
+        public string StartSeekerCount()
         {
-            System.Diagnostics.Debug.Assert(world != null);
-
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(_started == true);
@@ -262,13 +260,11 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(_currentSeeker != null);
             _currentSeeker.ApplyBilndness(true);
 
-            System.Guid id = System.Guid.NewGuid();
-            
+            return _currentSeeker.Username;
         }
 
-        public void EndSeekerCount(SuperWorld world)
+        public void EndSeekerCount()
         {
-            System.Diagnostics.Debug.Assert(world != null);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
@@ -277,9 +273,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(_currentSeeker != null);
             _currentSeeker.ApplyBilndness(false);
 
-            world.DisplayTitle(
-                Time.Zero, Time.FromSeconds(1), Time.Zero,
-                new TextComponent($"주의! 술래가 출발합니다!", TextColor.Red));
+            
         }
 
         public void EndRound()

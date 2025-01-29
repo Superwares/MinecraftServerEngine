@@ -262,7 +262,9 @@ namespace MinecraftServerEngine
 
         internal readonly BlockContext BlockContext;  // Disposable
 
-        private readonly ConcurrentSet<System.Guid> BossBars = new();  // Disposable
+
+        private readonly ReadLocker LockerBossBars = new();  // Disposable
+        private readonly Map<System.Guid, BossBar> BossBars = new();  // Disposable
 
         public World()
         {
@@ -287,7 +289,28 @@ namespace MinecraftServerEngine
             WorldRenderersByUserId.Insert(id, renderer);
 
             // TODO: world border
+
+
             // TODO: Boss Bar
+            System.Diagnostics.Debug.Assert(LockerBossBars != null);
+            LockerBossBars.Read();
+
+            try
+            {
+                System.Diagnostics.Debug.Assert(BossBars != null);
+                foreach (BossBar bossBar in BossBars.GetValues())
+                {
+                    renderer.OpenBossBar(
+                        bossBar.Id, bossBar.TitleData, bossBar.Health, bossBar.Color, bossBar.Division);
+                }
+
+
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerBossBars != null);
+                LockerBossBars.Release();
+            }
         }
 
         public void PlaySound(string name, int category, Vector p, double volume, double pitch)
@@ -362,14 +385,10 @@ namespace MinecraftServerEngine
 
         }
 
-        public void OpenBossBar(
-            System.Guid id, TextComponent[] title, double health,
+        public System.Guid OpenBossBar(
+            TextComponent[] title, double health,
             BossBarColor color, BossBarDivision division)
         {
-            if (id == System.Guid.Empty)
-            {
-                throw new System.ArgumentNullException(nameof(id));
-            }
             if (health < 0.0 || health > 1.0)
             {
                 throw new System.ArgumentOutOfRangeException(nameof(health));
@@ -385,36 +404,32 @@ namespace MinecraftServerEngine
                 title = [];
             }
 
-            var extra = new object[title.Length];
+            BossBar bossBar = new(title, health, color, division);
 
-            for (int i = 0; i < title.Length; ++i)
+            System.Diagnostics.Debug.Assert(LockerBossBars != null);
+            LockerBossBars.Hold();
+
+            try
             {
-                TextComponent component = title[i];
-
-                extra[i] = new
+                foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
                 {
-                    text = component.Text,
-                    color = component.Color.GetName(),
-                };
+                    System.Diagnostics.Debug.Assert(renderer != null);
+                    renderer.OpenBossBar(
+                        bossBar.Id, bossBar.TitleData, bossBar.Health, bossBar.Color, bossBar.Division);
+                }
+
+                System.Diagnostics.Debug.Assert(BossBars != null);
+                BossBars.Insert(bossBar.Id, bossBar);
+
+                return bossBar.Id;
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerBossBars != null);
+                LockerBossBars.Release();
             }
 
-            var _titleChat = new
-            {
-                text = "",
-                extra = extra,
-            };
 
-            string titleChat = System.Text.Json.JsonSerializer.Serialize(_titleChat);
-
-            foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
-            {
-                System.Diagnostics.Debug.Assert(renderer != null);
-                renderer.OpenBossBar(
-                    id, titleChat, health, color, division);
-            }
-
-            System.Diagnostics.Debug.Assert(BossBars != null);
-            BossBars.Insert(id);
         }
 
         public void UpdateBossBarHealth(System.Guid id, double health)
@@ -433,15 +448,28 @@ namespace MinecraftServerEngine
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
+            System.Diagnostics.Debug.Assert(LockerBossBars != null);
+            LockerBossBars.Hold();
 
-            foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
+            try
             {
-                System.Diagnostics.Debug.Assert(renderer != null);
-                renderer.UpdateBossBarHealth(id, health);
-            }
+                System.Diagnostics.Debug.Assert(BossBars != null);
+                BossBar bossBar = BossBars.Lookup(id);
 
-            System.Diagnostics.Debug.Assert(BossBars != null);
-            BossBars.Contains(id);
+                bossBar.UpdateHealth(health);
+
+                foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
+                {
+                    System.Diagnostics.Debug.Assert(renderer != null);
+                    renderer.UpdateBossBarHealth(bossBar.Id, bossBar.Health);
+                }
+
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerBossBars != null);
+                LockerBossBars.Release();
+            }
         }
 
         public void CloseBossBar(System.Guid id)
@@ -456,15 +484,26 @@ namespace MinecraftServerEngine
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
+            System.Diagnostics.Debug.Assert(LockerBossBars != null);
+            LockerBossBars.Hold();
 
-            foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
+            try
             {
-                System.Diagnostics.Debug.Assert(renderer != null);
-                renderer.CloseBossBar(id);
-            }
+                System.Diagnostics.Debug.Assert(BossBars != null);
+                BossBar bossBar = BossBars.Extract(id);
 
-            System.Diagnostics.Debug.Assert(BossBars != null);
-            BossBars.Extract(id);
+                foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
+                {
+                    System.Diagnostics.Debug.Assert(renderer != null);
+                    renderer.CloseBossBar(bossBar.Id);
+                }
+
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerBossBars != null);
+                LockerBossBars.Release();
+            }
         }
 
         internal void Disconnect(UserId id)
@@ -609,34 +648,6 @@ namespace MinecraftServerEngine
                 Objects.Enqueue(player);
             }
 
-            //while (Objects.DequeuePlayer(out AbstractPlayer player))
-            //{
-            //    System.Diagnostics.Debug.Assert(player != null);
-
-            //    if (player.HandleDisconnection(out UserId userId, this))
-            //    {
-            //        System.Diagnostics.Debug.Assert(userId != UserId.Null);
-            //        System.Diagnostics.Debug.Assert(!DisconnectedPlayers.Contains(userId));
-            //        DisconnectedPlayers.Insert(userId, player);
-
-            //        if (DetermineToDespawnPlayerOnDisconnect())
-            //        {
-            //            PlayerList.Remove(userId);
-
-            //            PlayersByUserId.Extract(userId);
-            //            PlayersByUsername.Extract(player.Username);
-
-            //            AbstractPlayer playerExtracted = DisconnectedPlayers.Extract(userId);
-            //            System.Diagnostics.Debug.Assert(ReferenceEquals(playerExtracted, player));
-
-            //            ObjectDespawningPool.Enqueue(player);
-
-            //            continue;
-            //        }
-            //    }
-
-            //    Objects.Enqueue(player);
-            //}
         }
 
         internal void DestroyObjects()
@@ -781,6 +792,7 @@ namespace MinecraftServerEngine
 
                     BlockContext.Dispose();
 
+                    LockerBossBars.Dispose();
                     BossBars.Dispose();
                 }
 

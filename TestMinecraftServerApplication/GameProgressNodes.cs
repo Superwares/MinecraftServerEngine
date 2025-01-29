@@ -30,7 +30,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(ctx != null);
             System.Diagnostics.Debug.Assert(world != null);
 
-            return ctx.IsStarted;
+            return ctx.IsStarted == true;
         }
     }
 
@@ -241,7 +241,7 @@ namespace TestMinecraftServerApplication
 
         private readonly Time _StartTime = Time.Now();
 
-        private readonly System.Guid _BossBarId = System.Guid.NewGuid();
+        private System.Guid _bossBarId = System.Guid.Empty;
 
         private bool _init = false;
 
@@ -268,16 +268,17 @@ namespace TestMinecraftServerApplication
 
             if (_init == false)
             {
-                ctx.StartSeekerCount(world);
+                string username = ctx.StartSeekerCount();
 
                 progressBar = 1.0 - (elapsedTime.Amount / Duration.Amount);
                 System.Diagnostics.Debug.Assert(progressBar >= 0.0);
                 System.Diagnostics.Debug.Assert(progressBar <= 1.0);
 
-                world.OpenBossBar(
-                    _BossBarId,
+                System.Diagnostics.Debug.Assert(_bossBarId == System.Guid.Empty);
+                _bossBarId = world.OpenBossBar(
                     [
-                        new TextComponent("hello", TextColor.DarkGray),
+                        new TextComponent("술래: ", TextColor.DarkRed, true, false, false, false, false),
+                        new TextComponent($"{username}", TextColor.DarkGray),
                     ],
                     progressBar,
                     BossBarColor.Red,
@@ -292,15 +293,21 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(progressBar >= 0.0);
                 System.Diagnostics.Debug.Assert(progressBar <= 1.0);
 
+                System.Diagnostics.Debug.Assert(_bossBarId != System.Guid.Empty);
                 world.UpdateBossBarHealth(
-                    _BossBarId,
+                    _bossBarId,
                     progressBar);
             }
             else
             {
-                ctx.EndSeekerCount(world);
+                ctx.EndSeekerCount();
 
-                world.CloseBossBar(_BossBarId);
+                world.DisplayTitle(
+                    Time.Zero, Time.FromSeconds(1), Time.FromSeconds(1),
+                    new TextComponent($"주의! 술래가 출발합니다!", TextColor.Red));
+
+                System.Diagnostics.Debug.Assert(_bossBarId != System.Guid.Empty);
+                world.CloseBossBar(_bossBarId);
 
                 return true;
             }
