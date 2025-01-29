@@ -33,13 +33,19 @@ namespace TestMinecraftServerApplication
         public override string Title => "Game Context";
 
         private ItemStack GetGameSwitchOnItemStack(
-            int currentPlayers, int totalRounds)
+            int currentPlayers, int totalRounds, int currentRound)
         {
+            System.Diagnostics.Debug.Assert(currentPlayers > 0);
+            System.Diagnostics.Debug.Assert(totalRounds > 0);
+            System.Diagnostics.Debug.Assert(currentRound > 0);
+            System.Diagnostics.Debug.Assert(currentRound <= totalRounds);
+
             return new ItemStack(
                 GameSwitchOnItemType,
                 "게임 진행 중...", 1, [
                     $"참여 인원          {currentPlayers}",
-                    $"총 라운드          {totalRounds}",
+                    $"",
+                    $"라운드             {currentRound}/{totalRounds}",
                 ]);
         }
 
@@ -190,9 +196,8 @@ namespace TestMinecraftServerApplication
         {
             (bool, ItemStack)[] slots = new (bool, ItemStack)[GetTotalSlotCount()];
 
-            slots[GameSwitchSlot] = (true, GetGameSwitchOnItemStack(players.Length, totalRounds));
+            slots[GameSwitchSlot] = (true, GetGameSwitchOnItemStack(players.Length, totalRounds, 1));
 
-            System.Diagnostics.Debug.Assert(GameContext.MaxPlayers % SlotCountPerLine == 0);
             for (int i = 0; i < totalRounds; ++i)
             {
                 int slot = i + RoundIndicatorSlotOffset;
@@ -202,6 +207,43 @@ namespace TestMinecraftServerApplication
                     DisabledRoundItemType, "시작하지 않은 라운드", 1, [
                     ]));
             }
+
+            SetSlots(slots);
+        }
+
+        public void StartRound(List<SuperPlayer> players, int totalRounds, int currentRoundIndex)
+        {
+            System.Diagnostics.Debug.Assert(currentRoundIndex >= 0);
+            System.Diagnostics.Debug.Assert(currentRoundIndex < totalRounds);
+
+            (bool, ItemStack)[] slots = new (bool, ItemStack)[GetTotalSlotCount()];
+
+            slots[GameSwitchSlot] = (true,
+                GetGameSwitchOnItemStack(players.Length, totalRounds, currentRoundIndex + 1));
+
+            int slot = currentRoundIndex + RoundIndicatorSlotOffset;
+            System.Diagnostics.Debug.Assert(slot < GameContextInventoryMaxLineCount * SlotCountPerLine);
+
+            slots[slot] = (true, new ItemStack(
+                EnabledRoundItemType, "현재 라운드", 1, [
+                ]));
+
+            SetSlots(slots);
+        }
+
+        public void EndRound(List<SuperPlayer> players, int totalRounds, int currentRoundIndex)
+        {
+            System.Diagnostics.Debug.Assert(currentRoundIndex >= 0);
+            System.Diagnostics.Debug.Assert(currentRoundIndex < totalRounds);
+
+            (bool, ItemStack)[] slots = new (bool, ItemStack)[GetTotalSlotCount()];
+
+            int slot = currentRoundIndex + RoundIndicatorSlotOffset;
+            System.Diagnostics.Debug.Assert(slot < GameContextInventoryMaxLineCount * SlotCountPerLine);
+
+            slots[slot] = (true, new ItemStack(
+                EnabledRoundItemType, "종료된 라운드", 1, [
+                ]));
 
             SetSlots(slots);
         }

@@ -62,7 +62,7 @@ namespace TestMinecraftServerApplication
                     // $"The game will start in {_count} seconds!"
                     world.DisplayTitle(
                         Time.Zero, INTERVAL_TIME, Time.FromMilliseconds(500),
-                        new TextComponent($"{_count}초 후에 게임을 시작합니다!", TextColor.Red));
+                        new TextComponent($"{_count}초 후에 게임을 시작합니다...", TextColor.Red));
 
                     --_count;
 
@@ -403,7 +403,7 @@ namespace TestMinecraftServerApplication
 
                     world.DisplayTitle(
                         Time.Zero, Time.FromSeconds(1), Time.Zero,
-                        new TextComponent($"Burning Time 시작!", TextColor.Red));
+                        new TextComponent($"Burning Time 시작!", TextColor.Gold));
 
                     _initBurning = true;
                 }
@@ -435,8 +435,8 @@ namespace TestMinecraftServerApplication
 
     public sealed class RoundEndNode : IGameProgressNode
     {
-        public readonly static Time Duration = Time.FromSeconds(30);
-        //public readonly static Time Duration = Time.FromSeconds(5);  // for debug
+        //public readonly static Time Duration = Time.FromSeconds(30);
+        public readonly static Time Duration = Time.FromSeconds(5);  // for debug
 
         private readonly Time _StartTime = Time.Now();
 

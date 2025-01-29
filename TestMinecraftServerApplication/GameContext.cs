@@ -216,6 +216,9 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(_prevSeekers != null);
             System.Diagnostics.Debug.Assert(_currentSeeker == null);
             ++_currentRoundIndex;
+
+            System.Diagnostics.Debug.Assert(Inventory != null);
+            Inventory.StartRound(_players, TotalRounds, _currentRoundIndex);
         }
 
         public int MakeNonSeekerIndexList(List<int> indices)
@@ -301,6 +304,9 @@ namespace TestMinecraftServerApplication
             _currentSeeker = null;
 
             System.Diagnostics.Debug.Assert(_currentRoundIndex >= 0);
+
+            System.Diagnostics.Debug.Assert(Inventory != null);
+            Inventory.EndRound(_players, TotalRounds, _currentRoundIndex);
         }
 
         public void Stop()
