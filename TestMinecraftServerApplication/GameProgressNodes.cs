@@ -135,20 +135,22 @@ namespace TestMinecraftServerApplication
 
     public sealed class RandomSeekerNode : IGameProgressNode
     {
-        private List<int> _nonSeekerIndexList;
+        private readonly System.Random _Random = new();
+
+        private readonly List<int> _NonSeekerIndexList;
+
 
         private Time _intervalTime = Time.FromMilliseconds(250);
         private Time _time;
 
-        private readonly System.Random _Random = new();
-
         private int _repeat = 3;
         private int i = 0;
+
 
         public RandomSeekerNode(List<int> nonSeekerIndexList)
         {
             System.Diagnostics.Debug.Assert(nonSeekerIndexList != null);
-            _nonSeekerIndexList = nonSeekerIndexList;
+            _NonSeekerIndexList = nonSeekerIndexList;
 
             _intervalTime /= nonSeekerIndexList.Length;
             _time = Time.Now() - _intervalTime;
@@ -159,8 +161,8 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
-            System.Diagnostics.Debug.Assert(_nonSeekerIndexList != null);
-            _nonSeekerIndexList.Dispose();
+            System.Diagnostics.Debug.Assert(_NonSeekerIndexList != null);
+            _NonSeekerIndexList.Dispose();
 
             return new SeekerCountNode();
         }
@@ -174,9 +176,9 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(ctx.Players != null);
             IReadOnlyList<SuperPlayer> players = ctx.Players;
 
-            if (_nonSeekerIndexList.Length == 1)
+            if (_NonSeekerIndexList.Length == 1)
             {
-                int j = _nonSeekerIndexList[0];
+                int j = _NonSeekerIndexList[0];
 
                 SuperPlayer seeker = players[j];
 
@@ -189,12 +191,12 @@ namespace TestMinecraftServerApplication
                 return true;
             }
 
-            if (i >= _nonSeekerIndexList.Length * _repeat)
+            if (i >= _NonSeekerIndexList.Length * _repeat)
             {
-                int j = _Random.Next(_nonSeekerIndexList.Length);
-                int k = _nonSeekerIndexList[j];
+                int j = _Random.Next(_NonSeekerIndexList.Length);
+                int k = _NonSeekerIndexList[j];
 
-                _nonSeekerIndexList.Extract(_j => _j == j, -1);
+                _NonSeekerIndexList.Extract(_j => _j == j, -1);
 
                 //SuperPlayer player = players[k];
 
@@ -209,8 +211,8 @@ namespace TestMinecraftServerApplication
 
                 if (time > _intervalTime)
                 {
-                    int j = i % _nonSeekerIndexList.Length;
-                    int k = _nonSeekerIndexList[j];
+                    int j = i % _NonSeekerIndexList.Length;
+                    int k = _NonSeekerIndexList[j];
 
                     //MyConsole.Debug($"j: {j}");
 
@@ -259,13 +261,11 @@ namespace TestMinecraftServerApplication
 
             if (elapsedTime < Duration)
             {
-
+                ctx.StartSeekerCount(world);
             }
             else
             {
-                world.DisplayTitle(
-                    Time.Zero, Time.FromSeconds(1), Time.Zero,
-                    new TextComponent($"주의! 술래가 출발합니다!", TextColor.Red));
+                ctx.EndSeekerCount(world);
 
                 return true;
             }

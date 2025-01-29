@@ -251,6 +251,34 @@ namespace TestMinecraftServerApplication
             _currentSeeker = player;
         }
 
+        public void StartSeekerCount(SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_started == true);
+
+            System.Diagnostics.Debug.Assert(_currentSeeker != null);
+            _currentSeeker.ApplyBilndness(true);
+        }
+
+        public void EndSeekerCount(SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_started == true);
+
+            System.Diagnostics.Debug.Assert(_currentSeeker != null);
+            _currentSeeker.ApplyBilndness(false);
+
+            world.DisplayTitle(
+                Time.Zero, Time.FromSeconds(1), Time.Zero,
+                new TextComponent($"주의! 술래가 출발합니다!", TextColor.Red));
+        }
+
         public void EndRound()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
