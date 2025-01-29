@@ -9,11 +9,14 @@ namespace TestMinecraftServerApplication
 {
     public sealed class GameContext : System.IDisposable
     {
-        private bool _disposed = false;
 
         public const int MinPlayers = 2;
         public const int MaxPlayers = 18;
         public const int MaxRounds = MaxPlayers;
+
+        public readonly static GameContextInventory Inventory = new(MinPlayers, MaxPlayers, MaxRounds);
+        
+        private bool _disposed = false;
 
         private readonly Locker Locker = new();
 
@@ -102,7 +105,7 @@ namespace TestMinecraftServerApplication
                     System.Diagnostics.Debug.Assert(_players != null);
                     _players.Append(player);
 
-                    SuperWorld.GameContextInventory.ResetPlayerSeats(_players);
+                    SuperWorld.GameContextInventory.ResetPlayerSeatsBeforeGame(_players, MinPlayers, MaxPlayers);
                 }
 
                 return exists == false;
@@ -136,7 +139,7 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_players != null);
                 _players.Extract(player => player.UserId == userId, null);
 
-                SuperWorld.GameContextInventory.ResetPlayerSeats(_players);
+                SuperWorld.GameContextInventory.ResetPlayerSeatsBeforeGame(_players, MinPlayers, MaxPlayers);
             }
             catch (KeyNotFoundException)
             {
@@ -174,7 +177,7 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_started == false);
                 _started = true;
 
-                SuperWorld.GameContextInventory.StartGame(_players);
+                SuperWorld.GameContextInventory.StartGame(_players, TotalRounds);
 
                 return true;
             }
@@ -199,7 +202,7 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_started == true);
                 _started = false;
 
-                SuperWorld.GameContextInventory.ResetPlayerSeats(_players);
+                SuperWorld.GameContextInventory.Reset(_players, MinPlayers, MaxPlayers, MaxRounds);
 
             }
             finally
