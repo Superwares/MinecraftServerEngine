@@ -101,12 +101,14 @@ Disposable instances must be handled by 'using' statement except members of clas
 If disposable objects were used as members of class and struct, they must be disposed at the current object Dispose(bool disposing) fucntion.
 
 ## Notes
+
 ### TODO
 * Buffer 의 expandData 에서 capNew == buf.cap 일시 함수가 끝나야됨.
 * PlayerList.Connect 이 실행되기 전에 PlayerList.Add 되는 문제
 * Abstract Player 의 Guest 와 SuperPlayer 두 객체를 넘어갈 수 있도록 구현
 * CanJoinWorld 는 이미 존재하는 player 객체에 연결하는 것이면 넘어가기. 새로운 client 에만 나가기
 * 같은 username 과 userId 로 접속시 튕기도록
+* BossBar 은 Player 개인 또는 World 에 할당할 수 있도록
 
 ### Done 
 

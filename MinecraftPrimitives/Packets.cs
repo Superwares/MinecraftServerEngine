@@ -226,6 +226,7 @@ namespace MinecraftPrimitives
         public const int SpawnNamedEntityPacketId = 0x05;
         public const int ClientboundAnimationPacketId = 0x06;
         public const int BlockChangePacketId = 0x0B;
+        public const int BossBarPacketId = 0x0C;
         public const int ClientboundChatmessagePacketId = 0x0F;
         public const int ClientboundConfirmTransactionPacketId = 0x11;
         public const int ClientboundCloseWindowPacketId = 0x12;
@@ -934,6 +935,244 @@ namespace MinecraftPrimitives
             buffer.WriteInt(BlockId, true);
         }
 
+    }
+
+    public sealed class OpenBossBarPacket : ClientboundPlayingPacket
+    {
+        public readonly System.Guid UniqueId;
+        public readonly string Title;
+        public readonly float Health;
+        public readonly int Color;
+        public readonly int Division;
+        public readonly byte Flags;
+
+        public static OpenBossBarPacket Read(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public OpenBossBarPacket(
+            System.Guid id,
+            string title,
+            float health,
+            int color, int division,
+            byte flags)
+            : base(BossBarPacketId)
+        {
+            UniqueId = id;
+            Title = title;
+            Health = health;
+            Color = color;
+            Division = division;
+            Flags = flags;
+
+        }
+
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteGuid(UniqueId);
+            buffer.WriteInt(0, true);
+            buffer.WriteString(Title);
+            buffer.WriteFloat(Health);
+            buffer.WriteInt(Color, true);
+            buffer.WriteInt(Division, true);
+            buffer.WriteByte(Flags);
+        }
+    }
+
+    public sealed class CloseBossBarPacket : ClientboundPlayingPacket
+    {
+        public readonly System.Guid UniqueId;
+
+        public static CloseBossBarPacket Read(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public CloseBossBarPacket(System.Guid id) : base(BossBarPacketId)
+        {
+            UniqueId = id;
+        }
+
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteGuid(UniqueId);
+            buffer.WriteInt(1, true);
+        }
+    }
+
+    public sealed class UpdateBossBarHealthPacket : ClientboundPlayingPacket
+    {
+        public readonly System.Guid UniqueId;
+        public readonly float Health;
+
+        public static UpdateBossBarHealthPacket Read(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public UpdateBossBarHealthPacket(
+            System.Guid id,
+            float health)
+            : base(BossBarPacketId)
+        {
+            UniqueId = id;
+            Health = health;
+        }
+
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteGuid(UniqueId);
+            buffer.WriteInt(2, true);
+            buffer.WriteFloat(Health);
+        }
+    }
+
+    public sealed class UpdateBossBarTitlePacket : ClientboundPlayingPacket
+    {
+        public readonly System.Guid UniqueId;
+        public readonly string Title;
+
+        public static UpdateBossBarTitlePacket Read(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public UpdateBossBarTitlePacket(
+            System.Guid id,
+            string title)
+            : base(BossBarPacketId)
+        {
+            UniqueId = id;
+            Title = title;
+
+        }
+
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteGuid(UniqueId);
+            buffer.WriteInt(3, true);
+            buffer.WriteString(Title);
+        }
+    }
+
+    public sealed class UpdateBossBarStylePacket : ClientboundPlayingPacket
+    {
+        public readonly System.Guid UniqueId;
+        public readonly int Color;
+        public readonly int Division;
+
+        public static UpdateBossBarStylePacket Read(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public UpdateBossBarStylePacket(
+            System.Guid id,
+            int color, int division)
+            : base(BossBarPacketId)
+        {
+            UniqueId = id;
+            Color = color;
+            Division = division;
+
+        }
+
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteGuid(UniqueId);
+            buffer.WriteInt(4, true);
+            buffer.WriteInt(Color, true);
+            buffer.WriteInt(Division, true);
+        }
+    }
+
+    public sealed class UpdateBossBarFlagsPacket : ClientboundPlayingPacket
+    {
+        public readonly System.Guid UniqueId;
+        public readonly byte Flags;
+
+        public static UpdateBossBarFlagsPacket Read(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public UpdateBossBarFlagsPacket(
+            System.Guid id,
+            byte flags)
+            : base(BossBarPacketId)
+        {
+            UniqueId = id;
+            Flags = flags;
+
+        }
+
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteGuid(UniqueId);
+            buffer.WriteInt(5, true);
+            buffer.WriteByte(Flags);
+        }
     }
 
     public sealed class ClientboundChatmessagePacket : ClientboundPlayingPacket
