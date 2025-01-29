@@ -1,7 +1,7 @@
 ﻿
 namespace MinecraftPrimitives
 {
-    public struct BossBar
+    public struct ProgressBar
     {
         public readonly System.Guid Id = System.Guid.NewGuid();
         public readonly TextComponent[] Title;
@@ -14,7 +14,7 @@ namespace MinecraftPrimitives
         public readonly BossBarDivision Division;
 
 
-        public BossBar(
+        public ProgressBar(
             TextComponent[] title, double health,
             BossBarColor color, BossBarDivision division)
         {

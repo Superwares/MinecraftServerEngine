@@ -67,6 +67,19 @@ namespace TestMinecraftServerApplication
             }
         }
 
+        public SuperPlayer CurrentSeeker
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(_disposed == false);
+
+                System.Diagnostics.Debug.Assert(_started == true);
+
+                System.Diagnostics.Debug.Assert(_currentSeeker != null);
+                return _currentSeeker;
+            }
+        }
+
         public GameContext()
         {
         }
@@ -251,7 +264,7 @@ namespace TestMinecraftServerApplication
             _currentSeeker = player;
         }
 
-        public string StartSeekerCount()
+        public void StartSeekerCount()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
@@ -260,7 +273,6 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(_currentSeeker != null);
             _currentSeeker.ApplyBilndness(true);
 
-            return _currentSeeker.Username;
         }
 
         public void EndSeekerCount()
@@ -273,7 +285,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(_currentSeeker != null);
             _currentSeeker.ApplyBilndness(false);
 
-            
+
         }
 
         public void EndRound()

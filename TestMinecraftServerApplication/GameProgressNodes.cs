@@ -237,11 +237,12 @@ namespace TestMinecraftServerApplication
     // The seeker closes their eyes and counts to a number.
     public sealed class SeekerCountNode : IGameProgressNode
     {
-        public readonly static Time Duration = Time.FromSeconds(30);
+        //public readonly static Time Duration = Time.FromSeconds(30);
+        public readonly static Time Duration = Time.FromSeconds(5);  // for debug
 
         private readonly Time _StartTime = Time.Now();
 
-        private System.Guid _bossBarId = System.Guid.Empty;
+        private System.Guid _progressBarId = System.Guid.Empty;
 
         private bool _init = false;
 
@@ -268,17 +269,17 @@ namespace TestMinecraftServerApplication
 
             if (_init == false)
             {
-                string username = ctx.StartSeekerCount();
+                ctx.StartSeekerCount();
 
-                progressBar = 1.0 - (elapsedTime.Amount / Duration.Amount);
+                progressBar = 1.0 - ((double)elapsedTime.Amount / (double)Duration.Amount);
                 System.Diagnostics.Debug.Assert(progressBar >= 0.0);
                 System.Diagnostics.Debug.Assert(progressBar <= 1.0);
 
-                System.Diagnostics.Debug.Assert(_bossBarId == System.Guid.Empty);
-                _bossBarId = world.OpenBossBar(
+                System.Diagnostics.Debug.Assert(_progressBarId == System.Guid.Empty);
+                _progressBarId = world.OpenProgressBar(
                     [
-                        new TextComponent("술래: ", TextColor.Red, true, false, false, false, false),
-                        new TextComponent($"{username}", TextColor.DarkGray),
+                        new TextComponent($"[Superdek] 술래카운트 ", TextColor.Gold),
+                        new TextComponent($"(술래: {ctx.CurrentSeeker.Username})", TextColor.Red),
                     ],
                     progressBar,
                     BossBarColor.Red,
@@ -293,9 +294,9 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(progressBar >= 0.0);
                 System.Diagnostics.Debug.Assert(progressBar <= 1.0);
 
-                System.Diagnostics.Debug.Assert(_bossBarId != System.Guid.Empty);
-                world.UpdateBossBarHealth(
-                    _bossBarId,
+                System.Diagnostics.Debug.Assert(_progressBarId != System.Guid.Empty);
+                world.UpdateProgressBarHealth(
+                    _progressBarId,
                     progressBar);
             }
             else
@@ -306,8 +307,8 @@ namespace TestMinecraftServerApplication
                     Time.Zero, Time.FromSeconds(1), Time.FromSeconds(1),
                     new TextComponent($"주의! 술래가 출발합니다!", TextColor.Red));
 
-                System.Diagnostics.Debug.Assert(_bossBarId != System.Guid.Empty);
-                world.CloseBossBar(_bossBarId);
+                System.Diagnostics.Debug.Assert(_progressBarId != System.Guid.Empty);
+                world.CloseProgressBar(_progressBarId);
 
                 return true;
             }
@@ -318,12 +319,17 @@ namespace TestMinecraftServerApplication
 
     public sealed class FindHidersNode : IGameProgressNode
     {
-        public readonly static Time NormalTimeDuration = Time.FromMinutes(2);
-        public readonly static Time BurningTimeDuration = Time.FromMinutes(1);
+        //public readonly static Time NormalTimeDuration = Time.FromMinutes(2);
+        //public readonly static Time BurningTimeDuration = Time.FromMinutes(1);
+
+        public readonly static Time NormalTimeDuration = Time.FromSeconds(5);  // for debug
+        public readonly static Time BurningTimeDuration = Time.FromSeconds(5);  // for debug
 
         private readonly Time _StartTime = Time.Now();
 
-        private bool _alertBurningTime = false;
+        private System.Guid _progressBarId = System.Guid.Empty;
+
+        private bool _initNormal = false, _initBurning = false;
 
         public FindHidersNode()
         {
@@ -342,24 +348,84 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(world != null);
 
             Time elapsedTime = Time.Now() - _StartTime;
+            double progressBar;
 
             if (elapsedTime < NormalTimeDuration)
             {
+                progressBar = 1.0 - ((double)elapsedTime.Amount / (double)NormalTimeDuration.Amount);
+                System.Diagnostics.Debug.Assert(progressBar >= 0.0);
+                System.Diagnostics.Debug.Assert(progressBar <= 1.0);
+
+
+                if (_initNormal == false)
+                {
+                    System.Diagnostics.Debug.Assert(_progressBarId == System.Guid.Empty);
+                    _progressBarId = world.OpenProgressBar(
+                        [
+                        new TextComponent($"[Superdek] 도망치기 ", TextColor.Gold),
+                        new TextComponent($"(술래: {ctx.CurrentSeeker.Username})", TextColor.Red),
+                        ],
+                        progressBar,
+                        BossBarColor.Red,
+                        BossBarDivision.Notches_20);
+
+                    _initNormal = true;
+                }
+                else
+                {
+                    System.Diagnostics.Debug.Assert(_progressBarId != System.Guid.Empty);
+                    world.UpdateProgressBarHealth(
+                        _progressBarId,
+                        progressBar);
+                }
 
             }
-            else if (elapsedTime < BurningTimeDuration)
+            else if ((elapsedTime - NormalTimeDuration) < BurningTimeDuration)
             {
-                if (_alertBurningTime == false)
+                progressBar = 1.0 - ((double)(elapsedTime - NormalTimeDuration).Amount / (double)BurningTimeDuration.Amount);
+                System.Diagnostics.Debug.Assert(progressBar >= 0.0);
+                System.Diagnostics.Debug.Assert(progressBar <= 1.0);
+
+                if (_initBurning == false)
                 {
+                    System.Diagnostics.Debug.Assert(_progressBarId != System.Guid.Empty);
+                    world.CloseProgressBar(_progressBarId);
+
+                    _progressBarId = world.OpenProgressBar(
+                        [
+                        new TextComponent($"[Superdek] ", TextColor.Gold),
+                        new TextComponent($"버닝타임! ", TextColor.Yellow),
+                        new TextComponent($"(술래: {ctx.CurrentSeeker.Username})", TextColor.Red),
+                        ],
+                        progressBar,
+                        BossBarColor.Yellow,
+                        BossBarDivision.Notches_20);
+
                     world.DisplayTitle(
                         Time.Zero, Time.FromSeconds(1), Time.Zero,
                         new TextComponent($"Burning Time 시작!", TextColor.Red));
 
-                    _alertBurningTime = true;
+                    _initBurning = true;
                 }
+                else
+                {
+                    System.Diagnostics.Debug.Assert(_progressBarId != System.Guid.Empty);
+                    world.UpdateProgressBarHealth(
+                        _progressBarId,
+                        progressBar);
+                }
+
+
             }
             else
             {
+                world.DisplayTitle(
+                    Time.Zero, Time.FromSeconds(1), Time.FromSeconds(1),
+                    new TextComponent($"종료!", TextColor.Gold));
+
+                System.Diagnostics.Debug.Assert(_progressBarId != System.Guid.Empty);
+                world.CloseProgressBar(_progressBarId);
+
                 return true;
             }
 
@@ -369,6 +435,10 @@ namespace TestMinecraftServerApplication
 
     public sealed class RoundEndNode : IGameProgressNode
     {
+        public readonly static Time Duration = Time.FromSeconds(30);
+        //public readonly static Time Duration = Time.FromSeconds(5);  // for debug
+
+        private readonly Time _StartTime = Time.Now();
 
         public RoundEndNode()
         {
@@ -395,9 +465,20 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(ctx != null);
             System.Diagnostics.Debug.Assert(world != null);
 
-            ctx.EndRound();
+            Time elapsedTime = Time.Now() - _StartTime;
 
-            return true;
+            if (elapsedTime < Duration)
+            {
+
+            }
+            else
+            {
+                ctx.EndRound();
+
+                return true;
+            }
+
+            return false;
         }
     }
 

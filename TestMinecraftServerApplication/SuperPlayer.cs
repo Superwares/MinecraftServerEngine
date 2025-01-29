@@ -89,13 +89,13 @@ namespace TestMinecraftServerApplication
                     Time.FromSeconds(0), Time.FromSeconds(1), Time.FromSeconds(0),
                     new TextComponent("good", TextColor.Blue));
 
-                ApplyBilndness(true);
+                //ApplyBilndness(true);
             }
             else
             {
                 ResetBlockAppearance();
 
-                ApplyBilndness(false);
+                //ApplyBilndness(false);
             }
         }
 

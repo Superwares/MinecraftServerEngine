@@ -263,8 +263,8 @@ namespace MinecraftServerEngine
         internal readonly BlockContext BlockContext;  // Disposable
 
 
-        private readonly ReadLocker LockerBossBars = new();  // Disposable
-        private readonly Map<System.Guid, BossBar> BossBars = new();  // Disposable
+        private readonly ReadLocker LockerProgressBars = new();  // Disposable
+        private readonly Map<System.Guid, ProgressBar> ProgressBars = new();  // Disposable
 
         public World()
         {
@@ -292,24 +292,24 @@ namespace MinecraftServerEngine
 
 
             // TODO: Boss Bar
-            System.Diagnostics.Debug.Assert(LockerBossBars != null);
-            LockerBossBars.Read();
+            System.Diagnostics.Debug.Assert(LockerProgressBars != null);
+            LockerProgressBars.Read();
 
             try
             {
-                System.Diagnostics.Debug.Assert(BossBars != null);
-                foreach (BossBar bossBar in BossBars.GetValues())
+                System.Diagnostics.Debug.Assert(ProgressBars != null);
+                foreach (ProgressBar progressBar in ProgressBars.GetValues())
                 {
                     renderer.OpenBossBar(
-                        bossBar.Id, bossBar.TitleData, bossBar.Health, bossBar.Color, bossBar.Division);
+                        progressBar.Id, progressBar.TitleData, progressBar.Health, progressBar.Color, progressBar.Division);
                 }
 
 
             }
             finally
             {
-                System.Diagnostics.Debug.Assert(LockerBossBars != null);
-                LockerBossBars.Release();
+                System.Diagnostics.Debug.Assert(LockerProgressBars != null);
+                LockerProgressBars.Release();
             }
         }
 
@@ -385,7 +385,7 @@ namespace MinecraftServerEngine
 
         }
 
-        public System.Guid OpenBossBar(
+        public System.Guid OpenProgressBar(
             TextComponent[] title, double health,
             BossBarColor color, BossBarDivision division)
         {
@@ -404,10 +404,10 @@ namespace MinecraftServerEngine
                 title = [];
             }
 
-            BossBar bossBar = new(title, health, color, division);
+            ProgressBar progressBar = new(title, health, color, division);
 
-            System.Diagnostics.Debug.Assert(LockerBossBars != null);
-            LockerBossBars.Hold();
+            System.Diagnostics.Debug.Assert(LockerProgressBars != null);
+            LockerProgressBars.Hold();
 
             try
             {
@@ -415,24 +415,25 @@ namespace MinecraftServerEngine
                 {
                     System.Diagnostics.Debug.Assert(renderer != null);
                     renderer.OpenBossBar(
-                        bossBar.Id, bossBar.TitleData, bossBar.Health, bossBar.Color, bossBar.Division);
+                        progressBar.Id, progressBar.TitleData, progressBar.Health,
+                        progressBar.Color, progressBar.Division);
                 }
 
-                System.Diagnostics.Debug.Assert(BossBars != null);
-                BossBars.Insert(bossBar.Id, bossBar);
+                System.Diagnostics.Debug.Assert(ProgressBars != null);
+                ProgressBars.Insert(progressBar.Id, progressBar);
 
-                return bossBar.Id;
+                return progressBar.Id;
             }
             finally
             {
-                System.Diagnostics.Debug.Assert(LockerBossBars != null);
-                LockerBossBars.Release();
+                System.Diagnostics.Debug.Assert(LockerProgressBars != null);
+                LockerProgressBars.Release();
             }
 
 
         }
 
-        public void UpdateBossBarHealth(System.Guid id, double health)
+        public void UpdateProgressBarHealth(System.Guid id, double health)
         {
             if (id == System.Guid.Empty)
             {
@@ -448,31 +449,31 @@ namespace MinecraftServerEngine
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            System.Diagnostics.Debug.Assert(LockerBossBars != null);
-            LockerBossBars.Hold();
+            System.Diagnostics.Debug.Assert(LockerProgressBars != null);
+            LockerProgressBars.Hold();
 
             try
             {
-                System.Diagnostics.Debug.Assert(BossBars != null);
-                BossBar bossBar = BossBars.Lookup(id);
+                System.Diagnostics.Debug.Assert(ProgressBars != null);
+                ProgressBar progressBar = ProgressBars.Lookup(id);
 
-                bossBar.UpdateHealth(health);
+                progressBar.UpdateHealth(health);
 
                 foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
                 {
                     System.Diagnostics.Debug.Assert(renderer != null);
-                    renderer.UpdateBossBarHealth(bossBar.Id, bossBar.Health);
+                    renderer.UpdateBossBarHealth(progressBar.Id, progressBar.Health);
                 }
 
             }
             finally
             {
-                System.Diagnostics.Debug.Assert(LockerBossBars != null);
-                LockerBossBars.Release();
+                System.Diagnostics.Debug.Assert(LockerProgressBars != null);
+                LockerProgressBars.Release();
             }
         }
 
-        public void CloseBossBar(System.Guid id)
+        public void CloseProgressBar(System.Guid id)
         {
             if (id == System.Guid.Empty)
             {
@@ -484,25 +485,25 @@ namespace MinecraftServerEngine
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            System.Diagnostics.Debug.Assert(LockerBossBars != null);
-            LockerBossBars.Hold();
+            System.Diagnostics.Debug.Assert(LockerProgressBars != null);
+            LockerProgressBars.Hold();
 
             try
             {
-                System.Diagnostics.Debug.Assert(BossBars != null);
-                BossBar bossBar = BossBars.Extract(id);
+                System.Diagnostics.Debug.Assert(ProgressBars != null);
+                ProgressBar progressBar = ProgressBars.Extract(id);
 
                 foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
                 {
                     System.Diagnostics.Debug.Assert(renderer != null);
-                    renderer.CloseBossBar(bossBar.Id);
+                    renderer.CloseBossBar(progressBar.Id);
                 }
 
             }
             finally
             {
-                System.Diagnostics.Debug.Assert(LockerBossBars != null);
-                LockerBossBars.Release();
+                System.Diagnostics.Debug.Assert(LockerProgressBars != null);
+                LockerProgressBars.Release();
             }
         }
 
@@ -792,8 +793,8 @@ namespace MinecraftServerEngine
 
                     BlockContext.Dispose();
 
-                    LockerBossBars.Dispose();
-                    BossBars.Dispose();
+                    LockerProgressBars.Dispose();
+                    ProgressBars.Dispose();
                 }
 
                 // Call the appropriate methods to clean up
