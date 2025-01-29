@@ -3,7 +3,7 @@ using MinecraftPrimitives;
 
 namespace TestMinecraftServerApplication
 {
-    public struct ScoreboardPlayerRow
+    public sealed class ScoreboardPlayerRow
     {
         public const int PointsPerKill = 3;
         public const int PointsPerDeath = -2;

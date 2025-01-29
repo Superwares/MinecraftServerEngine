@@ -136,13 +136,11 @@ namespace MinecraftServerEngine
             OnItemBreak(world, stack);
         }
 
-        public virtual (bool, double) Damage(double amount)
+        protected virtual (bool, double) _Damage(double amount)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
             System.Diagnostics.Debug.Assert(amount >= 0.0D);
-            System.Diagnostics.Debug.Assert(_health >= 0.0D);
-            System.Diagnostics.Debug.Assert(_health <= _maxHealth);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
 
             LockerHealth.Hold();
 
@@ -160,6 +158,9 @@ namespace MinecraftServerEngine
                     return (false, 0.0);
                 }
 
+
+                System.Diagnostics.Debug.Assert(_health >= 0.0D);
+                System.Diagnostics.Debug.Assert(_health <= _maxHealth);
                 _health -= amount;
 
                 SetEntityStatus(2);
@@ -185,6 +186,71 @@ namespace MinecraftServerEngine
                 LockerHealth.Release();
 
             }
+        }
+
+        public (bool, double) Damage(double amount)
+        {
+            if (amount < 0.0F)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
+            }
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            return _Damage(amount);
+        }
+
+        protected virtual double _Heal(double amount)
+        {
+            System.Diagnostics.Debug.Assert(amount >= 0.0D);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            LockerHealth.Hold();
+
+            try
+            {
+
+                if (amount == 0.0D)
+                {
+                    return _health;
+                }
+
+                System.Diagnostics.Debug.Assert(_health >= 0.0D);
+                System.Diagnostics.Debug.Assert(_health <= _maxHealth);
+                _health += amount;
+
+                if (_health >= _maxHealth)
+                {
+                    _health = _maxHealth;
+                }
+
+                return _health;
+            }
+            finally
+            {
+                LockerHealth.Release();
+
+            }
+        }
+
+        public void Heal(double amount)
+        {
+            if (amount < 0.0F)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
+            }
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _Heal(amount);
+        }
+
+        public void HealFully()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _Heal(MaxHealth);
         }
 
         protected override void Dispose(bool disposing)

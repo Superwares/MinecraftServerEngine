@@ -122,6 +122,10 @@ namespace MinecraftPrimitives
                 {
                     throw new DisconnectedClientException();
                 }
+                if (e.SocketErrorCode == System.Net.Sockets.SocketError.ConnectionReset)
+                {
+                    throw new DisconnectedClientException();
+                }
 
                 throw;
             }

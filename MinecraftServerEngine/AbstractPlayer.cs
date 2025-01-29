@@ -167,32 +167,50 @@ namespace MinecraftServerEngine
 
         //}
 
-        public override (bool, double) Damage(double amount)
+        protected override (bool, double) _Damage(double amount)
         {
-            if (amount < 0.0F)
-            {
-                throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
-            }
-
             System.Diagnostics.Debug.Assert(amount >= 0.0D);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             LockerHealth.Hold();
 
             try
             {
-                if (Gamemode == Gamemode.Spectator)
-                {
-                    return (false, _health);
-                }
-
-                (bool damaged, double health) = base.Damage(amount);
+                (bool damaged, double health) = base._Damage(amount);
 
                 if (Connected == true)
                 {
-                    Conn.UpdateHealth(_health);
+                    Conn.UpdateHealth(health);
                 }
 
                 return (damaged, health);
+            }
+            finally
+            {
+                LockerHealth.Release();
+            }
+
+        }
+
+        protected override double _Heal(double amount)
+        {
+            System.Diagnostics.Debug.Assert(amount >= 0.0D);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            LockerHealth.Hold();
+
+            try
+            {
+                double health = base._Heal(amount);
+
+                if (Connected == true)
+                {
+                    Conn.UpdateHealth(health);
+                }
+
+                return health;
             }
             finally
             {

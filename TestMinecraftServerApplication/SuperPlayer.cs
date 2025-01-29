@@ -437,6 +437,8 @@ namespace TestMinecraftServerApplication
 
             SwitchGamemode(Gamemode.Spectator);
 
+            HealFully();
+
             System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
             System.Diagnostics.Debug.Assert(UserId != UserId.Null);
             SuperWorld.GameContext.IncreaseDeathPoint(UserId);

@@ -1480,6 +1480,8 @@ namespace MinecraftServerEngine
                 return;
             }
 
+            health += 0.00001;
+
             System.Diagnostics.Debug.Assert(OutPackets != null);
             OutPackets.Enqueue(new UpdateHealthPacket((float)health, 20, 5.0F));
         }

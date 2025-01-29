@@ -337,9 +337,6 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
-            System.Diagnostics.Debug.Assert(printMessage0 == true);
-            System.Diagnostics.Debug.Assert(printMessage1 == true);
-
             return new FindHidersNode();
         }
 
@@ -419,10 +416,10 @@ namespace TestMinecraftServerApplication
 
     public sealed class FindHidersNode : IGameProgressNode
     {
-        //public readonly static Time NormalTimeDuration = Time.FromMinutes(2);
+        public readonly static Time NormalTimeDuration = Time.FromMinutes(2);
         //public readonly static Time BurningTimeDuration = Time.FromMinutes(1);
 
-        public readonly static Time NormalTimeDuration = Time.FromSeconds(5);  // for debug
+        //public readonly static Time NormalTimeDuration = Time.FromSeconds(5);  // for debug
         public readonly static Time BurningTimeDuration = Time.FromSeconds(5);  // for debug
 
         private readonly Time _StartTime = Time.Now();
@@ -455,8 +452,6 @@ namespace TestMinecraftServerApplication
         public IGameProgressNode CreateNextNode(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
-
-            System.Diagnostics.Debug.Assert(printMessage0 == true);
 
             return new RoundEndNode();
         }
@@ -591,8 +586,6 @@ namespace TestMinecraftServerApplication
         public IGameProgressNode CreateNextNode(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
-
-            System.Diagnostics.Debug.Assert(printMessage0 == true);
 
             if (ctx.IsFinalRound == true)
             {
