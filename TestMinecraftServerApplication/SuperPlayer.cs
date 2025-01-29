@@ -26,7 +26,7 @@ namespace TestMinecraftServerApplication
         public static void GiveDefaultItems(SuperPlayer player)
         {
             player.GiveItem(ShopItem.Create(1));
-            player.GiveItem(Coin.Create(10));
+            player.GiveItem(Coin.Create(GameContext.DefaultCoinAmount));
         }
 
         public SuperPlayer(

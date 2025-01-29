@@ -411,6 +411,7 @@ namespace MinecraftServerEngine
 
             try
             {
+                System.Diagnostics.Debug.Assert(WorldRenderersByUserId != null);
                 foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
                 {
                     System.Diagnostics.Debug.Assert(renderer != null);
@@ -459,6 +460,7 @@ namespace MinecraftServerEngine
 
                 progressBar.UpdateHealth(health);
 
+                System.Diagnostics.Debug.Assert(WorldRenderersByUserId != null);
                 foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
                 {
                     System.Diagnostics.Debug.Assert(renderer != null);
@@ -493,6 +495,7 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(ProgressBars != null);
                 ProgressBar progressBar = ProgressBars.Extract(id);
 
+                System.Diagnostics.Debug.Assert(WorldRenderersByUserId != null);
                 foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
                 {
                     System.Diagnostics.Debug.Assert(renderer != null);
@@ -505,6 +508,48 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(LockerProgressBars != null);
                 LockerProgressBars.Release();
             }
+        }
+
+        public void WriteMessageInChatBox(params TextComponent[] components)
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            if (components == null)
+            {
+                components = [];
+            }
+
+            var extra = new object[components.Length];
+
+            for (int i = 0; i < components.Length; ++i)
+            {
+                TextComponent component = components[i];
+
+                extra[i] = new
+                {
+                    text = component.Text,
+                    color = component.Color.GetName(),
+                };
+            }
+
+            var chat = new
+            {
+                text = "",
+                extra = extra,
+            };
+
+            string data = System.Text.Json.JsonSerializer.Serialize(chat);
+
+            System.Diagnostics.Debug.Assert(WorldRenderersByUserId != null);
+            foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
+            {
+                System.Diagnostics.Debug.Assert(renderer != null);
+                renderer.WriteChatInChatBox(data);
+            }
+
         }
 
         internal void Disconnect(UserId id)

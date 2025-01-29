@@ -109,6 +109,7 @@ If disposable objects were used as members of class and struct, they must be dis
 * CanJoinWorld 는 이미 존재하는 player 객체에 연결하는 것이면 넘어가기. 새로운 client 에만 나가기
 * 같은 username 과 userId 로 접속시 튕기도록
 * BossBar 은 Player 개인 또는 World 에 할당할 수 있도록
+* y < 0 으로 떨어지면 Arrert 해결하기
 
 ### Done 
 

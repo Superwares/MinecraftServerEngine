@@ -298,6 +298,14 @@ namespace MinecraftServerEngine
 
             Render(new CloseBossBarPacket(id));
         }
+
+        internal void WriteChatInChatBox(string data)
+        {
+            System.Diagnostics.Debug.Assert(data != null);
+            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(data) == false);
+
+            Render(new ClientboundChatmessagePacket(data, 0x00));
+        }
     }
 
     internal abstract class ObjectRenderer : Renderer

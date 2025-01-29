@@ -9,7 +9,7 @@ namespace TestMinecraftServerApplication
 {
     public sealed class GameContext : System.IDisposable
     {
-
+        public const int DefaultCoinAmount = 10;
 
         public const int MinPlayers = 2;
         public const int MaxPlayers = 18;
@@ -55,6 +55,17 @@ namespace TestMinecraftServerApplication
         private List<SuperPlayer> _prevSeekers = new();
         private SuperPlayer _currentSeeker = null;
         private int _currentRoundIndex = -1;
+        public bool IsBeforeFirstRound
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(_disposed == false);
+
+                System.Diagnostics.Debug.Assert(_started == true);
+
+                return _currentRoundIndex <= 0;
+            }
+        }
         public bool IsFinalRound
         {
             get

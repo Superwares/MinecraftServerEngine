@@ -38,8 +38,30 @@ namespace TestMinecraftServerApplication
     {
         private readonly static Time INTERVAL_TIME = Time.FromSeconds(1);
 
+        public readonly TextComponent[] Message = [
+            new TextComponent($"============SUPERDEK=============\n", TextColor.DarkGray),
+            new TextComponent($"\n", TextColor.White),
+            new TextComponent($"**최종 우승 조건** \n", TextColor.Gold),
+            new TextComponent($"최종 포인트", TextColor.Yellow, true, false, true, false, false),
+            new TextComponent($"가 가장 높은 플레이어가 ", TextColor.White),
+            new TextComponent($"우승자", TextColor.Gold),
+            new TextComponent($"가 됩니다!\n", TextColor.White),
+            new TextComponent($"\n", TextColor.White),
+            new TextComponent($"킬 당 포인트:       {ScoreboardPlayerRow.PointsPerKill}\n",  TextColor.Gray),
+            new TextComponent($"데스 당 포인트:     {ScoreboardPlayerRow.PointsPerDeath}\n", TextColor.Gray),
+            new TextComponent($"\n", TextColor.White),
+            new TextComponent($"* 라운드는 참여한 플레이어 수만큼 진행됩니다.\n", TextColor.Gray),
+            new TextComponent($"\n", TextColor.White),
+            new TextComponent($"=================================", TextColor.DarkGray),
+        ];
+        private bool _printMessage = false;
+
+
         private Time _prevDisplayTime = Time.Now() - INTERVAL_TIME;
         private int _count = 5;
+
+
+
 
         public IGameProgressNode CreateNextNode(GameContext ctx)
         {
@@ -52,6 +74,13 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(ctx != null);
             System.Diagnostics.Debug.Assert(world != null);
+
+            if (ctx.IsBeforeFirstRound == true && _printMessage == false)
+            {
+                world.WriteMessageInChatBox(Message);
+
+                _printMessage = true;
+            }
 
             if (_count > 0)
             {
@@ -67,10 +96,13 @@ namespace TestMinecraftServerApplication
                     --_count;
 
                     _prevDisplayTime = Time.Now();
+
                 }
 
                 return false;
             }
+
+
 
             return true;
         }
@@ -139,6 +171,16 @@ namespace TestMinecraftServerApplication
 
         private readonly List<int> _NonSeekerIndexList;
 
+        public readonly TextComponent[] Message = [
+            new TextComponent($"============SUPERDEK=============\n", TextColor.DarkGray),
+            new TextComponent($"\n", TextColor.White),
+            new TextComponent($"모든 플레이어는 무작위로 술래로 지정됩니다.\n",  TextColor.White),
+            new TextComponent($"단, 한 번 술래가 된 플레이어는 다음 라운드\n", TextColor.White),
+            new TextComponent($"에서는 술래로 선정되지 않습니다.\n", TextColor.White),
+            new TextComponent($"\n", TextColor.White),
+            new TextComponent($"=================================", TextColor.DarkGray),
+        ];
+        private bool printMessage = false;
 
         private Time _intervalTime = Time.FromMilliseconds(250);
         private Time _time;
@@ -173,6 +215,12 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(ctx != null);
             System.Diagnostics.Debug.Assert(world != null);
 
+            if (ctx.IsBeforeFirstRound == true && printMessage == false)
+            {
+                world.WriteMessageInChatBox(Message);
+
+                printMessage = true;
+            }
 
             System.Diagnostics.Debug.Assert(ctx.Players != null);
             IReadOnlyList<SuperPlayer> players = ctx.Players;
@@ -242,6 +290,40 @@ namespace TestMinecraftServerApplication
 
         private readonly Time _StartTime = Time.Now();
 
+
+        public readonly TextComponent[] Message0 = [
+            new TextComponent($"============SUPERDEK=============\n", TextColor.DarkGray),
+            new TextComponent($"\n", TextColor.White),
+            new TextComponent($"쉬프트 키를 누르면 자신이 서 있는 아래 \n",  TextColor.White),
+            new TextComponent($"블록", TextColor.White, true, false, true, false, false),
+            new TextComponent($"으로 변신합니다.\n", TextColor.White),
+            new TextComponent($"자신에게는 여전히 플레이어 형태로 보이지만, \n", TextColor.White),
+            new TextComponent($"다른 플레이어에게는 ", TextColor.White),
+            new TextComponent($"블록", TextColor.White, true, false, true, false, false),
+            new TextComponent($"으로 위장됩니다.\n", TextColor.White),
+            new TextComponent($"\n", TextColor.White),
+            new TextComponent($"=================================", TextColor.DarkGray),
+        ];
+        private bool printMessage0 = false;
+
+        public readonly TextComponent[] Message1 = [
+            new TextComponent($"============SUPERDEK=============\n", TextColor.DarkGray),
+            new TextComponent($"\n", TextColor.White),
+            new TextComponent($"상점 아이템",  TextColor.Yellow),
+            new TextComponent($"을 우클릭하면 상점을 \n",  TextColor.White),
+            new TextComponent($"이용할 수 있습니다.\n", TextColor.White),
+            new TextComponent($"게임에서 사용되는 공통 재화는 ", TextColor.White),
+            new TextComponent($"코인", TextColor.Gold),
+            new TextComponent($"이며, \n", TextColor.White),
+            new TextComponent($"이는 아이템 형태로 제공됩니다.\n", TextColor.White),
+            new TextComponent($"\n", TextColor.White),
+            new TextComponent($"기본 코인:      ${GameContext.DefaultCoinAmount} Coins\n", TextColor.Gray),
+            new TextComponent($"\n", TextColor.White),
+            new TextComponent($"=================================", TextColor.DarkGray),
+        ];
+        private bool printMessage1 = false;
+
+
         private System.Guid _progressBarId = System.Guid.Empty;
 
         private bool _init = false;
@@ -255,6 +337,9 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
+            System.Diagnostics.Debug.Assert(printMessage0 == true);
+            System.Diagnostics.Debug.Assert(printMessage1 == true);
+
             return new FindHidersNode();
         }
 
@@ -264,6 +349,21 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(world != null);
 
             Time elapsedTime = Time.Now() - _StartTime;
+
+            if (ctx.IsBeforeFirstRound == true && printMessage0 == false && elapsedTime > Time.FromSeconds(2))
+            {
+                world.WriteMessageInChatBox(Message0);
+
+                printMessage0 = true;
+            }
+
+            if (ctx.IsBeforeFirstRound == true && printMessage1 == false && elapsedTime > Time.FromSeconds(4))
+            {
+                world.WriteMessageInChatBox(Message1);
+
+                printMessage1 = true;
+            }
+
 
             double progressBar;
 
@@ -327,6 +427,23 @@ namespace TestMinecraftServerApplication
 
         private readonly Time _StartTime = Time.Now();
 
+
+        public readonly TextComponent[] Message0 = [
+            new TextComponent($"============SUPERDEK=============\n", TextColor.DarkGray),
+            new TextComponent($"\n", TextColor.White),
+            new TextComponent($"버닝 타임 시작! \n",  TextColor.Red),
+            new TextComponent($"이제 잘못된 ", TextColor.White),
+            new TextComponent($"공격", TextColor.DarkRed),
+            new TextComponent($"으로 인해 체력이 감소하지 \n", TextColor.White),
+            new TextComponent($"않으며, 술래의 ", TextColor.White),
+            new TextComponent($"속도", TextColor.Cyan),
+            new TextComponent($"가 더욱 빨라집니다! \n", TextColor.White),
+            new TextComponent($"\n", TextColor.White),
+            new TextComponent($"=================================", TextColor.DarkGray),
+        ];
+        private bool printMessage0 = false;
+
+
         private System.Guid _progressBarId = System.Guid.Empty;
 
         private bool _initNormal = false, _initBurning = false;
@@ -338,6 +455,8 @@ namespace TestMinecraftServerApplication
         public IGameProgressNode CreateNextNode(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
+
+            System.Diagnostics.Debug.Assert(printMessage0 == true);
 
             return new RoundEndNode();
         }
@@ -382,6 +501,13 @@ namespace TestMinecraftServerApplication
             }
             else if ((elapsedTime - NormalTimeDuration) < BurningTimeDuration)
             {
+                if (ctx.IsBeforeFirstRound == true && printMessage0 == false)
+                {
+                    world.WriteMessageInChatBox(Message0);
+
+                    printMessage0 = true;
+                }
+
                 progressBar = 1.0 - ((double)(elapsedTime - NormalTimeDuration).Amount / (double)BurningTimeDuration.Amount);
                 System.Diagnostics.Debug.Assert(progressBar >= 0.0);
                 System.Diagnostics.Debug.Assert(progressBar <= 1.0);
@@ -440,6 +566,23 @@ namespace TestMinecraftServerApplication
 
         private readonly Time _StartTime = Time.Now();
 
+        public readonly TextComponent[] Message0 = [
+            new TextComponent($"============SUPERDEK=============\n", TextColor.DarkGray),
+            new TextComponent($"\n", TextColor.White),
+            new TextComponent($"게임",  TextColor.Red),
+            new TextComponent($"에 대한 자세한 정보는 게임 컨텍스트 ",  TextColor.White),
+            new TextComponent($"창에서 확인하실 수 있습니다. \n", TextColor.White),
+            new TextComponent($"해당 창은 게임 컨텍스트 ", TextColor.White),
+            new TextComponent($"아이템", TextColor.Purple),
+            new TextComponent($"을 우클릭하여 ", TextColor.White),
+            new TextComponent($"열람 가능합니다. \n", TextColor.White),
+            new TextComponent($"\n", TextColor.White),
+            new TextComponent($"게임의 중요한 정보를 놓치지 마세요! \n", TextColor.Pink),
+            new TextComponent($"\n", TextColor.White),
+            new TextComponent($"=================================", TextColor.DarkGray),
+        ];
+        private bool printMessage0 = false;
+
         public RoundEndNode()
         {
 
@@ -448,6 +591,8 @@ namespace TestMinecraftServerApplication
         public IGameProgressNode CreateNextNode(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
+
+            System.Diagnostics.Debug.Assert(printMessage0 == true);
 
             if (ctx.IsFinalRound == true)
             {
@@ -469,11 +614,17 @@ namespace TestMinecraftServerApplication
 
             if (elapsedTime < Duration)
             {
+                if (ctx.IsBeforeFirstRound == true && printMessage0 == false)
+                {
+                    world.WriteMessageInChatBox(Message0);
 
+                    printMessage0 = true;
+                }
             }
             else
             {
                 ctx.EndRound();
+
 
                 return true;
             }
