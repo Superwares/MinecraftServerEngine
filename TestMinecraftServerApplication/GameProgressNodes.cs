@@ -277,7 +277,7 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_bossBarId == System.Guid.Empty);
                 _bossBarId = world.OpenBossBar(
                     [
-                        new TextComponent("술래: ", TextColor.DarkRed, true, false, false, false, false),
+                        new TextComponent("술래: ", TextColor.Red, true, false, false, false, false),
                         new TextComponent($"{username}", TextColor.DarkGray),
                     ],
                     progressBar,
