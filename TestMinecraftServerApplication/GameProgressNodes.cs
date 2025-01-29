@@ -378,7 +378,7 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_progressBarId == System.Guid.Empty);
                 _progressBarId = world.OpenProgressBar(
                     [
-                        new TextComponent($"[Superdek] 술래카운트 ", TextColor.Gold),
+                        new TextComponent($"[SUPERDEK] 술래카운트 ", TextColor.Gold),
                         new TextComponent($"(술래: {ctx.CurrentSeeker.Username})", TextColor.Red),
                     ],
                     progressBar,
@@ -481,7 +481,7 @@ namespace TestMinecraftServerApplication
                     System.Diagnostics.Debug.Assert(_progressBarId == System.Guid.Empty);
                     _progressBarId = world.OpenProgressBar(
                         [
-                        new TextComponent($"[Superdek] 도망치기 ", TextColor.Gold),
+                        new TextComponent($"[SUPERDEK] 도망치기 ", TextColor.Gold),
                         new TextComponent($"(술래: {ctx.CurrentSeeker.Username})", TextColor.Red),
                         ],
                         progressBar,
@@ -519,7 +519,7 @@ namespace TestMinecraftServerApplication
 
                     _progressBarId = world.OpenProgressBar(
                         [
-                        new TextComponent($"[Superdek] ", TextColor.Gold),
+                        new TextComponent($"[SUPERDEK] ", TextColor.Gold),
                         new TextComponent($"Burning Time! ", TextColor.Yellow),
                         new TextComponent($"(술래: {ctx.CurrentSeeker.Username})", TextColor.Red),
                         ],
