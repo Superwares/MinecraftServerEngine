@@ -19,17 +19,19 @@ namespace TestMinecraftServerApplication
 
         public const int GameSwitchSlot = (9 * 2) + 4;
 
+        public const int ShopItemSlot = (9 * 2) + 8;
+
         public const int RoundIndicatorSlotOffset = (9 * 3) + 0;
 
-        private const ItemType GameSwitchOnItemType = ItemType.JackOLantern;
-        private const ItemType GameSwitchOffItemType = ItemType.Pumpkin;
+        public const ItemType GameSwitchOnItemType = ItemType.JackOLantern;
+        public const ItemType GameSwitchOffItemType = ItemType.Pumpkin;
 
-        private const ItemType PlayerSeatItemType = ItemType.PlayerSkull;
-        private const ItemType EmptySeatItemType = ItemType.RedWool;
+        public const ItemType PlayerSeatItemType = ItemType.PlayerSkull;
+        public const ItemType EmptySeatItemType = ItemType.RedWool;
 
-        private const ItemType EnabledRoundItemType = ItemType.GreenStainedGlassPane;
-        private const ItemType DisabledRoundItemType = ItemType.RedStainedGlassPane;
-        private const ItemType EmptyRoundItemType = ItemType.GrayStainedGlassPane;
+        public const ItemType EnabledRoundItemType = ItemType.GreenStainedGlassPane;
+        public const ItemType DisabledRoundItemType = ItemType.RedStainedGlassPane;
+        public const ItemType EmptyRoundItemType = ItemType.GrayStainedGlassPane;
 
         public override string Title => "Game Context";
 
@@ -157,6 +159,12 @@ namespace TestMinecraftServerApplication
                 minPlayers, maxPlayers,
                 currentPlayers));
 
+            slots[ShopItemSlot] = (true, ShopItem.CreateForShop([
+                $"",
+                $"왼클릭          지급",
+                $"우클릭          차감",
+                ]));
+
             System.Diagnostics.Debug.Assert(maxRounds % SlotCountPerLine == 0);
             for (int i = 0; i < maxRounds; ++i)
             {
@@ -186,6 +194,8 @@ namespace TestMinecraftServerApplication
         {
             bool success = false;
 
+            ItemStack giveItem;
+
             switch (i)
             {
                 case int playerSeat when (
@@ -212,12 +222,53 @@ namespace TestMinecraftServerApplication
                     break;
             }
 
+            switch (itemStack.Type)
+            {
+                case ShopItem.Type:
+                    {
+                        giveItem = ItemStack.Create(ShopItem.Item, ShopItem.DefaultCount * itemStack.Count);
+                        success = playerInventory.GiveItem(giveItem);
+                    }
+                    break;
+            }
+
             if (success == true)
             {
                 _player.PlaySound("entity.item.pickup", 7, 1.0F, 2.0F);
             }
         }
 
+
+        protected override void OnRightClickSharedItem(
+            UserId userId, AbstractPlayer player, PlayerInventory playerInventory,
+            int i, ItemStack itemStack)
+        {
+            bool success = false;
+
+            //ItemStack giveItem;
+            ItemStack[] taked;
+
+
+            switch (itemStack.Type)
+            {
+                case ShopItem.Type:
+                    {
+                        taked = playerInventory.TakeItemStacksInPrimary(
+                            ShopItem.Item, ShopItem.DefaultCount * itemStack.Count);
+
+                        if (taked != null && taked.Length > 0)
+                        {
+                            success = true;
+                        }
+                    }
+                    break;
+            }
+
+            if (success == true)
+            {
+                player.PlaySound("entity.item.pickup", 7, 1.0F, 2.0F);
+            }
+        }
 
         public void ResetPlayerSeatsBeforeGame(
             List<SuperPlayer> players,

@@ -31,6 +31,8 @@ namespace TestMinecraftServerApplication
 
             GiveItem(ShopItem.Create(1));
             GiveItem(Coin.Create(GameContext.DefaultCoinAmount));
+
+            GiveItem(GamePanel.Create());
         }
 
         public SuperPlayer(
@@ -53,9 +55,14 @@ namespace TestMinecraftServerApplication
             Dispose(false);
         }
 
+        protected override void OnDisconnected()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
-
-
+            System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+            System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+            SuperWorld.GameContext.RemovePlayer(UserId);
+        }
 
         private double GenerateRandomValueBetween(double min, double max)
         {

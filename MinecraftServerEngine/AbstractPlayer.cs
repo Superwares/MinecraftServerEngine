@@ -441,7 +441,7 @@ namespace MinecraftServerEngine
 
         }
 
-        public virtual void OnDisconnected()
+        protected internal virtual void OnDisconnected()
         {
             if (_disposed == true)
             {
