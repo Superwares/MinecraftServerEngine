@@ -4,12 +4,12 @@ using Containers;
 using Sync;
 
 using MinecraftPrimitives;
-using System.Numerics;
 
 namespace TestMinecraftServerApplication
 {
     public sealed class GameContext : System.IDisposable
     {
+
 
         public const int MinPlayers = 2;
         public const int MaxPlayers = 18;
@@ -21,7 +21,7 @@ namespace TestMinecraftServerApplication
 
         private bool _disposed = false;
 
-        private readonly Locker Locker = new();
+        private readonly Locker _LockerPlayers = new();
 
         private readonly List<SuperPlayer> _players = new();
 
@@ -52,7 +52,7 @@ namespace TestMinecraftServerApplication
         }
 
 
-        private List<SuperPlayer> _prevSeekers = null;
+        private List<SuperPlayer> _prevSeekers = new();
         private SuperPlayer _currentSeeker = null;
         private int _currentRoundIndex = -1;
         public bool IsFinalRound
@@ -80,6 +80,10 @@ namespace TestMinecraftServerApplication
             }
         }
 
+        private readonly Locker _LockerScoreboard = new();
+        private readonly Map<UserId, ScoreboardPlayerRow> _ScoreboardByUserId = new();
+        private readonly Map<string, ScoreboardPlayerRow> _ScoreboardByUsername = new();
+
         public GameContext()
         {
         }
@@ -91,14 +95,14 @@ namespace TestMinecraftServerApplication
             Dispose(false);
         }
 
-        public bool Add(SuperPlayer player)
+        public bool AddPlayer(SuperPlayer player)
         {
             System.Diagnostics.Debug.Assert(player != null);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(Locker != null);
-            Locker.Hold();
+            System.Diagnostics.Debug.Assert(_LockerPlayers != null);
+            _LockerPlayers.Hold();
 
             try
             {
@@ -130,18 +134,18 @@ namespace TestMinecraftServerApplication
             }
             finally
             {
-                System.Diagnostics.Debug.Assert(Locker != null);
-                Locker.Release();
+                System.Diagnostics.Debug.Assert(_LockerPlayers != null);
+                _LockerPlayers.Release();
             }
 
         }
 
-        public void Remove(UserId userId)
+        public void RemovePlayer(UserId userId)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(Locker != null);
-            Locker.Hold();
+            System.Diagnostics.Debug.Assert(_LockerPlayers != null);
+            _LockerPlayers.Hold();
 
             try
             {
@@ -160,8 +164,8 @@ namespace TestMinecraftServerApplication
             }
             finally
             {
-                System.Diagnostics.Debug.Assert(Locker != null);
-                Locker.Release();
+                System.Diagnostics.Debug.Assert(_LockerPlayers != null);
+                _LockerPlayers.Release();
             }
 
         }
@@ -170,8 +174,10 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(Locker != null);
-            Locker.Hold();
+            System.Diagnostics.Debug.Assert(_LockerPlayers != null);
+            _LockerPlayers.Hold();
+            System.Diagnostics.Debug.Assert(_LockerScoreboard != null);
+            _LockerScoreboard.Hold();
 
             try
             {
@@ -191,18 +197,33 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_started == false);
                 _started = true;
 
-                _prevSeekers = new List<SuperPlayer>();
+                System.Diagnostics.Debug.Assert(_prevSeekers != null);
+                System.Diagnostics.Debug.Assert(_prevSeekers.Length == 0);
                 System.Diagnostics.Debug.Assert(_currentSeeker == null);
                 System.Diagnostics.Debug.Assert(_currentRoundIndex < 0);
 
-                Inventory.StartGame(_players, TotalRounds);
+                System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
+                System.Diagnostics.Debug.Assert(_ScoreboardByUserId.Count == 0);
+                System.Diagnostics.Debug.Assert(_ScoreboardByUsername != null);
+                System.Diagnostics.Debug.Assert(_ScoreboardByUsername.Count == 0);
+                foreach (SuperPlayer player in _players)
+                {
+                    ScoreboardPlayerRow row = new(player.UserId, player.Username);
+
+                    _ScoreboardByUserId.Insert(row.UserId, row);
+                    _ScoreboardByUsername.Insert(row.Username, row);
+                }
+
+                Inventory.StartGame(_players, TotalRounds, _ScoreboardByUserId);
 
                 return true;
             }
             finally
             {
-                System.Diagnostics.Debug.Assert(Locker != null);
-                Locker.Release();
+                System.Diagnostics.Debug.Assert(_LockerScoreboard != null);
+                _LockerScoreboard.Release();
+                System.Diagnostics.Debug.Assert(_LockerPlayers != null);
+                _LockerPlayers.Release();
             }
 
         }
@@ -291,6 +312,61 @@ namespace TestMinecraftServerApplication
 
         }
 
+        public void IncreaseKillPoint(UserId userId)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_started == true);
+
+            System.Diagnostics.Debug.Assert(_LockerScoreboard != null);
+            _LockerScoreboard.Hold();
+
+            try
+            {
+                System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
+                ScoreboardPlayerRow row = _ScoreboardByUserId.Lookup(userId);
+
+                ++row.Kills;
+
+                System.Diagnostics.Debug.Assert(_players != null);
+                System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
+                Inventory.UpdatePlayerScores(_players, _ScoreboardByUserId);
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(_LockerScoreboard != null);
+                _LockerScoreboard.Release();
+            }
+
+        }
+
+        public void IncreaseDeathPoint(UserId userId)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_started == true);
+
+            System.Diagnostics.Debug.Assert(_LockerScoreboard != null);
+            _LockerScoreboard.Hold();
+
+            try
+            {
+                System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
+                ScoreboardPlayerRow row = _ScoreboardByUserId.Lookup(userId);
+
+                ++row.Deaths;
+
+                System.Diagnostics.Debug.Assert(_players != null);
+                System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
+                Inventory.UpdatePlayerScores(_players, _ScoreboardByUserId);
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(_LockerScoreboard != null);
+                _LockerScoreboard.Release();
+            }
+        }
+
         public void EndRound()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
@@ -309,12 +385,14 @@ namespace TestMinecraftServerApplication
             Inventory.EndRound(_players, TotalRounds, _currentRoundIndex);
         }
 
-        public void Stop()
+        public void End()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(Locker != null);
-            Locker.Hold();
+            System.Diagnostics.Debug.Assert(_LockerPlayers != null);
+            _LockerPlayers.Hold();
+            System.Diagnostics.Debug.Assert(_LockerScoreboard != null);
+            _LockerScoreboard.Hold();
 
             try
             {
@@ -322,17 +400,30 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_started == true);
                 _started = false;
 
-                Inventory.Reset(_players, MinPlayers, MaxPlayers, MaxRounds);
 
-                _prevSeekers = null;
+
+                _prevSeekers.Flush();
                 _currentSeeker = null;
                 _currentRoundIndex = -1;
 
+                System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
+                System.Diagnostics.Debug.Assert(_ScoreboardByUserId.Count >= MinPlayers);
+                System.Diagnostics.Debug.Assert(_ScoreboardByUserId.Count <= MaxPlayers);
+                System.Diagnostics.Debug.Assert(_ScoreboardByUsername != null);
+                System.Diagnostics.Debug.Assert(_ScoreboardByUsername.Count >= MinPlayers);
+                System.Diagnostics.Debug.Assert(_ScoreboardByUsername.Count <= MaxPlayers);
+                _ScoreboardByUserId.Flush();
+                _ScoreboardByUsername.Flush();
+
+                System.Diagnostics.Debug.Assert(Inventory != null);
+                Inventory.Reset(_players, MinPlayers, MaxPlayers, MaxRounds);
             }
             finally
             {
-                System.Diagnostics.Debug.Assert(Locker != null);
-                Locker.Release();
+                System.Diagnostics.Debug.Assert(_LockerPlayers != null);
+                _LockerPlayers.Release();
+                System.Diagnostics.Debug.Assert(_LockerScoreboard != null);
+                _LockerScoreboard.Release();
             }
         }
 
@@ -354,10 +445,14 @@ namespace TestMinecraftServerApplication
                 if (disposing == true)
                 {
                     // Dispose managed resources.
-                    Locker.Dispose();
+                    _LockerPlayers.Dispose();
                     _players.Dispose();
 
                     _prevSeekers.Dispose();
+
+                    _LockerScoreboard.Dispose();
+                    _ScoreboardByUserId.Dispose();
+                    _ScoreboardByUsername.Dispose();
                 }
 
                 // Call the appropriate methods to clean up

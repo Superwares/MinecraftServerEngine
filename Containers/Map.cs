@@ -4,8 +4,7 @@ using Sync;
 namespace Containers
 {
     // TODO: Implement hash table logic to tree structure.
-    public class Map<K, T> : System.IDisposable
-        where K : notnull
+    public class Map<K, T> : IReadOnlyMap<K, T>, System.IDisposable
     {
         private bool _disposed = false;
 

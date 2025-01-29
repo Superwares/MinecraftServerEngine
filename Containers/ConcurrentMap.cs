@@ -3,7 +3,6 @@
 namespace Containers
 {
     public sealed class ConcurrentMap<K, T> : Map<K, T>
-        where K : notnull
     {
         private bool _disposed = false;
 

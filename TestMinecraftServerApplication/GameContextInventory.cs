@@ -9,6 +9,7 @@ using MinecraftServerEngine;
 namespace TestMinecraftServerApplication
 {
     using Items;
+    using static System.Reflection.Metadata.BlobBuilder;
 
     public sealed class GameContextInventory : ItemInterfaceInventory
     {
@@ -32,7 +33,7 @@ namespace TestMinecraftServerApplication
 
         public override string Title => "Game Context";
 
-        private ItemStack GetGameSwitchOnItemStack(
+        private static ItemStack GetGameSwitchOnItemStack(
             int currentPlayers, int totalRounds, int currentRound)
         {
             System.Diagnostics.Debug.Assert(currentPlayers > 0);
@@ -49,7 +50,7 @@ namespace TestMinecraftServerApplication
                 ]);
         }
 
-        private ItemStack GetGameSwitchOffItemStack(int minPlayers, int maxPlayers, int currentPlayers)
+        private static ItemStack GetGameSwitchOffItemStack(int minPlayers, int maxPlayers, int currentPlayers)
         {
             return new ItemStack(
                 GameSwitchOffItemType, "게임 시작!", 1, [
@@ -60,7 +61,49 @@ namespace TestMinecraftServerApplication
                 ]);
         }
 
-        private void ResetPlayerSeatSlots((bool, ItemStack)[] slots, List<SuperPlayer> players)
+        private static void ResetPlayerScoreSlots(
+            (bool, ItemStack)[] slots,
+            List<SuperPlayer> players,
+            IReadOnlyMap<UserId, ScoreboardPlayerRow> scoreboard)
+        {
+            System.Diagnostics.Debug.Assert(slots != null);
+            System.Diagnostics.Debug.Assert(slots.Length > 0);
+            System.Diagnostics.Debug.Assert(scoreboard != null);
+
+            int i = 0;
+
+            if (players != null)
+            {
+                System.Diagnostics.Debug.Assert(players.Length <= GameContext.MaxPlayers);
+                foreach (SuperPlayer player in players)
+                {
+                    int slot = i++ + PlayerSeatSlotOffset;
+
+                    ScoreboardPlayerRow row = scoreboard.Lookup(player.UserId);
+
+                    slots[slot] = (true, new ItemStack(
+                        PlayerSeatItemType, player.Username, 1, [
+                            $"현재 참여한 플레이어입니다.",
+                            $"",
+                            $"킬/데스         {row.Kills}/{row.Deaths}",
+                            $"총 포인트       {row.TotalPoints}",
+                        ]));
+                }
+            }
+
+
+            for (; i < GameContext.MaxRounds; ++i)
+            {
+                int slot = i + PlayerSeatSlotOffset;
+
+                slots[slot] = (true, new ItemStack(
+                    EmptySeatItemType, "빈자리", 1, [
+                        "진행 중에는 게임을 탈퇴할 수 없습니다.",
+                    ]));
+            }
+        }
+
+        private static void ResetPlayerSeatSlots((bool, ItemStack)[] slots, List<SuperPlayer> players)
         {
             System.Diagnostics.Debug.Assert(slots != null);
             System.Diagnostics.Debug.Assert(slots.Length > 0);
@@ -151,10 +194,10 @@ namespace TestMinecraftServerApplication
                     {
                         if (_player is SuperPlayer player)
                         {
-                            bool f = SuperWorld.GameContext.Add(player);
+                            bool f = SuperWorld.GameContext.AddPlayer(player);
                             if (f == false)
                             {
-                                SuperWorld.GameContext.Remove(player.UserId);
+                                SuperWorld.GameContext.RemovePlayer(player.UserId);
                             }
 
                             success = true;
@@ -192,9 +235,18 @@ namespace TestMinecraftServerApplication
             SetSlots(slots);
         }
 
-        public void StartGame(List<SuperPlayer> players, int totalRounds)
+        public void StartGame(
+            List<SuperPlayer> players,
+            int totalRounds,
+            IReadOnlyMap<UserId, ScoreboardPlayerRow> scoreboard)
         {
+            System.Diagnostics.Debug.Assert(players != null);
+            System.Diagnostics.Debug.Assert(totalRounds > 0);
+            System.Diagnostics.Debug.Assert(scoreboard != null);
+
             (bool, ItemStack)[] slots = new (bool, ItemStack)[GetTotalSlotCount()];
+
+            ResetPlayerScoreSlots(slots, players, scoreboard);
 
             slots[GameSwitchSlot] = (true, GetGameSwitchOnItemStack(players.Length, totalRounds, 1));
 
@@ -227,6 +279,20 @@ namespace TestMinecraftServerApplication
             slots[slot] = (true, new ItemStack(
                 EnabledRoundItemType, "현재 라운드", 1, [
                 ]));
+
+            SetSlots(slots);
+        }
+
+        public void UpdatePlayerScores(
+            List<SuperPlayer> players,
+            IReadOnlyMap<UserId, ScoreboardPlayerRow> scoreboard)
+        {
+            System.Diagnostics.Debug.Assert(players != null);
+            System.Diagnostics.Debug.Assert(scoreboard != null);
+
+            (bool, ItemStack)[] slots = new (bool, ItemStack)[GetTotalSlotCount()];
+
+            ResetPlayerScoreSlots(slots, players, scoreboard);
 
             SetSlots(slots);
         }

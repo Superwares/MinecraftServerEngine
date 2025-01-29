@@ -394,7 +394,7 @@ namespace TestMinecraftServerApplication
                     _progressBarId = world.OpenProgressBar(
                         [
                         new TextComponent($"[Superdek] ", TextColor.Gold),
-                        new TextComponent($"버닝타임! ", TextColor.Yellow),
+                        new TextComponent($"Burning Time! ", TextColor.Yellow),
                         new TextComponent($"(술래: {ctx.CurrentSeeker.Username})", TextColor.Red),
                         ],
                         progressBar,
@@ -403,7 +403,7 @@ namespace TestMinecraftServerApplication
 
                     world.DisplayTitle(
                         Time.Zero, Time.FromSeconds(1), Time.Zero,
-                        new TextComponent($"Burning Time 시작!", TextColor.Gold));
+                        new TextComponent($"Burning Time!", TextColor.Gold));
 
                     _initBurning = true;
                 }
@@ -484,6 +484,11 @@ namespace TestMinecraftServerApplication
 
     public sealed class GameEndNode : IGameProgressNode
     {
+        //public readonly static Time Duration = Time.FromSeconds(30);
+        public readonly static Time Duration = Time.FromSeconds(5);  // for debug
+
+        private readonly Time _StartTime = Time.Now();
+
         public IGameProgressNode CreateNextNode(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
@@ -496,7 +501,20 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(ctx != null);
             System.Diagnostics.Debug.Assert(world != null);
 
-            throw new System.NotImplementedException();
+            Time elapsedTime = Time.Now() - _StartTime;
+
+            if (elapsedTime < Duration)
+            {
+
+            }
+            else
+            {
+                ctx.End();
+
+                return true;
+            }
+
+            return false;
         }
     }
 
