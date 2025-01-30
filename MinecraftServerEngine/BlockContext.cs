@@ -761,10 +761,10 @@ namespace MinecraftServerEngine
                     //MyConsole.Debug($"Valid filename: {name}");
                     //MyConsole.Debug($"regionX = {regionX}, regionZ = {regionZ}");
 
-                    int chunkX_min = regionX * 32;
-                    int chunkZ_min = regionZ * 32;
-                    int chunkX_max = chunkX_min + 32 - 1;
-                    int chunkZ_max = chunkZ_min + 32 - 1;
+                    int chunkX_min = regionX * MinecraftConstants.ChunksPerRegion;
+                    int chunkZ_min = regionZ * MinecraftConstants.ChunksPerRegion;
+                    int chunkX_max = chunkX_min + MinecraftConstants.ChunksPerRegion - 1;
+                    int chunkZ_max = chunkZ_min + MinecraftConstants.ChunksPerRegion - 1;
 
                     for (int chunkX = chunkX_min; chunkX <= chunkX_max; ++chunkX)
                     {

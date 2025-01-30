@@ -116,7 +116,7 @@ namespace Common
 
         public readonly long Amount;
 
-        private Time(long amount)
+        public Time(long amount)
         {
             Amount = amount;
         }

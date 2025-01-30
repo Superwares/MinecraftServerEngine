@@ -95,8 +95,8 @@ namespace TestMinecraftServerApplication
                 }
 
 
-                bool isOutsideOfWorldBorder = world.IsOutsideOfWorldBorder(Position);
-                MyConsole.Debug($"isOutsideOfWorldBorder: {isOutsideOfWorldBorder}");
+                //bool isOutsideOfWorldBorder = world.IsOutsideOfWorldBorder(Position);
+                //MyConsole.Debug($"isOutsideOfWorldBorder: {isOutsideOfWorldBorder}");
             }
 
 

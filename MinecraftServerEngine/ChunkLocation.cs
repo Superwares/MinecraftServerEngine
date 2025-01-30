@@ -1,16 +1,17 @@
 ﻿
 
 using Common;
+using MinecraftPrimitives;
 using MinecraftServerEngine.PhysicsEngine;
 
 namespace MinecraftServerEngine
 {
     internal readonly struct ChunkLocation : System.IEquatable<ChunkLocation>
     {
-        public const int BlocksPerWidth = 16;
+        public const int BlocksPerWidth = MinecraftConstants.BlocksPerChunk;
         public const double Width = Terrain.BlockWidth * BlocksPerWidth;
 
-        public const int BlocksPerHeight = 16 * 16;
+        public const int BlocksPerHeight = MinecraftConstants.BlocksPerChunk * MinecraftConstants.BlocksPerChunk;
         public const double Height = Terrain.BlockHeight * BlocksPerHeight;
 
         public static ChunkLocation Generate(Vector p)

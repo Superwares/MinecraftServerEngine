@@ -293,8 +293,7 @@ namespace MinecraftServerEngine
 
             total = Time.Zero;
 
-            // TODO: 1tick = 50ms, make this variable to single constant.
-            interval = accumulated = Time.FromMilliseconds(50); 
+            interval = accumulated = MinecraftConstants.TimePerTick; 
             start = Time.Now();
 
             while (_running)
