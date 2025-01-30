@@ -5,6 +5,8 @@ using Containers;
 
 using MinecraftPrimitives;
 using MinecraftServerEngine.PhysicsEngine;
+using System.Runtime.InteropServices;
+using System;
 
 namespace MinecraftServerEngine
 {
@@ -959,6 +961,26 @@ namespace MinecraftServerEngine
             return;
         }
 
+        private void GenerateBoundingBoxForSlabBlock(
+            Queue<AxisAlignedBoundingBox> queue, BlockLocation loc, Block block)
+        {
+            System.Diagnostics.Debug.Assert(queue != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(block.GetShape() == BlockShape.Slab);
+
+            Vector _min = loc.GetMinVector(),
+                   _max = loc.GetMaxVector();
+
+            Vector min = block.IsBottomSlab() == true ? _min : new(_min.X, _max.Y / 2.0, _min.Z),
+                max = block.IsBottomSlab() == true ? new(_max.X, _max.Y / 2.0, _max.Z) : _max;
+            AxisAlignedBoundingBox aabb = new(max, min);
+
+            queue.Enqueue(aabb);
+            return;
+        }
+
         private (BlockDirection, bool, int) DetermineStairsBlockShape(
             BlockLocation loc, Block block)
         {
@@ -1039,6 +1061,22 @@ namespace MinecraftServerEngine
             throw new System.NotImplementedException();
         }
 
+        private void GenerateBoundingBoxForCarpetBlock(
+            Queue<AxisAlignedBoundingBox> queue, BlockLocation loc)
+        {
+            System.Diagnostics.Debug.Assert(queue != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            Vector min = loc.GetMinVector(),
+                   _max = loc.GetMaxVector();
+            Vector max = new(_max.X, min.Y + 0.0625, _max.Z);
+            AxisAlignedBoundingBox aabb = new(max, min);
+
+            queue.Enqueue(aabb);
+            return;
+        }
+
         protected override void GenerateBoundingBoxForBlock(
             Queue<AxisAlignedBoundingBox> queue, BlockLocation loc)
         {
@@ -1058,9 +1096,22 @@ namespace MinecraftServerEngine
                     GenerateBoundingBoxForCubeBlock(queue, loc);
                     break;
                 case BlockShape.Slab:
-                    throw new System.NotImplementedException();
+                    GenerateBoundingBoxForSlabBlock(queue, loc, block);
+                    break;
                 case BlockShape.Stairs:
                     GenerateBoundingBoxForStairsBlock(queue, loc, block);
+                    break;
+                case BlockShape.Fence:
+                    // TODO
+                    break;
+                case BlockShape.Bars:
+                    // TODO
+                    break;
+                case BlockShape.Wall:
+                    // TODO
+                    break;
+                case BlockShape.Carpet:
+                    GenerateBoundingBoxForCarpetBlock(queue, loc);
                     break;
             }
         }

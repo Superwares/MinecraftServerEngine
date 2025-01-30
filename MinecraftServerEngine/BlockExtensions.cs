@@ -541,44 +541,85 @@ namespace MinecraftServerEngine
                 BlockShape.Cube));
 
 
-            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.StoneSlab, new BlockContext(
-                Block.StoneSlab,
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.StoneBottomSlab, new BlockContext(
+                Block.StoneBottomSlab,
                 (44 << 4) | 0,
                 "stone_slab",
                 BlockShape.Slab));
-            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.SandstoneSlab, new BlockContext(
-                Block.SandstoneSlab,
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.SandstoneBottomSlab, new BlockContext(
+                Block.SandstoneBottomSlab,
                 (44 << 4) | 1,
                 "stone_slab",
                 BlockShape.Slab));
-            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.WoodenSlab, new BlockContext(
-                Block.WoodenSlab,
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.WoodenBottomSlab, new BlockContext(
+                Block.WoodenBottomSlab,
                 (44 << 4) | 2,
                 "stone_slab",
                 BlockShape.Slab));
-            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.CobblestoneSlab, new BlockContext(
-                Block.CobblestoneSlab,
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.CobblestoneBottomSlab, new BlockContext(
+                Block.CobblestoneBottomSlab,
                 (44 << 4) | 3,
                 "stone_slab",
                 BlockShape.Slab));
-            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.BrickSlab, new BlockContext(
-                Block.BrickSlab,
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.BrickBottomSlab, new BlockContext(
+                Block.BrickBottomSlab,
                 (44 << 4) | 4,
                 "stone_slab",
                 BlockShape.Slab));
-            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.StoneBrickSlab, new BlockContext(
-                Block.StoneBrickSlab,
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.StoneBrickBottomSlab, new BlockContext(
+                Block.StoneBrickBottomSlab,
                 (44 << 4) | 5,
                 "stone_slab",
                 BlockShape.Slab));
-            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.NetherBrickSlab, new BlockContext(
-                Block.NetherBrickSlab,
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.NetherBrickBottomSlab, new BlockContext(
+                Block.NetherBrickBottomSlab,
                 (44 << 4) | 6,
                 "stone_slab",
                 BlockShape.Slab));
-            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.QuartzSlab, new BlockContext(
-                Block.QuartzSlab,
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.QuartzBottomSlab, new BlockContext(
+                Block.QuartzBottomSlab,
                 (44 << 4) | 7,
+                "stone_slab",
+                BlockShape.Slab));
+
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.StoneTopSlab, new BlockContext(
+                Block.StoneTopSlab,
+                (44 << 4) | 8,
+                "stone_slab",
+                BlockShape.Slab));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.SandstoneTopSlab, new BlockContext(
+                Block.SandstoneTopSlab,
+                (44 << 4) | 9,
+                "stone_slab",
+                BlockShape.Slab));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.WoodenTopSlab, new BlockContext(
+                Block.WoodenTopSlab,
+                (44 << 4) | 10,
+                "stone_slab",
+                BlockShape.Slab));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.CobblestoneTopSlab, new BlockContext(
+                Block.CobblestoneTopSlab,
+                (44 << 4) | 11,
+                "stone_slab",
+                BlockShape.Slab));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.BrickTopSlab, new BlockContext(
+                Block.BrickTopSlab,
+                (44 << 4) | 12,
+                "stone_slab",
+                BlockShape.Slab));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.StoneBrickTopSlab, new BlockContext(
+                Block.StoneBrickTopSlab,
+                (44 << 4) | 13,
+                "stone_slab",
+                BlockShape.Slab));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.NetherBrickTopSlab, new BlockContext(
+                Block.NetherBrickTopSlab,
+                (44 << 4) | 14,
+                "stone_slab",
+                BlockShape.Slab));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.QuartzTopSlab, new BlockContext(
+                Block.QuartzTopSlab,
+                (44 << 4) | 15,
                 "stone_slab",
                 BlockShape.Slab));
 
@@ -1304,6 +1345,29 @@ namespace MinecraftServerEngine
             int id = block.GetId();
             int metadata = id & 0b_1111;
             return metadata >= 4;
+        }
+
+        public static bool IsBottomSlab(this Block block)
+        {
+            if (block.GetShape() != BlockShape.Slab)
+            {
+                return false;
+            }
+
+            int id = block.GetId();
+            int metadata = id & 0b_1000;
+            return metadata <= 0;
+        }
+
+        public static bool IsTopSlab(this Block block)
+        {
+            if (block.GetShape() != BlockShape.Slab)
+            {
+                return false;
+            }
+            int id = block.GetId();
+            int metadata = id & 0b_1000;
+            return metadata > 0;
         }
 
         public static BlockDirection GetStairsDirection(this Block block)

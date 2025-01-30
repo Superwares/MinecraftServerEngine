@@ -109,14 +109,24 @@ namespace MinecraftServerEngine
         DoubleStoneBrickSlab,     // 43:5
         DoubleNetherBrickSlab,    // 43:6
         DoubleQuartzSlab,         // 43:7
-        StoneSlab,                // 44:0
-        SandstoneSlab,            // 44:1
-        WoodenSlab,               // 44:2
-        CobblestoneSlab,          // 44:3
-        BrickSlab,                // 44:4
-        StoneBrickSlab,           // 44:5
-        NetherBrickSlab,          // 44:6
-        QuartzSlab,               // 44:7
+
+        StoneBottomSlab,                // 44:0
+        SandstoneBottomSlab,            // 44:1
+        WoodenBottomSlab,               // 44:2
+        CobblestoneBottomSlab,          // 44:3
+        BrickBottomSlab,                // 44:4
+        StoneBrickBottomSlab,           // 44:5
+        NetherBrickBottomSlab,          // 44:6
+        QuartzBottomSlab,               // 44:7
+        StoneTopSlab,                   // 44:8
+        SandstoneTopSlab,               // 44:9
+        WoodenTopSlab,                  // 44:10
+        CobblestoneTopSlab,             // 44:11
+        BrickTopSlab,                   // 44:12
+        StoneBrickTopSlab,              // 44:13
+        NetherBrickTopSlab,             // 44:14
+        QuartzTopSlab,                  // 44:15
+
         Bricks,                   // 45:0
         TNT,                      // 46:0
         Bookshelf,                // 47:0
@@ -124,6 +134,15 @@ namespace MinecraftServerEngine
         Obsidian,                 // 49:0
         Torch,                    // 50:0
         Fire,                     // 51:0
+
+        EastBottomOakWoodStairs,    // 53:0
+        WestBottomOakWoodStairs,    // 53:1
+        SouthBottomOakWoodStairs,   // 53:2
+        NorthBottomOakWoodStairs,   // 53:3
+        EastTopOakWoodStairs,       // 53:4
+        WestTopOakWoodStairs,       // 53:5
+        SouthTopOakWoodStairs,      // 53:6
+        NorthTopOakWoodStairs,      // 53:7
 
         DiamondBlock,             // 57:0
         CraftingTable,            // 58:0
@@ -250,14 +269,7 @@ namespace MinecraftServerEngine
         BlackCarpet,       // 171:15
 
 
-        EastBottomOakWoodStairs,
-        WestBottomOakWoodStairs,
-        SouthBottomOakWoodStairs,
-        NorthBottomOakWoodStairs,
-        EastTopOakWoodStairs,
-        WestTopOakWoodStairs,
-        SouthTopOakWoodStairs,
-        NorthTopOakWoodStairs,
+
     }
 
 }
