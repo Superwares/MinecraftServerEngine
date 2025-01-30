@@ -47,6 +47,8 @@ namespace TestMinecraftServerApplication
         public bool IsStarted => _started;
 
         private bool _inRound = false;
+        private bool _seekerDeath = false;
+        public bool IsSeekerDeath => _seekerDeath;
 
 
         public IReadOnlyList<SuperPlayer> Players
@@ -235,7 +237,7 @@ namespace TestMinecraftServerApplication
                 foreach (SuperPlayer player in _players)
                 {
                     ScoreboardPlayerRow row = new(player.UserId, player.Username);
-                    
+
                     _ScoreboardByUserId.Insert(row.UserId, row);
                     _ScoreboardByUsername.Insert(row.Username, row);
 
@@ -298,6 +300,8 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(_inRound == false);
             _inRound = true;
+
+            _seekerDeath = false;
 
             System.Diagnostics.Debug.Assert(_players != null);
             foreach (SuperPlayer player in _players)
@@ -396,7 +400,7 @@ namespace TestMinecraftServerApplication
 
         }
 
-        public void IncreaseKillPoint(UserId userId)
+        public void HandleKillEvent(UserId userId)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
@@ -430,7 +434,7 @@ namespace TestMinecraftServerApplication
 
         }
 
-        public void IncreaseDeathPoint(UserId userId)
+        public void HandleDeathEvent(UserId userId)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
@@ -445,6 +449,11 @@ namespace TestMinecraftServerApplication
                 if (_inRound == false)
                 {
                     return;
+                }
+
+                if (_currentSeeker != null && _currentSeeker.UserId == userId)
+                {
+                    _seekerDeath = true;
                 }
 
                 System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
@@ -488,6 +497,7 @@ namespace TestMinecraftServerApplication
             _prevSeekers.Append(_currentSeeker);
 
             _currentSeeker = null;
+            _seekerDeath = false;
 
             System.Diagnostics.Debug.Assert(_currentRoundIndex >= 0);
 
@@ -563,7 +573,7 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_started == true);
                 _started = false;
 
-
+                _seekerDeath = false;
 
                 _prevSeekers.Flush();
                 _currentSeeker = null;

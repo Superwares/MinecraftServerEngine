@@ -200,7 +200,7 @@ namespace TestMinecraftServerApplication
                 {
                     System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
                     System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                    SuperWorld.GameContext.IncreaseKillPoint(UserId);
+                    SuperWorld.GameContext.HandleKillEvent(UserId);
                 }
 
                 livingEntity.ApplyForce(d * knockbackScale);
@@ -263,7 +263,7 @@ namespace TestMinecraftServerApplication
                 {
                     System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
                     System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                    SuperWorld.GameContext.IncreaseKillPoint(UserId);
+                    SuperWorld.GameContext.HandleKillEvent(UserId);
                 }
 
                 livingEntity.ApplyForce(d * knockbackScale);
@@ -328,7 +328,7 @@ namespace TestMinecraftServerApplication
                 {
                     System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
                     System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                    SuperWorld.GameContext.IncreaseKillPoint(UserId);
+                    SuperWorld.GameContext.HandleKillEvent(UserId);
                 }
 
                 livingEntity.ApplyForce(k * knockbackScale);
@@ -446,7 +446,7 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
             System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-            SuperWorld.GameContext.IncreaseDeathPoint(UserId);
+            SuperWorld.GameContext.HandleDeathEvent(UserId);
         }
 
         protected override void Dispose(bool disposing)

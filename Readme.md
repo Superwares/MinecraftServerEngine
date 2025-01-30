@@ -114,6 +114,10 @@ If disposable objects were used as members of class and struct, they must be dis
 	* 따로 분리해서 코드 중복이 늘어남
 * abstract player 전용 play sound 기능 추가.
 	* 룰렛 돌릴때 (random seeker, winners) 에서 띵띵띵 소리 추가
+* 술래 사망시 라운드가 종료되는가. 
+	* Progress Bar 가 잘 닫히는지
+	* Title 이 잘띄어지는지
+	* 중간에 사망하여도 잘 진행되는가
 
 ### Done 
 

@@ -5,7 +5,6 @@ using Containers;
 
 using MinecraftServerEngine;
 using MinecraftPrimitives;
-using System;
 
 namespace TestMinecraftServerApplication
 {
@@ -457,6 +456,23 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(ctx != null);
             System.Diagnostics.Debug.Assert(world != null);
+
+            if (ctx.IsSeekerDeath == true)
+            {
+                if (_progressBarId != System.Guid.Empty)
+                {
+                    System.Diagnostics.Debug.Assert(_progressBarId != System.Guid.Empty);
+                    System.Diagnostics.Debug.Assert(world != null);
+                    world.CloseProgressBar(_progressBarId);
+                }
+
+                System.Diagnostics.Debug.Assert(world != null);
+                world.DisplayTitle(
+                    Time.Zero, Time.FromSeconds(1), Time.Zero,
+                    new TextComponent($"술래가 사망하였습니다...", TextColor.DarkGray));
+
+                return true;
+            }
 
             Time elapsedTime = Time.Now() - _StartTime;
             double progressBar;
