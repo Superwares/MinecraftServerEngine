@@ -96,7 +96,7 @@ namespace MinecraftServerEngine
             Dispose(false);
         }
 
-        public void PlaySound(string name, int category, float volume, float pitch)
+        public void PlaySound(string name, int category, double volume, double pitch)
         {
             if (_disposed == true)
             {

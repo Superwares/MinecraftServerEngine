@@ -400,7 +400,7 @@ namespace TestMinecraftServerApplication
 
         }
 
-        private void UseStoneOfSwiftness()
+        private void UseStoneOfSwiftness(SuperWorld world)
         {
             ItemStack[] takedItemStacks = TakeItemStacks(StoneOfSwiftness.Item, StoneOfSwiftness.DefaultCount);
             if (takedItemStacks == null | takedItemStacks.Length == 0)
@@ -416,6 +416,8 @@ namespace TestMinecraftServerApplication
             _startTime_StoneOfSwiftness = Time.Now();
 
             SetMovementSpeed(StoneOfSwiftness.MovementSpeed);
+
+            world.PlaySound("block.anvil.land", 4, Position, 0.8, 1.5);
         }
 
         protected override void OnUseItem(World _world, ItemStack stack)
@@ -439,7 +441,7 @@ namespace TestMinecraftServerApplication
                         OpenInventory(ChestInventory);
                         break;
                     case StoneOfSwiftness.Type:
-                        UseStoneOfSwiftness();
+                        UseStoneOfSwiftness(world);
                         break;
                 }
             }
