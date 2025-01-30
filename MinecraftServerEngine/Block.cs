@@ -232,6 +232,22 @@ namespace MinecraftServerEngine
         CobblestoneWall,                // 139:0
         MossyCobblestoneWall,           // 139:1
 
+        WhiteCarpet,       // 171:0
+        OrangeCarpet,      // 171:1
+        MagentaCarpet,     // 171:2
+        LightBlueCarpet,   // 171:3
+        YellowCarpet,      // 171:4
+        LimeCarpet,        // 171:5
+        PinkCarpet,        // 171:6
+        GrayCarpet,        // 171:7
+        LightGrayCarpet,   // 171:8
+        CyanCarpet,        // 171:9
+        PurpleCarpet,      // 171:10
+        BlueCarpet,        // 171:11
+        BrownCarpet,       // 171:12
+        GreenCarpet,       // 171:13
+        RedCarpet,         // 171:14
+        BlackCarpet,       // 171:15
 
 
         EastBottomOakWoodStairs,

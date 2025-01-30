@@ -7,6 +7,7 @@ using System;
 using static System.Formats.Asn1.AsnWriter;
 using System.Diagnostics.Metrics;
 using static MinecraftPrimitives.Packet;
+using System.Runtime.InteropServices;
 
 namespace MinecraftServerEngine
 {
@@ -1156,6 +1157,88 @@ namespace MinecraftServerEngine
                 (139 << 4) | 1,
                 "cobblestone_wall",
                 BlockShape.Wall));
+
+
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.WhiteCarpet, new BlockContext(
+                Block.WhiteCarpet,
+                (171 << 4) | 0,
+                "carpet",
+                BlockShape.Carpet));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.OrangeCarpet, new BlockContext(
+                Block.OrangeCarpet,
+                (171 << 4) | 1,
+                "carpet",
+                BlockShape.Carpet));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.MagentaCarpet, new BlockContext(
+                Block.MagentaCarpet,
+                (171 << 4) | 2,
+                "carpet",
+                BlockShape.Carpet));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.LightBlueCarpet, new BlockContext(
+                Block.LightBlueCarpet,
+                (171 << 4) | 3,
+                "carpet",
+                BlockShape.Carpet));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.YellowCarpet, new BlockContext(
+                Block.YellowCarpet,
+                (171 << 4) | 4,
+                "carpet",
+                BlockShape.Carpet));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.LimeCarpet, new BlockContext(
+                Block.LimeCarpet,
+                (171 << 4) | 5,
+                "carpet",
+                BlockShape.Carpet));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.PinkCarpet, new BlockContext(
+                Block.PinkCarpet,
+                (171 << 4) | 6,
+                "carpet",
+                BlockShape.Carpet));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.GrayCarpet, new BlockContext(
+                Block.GrayCarpet,
+                (171 << 4) | 7,
+                "carpet",
+                BlockShape.Carpet));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.LightGrayCarpet, new BlockContext(
+                Block.LightGrayCarpet,
+                (171 << 4) | 8,
+                "carpet",
+                BlockShape.Carpet));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.CyanCarpet, new BlockContext(
+                Block.CyanCarpet,
+                (171 << 4) | 9,
+                "carpet",
+                BlockShape.Carpet));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.PurpleCarpet, new BlockContext(
+                Block.PurpleCarpet,
+                (171 << 4) | 10,
+                "carpet",
+                BlockShape.Carpet));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.BlueCarpet, new BlockContext(
+                Block.BlueCarpet,
+                (171 << 4) | 11,
+                "carpet",
+                BlockShape.Carpet));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.BrownCarpet, new BlockContext(
+                Block.BrownCarpet,
+                (171 << 4) | 12,
+                "carpet",
+                BlockShape.Carpet));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.GreenCarpet, new BlockContext(
+                Block.GreenCarpet,
+                (171 << 4) | 13,
+                "carpet",
+                BlockShape.Carpet));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.RedCarpet, new BlockContext(
+                Block.RedCarpet,
+                (171 << 4) | 14,
+                "carpet",
+                BlockShape.Carpet));
+            _BLOCK_ENUM_TO_CTX_MAP.Insert(Block.BlackCarpet, new BlockContext(
+                Block.BlackCarpet,
+                (171 << 4) | 15,
+                "carpet",
+                BlockShape.Carpet));
 
             foreach ((Block block, BlockContext ctx) in _BLOCK_ENUM_TO_CTX_MAP.GetElements())
             {
