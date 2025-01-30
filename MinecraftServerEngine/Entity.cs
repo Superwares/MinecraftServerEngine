@@ -126,7 +126,7 @@ namespace MinecraftServerEngine
         private protected abstract void RenderSpawning(EntityRenderer renderer);
 
 
-        protected virtual void OnMove(World world) { }
+        protected virtual void OnMove(PhysicsWorld world) { }
 
         protected virtual void OnSneak(World world, bool f) { }
         protected virtual void OnSprint(World world, bool f) { }
@@ -284,9 +284,9 @@ namespace MinecraftServerEngine
 
         }
 
-        internal override void Move(PhysicsWorld _world, BoundingVolume volume, Vector v)
+        internal override void Move(PhysicsWorld world, BoundingVolume volume, Vector v)
         {
-            System.Diagnostics.Debug.Assert(_world != null);
+            System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(volume != null);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
@@ -442,12 +442,9 @@ namespace MinecraftServerEngine
             _prevFakeBlockApplied = _fakeBlockApplied;
             _prevFakeBlock = _fakeBlock;
 
-            base.Move(_world, volume, v);
+            base.Move(world, volume, v);
 
-            if (moved == true && _world is World world)
-            {
-                OnMove(world);
-            }
+            OnMove(world);
         }
 
         internal void SetEntityStatus(byte v)

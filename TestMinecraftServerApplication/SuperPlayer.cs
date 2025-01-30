@@ -98,22 +98,26 @@ namespace TestMinecraftServerApplication
 
         }
 
-        protected override void OnMove(World world)
+        protected override void OnMove(PhysicsWorld _world)
         {
-            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(_world != null);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             //ResetBlockAppearance();
-
-            if (Sneaking == true)
+            if (_world is SuperWorld world)
             {
-                BlockLocation _belowBlockLoc = BlockLocation.Generate(Position);
-                BlockLocation belowBlockLoc = new(_belowBlockLoc.X, _belowBlockLoc.Y - 1, _belowBlockLoc.Z);
-                Block belowBlock = world.BlockContext.GetBlock(belowBlockLoc);
+                if (Sneaking == true)
+                {
+                    BlockLocation _belowBlockLoc = BlockLocation.Generate(Position);
+                    BlockLocation belowBlockLoc = new(_belowBlockLoc.X, _belowBlockLoc.Y - 1, _belowBlockLoc.Z);
+                    Block belowBlock = world.BlockContext.GetBlock(belowBlockLoc);
 
-                ApplyBlockAppearance(belowBlock);
+                    ApplyBlockAppearance(belowBlock);
+                }
             }
+
+
         }
 
         protected override void OnSneak(World world, bool f)
