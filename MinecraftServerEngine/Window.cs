@@ -369,9 +369,11 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            System.Diagnostics.Debug.Assert(_Locker != null);
             _Locker.Hold();
             //if (_sharedInventory != null)
             //{
+            //    System.Diagnostics.Debug.Assert(_sharedInventory.Locker != null);
             //    _sharedInventory.Locker.Hold();
             //}
 
@@ -383,8 +385,10 @@ namespace MinecraftServerEngine
             {
                 //if (_sharedInventory != null)
                 //{
+                //    System.Diagnostics.Debug.Assert(_sharedInventory.Locker != null);
                 //    _sharedInventory.Locker.Release();
                 //}
+                System.Diagnostics.Debug.Assert(_Locker != null);
                 _Locker.Release();
             }
         }
@@ -424,6 +428,48 @@ namespace MinecraftServerEngine
                 _Locker.Release();
             }
         }
+
+        internal ItemStack[] TakeItemStacks(PlayerInventory playerInventory, IReadOnlyItem item, int count)
+        {
+            System.Diagnostics.Debug.Assert(playerInventory != null);
+            System.Diagnostics.Debug.Assert(item != null);
+            System.Diagnostics.Debug.Assert(count >= 0);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_Locker != null);
+            _Locker.Hold();
+            if (_sharedInventory != null)
+            {
+                System.Diagnostics.Debug.Assert(_sharedInventory.Locker != null);
+                _sharedInventory.Locker.Hold();
+            }
+
+            try
+            {
+                if (count == 0)
+                {
+                    return [];
+                }
+
+                ItemStack[] takedItemStacks = playerInventory.TakeItemStacks(item, count);
+
+                _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
+
+                return takedItemStacks;
+            }
+            finally
+            {
+                if (_sharedInventory != null)
+                {
+                    System.Diagnostics.Debug.Assert(_sharedInventory.Locker != null);
+                    _sharedInventory.Locker.Release();
+                }
+                System.Diagnostics.Debug.Assert(_Locker != null);
+                _Locker.Release();
+            }
+        }
+
 
         internal void FlushItems(PlayerInventory playerInventory)
         {

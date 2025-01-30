@@ -275,6 +275,10 @@ namespace MinecraftServerEngine
                     ItemType.Stick, 280, "stick",
                     1, 64,
                     0),
+                new ItemContext(
+                    ItemType.Flint, 318, "flint",
+                    1, 64,
+                    0),
                 //new ItemContext(
                 //    ItemType.Snowball, 332, "snowball",
                 //    1, 16,

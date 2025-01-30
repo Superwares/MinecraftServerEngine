@@ -574,6 +574,11 @@ namespace MinecraftServerEngine
                 throw new System.ArgumentOutOfRangeException(nameof(count));
             }
 
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (count == 0)
@@ -691,6 +696,28 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(leftCount == 0);
 
             return itemStacks;
+        }
+
+        public ItemStack[] TakeItemStacks(IReadOnlyItem item, int count)
+        {
+            if (item == null)
+            {
+                throw new System.ArgumentNullException(nameof(item));
+            }
+
+            if (count < 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(count));
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            return TakeItemStacksInPrimary(item, count);
         }
 
         internal void QuickMoveFromLeftInPrimary(InventorySlot slot)

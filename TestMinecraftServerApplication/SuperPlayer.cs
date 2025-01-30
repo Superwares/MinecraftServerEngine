@@ -20,7 +20,8 @@ namespace TestMinecraftServerApplication
         private readonly static ChestInventory ChestInventory = new();
         private readonly static ShopInventory ShopInventory = new();
 
-
+        private bool _running_StoneOfSwiftness = false;
+        private Time _startTime_StoneOfSwiftness = Time.Zero;
 
 
         public SuperPlayer(
@@ -71,12 +72,28 @@ namespace TestMinecraftServerApplication
             return min + (random.NextDouble() * (max - min));
         }
 
-        public override void StartRoutine(PhysicsWorld world)
+        public override void StartRoutine(PhysicsWorld _world)
         {
-            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(_world != null);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            if (_world is World world)
+            {
+                if (_running_StoneOfSwiftness == true)
+                {
+                    EmitParticles(Particle.Spell, 1.0, 1);
+
+                    Time elapsedTime = Time.Now() - _startTime_StoneOfSwiftness;
+                    if (elapsedTime > StoneOfSwiftness.Duration)
+                    {
+                        SetMovementSpeed(DefaultMovementSpeed);
+
+                        _running_StoneOfSwiftness = false;
+                        _startTime_StoneOfSwiftness = Time.Zero;
+                    }
+                }
+            }
 
 
         }
@@ -383,6 +400,24 @@ namespace TestMinecraftServerApplication
 
         }
 
+        private void UseStoneOfSwiftness()
+        {
+            ItemStack[] takedItemStacks = TakeItemStacks(StoneOfSwiftness.Item, StoneOfSwiftness.DefaultCount);
+            if (takedItemStacks == null | takedItemStacks.Length == 0)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(takedItemStacks != null);
+            System.Diagnostics.Debug.Assert(takedItemStacks.Length == 1);
+            System.Diagnostics.Debug.Assert(takedItemStacks[0].Count == StoneOfSwiftness.DefaultCount);
+
+            _running_StoneOfSwiftness = true;
+            _startTime_StoneOfSwiftness = Time.Now();
+
+            SetMovementSpeed(StoneOfSwiftness.MovementSpeed);
+        }
+
         protected override void OnUseItem(World _world, ItemStack stack)
         {
             System.Diagnostics.Debug.Assert(_world != null);
@@ -402,6 +437,9 @@ namespace TestMinecraftServerApplication
                         break;
                     case GlobalChestItem.Type:
                         OpenInventory(ChestInventory);
+                        break;
+                    case StoneOfSwiftness.Type:
+                        UseStoneOfSwiftness();
                         break;
                 }
             }

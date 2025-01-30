@@ -72,6 +72,8 @@ namespace MinecraftServerEngine
 
         Stick,                     // 280  minecraft:stick
 
+        Flint,                     // 318  minecraft:flint
+
         /*  // This item is handled by clientside.
         Snowball,                  // 332  minecraft:snowball
         */

@@ -621,6 +621,11 @@ namespace MinecraftServerEngine
 
         public bool GiveItem(ItemStack stack)
         {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (stack == null)
@@ -639,6 +644,52 @@ namespace MinecraftServerEngine
                 else
                 {
                     return Inventory.GiveItem(stack);
+                }
+            }
+            finally
+            {
+                InventoryLocker.Release();
+            }
+
+        }
+
+        public ItemStack[] TakeItemStacks(IReadOnlyItem item, int count)
+        {
+            if (item == null)
+            {
+                throw new System.ArgumentNullException(nameof(item));
+            }
+
+            if (count < 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(count));
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(item != null);
+            System.Diagnostics.Debug.Assert(count >= 0);
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            InventoryLocker.Hold();
+
+            try
+            {
+                if (count == 0)
+                {
+                    return [];
+                }
+
+                if (Conn != null)
+                {
+                    return Conn.Window.TakeItemStacks(Inventory, item, count);
+                }
+                else
+                {
+                    return Inventory.TakeItemStacks(item, count);
                 }
             }
             finally
