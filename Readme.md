@@ -119,7 +119,8 @@ If disposable objects were used as members of class and struct, they must be dis
 	* Progress Bar 가 잘 닫히는지
 	* Title 이 잘띄어지는지
 	* 중간에 사망하여도 잘 진행되는가
-
+* Send packet 할때 TryAgain 처리해야됨.
+	*
 ### Done 
 
 * DetermineToDespawnPlayerOnDisconnect 가 동적으로 적용되나 테스트해야됨.

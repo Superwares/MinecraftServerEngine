@@ -11,12 +11,12 @@ namespace TestMinecraftServerApplication
     {
         public readonly static GameContext GameContext = new();
 
-        public const double CenterX = MinecraftConstants.MetersPerRegion / 2.0;
-        public const double CenterZ = MinecraftConstants.MetersPerRegion / 2.0;
-        public const double DefaultWorldBorderRadiusInMeters = MinecraftConstants.MetersPerRegion / 2.0;
+        public const double CenterX = 120.0;
+        public const double CenterZ = 216.0;
+        public const double DefaultWorldBorderRadiusInMeters = 40.0;
 
-        public static readonly Vector PosSpawning = new(4.0D, 3.0D, 4.0D);
-        public static readonly Angles LookSpawning = new(0.0F, 0.0F);
+        public static readonly Vector PosSpawning = new(CenterX, 100.0, CenterZ);
+        public static readonly Angles LookSpawning = new(0.0F, 90.0F);
 
         private bool _disposed = false;
 

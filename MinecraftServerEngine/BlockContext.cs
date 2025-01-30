@@ -908,12 +908,13 @@ namespace MinecraftServerEngine
                 return DefaultBlock;
             }
 
+
             ChunkData chunk = Chunks.Lookup(locChunk);
             int x = loc.X - (locChunk.X * ChunkLocation.BlocksPerWidth),
                 y = loc.Y,
                 z = loc.Z - (locChunk.Z * ChunkLocation.BlocksPerWidth);
             int id = chunk.GetId(DefaultBlock.GetId(), x, y, z);
-            return BlockExtensions.ToBlock(id);
+            return BlockExtensions.ToBlock(id, DefaultBlock);
         }
 
         private Block GetBlock(BlockLocation loc, BlockDirection d, int s)
@@ -973,8 +974,8 @@ namespace MinecraftServerEngine
             Vector _min = loc.GetMinVector(),
                    _max = loc.GetMaxVector();
 
-            Vector min = block.IsBottomSlab() == true ? _min : new(_min.X, _max.Y / 2.0, _min.Z),
-                max = block.IsBottomSlab() == true ? new(_max.X, _max.Y / 2.0, _max.Z) : _max;
+            Vector min = block.IsBottomSlab() == true ? _min : new(_min.X, _min.Y + (Terrain.BlockWidth / 2.0), _min.Z),
+                max = block.IsBottomSlab() == true ? new(_max.X, _max.Y - (Terrain.BlockWidth / 2.0), _max.Z) : _max;
             AxisAlignedBoundingBox aabb = new(max, min);
 
             queue.Enqueue(aabb);
@@ -1099,7 +1100,7 @@ namespace MinecraftServerEngine
                     GenerateBoundingBoxForSlabBlock(queue, loc, block);
                     break;
                 case BlockShape.Stairs:
-                    GenerateBoundingBoxForStairsBlock(queue, loc, block);
+                    //GenerateBoundingBoxForStairsBlock(queue, loc, block);
                     break;
                 case BlockShape.Fence:
                     // TODO

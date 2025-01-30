@@ -3,7 +3,7 @@ namespace MinecraftPrimitives
 {
     internal static class DataInputStreamUtils
     {
-        public static int ReadByte(System.IO.Stream s)
+        public static byte ReadByte(System.IO.Stream s)
         {
             System.Diagnostics.Debug.Assert(s != null);
 
@@ -13,63 +13,72 @@ namespace MinecraftPrimitives
                 throw new System.IO.EndOfStreamException("EOF");
             }
 
-            return value;
+            System.Diagnostics.Debug.Assert(value >= byte.MinValue);
+            System.Diagnostics.Debug.Assert(value <= byte.MaxValue);
+            return (byte)value;
         }
 
-        public static int ReadShort(System.IO.Stream s)
+        public static short ReadShort(System.IO.Stream s)
         {
             System.Diagnostics.Debug.Assert(s != null);
 
-            int b0 = s.ReadByte();
-            int b1 = s.ReadByte();
+            byte b0 = ReadByte(s);
+            byte b1 = ReadByte(s);
             if ((b0 | b1) < 0)
             {
                 throw new System.IO.EndOfStreamException("EOF");
             }
-            return (b0 << 8) + (b1 << 0);
+            return (short)(
+                ((short)b0 << 8) |
+                ((short)b1 << 0));
         }
 
         public static int ReadInt(System.IO.Stream s)
         {
             System.Diagnostics.Debug.Assert(s != null);
 
-            int b0 = s.ReadByte();
-            int b1 = s.ReadByte();
-            int b2 = s.ReadByte();
-            int b3 = s.ReadByte();
+            byte b0 = ReadByte(s);
+            byte b1 = ReadByte(s);
+            byte b2 = ReadByte(s);
+            byte b3 = ReadByte(s);
             if ((b0 | b1 | b2 | b3) < 0)
             {
                 throw new System.IO.EndOfStreamException("EOF");
             }
 
-            return (b0 << 24) + (b1 << 16) + (b2 << 8) + (b3 << 0);
+            return (int)(
+                ((int)b0 << 24) |
+                ((int)b1 << 16) |
+                ((int)b2 << 8) |
+                ((int)b3 << 0));
         }
 
         public static long ReadLong(System.IO.Stream s)
         {
             System.Diagnostics.Debug.Assert(s != null);
 
-            int b0 = s.ReadByte();
-            int b1 = s.ReadByte();
-            int b2 = s.ReadByte();
-            int b3 = s.ReadByte();
-            int b4 = s.ReadByte();
-            int b5 = s.ReadByte();
-            int b6 = s.ReadByte();
-            int b7 = s.ReadByte();
+            byte b0 = ReadByte(s);
+            byte b1 = ReadByte(s);
+            byte b2 = ReadByte(s);
+            byte b3 = ReadByte(s);
+            byte b4 = ReadByte(s);
+            byte b5 = ReadByte(s);
+            byte b6 = ReadByte(s);
+            byte b7 = ReadByte(s);
             if ((b0 | b1 | b2 | b3 | b4 | b5 | b6 | b7) < 0)
             {
                 throw new System.IO.EndOfStreamException("EOF");
             }
 
-            return ((long)(b0 & 0xff) << 56)
-                + ((long)(b1 & 0xff) << 48)
-                + ((long)(b2 & 0xff) << 40)
-                + ((long)(b3 & 0xff) << 32)
-                + ((long)(b4 & 0xff) << 24)
-                + ((long)(b5 & 0xff) << 16)
-                + ((long)(b6 & 0xff) << 8)
-                + ((long)(b7 & 0xff) << 0);
+            return (long)(
+                ((long)b0 << 56) |
+                ((long)b1 << 48) |
+                ((long)b2 << 40) |
+                ((long)b3 << 32) |
+                ((long)b4 << 24) |
+                ((long)b5 << 16) |
+                ((long)b6 << 8) |
+                ((long)b7 << 0));
         }
 
         public static float ReadFloat(System.IO.Stream s)
@@ -97,8 +106,8 @@ namespace MinecraftPrimitives
              * Returns: the float value read.
              */
             return System.BitConverter.ToSingle(new byte[] {
-                (byte)b0, (byte)b1, (byte)b2, (byte)b3,
-            }, 0);
+                (byte)b3,(byte)b2, (byte)b1,  (byte)b0,
+            });
         }
 
         public static double ReadDouble(System.IO.Stream s)
@@ -130,9 +139,9 @@ namespace MinecraftPrimitives
              * Returns: the double value read.
              */
             return System.BitConverter.ToDouble(new byte[] {
-                (byte)b0, (byte)b1, (byte)b2, (byte)b3,
-                (byte)b4, (byte)b5, (byte)b6, (byte)b7,
-            }, 0);
+                (byte)b7,(byte)b6, (byte)b5, (byte)b4,
+                (byte)b3,(byte)b2, (byte)b1, (byte)b0,
+            });
         }
 
         public static string ReadModifiedUtf8String(System.IO.Stream s)

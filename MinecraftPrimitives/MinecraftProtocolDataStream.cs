@@ -5,6 +5,7 @@ namespace MinecraftPrimitives
 {
 
     // TODO: Check system is little- or big-endian.
+    // System.BitConverter.IsLittleEndian is useful!
     public class MinecraftProtocolDataStream : System.IDisposable
     {
         private const int _EXPANSION_FACTOR = 2;

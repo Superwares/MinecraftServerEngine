@@ -1296,6 +1296,18 @@ namespace MinecraftServerEngine
             return _BLOCK_ID_TO_ENUM_MAP.Lookup(id);
         }
 
+        public static Block ToBlock(int id, Block defaultBlock)
+        {
+            try
+            {
+                return _BLOCK_ID_TO_ENUM_MAP.Lookup(id);
+            }
+            catch (KeyNotFoundException)
+            {
+                return defaultBlock;
+            }
+        }
+
         public static int GetId(this Block block)
         {
             return _BLOCK_ENUM_TO_CTX_MAP.Lookup(block).Id;
