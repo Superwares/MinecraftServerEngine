@@ -33,7 +33,8 @@ namespace TestMinecraftServerApplication
 
             //ApplyBlockAppearance(Block.Dirt);
 
-            Reset();
+            GiveItem(GamePanel.Create());
+            GiveItem(ShopItem.Create());
         }
 
         public void Reset()

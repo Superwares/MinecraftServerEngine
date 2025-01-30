@@ -217,7 +217,7 @@ namespace TestMinecraftServerApplication
                     break;
                 case GameSwitchSlot:
                     {
-                        success = SuperWorld.GameContext.Start();
+                        success = SuperWorld.GameContext.Ready();
                     }
                     break;
             }

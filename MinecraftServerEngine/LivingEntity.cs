@@ -7,6 +7,8 @@ namespace MinecraftServerEngine
 
     public abstract class LivingEntity : Entity
     {
+        public const double DefaultMovementSpeed = 0.099999988079071;
+
         private bool _disposed = false;
 
         /**
@@ -20,9 +22,65 @@ namespace MinecraftServerEngine
         protected double _additionalHealth = 0.0;
         protected double _maxHealth = 20.0;
         protected double _health;
-        public double AdditionalHealth => _additionalHealth;
-        public double MaxHealth => _maxHealth;
-        public double Health => _health;
+        public double AdditionalHealth
+        {
+            get
+            {
+                if (_disposed == true)
+                {
+                    throw new System.ObjectDisposedException(GetType().Name);
+                }
+
+                System.Diagnostics.Debug.Assert(_additionalHealth >= 0.0);
+                return _additionalHealth;
+            }
+        }
+        public double MaxHealth
+        {
+            get
+            {
+                if (_disposed == true)
+                {
+                    throw new System.ObjectDisposedException(GetType().Name);
+                }
+
+                System.Diagnostics.Debug.Assert(_maxHealth >= 0.0);
+                System.Diagnostics.Debug.Assert(_maxHealth <= 1024.0);
+                return _maxHealth;
+            }
+        }
+        public double Health
+        {
+            get
+            {
+                if (_disposed == true)
+                {
+                    throw new System.ObjectDisposedException(GetType().Name);
+                }
+
+                System.Diagnostics.Debug.Assert(_health >= 0.0);
+                System.Diagnostics.Debug.Assert(_health <= 1024.0);
+                System.Diagnostics.Debug.Assert(_health <= _maxHealth);
+                return _health;
+            }
+        }
+
+        protected readonly Locker LockerMovementSpeed = new();
+        protected double _movementSpeed = DefaultMovementSpeed;
+        public double MovementSpeed
+        {
+            get
+            {
+                if (_disposed == true)
+                {
+                    throw new System.ObjectDisposedException(GetType().Name);
+                }
+
+                System.Diagnostics.Debug.Assert(_movementSpeed >= 0.0);
+                System.Diagnostics.Debug.Assert(_movementSpeed <= 1024.0);
+                return _movementSpeed;
+            }
+        }
 
 
         private Time _lastAttackTime = Time.Now();
@@ -180,7 +238,8 @@ namespace MinecraftServerEngine
                     {
                         amount = -_additionalHealth;
                         _additionalHealth = 0.0;
-                    } else
+                    }
+                    else
                     {
                         amount = 0.0;
                     }
@@ -221,7 +280,7 @@ namespace MinecraftServerEngine
 
         public (bool, double) Damage(double amount)
         {
-            if (amount < 0.0F)
+            if (amount < 0.0)
             {
                 throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
             }
@@ -311,14 +370,9 @@ namespace MinecraftServerEngine
 
             try
             {
-                if (amount == 0.0)
-                {
-                    return;
-                }
-
-                System.Diagnostics.Debug.Assert(amount > 0.0);
+                System.Diagnostics.Debug.Assert(amount >= 0.0);
                 _additionalHealth = amount;
-                
+
             }
             finally
             {
@@ -327,9 +381,33 @@ namespace MinecraftServerEngine
             }
         }
 
+        protected virtual void _SetMovementSpeed(double amount)
+        {
+            System.Diagnostics.Debug.Assert(amount >= 0.0);
+            System.Diagnostics.Debug.Assert(amount <= 1024.0);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(LockerMovementSpeed != null);
+            LockerMovementSpeed.Hold();
+
+            try
+            {
+                System.Diagnostics.Debug.Assert(amount >= 0.0);
+                System.Diagnostics.Debug.Assert(amount <= 1024.0);
+                _movementSpeed = amount;
+
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerMovementSpeed != null);
+                LockerMovementSpeed.Release();
+            }
+        }
+
         public void Heal(double amount)
         {
-            if (amount < 0.0F)
+            if (amount < 0.0)
             {
                 throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
             }
@@ -348,7 +426,7 @@ namespace MinecraftServerEngine
 
         public void SetMaxHealth(double amount)
         {
-            if (amount <= 0.0F)
+            if (amount <= 0.0)
             {
                 throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative or zero.");
             }
@@ -367,7 +445,7 @@ namespace MinecraftServerEngine
 
         public void SetAdditionalHealth(double amount)
         {
-            if (amount < 0.0F)
+            if (amount < 0.0)
             {
                 throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
             }
@@ -382,6 +460,30 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             _SetAdditionalHealth(amount);
+        }
+
+        public void SetMovementSpeed(double amount)
+        {
+            if (amount < 0.0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
+            }
+            if (amount > 1024.0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be greater than 1024.0.");
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(amount >= 0.0);
+            System.Diagnostics.Debug.Assert(amount <= 1024.0);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _SetMovementSpeed(amount);
         }
 
         public void HealFully()
@@ -403,6 +505,7 @@ namespace MinecraftServerEngine
                 {
                     // Dispose managed resources.
                     LockerHealths.Dispose();
+                    LockerMovementSpeed.Dispose();
                 }
 
                 // Call the appropriate methods to clean up

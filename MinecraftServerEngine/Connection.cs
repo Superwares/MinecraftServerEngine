@@ -326,6 +326,7 @@ namespace MinecraftServerEngine
             World world,
             int idEntity,
             double additionalHealth, double maxHealth, double health,
+            double movementSpeed,
             Vector p, Angles look,
             bool blindness,
             PlayerInventory playerInventory,
@@ -375,6 +376,8 @@ namespace MinecraftServerEngine
             UpdateMaxHealth(idEntity, maxHealth);
             UpdateHealth(health);
 
+            UpdateMovementSpeed(idEntity, movementSpeed);
+
             SetGamemode(idEntity, gamemode);
 
             {
@@ -383,6 +386,8 @@ namespace MinecraftServerEngine
                 [
                     ("generic.attackSpeed", 4.0),   // 5 ticks, 0.25 seconds
                     //("generic.attackSpeed", 1.0),   // 20 ticks, 1 seconds
+
+                    //("generic.movementSpeed", 0.699999988079071),  // default movement speed
                 ]));
             }
 
@@ -1544,6 +1549,28 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(OutPackets != null);
             OutPackets.Enqueue(new UpdateHealthPacket((float)health, 20, 5.0F));
         }
+
+        internal void UpdateMovementSpeed(int entityId, double amount)
+        {
+            System.Diagnostics.Debug.Assert(amount >= 0.0);
+            System.Diagnostics.Debug.Assert(amount <= 1024.0);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (_disconnected == true)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(OutPackets != null);
+            OutPackets.Enqueue(new EntityPropertiesPacket(
+                entityId,
+                [
+                    ("generic.movementSpeed", amount),
+                ]));
+        }
+
+
 
         internal void Animate(int entityId, EntityAnimation animation)
         {

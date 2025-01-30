@@ -4,6 +4,9 @@ using Containers;
 using Sync;
 
 using MinecraftPrimitives;
+using MinecraftServerEngine;
+using TestMinecraftServerApplication.Items;
+using System.Numerics;
 
 namespace TestMinecraftServerApplication
 {
@@ -11,6 +14,16 @@ namespace TestMinecraftServerApplication
     {
         public const int DefaultCoinAmount = 10;
 
+        public const double DefaultPlayerAdditionalHealth = 0.0;
+        public const double DefaultPlayerMaxHealth = 20.0;
+        public const double DefaultPlayerMovementSpeed = LivingEntity.DefaultMovementSpeed;
+
+        public const double DefaultSeekerAdditionalHealth = 100.0;
+        public const double DefaultSeekerMaxHealth = 20.0;
+        public const double DefaultSeekerMovementSpeed = LivingEntity.DefaultMovementSpeed;
+
+        public const double BurnedSeekerMaxHealth = 80.0;
+        public const double BurnedSeekerMovementSpeed = LivingEntity.DefaultMovementSpeed + 0.1;
 
         public const int MinPlayers = 2;
         public const int MaxPlayers = 18;
@@ -27,9 +40,13 @@ namespace TestMinecraftServerApplication
         private readonly List<SuperPlayer> _players = new();
 
 
+        private bool _ready = false;
+        public bool IsReady => _ready;
 
-        public bool IsStarted => _started;
         private bool _started = false;
+        public bool IsStarted => _started;
+
+        private bool _inRound = false;
 
 
         public IReadOnlyList<SuperPlayer> Players
@@ -62,7 +79,7 @@ namespace TestMinecraftServerApplication
             {
                 System.Diagnostics.Debug.Assert(_disposed == false);
 
-                System.Diagnostics.Debug.Assert(_started == true);
+                System.Diagnostics.Debug.Assert(_ready == true);
 
                 return _currentRoundIndex <= 0;
             }
@@ -118,7 +135,7 @@ namespace TestMinecraftServerApplication
 
             try
             {
-                if (_started == true)
+                if (_ready == true || _started == true)
                 {
                     return false;
                 }
@@ -161,7 +178,7 @@ namespace TestMinecraftServerApplication
 
             try
             {
-                if (_started == true)
+                if (_ready == true || _started == true)
                 {
                     return;
                 }
@@ -182,7 +199,7 @@ namespace TestMinecraftServerApplication
 
         }
 
-        public bool Start()
+        public bool Ready()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
@@ -193,7 +210,7 @@ namespace TestMinecraftServerApplication
 
             try
             {
-                if (_started == true)
+                if (_ready == true || _started == true)
                 {
                     return false;
                 }
@@ -206,27 +223,27 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_players.Length >= MinPlayers);
                 System.Diagnostics.Debug.Assert(_players.Length <= MaxPlayers);
 
-                System.Diagnostics.Debug.Assert(_started == false);
-                _started = true;
-
-                System.Diagnostics.Debug.Assert(_prevSeekers != null);
-                System.Diagnostics.Debug.Assert(_prevSeekers.Length == 0);
-                System.Diagnostics.Debug.Assert(_currentSeeker == null);
-                System.Diagnostics.Debug.Assert(_currentRoundIndex < 0);
+                System.Diagnostics.Debug.Assert(_ready == false);
+                _ready = true;
 
                 System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
                 System.Diagnostics.Debug.Assert(_ScoreboardByUserId.Count == 0);
                 System.Diagnostics.Debug.Assert(_ScoreboardByUsername != null);
                 System.Diagnostics.Debug.Assert(_ScoreboardByUsername.Count == 0);
+
+                System.Diagnostics.Debug.Assert(_players != null);
                 foreach (SuperPlayer player in _players)
                 {
                     ScoreboardPlayerRow row = new(player.UserId, player.Username);
-
+                    
                     _ScoreboardByUserId.Insert(row.UserId, row);
                     _ScoreboardByUsername.Insert(row.Username, row);
-                }
 
-                Inventory.StartGame(_players, TotalRounds, _ScoreboardByUserId);
+                    player.FlushItems();
+
+                    player.GiveItem(GamePanel.Create());
+                    player.GiveItem(ShopItem.Create());
+                }
 
                 return true;
             }
@@ -240,17 +257,62 @@ namespace TestMinecraftServerApplication
 
         }
 
+        public void Start()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_ready == true);
+            System.Diagnostics.Debug.Assert(_started == false);
+
+            System.Diagnostics.Debug.Assert(_started == false);
+            _started = true;
+
+            System.Diagnostics.Debug.Assert(_prevSeekers != null);
+            System.Diagnostics.Debug.Assert(_prevSeekers.Length == 0);
+            System.Diagnostics.Debug.Assert(_currentSeeker == null);
+            System.Diagnostics.Debug.Assert(_currentRoundIndex < 0);
+
+            System.Diagnostics.Debug.Assert(_players != null);
+            foreach (SuperPlayer player in _players)
+            {
+                player.FlushItems();
+
+                player.GiveItem(GamePanel.Create());
+                player.GiveItem(ShopItem.Create());
+            }
+
+            System.Diagnostics.Debug.Assert(_players != null);
+            Inventory.StartGame(_players, TotalRounds, _ScoreboardByUserId);
+        }
+
         public void StartRound()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            System.Diagnostics.Debug.Assert(_ready == true);
             System.Diagnostics.Debug.Assert(_started == true);
 
             System.Diagnostics.Debug.Assert(_prevSeekers != null);
             System.Diagnostics.Debug.Assert(_currentSeeker == null);
             ++_currentRoundIndex;
 
+            System.Diagnostics.Debug.Assert(_inRound == false);
+            _inRound = true;
+
+            System.Diagnostics.Debug.Assert(_players != null);
+            foreach (SuperPlayer player in _players)
+            {
+                player.SwitchGamemode(Gamemode.Adventure);
+
+                player.SetAdditionalHealth(DefaultPlayerAdditionalHealth);
+                player.SetMaxHealth(DefaultPlayerMaxHealth);
+                player.SetMovementSpeed(DefaultPlayerMovementSpeed);
+
+                player.HealFully();
+            }
+
             System.Diagnostics.Debug.Assert(Inventory != null);
+            System.Diagnostics.Debug.Assert(_players != null);
             Inventory.StartRound(_players, TotalRounds, _currentRoundIndex);
         }
 
@@ -260,6 +322,7 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            System.Diagnostics.Debug.Assert(_ready == true);
             System.Diagnostics.Debug.Assert(_started == true);
 
             bool prevSeeker = false;
@@ -294,16 +357,24 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            System.Diagnostics.Debug.Assert(_ready == true);
             System.Diagnostics.Debug.Assert(_started == true);
 
             System.Diagnostics.Debug.Assert(_currentSeeker == null);
             _currentSeeker = player;
+
+            _currentSeeker.SetAdditionalHealth(DefaultSeekerAdditionalHealth);
+            _currentSeeker.SetMaxHealth(DefaultSeekerMaxHealth);
+            player.SetMovementSpeed(DefaultSeekerMovementSpeed);
+
+            _currentSeeker.HealFully();
         }
 
         public void StartSeekerCount()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            System.Diagnostics.Debug.Assert(_ready == true);
             System.Diagnostics.Debug.Assert(_started == true);
 
             System.Diagnostics.Debug.Assert(_currentSeeker != null);
@@ -316,6 +387,7 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            System.Diagnostics.Debug.Assert(_ready == true);
             System.Diagnostics.Debug.Assert(_started == true);
 
             System.Diagnostics.Debug.Assert(_currentSeeker != null);
@@ -328,6 +400,7 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            System.Diagnostics.Debug.Assert(_ready == true);
             System.Diagnostics.Debug.Assert(_started == true);
 
             System.Diagnostics.Debug.Assert(_LockerScoreboard != null);
@@ -335,6 +408,11 @@ namespace TestMinecraftServerApplication
 
             try
             {
+                if (_inRound == false)
+                {
+                    return;
+                }
+
                 System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
                 ScoreboardPlayerRow row = _ScoreboardByUserId.Lookup(userId);
 
@@ -356,6 +434,7 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            System.Diagnostics.Debug.Assert(_ready == true);
             System.Diagnostics.Debug.Assert(_started == true);
 
             System.Diagnostics.Debug.Assert(_LockerScoreboard != null);
@@ -363,6 +442,11 @@ namespace TestMinecraftServerApplication
 
             try
             {
+                if (_inRound == false)
+                {
+                    return;
+                }
+
                 System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
                 ScoreboardPlayerRow row = _ScoreboardByUserId.Lookup(userId);
 
@@ -379,10 +463,24 @@ namespace TestMinecraftServerApplication
             }
         }
 
+        public void StartBuringTime()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_ready == true);
+            System.Diagnostics.Debug.Assert(_started == true);
+
+            System.Diagnostics.Debug.Assert(_currentSeeker != null);
+            _currentSeeker.SetMaxHealth(BurnedSeekerMaxHealth);
+            _currentSeeker.SetMovementSpeed(BurnedSeekerMovementSpeed);
+            _currentSeeker.HealFully();
+        }
+
         public void EndRound()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            System.Diagnostics.Debug.Assert(_ready == true);
             System.Diagnostics.Debug.Assert(_started == true);
 
             System.Diagnostics.Debug.Assert(_prevSeekers != null);
@@ -395,12 +493,16 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(Inventory != null);
             Inventory.EndRound(_players, TotalRounds, _currentRoundIndex);
+
+            System.Diagnostics.Debug.Assert(_inRound == true);
+            _inRound = false;
         }
 
         public void DetermineWinners(List<SuperPlayer> players)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            System.Diagnostics.Debug.Assert(_ready == true);
             System.Diagnostics.Debug.Assert(_started == true);
 
             System.Diagnostics.Debug.Assert(IsFinalRound == true);
@@ -457,6 +559,7 @@ namespace TestMinecraftServerApplication
             try
             {
 
+                System.Diagnostics.Debug.Assert(_ready == true);
                 System.Diagnostics.Debug.Assert(_started == true);
                 _started = false;
 

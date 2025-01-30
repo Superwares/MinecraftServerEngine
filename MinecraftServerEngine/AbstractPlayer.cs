@@ -285,6 +285,34 @@ namespace MinecraftServerEngine
             }
         }
 
+        protected override void _SetMovementSpeed(double amount)
+        {
+            System.Diagnostics.Debug.Assert(amount >= 0.0);
+            System.Diagnostics.Debug.Assert(amount <= 1024.0);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(LockerMovementSpeed != null);
+            LockerMovementSpeed.Hold();
+
+            try
+            {
+                base._SetMovementSpeed(amount);
+
+                if (Connected == true)
+                {
+                    System.Diagnostics.Debug.Assert(MovementSpeed >= 0.0);
+                    System.Diagnostics.Debug.Assert(MovementSpeed <= 1024.0);
+                    Conn.UpdateMovementSpeed(Id, MovementSpeed);
+                }
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerMovementSpeed != null);
+                LockerMovementSpeed.Release();
+            }
+        }
+
         internal override void _AddEffect(
             byte effectId,
             byte amplifier, int duration, byte flags)
@@ -404,6 +432,7 @@ namespace MinecraftServerEngine
                 world,
                 Id,
                 AdditionalHealth, MaxHealth, Health,
+                MovementSpeed,
                 Position, Look,
                 Blindness,
                 Inventory,

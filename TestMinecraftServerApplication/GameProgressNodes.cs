@@ -31,7 +31,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(ctx != null);
             System.Diagnostics.Debug.Assert(world != null);
 
-            return ctx.IsStarted == true;
+            return ctx.IsReady == true;
         }
     }
 
@@ -127,12 +127,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(ctx != null);
             System.Diagnostics.Debug.Assert(world != null);
 
-            foreach (SuperPlayer player in ctx.Players)
-            {
-
-
-                player.Reset();
-            }
+            ctx.Start();
 
             return true;
         }
@@ -527,6 +522,8 @@ namespace TestMinecraftServerApplication
                     world.DisplayTitle(
                         Time.Zero, Time.FromSeconds(1), Time.Zero,
                         new TextComponent($"Burning Time!", TextColor.Gold));
+
+                    ctx.StartBuringTime();
 
                     _initBurning = true;
                 }

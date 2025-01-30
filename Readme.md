@@ -112,6 +112,8 @@ If disposable objects were used as members of class and struct, they must be dis
 * y < 0 으로 떨어지면 Arrert 해결하기
 * Connection 대신 AbstractPlayer 안에서 Connection 에서의 로직을 모두 처리하기
 	* 따로 분리해서 코드 중복이 늘어남
+* abstract player 전용 play sound 기능 추가.
+	* 룰렛 돌릴때 (random seeker, winners) 에서 띵띵띵 소리 추가
 
 ### Done 
 
