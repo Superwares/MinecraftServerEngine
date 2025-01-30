@@ -15,41 +15,65 @@ namespace TestMinecraftServerApplication
 
         public ShopInventory() : base(MaxLineCount)
         {
-            SetSlot((SlotCountPerLine * 0) + 0, Coin.CreateForShop([
-                $"",
-                $"테스트용 무료 코인입니다.",
-                $"",
-                $"왼클릭          지급",
-                $"우클릭          차감",
-                ]));
+            {
+                int basicItemLineOffset = SlotCountPerLine * 0;
 
-            SetSlot((SlotCountPerLine * 1) + 1, WoodenSword.CreateShopItemStack([
-                $"",
-                $"평범한 나무검입니다!",
-                $"",
-                $"왼클릭(구매)          {WoodenSword.PurchasePrice} 코인",
-                $"우클릭(판매)          {WoodenSword.SellPrice} 코인",
-                ]));
+                SetSlot(basicItemLineOffset + 0, new ItemStack(
+                    ItemType.GrayStainedGlassPane, "Basic Tier", 1));
 
-            SetSlot((SlotCountPerLine * 1) + 3, BalloonBasher.CreateForShop([
-                $"",
-                $"가볍지만 강력한 한 방으로 적을 날려버리세요!",
-                $"",
-                $"왼클릭(구매)          {BalloonBasher.PurchasePrice} 코인",
-                $"우클릭(판매)          {BalloonBasher.SellPrice} 코인",
-                ]));
+                SetSlot(basicItemLineOffset + 1, WoodenSword.CreateShopItemStack([
+                    $"",
+                    $"평범한 나무검입니다!",
+                    $"",
+                    $"왼클릭(구매)          {WoodenSword.PurchasePrice} 코인",
+                    $"우클릭(판매)          {WoodenSword.SellPrice} 코인",
+                    ]));
 
-            SetSlot((SlotCountPerLine * (MaxLineCount - 1)) + 8, ShopItem.CreateForShop([
-                $"",
-                $"왼클릭          지급",
-                $"우클릭          차감",
-                ]));
+                SetSlot(basicItemLineOffset + 2, BalloonBasher.CreateForShop([
+                    $"",
+                    $"가볍지만 강력한 한 방으로 적을 날려버리세요!",
+                    $"",
+                    $"왼클릭(구매)          {BalloonBasher.PurchasePrice} 코인",
+                    $"우클릭(판매)          {BalloonBasher.SellPrice} 코인",
+                    ]));
+            }
 
-            SetSlot((SlotCountPerLine * (MaxLineCount - 1)) + 7, GlobalChestItem.CreateForShop([
-                $"",
-                $"왼클릭          지급",
-                $"우클릭          차감",
-                ]));
+            {
+                int uniqueItemLineOffset = SlotCountPerLine * 1;
+                SetSlot(uniqueItemLineOffset + 0, new ItemStack(
+                    ItemType.PurpleStainedGlassPane, "Unique Tier", 1));
+            }
+
+            {
+                int utilityItemLineOffset = SlotCountPerLine * 3;
+                SetSlot(utilityItemLineOffset + 0, new ItemStack(
+                    ItemType.WhiteStainedGlassPane, "Utility Tier", 1));
+            }
+
+            {
+                int lastLineOffset = SlotCountPerLine * (MaxLineCount - 1);
+
+
+                SetSlot(lastLineOffset + 0, Coin.CreateForShop([
+                    $"",
+                    $"게임 시작 전의 무료 코인입니다.",
+                    $"",
+                    $"왼클릭          지급",
+                    $"우클릭          차감",
+                    ]));
+
+                SetSlot(lastLineOffset + 8, ShopItem.CreateForShop([
+                    $"",
+                    $"왼클릭          지급",
+                    $"우클릭          차감",
+                    ]));
+
+                SetSlot(lastLineOffset + 7, GlobalChestItem.CreateForShop([
+                    $"",
+                    $"왼클릭          지급",
+                    $"우클릭          차감",
+                    ]));
+            }
         }
 
         protected override void OnLeftClickSharedItem(
@@ -69,8 +93,11 @@ namespace TestMinecraftServerApplication
             {
                 case Coin.Type:
                     {
-                        giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * itemStack.Count);
-                        success = playerInventory.GiveItem(giveItem);
+                        if (SuperWorld.GameContext.IsStarted == false)
+                        {
+                            giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * itemStack.Count);
+                            success = playerInventory.GiveItem(giveItem);
+                        }
 
                     }
                     break;
@@ -171,13 +198,17 @@ namespace TestMinecraftServerApplication
             {
                 case Coin.Type:
                     {
-                        taked = playerInventory.TakeItemStacksInPrimary(
-                            Coin.Item, Coin.DefaultCount * itemStack.Count);
-
-                        if (taked != null && taked.Length > 0)
+                        if (SuperWorld.GameContext.IsStarted == false)
                         {
-                            success = true;
+                            taked = playerInventory.TakeItemStacksInPrimary(
+                                Coin.Item, Coin.DefaultCount * itemStack.Count);
+
+                            if (taked != null && taked.Length > 0)
+                            {
+                                success = true;
+                            }
                         }
+
                     }
                     break;
                 case ShopItem.Type:

@@ -6,5 +6,7 @@ namespace TestMinecraftServerApplication.Items
     {
         Basic,
         Unique,
+
+        Utility,
     }
 }

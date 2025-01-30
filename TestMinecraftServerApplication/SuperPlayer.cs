@@ -21,19 +21,7 @@ namespace TestMinecraftServerApplication
         private readonly static ShopInventory ShopInventory = new();
 
 
-        public void Reset()
-        {
-            System.Diagnostics.Debug.Assert(_disposed == false);
 
-            FlushItems();
-
-            SwitchGamemode(Gamemode.Adventure);
-
-            GiveItem(ShopItem.Create(1));
-            GiveItem(Coin.Create(GameContext.DefaultCoinAmount));
-
-            GiveItem(GamePanel.Create());
-        }
 
         public SuperPlayer(
             UserId userId, string username,
@@ -46,6 +34,18 @@ namespace TestMinecraftServerApplication
             //ApplyBlockAppearance(Block.Dirt);
 
             Reset();
+        }
+
+        public void Reset()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            FlushItems();
+
+            SwitchGamemode(Gamemode.Adventure);
+
+            GiveItem(GamePanel.Create());
+            GiveItem(ShopItem.Create());
         }
 
         ~SuperPlayer()
