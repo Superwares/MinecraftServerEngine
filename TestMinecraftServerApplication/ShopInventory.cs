@@ -13,6 +13,16 @@ namespace TestMinecraftServerApplication
     {
         public override string Title => "Shop";
 
+
+        public const int UniqueItemLineOffset = (SlotCountPerLine * 1) + 0;
+        public const int BalloonBasherSlot = UniqueItemLineOffset + 1;
+
+
+        public void ResetBalloonBasherSlot(string username)
+        {
+            SetSlot(BalloonBasherSlot, BalloonBasher.CreateForShop(username));
+        }
+
         public ShopInventory() : base(MaxLineCount)
         {
             // Basic items
@@ -33,23 +43,15 @@ namespace TestMinecraftServerApplication
                     $"우클릭(판매)          {WoodenSword.SellPrice} Coins",
                     ]));
 
-                SetSlot(offset + 2, BalloonBasher.CreateForShop([
-                    $"",
-                    // A lightweight yet powerful weapon that can send enemies flying with a single hit.
-                    $"가볍지만 강력한 무기로 한 방에 적을 날려버릴 수 있습니다.",
-                    $"",
-                    // Left-click (Purchase)
-                    $"왼클릭(구매)          {BalloonBasher.PurchasePrice} Coins",
-                    // Right-click (Sell)
-                    $"우클릭(판매)          {BalloonBasher.SellPrice} Coins",
-                    ]));
+
             }
 
             // Unique items
             {
-                int offset = SlotCountPerLine * 1;
-                SetSlot(offset + 0, new ItemStack(
+                SetSlot(UniqueItemLineOffset, new ItemStack(
                     ItemType.PurpleStainedGlassPane, "Unique Tier", 1));
+
+                ResetBalloonBasherSlot(null);
             }
 
             // Utility items
@@ -166,6 +168,11 @@ namespace TestMinecraftServerApplication
                     break;
                 case BalloonBasher.Type:
                     {
+                        if (BalloonBasher.CanPurchase == false)
+                        {
+                            break;
+                        }
+
                         const int coinAmount = BalloonBasher.PurchasePrice;
 
                         taked = playerInventory.TakeItemStacksInPrimary(
@@ -190,6 +197,15 @@ namespace TestMinecraftServerApplication
                                 System.Diagnostics.Debug.Assert(success == true);
 
                                 success = false;
+                            }
+                            else
+                            {
+                                System.Diagnostics.Debug.Assert(player.Username != null);
+                                System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(player.Username) == false);
+                                System.Diagnostics.Debug.Assert(i == BalloonBasherSlot);
+                                ResetBalloonBasherSlot(player.Username);
+
+                                BalloonBasher.CanPurchase = false;
                             }
                         }
 
@@ -318,6 +334,11 @@ namespace TestMinecraftServerApplication
                     break;
                 case BalloonBasher.Type:
                     {
+                        if (BalloonBasher.CanPurchase == true)
+                        {
+                            break;
+                        }
+
                         const int coinAmount = BalloonBasher.SellPrice;
 
                         System.Diagnostics.Debug.Assert(coinAmount >= Coin.Type.GetMinStackCount());
@@ -344,6 +365,13 @@ namespace TestMinecraftServerApplication
                                 System.Diagnostics.Debug.Assert(success == true);
 
                                 success = false;
+                            }
+                            else
+                            {
+                                System.Diagnostics.Debug.Assert(i == BalloonBasherSlot);
+                                ResetBalloonBasherSlot(null);
+
+                                BalloonBasher.CanPurchase = true;
                             }
                         }
 

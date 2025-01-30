@@ -175,9 +175,21 @@ namespace TestMinecraftServerApplication
             //Switch(Gamemode.Adventure);
         }
 
-        protected override void OnItemBreak(World world, ItemStack stack)
+        protected override void OnItemBreak(World world, ItemStack itemStack)
         {
             world.PlaySound("entity.item.break", 7, Position, 1.0F, 2.0F);
+
+            switch (itemStack.Type)
+            {
+                case BalloonBasher.Type:
+                    {
+                        System.Diagnostics.Debug.Assert(BalloonBasher.CanPurchase == false);
+                        BalloonBasher.CanPurchase = true;
+
+                        ShopInventory.ResetBalloonBasherSlot(null);
+                    }
+                    break;
+            }
         }
 
         private void HandleDefaultAttack(SuperWorld world, double attackCharge)

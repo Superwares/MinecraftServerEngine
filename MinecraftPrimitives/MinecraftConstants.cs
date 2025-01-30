@@ -6,8 +6,7 @@ namespace MinecraftPrimitives
     {
         public readonly static Time TimePerTick = Time.FromMilliseconds(50);
 
-        public const int BlocksPerMeter = 1;
-        public const int BlocksPerChunk = BlocksPerMeter * 16;
+        public const int BlocksPerChunk = 16;
         public const int ChunksPerRegion = 32;
         public const int BlocksPerRegion = BlocksPerChunk * ChunksPerRegion;
 
