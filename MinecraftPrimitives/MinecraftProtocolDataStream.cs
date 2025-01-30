@@ -480,9 +480,29 @@ namespace MinecraftPrimitives
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            byte[] data = ExtractBytes(_UUID_DATATYPE_SIZE);
-            System.Diagnostics.Debug.Assert(data.Length == _UUID_DATATYPE_SIZE);
+            byte[] _data = ExtractBytes(_UUID_DATATYPE_SIZE);
+            System.Diagnostics.Debug.Assert(_data.Length == _UUID_DATATYPE_SIZE);
 
+            byte[] data = new byte[16];
+            data[0] = _data[3];
+            data[1] = _data[2];
+            data[2] = _data[1];
+            data[3] = _data[0];
+
+            data[4] = _data[5];
+            data[5] = _data[4];
+
+            data[6] = _data[7];
+            data[7] = _data[6];
+
+            data[8] = _data[8];
+            data[9] = _data[9];
+            data[10] = _data[10];
+            data[11] = _data[11];
+            data[12] = _data[12];
+            data[13] = _data[13];
+            data[14] = _data[14];
+            data[15] = _data[15];
 
             return new System.Guid(data);
         }
