@@ -424,6 +424,10 @@ namespace TestMinecraftServerApplication
 
         }
 
+        /**
+         * If not use HealFully method after death, the method OnDeath is called everytime...
+         * Bacause the health is zero if not heal fully after death.
+         */
         protected override void OnDeath(PhysicsWorld world)
         {
             System.Diagnostics.Debug.Assert(world != null);
