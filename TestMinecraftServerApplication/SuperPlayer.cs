@@ -93,6 +93,10 @@ namespace TestMinecraftServerApplication
                         _startTime_StoneOfSwiftness = Time.Zero;
                     }
                 }
+
+
+                //bool isOutsideOfWorldBorder = world.IsOutsideOfWorldBorder(Position);
+                //MyConsole.Debug($"isOutsideOfWorldBorder: {isOutsideOfWorldBorder}");
             }
 
 

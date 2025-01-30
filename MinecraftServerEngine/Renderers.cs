@@ -324,6 +324,48 @@ namespace MinecraftServerEngine
 
             Render(new ClientboundChatmessagePacket(data, 0x00));
         }
+
+        internal void InitWorldBorder(
+            double centerX, double centerZ,
+            double oldRadiusInMeters, double newRadiusInMeters,
+            Time transitionTimePerMeter)
+        {
+            System.Diagnostics.Debug.Assert(oldRadiusInMeters > 0.0);
+            System.Diagnostics.Debug.Assert(newRadiusInMeters > 0.0);
+            System.Diagnostics.Debug.Assert(transitionTimePerMeter >= Time.Zero);
+
+            Render(new WorldBorderInitPacket(
+                centerX, centerZ,
+                oldRadiusInMeters * 2.0, newRadiusInMeters * 2.0,
+                (long)(transitionTimePerMeter.Amount / Time.FromMilliseconds(1000).Amount)
+                ));
+        }
+
+        internal void SetWorldBorderCenter(double centerX, double centerZ)
+        {
+            Render(new WorldBorderCenterPacket(centerX, centerZ));
+        }
+
+        internal void SetWorldBorderRadius(double radiusInMeters)
+        {
+            System.Diagnostics.Debug.Assert(radiusInMeters > 0.0);
+
+            Render(new WorldBorderSizePacket(radiusInMeters * 2.0));
+        }
+
+        internal void SetWorldBorderLerpSize(
+            double oldRadiusInMeters, double newRadiusInMeters,
+            Time transitionTimePerMeter)
+        {
+            System.Diagnostics.Debug.Assert(oldRadiusInMeters > 0.0);
+            System.Diagnostics.Debug.Assert(newRadiusInMeters > 0.0);
+            System.Diagnostics.Debug.Assert(transitionTimePerMeter >= Time.Zero);
+
+            Render(new WorldBorderLerpSizePacket(
+                oldRadiusInMeters * 2.0, newRadiusInMeters * 2.0,
+                (long)(transitionTimePerMeter.Amount / Time.FromMilliseconds(1000).Amount)
+                ));
+        }
     }
 
     internal abstract class ObjectRenderer : Renderer

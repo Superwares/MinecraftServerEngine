@@ -18,6 +18,18 @@ namespace Common
             return new(t1.Amount - t2.Amount);
         }
 
+        public static Time operator *(Time t, double amount)
+        {
+            // TODO: Assertion of value range
+            return new((long)(t.Amount * amount));
+        }
+
+        public static Time operator /(Time t, double amount)
+        {
+            // TODO: Assertion of value range
+            return new((long)(t.Amount / amount));
+        }
+
         public static Time operator *(Time t, int amount)
         {
             // TODO: Assertion of value range

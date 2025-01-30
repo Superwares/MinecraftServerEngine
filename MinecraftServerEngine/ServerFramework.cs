@@ -278,7 +278,7 @@ namespace MinecraftServerEngine
                     () => World.SwapObjectQueue(),
                     () => World.LoadAndSendData()),
                 new Task(  // 8
-                    () => World.StartRoutine(), false),
+                    () => World._StartRoutine(), false),
                 new Task(  // 9
                     () => World.SwapObjectQueue(),
                     () => World.StartObjectRoutines()));

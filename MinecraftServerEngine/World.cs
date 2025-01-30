@@ -266,8 +266,30 @@ namespace MinecraftServerEngine
         private readonly ReadLocker LockerProgressBars = new();  // Disposable
         private readonly Map<System.Guid, ProgressBar> ProgressBars = new();  // Disposable
 
-        public World()
+
+        private readonly ReadLocker LockerWorldBorder = new();  // Disposable
+        private double _worldBorder_centerX;
+        private double _worldBorder_centerZ;
+        private double _worldBorder_currentRadiusInMeters;
+        private double _worldBorder_newRadiusInMeters;
+        private Time _worldBorder_transitionStartTime = Time.Zero;
+        private Time _worldBorder_transitionTimePerMeter = Time.Zero;
+
+
+        public World(double centerX, double centerZ, double worldBorderRadiusInMeters)
         {
+            if (worldBorderRadiusInMeters <= 0)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(worldBorderRadiusInMeters),
+                    "World border radius must be greater than 0.");
+            }
+
+            _worldBorder_centerX = centerX;
+            _worldBorder_centerZ = centerZ;
+            _worldBorder_currentRadiusInMeters = worldBorderRadiusInMeters;
+            _worldBorder_newRadiusInMeters = worldBorderRadiusInMeters;
+
             BlockContext = BlockContext.LoadWithRegionFiles(@"region");
         }
 
@@ -276,6 +298,71 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(false);
 
             Dispose(false);
+        }
+
+
+        protected internal override void _StartRoutine()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (_worldBorder_transitionTimePerMeter != Time.Zero)
+            {
+                System.Diagnostics.Debug.Assert(LockerWorldBorder != null);
+                LockerWorldBorder.Hold();
+
+                try
+                {
+                    System.Diagnostics.Debug.Assert(
+                        Math.AreDoublesEqual(
+                            _worldBorder_currentRadiusInMeters,
+                            _worldBorder_newRadiusInMeters) == false
+                            );
+                    System.Diagnostics.Debug.Assert(_worldBorder_transitionStartTime != Time.Zero);
+                    Time elapsedTime = Time.Now() - _worldBorder_transitionStartTime;
+
+                    System.Diagnostics.Debug.Assert(_worldBorder_newRadiusInMeters > 0.0);
+                    System.Diagnostics.Debug.Assert(_worldBorder_currentRadiusInMeters > 0.0);
+                    double remainingDistanceInMeters =
+                        _worldBorder_newRadiusInMeters - _worldBorder_currentRadiusInMeters;
+                    Time remainingTransitionTime =
+                        _worldBorder_transitionTimePerMeter * Math.Abs(remainingDistanceInMeters);
+
+                    if (elapsedTime >= remainingTransitionTime)
+                    {
+                        _worldBorder_currentRadiusInMeters = _worldBorder_newRadiusInMeters;
+
+                        _worldBorder_transitionStartTime = Time.Zero;
+                        _worldBorder_transitionTimePerMeter = Time.Zero;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.Assert(remainingTransitionTime > elapsedTime);
+                        // Calculate Transition Progress:
+                        double transitionProgress =
+                            (double)elapsedTime.Amount / (double)remainingTransitionTime.Amount;
+
+                        // Ensure transition progress does not exceed 1.0
+                        transitionProgress = System.Math.Min(transitionProgress, 1.0);
+
+                        // Update Old Radius:
+                        _worldBorder_currentRadiusInMeters = _worldBorder_currentRadiusInMeters +
+                            (remainingDistanceInMeters * transitionProgress);
+
+                        // Update Transition Start Time
+                        _worldBorder_transitionStartTime = Time.Now();
+                    }
+
+
+
+                }
+                finally
+                {
+                    System.Diagnostics.Debug.Assert(LockerWorldBorder != null);
+                    LockerWorldBorder.Release();
+                }
+            }
+
+            base._StartRoutine();
         }
 
         internal void Connect(UserId id, ConcurrentQueue<ClientboundPlayingPacket> OutPackets)
@@ -288,10 +375,7 @@ namespace MinecraftServerEngine
             WorldRenderer renderer = new(OutPackets);
             WorldRenderersByUserId.Insert(id, renderer);
 
-            // TODO: world border
 
-
-            // TODO: Boss Bar
             System.Diagnostics.Debug.Assert(LockerProgressBars != null);
             LockerProgressBars.Read();
 
@@ -301,7 +385,8 @@ namespace MinecraftServerEngine
                 foreach (ProgressBar progressBar in ProgressBars.GetValues())
                 {
                     renderer.OpenBossBar(
-                        progressBar.Id, progressBar.TitleData, progressBar.Health, progressBar.Color, progressBar.Division);
+                        progressBar.Id, progressBar.TitleData,
+                        progressBar.Health, progressBar.Color, progressBar.Division);
                 }
 
 
@@ -311,6 +396,23 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(LockerProgressBars != null);
                 LockerProgressBars.Release();
             }
+
+            System.Diagnostics.Debug.Assert(LockerWorldBorder != null);
+            LockerWorldBorder.Read();
+            try
+            {
+
+                renderer.InitWorldBorder(
+                    _worldBorder_centerX, _worldBorder_centerZ,
+                    _worldBorder_currentRadiusInMeters, _worldBorder_newRadiusInMeters,
+                    _worldBorder_transitionTimePerMeter);
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerWorldBorder != null);
+                LockerWorldBorder.Release();
+            }
+
         }
 
         public void PlaySound(string name, int category, Vector p, double volume, double pitch)
@@ -550,6 +652,70 @@ namespace MinecraftServerEngine
                 renderer.WriteChatInChatBox(data);
             }
 
+        }
+
+        public bool IsOutsideOfWorldBorder(Vector p)
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(LockerWorldBorder != null);
+            LockerWorldBorder.Read();
+
+            try
+            {
+                double dx = Math.Abs(p.X - _worldBorder_centerX);
+                double dz = Math.Abs(p.Z - _worldBorder_centerZ);
+
+                System.Diagnostics.Debug.Assert(_worldBorder_currentRadiusInMeters > 0.0);
+                return (dx > _worldBorder_currentRadiusInMeters) || (dz > _worldBorder_currentRadiusInMeters);
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerWorldBorder != null);
+                LockerWorldBorder.Release();
+            }
+        }
+
+        public void ChangeWorldBorderSize(double radiusInMeters, Time transitionTimePerMeter)
+        {
+            if (radiusInMeters <= 0)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(radiusInMeters),
+                    "World border radius must be greater than 0.");
+            }
+
+            if (transitionTimePerMeter < Time.Zero)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(transitionTimePerMeter),
+                    "World border transition time must be greater than or equal to 0.");
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(LockerWorldBorder != null);
+            LockerWorldBorder.Hold();
+
+            try
+            {
+                if (Math.AreDoublesEqual(_worldBorder_newRadiusInMeters, radiusInMeters) == false)
+                {
+                    _worldBorder_newRadiusInMeters = radiusInMeters;
+                    _worldBorder_transitionTimePerMeter = transitionTimePerMeter;
+                }
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerWorldBorder != null);
+                LockerWorldBorder.Release();
+            }
         }
 
         internal void Disconnect(UserId id)
@@ -831,12 +997,16 @@ namespace MinecraftServerEngine
                     PlayersByUserId.Dispose();
                     PlayersByUsername.Dispose();
 
+                    WorldRenderersByUserId.Dispose();
+
                     DisconnectedPlayers.Dispose();
 
                     BlockContext.Dispose();
 
                     LockerProgressBars.Dispose();
                     ProgressBars.Dispose();
+
+                    LockerWorldBorder.Dispose();
                 }
 
                 // Call the appropriate methods to clean up

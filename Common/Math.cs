@@ -14,5 +14,10 @@ namespace Common
             return System.Math.Abs(s);
         }
 
+        public static bool AreDoublesEqual(double a, double b)
+        {
+            const double Tolerance = 1e-10;
+            return System.Math.Abs(a - b) < Tolerance;
+        }
     }
 }

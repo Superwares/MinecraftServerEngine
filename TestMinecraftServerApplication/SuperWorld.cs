@@ -11,8 +11,12 @@ namespace TestMinecraftServerApplication
     {
         public readonly static GameContext GameContext = new();
 
-        private static readonly Vector PosSpawning = new(0.0D, 3.0D, 0.0D);
-        private static readonly Angles LookSpawning = new(0.0F, 0.0F);
+        public const double CenterX = 8.0;
+        public const double CenterZ = 8.0;
+        public const double DefaultWorldBorderRadiusInMeters = 3.0;
+
+        public static readonly Vector PosSpawning = new(0.0D, 3.0D, 0.0D);
+        public static readonly Angles LookSpawning = new(0.0F, 0.0F);
 
         private bool _disposed = false;
 
@@ -30,7 +34,7 @@ namespace TestMinecraftServerApplication
         private IGameProgressNode _currentGameProgressNode = new LobbyNode();
 
 
-        public SuperWorld() : base() { }
+        public SuperWorld() : base(CenterX, CenterZ, DefaultWorldBorderRadiusInMeters) { }
 
         ~SuperWorld()
         {

@@ -213,7 +213,15 @@ namespace MinecraftServerEngine.PhysicsEngine
             Dispose(false);
         }
 
-        protected internal abstract void StartRoutine();
+        protected virtual void StartRoutine()
+        {
+        }
+
+        protected internal virtual void _StartRoutine()
+        {
+            StartRoutine();
+        }
+
 
         public void SearchObjects(
             Tree<PhysicsObject> objs, AxisAlignedBoundingBox minBoundingBox,
