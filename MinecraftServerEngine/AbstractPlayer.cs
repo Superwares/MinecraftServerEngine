@@ -173,7 +173,8 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            LockerHealth.Hold();
+            System.Diagnostics.Debug.Assert(LockerHealths != null);
+            LockerHealths.Hold();
 
             try
             {
@@ -181,14 +182,19 @@ namespace MinecraftServerEngine
 
                 if (Connected == true)
                 {
-                    Conn.UpdateHealth(health);
+                    System.Diagnostics.Debug.Assert(AdditionalHealth >= 0.0);
+                    System.Diagnostics.Debug.Assert(Health >= 0.0);
+                    Conn.UpdateAdditionalHealth(Id, AdditionalHealth);
+                    Conn.UpdateHealth(Health);
                 }
 
+                System.Diagnostics.Debug.Assert(health >= 0.0);
                 return (damaged, health);
             }
             finally
             {
-                LockerHealth.Release();
+                System.Diagnostics.Debug.Assert(LockerHealths != null);
+                LockerHealths.Release();
             }
 
         }
@@ -199,7 +205,8 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            LockerHealth.Hold();
+            System.Diagnostics.Debug.Assert(LockerHealths != null);
+            LockerHealths.Hold();
 
             try
             {
@@ -207,16 +214,75 @@ namespace MinecraftServerEngine
 
                 if (Connected == true)
                 {
-                    Conn.UpdateHealth(health);
+                    System.Diagnostics.Debug.Assert(Health >= 0.0);
+                    Conn.UpdateHealth(Health);
                 }
 
+                System.Diagnostics.Debug.Assert(health >= 0.0);
                 return health;
             }
             finally
             {
-                LockerHealth.Release();
+                System.Diagnostics.Debug.Assert(LockerHealths != null);
+                LockerHealths.Release();
             }
 
+        }
+
+        protected override void _SetMaxHealth(double amount)
+        {
+            System.Diagnostics.Debug.Assert(amount > 0.0D);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(LockerHealths != null);
+            LockerHealths.Hold();
+
+            try
+            {
+                base._SetMaxHealth(amount);
+
+                if (Connected == true)
+                {
+                    System.Diagnostics.Debug.Assert(MaxHealth >= 0.0);
+                    System.Diagnostics.Debug.Assert(Health >= 0.0);
+                    Conn.UpdateMaxHealth(Id, MaxHealth);
+                    Conn.UpdateHealth(Health);
+                }
+
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerHealths != null);
+                LockerHealths.Release();
+            }
+        }
+
+        protected override void _SetAdditionalHealth(double amount)
+        {
+            System.Diagnostics.Debug.Assert(amount >= 0.0D);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(LockerHealths != null);
+            LockerHealths.Hold();
+
+            try
+            {
+                base._SetAdditionalHealth(amount);
+
+                if (Connected == true)
+                {
+                    System.Diagnostics.Debug.Assert(AdditionalHealth >= 0.0);
+                    Conn.UpdateAdditionalHealth(Id, AdditionalHealth);
+                }
+
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerHealths != null);
+                LockerHealths.Release();
+            }
         }
 
         internal override void _AddEffect(
@@ -337,7 +403,7 @@ namespace MinecraftServerEngine
                 id, client,
                 world,
                 Id,
-                Health,
+                AdditionalHealth, MaxHealth, Health,
                 Position, Look,
                 Blindness,
                 Inventory,
@@ -412,7 +478,7 @@ namespace MinecraftServerEngine
 
                 if (_gamemode != _nextGamemode)
                 {
-                    Conn.Set(Id, _nextGamemode);
+                    Conn.SetGamemode(Id, _nextGamemode);
                 }
             }
 

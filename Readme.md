@@ -110,6 +110,8 @@ If disposable objects were used as members of class and struct, they must be dis
 * 같은 username 과 userId 로 접속시 튕기도록
 * BossBar 은 Player 개인 또는 World 에 할당할 수 있도록
 * y < 0 으로 떨어지면 Arrert 해결하기
+* Connection 대신 AbstractPlayer 안에서 Connection 에서의 로직을 모두 처리하기
+	* 따로 분리해서 코드 중복이 늘어남
 
 ### Done 
 

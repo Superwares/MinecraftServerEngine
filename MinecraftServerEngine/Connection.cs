@@ -9,6 +9,7 @@ namespace MinecraftServerEngine
     using PhysicsEngine;
     using static System.Net.Mime.MediaTypeNames;
     using System.Drawing;
+    using System.Security.Principal;
 
     internal sealed class Connection : System.IDisposable
     {
@@ -324,7 +325,7 @@ namespace MinecraftServerEngine
             MinecraftClient client,
             World world,
             int idEntity,
-            double health,
+            double additionalHealth, double maxHealth, double health,
             Vector p, Angles look,
             bool blindness,
             PlayerInventory playerInventory,
@@ -365,20 +366,33 @@ namespace MinecraftServerEngine
             TeleportRecord report = new(payload, p);
             TeleportRecords.Enqueue(report);
 
-            UpdateHealth(health);
-            Set(idEntity, gamemode);
+            System.Diagnostics.Debug.Assert(additionalHealth >= 0.0);
+            UpdateAdditionalHealth(idEntity, additionalHealth);
 
-            OutPackets.Enqueue(new EntityPropertiesPacket(
+            System.Diagnostics.Debug.Assert(maxHealth >= health);
+            System.Diagnostics.Debug.Assert(maxHealth > 0.0);
+            System.Diagnostics.Debug.Assert(health >= 0.0);
+            UpdateMaxHealth(idEntity, maxHealth);
+            UpdateHealth(health);
+
+            SetGamemode(idEntity, gamemode);
+
+            {
+                OutPackets.Enqueue(new EntityPropertiesPacket(
                 idEntity,
                 [
-                    ("generic.attackSpeed", 4.0F),   // 5 ticks, 0.25 seconds
-                    //("generic.attackSpeed", 1.0F),   // 20 ticks, 1 seconds
+                    ("generic.attackSpeed", 4.0),   // 5 ticks, 0.25 seconds
+                    //("generic.attackSpeed", 1.0),   // 20 ticks, 1 seconds
                 ]));
+            }
 
-            using EntityMetadata metadata = new();
-            metadata.AddByte(13, 0xFF);  // The Displayed Skin Parts bit mask
+            {
+                using EntityMetadata metadata = new();
 
-            OutPackets.Enqueue(new EntityMetadataPacket(idEntity, metadata.WriteData()));
+                metadata.AddByte(13, 0xFF);  // The Displayed Skin Parts bit mask
+
+                OutPackets.Enqueue(new EntityMetadataPacket(idEntity, metadata.WriteData()));
+            }
 
             //var title = new
             //{
@@ -1476,6 +1490,46 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(buffer.Empty);
         }
 
+        internal void UpdateAdditionalHealth(int entityId, double health)
+        {
+            System.Diagnostics.Debug.Assert(health >= 0.0);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (_disconnected == true)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(OutPackets != null);
+            using EntityMetadata metadata = new();
+
+            MyConsole.Debug($"UpdateAdditionalHealth's health: {health}");
+            metadata.AddFloat(11, (float)health);
+
+            OutPackets.Enqueue(new EntityMetadataPacket(entityId, metadata.WriteData()));
+        }
+
+        internal void UpdateMaxHealth(int entityId, double maxHealth)
+        {
+            System.Diagnostics.Debug.Assert(maxHealth > 0.0);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (_disconnected == true)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(OutPackets != null);
+            OutPackets.Enqueue(new EntityPropertiesPacket(
+                entityId,
+                [
+                    ("generic.maxHealth", maxHealth),
+                ]));
+        }
+
+
         internal void UpdateHealth(double health)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
@@ -1577,7 +1631,7 @@ namespace MinecraftServerEngine
             OutPackets.Enqueue(new SetExperiencePacket((float)ratio, level, 0));
         }
 
-        internal void Set(int idEntity, Gamemode gamemode)
+        internal void SetGamemode(int idEntity, Gamemode gamemode)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

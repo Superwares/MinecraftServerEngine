@@ -226,6 +226,10 @@ namespace TestMinecraftServerApplication
                 return;
             }
 
+            SetMaxHealth(40);
+            HealFully();
+            SetAdditionalHealth(30);
+
             double damage = WoodenSword.Damage;
             damage *= (attackCharge * attackCharge);
             damage *= GenerateRandomValueBetween(0.98, 1.01);

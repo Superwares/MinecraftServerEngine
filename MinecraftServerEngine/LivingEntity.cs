@@ -9,11 +9,21 @@ namespace MinecraftServerEngine
     {
         private bool _disposed = false;
 
-        protected readonly Locker LockerHealth = new();
-        protected double _maxHealth = 20.0F;
+        /**
+         * The main health is _health.
+         * If the additional health is greater than 0 and main health is zero, 
+         * the living entity is dead.
+         * 
+         * The additional health cannot be self-healed, only damaged.
+         */
+        protected readonly Locker LockerHealths = new();
+        protected double _additionalHealth = 0.0;
+        protected double _maxHealth = 20.0;
         protected double _health;
+        public double AdditionalHealth => _additionalHealth;
         public double MaxHealth => _maxHealth;
         public double Health => _health;
+
 
         private Time _lastAttackTime = Time.Now();
 
@@ -52,7 +62,8 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            return _health <= 0.0D;
+            System.Diagnostics.Debug.Assert(_health >= 0.0D);
+            return _health == 0.0D;
         }
 
         protected internal virtual void OnAttack(World world, double attackCharge) { }
@@ -140,9 +151,10 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(amount >= 0.0D);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
-            LockerHealth.Hold();
+            System.Diagnostics.Debug.Assert(LockerHealths != null);
+            LockerHealths.Hold();
 
             try
             {
@@ -158,16 +170,32 @@ namespace MinecraftServerEngine
                     return (false, 0.0);
                 }
 
+                System.Diagnostics.Debug.Assert(_additionalHealth >= 0.0);
+                if (_additionalHealth > 0.0)
+                {
+                    System.Diagnostics.Debug.Assert(amount >= 0.0);
+                    _additionalHealth -= amount;
+
+                    if (_additionalHealth <= 0.0)
+                    {
+                        amount = -_additionalHealth;
+                        _additionalHealth = 0.0;
+                    } else
+                    {
+                        amount = 0.0;
+                    }
+                }
 
                 System.Diagnostics.Debug.Assert(_health >= 0.0D);
                 System.Diagnostics.Debug.Assert(_health <= _maxHealth);
+                System.Diagnostics.Debug.Assert(amount >= 0.0);
                 _health -= amount;
 
                 SetEntityStatus(2);
 
-                if (_health <= 0.0D)
+                if (_health <= 0.0)
                 {
-                    _health = 0.0F;
+                    _health = 0.0;
 
                     //using Buffer buffer = new();
                     //buffer.WriteShort(-1);
@@ -179,11 +207,14 @@ namespace MinecraftServerEngine
 
                 }
 
+                System.Diagnostics.Debug.Assert(_health >= 0.0D);
+                System.Diagnostics.Debug.Assert(_health <= _maxHealth);
                 return (true, _health);
             }
             finally
             {
-                LockerHealth.Release();
+                System.Diagnostics.Debug.Assert(LockerHealths != null);
+                LockerHealths.Release();
 
             }
         }
@@ -195,7 +226,10 @@ namespace MinecraftServerEngine
                 throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
             }
 
-            System.Diagnostics.Debug.Assert(_disposed == false);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
             return _Damage(amount);
         }
@@ -206,20 +240,23 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            LockerHealth.Hold();
+            System.Diagnostics.Debug.Assert(LockerHealths != null);
+            LockerHealths.Hold();
 
             try
             {
 
-                if (amount == 0.0D)
+                if (amount == 0.0)
                 {
                     return _health;
                 }
 
                 System.Diagnostics.Debug.Assert(_health >= 0.0D);
                 System.Diagnostics.Debug.Assert(_health <= _maxHealth);
+                System.Diagnostics.Debug.Assert(amount >= 0.0);
                 _health += amount;
 
+                System.Diagnostics.Debug.Assert(_maxHealth > 0.0D);
                 if (_health >= _maxHealth)
                 {
                     _health = _maxHealth;
@@ -229,8 +266,64 @@ namespace MinecraftServerEngine
             }
             finally
             {
-                LockerHealth.Release();
+                System.Diagnostics.Debug.Assert(LockerHealths != null);
+                LockerHealths.Release();
 
+            }
+        }
+
+        protected virtual void _SetMaxHealth(double amount)
+        {
+            System.Diagnostics.Debug.Assert(amount > 0.0D);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(LockerHealths != null);
+            LockerHealths.Hold();
+
+            try
+            {
+
+                System.Diagnostics.Debug.Assert(amount > 0.0);
+                _maxHealth = amount;
+
+                if (_health > _maxHealth)
+                {
+                    _health = _maxHealth;
+                }
+
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerHealths != null);
+                LockerHealths.Release();
+            }
+        }
+
+        protected virtual void _SetAdditionalHealth(double amount)
+        {
+            System.Diagnostics.Debug.Assert(amount >= 0.0D);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(LockerHealths != null);
+            LockerHealths.Hold();
+
+            try
+            {
+                if (amount == 0.0)
+                {
+                    return;
+                }
+
+                System.Diagnostics.Debug.Assert(amount > 0.0);
+                _additionalHealth = amount;
+                
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerHealths != null);
+                LockerHealths.Release();
             }
         }
 
@@ -241,9 +334,54 @@ namespace MinecraftServerEngine
                 throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
             }
 
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(amount >= 0.0D);
+
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             _Heal(amount);
+        }
+
+        public void SetMaxHealth(double amount)
+        {
+            if (amount <= 0.0F)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative or zero.");
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(amount > 0.0D);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _SetMaxHealth(amount);
+        }
+
+        public void SetAdditionalHealth(double amount)
+        {
+            if (amount < 0.0F)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(amount >= 0.0D);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _SetAdditionalHealth(amount);
         }
 
         public void HealFully()
@@ -264,7 +402,7 @@ namespace MinecraftServerEngine
                 if (disposing == true)
                 {
                     // Dispose managed resources.
-                    LockerHealth.Dispose();
+                    LockerHealths.Dispose();
                 }
 
                 // Call the appropriate methods to clean up
