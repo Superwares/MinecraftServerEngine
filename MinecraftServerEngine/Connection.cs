@@ -376,7 +376,7 @@ namespace MinecraftServerEngine
                 ]));
 
             using EntityMetadata metadata = new();
-            metadata.AddByte(17, 0xFF);
+            metadata.AddByte(13, 0xFF);  // The Displayed Skin Parts bit mask
 
             OutPackets.Enqueue(new EntityMetadataPacket(idEntity, metadata.WriteData()));
 

@@ -600,9 +600,9 @@ namespace MinecraftServerEngine
             }
 
             using EntityMetadata metadata = new();
-            metadata.AddByte(0, flags);
 
-            metadata.AddByte(17, 0b01111111);
+            metadata.AddByte(0, flags);
+            metadata.AddByte(13, 0xFF);  // The Displayed Skin Parts bit mask
 
             (byte x, byte y) = look.ConvertToProtocolFormat();
             Render(new SpawnNamedEntityPacket(

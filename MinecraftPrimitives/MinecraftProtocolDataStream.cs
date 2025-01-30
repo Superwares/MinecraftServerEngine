@@ -22,7 +22,7 @@ namespace MinecraftPrimitives
         private const int _LONG_DATATYPE_SIZE = 8;
         private const int _FLOAT_DATATYPE_SIZE = 4;
         private const int _DOUBLE_DATATYPE_SIZE = 8;
-        private const int _GUID_DATATYPE_SIZE = 16;
+        private const int _UUID_DATATYPE_SIZE = 16;
 
         private const int _INIT_DATASIZE = 16;
 
@@ -480,8 +480,9 @@ namespace MinecraftPrimitives
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            byte[] data = ExtractBytes(_GUID_DATATYPE_SIZE);
-            System.Diagnostics.Debug.Assert(data.Length == _GUID_DATATYPE_SIZE);
+            byte[] data = ExtractBytes(_UUID_DATATYPE_SIZE);
+            System.Diagnostics.Debug.Assert(data.Length == _UUID_DATATYPE_SIZE);
+
 
             return new System.Guid(data);
         }
@@ -713,8 +714,32 @@ namespace MinecraftPrimitives
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            byte[] data = value.ToByteArray();
-            System.Diagnostics.Debug.Assert(data.Length == _GUID_DATATYPE_SIZE);
+            byte[] _data = value.ToByteArray();
+            System.Diagnostics.Debug.Assert(_data.Length == _UUID_DATATYPE_SIZE);
+
+            byte[] data = new byte[16];
+            data[0] = _data[3];
+            data[1] = _data[2];
+            data[2] = _data[1];
+            data[3] = _data[0];
+
+            data[4] = _data[5];
+            data[5] = _data[4];
+
+            data[6] = _data[7];
+            data[7] = _data[6];
+
+            data[8] = _data[8];
+            data[9] = _data[9];
+            data[10] = _data[10];
+            data[11] = _data[11];
+            data[12] = _data[12];
+            data[13] = _data[13];
+            data[14] = _data[14];
+            data[15] = _data[15];
+
+            // c8a169ec-895c-426b-a0c4-2d359dd59a26
+            //byte[] data = { 0xc8, 0xa1, 0x69, 0xec, 0x89, 0x5c, 0x42, 0x6b, 0xa0, 0xc4, 0x2d, 0x35, 0x9d, 0xd5, 0x9a, 0x26 };
             InsertBytes(data);
         }
 
