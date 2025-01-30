@@ -296,7 +296,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(damage >= 0.0F);
 
             double directionScale = 3.0;
-            double knockbackScale = GenerateRandomValueBetween(0.1, 0.3123);
+            double knockbackScale = GenerateRandomValueBetween(0.1, 0.3123) * (attackCharge * attackCharge);
 
             System.Diagnostics.Debug.Assert(directionScale > 0.0F);
             System.Diagnostics.Debug.Assert(knockbackScale > 0.0F);
@@ -430,14 +430,14 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            HealFully();
+
             if (SuperWorld.GameContext.IsStarted == false)
             {
                 return;
             }
 
             SwitchGamemode(Gamemode.Spectator);
-
-            HealFully();
 
             System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
             System.Diagnostics.Debug.Assert(UserId != UserId.Null);

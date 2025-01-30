@@ -242,6 +242,8 @@ namespace MinecraftServerEngine
             {
                 using ClientListener clntListener = new(connListener, port);
 
+                MyConsole.Info($"Server is now listening on port {port}");
+
                 while (_running)
                 {
                     clntListener.StartRoutine();
@@ -249,6 +251,8 @@ namespace MinecraftServerEngine
 
                 clntListener.Flush();
             });
+
+            
 
             TaskManager manager = new(
                 new Task(  // 0
