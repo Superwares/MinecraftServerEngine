@@ -7,6 +7,7 @@ using MinecraftPrimitives;
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
+    using System.Xml.Linq;
 
     public abstract class World : PhysicsWorld
     {
@@ -401,11 +402,14 @@ namespace MinecraftServerEngine
             LockerWorldBorder.Read();
             try
             {
-
+                double remainingDistanceInMeters =
+                        _worldBorder_newRadiusInMeters - _worldBorder_currentRadiusInMeters;
+                Time remainingTransitionTime =
+                    _worldBorder_transitionTimePerMeter * Math.Abs(remainingDistanceInMeters);
                 renderer.InitWorldBorder(
                     _worldBorder_centerX, _worldBorder_centerZ,
                     _worldBorder_currentRadiusInMeters, _worldBorder_newRadiusInMeters,
-                    _worldBorder_transitionTimePerMeter);
+                    remainingTransitionTime);
             }
             finally
             {
@@ -431,8 +435,10 @@ namespace MinecraftServerEngine
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
+            System.Diagnostics.Debug.Assert(WorldRenderersByUserId != null);
             foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
             {
+                System.Diagnostics.Debug.Assert(renderer != null);
                 renderer.PlaySound(name, category, p, volume, pitch);
             }
         }
@@ -709,6 +715,22 @@ namespace MinecraftServerEngine
                 {
                     _worldBorder_newRadiusInMeters = radiusInMeters;
                     _worldBorder_transitionTimePerMeter = transitionTimePerMeter;
+
+                    _worldBorder_transitionStartTime = Time.Now();
+
+                    double remainingDistanceInMeters =
+                        _worldBorder_newRadiusInMeters - _worldBorder_currentRadiusInMeters;
+                    Time remainingTransitionTime =
+                        _worldBorder_transitionTimePerMeter * Math.Abs(remainingDistanceInMeters);
+
+                    System.Diagnostics.Debug.Assert(WorldRenderersByUserId != null);
+                    foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
+                    {
+                        System.Diagnostics.Debug.Assert(renderer != null);
+                        renderer.InitWorldBorder(_worldBorder_centerX, _worldBorder_centerZ,
+                            _worldBorder_currentRadiusInMeters, _worldBorder_newRadiusInMeters,
+                            remainingTransitionTime);
+                    }
                 }
             }
             finally

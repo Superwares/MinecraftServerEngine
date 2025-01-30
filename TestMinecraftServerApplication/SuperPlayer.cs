@@ -95,8 +95,8 @@ namespace TestMinecraftServerApplication
                 }
 
 
-                //bool isOutsideOfWorldBorder = world.IsOutsideOfWorldBorder(Position);
-                //MyConsole.Debug($"isOutsideOfWorldBorder: {isOutsideOfWorldBorder}");
+                bool isOutsideOfWorldBorder = world.IsOutsideOfWorldBorder(Position);
+                MyConsole.Debug($"isOutsideOfWorldBorder: {isOutsideOfWorldBorder}");
             }
 
 
@@ -154,6 +154,8 @@ namespace TestMinecraftServerApplication
                 //    new TextComponent("good", TextColor.Blue));
 
                 //ApplyBilndness(true);
+
+                world.ChangeWorldBorderSize(5.0, Time.FromSeconds(1));
             }
             else
             {

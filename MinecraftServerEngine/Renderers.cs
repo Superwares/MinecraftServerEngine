@@ -337,7 +337,7 @@ namespace MinecraftServerEngine
             Render(new WorldBorderInitPacket(
                 centerX, centerZ,
                 oldRadiusInMeters * 2.0, newRadiusInMeters * 2.0,
-                (long)(transitionTimePerMeter.Amount / Time.FromMilliseconds(1000).Amount)
+                (long)(transitionTimePerMeter.Amount / Time.FromMilliseconds(1).Amount)
                 ));
         }
 
@@ -363,7 +363,7 @@ namespace MinecraftServerEngine
 
             Render(new WorldBorderLerpSizePacket(
                 oldRadiusInMeters * 2.0, newRadiusInMeters * 2.0,
-                (long)(transitionTimePerMeter.Amount / Time.FromMilliseconds(1000).Amount)
+                (long)(transitionTimePerMeter.Amount / Time.FromMilliseconds(1).Amount)
                 ));
         }
     }
