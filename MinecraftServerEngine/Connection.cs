@@ -1286,7 +1286,7 @@ namespace MinecraftServerEngine
                 {
                     // TODO: send disconnected message to client.
 
-                    MyConsole.Printl($"UnexpectedClientBehavior: {e.Message}!");
+                    MyConsole.Warn($"UnexpectedClientBehavior: {e.Message}!");
 
                     throw new DisconnectedClientException();
                 }
