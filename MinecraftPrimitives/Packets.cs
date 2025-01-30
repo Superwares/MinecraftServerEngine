@@ -255,6 +255,7 @@ namespace MinecraftPrimitives
         public const int RemoveEntityEffectPacketId = 0x33;
         public const int RespawnPacketId = 0x35;
         public const int EntityHeadLookPacketId = 0x36;
+        public const int WorldBorderPacketId = 0x38;
         public const int EntityMetadataPacketId = 0x3C;
         public const int EntityVelocityPacketId = 0x3E;
         public const int EntityEquipmentPacketId = 0x3F;
@@ -2033,7 +2034,7 @@ namespace MinecraftPrimitives
                 if (Signature != null)
                 {
                     buffer.WriteString(Signature);
-                 }
+                }
             }
             buffer.WriteInt(2, true);  // gamemode
             buffer.WriteInt(Ping, true);  // latency
@@ -2327,6 +2328,154 @@ namespace MinecraftPrimitives
 
     }
 
+    public sealed class WorldBorderSizePacket : ClientboundPlayingPacket
+    {
+        public readonly double Diameter;
+
+        public static WorldBorderSizePacket Read(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public WorldBorderSizePacket(double diameter) : base(WorldBorderPacketId)
+        {
+            Diameter = diameter;
+        }
+
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteInt(0, true);
+            buffer.WriteDouble(Diameter);
+        }
+
+    }
+
+    public sealed class WorldBorderLerpSizePacket : ClientboundPlayingPacket
+    {
+        public readonly double OldDiameter, NewDiameter;
+        public readonly long Speed;
+
+        public static WorldBorderLerpSizePacket Read(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public WorldBorderLerpSizePacket(
+            double oldDiameter, double newDiameter,
+            long speed) : base(WorldBorderPacketId)
+        {
+            OldDiameter = oldDiameter; NewDiameter = newDiameter;
+            Speed = speed;
+        }
+
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteInt(1, true);
+            buffer.WriteDouble(OldDiameter); buffer.WriteDouble(NewDiameter);
+            buffer.WriteLong(Speed, true);
+        }
+
+    }
+
+    public sealed class WorldBorderCenterPacket : ClientboundPlayingPacket
+    {
+        public readonly double X, Z;
+
+        public static WorldBorderCenterPacket Read(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public WorldBorderCenterPacket(double x, double z) : base(WorldBorderPacketId)
+        {
+            X = x; Z = z;
+        }
+
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteInt(2, true);
+            buffer.WriteDouble(X); buffer.WriteDouble(Z);
+        }
+
+    }
+
+    public sealed class WorldBorderInitPacket : ClientboundPlayingPacket
+    {
+        public readonly double X, Z;
+        public readonly double OldDiameter, NewDiameter;
+        public readonly long Speed;
+        public readonly int PortalTeleportBoundary = 29999984;
+        public readonly int WarningTime = 0;
+        public readonly int WarningBlocks = 0;
+
+        public static WorldBorderInitPacket Read(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public WorldBorderInitPacket(
+            double x, double z,
+            double oldDiameter, double newDiameter,
+            long speed) : base(WorldBorderPacketId)
+        {
+            X = x; Z = z;
+            OldDiameter = oldDiameter; NewDiameter = newDiameter;
+            Speed = speed;
+        }
+
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteInt(3, true);
+            buffer.WriteDouble(X); buffer.WriteDouble(Z);
+            buffer.WriteDouble(OldDiameter); buffer.WriteDouble(NewDiameter);
+            buffer.WriteLong(Speed, true);
+            buffer.WriteInt(PortalTeleportBoundary, true);
+            buffer.WriteInt(WarningTime, true);
+            buffer.WriteInt(WarningBlocks, true);
+        }
+
+    }
+
     public sealed class EntityMetadataPacket : ClientboundPlayingPacket
     {
         public readonly int EntityId;
@@ -2377,8 +2526,7 @@ namespace MinecraftPrimitives
             throw new System.NotImplementedException();
         }
 
-        public EntityVelocityPacket(int entityId, short x, short y, short z)
-            : base(EntityVelocityPacketId)
+        public EntityVelocityPacket(int entityId, short x, short y, short z) : base(EntityVelocityPacketId)
         {
             EntityId = entityId;
             X = x; Y = y; Z = z;

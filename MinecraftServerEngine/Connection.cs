@@ -399,6 +399,11 @@ namespace MinecraftServerEngine
                 OutPackets.Enqueue(new EntityMetadataPacket(idEntity, metadata.WriteData()));
             }
 
+            {
+                OutPackets.Enqueue(new WorldBorderInitPacket(0.0, 0.0, 20.0, 10.0, 1000 * 5));
+                OutPackets.Enqueue(new WorldBorderInitPacket(0.0, 0.0, 10.0, 20.0, 1000 * 5));
+            }
+
             //var title = new
             //{
             //    text = "",
