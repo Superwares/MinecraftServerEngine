@@ -1504,7 +1504,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(OutPackets != null);
             using EntityMetadata metadata = new();
 
-            MyConsole.Debug($"UpdateAdditionalHealth's health: {health}");
+            //MyConsole.Debug($"UpdateAdditionalHealth's health: {health}");
             metadata.AddFloat(11, (float)health);
 
             OutPackets.Enqueue(new EntityMetadataPacket(entityId, metadata.WriteData()));
