@@ -5,12 +5,24 @@ namespace MinecraftServerEngine
 {
     public class Item : IReadOnlyItem
     {
+        public const int MinCount = 1;
+
+
         public ItemType Type { get; }
+        public int MaxCount
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(Type.GetMaxCount() >= MinCount);
+                return Type.GetMaxCount();
+            }
+        }
+
+
+
         public string Name { get; }
         public string[] Lore { get; }
 
-        public int MaxCount => Type.GetMaxStackCount();
-        public int MinCount => Type.GetMinStackCount();
 
 
         public int MaxDurability { get; }
@@ -118,8 +130,6 @@ namespace MinecraftServerEngine
             int maxDurability, int currentDurability,
             params string[] lore)
         {
-            System.Diagnostics.Debug.Assert(type.GetMaxStackCount() >= type.GetMinStackCount());
-
             if (maxDurability < 0)
             {
                 throw new System.ArgumentOutOfRangeException(
@@ -146,7 +156,7 @@ namespace MinecraftServerEngine
             MaxDurability = maxDurability;
             _currentDurability = currentDurability;
 
-            Lore = lore;
+            Lore = lore != null ? lore : [];
 
             _hash = GenerateItemHash(type, name, maxDurability, currentDurability, lore);
         }

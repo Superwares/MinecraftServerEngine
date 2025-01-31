@@ -7,7 +7,14 @@ namespace MinecraftServerEngine
     {
 
         private int _count;
-        public int Count => _count;
+        public int Count
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(_count >= MinCount);
+                return _count;
+            }
+        }
 
 
         public int RemainingCount
@@ -36,8 +43,8 @@ namespace MinecraftServerEngine
             params string[] lore)
             : base(type, name, maxDurability, currentDurability, lore)
         {
-            System.Diagnostics.Debug.Assert(count >= type.GetMinStackCount());
-            System.Diagnostics.Debug.Assert(count <= type.GetMaxStackCount());
+            System.Diagnostics.Debug.Assert(count >= MinCount);
+            System.Diagnostics.Debug.Assert(count <= MaxCount);
             _count = count;
         }
 
@@ -53,7 +60,7 @@ namespace MinecraftServerEngine
             ItemType type, string name,
             int maxDurability, int currentDurability,
             params string[] lore)
-            : this(type, name, type.GetMaxStackCount(), maxDurability, currentDurability, lore)
+            : this(type, name, MinCount, maxDurability, currentDurability, lore)
         {
 
         }
@@ -61,7 +68,7 @@ namespace MinecraftServerEngine
         public ItemStack(
             ItemType type, string name,
             params string[] lore)
-            : this(type, name, type.GetMaxStackCount(), 0, 0, lore)
+            : this(type, name, MinCount, 0, 0, lore)
         {
 
         }
@@ -70,6 +77,11 @@ namespace MinecraftServerEngine
             IReadOnlyItem item, int count,
             params string[] additionalLore)
         {
+            if (additionalLore == null)
+            {
+                additionalLore = [];
+            }
+
             string[] lore = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Concat(item.Lore, additionalLore));
 
             return new ItemStack(

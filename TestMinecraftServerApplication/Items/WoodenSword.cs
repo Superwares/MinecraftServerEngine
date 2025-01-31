@@ -26,23 +26,23 @@ namespace TestMinecraftServerApplication.Items
                 $"Damage          {Damage:F2}",
             ]);
 
-        public static readonly int DefaultCount = Item.Type.GetMinStackCount();
+        public static readonly int DefaultCount = MinecraftServerEngine.Item.MinCount;
 
-        public static ItemStack Create()
-        {
-            System.Diagnostics.Debug.Assert(Damage >= 0);
-            return ItemStack.Create(Item, DefaultCount);
-        }
+        //public static ItemStack Create()
+        //{
+        //    System.Diagnostics.Debug.Assert(Damage >= 0);
+        //    return ItemStack.Create(Item, DefaultCount);
+        //}
 
-        public static ItemStack CreateShopItemStack(string[] descriptions)
-        {
-            System.Diagnostics.Debug.Assert(Damage >= 0);
-            return ItemStack.Create(
-                Item,
-                DefaultCount,
-                [
-                    ..descriptions,
-                ]);
-        }
+        //public static ItemStack CreateShopItemStack(string[] descriptions)
+        //{
+        //    System.Diagnostics.Debug.Assert(Damage >= 0);
+        //    return ItemStack.Create(
+        //        Item,
+        //        DefaultCount,
+        //        [
+        //            ..descriptions,
+        //        ]);
+        //}
     }
 }

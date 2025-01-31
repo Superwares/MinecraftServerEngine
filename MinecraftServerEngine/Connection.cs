@@ -647,14 +647,14 @@ namespace MinecraftServerEngine
                             {
                                 string name = args[2];
 
-                                if (amount > itemType.GetMaxStackCount())
+                                if (amount > itemType.GetMaxCount())
                                 {
-                                    amount = itemType.GetMaxStackCount();
+                                    amount = itemType.GetMaxCount();
                                 }
 
-                                if (amount < itemType.GetMinStackCount())
+                                if (amount < Item.MinCount)
                                 {
-                                    amount = itemType.GetMinStackCount();
+                                    amount = Item.MinCount;
                                 }
 
                                 string username = args.Length >= 5 ? args[4] : null;

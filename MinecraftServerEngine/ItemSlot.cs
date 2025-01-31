@@ -27,7 +27,7 @@ namespace MinecraftServerEngine
             Item = item;
             _count = count;
 
-            MaxCount = item.GetMaxStackCount();
+            MaxCount = item.GetMaxCount();
             System.Diagnostics.Debug.Assert(MaxCount >= MinCount);
         }
 

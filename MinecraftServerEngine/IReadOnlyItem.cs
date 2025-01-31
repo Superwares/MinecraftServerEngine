@@ -5,11 +5,12 @@ namespace MinecraftServerEngine
     public interface IReadOnlyItem : System.IEquatable<IReadOnlyItem>
     {
         public ItemType Type { get; }
+
+        public int MaxCount { get; }
+
         public string Name { get; }
         public string[] Lore { get; }
 
-        public int MaxCount { get; }
-        public int MinCount { get; }
 
         public int MaxDurability { get; }
         public int CurrentDurability { get; }

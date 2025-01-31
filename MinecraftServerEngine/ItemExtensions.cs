@@ -16,24 +16,23 @@ namespace MinecraftServerEngine
             public readonly ItemType Type;
             public readonly int Id;
             public readonly string Name;
-            public readonly int MinStackCount, MaxStackCount;
+            public readonly int MaxCount;
             public readonly int Metadata;
 
             public ItemContext(
                 ItemType type,
                 int id, string name,
-                int minStackCount, int maxStackCount,
+                int maxCount,
                 int metadata)
             {
-                System.Diagnostics.Debug.Assert(maxStackCount > 0);
-                System.Diagnostics.Debug.Assert(minStackCount > 0);
-                System.Diagnostics.Debug.Assert(minStackCount <= maxStackCount);
+                System.Diagnostics.Debug.Assert(maxCount > 0);
+                System.Diagnostics.Debug.Assert(ItemStack.MinCount > 0);
+                System.Diagnostics.Debug.Assert(ItemStack.MinCount <= maxCount);
 
                 Type = type;
                 Id = id;
                 Name = name;
-                MinStackCount = minStackCount;
-                MaxStackCount = maxStackCount;
+                MaxCount = maxCount;
                 Metadata = metadata;
             }
 
@@ -50,239 +49,239 @@ namespace MinecraftServerEngine
             {
                 new ItemContext(
                     ItemType.WhiteWool, 35, "wool",
-                    1, 64,
+                    64,
                     0),
                 new ItemContext(
                     ItemType.OrangeWool, 35, "wool",
-                    1, 64,
+                    64,
                     1),
                 new ItemContext(
                     ItemType.MagentaWool, 35, "wool",
-                    1, 64,
+                    64,
                     2),
                 new ItemContext(
                     ItemType.LightBlueWool, 35, "wool",
-                    1, 64,
+                    64,
                     3),
                 new ItemContext(
                     ItemType.YellowWool, 35, "wool",
-                    1, 64,
+                    64,
                     4),
                 new ItemContext(
                     ItemType.LimeWool, 35, "wool",
-                    1, 64,
+                    64,
                     5),
                 new ItemContext(
                     ItemType.PinkWool, 35, "wool",
-                    1, 64,
+                    64,
                     6),
                 new ItemContext(
                     ItemType.GrayWool, 35, "wool",
-                    1, 64,
+                    64,
                     7),
                 new ItemContext(
                     ItemType.LightGrayWool, 35, "wool",
-                    1, 64,
+                    64,
                     8),
                 new ItemContext(
                     ItemType.CyanWool, 35, "wool",
-                    1, 64,
+                    64,
                     9),
                 new ItemContext(
                     ItemType.PurpleWool, 35, "wool",
-                    1, 64,
+                    64,
                     10),
                 new ItemContext(
                     ItemType.BlueWool, 35, "wool",
-                    1, 64,
+                    64,
                     11),
                 new ItemContext(
                     ItemType.BrownWool, 35, "wool",
-                    1, 64,
+                    64,
                     12),
                 new ItemContext(
                     ItemType.GreenWool, 35, "wool",
-                    1, 64,
+                    64,
                     13),
                 new ItemContext(
                     ItemType.RedWool, 35, "wool",
-                    1, 64,
+                    64,
                     14),
                 new ItemContext(
                     ItemType.BlackWool, 35, "wool",
-                    1, 64,
+                    64,
                     15),
                 new ItemContext(
                     ItemType.Pumpkin, 86, "pumpkin",
-                    1, 64,
+                    64,
                     0),
                 new ItemContext(
                     ItemType.JackOLantern, 91, "lit_pumpkin",
-                    1, 64,
+                    64,
                     0),
                 new ItemContext(
                     ItemType.IronBars, 101, "iron_bars",
-                    1, 64,
+                    64,
                     0),
                 new ItemContext(
                     ItemType.WhiteTerracotta, 159, "stained_hardened_clay",
-                    1, 64,
+                    64,
                     0),
                 new ItemContext(
                     ItemType.OrangeTerracotta, 159, "stained_hardened_clay",
-                    1, 64,
+                    64,
                     1),
                 new ItemContext(
                     ItemType.MagentaTerracotta, 159, "stained_hardened_clay",
-                    1, 64,
+                    64,
                     2),
                 new ItemContext(
                     ItemType.LightBlueTerracotta, 159, "stained_hardened_clay",
-                    1, 64,
+                    64,
                     3),
                 new ItemContext(
                     ItemType.YellowTerracotta, 159, "stained_hardened_clay",
-                    1, 64,
+                    64,
                     4),
                 new ItemContext(
                     ItemType.LimeTerracotta, 159, "stained_hardened_clay",
-                    1, 64,
+                    64,
                     5),
                 new ItemContext(
                     ItemType.PinkTerracotta, 159, "stained_hardened_clay",
-                    1, 64,
+                    64,
                     6),
                 new ItemContext(
                     ItemType.GrayTerracotta, 159, "stained_hardened_clay",
-                    1, 64,
+                    64,
                     7),
                 new ItemContext(
                     ItemType.LightGrayTerracotta, 159, "stained_hardened_clay",
-                    1, 64,
+                    64,
                     8),
                 new ItemContext(
                     ItemType.CyanTerracotta, 159, "stained_hardened_clay",
-                    1, 64,
+                    64,
                     9),
                 new ItemContext(
                     ItemType.PurpleTerracotta, 159, "stained_hardened_clay",
-                    1, 64,
+                    64,
                     10),
                 new ItemContext(
                     ItemType.BlueTerracotta, 159, "stained_hardened_clay",
-                    1, 64,
+                    64,
                     11),
                 new ItemContext(
                     ItemType.BrownTerracotta, 159, "stained_hardened_clay",
-                    1, 64,
+                    64,
                     12),
                 new ItemContext(
                     ItemType.GreenTerracotta, 159, "stained_hardened_clay",
-                    1, 64,
+                    64,
                     13),
                 new ItemContext(
                     ItemType.RedTerracotta, 159, "stained_hardened_clay",
-                    1, 64,
+                    64,
                     14),
                 new ItemContext(
                     ItemType.BlackTerracotta, 159, "stained_hardened_clay",
-                    1, 64,
+                    64,
                     15),
                 new ItemContext(
                     ItemType.WhiteStainedGlassPane, 160, "stained_glass_pane",
-                    1, 64,
+                    64,
                     0),
                 new ItemContext(
                     ItemType.OrangeStainedGlassPane, 160, "stained_glass_pane",
-                    1, 64,
+                    64,
                     1),
                 new ItemContext(
                     ItemType.MagentaStainedGlassPane, 160, "stained_glass_pane",
-                    1, 64,
+                    64,
                     2),
                 new ItemContext(
                     ItemType.LightBlueStainedGlassPane, 160, "stained_glass_pane",
-                    1, 64,
+                    64,
                     3),
                 new ItemContext(
                     ItemType.YellowStainedGlassPane, 160, "stained_glass_pane",
-                    1, 64,
+                    64,
                     4),
                 new ItemContext(
                     ItemType.LimeStainedGlassPane, 160, "stained_glass_pane",
-                    1, 64,
+                    64,
                     5),
                 new ItemContext(
                     ItemType.PinkStainedGlassPane, 160, "stained_glass_pane",
-                    1, 64,
+                    64,
                     6),
                 new ItemContext(
                     ItemType.GrayStainedGlassPane, 160, "stained_glass_pane",
-                    1, 64,
+                    64,
                     7),
                 new ItemContext(
                     ItemType.LightGrayStainedGlassPane, 160, "stained_glass_pane",
-                    1, 64,
+                    64,
                     8),
                 new ItemContext(
                     ItemType.CyanStainedGlassPane, 160, "stained_glass_pane",
-                    1, 64,
+                    64,
                     9),
                 new ItemContext(
                     ItemType.PurpleStainedGlassPane, 160, "stained_glass_pane",
-                    1, 64,
+                    64,
                     10),
                 new ItemContext(
                     ItemType.BlueStainedGlassPane, 160, "stained_glass_pane",
-                    1, 64,
+                    64,
                     11),
                 new ItemContext(
                     ItemType.BrownStainedGlassPane, 160, "stained_glass_pane",
-                    1, 64,
+                    64,
                     12),
                 new ItemContext(
                     ItemType.GreenStainedGlassPane, 160, "stained_glass_pane",
-                    1, 64,
+                    64,
                     13),
                 new ItemContext(
                     ItemType.RedStainedGlassPane, 160, "stained_glass_pane",
-                    1, 64,
+                    64,
                     14),
                 new ItemContext(
                     ItemType.BlackStainedGlassPane, 160, "stained_glass_pane",
-                    1, 64,
+                    64,
                     15),
                 new ItemContext(
                     ItemType.IronSword, 267, "iron_sword",
-                    1, 1,
+                    1,
                     0),
                 new ItemContext(
                     ItemType.WoodenSword, 268, "wooden_sword",
-                    1, 1,
+                    1,
                     0),
                 new ItemContext(
                     ItemType.StoneSword, 272, "stone_sword",
-                    1, 1,
+                    1,
                     0),
                 new ItemContext(
                     ItemType.DiamondSword, 276, "diamond_sword",
-                    1, 1,
+                    1,
                     0),
                 new ItemContext(
                     ItemType.GoldenSword, 283, "golden_sword",
-                    1, 1,
+                    1,
                     0),
                 new ItemContext(
                     ItemType.Stick, 280, "stick",
-                    1, 64,
+                    64,
                     0),
                 new ItemContext(
                     ItemType.Flint, 318, "flint",
-                    1, 64,
+                    64,
                     0),
                 new ItemContext(
                     ItemType.Sign, 323, "sign",
-                    1, 64,
+                    64,
                     0),
                 //new ItemContext(
                 //    ItemType.Snowball, 332, "snowball",
@@ -290,65 +289,65 @@ namespace MinecraftServerEngine
                 //    0),
                 new ItemContext(
                     ItemType.GoldNugget, 371, "gold_nugget",
-                    1, 64,
+                    64,
                     0),
                 new ItemContext(
                     ItemType.PlayerSkull, 397, "skull",
-                    1, 64,
+                    64,
                     3),
 
                 new ItemContext(
                     ItemType.EndCrystal, 426, "end_crystal",
-                    1, 64,
+                    64,
                     0),
 
                 new ItemContext(
                     ItemType.MusicDisc_C418_13, 2256, "record_13",
-                    1, 1,
+                    1,
                     0),
                 new ItemContext(
                     ItemType.MusicDisc_C418_cat, 2257, "record_cat",
-                    1, 1,
+                    1,
                     0),
                 new ItemContext(
                     ItemType.MusicDisc_C418_blocks, 2258, "record_blocks",
-                    1, 1,
+                    1,
                     0),
                 new ItemContext(
                     ItemType.MusicDisc_C418_chirp, 2259, "record_chirp",
-                    1, 1,
+                    1,
                     0),
                 new ItemContext(
                     ItemType.MusicDisc_C418_far, 2260, "record_far",
-                    1, 1,
+                    1,
                     0),
                 new ItemContext(
                     ItemType.MusicDisc_C418_mall, 2261, "record_mall",
-                    1, 1,
+                    1,
                     0),
                 new ItemContext(
                     ItemType.MusicDisc_C418_mellohi, 2262, "record_mellohi",
-                    1, 1,
+                    1,
                     0),
                 new ItemContext(
                     ItemType.MusicDisc_C418_stal, 2263, "record_stal",
-                    1, 1,
+                    1,
                     0),
                 new ItemContext(
                     ItemType.MusicDisc_C418_strad, 2264, "record_strad",
-                    1, 1,
+                    1,
                     0),
                 new ItemContext(
                     ItemType.MusicDisc_C418_ward, 2265, "record_ward",
-                    1, 1,
+                    1,
                     0),
                 new ItemContext(
                     ItemType.MusicDisc_C418_11, 2266, "record_11",
-                    1, 1,
+                    1,
                     0),
                 new ItemContext(
                     ItemType.MusicDisc_C418_wait, 2267, "record_wait",
-                    1, 1,
+                    1,
                     0),
 
             };
@@ -367,14 +366,9 @@ namespace MinecraftServerEngine
 
         }
 
-        public static int GetMinStackCount(this ItemType item)
+        public static int GetMaxCount(this ItemType item)
         {
-            return _ITEM_TYPE_TO_CTX_MAP.Lookup(item).MinStackCount;
-        }
-
-        public static int GetMaxStackCount(this ItemType item)
-        {
-            return _ITEM_TYPE_TO_CTX_MAP.Lookup(item).MaxStackCount;
+            return _ITEM_TYPE_TO_CTX_MAP.Lookup(item).MaxCount;
         }
 
         public static int GetMetadata(this ItemType item)

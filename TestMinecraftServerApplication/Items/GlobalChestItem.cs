@@ -18,28 +18,28 @@ namespace TestMinecraftServerApplication.Items
                 $"우클릭하여 창고를 이용할 수 있습니다!",
             ]);
 
-        public static readonly int DefaultCount = Item.Type.GetMinStackCount();
+        public static readonly int DefaultCount = MinecraftServerEngine.Item.MinCount;
 
-        public static ItemStack Create(int count = 1)
-        {
-            System.Diagnostics.Debug.Assert(Name != null);
-            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(Name) == false);
-            System.Diagnostics.Debug.Assert(count >= Type.GetMinStackCount());
+        //public static ItemStack Create(int count = 1)
+        //{
+        //    System.Diagnostics.Debug.Assert(Name != null);
+        //    System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(Name) == false);
+        //    System.Diagnostics.Debug.Assert(count >= Type.GetMinStackCount());
 
-            return ItemStack.Create(Item, DefaultCount * count);
-        }
+        //    return ItemStack.Create(Item, DefaultCount * count);
+        //}
 
-        public static ItemStack CreateForShop(string[] descriptions)
-        {
-            System.Diagnostics.Debug.Assert(Name != null);
-            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(Name) == false);
-            return ItemStack.Create(
-                Item,
-                DefaultCount,
-                [
-                    ..descriptions,
-                ]);
-        }
+        //public static ItemStack CreateForShop(string[] descriptions)
+        //{
+        //    System.Diagnostics.Debug.Assert(Name != null);
+        //    System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(Name) == false);
+        //    return ItemStack.Create(
+        //        Item,
+        //        DefaultCount,
+        //        [
+        //            ..descriptions,
+        //        ]);
+        //}
 
     }
 }

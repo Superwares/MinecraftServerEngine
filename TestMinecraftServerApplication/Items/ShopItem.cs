@@ -18,16 +18,8 @@ namespace TestMinecraftServerApplication.Items
                 $"상점을 이용할 수 있습니다.",
             ]);
 
-        public static readonly int DefaultCount = Item.Type.GetMinStackCount();
+        public static readonly int DefaultCount = MinecraftServerEngine.Item.MinCount;
 
-        public static ItemStack Create()
-        {
-            System.Diagnostics.Debug.Assert(Name != null);
-            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(Name) == false);
-            System.Diagnostics.Debug.Assert(DefaultCount >= Type.GetMinStackCount());
-
-            return ItemStack.Create(Item, DefaultCount);
-        }
 
     }
 }

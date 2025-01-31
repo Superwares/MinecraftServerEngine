@@ -20,36 +20,57 @@ namespace TestMinecraftServerApplication
 
         public void ResetBalloonBasherSlot(string username)
         {
-            SetSlot(BalloonBasherSlot, BalloonBasher.CreateForShop(username));
+            SetSlot(BalloonBasherSlot, ItemStack.Create(BalloonBasher.Item, BalloonBasher.DefaultCount, [
+                    // A lightweight yet powerful weapon that can send enemies flying with a single hit.
+                    $"",
+                    $"가볍지만 강력한 무기로 ",
+                    $"한 방에 적을 날려버릴 수 있습니다.",
+                    $"",
+                    // Left-click (Purchase)
+                    $"왼클릭(구매)          {BalloonBasher.PurchasePrice} Coins",
+                    // Right-click (Sell)
+                    $"우클릭(판매)          {BalloonBasher.SellPrice} Coins",
+                    $"구매자                {username}",
+                ]));
         }
 
         public ShopInventory() : base(MaxLineCount)
         {
+            (bool, ItemStack)[] slots = new (bool, ItemStack)[GetTotalSlotCount()];
+
             // Basic items
             {
                 int offset = SlotCountPerLine * 0;
 
-                SetSlot(offset + 0, new ItemStack(
-                    ItemType.GrayStainedGlassPane, "Basic Tier", 1));
+                slots[offset + 0] = (
+                    true,
+                    new ItemStack(ItemType.GrayStainedGlassPane, "Basic Tier", 1)
+                    );
 
-                SetSlot(offset + 1, WoodenSword.CreateShopItemStack([
-                    $"",
-                    // A basic wooden sword, ideal for beginners.
-                    $"초보자에게 이상적인 기본 나무검입니다.",
-                    $"",
-                    // Left-click (Purchase)
-                    $"왼클릭(구매)          {WoodenSword.PurchasePrice} Coins",
-                    // Right-click (Sell)
-                    $"우클릭(판매)          {WoodenSword.SellPrice} Coins",
-                    ]));
+                slots[offset + 1] = (
+                    true,
+                    ItemStack.Create(WoodenSword.Item, WoodenSword.DefaultCount, [
+                        $"",
+                        // A basic wooden sword, ideal for beginners.
+                        $"초보자에게 이상적인 ",
+                        $"기본 나무검입니다.",
+                        $"",
+                        // Left-click (Purchase)
+                        $"왼클릭(구매)          {WoodenSword.PurchasePrice} Coins",
+                        // Right-click (Sell)
+                        $"우클릭(판매)          {WoodenSword.SellPrice} Coins",
+                        ])
+                    );
 
 
             }
 
             // Unique items
             {
-                SetSlot(UniqueItemLineOffset, new ItemStack(
-                    ItemType.PurpleStainedGlassPane, "Unique Tier", 1));
+                slots[UniqueItemLineOffset] = (
+                    true,
+                    new ItemStack(ItemType.PurpleStainedGlassPane, "Unique Tier", 1)
+                    );
 
                 ResetBalloonBasherSlot(null);
             }
@@ -57,33 +78,50 @@ namespace TestMinecraftServerApplication
             // Utility items
             {
                 int offset = SlotCountPerLine * 3;
-                SetSlot(offset + 0, new ItemStack(
-                    ItemType.WhiteStainedGlassPane, "Utility Tier", 1));
+                slots[offset + 0] = (
+                    true,
+                    new ItemStack(ItemType.WhiteStainedGlassPane, "Utility Tier", 1)
+                    );
 
-                SetSlot(offset + 1, StoneOfSwiftness.CreateShopItemStack([
-                    $"",
-                    // A mystical stone that grants the bearer enhanced speed and agility.
-                    $"사용자에게 향상된 속도와 민첩성을 부여하는 신비한 돌입니다.",
-                    $"",
-                    // Left-click (Purchase)
-                    $"왼클릭(구매)          {StoneOfSwiftness.PurchasePrice} Coins",
-                    // Right-click (Sell)
-                    $"우클릭(판매)          {StoneOfSwiftness.SellPrice} Coins",
-                    ]));
+                slots[offset + 1] = (
+                    true,
+                    ItemStack.Create(StoneOfSwiftness.Item, StoneOfSwiftness.DefaultCount, [
+                        $"",
+                        // A mystical stone that grants the bearer enhanced speed and agility.
+                        $"사용자에게 향상된 속도와 민첩성을 ",
+                        $"부여하는 신비한 돌입니다.",
+                        $"",
+                        // Left-click (Purchase)
+                        $"왼클릭(구매)          {StoneOfSwiftness.PurchasePrice} Coins",
+                        // Right-click (Sell)
+                        $"우클릭(판매)          {StoneOfSwiftness.SellPrice} Coins",
+                        ])
+                    );
             }
 
             // Last line
             {
                 int offset = SlotCountPerLine * (MaxLineCount - 1);
 
-                SetSlot(offset + 0, ItemStack.Create(Coin.Item, [
-                    $"",
-                    $"게임 전에만 지급받을 수 있습니다!",
-                    ]));
+                slots[offset + 0] = (
+                    true,
+                    ItemStack.Create(Coin.Item, Coin.DefaultCount, [
+                        $"",
+                        $"게임 전에만 지급받을 수 있습니다!",
+                        ])
+                    );
 
-                SetSlot(offset + 8, ItemStack.Create(ShopItem.Item));
-                SetSlot(offset + 7, ItemStack.Create(GlobalChestItem.Item));
+                slots[offset + 8] = (
+                    true,
+                    ItemStack.Create(ShopItem.Item, ShopItem.DefaultCount)
+                    );
+                slots[offset + 7] = (
+                    true,
+                    ItemStack.Create(GlobalChestItem.Item, GlobalChestItem.DefaultCount)
+                    );
             }
+
+            SetSlots(slots);
         }
 
         protected override void OnLeftClickSharedItem(

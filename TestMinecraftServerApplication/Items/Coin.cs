@@ -1,6 +1,5 @@
 ﻿using MinecraftServerEngine;
-using static System.Net.Mime.MediaTypeNames;
-
+using MinecraftPrimitives;
 
 namespace TestMinecraftServerApplication.Items
 {
@@ -16,16 +15,7 @@ namespace TestMinecraftServerApplication.Items
                 "게임의 기본 재화입니다.",
             ]);
 
-        public static readonly int DefaultCount = Item.Type.GetMinStackCount();
-
-        public static ItemStack Create()
-        {
-            System.Diagnostics.Debug.Assert(Name != null);
-            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(Name) == false);
-            System.Diagnostics.Debug.Assert(DefaultCount >= Type.GetMinStackCount());
-
-            return ItemStack.Create(Item, DefaultCount);
-        }
+        public static readonly int DefaultCount = MinecraftServerEngine.Item.MinCount;
 
     }
 

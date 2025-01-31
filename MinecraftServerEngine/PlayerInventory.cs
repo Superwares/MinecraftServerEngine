@@ -628,8 +628,8 @@ namespace MinecraftServerEngine
                 return [];
             }
 
-            System.Diagnostics.Debug.Assert(item.Type.GetMaxStackCount() > 0);
-            int minLength = (int)System.Math.Ceiling((double)count / (double)item.Type.GetMaxStackCount());
+            System.Diagnostics.Debug.Assert(item.Type.GetMaxCount() > 0);
+            int minLength = (int)System.Math.Ceiling((double)count / (double)item.Type.GetMaxCount());
             ItemStack[] itemStacks = new ItemStack[minLength];
 
             int leftCount = count;

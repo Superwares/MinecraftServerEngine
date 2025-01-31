@@ -159,7 +159,7 @@ namespace TestMinecraftServerApplication
                 minPlayers, maxPlayers,
                 currentPlayers));
 
-            slots[ShopItemSlot] = (true, ShopItem.Create());
+            slots[ShopItemSlot] = (true, ItemStack.Create(ShopItem.Item, ShopItem.DefaultCount));
 
             System.Diagnostics.Debug.Assert(maxRounds % SlotCountPerLine == 0);
             for (int i = 0; i < maxRounds; ++i)

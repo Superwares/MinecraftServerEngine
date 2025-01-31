@@ -18,15 +18,7 @@ namespace TestMinecraftServerApplication.Items
                 $"게임의 자세한 정보를 확인할 수 있습니다!",
             ]);
 
-        public static readonly int DefaultCount = Item.Type.GetMinStackCount();
+        public static readonly int DefaultCount = MinecraftServerEngine.Item.MinCount;
 
-        public static ItemStack Create()
-        {
-            System.Diagnostics.Debug.Assert(Name != null);
-            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(Name) == false);
-            System.Diagnostics.Debug.Assert(DefaultCount >= Type.GetMinStackCount());
-
-            return ItemStack.Create(Item, DefaultCount);
-        }
     }
 }

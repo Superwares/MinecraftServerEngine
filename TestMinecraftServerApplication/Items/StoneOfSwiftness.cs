@@ -25,23 +25,7 @@ namespace TestMinecraftServerApplication.Items
                 $"Duration        {(double)Duration.Amount/(double)Time.FromSeconds(1).Amount}s",
             ]);
 
-        public static readonly int DefaultCount = Item.Type.GetMinStackCount();
+        public static readonly int DefaultCount = MinecraftServerEngine.Item.MinCount;
 
-        public static ItemStack Create()
-        {
-            System.Diagnostics.Debug.Assert(Duration >= Time.Zero);
-            return ItemStack.Create(Item, DefaultCount);
-        }
-
-        public static ItemStack CreateShopItemStack(string[] descriptions)
-        {
-            System.Diagnostics.Debug.Assert(Duration >= Time.Zero);
-            return ItemStack.Create(
-                Item,
-                DefaultCount,
-                [
-                    ..descriptions,
-                ]);
-        }
     }
 }
