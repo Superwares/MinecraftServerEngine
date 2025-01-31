@@ -61,13 +61,23 @@ namespace MinecraftServerEngine
         NoteBlock,        // 25:0
 
 
-        StickyPiston,     // 29:0
+        BottomStickyPiston,     // 29:0
+        TopStickyPiston,        // 29:1
+        NorthStickyPiston,      // 29:2
+        SouthStickyPiston,      // 29:3
+        WestStickyPiston,       // 29:4
+        EastStickyPiston,       // 29:5
 
         DeadShrub,        // 31:0
         Grass,            // 31:1
         Fern,             // 31:2
         DeadBush,         // 32:0
-        Piston,           // 33:0
+        BottomPiston,     // 33:0
+        TopPiston,        // 33:1
+        NorthPiston,      // 33:2
+        SouthPiston,      // 33:3
+        WestPiston,       // 33:4
+        EastPiston,       // 33:5
 
         WhiteWool,        // 35:0
         OrangeWool,       // 35:1
@@ -198,6 +208,9 @@ namespace MinecraftServerEngine
         IronBars,                         // 101:0
         GlassPane,                        // 102:0
         MelonBlock,                       // 103:0
+
+        InactiveRedstoneLamp,     // 123:0
+        ActiveRedstoneLamp,       // 124:0
 
 
         DoubleOakWoodSlab,              // 125:0

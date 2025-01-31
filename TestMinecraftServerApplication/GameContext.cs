@@ -572,6 +572,7 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_ready == true);
                 System.Diagnostics.Debug.Assert(_started == true);
                 _started = false;
+                _ready = false;
 
                 _seekerDeath = false;
 

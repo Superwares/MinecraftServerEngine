@@ -45,7 +45,7 @@ namespace MinecraftServerEngine
 
         static ItemExtensions()
         {
-            ItemContext[] list =
+            ItemContext[] _map =
             {
                 new ItemContext(
                     ItemType.WhiteWool, 35, "wool",
@@ -343,7 +343,7 @@ namespace MinecraftServerEngine
 
             };
 
-            foreach (ItemContext ctx in list)
+            foreach (ItemContext ctx in _map)
             {
                 _ITEM_TYPE_ENUM_TO_CTX_MAP.Insert(ctx.Type, ctx);
             }

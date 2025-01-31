@@ -102,6 +102,27 @@ namespace TestMinecraftServerApplication
 
         }
 
+        private void HideBlock(SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            BlockLocation blockLoc = BlockLocation.Generate(Position);
+            BlockLocation belowBlockLoc = new(blockLoc.X, blockLoc.Y - 1, blockLoc.Z);
+
+            System.Diagnostics.Debug.Assert(world.BlockContext != null);
+            Block block = world.BlockContext.GetBlock(blockLoc);
+            Block belowBlock = world.BlockContext.GetBlock(belowBlockLoc);
+
+            if (block == Block.Air && belowBlock != Block.Air)
+            {
+                ApplyBlockAppearance(belowBlock);
+            }
+            else
+            {
+                ResetBlockAppearance();
+            }
+        }
+
         protected override void OnMove(PhysicsWorld _world)
         {
             System.Diagnostics.Debug.Assert(_world != null);
@@ -113,69 +134,50 @@ namespace TestMinecraftServerApplication
             {
                 if (Sneaking == true)
                 {
-                    BlockLocation _belowBlockLoc = BlockLocation.Generate(Position);
-                    BlockLocation belowBlockLoc = new(_belowBlockLoc.X, _belowBlockLoc.Y - 1, _belowBlockLoc.Z);
-                    Block belowBlock = world.BlockContext.GetBlock(belowBlockLoc);
-
-                    if (belowBlock != Block.Air)
-                    {
-                        ApplyBlockAppearance(belowBlock);
-                    }
-                    else
-                    {
-                        ResetBlockAppearance();
-                    }
+                    HideBlock(world);
                 }
             }
 
 
         }
 
-        protected override void OnSneak(World world, bool f)
+        protected override void OnSneak(World _world, bool f)
         {
-            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(_world != null);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            if (f == true)
+            if (_world is SuperWorld world)
             {
-                BlockLocation _belowBlockLoc = BlockLocation.Generate(Position);
-                BlockLocation belowBlockLoc = new(_belowBlockLoc.X, _belowBlockLoc.Y - 1, _belowBlockLoc.Z);
-                Block belowBlock = world.BlockContext.GetBlock(belowBlockLoc);
-
-                if (belowBlock != Block.Air)
+                if (f == true)
                 {
-                    ApplyBlockAppearance(belowBlock);
+                    HideBlock(world);
+
+                    //OpenInventory(chestInventory);
+                    //OpenInventory(ShopInventory);
+                    //OpenInventory(GameContext.Inventory);
+
+                    //SetExperience(0.6F, 123456789);
+
+                    //EmitParticles(Particle.Cloud, 1.0F, 100);
+                    //EmitParticles(Particle.Largeexplode, 1.0F, 1);
+
+                    //AddEffect(1, 1, 1800, 2);
+
+                    //world.DisplayTitle(
+                    //    Time.FromSeconds(0), Time.FromSeconds(1), Time.FromSeconds(0),
+                    //    new TextComponent("good", TextColor.Blue));
+
+                    //ApplyBilndness(true);
+
+                    //world.ChangeWorldBorderSize(5.0, Time.FromSeconds(1));
                 }
                 else
                 {
                     ResetBlockAppearance();
+
+                    //ApplyBilndness(false);
                 }
-
-                //OpenInventory(chestInventory);
-                //OpenInventory(ShopInventory);
-                //OpenInventory(GameContext.Inventory);
-
-                //SetExperience(0.6F, 123456789);
-
-                //EmitParticles(Particle.Cloud, 1.0F, 100);
-                //EmitParticles(Particle.Largeexplode, 1.0F, 1);
-
-                //AddEffect(1, 1, 1800, 2);
-
-                //world.DisplayTitle(
-                //    Time.FromSeconds(0), Time.FromSeconds(1), Time.FromSeconds(0),
-                //    new TextComponent("good", TextColor.Blue));
-
-                //ApplyBilndness(true);
-
-                //world.ChangeWorldBorderSize(5.0, Time.FromSeconds(1));
-            }
-            else
-            {
-                ResetBlockAppearance();
-
-                //ApplyBilndness(false);
             }
         }
 
