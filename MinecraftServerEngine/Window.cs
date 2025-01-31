@@ -405,26 +405,28 @@ namespace MinecraftServerEngine
                 return true;
             }
 
+            System.Diagnostics.Debug.Assert(_Locker != null);
             _Locker.Hold();
             if (_sharedInventory != null)
             {
+                System.Diagnostics.Debug.Assert(_sharedInventory.Locker != null);
                 _sharedInventory.Locker.Hold();
             }
 
             try
             {
-                bool f = playerInventory.GiveItemStacks(item, count);
-
-                _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
-
-                return f;
+                return playerInventory.GiveItemStacks(item, count);
             }
             finally
             {
+                _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
+
                 if (_sharedInventory != null)
                 {
+                    System.Diagnostics.Debug.Assert(_sharedInventory.Locker != null);
                     _sharedInventory.Locker.Release();
                 }
+                System.Diagnostics.Debug.Assert(_Locker != null);
                 _Locker.Release();
             }
         }
@@ -449,13 +451,11 @@ namespace MinecraftServerEngine
             try
             {
                 playerInventory.GiveItemStack(ref itemStack);
-
-                _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
-
-                return;
             }
             finally
             {
+                _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
+
                 if (_sharedInventory != null)
                 {
                     _sharedInventory.Locker.Release();
@@ -464,11 +464,58 @@ namespace MinecraftServerEngine
             }
         }
 
-        internal ItemStack[] TakeItemStacks(PlayerInventory playerInventory, IReadOnlyItem item, int count)
+        internal ItemStack[] TakeItemStacks(
+            PlayerInventory playerInventory,
+            IReadOnlyItem item, int count)
         {
             System.Diagnostics.Debug.Assert(playerInventory != null);
             System.Diagnostics.Debug.Assert(item != null);
             System.Diagnostics.Debug.Assert(count >= 0);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (count == 0)
+            {
+                return [];
+            }
+
+            System.Diagnostics.Debug.Assert(_Locker != null);
+            _Locker.Hold();
+            if (_sharedInventory != null)
+            {
+                System.Diagnostics.Debug.Assert(_sharedInventory.Locker != null);
+                _sharedInventory.Locker.Hold();
+            }
+
+            try
+            {
+                return playerInventory.TakeItemStacks(item, count);
+            }
+            finally
+            {
+                _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
+
+                if (_sharedInventory != null)
+                {
+                    System.Diagnostics.Debug.Assert(_sharedInventory.Locker != null);
+                    _sharedInventory.Locker.Release();
+                }
+                System.Diagnostics.Debug.Assert(_Locker != null);
+                _Locker.Release();
+            }
+        }
+
+        internal ItemStack[] GiveAndTakeItemStacks(
+            PlayerInventory playerInventory,
+            IReadOnlyItem giveItem, int giveCount,
+            IReadOnlyItem takeItem, int takeCount)
+        {
+            System.Diagnostics.Debug.Assert(playerInventory != null);
+
+            System.Diagnostics.Debug.Assert(giveItem != null);
+            System.Diagnostics.Debug.Assert(giveCount >= 0);
+            System.Diagnostics.Debug.Assert(takeItem != null);
+            System.Diagnostics.Debug.Assert(takeCount >= 0);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
@@ -482,19 +529,13 @@ namespace MinecraftServerEngine
 
             try
             {
-                if (count == 0)
-                {
-                    return [];
-                }
-
-                ItemStack[] takedItemStacks = playerInventory.TakeItemStacks(item, count);
-
-                _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
-
-                return takedItemStacks;
+                return playerInventory.GiveAndTakeItemStacks(
+                    giveItem, giveCount, takeItem, takeCount);
             }
             finally
             {
+                _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
+
                 if (_sharedInventory != null)
                 {
                     System.Diagnostics.Debug.Assert(_sharedInventory.Locker != null);
@@ -504,7 +545,6 @@ namespace MinecraftServerEngine
                 _Locker.Release();
             }
         }
-
 
         internal void FlushItems(PlayerInventory playerInventory)
         {

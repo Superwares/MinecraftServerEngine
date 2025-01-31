@@ -749,6 +749,62 @@ namespace MinecraftServerEngine
 
         }
 
+        public ItemStack[] GiveAndTakeItemStacks(
+            IReadOnlyItem giveItem, int giveCount,
+            IReadOnlyItem takeItem, int takeCount)
+        {
+            if (giveItem == null)
+            {
+                throw new System.ArgumentNullException(nameof(giveItem));
+            }
+
+            if (giveCount < 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(giveCount));
+            }
+
+            if (takeItem == null)
+            {
+                throw new System.ArgumentNullException(nameof(takeItem));
+            }
+
+            if (takeCount < 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(takeCount));
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            InventoryLocker.Hold();
+
+            try
+            {
+
+
+                if (Conn != null)
+                {
+                    return Conn.Window.GiveAndTakeItemStacks(Inventory,
+                        giveItem, giveCount, takeItem, takeCount);
+                }
+                else
+                {
+                    return Inventory.GiveAndTakeItemStacks(
+                        giveItem, giveCount, takeItem, takeCount);
+                }
+            }
+            finally
+            {
+                InventoryLocker.Release();
+            }
+
+        }
+
+
         public void FlushItems()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
