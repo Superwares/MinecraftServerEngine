@@ -1753,19 +1753,30 @@ namespace MinecraftServerEngine
             {
                 if (_LoginSuccessPacket != null)
                 {
-                    SendPacket(buffer, _LoginSuccessPacket);
+                    try
+                    {
+                        SendPacket(buffer, _LoginSuccessPacket);
+                    }
+                    finally
+                    {
+                        _LoginSuccessPacket = null;
+                    }
 
-                    _LoginSuccessPacket = null;
                 }
 
                 if (_JoinGamePacket != null)
                 {
+                    try
+                    {
+                        // The difficulty must be normal,
+                        // because the hunger bar increases on its own in easy difficulty.
+                        SendPacket(buffer, _JoinGamePacket);
+                    }
+                    finally
+                    {
+                        _JoinGamePacket = null;
+                    }
 
-                    // The difficulty must be normal,
-                    // because the hunger bar increases on its own in easy difficulty.
-                    SendPacket(buffer, _JoinGamePacket);
-
-                    _JoinGamePacket = null;
                 }
 
                 System.Diagnostics.Debug.Assert(_JoinGamePacket == null);
