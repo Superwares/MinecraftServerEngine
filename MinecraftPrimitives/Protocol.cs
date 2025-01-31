@@ -627,6 +627,16 @@ namespace MinecraftPrimitives
 
     public sealed class ClientListener : System.IDisposable
     {
+        private enum VisitorLevel : int
+        {
+            Handshake,
+            Request,
+            Response,
+            Ping,
+            Pong,
+            StartLogin,
+        }
+
         private static readonly System.TimeSpan PendingTimeout = System.TimeSpan.FromSeconds(1);
 
         private bool _disposed = false;
@@ -644,7 +654,7 @@ namespace MinecraftPrimitives
          * 2: Ping
          * 3: Start Login
          */
-        private readonly Queue<int> LevelQueue;  // Disposable
+        private readonly Queue<VisitorLevel> LevelQueue;  // Disposable
 
 
         public ClientListener(IConnectionListener connListener, ushort port)
@@ -675,16 +685,15 @@ namespace MinecraftPrimitives
                 close = success = false;
 
                 MinecraftClient client = Visitors.Dequeue();
-                int level = LevelQueue.Dequeue();
+                VisitorLevel level = LevelQueue.Dequeue();
 
                 /*Console.WriteLine($"count: {count}, level: {level}");*/
 
-                System.Diagnostics.Debug.Assert(level >= 0);
                 using MinecraftProtocolDataStream buffer = new();
 
                 try
                 {
-                    if (level == 0)
+                    if (level == VisitorLevel.Handshake)
                     {
                         /*Console.WriteLine("Handshake!");*/
                         client.Recv(buffer);
@@ -707,16 +716,16 @@ namespace MinecraftPrimitives
                             default:
                                 throw new InvalidEncodingException();
                             case Packet.States.Status:
-                                level = 1;
+                                level = VisitorLevel.Request;
                                 break;
                             case Packet.States.Login:
-                                level = 3;
+                                level = VisitorLevel.StartLogin;
                                 break;
                         }
 
                     }
 
-                    if (level == 1)  // Request
+                    if (level == VisitorLevel.Request)  // Request
                     {
                         /*Console.WriteLine("Request!");*/
                         client.Recv(buffer);
@@ -738,20 +747,20 @@ namespace MinecraftPrimitives
                         ResponsePacket responsePacket = new(100, 10, "Hello, World!");
                         responsePacket.Write(buffer);
 
-                        level = 4;
+                        level = VisitorLevel.Response;
                         client.Send(buffer);
 
-                        level = 2;
+                        level = VisitorLevel.Ping;
                     }
 
-                    if (level == 4)
+                    if (level == VisitorLevel.Response)
                     {
                         client.Send(buffer);
 
-                        level = 2;
+                        level = VisitorLevel.Ping;
                     }
 
-                    if (level == 2)  // Ping
+                    if (level == VisitorLevel.Ping)  // Ping
                     {
                         /*Console.WriteLine("Ping!");*/
                         client.Recv(buffer);
@@ -772,11 +781,16 @@ namespace MinecraftPrimitives
                         PongPacket outPacket = new(inPacket.Payload);
                         outPacket.Write(buffer);
 
-                        level = 5;
+                        level = VisitorLevel.Pong;
                         client.Send(buffer);
                     }
 
-                    if (level == 3)  // Start Login
+                    if (level == VisitorLevel.Pong)
+                    {
+                        client.Send(buffer);
+                    }
+
+                    if (level == VisitorLevel.StartLogin)  // Start Login
                     {
                         client.Recv(buffer);
 
@@ -887,11 +901,7 @@ namespace MinecraftPrimitives
 
                         success = true;
                     }
-
-                    if (level == 5)
-                    {
-                        client.Send(buffer);
-                    }
+                 
 
                     System.Diagnostics.Debug.Assert(buffer.Size == 0);
 
@@ -916,7 +926,7 @@ namespace MinecraftPrimitives
 
                     buffer.Flush();
 
-                    if (level >= 3)  // >= Start Login level
+                    if (level >= VisitorLevel.StartLogin)  // >= Start Login level
                     {
                         System.Diagnostics.Debug.Assert(false);
                         // TODO: Handle send Disconnect packet with reason.
@@ -978,7 +988,7 @@ namespace MinecraftPrimitives
                 {
                     MinecraftClient client = MinecraftClient.Accept(Socket);
                     Visitors.Enqueue(client);
-                    LevelQueue.Enqueue(0);
+                    LevelQueue.Enqueue(VisitorLevel.Handshake);
 
                     SocketMethods.SetBlocking(Socket, false);
                 }
