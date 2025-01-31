@@ -1416,6 +1416,8 @@ namespace MinecraftServerEngine
 
             bool tryAgain;
 
+            int hit = 0;
+
             do
             {
                 tryAgain = false;
@@ -1439,7 +1441,9 @@ namespace MinecraftServerEngine
                     tryAgain = true;
                 }
 
-            } while (tryAgain);
+                System.Diagnostics.Debug.Assert(hit++ < 100);
+
+            } while (tryAgain == true);
 
             System.Diagnostics.Debug.Assert(buffer.Empty);
         }
@@ -1735,7 +1739,7 @@ namespace MinecraftServerEngine
 
                 LoadWorld(idEntitySelf, world, p, blindness);
 
-                while (!LoadChunkPackets.Empty)
+                while (LoadChunkPackets.Empty == false)
                 {
                     LoadChunkPacket packet = LoadChunkPackets.Dequeue();
                     SendPacket(buffer, packet);
@@ -1744,7 +1748,7 @@ namespace MinecraftServerEngine
                 }
 
                 /*Console.Printl($"Packets Length: {OutPackets.Count}");*/
-                while (!OutPackets.Empty)
+                while (OutPackets.Empty == false)
                 {
                     ClientboundPlayingPacket packet = OutPackets.Dequeue();
                     System.Diagnostics.Debug.Assert(packet != null);

@@ -1,7 +1,7 @@
 ﻿
 using Common;
 using Containers;
-using System.Xml.Linq;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 namespace MinecraftPrimitives
@@ -89,45 +89,66 @@ namespace MinecraftPrimitives
         /// <exception cref="TryAgainException"></exception>
         public static int RecvBytes(
             System.Net.Sockets.Socket socket,
-            byte[] buffer, int offset, int size)
+            byte[] data, int offset, int size)
         {
             System.Diagnostics.Debug.Assert(socket != null);
 
-            System.Diagnostics.Debug.Assert(buffer != null);
+            if (data == null || data.Length == 0)
+            {
+                System.Diagnostics.Debug.Assert(offset == 0);
+                System.Diagnostics.Debug.Assert(size == 0);
+                return 0;
+            }
 
-            System.Diagnostics.Debug.Assert(offset <= buffer.Length);
+            System.Diagnostics.Debug.Assert(offset <= data.Length);
+            System.Diagnostics.Debug.Assert(offset >= 0);
+            System.Diagnostics.Debug.Assert(offset + size <= data.Length);
+            System.Diagnostics.Debug.Assert(size >= 0);
+            if (size == 0)
+            {
+                return 0;
+            }
+
+            System.Diagnostics.Debug.Assert(data != null);
+            System.Diagnostics.Debug.Assert(data.Length > 0);
+
+            System.Diagnostics.Debug.Assert(offset <= data.Length);
             System.Diagnostics.Debug.Assert(offset >= 0);
 
-            System.Diagnostics.Debug.Assert(offset + size == buffer.Length);
+            System.Diagnostics.Debug.Assert(offset + size <= data.Length);
             System.Diagnostics.Debug.Assert(size >= 0);
 
             try
             {
-                int n = socket.Receive(buffer, offset, size, System.Net.Sockets.SocketFlags.None);
+                int n = socket.Receive(data, offset, size, System.Net.Sockets.SocketFlags.None);
                 if (n == 0)
                 {
                     throw new DisconnectedClientException();
                 }
 
-                System.Diagnostics.Debug.Assert(n <= size);
 
+                System.Diagnostics.Debug.Assert(n <= size);
                 return n;
             }
             catch (System.Net.Sockets.SocketException e)
+            when (e.SocketErrorCode == System.Net.Sockets.SocketError.WouldBlock)
             {
-                if (e.SocketErrorCode == System.Net.Sockets.SocketError.WouldBlock)
-                {
-                    throw new TryAgainException();
-                }
-                if (e.SocketErrorCode == System.Net.Sockets.SocketError.ConnectionAborted)
-                {
-                    throw new DisconnectedClientException();
-                }
-                if (e.SocketErrorCode == System.Net.Sockets.SocketError.ConnectionReset)
-                {
-                    throw new DisconnectedClientException();
-                }
-
+                //throw new TryAgainException();
+                System.Diagnostics.Debug.Assert(size == 1);
+                return 0;
+            }
+            catch (System.Net.Sockets.SocketException e)
+            when (e.SocketErrorCode == System.Net.Sockets.SocketError.ConnectionAborted)
+            {
+                throw new DisconnectedClientException();
+            }
+            catch (System.Net.Sockets.SocketException e)
+            when (e.SocketErrorCode == System.Net.Sockets.SocketError.ConnectionReset)
+            {
+                throw new DisconnectedClientException();
+            }
+            catch (System.Net.Sockets.SocketException)
+            {
                 throw;
             }
 
@@ -135,47 +156,70 @@ namespace MinecraftPrimitives
 
         /// <exception cref="DisconnectedClientException"></exception>
         /// <exception cref="TryAgainException"></exception>
-        public static byte RecvByte(System.Net.Sockets.Socket socket)
-        {
-            System.Diagnostics.Debug.Assert(socket != null);
+        //public static byte RecvByte(System.Net.Sockets.Socket socket)
+        //{
+        //    System.Diagnostics.Debug.Assert(socket != null);
 
-            byte[] buffer = new byte[1];
+        //    byte[] buffer = new byte[1];
 
-            int n = RecvBytes(socket, buffer, 0, 1);
-            System.Diagnostics.Debug.Assert(n == 1);
+        //    int n = RecvBytes(socket, buffer, 0, 1);
+        //    System.Diagnostics.Debug.Assert(n == 1);
 
-            return buffer[0];
-        }
+        //    return buffer[0];
+        //}
 
         /// <exception cref="DisconnectedClientException"></exception>
         /// <exception cref="TryAgainException"></exception>
-        public static void SendBytes(System.Net.Sockets.Socket socket, byte[] data)
+        public static int SendBytes(
+            System.Net.Sockets.Socket socket,
+            byte[] data, int offset, int size)
         {
             System.Diagnostics.Debug.Assert(socket != null);
+
+            if (data == null || data.Length == 0)
+            {
+                System.Diagnostics.Debug.Assert(offset == 0);
+                System.Diagnostics.Debug.Assert(size == 0);
+                return 0;
+            }
+
             System.Diagnostics.Debug.Assert(data != null);
+
+            System.Diagnostics.Debug.Assert(offset <= data.Length);
+            System.Diagnostics.Debug.Assert(offset >= 0);
+
+            System.Diagnostics.Debug.Assert(offset + size == data.Length);
+            System.Diagnostics.Debug.Assert(size >= 0);
 
             try
             {
                 System.Diagnostics.Debug.Assert(data != null);
-                int n = socket.Send(data);
+                int n = socket.Send(data, offset, size, System.Net.Sockets.SocketFlags.None);
+
                 System.Diagnostics.Debug.Assert(n >= 0);
                 System.Diagnostics.Debug.Assert(n == data.Length);
+                return n;
             }
             catch (System.Net.Sockets.SocketException e)
+            when (e.SocketErrorCode == System.Net.Sockets.SocketError.WouldBlock)
             {
-                if (e.SocketErrorCode == System.Net.Sockets.SocketError.WouldBlock)
-                {
-                    throw new TryAgainException();
-                }
-                if (e.SocketErrorCode == System.Net.Sockets.SocketError.ConnectionAborted)
-                {
-                    throw new DisconnectedClientException();
-                }
-                if (e.SocketErrorCode == System.Net.Sockets.SocketError.ConnectionReset)
-                {
-                    throw new DisconnectedClientException();
-                }
-
+                //throw new TryAgainException();
+                System.Diagnostics.Debug.Assert(data != null);
+                System.Diagnostics.Debug.Assert(data.Length == 1);
+                return 0;
+            }
+            catch (System.Net.Sockets.SocketException e)
+            when (e.SocketErrorCode == System.Net.Sockets.SocketError.ConnectionAborted)
+            {
+                throw new DisconnectedClientException();
+            }
+            catch (System.Net.Sockets.SocketException e)
+            when (e.SocketErrorCode == System.Net.Sockets.SocketError.ConnectionReset)
+            {
+                throw new DisconnectedClientException();
+            }
+            catch (System.Net.Sockets.SocketException)
+            {
                 throw;
             }
 
@@ -183,12 +227,12 @@ namespace MinecraftPrimitives
 
         /// <exception cref="DisconnectedClientException"></exception>
         /// <exception cref="TryAgainException"></exception>
-        public static void SendByte(System.Net.Sockets.Socket socket, byte v)
-        {
-            System.Diagnostics.Debug.Assert(socket != null);
+        //public static int SendByte(System.Net.Sockets.Socket socket, byte v)
+        //{
+        //    System.Diagnostics.Debug.Assert(socket != null);
 
-            SendBytes(socket, [v]);
-        }
+        //    return SendBytes(socket, [v]);
+        //}
 
     }
 
@@ -197,13 +241,16 @@ namespace MinecraftPrimitives
         private bool _disposed = false;
 
         private const int Timeout = 100;
-        private int _tryAgainCount = 0;
+        private int _tryAgainHitCount = 0;
 
         private const byte SegmentBits = 0x7F;
         private const byte ContinueBit = 0x80;
 
-        private int _x = 0, _y = 0;
-        private byte[] _data = null;
+        private int _sizeRecv = 0, _offsetRecv = 0;
+        private byte[] _dataRecv = null;
+
+        private int _presizeSend = 0, _sizeSend = 0, _offsetSend = 0;
+        private byte[] _dataSend = null;
 
         private readonly System.Net.Sockets.Socket Socket;
 
@@ -229,7 +276,13 @@ namespace MinecraftPrimitives
             Socket = socket;
         }
 
-        ~MinecraftClient() => System.Diagnostics.Debug.Assert(false);
+        ~MinecraftClient()
+        {
+            System.Diagnostics.Debug.Assert(false);
+
+            //Dispose(false);
+        }
+
 
 
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
@@ -241,67 +294,88 @@ namespace MinecraftPrimitives
 
             System.Diagnostics.Debug.Assert(SocketMethods.IsBlocking(Socket) == false);
 
-            int size = _x;
-            int position = _y;
-            System.Diagnostics.Debug.Assert(size >= 0);
-            System.Diagnostics.Debug.Assert(position >= 0);
+            System.Diagnostics.Debug.Assert(_sizeRecv >= 0);
+            System.Diagnostics.Debug.Assert(_offsetRecv >= 0);
 
-            try
+            byte v;
+            int n;
+            byte[] data = new byte[1];
+
+            while (true)
             {
-                while (true)
+                n = SocketMethods.RecvBytes(Socket, data, 0, 1);
+                System.Diagnostics.Debug.Assert(n <= 1);
+
+                if (n == 0)
                 {
-                    byte v = SocketMethods.RecvByte(Socket);
-
-                    size |= (v & SegmentBits) << position;
-                    if ((v & ContinueBit) == 0)
-                    {
-                        break;
-                    }
-
-                    position += 7;
-
-                    if (position >= 32)
-                    {
-                        throw new InvalidEncodingException();
-                    }
-
-                    System.Diagnostics.Debug.Assert(position > 0);
+                    throw new TryAgainException();
                 }
 
-            }
-            finally
-            {
-                _x = size;
-                _y = position;
-                System.Diagnostics.Debug.Assert(_data == null);
+                v = data[0];  // TODO: Refactoring: only using byte v and its pointer to pass to the RecvBytes by array...
+
+                _sizeRecv |= (v & SegmentBits) << _offsetRecv;
+                if ((v & ContinueBit) == 0)
+                {
+                    break;
+                }
+
+                _offsetRecv += 7;
+
+                if (_offsetRecv >= 32)
+                {
+                    throw new InvalidEncodingException();
+                }
+
+                System.Diagnostics.Debug.Assert(_offsetRecv > 0);
             }
 
-            return size;
+
+            return _sizeRecv;
         }
 
         /// <exception cref="DisconnectedClientException"></exception>
         /// <exception cref="TryAgainException"></exception>
         private void SendSize(int size)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _presizeSend = size;
+
+            byte value;
+            int n;
 
             while (true)
             {
-                if ((size & ~SegmentBits) == 0)
+                if ((_presizeSend & ~SegmentBits) == 0)
                 {
-                    System.Diagnostics.Debug.Assert(size <= 0b_00000000_00000000_00000000_11111111);
-                    SocketMethods.SendByte(Socket, (byte)size);
+                    value = (byte)(_presizeSend & SegmentBits);
+                    n = SocketMethods.SendBytes(Socket, [value], 0, 1);
+
+                    System.Diagnostics.Debug.Assert(n <= 1);
+                    if (n == 0)
+                    {
+                        throw new TryAgainException();
+                    }
+
                     break;
                 }
 
-                int v = (size & SegmentBits) | ContinueBit;
-                System.Diagnostics.Debug.Assert(v <= 0b_00000000_00000000_00000000_11111111);
-                System.Diagnostics.Debug.Assert(((uint)255 ^ (byte)0b_11111111U) == 0);
-                SocketMethods.SendByte(Socket, (byte)v);
+                value = (byte)((_presizeSend & SegmentBits) | ContinueBit);
+                System.Diagnostics.Debug.Assert(((uint)255 ^ (byte)0b_11111111U) == 0);  // TODO: ?
 
-                size >>= 7;
+                n = SocketMethods.SendBytes(Socket, [value], 0, 1);
+
+                System.Diagnostics.Debug.Assert(n <= 1);
+                if (n == 0)
+                {
+                    throw new TryAgainException();
+                }
+
+                _presizeSend >>= 7;
             }
 
+            System.Diagnostics.Debug.Assert(_presizeSend >= 0);
+            _presizeSend = 0;
         }
 
         /// <exception cref="UnexpectedClientBehaviorExecption"></exception>
@@ -315,51 +389,47 @@ namespace MinecraftPrimitives
 
             try
             {
-                if (_data == null)
+                if (_dataRecv == null)
                 {
-                    int size = RecvSize();
-                    _x = size;
-                    _y = 0;
+                    _sizeRecv = RecvSize();
+                    _offsetRecv = 0;
 
-                    if (size == 0) return;
+                    if (_sizeRecv == 0)
+                    {
+                        return;
+                    }
 
-                    System.Diagnostics.Debug.Assert(_data == null);
-                    System.Diagnostics.Debug.Assert(size > 0);
-                    _data = new byte[size];
+                    System.Diagnostics.Debug.Assert(_dataRecv == null);
+                    System.Diagnostics.Debug.Assert(_sizeRecv > 0);
+
+                    // TODO: Pooling: Instead of dynamically allocating new memory, pre-allocate a fixed amount and reuse it.
+                    _dataRecv = new byte[_sizeRecv];
+
                 }
 
-                int availSize = _x, offset = _y;
+                int n = SocketMethods.RecvBytes(Socket, _dataRecv, _offsetRecv, _sizeRecv);
+                System.Diagnostics.Debug.Assert(n <= _sizeRecv);
 
-                do
+                if (n < _sizeRecv)
                 {
-                    try
-                    {
-                        int n = SocketMethods.RecvBytes(Socket, _data, offset, availSize);
-                        System.Diagnostics.Debug.Assert(n <= availSize);
+                    _sizeRecv -= n;
+                    _offsetRecv += n;
 
-                        availSize -= n;
-                        offset += n;
-                    }
-                    finally
-                    {
-                        _x = availSize;
-                        _y = offset;
-                    }
+                    throw new TryAgainException();
+                }
 
-                } while (availSize > 0);
+                buffer.WriteData(_dataRecv);
 
-                buffer.WriteData(_data);
+                _sizeRecv = 0;
+                _offsetRecv = 0;
+                _dataRecv = null;
 
-                _x = 0;
-                _y = 0;
-                _data = null;
-
-                _tryAgainCount = 0;
+                _tryAgainHitCount = 0;
             }
             catch (TryAgainException)
             {
-                /*Console.WriteLine($"count: {_count}");*/
-                if (Timeout < _tryAgainCount++)
+                /*Console.WriteLine($"_tryAgainHitCount: {_tryAgainHitCount}");*/
+                if (Timeout < ++_tryAgainHitCount)
                 {
                     throw new DataRecvTimeoutException();
                 }
@@ -375,9 +445,96 @@ namespace MinecraftPrimitives
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            byte[] data = buffer.ReadData();
-            SendSize(data.Length);
-            SocketMethods.SendBytes(Socket, data);
+            int n;
+
+            try
+            {
+                if (_dataSend != null)
+                {
+                    if (_dataSend.Length > 0)
+                    {
+                        System.Diagnostics.Debug.Assert(_presizeSend >= 0);
+                        if (_presizeSend > 0)
+                        {
+                            SendSize(_presizeSend);
+
+                            System.Diagnostics.Debug.Assert(_presizeSend == 0);
+                            System.Diagnostics.Debug.Assert(_sizeSend == _dataSend.Length);
+                            System.Diagnostics.Debug.Assert(_offsetSend == 0);
+                        }
+
+                        n = SocketMethods.SendBytes(Socket, _dataSend, _offsetSend, _sizeSend);
+
+                        if (n < _sizeSend)
+                        {
+                            _sizeSend -= n;
+                            _offsetSend += n;
+
+                            throw new TryAgainException();
+                        }
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.Assert(_presizeSend == 0);
+                        System.Diagnostics.Debug.Assert(_sizeSend == 0);
+                        System.Diagnostics.Debug.Assert(_offsetSend == 0);
+                        _dataSend = null;
+                    }
+
+
+
+
+                }
+
+                _dataSend = buffer.ReadData();
+
+                System.Diagnostics.Debug.Assert(_dataSend != null);
+                if (_dataSend.Length == 0)
+                {
+                    _presizeSend = 0;
+                    _sizeSend = 0;
+                    _offsetSend = 0;
+                    _dataSend = null;
+
+                    return;
+                }
+
+                _sizeSend = _dataSend.Length;
+                _offsetSend = 0;
+
+                SendSize(_dataSend.Length);
+
+                System.Diagnostics.Debug.Assert(_presizeSend == 0);
+
+                n = SocketMethods.SendBytes(Socket, _dataSend, 0, _sizeSend);
+
+                System.Diagnostics.Debug.Assert(n <= _sizeSend);
+                if (n < _sizeSend)
+                {
+                    System.Diagnostics.Debug.Assert(_presizeSend == 0);
+                    _sizeSend -= n;
+                    _offsetSend += n;
+
+                    throw new TryAgainException();
+                }
+
+                _presizeSend = 0;
+                _sizeSend = 0;
+                _offsetSend = 0;
+                _dataSend = null;
+
+                _tryAgainHitCount = 0;
+            }
+            catch (TryAgainException)
+            {
+                /*Console.WriteLine($"_tryAgainHitCount: {_tryAgainHitCount}");*/
+                if (Timeout < ++_tryAgainHitCount)
+                {
+                    throw new DataRecvTimeoutException();
+                }
+
+                throw;
+            }
         }
 
         public void Dispose()
@@ -387,7 +544,7 @@ namespace MinecraftPrimitives
 
             // Release resources.
             Socket.Dispose();
-            _data = null;
+            _dataRecv = null;
 
             // Finish.
             System.GC.SuppressFinalize(this);
@@ -567,6 +724,8 @@ namespace MinecraftPrimitives
                         // TODO
                         ResponsePacket responsePacket = new(100, 10, "Hello, World!");
                         responsePacket.Write(buffer);
+
+                        level = 4;
                         client.Send(buffer);
 
                         level = 2;
@@ -592,6 +751,8 @@ namespace MinecraftPrimitives
 
                         PongPacket outPacket = new(inPacket.Payload);
                         outPacket.Write(buffer);
+
+                        level = 5;
                         client.Send(buffer);
                     }
 
@@ -707,6 +868,19 @@ namespace MinecraftPrimitives
                         success = true;
                     }
 
+                    if (level == 4)
+                    {
+                        client.Send(buffer);
+
+                        level = 2;
+
+                        throw new TryAgainException();
+                    }
+
+                    if (level == 5)
+                    {
+                        client.Send(buffer);
+                    }
 
                     System.Diagnostics.Debug.Assert(buffer.Size == 0);
 
@@ -721,7 +895,6 @@ namespace MinecraftPrimitives
                     System.Diagnostics.Debug.Assert(success == false);
                     System.Diagnostics.Debug.Assert(close == false);
 
-                    /*Console.Write($"TryAgain!");*/
                 }
                 catch (UnexpectedClientBehaviorExecption)
                 {
