@@ -82,6 +82,8 @@ namespace MinecraftServerEngine
 
         PlayerSkull,               // 397  minecraft:skull
 
+        EndCrystal,                // 426  minecraft:end_crystal
+
 
         MusicDisc_C418_13,         // 2256  minecraft:record_13 
         MusicDisc_C418_cat,        // 2257  minecraft:record_cat 

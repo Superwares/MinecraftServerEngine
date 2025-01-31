@@ -644,7 +644,7 @@ namespace MinecraftServerEngine
                 }
                 else
                 {
-                    return Inventory.GiveItem(stack);
+                    return Inventory.GiveItemStack(stack);
                 }
             }
             finally

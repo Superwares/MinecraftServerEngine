@@ -293,6 +293,11 @@ namespace MinecraftServerEngine
                     3),
 
                 new ItemContext(
+                    ItemType.EndCrystal, 426, "end_crystal",
+                    1, 64,
+                    0),
+
+                new ItemContext(
                     ItemType.MusicDisc_C418_13, 2256, "record_13",
                     1, 1,
                     0),

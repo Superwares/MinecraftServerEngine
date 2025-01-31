@@ -11,6 +11,26 @@ namespace MinecraftServerEngine
         public int Count => _count;
 
 
+        public int RemainingCount
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(_count >= MinCount);
+                System.Diagnostics.Debug.Assert(_count <= MaxCount);
+                return MaxCount - _count;
+            }
+        }
+
+        public bool IsFull
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(_count >= MinCount);
+                System.Diagnostics.Debug.Assert(_count <= MaxCount);
+                return _count == MaxCount;
+            }
+        }
+
         public ItemStack(
             ItemType type, string name, int count,
             int maxDurability, int currentDurability,
@@ -71,13 +91,6 @@ namespace MinecraftServerEngine
                 lore);
         }
 
-        internal bool IsFull()
-        {
-            System.Diagnostics.Debug.Assert(_count >= MinCount);
-            System.Diagnostics.Debug.Assert(_count <= MaxCount);
-            return _count == MaxCount;
-        }
-
         internal int Stack(int count)
         {
             System.Diagnostics.Debug.Assert(count >= 0);
@@ -104,6 +117,34 @@ namespace MinecraftServerEngine
             }
 
             return count - unused;  // used
+        }
+
+        internal int PreStack(int count)
+        {
+            System.Diagnostics.Debug.Assert(count >= 0);
+
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
+
+            if (count == 0)
+            {
+                return 0;
+            }
+
+            int remaning;
+            int preCount = _count + count;
+
+            if (preCount > MaxCount)
+            {
+                remaning = preCount - MaxCount;
+                //preCount = MaxCount;
+            }
+            else
+            {
+                remaning = 0;
+            }
+
+            return remaning;
         }
 
         internal void Spend(int count)
@@ -147,6 +188,53 @@ namespace MinecraftServerEngine
             }
 
             return true;
+        }
+
+        internal int Move(IReadOnlyItem fromItem, int count)
+        {
+            System.Diagnostics.Debug.Assert(count >= 0);
+
+            if (count == 0)
+            {
+                return 0;
+            }
+
+            if (AreByteArraysEqual(Hash, fromItem.Hash) == false)
+            {
+                return count;
+            }
+
+            if (IsFull == true)
+            {
+                return count;
+            }
+
+
+            int used = Stack(count);
+
+            return count - used;
+        }
+
+        internal int PreMove(IReadOnlyItem fromItem, int count)
+        {
+            System.Diagnostics.Debug.Assert(count >= 0);
+
+            if (count == 0)
+            {
+                return 0;
+            }
+
+            if (AreByteArraysEqual(Hash, fromItem.Hash) == false)
+            {
+                return count;
+            }
+
+            if (IsFull == true)
+            {
+                return count;
+            }
+
+            return PreStack(count);  // remaning
         }
 
         internal bool DivideHalf(ref ItemStack to)

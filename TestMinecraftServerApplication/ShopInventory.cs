@@ -118,7 +118,7 @@ namespace TestMinecraftServerApplication
                         if (SuperWorld.GameContext.IsStarted == false)
                         {
                             giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * itemStack.Count);
-                            success = playerInventory.GiveItem(giveItem);
+                            success = playerInventory.GiveItemStack(giveItem);
                         }
 
                     }
@@ -126,13 +126,13 @@ namespace TestMinecraftServerApplication
                 case ShopItem.Type:
                     {
                         giveItem = ItemStack.Create(ShopItem.Item, ShopItem.DefaultCount * itemStack.Count);
-                        success = playerInventory.GiveItem(giveItem);
+                        success = playerInventory.GiveItemStack(giveItem);
                     }
                     break;
                 case GlobalChestItem.Type:
                     {
                         giveItem = ItemStack.Create(GlobalChestItem.Item, GlobalChestItem.DefaultCount * itemStack.Count);
-                        success = playerInventory.GiveItem(giveItem);
+                        success = playerInventory.GiveItemStack(giveItem);
                     }
                     break;
                 case WoodenSword.Type:
@@ -151,12 +151,12 @@ namespace TestMinecraftServerApplication
                             giveItem = ItemStack.Create(
                                 WoodenSword.Item,
                                 WoodenSword.DefaultCount * itemStack.Count);
-                            success = playerInventory.GiveItem(giveItem);
+                            success = playerInventory.GiveItemStack(giveItem);
 
                             if (success == false)
                             {
                                 giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * coinAmount);
-                                success = playerInventory.GiveItem(giveItem);
+                                success = playerInventory.GiveItemStack(giveItem);
 
                                 System.Diagnostics.Debug.Assert(success == true);
 
@@ -181,18 +181,16 @@ namespace TestMinecraftServerApplication
                         System.Diagnostics.Debug.Assert(taked != null);
                         if (taked.Length > 0)
                         {
-                            System.Diagnostics.Debug.Assert(taked.Length == 1);
-                            System.Diagnostics.Debug.Assert(taked[0].Count == coinAmount);
 
                             giveItem = ItemStack.Create(
                                 BalloonBasher.Item,
                                 BalloonBasher.DefaultCount * itemStack.Count);
-                            success = playerInventory.GiveItem(giveItem);
+                            success = playerInventory.GiveItemStack(giveItem);
 
                             if (success == false)
                             {
                                 giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * coinAmount);
-                                success = playerInventory.GiveItem(giveItem);
+                                success = playerInventory.GiveItemStack(giveItem);
 
                                 System.Diagnostics.Debug.Assert(success == true);
 
@@ -221,18 +219,16 @@ namespace TestMinecraftServerApplication
                         System.Diagnostics.Debug.Assert(taked != null);
                         if (taked.Length > 0)
                         {
-                            System.Diagnostics.Debug.Assert(taked.Length == 1);
-                            System.Diagnostics.Debug.Assert(taked[0].Count == coinAmount);
 
                             giveItem = ItemStack.Create(
                                 StoneOfSwiftness.Item,
                                 StoneOfSwiftness.DefaultCount * itemStack.Count);
-                            success = playerInventory.GiveItem(giveItem);
+                            success = playerInventory.GiveItemStack(giveItem);
 
                             if (success == false)
                             {
                                 giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * coinAmount);
-                                success = playerInventory.GiveItem(giveItem);
+                                success = playerInventory.GiveItemStack(giveItem);
 
                                 System.Diagnostics.Debug.Assert(success == true);
 
@@ -315,14 +311,14 @@ namespace TestMinecraftServerApplication
                             System.Diagnostics.Debug.Assert(taked[0].Count == itemStack.Count);
 
                             giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * coinAmount);
-                            success = playerInventory.GiveItem(giveItem);
+                            success = playerInventory.GiveItemStack(giveItem);
 
                             if (success == false)
                             {
                                 giveItem = ItemStack.Create(
                                     WoodenSword.Item,
                                     WoodenSword.DefaultCount * itemStack.Count);
-                                success = playerInventory.GiveItem(giveItem);
+                                success = playerInventory.GiveItemStack(giveItem);
 
                                 System.Diagnostics.Debug.Assert(success == true);
 
@@ -349,18 +345,17 @@ namespace TestMinecraftServerApplication
 
                         if (taked != null && taked.Length > 0)
                         {
-                            System.Diagnostics.Debug.Assert(taked.Length == 1);
-                            System.Diagnostics.Debug.Assert(taked[0].Count == itemStack.Count);
 
+                            System.Diagnostics.Debug.Assert(Coin.DefaultCount * coinAmount <= Coin.Type.GetMaxStackCount());
                             giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * coinAmount);
-                            success = playerInventory.GiveItem(giveItem);
+                            success = playerInventory.GiveItemStack(giveItem);
 
                             if (success == false)
                             {
                                 giveItem = ItemStack.Create(
                                     BalloonBasher.Item,
                                     BalloonBasher.DefaultCount * itemStack.Count);
-                                success = playerInventory.GiveItem(giveItem);
+                                success = playerInventory.GiveItemStack(giveItem);
 
                                 System.Diagnostics.Debug.Assert(success == true);
 
@@ -393,14 +388,14 @@ namespace TestMinecraftServerApplication
                             System.Diagnostics.Debug.Assert(taked[0].Count == itemStack.Count);
 
                             giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * coinAmount);
-                            success = playerInventory.GiveItem(giveItem);
+                            success = playerInventory.GiveItemStack(giveItem);
 
                             if (success == false)
                             {
                                 giveItem = ItemStack.Create(
                                     StoneOfSwiftness.Item,
                                     StoneOfSwiftness.DefaultCount * itemStack.Count);
-                                success = playerInventory.GiveItem(giveItem);
+                                success = playerInventory.GiveItemStack(giveItem);
 
                                 System.Diagnostics.Debug.Assert(success == true);
 

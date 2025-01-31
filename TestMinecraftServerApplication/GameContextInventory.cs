@@ -227,7 +227,7 @@ namespace TestMinecraftServerApplication
                 case ShopItem.Type:
                     {
                         giveItem = ItemStack.Create(ShopItem.Item, ShopItem.DefaultCount * itemStack.Count);
-                        success = playerInventory.GiveItem(giveItem);
+                        success = playerInventory.GiveItemStack(giveItem);
                     }
                     break;
             }

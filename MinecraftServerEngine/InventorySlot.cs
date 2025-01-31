@@ -142,7 +142,31 @@ namespace MinecraftServerEngine
             _stack.Move(ref from);
         }
 
-        internal int PreMove(ItemStack from, int count)
+        //internal int PreMove(ItemStack from, int count)
+        //{
+        //    System.Diagnostics.Debug.Assert(count >= 0);
+
+        //    if (count == 0)
+        //    {
+        //        return 0;
+        //    }
+
+        //    if (from.Equals(_stack) == false || _stack.IsFull == true)
+        //    {
+        //        return count;
+        //    }
+
+        //    int canMovedAmount = (_stack.MaxCount - _stack.Count);
+
+        //    if (count < canMovedAmount)
+        //    {
+        //        return 0;
+        //    }
+
+        //    return count - canMovedAmount;
+        //}
+
+        internal int Move(IReadOnlyItem fromItem, int count)
         {
             System.Diagnostics.Debug.Assert(count >= 0);
 
@@ -151,7 +175,54 @@ namespace MinecraftServerEngine
                 return 0;
             }
 
-            if (from.Equals(_stack) == false || _stack.IsFull() == true)
+            if (_stack == null)
+            {
+                _stack = ItemStack.Create(fromItem, fromItem.MaxCount);
+                return count - fromItem.MaxCount;
+            }
+
+            return _stack.Move(fromItem, count);  // // remaning
+        }
+
+        internal int PreMove(IReadOnlyItem from, int count)
+        {
+            System.Diagnostics.Debug.Assert(count >= 0);
+
+            if (count == 0)
+            {
+                return 0;
+            }
+
+            if (_stack == null)
+            {
+                return count - from.MaxCount;
+            }
+
+            if (from.Equals(_stack) == false || _stack.IsFull == true)
+            {
+                return count;
+            }
+
+            int canMovedAmount = (_stack.MaxCount - _stack.Count);
+
+            if (count < canMovedAmount)
+            {
+                return 0;
+            }
+
+            return count - canMovedAmount;
+        }
+
+        internal int PreMove(int count)
+        {
+            System.Diagnostics.Debug.Assert(count >= 0);
+
+            if (count == 0)
+            {
+                return 0;
+            }
+
+            if (_stack.IsFull == true)
             {
                 return count;
             }

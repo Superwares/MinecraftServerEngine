@@ -413,7 +413,7 @@ namespace MinecraftServerEngine
 
             try
             {
-                bool f = playerInventory.GiveItem(stack);
+                bool f = playerInventory.GiveItemStack(stack);
 
                 _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
 

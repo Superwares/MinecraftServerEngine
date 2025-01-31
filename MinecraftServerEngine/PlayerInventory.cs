@@ -1,6 +1,8 @@
 ﻿
 
 using Containers;
+using System.Diagnostics.Metrics;
+using static System.Reflection.Metadata.BlobBuilder;
 
 namespace MinecraftServerEngine
 {
@@ -464,8 +466,13 @@ namespace MinecraftServerEngine
             RightClick(slot, cursor);
         }
 
-        internal bool GiveFromLeftInPrimary(ItemStack stack)
+        public bool _GiveItemFromLeftInPrimary(ItemStack stack)
         {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             if (stack == null)
@@ -549,18 +556,84 @@ namespace MinecraftServerEngine
             return true;
         }
 
-        public bool GiveItem(ItemStack stack)
+        public bool GiveItemStacksFromLeftInPrimary(IReadOnlyItem item, int count)
         {
+            if (item == null)
+            {
+                throw new System.ArgumentNullException(nameof(item));
+            }
+
+            if (count < 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(count));
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            if (stack == null)
+            System.Diagnostics.Debug.Assert(count >= 0);
+            if (count == 0)
             {
                 return true;
             }
 
-            return GiveFromLeftInPrimary(stack);
-        }
+            using Queue<InventorySlot> slots = new();
 
+            int _preMovedCount;
+            int _preRemainingCount = count;
+
+            InventorySlot slot;
+            for (int i = 0; i < PrimarySlotCount; ++i)
+            {
+                slot = GetPrimarySlot(i);
+                System.Diagnostics.Debug.Assert(slot != null);
+
+                _preMovedCount = slot.PreMove(item, _preRemainingCount);
+
+                if (_preRemainingCount == _preMovedCount)
+                {
+                    continue;
+                }
+
+                _preRemainingCount = _preMovedCount;
+                slots.Enqueue(slot);
+
+
+                if (_preRemainingCount == 0)
+                {
+                    break;
+                }
+            }
+
+            if (_preRemainingCount > 0)
+            {
+                return false;
+            }
+
+            //int requiredStacks = count / item.Type.GetMaxStackCount();
+            //int restItems = count % item.Type.GetMaxStackCount();
+
+            while (slots.Empty == false)
+            {
+                slot = slots.Dequeue();
+
+                count = slot.Move(item, count);
+
+                System.Diagnostics.Debug.Assert(count >= 0);
+                if (count == 0)
+                {
+                    break;
+                }
+            }
+
+            System.Diagnostics.Debug.Assert(count == 0);
+
+            return true;
+        }
 
         public ItemStack[] TakeItemStacksInPrimary(IReadOnlyItem item, int count)
         {
@@ -624,7 +697,7 @@ namespace MinecraftServerEngine
 
             if (leftCount > 0)
             {
-                return [];
+                return null;
             }
 
             leftCount = count;
@@ -698,6 +771,33 @@ namespace MinecraftServerEngine
             return itemStacks;
         }
 
+
+        public bool GiveItemStacks(IReadOnlyItem item, int count)
+        {
+            if (item == null)
+            {
+                throw new System.ArgumentNullException(nameof(item));
+            }
+
+            if (count < 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(count));
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(count >= 0);
+            if (count == 0)
+            {
+                return true;
+            }
+
+            return GiveItemStacksFromLeftInPrimary(item, count);
+        }
+
         public ItemStack[] TakeItemStacks(IReadOnlyItem item, int count)
         {
             if (item == null)
@@ -718,6 +818,13 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             return TakeItemStacksInPrimary(item, count);
+        }
+
+        private ItemStack[] GiveAndTakeItemStacks(
+            IReadOnlyItem giveItem, int giveCount,
+            IReadOnlyItem takeItem, int takeCount)
+        {
+            throw new System.NotImplementedException();
         }
 
         internal void QuickMoveFromLeftInPrimary(InventorySlot slot)
