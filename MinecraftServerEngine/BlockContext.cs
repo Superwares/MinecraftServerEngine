@@ -54,6 +54,7 @@ namespace MinecraftServerEngine
 
                     {
                         int i;
+                        ulong metadata;
                         ulong value;
 
                         int start, offset, end;
@@ -66,7 +67,16 @@ namespace MinecraftServerEngine
                                 {
                                     i = (((y * BlocksPerHeight) + z) * BlocksPerWidth) + x;
 
-                                    value = ((ulong)blocks[i] << 4) | _data[i / 2];
+                                    metadata = _data[i / 2];
+
+                                    if (i % 2 == 0)
+                                    {
+                                        metadata &= 0b00001111;
+                                    } else {
+                                        metadata = metadata >> 4;
+                                    }
+
+                                    value = ((ulong)blocks[i] << 4) | metadata;
 
                                     start = (i * bitsPerBlock) / _BITS_PER_DATA_UNIT;
                                     offset = (i * bitsPerBlock) % _BITS_PER_DATA_UNIT;

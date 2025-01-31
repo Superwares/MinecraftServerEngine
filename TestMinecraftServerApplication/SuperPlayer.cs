@@ -117,7 +117,14 @@ namespace TestMinecraftServerApplication
                     BlockLocation belowBlockLoc = new(_belowBlockLoc.X, _belowBlockLoc.Y - 1, _belowBlockLoc.Z);
                     Block belowBlock = world.BlockContext.GetBlock(belowBlockLoc);
 
-                    ApplyBlockAppearance(belowBlock);
+                    if (belowBlock != Block.Air)
+                    {
+                        ApplyBlockAppearance(belowBlock);
+                    }
+                    else
+                    {
+                        ResetBlockAppearance();
+                    }
                 }
             }
 
@@ -136,7 +143,14 @@ namespace TestMinecraftServerApplication
                 BlockLocation belowBlockLoc = new(_belowBlockLoc.X, _belowBlockLoc.Y - 1, _belowBlockLoc.Z);
                 Block belowBlock = world.BlockContext.GetBlock(belowBlockLoc);
 
-                ApplyBlockAppearance(belowBlock);
+                if (belowBlock != Block.Air)
+                {
+                    ApplyBlockAppearance(belowBlock);
+                }
+                else
+                {
+                    ResetBlockAppearance();
+                }
 
                 //OpenInventory(chestInventory);
                 //OpenInventory(ShopInventory);
@@ -155,7 +169,7 @@ namespace TestMinecraftServerApplication
 
                 //ApplyBilndness(true);
 
-                world.ChangeWorldBorderSize(5.0, Time.FromSeconds(1));
+                //world.ChangeWorldBorderSize(5.0, Time.FromSeconds(1));
             }
             else
             {
