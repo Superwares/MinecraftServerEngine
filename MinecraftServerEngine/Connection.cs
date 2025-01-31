@@ -7,9 +7,6 @@ using MinecraftPrimitives;
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
-    using static System.Net.Mime.MediaTypeNames;
-    using System.Drawing;
-    using System.Security.Principal;
 
     internal sealed class Connection : System.IDisposable
     {
@@ -284,7 +281,7 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
-        private readonly UserId Id;
+        private readonly UserId UserId;
 
         private readonly MinecraftClient Client;  // Dispoasble
 
@@ -293,8 +290,8 @@ namespace MinecraftServerEngine
         private bool _disconnected = false;
         public bool Disconnected => _disconnected;
 
-
-        private JoinGamePacket JoinGamePacket = null;
+        private LoginSuccessPacket _LoginSuccessPacket = null;
+        private JoinGamePacket _JoinGamePacket = null;
         private readonly Queue<LoadChunkPacket> LoadChunkPackets = new();  // Dispoasble
         internal readonly ConcurrentQueue<ClientboundPlayingPacket> OutPackets = new();  // Dispoasble
 
@@ -321,7 +318,7 @@ namespace MinecraftServerEngine
         internal readonly Window Window;  // Disposable
 
         internal Connection(
-            UserId id,
+            UserId userId, string username,
             MinecraftClient client,
             World world,
             int idEntity,
@@ -332,12 +329,14 @@ namespace MinecraftServerEngine
             PlayerInventory playerInventory,
             Gamemode gamemode)
         {
-            System.Diagnostics.Debug.Assert(id != UserId.Null);
+            System.Diagnostics.Debug.Assert(userId != UserId.Null);
+            System.Diagnostics.Debug.Assert(username != null);
+            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(username) == false);
             System.Diagnostics.Debug.Assert(client != null);
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(playerInventory != null);
 
-            Id = id;
+            UserId = userId;
 
             Client = client;
 
@@ -352,10 +351,16 @@ namespace MinecraftServerEngine
 
             Window = new Window(OutPackets, playerInventory);
 
-            world.Connect(Id, OutPackets);
+            world.Connect(UserId, OutPackets);
 
-            System.Diagnostics.Debug.Assert(JoinGamePacket == null);
-            JoinGamePacket = new JoinGamePacket(idEntity, 2, 0, 2, "default", false);
+            System.Diagnostics.Debug.Assert(userId != UserId.Null);
+            System.Diagnostics.Debug.Assert(username != null);
+            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(username) == false);
+            System.Diagnostics.Debug.Assert(_LoginSuccessPacket == null);
+            _LoginSuccessPacket = new LoginSuccessPacket(userId.Value, username);
+
+            System.Diagnostics.Debug.Assert(_JoinGamePacket == null);
+            _JoinGamePacket = new JoinGamePacket(idEntity, 2, 0, 2, "default", false);
 
             int payload = Random.NextInt();
             OutPackets.Enqueue(new TeleportPacket(
@@ -820,7 +825,7 @@ namespace MinecraftServerEngine
 
                         System.Diagnostics.Debug.Assert(Window != null);
                         Window.Handle(
-                            Id, world, player, playerInventory,
+                            UserId, world, player, playerInventory,
                             packet.WindowId, packet.Mode, packet.Button, packet.Slot);
 
                         OutPackets.Enqueue(new ClientboundConfirmTransactionPacket(
@@ -877,7 +882,7 @@ namespace MinecraftServerEngine
                         ServerboundKeepAlivePacket packet = ServerboundKeepAlivePacket.Read(buffer);
 
                         long ticks = _KeepAliveRecord.Confirm(packet.Payload);
-                        world.PlayerList.UpdateLaytency(Id, ticks);
+                        world.PlayerList.UpdateLaytency(UserId, ticks);
                     }
                     break;
                 case ServerboundPlayingPacket.PlayerPacketId:
@@ -1383,6 +1388,27 @@ namespace MinecraftServerEngine
         /// <param name="packet"></param>
         /// <exception cref="DisconnectedClientException"></exception>
         /// <exception cref="TryAgainException"></exception>
+        private void SendPacket(MinecraftProtocolDataStream buffer, ClientboundLoginPacket packet)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+            System.Diagnostics.Debug.Assert(packet != null);
+
+            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(!_disconnected);
+
+            packet.Write(buffer);
+            Client.Send(buffer);
+
+            System.Diagnostics.Debug.Assert(buffer.Empty);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="packet"></param>
+        /// <exception cref="DisconnectedClientException"></exception>
+        /// <exception cref="TryAgainException"></exception>
         private void SendPacket(MinecraftProtocolDataStream buffer, ClientboundPlayingPacket packet)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
@@ -1707,7 +1733,7 @@ namespace MinecraftServerEngine
                 return false;
             }
 
-            return Window.Open(Id, OutPackets, invPri, invPub);
+            return Window.Open(UserId, OutPackets, invPri, invPub);
         }
 
         internal void LoadAndSendData(
@@ -1725,17 +1751,24 @@ namespace MinecraftServerEngine
 
             try
             {
-                if (JoinGamePacket != null)
+                if (_LoginSuccessPacket != null)
+                {
+                    SendPacket(buffer, _LoginSuccessPacket);
+
+                    _LoginSuccessPacket = null;
+                }
+
+                if (_JoinGamePacket != null)
                 {
 
                     // The difficulty must be normal,
                     // because the hunger bar increases on its own in easy difficulty.
-                    SendPacket(buffer, JoinGamePacket);
+                    SendPacket(buffer, _JoinGamePacket);
 
-                    JoinGamePacket = null;
+                    _JoinGamePacket = null;
                 }
 
-                System.Diagnostics.Debug.Assert(JoinGamePacket == null);
+                System.Diagnostics.Debug.Assert(_JoinGamePacket == null);
 
                 LoadWorld(idEntitySelf, world, p, blindness);
 
@@ -1783,15 +1816,15 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(_disconnected);
 
-            System.Diagnostics.Debug.Assert(Id != UserId.Null);
-            id = Id;
+            System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+            id = UserId;
 
             EntityRenderer.Disconnect();
             ParticleObjectRenderer.Disconnect();
 
             Window.Flush(world, invPlayer);
 
-            world.Disconnect(Id);
+            world.Disconnect(UserId);
         }
 
         public void Dispose()

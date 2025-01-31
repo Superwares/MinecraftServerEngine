@@ -823,13 +823,13 @@ namespace MinecraftPrimitives
                             userId = System.Guid.NewGuid();
                         }
 
-                        System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
-                        System.Diagnostics.Debug.Assert(username != null);
-                        System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(username) == false);
-                        LoginSuccessPacket outPacket1 = new(userId, username);
-                        outPacket1.Write(buffer);
+                        //System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
+                        //System.Diagnostics.Debug.Assert(username != null);
+                        //System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(username) == false);
+                        //LoginSuccessPacket outPacket1 = new(userId, username);
+                        //outPacket1.Write(buffer);
 
-                        client.Send(buffer);
+                        //client.Send(buffer);
 
                         UserProperty[] properties = null;
 

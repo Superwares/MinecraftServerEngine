@@ -428,7 +428,8 @@ namespace MinecraftServerEngine
             _pControl = Position;
 
             Conn = new Connection(
-                id, client,
+                UserId, Username,
+                client,
                 world,
                 Id,
                 AdditionalHealth, MaxHealth, Health,
