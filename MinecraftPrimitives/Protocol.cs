@@ -250,7 +250,7 @@ namespace MinecraftPrimitives
     {
         private bool _disposed = false;
 
-        private const int Timeout = 100;
+        private const int MaxTyAgainHitCount = 99;
         private int _tryAgainHitCount = 0;
 
         private const byte SegmentBits = 0x7F;
@@ -442,9 +442,9 @@ namespace MinecraftPrimitives
             catch (TryAgainException)
             {
                 //MyConsole.Debug($"Recv::_tryAgainHitCount: {_tryAgainHitCount}");
-                if (Timeout < ++_tryAgainHitCount)
+                if (MaxTyAgainHitCount < ++_tryAgainHitCount)
                 {
-                    throw new DataRecvTimeoutException();
+                    throw new DataRecvOrSendTimeoutException();
                 }
 
                 throw;
@@ -540,10 +540,10 @@ namespace MinecraftPrimitives
             }
             catch (TryAgainException)
             {
-                MyConsole.Debug($"Send::_tryAgainHitCount: {_tryAgainHitCount}");
-                if (Timeout < ++_tryAgainHitCount)
+                //MyConsole.Debug($"Send::_tryAgainHitCount: {_tryAgainHitCount}");
+                if (MaxTyAgainHitCount < ++_tryAgainHitCount)
                 {
-                    throw new DataRecvTimeoutException();
+                    throw new DataRecvOrSendTimeoutException();
                 }
 
                 throw;

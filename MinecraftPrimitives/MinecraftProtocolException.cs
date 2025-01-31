@@ -13,9 +13,9 @@ namespace MinecraftPrimitives
         public UnexpectedClientBehaviorExecption(string msg) : base(msg) { }
     }
 
-    public class DataRecvTimeoutException : UnexpectedClientBehaviorExecption
+    public class DataRecvOrSendTimeoutException : UnexpectedClientBehaviorExecption
     {
-        public DataRecvTimeoutException() : base("A timeout occurred while attempting to recv data.") { }
+        public DataRecvOrSendTimeoutException() : base("A timeout occurred while attempting to receive or send data.") { }
     }
 
     public class UnexpectedValueException : UnexpectedClientBehaviorExecption
