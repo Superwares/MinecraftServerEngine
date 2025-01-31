@@ -393,14 +393,14 @@ namespace MinecraftServerEngine
             }
         }
 
-        internal bool GiveItem(PlayerInventory playerInventory, ItemStack stack)
+        internal bool GiveItemStacks(PlayerInventory playerInventory, IReadOnlyItem item, int count)
         {
             System.Diagnostics.Debug.Assert(playerInventory != null);
-            System.Diagnostics.Debug.Assert(stack != null);
+            System.Diagnostics.Debug.Assert(item != null);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            if (stack == null)
+            if (count == 0)
             {
                 return true;
             }
@@ -413,11 +413,46 @@ namespace MinecraftServerEngine
 
             try
             {
-                bool f = playerInventory.GiveItemStack(stack);
+                bool f = playerInventory.GiveItemStacks(item, count);
 
                 _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
 
                 return f;
+            }
+            finally
+            {
+                if (_sharedInventory != null)
+                {
+                    _sharedInventory.Locker.Release();
+                }
+                _Locker.Release();
+            }
+        }
+
+        internal void GiveItemStack(PlayerInventory playerInventory, ref ItemStack itemStack)
+        {
+            System.Diagnostics.Debug.Assert(playerInventory != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (itemStack == null)
+            {
+                return;
+            }
+
+            _Locker.Hold();
+            if (_sharedInventory != null)
+            {
+                _sharedInventory.Locker.Hold();
+            }
+
+            try
+            {
+                playerInventory.GiveItemStack(ref itemStack);
+
+                _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
+
+                return;
             }
             finally
             {

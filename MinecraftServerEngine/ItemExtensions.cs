@@ -41,7 +41,8 @@ namespace MinecraftServerEngine
 
         // TODO: Replace as IReadOnlyTable
         // TODO: 프로그램이 종료되었을 때 자원 해제하기. static destructor?
-        private readonly static Table<ItemType, ItemContext> _ITEM_TYPE_ENUM_TO_CTX_MAP = new();
+        private readonly static Table<ItemType, ItemContext> _ITEM_TYPE_TO_CTX_MAP = new();
+        private readonly static Table<(int, int), ItemType> _ITEM_ID_TO_ITEM_TYPE_MAP = new();
 
         static ItemExtensions()
         {
@@ -279,6 +280,10 @@ namespace MinecraftServerEngine
                     ItemType.Flint, 318, "flint",
                     1, 64,
                     0),
+                new ItemContext(
+                    ItemType.Sign, 323, "sign",
+                    1, 64,
+                    0),
                 //new ItemContext(
                 //    ItemType.Snowball, 332, "snowball",
                 //    1, 16,
@@ -350,29 +355,36 @@ namespace MinecraftServerEngine
 
             foreach (ItemContext ctx in _map)
             {
-                _ITEM_TYPE_ENUM_TO_CTX_MAP.Insert(ctx.Type, ctx);
+                _ITEM_TYPE_TO_CTX_MAP.Insert(ctx.Type, ctx);
             }
+
+            // Ensure to prevent the duplicated item ids...
+            foreach (ItemContext ctx in _map)
+            {
+                _ITEM_ID_TO_ITEM_TYPE_MAP.Insert((ctx.Id, ctx.Metadata), ctx.Type);
+            }
+
 
         }
 
         public static int GetMinStackCount(this ItemType item)
         {
-            return _ITEM_TYPE_ENUM_TO_CTX_MAP.Lookup(item).MinStackCount;
+            return _ITEM_TYPE_TO_CTX_MAP.Lookup(item).MinStackCount;
         }
 
         public static int GetMaxStackCount(this ItemType item)
         {
-            return _ITEM_TYPE_ENUM_TO_CTX_MAP.Lookup(item).MaxStackCount;
+            return _ITEM_TYPE_TO_CTX_MAP.Lookup(item).MaxStackCount;
         }
 
         public static int GetMetadata(this ItemType item)
         {
-            return _ITEM_TYPE_ENUM_TO_CTX_MAP.Lookup(item).Metadata;
+            return _ITEM_TYPE_TO_CTX_MAP.Lookup(item).Metadata;
         }
 
         internal static int GetId(this ItemType item)
         {
-            return _ITEM_TYPE_ENUM_TO_CTX_MAP.Lookup(item).Id;
+            return _ITEM_TYPE_TO_CTX_MAP.Lookup(item).Id;
         }
     }
 }

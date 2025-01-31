@@ -74,6 +74,8 @@ namespace MinecraftServerEngine
 
         Flint,                     // 318  minecraft:flint
 
+        Sign,                      // 323  minecraft:sign
+
         /*  // This item is handled by clientside.
         Snowball,                  // 332  minecraft:snowball
         */

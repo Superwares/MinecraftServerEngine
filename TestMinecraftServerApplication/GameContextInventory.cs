@@ -159,11 +159,7 @@ namespace TestMinecraftServerApplication
                 minPlayers, maxPlayers,
                 currentPlayers));
 
-            slots[ShopItemSlot] = (true, ShopItem.CreateForShop([
-                $"",
-                $"왼클릭          지급",
-                $"우클릭          차감",
-                ]));
+            slots[ShopItemSlot] = (true, ShopItem.Create());
 
             System.Diagnostics.Debug.Assert(maxRounds % SlotCountPerLine == 0);
             for (int i = 0; i < maxRounds; ++i)
@@ -194,7 +190,7 @@ namespace TestMinecraftServerApplication
         {
             bool success = false;
 
-            ItemStack giveItem;
+            //ItemStack giveItem;
 
             switch (i)
             {
@@ -226,8 +222,8 @@ namespace TestMinecraftServerApplication
             {
                 case ShopItem.Type:
                     {
-                        giveItem = ItemStack.Create(ShopItem.Item, ShopItem.DefaultCount * itemStack.Count);
-                        success = playerInventory.GiveItemStack(giveItem);
+                        //giveItem = ItemStack.Create(ShopItem.Item, ShopItem.DefaultCount * itemStack.Count);
+                        //success = playerInventory.GiveItemStack(giveItem);
                     }
                     break;
             }

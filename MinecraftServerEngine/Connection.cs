@@ -661,14 +661,16 @@ namespace MinecraftServerEngine
 
                                 try
                                 {
+                                    ItemStack itemStack = new(itemType, name, amount);
+
                                     if (username == null)
                                     {
-                                        player.GiveItem(new ItemStack(itemType, name, amount));
+                                        player.GiveItemStack(ref itemStack);
                                     }
                                     else
                                     {
                                         AbstractPlayer targetPlayer = world.PlayersByUsername.Lookup(username);
-                                        targetPlayer.GiveItem(new ItemStack(itemType, name, amount));
+                                        targetPlayer.GiveItemStack(ref itemStack);
                                     }
 
                                 }

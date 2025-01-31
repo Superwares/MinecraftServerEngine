@@ -466,7 +466,7 @@ namespace MinecraftServerEngine
             RightClick(slot, cursor);
         }
 
-        public bool _GiveItemFromLeftInPrimary(ItemStack stack)
+        public void GiveItemStackFromLeftInPrimary(ref ItemStack itemStack)
         {
             if (_disposed == true)
             {
@@ -475,85 +475,57 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (stack == null)
+            if (itemStack == null)
             {
-                return true;
+                return;
             }
 
             using Queue<InventorySlot> slots = new();
 
-            int j = -1;
-            int prevCount = stack.Count;
+            int _preMovedCount;
+            int _preRemainingCount = itemStack.Count;
 
-            InventorySlot slotInside;
+            InventorySlot slot;
             for (int i = 0; i < PrimarySlotCount; ++i)
             {
-                slotInside = GetPrimarySlot(i);
-                System.Diagnostics.Debug.Assert(slotInside != null);
+                slot = GetPrimarySlot(i);
+                System.Diagnostics.Debug.Assert(slot != null);
 
-                if (slotInside.Empty)
-                {
-                    //prevCount = 0;
-                    //slots.Enqueue(slotInside);
-                    //break;
+                _preMovedCount = slot.PreMove(itemStack, _preRemainingCount);
 
-                    if (j < 0)
-                    {
-                        j = i;
-                    }
-
-                    continue;
-                }
-
-                int restCount = slotInside.PreMove(stack, prevCount);
-
-                if (prevCount == restCount)
+                if (_preRemainingCount == _preMovedCount)
                 {
                     continue;
                 }
 
-                prevCount = restCount;
-                slots.Enqueue(slotInside);
+                _preRemainingCount = _preMovedCount;
+                slots.Enqueue(slot);
 
-                if (prevCount == 0)
+
+                if (_preRemainingCount == 0)
                 {
                     break;
                 }
-
             }
 
-            if (prevCount > 0 && j < 0)
+            if (_preRemainingCount > 0)
             {
-                return false;
+                return;
             }
 
             while (slots.Empty == false)
             {
-                slotInside = slots.Dequeue();
+                slot = slots.Dequeue();
 
-                slotInside.Move(ref stack);
+                slot.Move(ref itemStack);
 
-                if (stack == null)
+                if (itemStack == null)
                 {
                     break;
                 }
             }
 
-            if (j >= 0)
-            {
-                slotInside = GetPrimarySlot(j);
-
-                System.Diagnostics.Debug.Assert(slotInside != null);
-                System.Diagnostics.Debug.Assert(slotInside.Empty == true);
-
-                slotInside.Move(ref stack);
-
-                System.Diagnostics.Debug.Assert(stack == null);
-            }
-
-            slots.Flush();
-
-            return true;
+            return;
         }
 
         public bool GiveItemStacksFromLeftInPrimary(IReadOnlyItem item, int count)
@@ -613,9 +585,6 @@ namespace MinecraftServerEngine
             {
                 return false;
             }
-
-            //int requiredStacks = count / item.Type.GetMaxStackCount();
-            //int restItems = count % item.Type.GetMaxStackCount();
 
             while (slots.Empty == false)
             {
@@ -796,6 +765,21 @@ namespace MinecraftServerEngine
             }
 
             return GiveItemStacksFromLeftInPrimary(item, count);
+        }
+
+        public void GiveItemStack(ref ItemStack itemStack)
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            if (itemStack == null)
+            {
+                return;
+            }
+
+            GiveItemStackFromLeftInPrimary(ref itemStack);
         }
 
         public ItemStack[] TakeItemStacks(IReadOnlyItem item, int count)

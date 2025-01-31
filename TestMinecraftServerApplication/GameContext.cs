@@ -243,8 +243,8 @@ namespace TestMinecraftServerApplication
 
                     player.FlushItems();
 
-                    player.GiveItem(GamePanel.Create());
-                    player.GiveItem(ShopItem.Create());
+                    //player.GiveItemStack(GamePanel.Create());
+                    //player.GiveItemStack(ShopItem.Create());
                 }
 
                 return true;
@@ -279,8 +279,8 @@ namespace TestMinecraftServerApplication
             {
                 player.FlushItems();
 
-                player.GiveItem(GamePanel.Create());
-                player.GiveItem(ShopItem.Create());
+                //player.GiveItemStacks(GamePanel.Create());
+                //player.GiveItemStacks(ShopItem.Create());
             }
 
             System.Diagnostics.Debug.Assert(_players != null);

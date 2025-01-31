@@ -177,14 +177,24 @@ namespace MinecraftServerEngine
 
             if (_stack == null)
             {
-                _stack = ItemStack.Create(fromItem, fromItem.MaxCount);
-                return count - fromItem.MaxCount;
+                if (count >= fromItem.MaxCount)
+                {
+                    _stack = ItemStack.Create(fromItem, fromItem.MaxCount);
+                    return count - fromItem.MaxCount;
+                }
+                else
+                {
+                    _stack = ItemStack.Create(fromItem, count);
+                    return 0;
+                }
+
+
             }
 
             return _stack.Move(fromItem, count);  // // remaning
         }
 
-        internal int PreMove(IReadOnlyItem from, int count)
+        internal int PreMove(IReadOnlyItem fromItem, int count)
         {
             System.Diagnostics.Debug.Assert(count >= 0);
 
@@ -195,10 +205,19 @@ namespace MinecraftServerEngine
 
             if (_stack == null)
             {
-                return count - from.MaxCount;
+                if (count >= fromItem.MaxCount)
+                {
+                    return count - fromItem.MaxCount;
+                }
+                else
+                {
+                    return 0;
+                }
+
+
             }
 
-            if (from.Equals(_stack) == false || _stack.IsFull == true)
+            if (fromItem.Equals(_stack) == false || _stack.IsFull == true)
             {
                 return count;
             }

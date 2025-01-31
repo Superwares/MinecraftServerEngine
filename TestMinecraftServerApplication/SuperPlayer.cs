@@ -34,8 +34,8 @@ namespace TestMinecraftServerApplication
 
             //ApplyBlockAppearance(Block.Dirt);
 
-            GiveItem(GamePanel.Create());
-            GiveItem(ShopItem.Create());
+            GiveItemStacks(GamePanel.Item, GamePanel.DefaultCount);
+            GiveItemStacks(ShopItem.Item, ShopItem.DefaultCount);
         }
 
         public void Reset()
@@ -46,8 +46,8 @@ namespace TestMinecraftServerApplication
 
             SwitchGamemode(Gamemode.Adventure);
 
-            GiveItem(GamePanel.Create());
-            GiveItem(ShopItem.Create());
+            GiveItemStacks(GamePanel.Item, GamePanel.DefaultCount);
+            GiveItemStacks(ShopItem.Item, ShopItem.DefaultCount);
         }
 
         ~SuperPlayer()

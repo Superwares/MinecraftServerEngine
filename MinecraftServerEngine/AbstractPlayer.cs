@@ -620,7 +620,51 @@ namespace MinecraftServerEngine
         //    System
         //}
 
-        public bool GiveItem(ItemStack stack)
+        public bool GiveItemStacks(IReadOnlyItem item, int count)
+        {
+            if (item == null)
+            {
+                throw new System.ArgumentNullException(nameof(item));
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (count == 0)
+            {
+                return true;
+            }
+
+            System.Diagnostics.Debug.Assert(InventoryLocker != null);
+            InventoryLocker.Hold();
+
+            try
+            {
+                if (Conn != null)
+                {
+                    System.Diagnostics.Debug.Assert(Inventory != null);
+                    System.Diagnostics.Debug.Assert(Conn.Window != null);
+                    return Conn.Window.GiveItemStacks(Inventory, item, count);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.Assert(Inventory != null);
+                    return Inventory.GiveItemStacks(item, count);
+                }
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(InventoryLocker != null);
+                InventoryLocker.Release();
+            }
+
+        }
+
+        public void GiveItemStack(ref ItemStack itemStack)
         {
             if (_disposed == true)
             {
@@ -629,26 +673,31 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            if (stack == null)
+            if (itemStack == null)
             {
-                return true;
+                return;
             }
 
+            System.Diagnostics.Debug.Assert(InventoryLocker != null);
             InventoryLocker.Hold();
 
             try
             {
                 if (Conn != null)
                 {
-                    return Conn.Window.GiveItem(Inventory, stack);
+                    System.Diagnostics.Debug.Assert(Inventory != null);
+                    System.Diagnostics.Debug.Assert(Conn.Window != null);
+                    Conn.Window.GiveItemStack(Inventory, ref itemStack);
                 }
                 else
                 {
-                    return Inventory.GiveItemStack(stack);
+                    System.Diagnostics.Debug.Assert(Inventory != null);
+                    Inventory.GiveItemStack(ref itemStack);
                 }
             }
             finally
             {
+                System.Diagnostics.Debug.Assert(InventoryLocker != null);
                 InventoryLocker.Release();
             }
 

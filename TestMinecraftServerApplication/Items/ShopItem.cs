@@ -15,30 +15,18 @@ namespace TestMinecraftServerApplication.Items
             Type,
             Name,
             [
-                $"우클릭하여 상점을 이용할 수 있습니다!",
+                $"상점을 이용할 수 있습니다.",
             ]);
 
         public static readonly int DefaultCount = Item.Type.GetMinStackCount();
 
-        public static ItemStack Create(int count = 1)
+        public static ItemStack Create()
         {
             System.Diagnostics.Debug.Assert(Name != null);
             System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(Name) == false);
-            System.Diagnostics.Debug.Assert(count >= Type.GetMinStackCount());
+            System.Diagnostics.Debug.Assert(DefaultCount >= Type.GetMinStackCount());
 
-            return ItemStack.Create(Item, DefaultCount * count);
-        }
-
-        public static ItemStack CreateForShop(string[] descriptions)
-        {
-            System.Diagnostics.Debug.Assert(Name != null);
-            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(Name) == false);
-            return ItemStack.Create(
-                Item,
-                DefaultCount,
-                [
-                    ..descriptions,
-                ]);
+            return ItemStack.Create(Item, DefaultCount);
         }
 
     }

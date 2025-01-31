@@ -80,12 +80,8 @@ namespace MinecraftServerEngine
 
             try
             {
-                bool f = player.GiveItem(_stack);
+                player.GiveItemStack(ref _stack);
                 
-                if (f == true)
-                {
-                    _stack = null;
-                }
             } finally
             {
                 DefaultLocker.Release();
