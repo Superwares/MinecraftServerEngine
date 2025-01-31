@@ -1812,6 +1812,8 @@ namespace MinecraftServerEngine
                 _disconnected = true;
                 /*Console.Print("Disconnect!");*/
             }
+            catch (TryAgainException)
+            { }
 
         }
 

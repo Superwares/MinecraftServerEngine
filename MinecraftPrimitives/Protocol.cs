@@ -193,11 +193,21 @@ namespace MinecraftPrimitives
 
             try
             {
+
+                // For debug, For debug, randomly adjust the size
+                //if ((new System.Random()).Next(0, 10) == 0)
+                //{
+                //    const int _offset = 1;
+                //    int minValue = System.Math.Max(0, size - _offset);
+
+                //    size = (new System.Random()).Next(minValue, size + 1);
+                //}
+
                 System.Diagnostics.Debug.Assert(data != null);
                 int n = socket.Send(data, offset, size, System.Net.Sockets.SocketFlags.None);
 
                 System.Diagnostics.Debug.Assert(n >= 0);
-                System.Diagnostics.Debug.Assert(n == data.Length);
+                System.Diagnostics.Debug.Assert(n <= size);
                 return n;
             }
             catch (System.Net.Sockets.SocketException e)
@@ -341,11 +351,14 @@ namespace MinecraftPrimitives
 
             _presizeSend = size;
 
+
+
             byte value;
             int n;
 
             while (true)
             {
+
                 if ((_presizeSend & ~SegmentBits) == 0)
                 {
                     value = (byte)(_presizeSend & SegmentBits);
@@ -428,7 +441,7 @@ namespace MinecraftPrimitives
             }
             catch (TryAgainException)
             {
-                /*Console.WriteLine($"_tryAgainHitCount: {_tryAgainHitCount}");*/
+                //MyConsole.Debug($"Recv::_tryAgainHitCount: {_tryAgainHitCount}");
                 if (Timeout < ++_tryAgainHitCount)
                 {
                     throw new DataRecvTimeoutException();
@@ -527,7 +540,7 @@ namespace MinecraftPrimitives
             }
             catch (TryAgainException)
             {
-                /*Console.WriteLine($"_tryAgainHitCount: {_tryAgainHitCount}");*/
+                MyConsole.Debug($"Send::_tryAgainHitCount: {_tryAgainHitCount}");
                 if (Timeout < ++_tryAgainHitCount)
                 {
                     throw new DataRecvTimeoutException();
