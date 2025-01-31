@@ -20,6 +20,11 @@ namespace TestMinecraftServerApplication
 
         public void ResetBalloonBasherSlot(string username)
         {
+            if (username == null || string.IsNullOrEmpty(username) == true)
+            {
+                username = "없음";
+            }
+
             SetSlot(BalloonBasherSlot, ItemStack.Create(BalloonBasher.Item, BalloonBasher.DefaultCount, [
                     // A lightweight yet powerful weapon that can send enemies flying with a single hit.
                     $"",
@@ -133,6 +138,7 @@ namespace TestMinecraftServerApplication
             //MyConsole.Debug($"i: {i}, ItemStack: {itemStack}");
 
             bool success = false;
+            ItemStack[] taked;
 
             switch (itemStack.Type)
             {
@@ -157,104 +163,48 @@ namespace TestMinecraftServerApplication
                     break;
                 case WoodenSword.Type:
                     {
-                        //const int coinAmount = WoodenSword.PurchasePrice;
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                            WoodenSword.Item, WoodenSword.DefaultCount,
+                            Coin.Item, Coin.DefaultCount * WoodenSword.PurchasePrice);
 
-                        //taked = playerInventory.TakeItemStacksInPrimary(
-                        //   Coin.Item, Coin.DefaultCount * coinAmount);
-
-                        //System.Diagnostics.Debug.Assert(taked != null);
-                        //if (taked.Length > 0)
-                        //{
-                        //    System.Diagnostics.Debug.Assert(taked.Length == 1);
-                        //    System.Diagnostics.Debug.Assert(taked[0].Count == coinAmount);
-
-                        //    giveItem = ItemStack.Create(
-                        //        WoodenSword.Item,
-                        //        WoodenSword.DefaultCount * itemStack.Count);
-                        //    success = playerInventory.GiveItemStack(giveItem);
-
-                        //    if (success == false)
-                        //    {
-                        //        giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * coinAmount);
-                        //        success = playerInventory.GiveItemStack(giveItem);
-
-                        //        System.Diagnostics.Debug.Assert(success == true);
-
-                        //        success = false;
-                        //    }
-                        //}
-
+                        success = taked != null;
                     }
                     break;
                 case BalloonBasher.Type:
                     {
-                        //if (BalloonBasher.CanPurchase == false)
-                        //{
-                        //    break;
-                        //}
+                        if (BalloonBasher.CanPurchase == false)
+                        {
+                            break;
+                        }
 
-                        //const int coinAmount = BalloonBasher.PurchasePrice;
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                           BalloonBasher.Item, BalloonBasher.DefaultCount,
+                           Coin.Item, Coin.DefaultCount * BalloonBasher.PurchasePrice);
 
-                        //taked = playerInventory.TakeItemStacksInPrimary(
-                        //   Coin.Item, Coin.DefaultCount * coinAmount);
+                        if (taked != null)
+                        {
+                            System.Diagnostics.Debug.Assert(player.Username != null);
+                            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(player.Username) == false);
+                            System.Diagnostics.Debug.Assert(i == BalloonBasherSlot);
+                            ResetBalloonBasherSlot(player.Username);
 
-                        //System.Diagnostics.Debug.Assert(taked != null);
-                        //if (taked.Length > 0)
-                        //{
-
-                        //    giveItem = ItemStack.Create(
-                        //        BalloonBasher.Item,
-                        //        BalloonBasher.DefaultCount * itemStack.Count);
-                        //    success = playerInventory.GiveItemStack(giveItem);
-
-                        //    if (success == false)
-                        //    {
-                        //        giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * coinAmount);
-                        //        success = playerInventory.GiveItemStack(giveItem);
-
-                        //        System.Diagnostics.Debug.Assert(success == true);
-
-                        //        success = false;
-                        //    }
-                        //    else
-                        //    {
-                        //        System.Diagnostics.Debug.Assert(player.Username != null);
-                        //        System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(player.Username) == false);
-                        //        System.Diagnostics.Debug.Assert(i == BalloonBasherSlot);
-                        //        ResetBalloonBasherSlot(player.Username);
-
-                        //        BalloonBasher.CanPurchase = false;
-                        //    }
-                        //}
+                            BalloonBasher.CanPurchase = false;
+                            success = true;
+                        }
+                        else
+                        {
+                            success = false;
+                        }
 
                     }
                     break;
                 case StoneOfSwiftness.Type:
                     {
-                        //const int coinAmount = StoneOfSwiftness.PurchasePrice;
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                            StoneOfSwiftness.Item, StoneOfSwiftness.DefaultCount,
+                            Coin.Item, Coin.DefaultCount * StoneOfSwiftness.PurchasePrice);
 
-                        //taked = playerInventory.TakeItemStacksInPrimary(
-                        //   Coin.Item, Coin.DefaultCount * coinAmount);
-
-                        //System.Diagnostics.Debug.Assert(taked != null);
-                        //if (taked.Length > 0)
-                        //{
-
-                        //    giveItem = ItemStack.Create(
-                        //        StoneOfSwiftness.Item,
-                        //        StoneOfSwiftness.DefaultCount * itemStack.Count);
-                        //    success = playerInventory.GiveItemStack(giveItem);
-
-                        //    if (success == false)
-                        //    {
-                        //        giveItem = ItemStack.Create(Coin.Item, Coin.DefaultCount * coinAmount);
-                        //        success = playerInventory.GiveItemStack(giveItem);
-
-                        //        System.Diagnostics.Debug.Assert(success == true);
-
-                        //        success = false;
-                        //    }
-                        //}
+                        success = taked != null;
 
                     }
                     break;
