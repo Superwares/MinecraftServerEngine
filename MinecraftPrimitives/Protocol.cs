@@ -901,7 +901,7 @@ namespace MinecraftPrimitives
 
                         success = true;
                     }
-                 
+
 
                     System.Diagnostics.Debug.Assert(buffer.Size == 0);
 

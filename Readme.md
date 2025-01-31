@@ -121,6 +121,8 @@ If disposable objects were used as members of class and struct, they must be dis
 	* 중간에 사망하여도 잘 진행되는가
 * Send packet 할때 TryAgain 처리해야됨.
 * Block Appearance 일떄 움직이면 이전 블럭은Air 로 바뀌는데 Air 가 아닌 해당 위치의 블럭으로 바뀌어야됨.
+* 어떤 플레이어의 인벤토리를 강제로 닫을 수 있도록.
+
 
 ### Done 
 
