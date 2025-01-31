@@ -731,6 +731,13 @@ namespace MinecraftPrimitives
                         level = 2;
                     }
 
+                    if (level == 4)
+                    {
+                        client.Send(buffer);
+
+                        level = 2;
+                    }
+
                     if (level == 2)  // Ping
                     {
                         /*Console.WriteLine("Ping!");*/
@@ -866,15 +873,6 @@ namespace MinecraftPrimitives
                         _ConnectionListener.AddUser(user);
 
                         success = true;
-                    }
-
-                    if (level == 4)
-                    {
-                        client.Send(buffer);
-
-                        level = 2;
-
-                        throw new TryAgainException();
                     }
 
                     if (level == 5)
