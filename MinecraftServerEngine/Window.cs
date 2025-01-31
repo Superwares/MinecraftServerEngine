@@ -419,6 +419,7 @@ namespace MinecraftServerEngine
             }
             finally
             {
+                System.Diagnostics.Debug.Assert(_Renderer != null);
                 _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
 
                 if (_sharedInventory != null)
@@ -442,9 +443,11 @@ namespace MinecraftServerEngine
                 return;
             }
 
+            System.Diagnostics.Debug.Assert(_Locker != null);
             _Locker.Hold();
             if (_sharedInventory != null)
             {
+                System.Diagnostics.Debug.Assert(_sharedInventory.Locker != null);
                 _sharedInventory.Locker.Hold();
             }
 
@@ -454,12 +457,15 @@ namespace MinecraftServerEngine
             }
             finally
             {
+                System.Diagnostics.Debug.Assert(_Renderer != null);
                 _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
 
                 if (_sharedInventory != null)
                 {
+                    System.Diagnostics.Debug.Assert(_sharedInventory.Locker != null);
                     _sharedInventory.Locker.Release();
                 }
+                System.Diagnostics.Debug.Assert(_Locker != null);
                 _Locker.Release();
             }
         }
@@ -493,6 +499,7 @@ namespace MinecraftServerEngine
             }
             finally
             {
+                System.Diagnostics.Debug.Assert(_Renderer != null);
                 _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
 
                 if (_sharedInventory != null)
@@ -534,6 +541,7 @@ namespace MinecraftServerEngine
             }
             finally
             {
+                System.Diagnostics.Debug.Assert(_Renderer != null);
                 _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
 
                 if (_sharedInventory != null)
