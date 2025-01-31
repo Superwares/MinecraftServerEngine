@@ -76,13 +76,13 @@ namespace TestMinecraftServerApplication
             {
                 int offset = SlotCountPerLine * (MaxLineCount - 1);
 
-                SetSlot(offset + 0, Coin.Create());
-                SetSlot(offset + 1, new ItemStack(ItemType.Sign, "", [
-                    "게임 전에만 지급받을 수 있습니다!",
+                SetSlot(offset + 0, ItemStack.Create(Coin.Item, [
+                    $"",
+                    $"게임 전에만 지급받을 수 있습니다!",
                     ]));
 
-                SetSlot(offset + 8, ShopItem.Create());
-                SetSlot(offset + 7, GlobalChestItem.Create());
+                SetSlot(offset + 8, ItemStack.Create(ShopItem.Item));
+                SetSlot(offset + 7, ItemStack.Create(GlobalChestItem.Item));
             }
         }
 
@@ -102,19 +102,19 @@ namespace TestMinecraftServerApplication
                     {
                         if (SuperWorld.GameContext.IsStarted == false)
                         {
-                            success = playerInventory.GiveItemStacks(itemStack, itemStack.Count);
+                            success = playerInventory.GiveItemStacks(Coin.Item, itemStack.Count);
                         }
 
                     }
                     break;
                 case ShopItem.Type:
                     {
-                        success = playerInventory.GiveItemStacks(itemStack, itemStack.Count);
+                        success = playerInventory.GiveItemStacks(ShopItem.Item, itemStack.Count);
                     }
                     break;
                 case GlobalChestItem.Type:
                     {
-                        success = playerInventory.GiveItemStacks(itemStack, itemStack.Count);
+                        success = playerInventory.GiveItemStacks(ShopItem.Item, itemStack.Count);
                     }
                     break;
                 case WoodenSword.Type:

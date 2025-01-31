@@ -1,6 +1,5 @@
 ﻿
 using MinecraftPrimitives;
-using System.Linq;
 
 namespace MinecraftServerEngine
 {
@@ -71,7 +70,7 @@ namespace MinecraftServerEngine
             IReadOnlyItem item, int count,
             params string[] additionalLore)
         {
-            string[] lore = item.Lore.Concat(additionalLore).ToArray();
+            string[] lore = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Concat(item.Lore, additionalLore));
 
             return new ItemStack(
                 item.Type, item.Name, count,
@@ -83,7 +82,9 @@ namespace MinecraftServerEngine
             IReadOnlyItem item,
             params string[] additionalLore)
         {
-            string[] lore = item.Lore.Concat(additionalLore).ToArray();
+            string[] lore = System.Linq.Enumerable.ToArray(
+                System.Linq.Enumerable.Concat(item.Lore, additionalLore)
+                );
 
             return new ItemStack(
                 item.Type, item.Name,
@@ -117,6 +118,34 @@ namespace MinecraftServerEngine
             }
 
             return count - unused;  // used
+        }
+
+        internal int Stack2(int count)
+        {
+            System.Diagnostics.Debug.Assert(count >= 0);
+
+            System.Diagnostics.Debug.Assert(_count >= MinCount);
+            System.Diagnostics.Debug.Assert(_count <= MaxCount);
+
+            if (count == 0)
+            {
+                return 0;
+            }
+
+            int remaning;
+            _count += count;
+
+            if (_count > MaxCount)
+            {
+                remaning = _count - MaxCount;
+                _count = MaxCount;
+            }
+            else
+            {
+                remaning = 0;
+            }
+
+            return remaning;  // used
         }
 
         internal int PreStack(int count)
@@ -165,26 +194,26 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_count > 0);
         }
 
-        internal bool Move(ref ItemStack from)
+        internal bool Move(ref ItemStack fromItemStack)
         {
-            System.Diagnostics.Debug.Assert(from != null);
+            System.Diagnostics.Debug.Assert(fromItemStack != null);
 
-            if (AreByteArraysEqual(Hash, from.Hash) == false)
+            if (AreByteArraysEqual(Hash, fromItemStack.Hash) == false)
             {
                 return false;
             }
 
-            int used = Stack(from.Count);
-            System.Diagnostics.Debug.Assert(used >= 0);
-            System.Diagnostics.Debug.Assert(used <= from.Count);
+            int remaning = Stack2(fromItemStack.Count);
+            System.Diagnostics.Debug.Assert(remaning >= 0);
+            System.Diagnostics.Debug.Assert(remaning <= fromItemStack.Count);
 
-            if (used == from.Count)
+            if (remaning == 0)
             {
-                from = null;
+                fromItemStack = null;
             }
             else
             {
-                from.Spend(used);
+                fromItemStack.Spend(fromItemStack.Count - remaning);
             }
 
             return true;
@@ -210,9 +239,7 @@ namespace MinecraftServerEngine
             }
 
 
-            int used = Stack(count);
-
-            return count - used;
+            return Stack2(count);
         }
 
         internal int PreMove(IReadOnlyItem fromItem, int count)

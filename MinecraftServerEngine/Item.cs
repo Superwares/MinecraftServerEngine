@@ -168,6 +168,20 @@ namespace MinecraftServerEngine
 
         }
 
+        //public static Item Create(
+        //    IReadOnlyItem item,
+        //    params string[] additionalLore)
+        //{
+        //    string[] lore = System.Linq.Enumerable.ToArray(
+        //        System.Linq.Enumerable.Concat(item.Lore, additionalLore)
+        //        );
+
+        //    return new Item(
+        //        item.Type, item.Name,
+        //        item.MaxDurability, item.CurrentDurability,
+        //        lore);
+        //}
+
         internal bool CheckHash(byte[] hash)
         {
             if (hash == null)
