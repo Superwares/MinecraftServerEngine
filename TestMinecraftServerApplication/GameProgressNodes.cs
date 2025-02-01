@@ -97,6 +97,7 @@ namespace TestMinecraftServerApplication
 
                     _prevDisplayTime = Time.Now();
 
+                    ctx.PlaySound("entity.llama.chest", 0, 1.0, 1.5);
                 }
 
                 return false;
@@ -235,6 +236,8 @@ namespace TestMinecraftServerApplication
 
                 ctx.SeletSeeker(seeker);
 
+                ctx.PlaySound("entity.player.levelup", 0, 1.0, 1.5);
+
                 return true;
             }
 
@@ -251,6 +254,8 @@ namespace TestMinecraftServerApplication
 
                 //_repeat += 1;
                 i = 0;
+
+                ctx.PlaySound("entity.item.pickup", 0, 1.0, 1.5);
             }
             else
             {
@@ -272,6 +277,8 @@ namespace TestMinecraftServerApplication
                     ++i;
 
                     _time = Time.Now();
+
+                    ctx.PlaySound("entity.item.pickup", 0, 1.0, 1.5);
                 }
 
             }
@@ -405,6 +412,8 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_progressBarId != System.Guid.Empty);
                 world.CloseProgressBar(_progressBarId);
 
+                ctx.PlaySound("entity.player.levelup", 0, 1.0, 1.5);
+
                 return true;
             }
 
@@ -474,6 +483,8 @@ namespace TestMinecraftServerApplication
                     Time.Zero, Time.FromSeconds(1), Time.Zero,
                     new TextComponent($"술래가 사망하였습니다...", TextColor.DarkGray));
 
+                ctx.PlaySound("entity.illusion_illager.ambient", 0, 1.0, 1.5);
+
                 return true;
             }
 
@@ -498,6 +509,8 @@ namespace TestMinecraftServerApplication
                         progressBar,
                         BossBarColor.Red,
                         BossBarDivision.Notches_20);
+
+                    ctx.PlaySound("entity.player.levelup", 0, 1.0, 1.5);
 
                     _initNormal = true;
                 }
@@ -544,6 +557,8 @@ namespace TestMinecraftServerApplication
 
                     ctx.StartBuringTime();
 
+                    ctx.PlaySound("entity.player.levelup", 0, 1.0, 1.5);
+
                     _initBurning = true;
                 }
                 else
@@ -564,6 +579,8 @@ namespace TestMinecraftServerApplication
 
                 System.Diagnostics.Debug.Assert(_progressBarId != System.Guid.Empty);
                 world.CloseProgressBar(_progressBarId);
+
+                ctx.PlaySound("entity.player.levelup", 0, 1.0, 1.5);
 
                 return true;
             }
@@ -692,6 +709,8 @@ namespace TestMinecraftServerApplication
                         Time.Zero, Time.FromSeconds(5), Time.FromSeconds(5),
                         new TextComponent($"! {_winner.Username} !", TextColor.BrightGreen));
 
+                    ctx.PlaySound("entity.player.levelup", 0, 1.0, 1.5);
+
                     _displayWinner = true;
                 }
 
@@ -729,6 +748,8 @@ namespace TestMinecraftServerApplication
 
                     //_repeat += 1;
                     i = 0;
+
+                    ctx.PlaySound("entity.item.pickup", 0, 1.0, 1.5);
                 }
                 else
                 {
@@ -748,6 +769,8 @@ namespace TestMinecraftServerApplication
                         ++i;
 
                         _time = Time.Now();
+
+                        ctx.PlaySound("entity.item.pickup", 0, 1.0, 1.5);
                     }
 
                 }
@@ -763,6 +786,8 @@ namespace TestMinecraftServerApplication
                     Time.Zero, Time.FromSeconds(4), Time.FromSeconds(1),
                     new TextComponent($"우승자는!", TextColor.Gold));
 
+                ctx.PlaySound("block.note.pling", 0, 1.0, 1.5);
+
                 _init = true;
             }
 
@@ -776,6 +801,7 @@ namespace TestMinecraftServerApplication
                 _intervalTime /= _Winners.Length;
                 _time = Time.Now() - _intervalTime;
 
+                ctx.PlaySound("block.note.pling", 0, 1.0, 1.5);
             }
 
             return false;

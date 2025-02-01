@@ -34,9 +34,12 @@ namespace TestMinecraftServerApplication
 
         private bool _disposed = false;
 
+
+
         private readonly Locker _LockerPlayers = new();
 
         private readonly List<SuperPlayer> _players = new();
+
 
 
         private bool _ready = false;
@@ -240,6 +243,16 @@ namespace TestMinecraftServerApplication
 
         }
 
+        public void PlaySound(string name, int category, double volume, double pitch)
+        {
+            System.Diagnostics.Debug.Assert(_players != null);
+            foreach (SuperPlayer player in _players)
+            {
+                System.Diagnostics.Debug.Assert(player != null);
+                player.PlaySound(name, category, volume, pitch);
+            }
+        }
+
         public void Start()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
@@ -273,6 +286,8 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(_players != null);
             Inventory.StartGame(_players, TotalRounds, _ScoreboardByUserId);
+
+            PlaySound("entity.player.levelup", 0, 1.0, 1.5);
         }
 
         public void StartRound()
