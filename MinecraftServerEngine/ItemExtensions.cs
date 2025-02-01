@@ -112,6 +112,7 @@ namespace MinecraftServerEngine
                     64,
                     0),
                 // It is not shown in client...
+                // It is only used for block.
                 //new ItemContext(
                 //    ItemType.GlowingRedstoneOre, 74, "lit_redstone_ore",
                 //    64,

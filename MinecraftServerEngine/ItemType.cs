@@ -23,6 +23,7 @@ namespace MinecraftServerEngine
 
         RedstoneOre,               // 73  minecraft:redstone_ore
         // It is not shown in client...
+        // It is only used for block.
         //GlowingRedstoneOre,        // 74  minecraft:lit_redstone_ore
 
         Pumpkin,                   // 86  minecraft:pumpkin
