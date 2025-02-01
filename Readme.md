@@ -131,6 +131,8 @@ If disposable objects were used as members of class and struct, they must be dis
 
 * 게임 시작시 떨어진 모든 아이템을 정리하기
 
+* 아이템을 Give 할때 이미 존재하는 slot 을 수색하고 꽉 채우기
+
 ### Done 
 
 * DetermineToDespawnPlayerOnDisconnect 가 동적으로 적용되나 테스트해야됨.
