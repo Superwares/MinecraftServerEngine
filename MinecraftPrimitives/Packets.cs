@@ -2678,6 +2678,8 @@ namespace MinecraftPrimitives
     public sealed class TimeUpdatePacket : ClientboundPlayingPacket
     {
         public readonly long WorldAge;
+
+        // The world (or region) time, in ticks. If negative the sun will stop moving at the Math.abs of the time
         public readonly long TimeOfDay;
 
         public static TimeUpdatePacket Read(MinecraftProtocolDataStream buffer)

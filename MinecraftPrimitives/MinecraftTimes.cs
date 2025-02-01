@@ -31,14 +31,14 @@ namespace MinecraftPrimitives
             System.Diagnostics.Debug.Assert(DaytimeStart == Time.Zero);
             System.Diagnostics.Debug.Assert(DaytimeStart < DaytimeMid);
             System.Diagnostics.Debug.Assert(DaytimeMid < DaytimeEnd);
-            System.Diagnostics.Debug.Assert(DaytimeEnd < SunsetStart);
+            System.Diagnostics.Debug.Assert(DaytimeEnd <= SunsetStart);
 
             System.Diagnostics.Debug.Assert(SunsetStart < SunsetEnd);
-            System.Diagnostics.Debug.Assert(SunsetEnd < NighttimeStart);
+            System.Diagnostics.Debug.Assert(SunsetEnd <= NighttimeStart);
 
             System.Diagnostics.Debug.Assert(NighttimeStart < NighttimeMid);
             System.Diagnostics.Debug.Assert(NighttimeMid < NighttimeEnd);
-            System.Diagnostics.Debug.Assert(NighttimeEnd < SunriseStart);
+            System.Diagnostics.Debug.Assert(NighttimeEnd <= SunriseStart);
 
             System.Diagnostics.Debug.Assert(SunriseStart < SunriseEnd);
             System.Diagnostics.Debug.Assert(SunriseEnd == OneDay);

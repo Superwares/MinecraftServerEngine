@@ -110,9 +110,8 @@ namespace Common
             return new(min * 60 * 1_000_000);
         }
 
-        public static string Symbol => "μs";
-
-        public static Time Zero => new(0);
+        public const string Symbol = "μs";
+        public readonly static Time Zero = new(0);
 
         public readonly long Amount;
 

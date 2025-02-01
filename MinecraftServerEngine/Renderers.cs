@@ -366,6 +366,15 @@ namespace MinecraftServerEngine
                 (long)(transitionTimePerMeter.Amount / Time.FromMilliseconds(1).Amount)
                 ));
         }
+
+        internal void UpdateWorldTime(Time worldTime)
+        {
+            System.Diagnostics.Debug.Assert(worldTime >= Time.Zero);
+            System.Diagnostics.Debug.Assert(worldTime <= MinecraftTimes.OneDay);
+
+            // The world (or region) time, in ticks. If negative the sun will stop moving at the Math.abs of the time
+            Render(new TimeUpdatePacket(0, -1 * MinecraftTimes.ToTicks(worldTime)));
+        }
     }
 
     internal abstract class ObjectRenderer : Renderer

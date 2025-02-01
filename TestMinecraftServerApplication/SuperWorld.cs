@@ -35,7 +35,14 @@ namespace TestMinecraftServerApplication
         private IGameProgressNode _currentGameProgressNode = new LobbyNode();
 
 
-        public SuperWorld() : base(CenterX, CenterZ, DefaultWorldBorderRadiusInMeters) { }
+        public SuperWorld()
+            : base(
+                  CenterX, CenterZ,
+                  DefaultWorldBorderRadiusInMeters,
+                  MinecraftTimes.DaytimeMid
+                  )
+        {
+        }
 
         ~SuperWorld()
         {

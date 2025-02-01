@@ -7,7 +7,6 @@ using MinecraftPrimitives;
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
-    using System.Xml.Linq;
 
     public abstract class World : PhysicsWorld
     {
@@ -272,12 +271,22 @@ namespace MinecraftServerEngine
         private double _worldBorder_centerX;
         private double _worldBorder_centerZ;
         private double _worldBorder_currentRadiusInMeters;
-        private double _worldBorder_newRadiusInMeters;
+        private double _worldBorder_targetRadiusInMeters;
         private Time _worldBorder_transitionStartTime = Time.Zero;
         private Time _worldBorder_transitionTimePerMeter = Time.Zero;
 
 
-        public World(double centerX, double centerZ, double worldBorderRadiusInMeters)
+        private readonly ReadLocker LockerWorldTime = new();  // Disposable
+        // TODO: Add world age
+        private Time _currentWorldTime = MinecraftTimes.DaytimeMid;
+        private Time _targetWorldTime = MinecraftTimes.DaytimeMid;
+        private Time _worldTime_transitionStartTime = Time.Zero;
+        private Time _worldTime_transitionTime = Time.Zero;
+
+
+        public World(
+            double centerX, double centerZ,
+            double worldBorderRadiusInMeters)
         {
             if (worldBorderRadiusInMeters <= 0)
             {
@@ -289,9 +298,23 @@ namespace MinecraftServerEngine
             _worldBorder_centerX = centerX;
             _worldBorder_centerZ = centerZ;
             _worldBorder_currentRadiusInMeters = worldBorderRadiusInMeters;
-            _worldBorder_newRadiusInMeters = worldBorderRadiusInMeters;
+            _worldBorder_targetRadiusInMeters = worldBorderRadiusInMeters;
 
             BlockContext = BlockContext.LoadWithRegionFiles(@"region");
+        }
+
+        public World(
+            double centerX, double centerZ,
+            double worldBorderRadiusInMeters,
+            Time worldTime)
+            : this(centerX, centerZ, worldBorderRadiusInMeters)
+        {
+            //Time currentWorldTime = new(Math.Normalize(worldTime.Amount, MinecraftTimes.OneDay.Amount));
+            _currentWorldTime = worldTime;
+            _targetWorldTime = worldTime;
+            _worldTime_transitionStartTime = Time.Zero;
+            _worldTime_transitionTime = Time.Zero;
+
         }
 
         ~World()
@@ -306,7 +329,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            if (_worldBorder_transitionTimePerMeter != Time.Zero)
+            if (_worldBorder_transitionStartTime > Time.Zero)
             {
                 System.Diagnostics.Debug.Assert(LockerWorldBorder != null);
                 LockerWorldBorder.Hold();
@@ -316,21 +339,21 @@ namespace MinecraftServerEngine
                     System.Diagnostics.Debug.Assert(
                         Math.AreDoublesEqual(
                             _worldBorder_currentRadiusInMeters,
-                            _worldBorder_newRadiusInMeters) == false
+                            _worldBorder_targetRadiusInMeters) == false
                             );
                     System.Diagnostics.Debug.Assert(_worldBorder_transitionStartTime != Time.Zero);
                     Time elapsedTime = Time.Now() - _worldBorder_transitionStartTime;
 
-                    System.Diagnostics.Debug.Assert(_worldBorder_newRadiusInMeters > 0.0);
+                    System.Diagnostics.Debug.Assert(_worldBorder_targetRadiusInMeters > 0.0);
                     System.Diagnostics.Debug.Assert(_worldBorder_currentRadiusInMeters > 0.0);
                     double remainingDistanceInMeters =
-                        _worldBorder_newRadiusInMeters - _worldBorder_currentRadiusInMeters;
+                        _worldBorder_targetRadiusInMeters - _worldBorder_currentRadiusInMeters;
                     Time remainingTransitionTime =
                         _worldBorder_transitionTimePerMeter * Math.Abs(remainingDistanceInMeters);
 
                     if (elapsedTime >= remainingTransitionTime)
                     {
-                        _worldBorder_currentRadiusInMeters = _worldBorder_newRadiusInMeters;
+                        _worldBorder_currentRadiusInMeters = _worldBorder_targetRadiusInMeters;
 
                         _worldBorder_transitionStartTime = Time.Zero;
                         _worldBorder_transitionTimePerMeter = Time.Zero;
@@ -360,6 +383,60 @@ namespace MinecraftServerEngine
                 {
                     System.Diagnostics.Debug.Assert(LockerWorldBorder != null);
                     LockerWorldBorder.Release();
+                }
+            }
+
+            if (_worldTime_transitionStartTime > Time.Zero)
+            {
+                System.Diagnostics.Debug.Assert(LockerWorldTime != null);
+                LockerWorldTime.Hold();
+
+                try
+                {
+
+                    System.Diagnostics.Debug.Assert(_worldTime_transitionStartTime != Time.Zero);
+                    Time elapsedTime = Time.Now() - _worldTime_transitionStartTime;
+
+                    System.Diagnostics.Debug.Assert(elapsedTime >= Time.Zero);
+                    System.Diagnostics.Debug.Assert(_worldTime_transitionTime >= Time.Zero);
+                    if (elapsedTime >= _worldTime_transitionTime)
+                    {
+                        _currentWorldTime = _targetWorldTime;
+                        //_targetWorldTime = _targetWorldTime;
+                        _worldTime_transitionStartTime = Time.Zero;
+                        _worldTime_transitionTime = Time.Zero;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.Assert(elapsedTime.Amount < _worldTime_transitionTime.Amount);
+                        double transitionProgress =
+                                (double)elapsedTime.Amount / (double)_worldTime_transitionTime.Amount;
+
+                        Time remaningWorldTime = _targetWorldTime - _currentWorldTime;
+
+                        _currentWorldTime = _currentWorldTime + (remaningWorldTime * transitionProgress);
+
+                        _worldTime_transitionStartTime = Time.Now();
+                    }
+
+                    {
+                        Time currentWorldTime = new(
+                            Math.Normalize(_currentWorldTime.Amount, MinecraftTimes.OneDay.Amount)
+                            );
+
+                        System.Diagnostics.Debug.Assert(WorldRenderersByUserId != null);
+                        foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
+                        {
+                            System.Diagnostics.Debug.Assert(renderer != null);
+                            renderer.UpdateWorldTime(currentWorldTime);
+                        }
+                    }
+
+                }
+                finally
+                {
+                    System.Diagnostics.Debug.Assert(LockerWorldTime != null);
+                    LockerWorldTime.Release();
                 }
             }
 
@@ -403,12 +480,12 @@ namespace MinecraftServerEngine
             try
             {
                 double remainingDistanceInMeters =
-                        _worldBorder_newRadiusInMeters - _worldBorder_currentRadiusInMeters;
+                        _worldBorder_targetRadiusInMeters - _worldBorder_currentRadiusInMeters;
                 Time remainingTransitionTime =
                     _worldBorder_transitionTimePerMeter * Math.Abs(remainingDistanceInMeters);
                 renderer.InitWorldBorder(
                     _worldBorder_centerX, _worldBorder_centerZ,
-                    _worldBorder_currentRadiusInMeters, _worldBorder_newRadiusInMeters,
+                    _worldBorder_currentRadiusInMeters, _worldBorder_targetRadiusInMeters,
                     remainingTransitionTime);
             }
             finally
@@ -417,6 +494,23 @@ namespace MinecraftServerEngine
                 LockerWorldBorder.Release();
             }
 
+            System.Diagnostics.Debug.Assert(LockerWorldTime != null);
+            LockerWorldTime.Read();
+
+            try
+            {
+                Time currentWorldTime = new(
+                    Math.Normalize(_currentWorldTime.Amount, MinecraftTimes.OneDay.Amount)
+                    );
+                System.Diagnostics.Debug.Assert(renderer != null);
+                renderer.UpdateWorldTime(currentWorldTime);
+
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerWorldTime != null);
+                LockerWorldTime.Release();
+            }
         }
 
         public void PlaySound(string name, int category, Vector p, double volume, double pitch)
@@ -710,15 +804,15 @@ namespace MinecraftServerEngine
 
             try
             {
-                if (Math.AreDoublesEqual(_worldBorder_newRadiusInMeters, radiusInMeters) == false)
+                if (Math.AreDoublesEqual(_worldBorder_targetRadiusInMeters, radiusInMeters) == false)
                 {
-                    _worldBorder_newRadiusInMeters = radiusInMeters;
+                    _worldBorder_targetRadiusInMeters = radiusInMeters;
                     _worldBorder_transitionTimePerMeter = transitionTimePerMeter;
 
                     _worldBorder_transitionStartTime = Time.Now();
 
                     double remainingDistanceInMeters =
-                        _worldBorder_newRadiusInMeters - _worldBorder_currentRadiusInMeters;
+                        _worldBorder_targetRadiusInMeters - _worldBorder_currentRadiusInMeters;
                     Time remainingTransitionTime =
                         _worldBorder_transitionTimePerMeter * Math.Abs(remainingDistanceInMeters);
 
@@ -727,7 +821,7 @@ namespace MinecraftServerEngine
                     {
                         System.Diagnostics.Debug.Assert(renderer != null);
                         renderer.InitWorldBorder(_worldBorder_centerX, _worldBorder_centerZ,
-                            _worldBorder_currentRadiusInMeters, _worldBorder_newRadiusInMeters,
+                            _worldBorder_currentRadiusInMeters, _worldBorder_targetRadiusInMeters,
                             remainingTransitionTime);
                     }
                 }
@@ -736,6 +830,84 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(LockerWorldBorder != null);
                 LockerWorldBorder.Release();
+            }
+        }
+
+        public void ChangeWorldTimeToNextDay(Time worldTime, Time transitionTime)
+        {
+            if (transitionTime < Time.Zero)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(transitionTime));
+            }
+
+            System.Diagnostics.Debug.Assert(LockerWorldTime != null);
+            LockerWorldTime.Hold();
+
+            try
+            {
+                System.Diagnostics.Debug.Assert(MinecraftTimes.OneDay.Amount > 0);
+                int days = (int)System.Math.Ceiling(
+                    (double)_targetWorldTime.Amount / (double)MinecraftTimes.OneDay.Amount
+                    );
+
+                _targetWorldTime = (MinecraftTimes.OneDay * days) + worldTime;
+
+                _worldTime_transitionStartTime = Time.Now();
+                _worldTime_transitionTime = transitionTime;
+
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerWorldTime != null);
+                LockerWorldTime.Release();
+            }
+        }
+
+        public void ChangeWorldTimeToPrevDayTo(Time worldTime, Time transitionTime)
+        {
+            if (transitionTime < Time.Zero)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(transitionTime));
+            }
+
+            System.Diagnostics.Debug.Assert(LockerWorldTime != null);
+            LockerWorldTime.Hold();
+
+            try
+            {
+
+                throw new System.NotImplementedException();
+
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerWorldTime != null);
+                LockerWorldTime.Release();
+            }
+        }
+
+        public void AddTimeToWorld(Time addTime, Time transitionTime)
+        {
+            if (transitionTime < Time.Zero)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(transitionTime));
+            }
+
+            System.Diagnostics.Debug.Assert(LockerWorldTime != null);
+            LockerWorldTime.Hold();
+
+            try
+            {
+
+                _targetWorldTime = _targetWorldTime + addTime;
+                _worldTime_transitionStartTime = Time.Now();
+                _worldTime_transitionTime = transitionTime;
+
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerWorldTime != null);
+                LockerWorldTime.Release();
             }
         }
 
@@ -1028,6 +1200,8 @@ namespace MinecraftServerEngine
                     ProgressBars.Dispose();
 
                     LockerWorldBorder.Dispose();
+
+                    LockerWorldTime.Dispose();
                 }
 
                 // Call the appropriate methods to clean up
