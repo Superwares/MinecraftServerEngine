@@ -829,6 +829,47 @@ namespace MinecraftServerEngine
 
         }
 
+        public void WriteMessageInChatBox(params TextComponent[] components)
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            if (Connected == false)
+            {
+                return;
+            }
+
+            if (components == null)
+            {
+                components = [];
+            }
+
+            var extra = new object[components.Length];
+
+            for (int i = 0; i < components.Length; ++i)
+            {
+                TextComponent component = components[i];
+
+                extra[i] = new
+                {
+                    text = component.Text,
+                    color = component.Color.GetName(),
+                };
+            }
+
+            var chat = new
+            {
+                text = "",
+                extra = extra,
+            };
+
+            string data = System.Text.Json.JsonSerializer.Serialize(chat);
+
+            Conn.OutPackets.Enqueue(new ClientboundChatmessagePacket(data, 0x00));
+        }
+
         internal override void _Animate(EntityAnimation animation)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);

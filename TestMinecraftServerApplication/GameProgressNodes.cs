@@ -966,7 +966,7 @@ namespace TestMinecraftServerApplication
                     _fireworkTwinkle_5 = true;
 
                     ctx.PlaySound("entity.firework.twinkle", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.twinkle_far", 0, 1.0, 2.0);
+                    //ctx.PlaySound("entity.firework.twinkle_far", 0, 1.0, 2.0);
                     ctx.PlaySound("entity.firework.blast", 0, 1.0, 2.0);
                     ctx.PlaySound("entity.firework.large_blast_far", 0, 1.0, 2.0);
                 }
@@ -993,7 +993,7 @@ namespace TestMinecraftServerApplication
                     ctx.PlaySound("entity.firework.large_blast", 0, 1.0, 2.0);
                     ctx.PlaySound("entity.firework.blast_far", 0, 1.0, 2.0);
                     ctx.PlaySound("entity.firework.twinkle", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.twinkle_far", 0, 1.0, 2.0);
+                    //ctx.PlaySound("entity.firework.twinkle_far", 0, 1.0, 2.0);
                 }
                 else if (_fireworkTwinkle_9 == false && elapsedTime > FireworkTwinkleTime_9)
                 {
@@ -1001,7 +1001,7 @@ namespace TestMinecraftServerApplication
 
                     ctx.PlaySound("entity.firework.large_blast", 0, 1.0, 2.0);
                     ctx.PlaySound("entity.firework.blast_far", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.twinkle", 0, 1.0, 2.0);
+                    //ctx.PlaySound("entity.firework.twinkle", 0, 1.0, 2.0);
                     ctx.PlaySound("entity.firework.twinkle_far", 0, 1.0, 2.0);
                 }
 

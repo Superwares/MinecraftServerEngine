@@ -13,7 +13,7 @@ namespace TestMinecraftServerApplication.Items
         public const double MovementSpeed = LivingEntity.DefaultMovementSpeed + 0.2;
         public readonly static Time Duration = Time.FromSeconds(5);
 
-        public const int MaxPurchaseCount = 10;
+        public const int MaxPurchaseCount = 15;
         public const int PurchasePrice = 5;
         public const int SellPrice = 1;
 
