@@ -156,10 +156,7 @@ namespace TestMinecraftServerApplication
 
                 slots[offset + 0] = (
                     true,
-                    ItemStack.Create(Coin.Item, Coin.MaxCount, [
-                        $"",
-                        $"게임 전에만 지급받을 수 있습니다!",
-                        ])
+                    ItemStack.Create(Coin.Item, Coin.MaxCount)
                     );
 
                 slots[offset + 8] = (
