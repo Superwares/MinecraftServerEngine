@@ -261,6 +261,7 @@ namespace MinecraftPrimitives
         public const int EntityEquipmentPacketId = 0x3F;
         public const int SetExperiencePacketId = 0x40;
         public const int UpdateHealthPacketId = 0x41;
+        public const int TimeUpdatePacketId = 0x47;
         public const int TitlePacketId = 0x48;
         public const int EntityTeleportPacketId = 0x4C;
         public const int EntityPropertiesPacketId = 0x4E;
@@ -2671,6 +2672,39 @@ namespace MinecraftPrimitives
             buffer.WriteFloat(Health);
             buffer.WriteInt(Food, true);
             buffer.WriteFloat(FoodSaturation);
+        }
+    }
+
+    public sealed class TimeUpdatePacket : ClientboundPlayingPacket
+    {
+        public readonly long WorldAge;
+        public readonly long TimeOfDay;
+
+        public static TimeUpdatePacket Read(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public TimeUpdatePacket(long worldAge, long timeOfDay) : base(TimeUpdatePacketId)
+        {
+            WorldAge = worldAge;
+            TimeOfDay = timeOfDay;
+        }
+
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteLong(WorldAge);
+            buffer.WriteLong(TimeOfDay);
         }
     }
 

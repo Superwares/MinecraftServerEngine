@@ -252,7 +252,7 @@ namespace MinecraftServerEngine
                 clntListener.Flush();
             });
 
-            
+
 
             TaskManager manager = new(
                 new Task(  // 0
@@ -293,7 +293,7 @@ namespace MinecraftServerEngine
 
             total = Time.Zero;
 
-            interval = accumulated = MinecraftConstants.TimePerTick; 
+            interval = accumulated = MinecraftTimes.TimePerTick;
             start = Time.Now();
 
             while (_running)

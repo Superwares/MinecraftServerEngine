@@ -479,15 +479,14 @@ namespace MinecraftServerEngine
             string data = System.Text.Json.JsonSerializer.Serialize(chat);
 
             // TODO: 1tick = 50ms, make this variable to single constant.
-            const int microsecondsPerTick = 50 * 1000;
 
             foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
             {
                 System.Diagnostics.Debug.Assert(renderer != null);
                 renderer.DisplayTitle(
-                    (int)(fadeIn.Amount / microsecondsPerTick),
-                    (int)(stay.Amount / microsecondsPerTick),
-                    (int)(fadeOut.Amount / microsecondsPerTick),
+                    (int)(fadeIn.Amount / MinecraftTimes.TimePerTick.Amount),
+                    (int)(stay.Amount / MinecraftTimes.TimePerTick.Amount),
+                    (int)(fadeOut.Amount / MinecraftTimes.TimePerTick.Amount),
                     data);
             }
 

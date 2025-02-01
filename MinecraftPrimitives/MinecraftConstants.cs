@@ -2,9 +2,10 @@
 
 namespace MinecraftPrimitives
 {
+    // TODO: Suggestion nameing: MinecraftUnits
     public static class MinecraftConstants
     {
-        public readonly static Time TimePerTick = Time.FromMilliseconds(50);
+        
 
         public const int BlocksPerChunk = 16;
         public const int ChunksPerRegion = 32;
