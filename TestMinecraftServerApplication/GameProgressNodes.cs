@@ -156,6 +156,9 @@ namespace TestMinecraftServerApplication
 
             ctx.StartRound();
 
+            world.ChangeWorldTimeOfDay(SuperWorld.DefaultWorldTime, Time.Zero);
+            world.ChangeWorldBorderSize(SuperWorld.DefaultWorldBorderRadiusInMeters, Time.Zero);
+
             return true;
         }
     }

@@ -213,7 +213,7 @@ namespace TestMinecraftServerApplication
             {
                 case BalloonBasher.Type:
                     {
-                        System.Diagnostics.Debug.Assert(BalloonBasher.CanPurchase == false);
+                        //System.Diagnostics.Debug.Assert(BalloonBasher.CanPurchase == false);
                         BalloonBasher.CanPurchase = true;
 
                         ShopInventory.ResetBalloonBasherSlot(null);
@@ -221,7 +221,7 @@ namespace TestMinecraftServerApplication
                     break;
                 case EclipseCrystal.Type:
                     {
-                        System.Diagnostics.Debug.Assert(EclipseCrystal.CanPurchase == false);
+                        //System.Diagnostics.Debug.Assert(EclipseCrystal.CanPurchase == false);
                         EclipseCrystal.CanPurchase = true;
 
                         ShopInventory.ResetEclipseCrystalSlot(null);
@@ -497,7 +497,7 @@ namespace TestMinecraftServerApplication
                 }
             }
 
-            System.Diagnostics.Debug.Assert(EclipseCrystal.CanPurchase == false);
+            //System.Diagnostics.Debug.Assert(EclipseCrystal.CanPurchase == false);
             EclipseCrystal.CanPurchase = true;
 
             ShopInventory.ResetEclipseCrystalSlot(null);

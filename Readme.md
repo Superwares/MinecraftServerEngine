@@ -129,6 +129,8 @@ If disposable objects were used as members of class and struct, they must be dis
 * 클라이언트가 처음 접속할떄 느려짐
 	* 아마 청크 로드와 관련있음.
 
+* 게임 시작시 떨어진 모든 아이템을 정리하기
+
 ### Done 
 
 * DetermineToDespawnPlayerOnDisconnect 가 동적으로 적용되나 테스트해야됨.

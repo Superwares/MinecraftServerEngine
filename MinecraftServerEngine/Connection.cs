@@ -1051,8 +1051,8 @@ namespace MinecraftServerEngine
                         /*player.ControlStanding(packet.OnGround);*/
                     }
                     break;
-                case ServerboundPlayingPacket.PlayerDigPacketId:
-                    throw new UnexpectedPacketException();
+                //case ServerboundPlayingPacket.PlayerDigPacketId:
+                //    throw new UnexpectedPacketException();
                 //{
 
                 //    var packet = PlayerDigPacket.Read(buffer);

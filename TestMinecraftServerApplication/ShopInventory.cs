@@ -206,7 +206,7 @@ namespace TestMinecraftServerApplication
                            BalloonBasher.Item, BalloonBasher.DefaultCount,
                            Coin.Item, Coin.DefaultCount * BalloonBasher.PurchasePrice);
 
-                        if (taked != null)
+                        if (taked != null && SuperWorld.GameContext.IsStarted == true)
                         {
                             System.Diagnostics.Debug.Assert(player.Username != null);
                             System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(player.Username) == false);
@@ -214,12 +214,9 @@ namespace TestMinecraftServerApplication
                             ResetBalloonBasherSlot(player.Username);
 
                             BalloonBasher.CanPurchase = false;
-                            success = true;
                         }
-                        else
-                        {
-                            success = false;
-                        }
+
+                        success = taked != null;
 
                     }
                     break;
@@ -234,7 +231,7 @@ namespace TestMinecraftServerApplication
                            EclipseCrystal.Item, EclipseCrystal.DefaultCount,
                            Coin.Item, Coin.DefaultCount * EclipseCrystal.PurchasePrice);
 
-                        if (taked != null)
+                        if (taked != null && SuperWorld.GameContext.IsStarted == true)
                         {
                             System.Diagnostics.Debug.Assert(player.Username != null);
                             System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(player.Username) == false);
@@ -242,12 +239,9 @@ namespace TestMinecraftServerApplication
                             ResetEclipseCrystalSlot(player.Username);
 
                             EclipseCrystal.CanPurchase = false;
-                            success = true;
                         }
-                        else
-                        {
-                            success = false;
-                        }
+
+                        success = taked != null;
 
                     }
                     break;
@@ -338,18 +332,15 @@ namespace TestMinecraftServerApplication
                             Coin.Item, Coin.DefaultCount * BalloonBasher.SellPrice,
                             BalloonBasher.Item, BalloonBasher.DefaultCount);
 
-                        if (taked != null)
+                        if (taked != null && SuperWorld.GameContext.IsStarted == true)
                         {
                             System.Diagnostics.Debug.Assert(i == BalloonBasherSlot);
                             ResetBalloonBasherSlot(null);
 
                             BalloonBasher.CanPurchase = true;
-                            success = true;
                         }
-                        else
-                        {
-                            success = false;
-                        }
+
+                        success = taked != null;
 
                     }
                     break;
@@ -364,18 +355,15 @@ namespace TestMinecraftServerApplication
                             Coin.Item, Coin.DefaultCount * EclipseCrystal.SellPrice,
                             EclipseCrystal.Item, EclipseCrystal.DefaultCount);
 
-                        if (taked != null)
+                        if (taked != null && SuperWorld.GameContext.IsStarted == true)
                         {
                             System.Diagnostics.Debug.Assert(i == EclipseCrystalSlot);
                             ResetEclipseCrystalSlot(null);
 
                             EclipseCrystal.CanPurchase = true;
-                            success = true;
                         }
-                        else
-                        {
-                            success = false;
-                        }
+
+                        success = taked != null;
 
                     }
                     break;

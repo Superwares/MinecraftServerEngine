@@ -6,7 +6,6 @@ using Sync;
 using MinecraftPrimitives;
 using MinecraftServerEngine;
 using TestMinecraftServerApplication.Items;
-using System.Numerics;
 
 namespace TestMinecraftServerApplication
 {
@@ -228,24 +227,6 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_ready == false);
                 _ready = true;
 
-                System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
-                System.Diagnostics.Debug.Assert(_ScoreboardByUserId.Count == 0);
-                System.Diagnostics.Debug.Assert(_ScoreboardByUsername != null);
-                System.Diagnostics.Debug.Assert(_ScoreboardByUsername.Count == 0);
-
-                System.Diagnostics.Debug.Assert(_players != null);
-                foreach (SuperPlayer player in _players)
-                {
-                    ScoreboardPlayerRow row = new(player.UserId, player.Username);
-
-                    _ScoreboardByUserId.Insert(row.UserId, row);
-                    _ScoreboardByUsername.Insert(row.Username, row);
-
-                    player.FlushItems();
-
-                    //player.GiveItemStack(GamePanel.Create());
-                    //player.GiveItemStack(ShopItem.Create());
-                }
 
                 return true;
             }
@@ -274,13 +255,20 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(_currentSeeker == null);
             System.Diagnostics.Debug.Assert(_currentRoundIndex < 0);
 
+            System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
+            System.Diagnostics.Debug.Assert(_ScoreboardByUserId.Count == 0);
+            System.Diagnostics.Debug.Assert(_ScoreboardByUsername != null);
+            System.Diagnostics.Debug.Assert(_ScoreboardByUsername.Count == 0);
+
             System.Diagnostics.Debug.Assert(_players != null);
             foreach (SuperPlayer player in _players)
             {
-                player.FlushItems();
+                ScoreboardPlayerRow row = new(player.UserId, player.Username);
 
-                //player.GiveItemStacks(GamePanel.Create());
-                //player.GiveItemStacks(ShopItem.Create());
+                _ScoreboardByUserId.Insert(row.UserId, row);
+                _ScoreboardByUsername.Insert(row.Username, row);
+
+                player.Reset();
             }
 
             System.Diagnostics.Debug.Assert(_players != null);
