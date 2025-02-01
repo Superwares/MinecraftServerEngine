@@ -254,6 +254,14 @@ namespace MinecraftServerEngine
 
         internal readonly ConcurrentTable<int, Entity> EntitiesById = new();  // Disposable
         internal readonly ConcurrentTable<UserId, AbstractPlayer> PlayersByUserId = new();  // Disposable
+        public System.Collections.Generic.IEnumerable<AbstractPlayer> AllPlayers
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(PlayersByUserId != null);
+                return PlayersByUserId.GetValues();
+            }
+        }
         internal readonly ConcurrentTable<string, AbstractPlayer> PlayersByUsername = new();  // Disposable
 
         internal readonly ConcurrentMap<UserId, WorldRenderer> WorldRenderersByUserId = new();  // Disposable
@@ -848,6 +856,36 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(MinecraftTimes.OneDay.Amount > 0);
                 int days = (int)System.Math.Ceiling(
+                    (double)_targetWorldTime.Amount / (double)MinecraftTimes.OneDay.Amount
+                    );
+
+                _targetWorldTime = (MinecraftTimes.OneDay * days) + worldTime;
+
+                _worldTime_transitionStartTime = Time.Now();
+                _worldTime_transitionTime = transitionTime;
+
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerWorldTime != null);
+                LockerWorldTime.Release();
+            }
+        }
+
+        public void ChangeWorldTimeOfDay(Time worldTime, Time transitionTime)
+        {
+            if (transitionTime < Time.Zero)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(transitionTime));
+            }
+
+            System.Diagnostics.Debug.Assert(LockerWorldTime != null);
+            LockerWorldTime.Hold();
+
+            try
+            {
+                System.Diagnostics.Debug.Assert(MinecraftTimes.OneDay.Amount > 0);
+                int days = (int)System.Math.Floor(
                     (double)_targetWorldTime.Amount / (double)MinecraftTimes.OneDay.Amount
                     );
 

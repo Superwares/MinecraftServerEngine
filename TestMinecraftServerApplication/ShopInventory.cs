@@ -16,6 +16,7 @@ namespace TestMinecraftServerApplication
 
         public const int UniqueItemLineOffset = (SlotCountPerLine * 1) + 0;
         public const int BalloonBasherSlot = UniqueItemLineOffset + 1;
+        public const int EclipseCrystalSlot = UniqueItemLineOffset + 6;
 
 
         public void ResetBalloonBasherSlot(string username)
@@ -26,15 +27,36 @@ namespace TestMinecraftServerApplication
             }
 
             SetSlot(BalloonBasherSlot, ItemStack.Create(BalloonBasher.Item, BalloonBasher.DefaultCount, [
-                    // A lightweight yet powerful weapon that can send enemies flying with a single hit.
+                    // A lightweight yet powerful weapon that
+                    // can send enemies flying with a single hit.
                     $"",
                     $"가볍지만 강력한 무기로 ",
                     $"한 방에 적을 날려버릴 수 있습니다.",
                     $"",
                     // Left-click (Purchase)
-                    $"왼클릭(구매)          {Coin.DefaultCount * BalloonBasher.PurchasePrice} Coins",
+                    $"왼클릭(구매)          {BalloonBasher.PurchasePrice * Coin.DefaultCount} Coins",
                     // Right-click (Sell)
-                    $"우클릭(판매)          {Coin.DefaultCount * BalloonBasher.SellPrice} Coins",
+                    $"우클릭(판매)          {BalloonBasher.SellPrice * Coin.DefaultCount} Coins",
+                    $"구매자                {username}",
+                ]));
+        }
+
+        public void ResetEclipseCrystalSlot(string username)
+        {
+            if (username == null || string.IsNullOrEmpty(username) == true)
+            {
+                username = "없음";
+            }
+
+            SetSlot(EclipseCrystalSlot, ItemStack.Create(EclipseCrystal.Item, EclipseCrystal.DefaultCount, [
+                    // It can obscure the world...
+                    $"",
+                    $"세상을 가릴 수 있습니다...",
+                    $"",
+                    // Left-click (Purchase)
+                    $"왼클릭(구매)          {EclipseCrystal.PurchasePrice * Coin.DefaultCount} Coins",
+                    // Right-click (Sell)
+                    $"우클릭(판매)          {EclipseCrystal.SellPrice * Coin.DefaultCount} Coins",
                     $"구매자                {username}",
                 ]));
         }
@@ -78,6 +100,7 @@ namespace TestMinecraftServerApplication
                     );
 
                 ResetBalloonBasherSlot(null);
+                ResetEclipseCrystalSlot(null);
             }
 
             // Utility items
@@ -200,6 +223,34 @@ namespace TestMinecraftServerApplication
 
                     }
                     break;
+                case EclipseCrystal.Type:
+                    {
+                        if (EclipseCrystal.CanPurchase == false)
+                        {
+                            break;
+                        }
+
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                           EclipseCrystal.Item, EclipseCrystal.DefaultCount,
+                           Coin.Item, Coin.DefaultCount * EclipseCrystal.PurchasePrice);
+
+                        if (taked != null)
+                        {
+                            System.Diagnostics.Debug.Assert(player.Username != null);
+                            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(player.Username) == false);
+                            System.Diagnostics.Debug.Assert(i == EclipseCrystalSlot);
+                            ResetEclipseCrystalSlot(player.Username);
+
+                            EclipseCrystal.CanPurchase = false;
+                            success = true;
+                        }
+                        else
+                        {
+                            success = false;
+                        }
+
+                    }
+                    break;
                 case StoneOfSwiftness.Type:
                     {
                         taked = playerInventory.GiveAndTakeItemStacks(
@@ -293,6 +344,32 @@ namespace TestMinecraftServerApplication
                             ResetBalloonBasherSlot(null);
 
                             BalloonBasher.CanPurchase = true;
+                            success = true;
+                        }
+                        else
+                        {
+                            success = false;
+                        }
+
+                    }
+                    break;
+                case EclipseCrystal.Type:
+                    {
+                        if (EclipseCrystal.CanPurchase == true)
+                        {
+                            break;
+                        }
+
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                            Coin.Item, Coin.DefaultCount * EclipseCrystal.SellPrice,
+                            EclipseCrystal.Item, EclipseCrystal.DefaultCount);
+
+                        if (taked != null)
+                        {
+                            System.Diagnostics.Debug.Assert(i == EclipseCrystalSlot);
+                            ResetEclipseCrystalSlot(null);
+
+                            EclipseCrystal.CanPurchase = true;
                             success = true;
                         }
                         else

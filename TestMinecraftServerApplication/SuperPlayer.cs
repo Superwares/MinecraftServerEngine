@@ -14,6 +14,8 @@ namespace TestMinecraftServerApplication
 
         public const double DefaultAttackDamage = 1.0;
 
+        public readonly static Time WorldBorderOutsideDamageInterval = Time.FromSeconds(1);
+
 
         private bool _disposed = false;
 
@@ -22,6 +24,9 @@ namespace TestMinecraftServerApplication
 
         private bool _running_StoneOfSwiftness = false;
         private Time _startTime_StoneOfSwiftness = Time.Zero;
+
+
+        private Time _worldBorderOutsideDamage_startTime = Time.Now();
 
 
         public SuperPlayer(
@@ -78,7 +83,7 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            if (_world is World world)
+            if (_world is SuperWorld world)
             {
                 if (_running_StoneOfSwiftness == true)
                 {
@@ -94,9 +99,18 @@ namespace TestMinecraftServerApplication
                     }
                 }
 
+                System.Diagnostics.Debug.Assert(world != null);
 
-                //bool isOutsideOfWorldBorder = world.IsOutsideOfWorldBorder(Position);
-                //MyConsole.Debug($"isOutsideOfWorldBorder: {isOutsideOfWorldBorder}");
+                if (
+                    world.IsOutsideOfWorldBorder(Position) == true &&
+                    Time.Now() - _worldBorderOutsideDamage_startTime > WorldBorderOutsideDamageInterval
+                    )
+                {
+                    Damage(3.2390842905234);
+                    world.PlaySound("entity.player.hurt", 7, Position, 0.5, 1.0);
+                    _worldBorderOutsideDamage_startTime = Time.Now();
+                }
+
             }
 
 
@@ -205,6 +219,14 @@ namespace TestMinecraftServerApplication
                         ShopInventory.ResetBalloonBasherSlot(null);
                     }
                     break;
+                case EclipseCrystal.Type:
+                    {
+                        System.Diagnostics.Debug.Assert(EclipseCrystal.CanPurchase == false);
+                        EclipseCrystal.CanPurchase = true;
+
+                        ShopInventory.ResetEclipseCrystalSlot(null);
+                    }
+                    break;
             }
         }
 
@@ -246,9 +268,12 @@ namespace TestMinecraftServerApplication
 
             PhysicsObject obj = world.SearchClosestObject(o, d_prime, this);
 
+
             if (obj != null && obj is LivingEntity livingEntity)
             {
                 (bool damaged, double health) = livingEntity.Damage(damage);
+
+                //MyConsole.Debug("Attack!");
 
                 System.Diagnostics.Debug.Assert(health >= 0.0);
                 if (damaged == true && health == 0.0 && SuperWorld.GameContext.IsStarted == true)
@@ -265,7 +290,8 @@ namespace TestMinecraftServerApplication
                     livingEntity.Position.Y + livingEntity.GetEyeHeight(),
                     livingEntity.Position.Z);
 
-                world.PlaySound("entity.player.attack.strong", 7, v, 1.0F, 2.0F);
+                world.PlaySound("entity.player.hurt", 7, v, 1.0F, 2.0F);
+                world.PlaySound("entity.player.attack.strong", 7, Position, 1.0F, 2.0F);
             }
         }
 
@@ -438,13 +464,56 @@ namespace TestMinecraftServerApplication
 
         }
 
-        private void UseStoneOfSwiftness(SuperWorld world)
+        private void UseEclipseCrystal(SuperWorld world)
         {
-            ItemStack[] takedItemStacks = TakeItemStacks(StoneOfSwiftness.Item, StoneOfSwiftness.DefaultCount);
-            if (takedItemStacks == null | takedItemStacks.Length == 0)
+            System.Diagnostics.Debug.Assert(world != null);
+
+            ItemStack[] takedItemStacks = TakeItemStacks(EclipseCrystal.Item, EclipseCrystal.DefaultCount);
+            if (takedItemStacks == null)
             {
                 return;
             }
+
+            System.Diagnostics.Debug.Assert(takedItemStacks.Length > 0);
+
+            world.ChangeWorldBorderSize(
+                SuperWorld.DefaultWorldBorderRadiusInMeters / 2.0,
+                Time.FromMilliseconds(400)
+                );
+
+            world.ChangeWorldTimeOfDay(
+                MinecraftTimes.NighttimeMid,
+                Time.FromSeconds(1)
+                );
+
+            foreach (AbstractPlayer player in world.AllPlayers)
+            {
+                Vector v = new(player.Position.X, player.Position.Y + player.GetEyeHeight(), player.Position.Z);
+                world.PlaySound("block.end_portal.spawn", 6, v, 1.0, 2.0);
+
+                if (object.ReferenceEquals(this, player) == false)
+                {
+                    player.Damage(EclipseCrystal.Damage);
+                }
+            }
+
+            System.Diagnostics.Debug.Assert(EclipseCrystal.CanPurchase == false);
+            EclipseCrystal.CanPurchase = true;
+
+            ShopInventory.ResetEclipseCrystalSlot(null);
+        }
+
+        private void UseStoneOfSwiftness(SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            ItemStack[] takedItemStacks = TakeItemStacks(StoneOfSwiftness.Item, StoneOfSwiftness.DefaultCount);
+            if (takedItemStacks == null)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(takedItemStacks.Length > 0);
 
             System.Diagnostics.Debug.Assert(takedItemStacks != null);
             System.Diagnostics.Debug.Assert(takedItemStacks.Length == 1);
@@ -478,6 +547,11 @@ namespace TestMinecraftServerApplication
                     case GlobalChestItem.Type:
                         OpenInventory(ChestInventory);
                         break;
+
+                    case EclipseCrystal.Type:
+                        UseEclipseCrystal(world);
+                        break;
+
                     case StoneOfSwiftness.Type:
                         UseStoneOfSwiftness(world);
                         break;

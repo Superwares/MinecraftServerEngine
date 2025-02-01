@@ -113,19 +113,23 @@ If disposable objects were used as members of class and struct, they must be dis
 * y < 0 으로 떨어지면 Arrert 해결하기
 * Connection 대신 AbstractPlayer 안에서 Connection 에서의 로직을 모두 처리하기
 	* 따로 분리해서 코드 중복이 늘어남
-* abstract player 전용 play sound 기능 추가.
-	* 룰렛 돌릴때 (random seeker, winners) 에서 띵띵띵 소리 추가
+* 룰렛 돌릴때 (random seeker, winners) 에서 띵띵띵 소리 추가
+	* abstract player 전용 play sound 기능 추가.
 * 술래 사망시 라운드가 종료되는가. 
 	* Progress Bar 가 잘 닫히는지
 	* Title 이 잘띄어지는지
 	* 중간에 사망하여도 잘 진행되는가
-* Send packet 할때 TryAgain 처리해야됨.
+
 * Block Appearance 일떄 움직이면 이전 블럭은Air 로 바뀌는데 Air 가 아닌 해당 위치의 블럭으로 바뀌어야됨.
 	* PhysicsWorld 가 World 일때만 블럭으로 변할수 있도록. 
 		* World 에만 BlockContext가 있기에	``
 * 어떤 플레이어의 인벤토리를 강제로 닫을 수 있도록.
 
 
+* 클라이언트가 처음 접속할떄 느려짐
+	* 아마 청크 로드와 관련있음.
+
 ### Done 
 
 * DetermineToDespawnPlayerOnDisconnect 가 동적으로 적용되나 테스트해야됨.
+* Send packet 할때 TryAgain 처리해야됨.

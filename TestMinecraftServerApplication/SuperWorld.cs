@@ -15,7 +15,7 @@ namespace TestMinecraftServerApplication
         public const double CenterZ = 216.0;
         public const double DefaultWorldBorderRadiusInMeters = 40.0;
 
-        public static readonly Vector PosSpawning = new(151.5, 15.0, 214.5);
+        public static readonly Vector PosSpawning = new(151.5, 20.0, 214.5);
         //public static readonly Vector PosSpawning = new(5.0, 5.0, 5.0);
         public static readonly Angles LookSpawning = new(90.0F, 0.0F);
 

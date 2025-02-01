@@ -15,8 +15,8 @@ namespace TestMinecraftServerApplication.Items
 
         public const double Damage = 3.0;
 
-        public const int PurchasePrice = 30;
-        public const int SellPrice = 5;
+        public const int PurchasePrice = 70;
+        public const int SellPrice = 10;
 
         public readonly static IReadOnlyItem Item = new Item(
             Type,
