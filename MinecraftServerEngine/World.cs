@@ -416,6 +416,7 @@ namespace MinecraftServerEngine
 
                         _currentWorldTime = _currentWorldTime + (remaningWorldTime * transitionProgress);
 
+                        _worldTime_transitionTime = _worldTime_transitionTime - elapsedTime;
                         _worldTime_transitionStartTime = Time.Now();
                     }
 

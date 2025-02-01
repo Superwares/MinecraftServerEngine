@@ -279,6 +279,10 @@ namespace MinecraftServerEngine
 
         }
 
+
+
+
+
         private bool _disposed = false;
 
         private readonly UserId UserId;
@@ -507,19 +511,19 @@ namespace MinecraftServerEngine
                 case "tp":
                     {
                         const string usage = "\n" +
-    "Usage:\n" +
-    "\n" +
-    "/teleport <x> <y> <z> <yaw> <pitch> \n" +
-    "\n" +
-    "* Teleports the command issuer (you) to the specified coordinates <x>, <y>, <z>, <yaw>, and <pitch>. \n" +
-    "\n" +
-    "/teleport <x> <y> <z> <yaw> <pitch> <username> \n" +
-    "\n" +
-    "* Teleports the specified player to the coordinates <x>, <y>, <z>, <yaw>, and <pitch>. \n" +
-    "\n" +
-    "/teleport <from username> <to username> \n" +
-    "\n" +
-    "* Teleports the player specified as <from username> to the location of the player specified as <to username>. \n";
+"Usage:\n" +
+"\n" +
+"/teleport <x> <y> <z> <yaw> <pitch> \n" +
+"\n" +
+"* Teleports the command issuer (you) to the specified coordinates <x>, <y>, <z>, <yaw>, and <pitch>. \n" +
+"\n" +
+"/teleport <x> <y> <z> <yaw> <pitch> <username> \n" +
+"\n" +
+"* Teleports the specified player to the coordinates <x>, <y>, <z>, <yaw>, and <pitch>. \n" +
+"\n" +
+"/teleport <from username> <to username> \n" +
+"\n" +
+"* Teleports the player specified as <from username> to the location of the player specified as <to username>. \n";
                         if (args.Length == 6)
                         {
                             if (Vector.TryParse(args[1], args[2], args[3], out Vector v) == true &&
@@ -592,13 +596,13 @@ namespace MinecraftServerEngine
                 case "gm":
                     {
                         const string usage = "\n" +
-    "Usage:\n" +
-    "\n" +
-    "/gamemode <Adventure|Spectator> \n" +
-    "\n" +
-    "* Changes the game mode of the command issuer (you) to the specified mode.\n" +
-    "- Adventure: Sets your game mode to adventure mode, where you can interact with objects but cannot break or place blocks.\n" +
-    "- Spectator: Sets your game mode to spectator mode, where you can fly around and observe the world without interacting with it.\n";
+"Usage:\n" +
+"\n" +
+"/gamemode <Adventure|Spectator> \n" +
+"\n" +
+"* Changes the game mode of the command issuer (you) to the specified mode.\n" +
+"- Adventure: Sets your game mode to adventure mode, where you can interact with objects but cannot break or place blocks.\n" +
+"- Spectator: Sets your game mode to spectator mode, where you can fly around and observe the world without interacting with it.\n";
 
                         if (args.Length == 2)
                         {
@@ -623,19 +627,19 @@ namespace MinecraftServerEngine
                 case "give":
                     {
                         const string usage = "\n" +
-    "Usage:\n" +
-    "\n" +
-    "/give <item-type> <name> <amount> [username] \n" +
-    "\n" +
-    "* Gives the specified item to the command issuer (you) or to another player if a username is specified.\n" +
-    "- <item-type>: The name of the item type you want to receive.\n" +
-    "  Example: 'DiamondSword', 'Stick', 'Snowball'.\n" +
-    "- <name>: An optional custom name for the item.\n" +
-    "  Example: 'Excalibur', 'Magic Wand'.\n" +
-    "- <amount>: The number of items to give.\n" +
-    "  Example: 1, 32, 64.\n" +
-    "  Note: Each item has a predefined minimum and maximum amount. If the specified amount is outside this range, it will be adjusted to the nearest valid value.\n" +
-    "- [username]: An optional username of the player to receive the item. If specified, the item will be given to the specified player instead of you.\n";
+"Usage:\n" +
+"\n" +
+"/give <item-type> <name> <amount> [username] \n" +
+"\n" +
+"* Gives the specified item to the command issuer (you) or to another player if a username is specified.\n" +
+"- <item-type>: The name of the item type you want to receive.\n" +
+"  Example: 'DiamondSword', 'Stick', 'Snowball'.\n" +
+"- <name>: An optional custom name for the item.\n" +
+"  Example: 'Excalibur', 'Magic Wand'.\n" +
+"- <amount>: The number of items to give.\n" +
+"  Example: 1, 32, 64.\n" +
+"  Note: Each item has a predefined minimum and maximum amount. If the specified amount is outside this range, it will be adjusted to the nearest valid value.\n" +
+"- [username]: An optional username of the player to receive the item. If specified, the item will be given to the specified player instead of you.\n";
 
                         if (args.Length >= 4)
                         {
@@ -689,6 +693,61 @@ namespace MinecraftServerEngine
                             return $"Error: Invalid arguments!\n {usage}";
                         }
 
+                    }
+                    break;
+                case "world-time":
+                case "wt":
+                    {
+                        const string usage = "\n" +
+"Usage:\n" +
+"\n" +
+"/world-time next <ticks> <transition seconds> \n" +
+"\n" +
+"/world-time add <ticks> <transition seconds>\n";
+
+                        if (args.Length == 4)
+                        {
+                            if (args[1] == "next")
+                            {
+                                if (
+                                    int.TryParse(args[2], out int ticks) == true &&
+                                    int.TryParse(args[3], out int seconds) == true
+                                    )
+                                {
+                                    Time worldTime = MinecraftTimes.TimePerTick * ticks;
+                                    Time transitionTime = Time.FromSeconds(seconds);
+                                    world.ChangeWorldTimeToNextDay(worldTime, transitionTime);
+                                }
+                                else
+                                {
+                                    return $"Error: Invalid arguments!\n {usage}";
+                                }
+                            }
+                            else if (args[1] == "add")
+                            {
+                                if (
+                                    int.TryParse(args[2], out int ticks) == true &&
+                                    int.TryParse(args[3], out int seconds) == true
+                                    )
+                                {
+                                    Time addingWorldTime = MinecraftTimes.TimePerTick * ticks;
+                                    Time transitionTime = Time.FromSeconds(seconds);
+                                    world.AddTimeToWorld(addingWorldTime, transitionTime);
+                                }
+                                else
+                                {
+                                    return $"Error: Invalid arguments!\n {usage}";
+                                }
+                            }
+                            else
+                            {
+                                return $"Error: Invalid arguments!\n {usage}";
+                            }
+                        }
+                        else
+                        {
+                            return $"Error: Invalid arguments!\n {usage}";
+                        }
                     }
                     break;
             }
