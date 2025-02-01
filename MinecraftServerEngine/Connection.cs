@@ -716,6 +716,8 @@ namespace MinecraftServerEngine
                                 {
                                     Time worldTime = MinecraftTimes.TimePerTick * ticks;
                                     Time transitionTime = Time.FromSeconds(seconds);
+
+                                    System.Diagnostics.Debug.Assert(world != null);
                                     world.ChangeWorldTimeToNextDay(worldTime, transitionTime);
                                 }
                                 else
@@ -732,12 +734,47 @@ namespace MinecraftServerEngine
                                 {
                                     Time addingWorldTime = MinecraftTimes.TimePerTick * ticks;
                                     Time transitionTime = Time.FromSeconds(seconds);
+
+                                    System.Diagnostics.Debug.Assert(world != null);
                                     world.AddTimeToWorld(addingWorldTime, transitionTime);
                                 }
                                 else
                                 {
                                     return $"Error: Invalid arguments!\n {usage}";
                                 }
+                            }
+                            else
+                            {
+                                return $"Error: Invalid arguments!\n {usage}";
+                            }
+                        }
+                        else
+                        {
+                            return $"Error: Invalid arguments!\n {usage}";
+                        }
+                    }
+                    break;
+                case "world-border":
+                case "wb":
+                    {
+                        const string usage = "\n" +
+"Usage:\n" +
+"\n" +
+"/world-border <radius meters> <transition ms per meter> \n";
+
+                        if (args.Length == 3)
+                        {
+                            if (
+                                    double.TryParse(args[1], out double radiusInMeters) == true &&
+                                    int.TryParse(args[2], out int transitionMsPerMeter) == true &&
+                                    transitionMsPerMeter >= 0
+                                    )
+                            {
+                                System.Diagnostics.Debug.Assert(transitionMsPerMeter >= 0);
+                                Time transitionTimePerMeter = Time.FromMilliseconds(transitionMsPerMeter);
+
+                                System.Diagnostics.Debug.Assert(world != null);
+                                world.ChangeWorldBorderSize(radiusInMeters, transitionTimePerMeter);
                             }
                             else
                             {
