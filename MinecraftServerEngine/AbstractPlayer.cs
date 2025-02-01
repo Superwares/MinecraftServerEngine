@@ -115,7 +115,11 @@ namespace MinecraftServerEngine
 
             Vector p = new(Position.X, Position.Y + GetEyeHeight(), Position.Z);
 
-            Conn.PlaySound(name, category, p, volume, pitch);
+            if (Connected == true)
+            {
+                System.Diagnostics.Debug.Assert(Conn != null);
+                Conn.PlaySound(name, category, p, volume, pitch);
+            }
         }
 
 

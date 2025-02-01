@@ -292,6 +292,7 @@ namespace TestMinecraftServerApplication
 
         public void StartRound()
         {
+
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(_ready == true);
@@ -321,6 +322,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(Inventory != null);
             System.Diagnostics.Debug.Assert(_players != null);
             Inventory.StartRound(_players, TotalRounds, _currentRoundIndex);
+
         }
 
         public int MakeNonSeekerIndexList(List<int> indices)
@@ -571,6 +573,13 @@ namespace TestMinecraftServerApplication
 
             try
             {
+
+                System.Diagnostics.Debug.Assert(_players != null);
+                foreach (SuperPlayer player in _players)
+                {
+                    System.Diagnostics.Debug.Assert(player != null);
+                    player.Reset();
+                }
 
                 System.Diagnostics.Debug.Assert(_ready == true);
                 System.Diagnostics.Debug.Assert(_started == true);

@@ -365,11 +365,6 @@ namespace TestMinecraftServerApplication
                     break;
                 case EclipseCrystal.Type:
                     {
-                        if (EclipseCrystal.CanPurchase == true)
-                        {
-                            break;
-                        }
-
                         taked = playerInventory.GiveAndTakeItemStacks(
                             Coin.Item, Coin.DefaultCount * EclipseCrystal.SellPrice,
                             EclipseCrystal.Item, EclipseCrystal.DefaultCount);
@@ -404,7 +399,7 @@ namespace TestMinecraftServerApplication
                         if (SuperWorld.GameContext.IsStarted == false)
                         {
                             taked = playerInventory.TakeItemStacksInPrimary(
-                                Coin.Item, Coin.DefaultCount);
+                                Coin.Item, Coin.MaxCount);
 
                             if (taked != null)
                             {

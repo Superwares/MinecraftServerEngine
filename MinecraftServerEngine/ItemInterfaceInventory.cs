@@ -132,12 +132,20 @@ namespace MinecraftServerEngine
 
         internal override void QuickMove(UserId userId, PlayerInventory playerInventory, int i)
         {
-            //base.QuickMove(userId, playerInventory, i);
         }
 
         internal override void SwapItems(UserId userId, PlayerInventory playerInventory, int i, int j)
         {
-            //base.SwapItems(userId, playerInventory, i, j);
+        }
+
+        internal override ItemStack DropSingle(UserId userId, PlayerInventory playerInventory, int i)
+        {
+            return null;
+        }
+
+        internal override ItemStack DropFull(UserId userId, PlayerInventory playerInventory, int i)
+        {
+            return null;
         }
 
         protected override void Dispose(bool disposing)

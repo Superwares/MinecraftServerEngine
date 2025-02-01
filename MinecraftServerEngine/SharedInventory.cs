@@ -492,7 +492,9 @@ namespace MinecraftServerEngine
         }
 
 
-        internal ItemStack DropSingle(UserId userId, PlayerInventory playerInventory, int i)
+        internal virtual ItemStack DropSingle(
+            UserId userId, 
+            PlayerInventory playerInventory, int i)
         {
             int totalSlots = GetTotalSlotCount();
 
@@ -514,7 +516,9 @@ namespace MinecraftServerEngine
             }
         }
 
-        internal ItemStack DropFull(UserId userId, PlayerInventory playerInventory, int i)
+        internal virtual ItemStack DropFull(
+            UserId userId, 
+            PlayerInventory playerInventory, int i)
         {
             int totalSlots = GetTotalSlotCount();
 

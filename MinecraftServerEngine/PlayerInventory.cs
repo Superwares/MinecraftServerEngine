@@ -634,24 +634,24 @@ namespace MinecraftServerEngine
 
             int leftCount = count;
 
-            InventorySlot invSlot;
+            InventorySlot slot;
             ItemStack targetItemStack;
 
             for (int i = 0; i < PrimarySlotCount && leftCount > 0; ++i)
             {
-                invSlot = GetPrimarySlot(i);
-                System.Diagnostics.Debug.Assert(invSlot != null);
+                slot = GetPrimarySlot(i);
+                System.Diagnostics.Debug.Assert(slot != null);
 
-                if (invSlot.Empty == true)
+                if (slot.Empty == true)
                 {
                     continue;
                 }
 
-                targetItemStack = invSlot.Stack;
+                targetItemStack = slot.Stack;
 
                 if (targetItemStack.Equals(item) == true)
                 {
-                    int takedCount = invSlot.PreTake(leftCount);
+                    int takedCount = slot.PreTake(leftCount);
 
                     System.Diagnostics.Debug.Assert(takedCount >= 0);
                     System.Diagnostics.Debug.Assert(takedCount <= count);
@@ -676,20 +676,20 @@ namespace MinecraftServerEngine
 
             for (int i = 0; i < PrimarySlotCount && leftCount > 0; ++i)
             {
-                invSlot = GetPrimarySlot(i);
-                System.Diagnostics.Debug.Assert(invSlot != null);
+                slot = GetPrimarySlot(i);
+                System.Diagnostics.Debug.Assert(slot != null);
 
-                if (invSlot.Empty == true)
+                if (slot.Empty == true)
                 {
                     continue;
                 }
 
-                targetItemStack = invSlot.Stack;
+                targetItemStack = slot.Stack;
 
                 if (targetItemStack.Equals(item) == true)
                 {
                     int takedCount = takedItemStack == null
-                        ? invSlot.Take(out takedItemStack, leftCount)
+                        ? slot.Take(out takedItemStack, leftCount)
                         : takedItemStack.Count;
 
                     System.Diagnostics.Debug.Assert(takedCount >= 0);
@@ -702,34 +702,25 @@ namespace MinecraftServerEngine
                         if (itemStacks[k] == null)
                         {
                             itemStacks[k] = takedItemStack;
-
-                            leftCount -= takedCount;
-
-                            takedItemStack = null;
                         }
                         else
                         {
                             itemStacks[k].Move(ref takedItemStack);
 
-                            if (takedItemStack == null)
+                            if (takedItemStack != null)
                             {
-                                leftCount -= takedCount;
-
-                                takedItemStack = null;
-                            }
-                            else
-                            {
-                                leftCount -= (takedCount - takedItemStack.Count);
+                                itemStacks[++k] = takedItemStack;
                             }
                         }
+
+                        leftCount -= takedCount;
+                        takedItemStack = null;
 
                         System.Diagnostics.Debug.Assert(itemStacks[k].Count <= itemStacks[k].MaxCount);
                         if (itemStacks[k].Count == itemStacks[k].MaxCount)
                         {
                             ++k;
                         }
-
-                        //itemStacks[k++] = takedItemStack;
 
 
                     }
@@ -908,26 +899,19 @@ namespace MinecraftServerEngine
                             if (itemStacks[k] == null)
                             {
                                 itemStacks[k] = takedItemStack;
-
-                                leftCount -= takedCount;
-
-                                takedItemStack = null;
                             }
                             else
                             {
                                 itemStacks[k].Move(ref takedItemStack);
 
-                                if (takedItemStack == null)
+                                if (takedItemStack != null)
                                 {
-                                    leftCount -= takedCount;
-
-                                    takedItemStack = null;
-                                }
-                                else
-                                {
-                                    leftCount -= (takedCount - takedItemStack.Count);
+                                    itemStacks[++k] = takedItemStack;
                                 }
                             }
+
+                            leftCount -= takedCount;
+                            takedItemStack = null;
 
                             System.Diagnostics.Debug.Assert(itemStacks[k].Count <= itemStacks[k].MaxCount);
                             if (itemStacks[k].Count == itemStacks[k].MaxCount)
