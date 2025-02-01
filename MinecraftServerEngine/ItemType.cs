@@ -22,7 +22,8 @@ namespace MinecraftServerEngine
         BlackWool,                 // 35  minecraft:wool
 
         RedstoneOre,               // 73  minecraft:redstone_ore
-        GlowingRedstoneOre,        // 74  minecraft:lit_redstone_ore
+        // It is not shown in client...
+        //GlowingRedstoneOre,        // 74  minecraft:lit_redstone_ore
 
         Pumpkin,                   // 86  minecraft:pumpkin
 

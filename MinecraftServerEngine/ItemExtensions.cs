@@ -111,10 +111,11 @@ namespace MinecraftServerEngine
                     ItemType.RedstoneOre, 73, "redstone_ore",
                     64,
                     0),
-                new ItemContext(
-                    ItemType.GlowingRedstoneOre, 74, "lit_redstone_ore",
-                    64,
-                    0),
+                // It is not shown in client...
+                //new ItemContext(
+                //    ItemType.GlowingRedstoneOre, 74, "lit_redstone_ore",
+                //    64,
+                //    0),
 
                 new ItemContext(
                     ItemType.Pumpkin, 86, "pumpkin",

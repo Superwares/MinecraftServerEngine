@@ -6,7 +6,7 @@ namespace TestMinecraftServerApplication.Items
     public static class BlastCore
     {
         public const ItemQualityTier Tier = ItemQualityTier.Unique;
-        public const ItemType Type = ItemType.Pumpkin;
+        public const ItemType Type = ItemType.RedstoneOre;
         public const string Name = "Blast Core";
 
         public const Particle EffectParticle = Particle.LargeExplode;
