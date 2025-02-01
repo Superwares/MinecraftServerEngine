@@ -6,14 +6,14 @@ namespace TestMinecraftServerApplication.Items
 {
     public static class StoneOfSwiftness
     {
-        public const ItemQualityTier Tier = ItemQualityTier.Utility;
+        public const ItemQualityTier Tier = ItemQualityTier.Basic;
+
         public const ItemType Type = ItemType.Flint;
         public const string Name = "Stone of Swiftness";
 
         public const double MovementSpeed = LivingEntity.DefaultMovementSpeed + 0.2;
         public readonly static Time Duration = Time.FromSeconds(5);
 
-        public const int MaxPurchaseCount = 15;
         public const int PurchasePrice = 5;
         public const int SellPrice = 1;
 

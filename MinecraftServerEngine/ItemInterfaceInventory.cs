@@ -11,13 +11,13 @@ namespace MinecraftServerEngine
 
         public ItemInterfaceInventory(int totalLineCount) : base(totalLineCount)
         {
-            if (totalLineCount < 0 || totalLineCount > MaxLineCount)
+            if (totalLineCount < 0 || totalLineCount > MaxLines)
             {
                 throw new System.ArgumentOutOfRangeException(nameof(totalLineCount));
             }
 
             System.Diagnostics.Debug.Assert(totalLineCount > 0);
-            System.Diagnostics.Debug.Assert(totalLineCount <= MaxLineCount);
+            System.Diagnostics.Debug.Assert(totalLineCount <= MaxLines);
 
             ItemStack a = new ItemStack(ItemType.Stick, "Hello");
 

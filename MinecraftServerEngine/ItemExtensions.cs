@@ -1,11 +1,6 @@
 ﻿
 using Common;
 using Containers;
-using System.ComponentModel;
-using System.Net.NetworkInformation;
-using System;
-using static System.Reflection.Metadata.BlobBuilder;
-using System.IO;
 
 namespace MinecraftServerEngine
 {
@@ -289,6 +284,10 @@ namespace MinecraftServerEngine
                 //    0),
                 new ItemContext(
                     ItemType.GoldNugget, 371, "gold_nugget",
+                    64,
+                    0),
+                new ItemContext(
+                    ItemType.EyeOfEnder, 381, "ender_eye",
                     64,
                     0),
                 new ItemContext(

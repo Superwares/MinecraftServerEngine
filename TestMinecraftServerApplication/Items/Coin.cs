@@ -16,6 +16,7 @@ namespace TestMinecraftServerApplication.Items
             ]);
 
         public static readonly int DefaultCount = MinecraftServerEngine.Item.MinCount;
+        public static readonly int MaxCount = Type.GetMaxCount();
 
     }
 

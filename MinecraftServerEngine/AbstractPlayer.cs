@@ -471,9 +471,33 @@ namespace MinecraftServerEngine
 
         public override void ApplyForce(Vector force)
         {
+            if (force.X < MinecraftPhysics.MinVelocity || force.X > MinecraftPhysics.MaxVelocity)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(force),
+                    "The force vector's X component is out of the allowed range.");
+            }
+            if (force.Y < MinecraftPhysics.MinVelocity || force.Y > MinecraftPhysics.MaxVelocity)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(force),
+                    "The force vector's Y component is out of the allowed range.");
+            }
+            if (force.Z < MinecraftPhysics.MinVelocity || force.Z > MinecraftPhysics.MaxVelocity)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(force),
+                    "The force vector's Z component is out of the allowed range.");
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            if (Connected)
+            if (Connected == true)
             {
                 System.Diagnostics.Debug.Assert(Conn != null);
                 Vector v = force / Mass;

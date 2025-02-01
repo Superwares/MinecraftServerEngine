@@ -61,7 +61,7 @@ namespace TestMinecraftServerApplication
                 ]));
         }
 
-        public ShopInventory() : base(MaxLineCount)
+        public ShopInventory() : base(MaxLines)
         {
             (bool, ItemStack)[] slots = new (bool, ItemStack)[GetTotalSlotCount()];
 
@@ -78,7 +78,8 @@ namespace TestMinecraftServerApplication
                     true,
                     ItemStack.Create(WoodenSword.Item, WoodenSword.DefaultCount, [
                         $"",
-                        // A basic wooden sword, ideal for beginners.
+                        // A basic wooden sword,
+                        // ideal for beginners.
                         $"초보자에게 이상적인 ",
                         $"기본 나무검입니다.",
                         $"",
@@ -89,6 +90,36 @@ namespace TestMinecraftServerApplication
                         ])
                     );
 
+                slots[offset + 7] = (
+                    true,
+                    ItemStack.Create(EmergencyEscape.Item, EmergencyEscape.DefaultCount, [
+                        $"",
+                        // A powerful item that allows the user
+                        // to escape from danger instantly.
+                        $"위험에서 즉시 탈출할 수 있는 ",
+                        $"강력한 아이템입니다.",
+                        $"",
+                        // Left-click (Purchase)
+                        $"왼클릭(구매)          {Coin.DefaultCount * EmergencyEscape.PurchasePrice} Coins",
+                        // Right-click (Sell)
+                        $"우클릭(판매)          {Coin.DefaultCount * EmergencyEscape.SellPrice} Coins",
+                        ])
+                    );
+                slots[offset + 8] = (
+                    true,
+                    ItemStack.Create(StoneOfSwiftness.Item, StoneOfSwiftness.DefaultCount, [
+                        $"",
+                        // A mystical stone that grants
+                        // the bearer enhanced speed and agility.
+                        $"사용자에게 향상된 속도와 민첩성을 ",
+                        $"부여하는 신비한 돌입니다.",
+                        $"",
+                        // Left-click (Purchase)
+                        $"왼클릭(구매)          {Coin.DefaultCount * StoneOfSwiftness.PurchasePrice} Coins",
+                        // Right-click (Sell)
+                        $"우클릭(판매)          {Coin.DefaultCount * StoneOfSwiftness.SellPrice} Coins",
+                        ])
+                    );
 
             }
 
@@ -111,29 +142,21 @@ namespace TestMinecraftServerApplication
                     new ItemStack(ItemType.WhiteStainedGlassPane, "Utility Tier", 1)
                     );
 
+
                 slots[offset + 1] = (
                     true,
-                    ItemStack.Create(StoneOfSwiftness.Item, StoneOfSwiftness.DefaultCount, [
-                        $"",
-                        // A mystical stone that grants the bearer enhanced speed and agility.
-                        $"사용자에게 향상된 속도와 민첩성을 ",
-                        $"부여하는 신비한 돌입니다.",
-                        $"",
-                        // Left-click (Purchase)
-                        $"왼클릭(구매)          {Coin.DefaultCount * StoneOfSwiftness.PurchasePrice} Coins",
-                        // Right-click (Sell)
-                        $"우클릭(판매)          {Coin.DefaultCount * StoneOfSwiftness.SellPrice} Coins",
-                        ])
+                    ItemStack.Create(GlobalChestItem.Item, GlobalChestItem.DefaultCount)
                     );
+
             }
 
             // Last line
             {
-                int offset = SlotCountPerLine * (MaxLineCount - 1);
+                int offset = SlotCountPerLine * (MaxLines - 1);
 
                 slots[offset + 0] = (
                     true,
-                    ItemStack.Create(Coin.Item, Coin.DefaultCount, [
+                    ItemStack.Create(Coin.Item, Coin.MaxCount, [
                         $"",
                         $"게임 전에만 지급받을 수 있습니다!",
                         ])
@@ -142,10 +165,6 @@ namespace TestMinecraftServerApplication
                 slots[offset + 8] = (
                     true,
                     ItemStack.Create(ShopItem.Item, ShopItem.DefaultCount)
-                    );
-                slots[offset + 7] = (
-                    true,
-                    ItemStack.Create(GlobalChestItem.Item, GlobalChestItem.DefaultCount)
                     );
             }
 
@@ -167,34 +186,38 @@ namespace TestMinecraftServerApplication
 
             switch (itemStack.Type)
             {
-                case Coin.Type:
-                    {
-                        if (SuperWorld.GameContext.IsStarted == false)
-                        {
-                            success = playerInventory.GiveItemStacks(Coin.Item, Coin.DefaultCount);
-                        }
 
-                    }
-                    break;
-                case ShopItem.Type:
-                    {
-                        success = playerInventory.GiveItemStacks(ShopItem.Item, ShopItem.DefaultCount);
-                    }
-                    break;
-                case GlobalChestItem.Type:
-                    {
-                        success = playerInventory.GiveItemStacks(ShopItem.Item, ShopItem.DefaultCount);
-                    }
-                    break;
+
                 case WoodenSword.Type:
                     {
                         taked = playerInventory.GiveAndTakeItemStacks(
                             WoodenSword.Item, WoodenSword.DefaultCount,
                             Coin.Item, Coin.DefaultCount * WoodenSword.PurchasePrice);
 
-                        success = taked != null;
+                        success = (taked != null);
                     }
                     break;
+                case EmergencyEscape.Type:
+                    {
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                            EmergencyEscape.Item, EmergencyEscape.DefaultCount,
+                            Coin.Item, Coin.DefaultCount * EmergencyEscape.PurchasePrice);
+
+                        success = (taked != null);
+
+                    }
+                    break;
+                case StoneOfSwiftness.Type:
+                    {
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                            StoneOfSwiftness.Item, StoneOfSwiftness.DefaultCount,
+                            Coin.Item, Coin.DefaultCount * StoneOfSwiftness.PurchasePrice);
+
+                        success = (taked != null);
+
+                    }
+                    break;
+
                 case BalloonBasher.Type:
                     {
                         if (BalloonBasher.CanPurchase == false)
@@ -216,7 +239,7 @@ namespace TestMinecraftServerApplication
                             BalloonBasher.CanPurchase = false;
                         }
 
-                        success = taked != null;
+                        success = (taked != null);
 
                     }
                     break;
@@ -241,18 +264,30 @@ namespace TestMinecraftServerApplication
                             EclipseCrystal.CanPurchase = false;
                         }
 
-                        success = taked != null;
+                        success = (taked != null);
 
                     }
                     break;
-                case StoneOfSwiftness.Type:
+
+                case GlobalChestItem.Type:
                     {
-                        taked = playerInventory.GiveAndTakeItemStacks(
-                            StoneOfSwiftness.Item, StoneOfSwiftness.DefaultCount,
-                            Coin.Item, Coin.DefaultCount * StoneOfSwiftness.PurchasePrice);
+                        success = playerInventory.GiveItemStacks(
+                            GlobalChestItem.Item, GlobalChestItem.DefaultCount);
+                    }
+                    break;
 
-                        success = taked != null;
+                case Coin.Type:
+                    {
+                        if (SuperWorld.GameContext.IsStarted == false)
+                        {
+                            success = playerInventory.GiveItemStacks(Coin.Item, Coin.MaxCount);
+                        }
 
+                    }
+                    break;
+                case ShopItem.Type:
+                    {
+                        success = playerInventory.GiveItemStacks(ShopItem.Item, ShopItem.DefaultCount);
                     }
                     break;
 
@@ -274,44 +309,7 @@ namespace TestMinecraftServerApplication
 
             switch (itemStack.Type)
             {
-                case Coin.Type:
-                    {
-                        if (SuperWorld.GameContext.IsStarted == false)
-                        {
-                            taked = playerInventory.TakeItemStacksInPrimary(
-                                Coin.Item, Coin.DefaultCount);
 
-                            if (taked != null)
-                            {
-                                System.Diagnostics.Debug.Assert(taked.Length > 0);
-                                success = true;
-                            }
-                        }
-
-                    }
-                    break;
-                case ShopItem.Type:
-                    {
-                        taked = playerInventory.TakeItemStacksInPrimary(
-                            ShopItem.Item, ShopItem.DefaultCount);
-
-                        if (taked != null)
-                        {
-                            success = true;
-                        }
-                    }
-                    break;
-                case GlobalChestItem.Type:
-                    {
-                        taked = playerInventory.TakeItemStacksInPrimary(
-                            GlobalChestItem.Item, GlobalChestItem.DefaultCount);
-
-                        if (taked != null)
-                        {
-                            success = true;
-                        }
-                    }
-                    break;
                 case WoodenSword.Type:
                     {
                         taked = playerInventory.GiveAndTakeItemStacks(
@@ -321,6 +319,27 @@ namespace TestMinecraftServerApplication
                         success = taked != null;
                     }
                     break;
+                case StoneOfSwiftness.Type:
+                    {
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                            Coin.Item, Coin.DefaultCount * StoneOfSwiftness.SellPrice,
+                            StoneOfSwiftness.Item, StoneOfSwiftness.DefaultCount);
+
+                        success = taked != null;
+
+                    }
+                    break;
+                case EmergencyEscape.Type:
+                    {
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                            Coin.Item, Coin.DefaultCount * EmergencyEscape.SellPrice,
+                            EmergencyEscape.Item, EmergencyEscape.DefaultCount);
+
+                        success = taked != null;
+
+                    }
+                    break;
+
                 case BalloonBasher.Type:
                     {
                         if (BalloonBasher.CanPurchase == true)
@@ -367,17 +386,46 @@ namespace TestMinecraftServerApplication
 
                     }
                     break;
-                case StoneOfSwiftness.Type:
+
+                case GlobalChestItem.Type:
                     {
-                        taked = playerInventory.GiveAndTakeItemStacks(
-                            Coin.Item, Coin.DefaultCount * StoneOfSwiftness.SellPrice,
-                            StoneOfSwiftness.Item, StoneOfSwiftness.DefaultCount);
+                        taked = playerInventory.TakeItemStacksInPrimary(
+                            GlobalChestItem.Item, GlobalChestItem.DefaultCount);
 
-                        success = taked != null;
-
+                        if (taked != null)
+                        {
+                            success = true;
+                        }
                     }
                     break;
 
+                case Coin.Type:
+                    {
+                        if (SuperWorld.GameContext.IsStarted == false)
+                        {
+                            taked = playerInventory.TakeItemStacksInPrimary(
+                                Coin.Item, Coin.DefaultCount);
+
+                            if (taked != null)
+                            {
+                                System.Diagnostics.Debug.Assert(taked.Length > 0);
+                                success = true;
+                            }
+                        }
+
+                    }
+                    break;
+                case ShopItem.Type:
+                    {
+                        taked = playerInventory.TakeItemStacksInPrimary(
+                            ShopItem.Item, ShopItem.DefaultCount);
+
+                        if (taked != null)
+                        {
+                            success = true;
+                        }
+                    }
+                    break;
 
             }
 

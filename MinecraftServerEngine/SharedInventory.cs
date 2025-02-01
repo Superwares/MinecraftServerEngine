@@ -12,7 +12,7 @@ namespace MinecraftServerEngine
 
     public abstract class SharedInventory : Inventory
     {
-        public const int MaxLineCount = 6;
+        public const int MaxLines = 6;
 
 
         public abstract string Title { get; }
@@ -27,7 +27,7 @@ namespace MinecraftServerEngine
         internal SharedInventory(int totalLineCount) : base(totalLineCount * SlotCountPerLine)
         {
             System.Diagnostics.Debug.Assert(totalLineCount > 0);
-            System.Diagnostics.Debug.Assert(totalLineCount <= MaxLineCount);
+            System.Diagnostics.Debug.Assert(totalLineCount <= MaxLines);
         }
 
         ~SharedInventory()

@@ -82,6 +82,8 @@ namespace MinecraftServerEngine
 
         GoldNugget,                // 371  minecraft:gold_nugget
 
+        EyeOfEnder,                // 381  minecraft:ender_eye
+
         PlayerSkull,               // 397  minecraft:skull
 
         EndCrystal,                // 426  minecraft:end_crystal

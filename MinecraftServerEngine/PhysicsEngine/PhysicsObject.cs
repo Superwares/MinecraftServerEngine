@@ -1,6 +1,7 @@
 ﻿
 using Common;
 using Containers;
+using MinecraftPrimitives;
 using Sync;
 
 namespace MinecraftServerEngine.PhysicsEngine
@@ -133,6 +134,30 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         public virtual void ApplyForce(Vector v)
         {
+            if (v.X < MinecraftPhysics.MinVelocity || v.X > MinecraftPhysics.MaxVelocity)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(v),
+                    "The force vector's X component is out of the allowed range.");
+            }
+            if (v.Y < MinecraftPhysics.MinVelocity || v.Y > MinecraftPhysics.MaxVelocity)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(v),
+                    "The force vector's Y component is out of the allowed range.");
+            }
+            if (v.Z < MinecraftPhysics.MinVelocity || v.Z > MinecraftPhysics.MaxVelocity)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(v),
+                    "The force vector's Z component is out of the allowed range.");
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(Forces != null);

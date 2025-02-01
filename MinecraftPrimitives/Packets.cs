@@ -2527,7 +2527,10 @@ namespace MinecraftPrimitives
             throw new System.NotImplementedException();
         }
 
-        public EntityVelocityPacket(int entityId, short x, short y, short z) : base(EntityVelocityPacketId)
+        public EntityVelocityPacket(
+            int entityId,
+            short x, short y, short z)
+            : base(EntityVelocityPacketId)
         {
             EntityId = entityId;
             X = x; Y = y; Z = z;

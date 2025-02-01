@@ -19,11 +19,14 @@ namespace TestMinecraftServerApplication
 
         private bool _disposed = false;
 
-        private readonly static ChestInventory ChestInventory = new();
+        private readonly static ChestInventory ChestInventory = new(GlobalChestItem.InventoryLines);
         private readonly static ShopInventory ShopInventory = new();
 
         private bool _running_StoneOfSwiftness = false;
         private Time _startTime_StoneOfSwiftness = Time.Zero;
+
+        private bool _running_EmergencyEscape = false;
+        private Time _startTime_EmergencyEscape = Time.Zero;
 
 
         private Time _worldBorderOutsideDamage_startTime = Time.Now();
@@ -99,8 +102,19 @@ namespace TestMinecraftServerApplication
                     }
                 }
 
-                System.Diagnostics.Debug.Assert(world != null);
+                if (_running_EmergencyEscape == true)
+                {
+                    EmitParticles(EmergencyEscape.LaunchParticle, 1.0, 10);
 
+                    Time elapsedTime = Time.Now() - _startTime_EmergencyEscape;
+                    if (elapsedTime > EmergencyEscape.ParticleDuration)
+                    {
+                        _running_EmergencyEscape = false;
+                        _startTime_EmergencyEscape = Time.Zero;
+                    }
+                }
+
+                System.Diagnostics.Debug.Assert(world != null);
                 if (
                     world.IsOutsideOfWorldBorder(Position) == true &&
                     Time.Now() - _worldBorderOutsideDamage_startTime > WorldBorderOutsideDamageInterval
@@ -527,6 +541,26 @@ namespace TestMinecraftServerApplication
             world.PlaySound("block.anvil.land", 4, Position, 0.8, 1.5);
         }
 
+        private void UseEmergencyEscape(SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            ItemStack[] takedItemStacks = TakeItemStacks(EmergencyEscape.Item, EmergencyEscape.DefaultCount);
+            if (takedItemStacks == null)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(takedItemStacks.Length > 0);
+
+            ApplyForce(new Vector(0.0, EmergencyEscape.Power, 0.0));
+
+            _running_EmergencyEscape = true;
+            _startTime_EmergencyEscape = Time.Now();
+
+            world.PlaySound(EmergencyEscape.LaunchSoundName, 0, Position, 0.8, 1.5);
+        }
+
         protected override void OnUseItem(World _world, ItemStack stack)
         {
             System.Diagnostics.Debug.Assert(_world != null);
@@ -544,6 +578,7 @@ namespace TestMinecraftServerApplication
                     case GamePanel.Type:
                         OpenInventory(GameContext.Inventory);
                         break;
+
                     case GlobalChestItem.Type:
                         OpenInventory(ChestInventory);
                         break;
@@ -554,6 +589,10 @@ namespace TestMinecraftServerApplication
 
                     case StoneOfSwiftness.Type:
                         UseStoneOfSwiftness(world);
+                        break;
+
+                    case EmergencyEscape.Type:
+                        UseEmergencyEscape(world);
                         break;
                 }
             }

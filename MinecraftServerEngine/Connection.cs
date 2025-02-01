@@ -1250,11 +1250,12 @@ namespace MinecraftServerEngine
                         else if (packet.Hand == 1)  // offhand
                         {
                             // TOOD: Check it is correct behavior.
-                            throw new UnexpectedValueException("AnimationPacket.Hand");
+                            buffer.Flush();
+                            //throw new UnexpectedValueException("AnimationPacket.Hand");
                         }
                         else
                         {
-                            throw new UnexpectedValueException("AnimationPacket.Hand");
+                            throw new UnexpectedValueException("Invalid hand animation");
                         }
 
                     }
@@ -1288,7 +1289,10 @@ namespace MinecraftServerEngine
 
                             ItemStack stack = playerInventory.GetMainHandSlot().Stack;
 
-                            player.OnUseItem(world, stack);
+                            if (stack != null)
+                            {
+                                player.OnUseItem(world, stack);
+                            }
                         }
                         else if (packet.Hand == 1)
                         {
@@ -1296,7 +1300,10 @@ namespace MinecraftServerEngine
 
                             ItemStack stack = playerInventory.GetOffHandSlot().Stack;
 
-                            player.OnUseItem(world, stack);
+                            if (stack != null)
+                            {
+                                player.OnUseItem(world, stack);
+                            }
                         }
                         else
                         {
@@ -1525,16 +1532,23 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            if (_disconnected)
+            if (_disconnected == true)
             {
                 return;
             }
 
+            System.Diagnostics.Debug.Assert(v.X <= MinecraftPhysics.MaxVelocity);
+            System.Diagnostics.Debug.Assert(v.Y <= MinecraftPhysics.MaxVelocity);
+            System.Diagnostics.Debug.Assert(v.Z <= MinecraftPhysics.MaxVelocity);
+            System.Diagnostics.Debug.Assert(v.X >= MinecraftPhysics.MinVelocity);
+            System.Diagnostics.Debug.Assert(v.Y >= MinecraftPhysics.MinVelocity);
+            System.Diagnostics.Debug.Assert(v.Z >= MinecraftPhysics.MinVelocity);
+
             EntityVelocityPacket packet = new(
                 id,
-                (short)(v.X * 8000),
-                (short)(v.Y * 8000),
-                (short)(v.Z * 8000));
+                (short)(v.X * MinecraftPhysics.VelocityScaleFactorForClient),
+                (short)(v.Y * MinecraftPhysics.VelocityScaleFactorForClient),
+                (short)(v.Z * MinecraftPhysics.VelocityScaleFactorForClient));
 
             using MinecraftProtocolDataStream buffer = new();
 

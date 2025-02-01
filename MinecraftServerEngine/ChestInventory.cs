@@ -4,15 +4,11 @@ namespace MinecraftServerEngine
     public sealed class ChestInventory : SharedInventory
     {
 
-        internal const int TotalLineCount = 3;
-        internal const int TotalSlotCount = TotalLineCount * SlotCountPerLine;
-
-
         private bool _disposed = false;
 
         public override string Title => "Chest";
 
-        public ChestInventory() : base(TotalLineCount) { }
+        public ChestInventory(int lines) : base(lines) { }
 
         ~ChestInventory()
         {
