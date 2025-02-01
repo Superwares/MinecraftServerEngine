@@ -1283,31 +1283,62 @@ namespace MinecraftServerEngine
                         /*Console.Printl("UseItemPacket!");
                         Console.Printl($"\tHand: {packet.Hand}");*/
 
-                        if (packet.Hand == 0)
+                        ItemStack mainHandItemStack = null;
+                        byte[] mainHandItemStackHash = null;
+
+                        if (packet.Hand == 0)  // main hand
                         {
                             /*Console.Printl("UseItem!");*/
 
-                            ItemStack stack = playerInventory.GetMainHandSlot().Stack;
+                            mainHandItemStack = playerInventory.GetMainHandSlot().Stack;
 
-                            if (stack != null)
+                            if (mainHandItemStack != null)
                             {
-                                player.OnUseItem(world, stack);
+                                mainHandItemStackHash = mainHandItemStack.Hash;
+                                player.OnUseItem(world, mainHandItemStack);
                             }
                         }
-                        else if (packet.Hand == 1)
+                        else if (packet.Hand == 1)  // off hand
                         {
                             /*Console.Printl("UseItem!");*/
 
-                            ItemStack stack = playerInventory.GetOffHandSlot().Stack;
+                            mainHandItemStack = playerInventory.GetOffHandSlot().Stack;
 
-                            if (stack != null)
+                            if (mainHandItemStack != null)
                             {
-                                player.OnUseItem(world, stack);
+                                mainHandItemStackHash = mainHandItemStack.Hash;
+                                player.OnUseItem(world, mainHandItemStack);
                             }
                         }
                         else
                         {
                             throw new UnexpectedValueException("UseItemPacket.Hand");
+                        }
+
+                        if (
+                            mainHandItemStack != null &&
+                            mainHandItemStack.IsBreaked == true
+                            )
+                        {
+
+                            Window.UpdateMainHandSlot(playerInventory);
+
+                            player._ItemBreak(world, mainHandItemStack);
+
+                            player.UpdateEntityEquipmentsData(playerInventory.GetEquipmentsData());
+
+                            //MyConsole.Debug("Item break!");
+                        }
+                        else if (
+                             mainHandItemStack != null &&
+                             mainHandItemStackHash != null &&
+                             mainHandItemStack.CheckHash(mainHandItemStackHash) == false
+                             )
+                        {
+                            //MyConsole.Debug("Different status of prev and current item!");
+                            Window.UpdateMainHandSlot(playerInventory);
+
+                            player.UpdateEntityEquipmentsData(playerInventory.GetEquipmentsData());
                         }
 
                     }

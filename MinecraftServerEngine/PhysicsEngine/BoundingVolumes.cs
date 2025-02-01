@@ -79,14 +79,14 @@ namespace MinecraftServerEngine.PhysicsEngine
 
     public class AxisAlignedBoundingBox : BoundingVolume
     {
-        internal static AxisAlignedBoundingBox Generate(Vector p, double r)
-        {
-            System.Diagnostics.Debug.Assert(r > 0.0D);
+        //internal static AxisAlignedBoundingBox Generate(Vector p, double r)
+        //{
+        //    System.Diagnostics.Debug.Assert(r > 0.0D);
 
-            Vector max = new(p.X + r, p.Y + r, p.Z + r),
-                min = new(p.X - r, p.Y - r, p.Z - r);
-            return new AxisAlignedBoundingBox(max, min);
-        }
+        //    Vector max = new(p.X + r, p.Y + r, p.Z + r),
+        //        min = new(p.X - r, p.Y - r, p.Z - r);
+        //    return new AxisAlignedBoundingBox(max, min);
+        //}
 
         public static AxisAlignedBoundingBox Generate(Vector p, Vector d)
         {
@@ -101,6 +101,24 @@ namespace MinecraftServerEngine.PhysicsEngine
                 System.Math.Max(p.X, p.X + d.X),
                 System.Math.Max(p.Y, p.Y + d.Y),
                 System.Math.Max(p.Z, p.Z + d.Z)
+            );
+
+            // Return the axis-aligned bounding box
+            return new AxisAlignedBoundingBox(max, min);
+        }
+
+        public static AxisAlignedBoundingBox Generate(Vector p, double r)
+        {
+            Vector min = new Vector(
+                System.Math.Min(p.X + r, p.X - r),
+                System.Math.Min(p.Y + r, p.Y - r),
+                System.Math.Min(p.Z + r, p.Z - r)
+            );
+
+            Vector max = new Vector(
+                System.Math.Max(p.X + r, p.X - r),
+                System.Math.Max(p.Y + r, p.Y - r),
+                System.Math.Max(p.Z + r, p.Z - r)
             );
 
             // Return the axis-aligned bounding box

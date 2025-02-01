@@ -225,7 +225,7 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         public void SearchObjects(
             Tree<PhysicsObject> objs, AxisAlignedBoundingBox minBoundingBox,
-            bool strict)
+            bool strict, PhysicsObject exceptObj = null)
         {
             System.Diagnostics.Debug.Assert(minBoundingBox != null);
 
@@ -244,6 +244,11 @@ namespace MinecraftServerEngine.PhysicsEngine
                 System.Diagnostics.Debug.Assert(objectsInCell != null);
                 foreach (PhysicsObject objInCell in objectsInCell.GetKeys())
                 {
+                    if (ReferenceEquals(objInCell, exceptObj) == true)
+                    {
+                        continue;
+                    }
+
                     System.Diagnostics.Debug.Assert(objInCell != null);
                     if (objs.Contains(objInCell))
                     {
@@ -316,7 +321,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             }
         }
 
-        public PhysicsObject SearchClosestObject(Vector o, Vector d, PhysicsObject exceptObj)
+        public PhysicsObject SearchClosestObject(Vector o, Vector d, PhysicsObject exceptObj = null)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 

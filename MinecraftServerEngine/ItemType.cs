@@ -21,6 +21,9 @@ namespace MinecraftServerEngine
         RedWool,                   // 35  minecraft:wool
         BlackWool,                 // 35  minecraft:wool
 
+        RedstoneOre,               // 73  minecraft:redstone_ore
+        GlowingRedstoneOre,        // 74  minecraft:lit_redstone_ore
+
         Pumpkin,                   // 86  minecraft:pumpkin
 
         JackOLantern,              // 91  minecraft:lit_pumpkin

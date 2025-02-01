@@ -24,6 +24,11 @@ namespace MinecraftServerEngine.PhysicsEngine
             return new(v1.X + v2.X, v1.Y + v2.Y, v1.Z + v2.Z);
         }
 
+        public static Vector operator -(Vector v1, Vector v2)
+        {
+            return new(v1.X - v2.X, v1.Y - v2.Y, v1.Z - v2.Z);
+        }
+
         public static Vector operator *(Vector v1, Vector v2)
         {
             return new(v1.X * v2.X, v1.Y * v2.Y, v1.Z * v2.Z);
@@ -92,6 +97,62 @@ namespace MinecraftServerEngine.PhysicsEngine
         {
             double s = GetLengthSquared();
             return Math.Sqrt(s);
+        }
+
+        /// <summary>
+        /// Clamps the vector's components to the specified minimum and maximum values.
+        /// </summary>
+        /// <param name="min">Inclusive minimum value</param>
+        /// <param name="max">Inclusive maximum value</param>
+        /// <returns>A new vector with clamped components</returns>
+        /// <exception cref="System.ArgumentOutOfRangeException"></exception>
+        public Vector Clamp(double min, double max)
+        {
+            if (min > max)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(min));
+            }
+
+            double x, y, z;
+
+            if (X > max)
+            {
+                x = max;
+            } else if (X < min)
+            {
+                x = min;
+            } else
+            {
+                x = X;
+            }
+
+            if (Y > max)
+            {
+                y = max;
+            }
+            else if (Y < min)
+            {
+                y = min;
+            }
+            else
+            {
+                y = Y;
+            }
+
+            if (Z > max)
+            {
+                z = max;
+            }
+            else if (Z < min)
+            {
+                z = min;
+            }
+            else
+            {
+                z = Z;
+            }
+
+            return new Vector(x, y, z);
         }
 
         public override readonly string ToString()

@@ -106,6 +106,16 @@ namespace MinecraftServerEngine
                     ItemType.BlackWool, 35, "wool",
                     64,
                     15),
+
+                new ItemContext(
+                    ItemType.RedstoneOre, 73, "redstone_ore",
+                    64,
+                    0),
+                new ItemContext(
+                    ItemType.GlowingRedstoneOre, 74, "lit_redstone_ore",
+                    64,
+                    0),
+
                 new ItemContext(
                     ItemType.Pumpkin, 86, "pumpkin",
                     64,

@@ -16,7 +16,8 @@ namespace TestMinecraftServerApplication
 
         public const int UniqueItemLineOffset = (SlotCountPerLine * 1) + 0;
         public const int BalloonBasherSlot = UniqueItemLineOffset + 1;
-        public const int EclipseCrystalSlot = UniqueItemLineOffset + 6;
+        public const int BlastCoreSlot = UniqueItemLineOffset + 6;
+        public const int EclipseCrystalSlot = UniqueItemLineOffset + 8;
 
 
         public void ResetBalloonBasherSlot(string username)
@@ -41,6 +42,27 @@ namespace TestMinecraftServerApplication
                 ]));
         }
 
+        public void ResetBlastCoreSlot(string username)
+        {
+            if (username == null || string.IsNullOrEmpty(username) == true)
+            {
+                username = "없음";
+            }
+
+            SetSlot(BlastCoreSlot, ItemStack.Create(BlastCore.Item, BlastCore.DefaultCount, [
+                    $"",
+                    // A powerful core that explodes on use, knocking back all nearby players.
+                    $"사용 시 폭발하여 주변의 모든 플레이어를 ",
+                    $"날려버리는 강력한 코어입니다.",
+                    $"",
+                    // Left-click (Purchase)
+                    $"왼클릭(구매)          {BlastCore.PurchasePrice * Coin.DefaultCount} Coins",
+                    // Right-click (Sell)
+                    $"우클릭(판매)          {BlastCore.SellPrice * Coin.DefaultCount} Coins",
+                    $"구매자                {username}",
+                ]));
+        }
+
         public void ResetEclipseCrystalSlot(string username)
         {
             if (username == null || string.IsNullOrEmpty(username) == true)
@@ -49,8 +71,8 @@ namespace TestMinecraftServerApplication
             }
 
             SetSlot(EclipseCrystalSlot, ItemStack.Create(EclipseCrystal.Item, EclipseCrystal.DefaultCount, [
-                    // It can obscure the world...
                     $"",
+                    // It can obscure the world...
                     $"세상을 가릴 수 있습니다...",
                     $"",
                     // Left-click (Purchase)
@@ -132,6 +154,7 @@ namespace TestMinecraftServerApplication
 
                 ResetBalloonBasherSlot(null);
                 ResetEclipseCrystalSlot(null);
+                ResetBlastCoreSlot(null);
             }
 
             // Utility items
@@ -234,6 +257,31 @@ namespace TestMinecraftServerApplication
                             ResetBalloonBasherSlot(player.Username);
 
                             BalloonBasher.CanPurchase = false;
+                        }
+
+                        success = (taked != null);
+
+                    }
+                    break;
+                case BlastCore.Type:
+                    {
+                        if (BlastCore.CanPurchase == false)
+                        {
+                            break;
+                        }
+
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                           BlastCore.Item, BlastCore.DefaultCount,
+                           Coin.Item, Coin.DefaultCount * BlastCore.PurchasePrice);
+
+                        if (taked != null && SuperWorld.GameContext.IsStarted == true)
+                        {
+                            System.Diagnostics.Debug.Assert(player.Username != null);
+                            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(player.Username) == false);
+                            System.Diagnostics.Debug.Assert(i == BlastCoreSlot);
+                            ResetBlastCoreSlot(player.Username);
+
+                            BlastCore.CanPurchase = false;
                         }
 
                         success = (taked != null);
@@ -354,6 +402,24 @@ namespace TestMinecraftServerApplication
                             ResetBalloonBasherSlot(null);
 
                             BalloonBasher.CanPurchase = true;
+                        }
+
+                        success = taked != null;
+
+                    }
+                    break;
+                case BlastCore.Type:
+                    {
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                            Coin.Item, Coin.DefaultCount * BlastCore.SellPrice,
+                            BlastCore.Item, BlastCore.DefaultCount);
+
+                        if (taked != null && SuperWorld.GameContext.IsStarted == true)
+                        {
+                            System.Diagnostics.Debug.Assert(i == BlastCoreSlot);
+                            ResetBlastCoreSlot(null);
+
+                            BlastCore.CanPurchase = true;
                         }
 
                         success = taked != null;

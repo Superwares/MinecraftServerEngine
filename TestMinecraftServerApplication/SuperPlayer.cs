@@ -8,6 +8,7 @@ using MinecraftServerEngine.PhysicsEngine;
 namespace TestMinecraftServerApplication
 {
     using Items;
+    using static System.Net.Mime.MediaTypeNames;
 
     public sealed class SuperPlayer : AbstractPlayer
     {
@@ -233,6 +234,14 @@ namespace TestMinecraftServerApplication
                         ShopInventory.ResetBalloonBasherSlot(null);
                     }
                     break;
+                case BlastCore.Type:
+                    {
+                        //System.Diagnostics.Debug.Assert(BlastCore.CanPurchase == false);
+                        BlastCore.CanPurchase = true;
+
+                        ShopInventory.ResetBlastCoreSlot(null);
+                    }
+                    break;
                 case EclipseCrystal.Type:
                     {
                         //System.Diagnostics.Debug.Assert(EclipseCrystal.CanPurchase == false);
@@ -434,6 +443,51 @@ namespace TestMinecraftServerApplication
             }
         }
 
+        private void UseBlastCore(SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            Vector v = new Vector(Position.X, Position.Y + GetEyeHeight(), Position.Z);
+            Vector d;
+
+            AxisAlignedBoundingBox aabb = AxisAlignedBoundingBox.Generate(v, BlastCore.Radius);
+
+            using Tree<PhysicsObject> objs = new();
+
+            System.Diagnostics.Debug.Assert(world != null);
+            world.SearchObjects(objs, aabb, true, this);
+
+            foreach (PhysicsObject obj in objs.GetKeys())
+            {
+                if (obj is SuperPlayer player)
+                {
+                    (bool damaged, double health) = player.Damage(BlastCore.Damage);
+
+                    System.Diagnostics.Debug.Assert(health >= 0.0);
+                    if (
+                        damaged == true &&
+                        health == 0.0 &&
+                        SuperWorld.GameContext.IsStarted == true
+                        )
+                    {
+                        System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                        System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+                        SuperWorld.GameContext.HandleKillEvent(UserId);
+                    }
+
+                    d = player.Position - v;
+                    d = d.Clamp(MinecraftPhysics.MinVelocity, MinecraftPhysics.MaxVelocity);
+
+                    player.ApplyForce(d);
+                }
+            }
+
+            world.PlaySound("block.end_gateway.spawn", 0, v, 1.0, 2.0);
+
+            EmitParticles(BlastCore.EffectParticle, 1.0, 10);
+
+        }
+
         protected override void OnAttack(World _world, double attackCharge)
         {
             System.Diagnostics.Debug.Assert(_world != null);
@@ -449,10 +503,10 @@ namespace TestMinecraftServerApplication
             }
         }
 
-        protected override void OnAttack(World _world, ItemStack stack, double attackCharge)
+        protected override void OnAttack(World _world, ItemStack itemStack, double attackCharge)
         {
             System.Diagnostics.Debug.Assert(_world != null);
-            System.Diagnostics.Debug.Assert(stack != null);
+            System.Diagnostics.Debug.Assert(itemStack != null);
             System.Diagnostics.Debug.Assert(attackCharge >= 0.0);
             System.Diagnostics.Debug.Assert(attackCharge <= 1.0);
 
@@ -460,7 +514,7 @@ namespace TestMinecraftServerApplication
 
             if (_world is SuperWorld world)
             {
-                switch (stack.Type)
+                switch (itemStack.Type)
                 {
                     default:
                         HandleDefaultAttack(world, attackCharge);
@@ -471,9 +525,13 @@ namespace TestMinecraftServerApplication
                     case BalloonBasher.Type:
                         HandleBalloonBasherAttack(world, attackCharge);
                         break;
+
+                    case BlastCore.Type:
+                        UseBlastCore(world);
+                        break;
                 }
 
-                stack.Damage(1);
+                itemStack.Damage(1);
             }
 
         }
@@ -561,16 +619,16 @@ namespace TestMinecraftServerApplication
             world.PlaySound(EmergencyEscape.LaunchSoundName, 0, Position, 0.8, 1.5);
         }
 
-        protected override void OnUseItem(World _world, ItemStack stack)
+        protected override void OnUseItem(World _world, ItemStack itemStack)
         {
             System.Diagnostics.Debug.Assert(_world != null);
-            System.Diagnostics.Debug.Assert(stack != null);
+            System.Diagnostics.Debug.Assert(itemStack != null);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (_world is SuperWorld world)
             {
-                switch (stack.Type)
+                switch (itemStack.Type)
                 {
                     case ShopItem.Type:
                         OpenInventory(ShopInventory);
@@ -583,6 +641,10 @@ namespace TestMinecraftServerApplication
                         OpenInventory(ChestInventory);
                         break;
 
+                    case BlastCore.Type:
+                        UseBlastCore(world);
+                        itemStack.Damage(1);
+                        break;
                     case EclipseCrystal.Type:
                         UseEclipseCrystal(world);
                         break;
