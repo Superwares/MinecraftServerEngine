@@ -6,6 +6,7 @@ using Sync;
 using MinecraftPrimitives;
 using MinecraftServerEngine;
 using TestMinecraftServerApplication.Items;
+using System.Numerics;
 
 namespace TestMinecraftServerApplication
 {
@@ -28,6 +29,17 @@ namespace TestMinecraftServerApplication
         public const int MaxPlayers = 18;
         public const int MaxRounds = MaxPlayers;
 
+        public const int DefaultCoins = 110;
+
+        public const int KILL_COINS = 59;
+
+        public const int SurvivingCoins = 31;
+
+        public const int SEEKER_ROUND_WIN_ADDITIONAL_POINTS = 55;
+        public const int SEEKER_ROUND_WIN_COINS = 210;
+        public const int HIDER_ROUND_WIN_ADDITIONAL_POINTS = 11;
+        public const int HIDER_ROUND_WIN_COINS = 22;
+
 
         public readonly static GameContextInventory Inventory = new(MinPlayers, MaxPlayers, MaxRounds);
 
@@ -49,9 +61,31 @@ namespace TestMinecraftServerApplication
         public bool IsStarted => _started;
 
         private bool _inRound = false;
-        private bool _seekerDeath = false;
-        public bool IsSeekerDeath => _seekerDeath;
+        private bool _hiderWin = false, _seekerWin = false;
+        public bool IsHiderWin
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(_disposed == false);
 
+                System.Diagnostics.Debug.Assert(_ready == true);
+                System.Diagnostics.Debug.Assert(_started == true);
+
+                return _hiderWin;
+            }
+        }
+        public bool IsSeekerWin
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(_disposed == false);
+
+                System.Diagnostics.Debug.Assert(_ready == true);
+                System.Diagnostics.Debug.Assert(_started == true);
+
+                return _seekerWin;
+            }
+        }
 
         public IReadOnlyList<SuperPlayer> Players
         {
@@ -276,12 +310,18 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(_players != null);
             foreach (SuperPlayer player in _players)
             {
+                System.Diagnostics.Debug.Assert(player != null);
                 ScoreboardPlayerRow row = new(player.UserId, player.Username);
 
                 _ScoreboardByUserId.Insert(row.UserId, row);
                 _ScoreboardByUsername.Insert(row.Username, row);
 
+                System.Diagnostics.Debug.Assert(player != null);
                 player.Reset();
+
+                System.Diagnostics.Debug.Assert(player != null);
+                System.Diagnostics.Debug.Assert(DefaultCoins >= 0);
+                player.GiveItemStacks(Coin.Item, DefaultCoins);
             }
 
             System.Diagnostics.Debug.Assert(_players != null);
@@ -305,7 +345,8 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(_inRound == false);
             _inRound = true;
 
-            _seekerDeath = false;
+            _hiderWin = false;
+            _seekerWin = false;
 
             System.Diagnostics.Debug.Assert(_players != null);
             foreach (SuperPlayer player in _players)
@@ -405,8 +446,10 @@ namespace TestMinecraftServerApplication
 
         }
 
-        public void HandleKillEvent(UserId userId)
+        public void HandleKillEvent(SuperPlayer player)
         {
+            System.Diagnostics.Debug.Assert(player != null);
+
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(_ready == true);
@@ -423,13 +466,26 @@ namespace TestMinecraftServerApplication
                 }
 
                 System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
-                ScoreboardPlayerRow row = _ScoreboardByUserId.Lookup(userId);
+                ScoreboardPlayerRow row = _ScoreboardByUserId.Lookup(player.UserId);
 
                 ++row.Kills;
 
                 System.Diagnostics.Debug.Assert(_players != null);
                 System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
                 Inventory.UpdatePlayerScores(_players, _ScoreboardByUserId);
+
+                System.Diagnostics.Debug.Assert(player != null);
+                System.Diagnostics.Debug.Assert(KILL_COINS >= 0);
+                player.GiveItemStacks(Coin.Item, KILL_COINS);
+
+                player.WriteMessageInChatBox([
+                    new TextComponent($"킬! (+{GameContext.KILL_COINS}코인)", TextColor.DarkGreen),
+                    ]);
+
+            }
+            catch (KeyNotFoundException)
+            {
+
             }
             finally
             {
@@ -456,15 +512,93 @@ namespace TestMinecraftServerApplication
                     return;
                 }
 
-                if (_currentSeeker != null && _currentSeeker.UserId == userId)
+                if (_hiderWin == true || _seekerWin == true)
                 {
-                    _seekerDeath = true;
+                    return;
+                }
+
+                System.Diagnostics.Debug.Assert(_currentSeeker != null);
+
+                if (_currentSeeker.UserId == userId)
+                {
+
+                    foreach (SuperPlayer player in _players)
+                    {
+                        System.Diagnostics.Debug.Assert(player != null);
+                        System.Diagnostics.Debug.Assert(_currentSeeker != null);
+                        if (
+                            object.ReferenceEquals(player, _currentSeeker) == true ||
+                            player.Gamemode != Gamemode.Adventure
+                            )
+                        {
+                            continue;
+                        }
+
+                        System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
+                        ScoreboardPlayerRow hiderPlayerScoreRow = _ScoreboardByUserId.Lookup(player.UserId);
+
+                        System.Diagnostics.Debug.Assert(hiderPlayerScoreRow != null);
+                        System.Diagnostics.Debug.Assert(HIDER_ROUND_WIN_ADDITIONAL_POINTS >= 0);
+                        hiderPlayerScoreRow.AdditionalPoints += HIDER_ROUND_WIN_ADDITIONAL_POINTS;
+
+                        System.Diagnostics.Debug.Assert(_currentSeeker != null);
+                        System.Diagnostics.Debug.Assert(HIDER_ROUND_WIN_COINS >= 0);
+                        _currentSeeker.GiveItemStacks(Coin.Item, HIDER_ROUND_WIN_COINS);
+
+                        player.WriteMessageInChatBox([
+                            new TextComponent($"생존승리! (+{GameContext.HIDER_ROUND_WIN_ADDITIONAL_POINTS}포인트, +{GameContext.HIDER_ROUND_WIN_COINS}코인)", TextColor.DarkGreen),
+                            ]);
+                    }
+
+                    _hiderWin = true;
+                }
+                else
+                {
+                    System.Diagnostics.Debug.Assert(_seekerWin != true);
+                    _seekerWin = true;
+
+                    System.Diagnostics.Debug.Assert(_players != null);
+                    foreach (SuperPlayer player in _players)
+                    {
+                        System.Diagnostics.Debug.Assert(player != null);
+                        System.Diagnostics.Debug.Assert(_currentSeeker != null);
+                        if (object.ReferenceEquals(player, _currentSeeker) == true)
+                        {
+                            continue;
+                        }
+
+                        if (player.Gamemode == Gamemode.Adventure)
+                        {
+                            _seekerWin = false;
+                            break;
+                        }
+                    }
+
+                    if (_seekerWin == true)
+                    {
+                        System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
+                        ScoreboardPlayerRow seekerPlayerScoreRow = _ScoreboardByUserId.Lookup(_currentSeeker.UserId);
+
+                        System.Diagnostics.Debug.Assert(seekerPlayerScoreRow != null);
+                        System.Diagnostics.Debug.Assert(SEEKER_ROUND_WIN_ADDITIONAL_POINTS >= 0);
+                        seekerPlayerScoreRow.AdditionalPoints += SEEKER_ROUND_WIN_ADDITIONAL_POINTS;
+
+                        System.Diagnostics.Debug.Assert(_currentSeeker != null);
+                        System.Diagnostics.Debug.Assert(SEEKER_ROUND_WIN_COINS >= 0);
+                        _currentSeeker.GiveItemStacks(Coin.Item, SEEKER_ROUND_WIN_COINS);
+
+                        _currentSeeker.WriteMessageInChatBox([
+                            new TextComponent($"술래승리! (+{GameContext.SEEKER_ROUND_WIN_ADDITIONAL_POINTS}포인트, +{GameContext.SEEKER_ROUND_WIN_COINS}코인)", TextColor.DarkGreen),
+                            ]);
+
+                    }
+
                 }
 
                 System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
-                ScoreboardPlayerRow row = _ScoreboardByUserId.Lookup(userId);
+                ScoreboardPlayerRow deathPlayerRow = _ScoreboardByUserId.Lookup(userId);
 
-                ++row.Deaths;
+                ++deathPlayerRow.Deaths;
 
                 System.Diagnostics.Debug.Assert(_players != null);
                 System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
@@ -497,20 +631,67 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(_ready == true);
             System.Diagnostics.Debug.Assert(_started == true);
 
-            System.Diagnostics.Debug.Assert(_prevSeekers != null);
-            System.Diagnostics.Debug.Assert(_currentSeeker != null);
-            _prevSeekers.Append(_currentSeeker);
+            System.Diagnostics.Debug.Assert(_LockerScoreboard != null);
+            _LockerScoreboard.Hold();
 
-            _currentSeeker = null;
-            _seekerDeath = false;
+            try
+            {
 
-            System.Diagnostics.Debug.Assert(_currentRoundIndex >= 0);
+                System.Diagnostics.Debug.Assert(_players != null);
+                foreach (SuperPlayer player in _players)
+                {
+                    System.Diagnostics.Debug.Assert(player != null);
+                    System.Diagnostics.Debug.Assert(_currentSeeker != null);
+                    if (object.ReferenceEquals(player, _currentSeeker) == true)
+                    {
+                        continue;
+                    }
 
-            System.Diagnostics.Debug.Assert(Inventory != null);
-            Inventory.EndRound(_players, TotalRounds, _currentRoundIndex);
+                    if (player.Gamemode != Gamemode.Adventure)
+                    {
+                        continue;
+                    }
 
-            System.Diagnostics.Debug.Assert(_inRound == true);
-            _inRound = false;
+                    System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
+                    ScoreboardPlayerRow survivorPlayerScoreRow = _ScoreboardByUserId.Lookup(player.UserId);
+
+                    System.Diagnostics.Debug.Assert(survivorPlayerScoreRow != null);
+                    ++survivorPlayerScoreRow.Surviving;
+
+                    System.Diagnostics.Debug.Assert(_currentSeeker != null);
+                    System.Diagnostics.Debug.Assert(SurvivingCoins >= 0);
+                    _currentSeeker.GiveItemStacks(Coin.Item, SurvivingCoins);
+
+                    player.WriteMessageInChatBox([
+                        new TextComponent($"생존! (+{GameContext.SurvivingCoins}코인)", TextColor.DarkGreen),
+                        ]);
+                }
+
+                System.Diagnostics.Debug.Assert(_prevSeekers != null);
+                System.Diagnostics.Debug.Assert(_currentSeeker != null);
+                _prevSeekers.Append(_currentSeeker);
+
+                _currentSeeker = null;
+                _hiderWin = false;
+                _seekerWin = false;
+
+                System.Diagnostics.Debug.Assert(_currentRoundIndex >= 0);
+
+                System.Diagnostics.Debug.Assert(Inventory != null);
+                Inventory.EndRound(_players, TotalRounds, _currentRoundIndex);
+
+                System.Diagnostics.Debug.Assert(_inRound == true);
+                _inRound = false;
+
+                System.Diagnostics.Debug.Assert(_players != null);
+                System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
+                Inventory.UpdatePlayerScores(_players, _ScoreboardByUserId);
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(_LockerScoreboard != null);
+                _LockerScoreboard.Release();
+            }
         }
 
         public void DetermineWinners(List<SuperPlayer> players)
@@ -586,7 +767,8 @@ namespace TestMinecraftServerApplication
                 _started = false;
                 _ready = false;
 
-                _seekerDeath = false;
+                _hiderWin = false;
+                _seekerWin = false;
 
                 _prevSeekers.Flush();
                 _currentSeeker = null;

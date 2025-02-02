@@ -229,9 +229,9 @@ namespace TestMinecraftServerApplication
                 case BalloonBasher.Type:
                     {
                         //System.Diagnostics.Debug.Assert(BalloonBasher.CanPurchase == false);
-                        BalloonBasher.CanPurchase = true;
+                        //BalloonBasher.CanPurchase = true;
 
-                        ShopInventory.ResetBalloonBasherSlot(null);
+                        //ShopInventory.ResetBalloonBasherSlot(null);
                     }
                     break;
                 case BlastCore.Type:
@@ -303,7 +303,7 @@ namespace TestMinecraftServerApplication
                 {
                     System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
                     System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                    SuperWorld.GameContext.HandleKillEvent(UserId);
+                    SuperWorld.GameContext.HandleKillEvent(this);
                 }
 
                 livingEntity.ApplyForce(d * knockbackScale);
@@ -367,7 +367,7 @@ namespace TestMinecraftServerApplication
                 {
                     System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
                     System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                    SuperWorld.GameContext.HandleKillEvent(UserId);
+                    SuperWorld.GameContext.HandleKillEvent(this);
                 }
 
                 livingEntity.ApplyForce(d * knockbackScale);
@@ -432,7 +432,7 @@ namespace TestMinecraftServerApplication
                 {
                     System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
                     System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                    SuperWorld.GameContext.HandleKillEvent(UserId);
+                    SuperWorld.GameContext.HandleKillEvent(this);
                 }
 
                 livingEntity.ApplyForce(k * knockbackScale);
@@ -472,7 +472,7 @@ namespace TestMinecraftServerApplication
                     {
                         System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
                         System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                        SuperWorld.GameContext.HandleKillEvent(UserId);
+                        SuperWorld.GameContext.HandleKillEvent(this);
                     }
 
                     d = player.Position - v;

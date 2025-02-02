@@ -47,8 +47,15 @@ namespace TestMinecraftServerApplication
             new TextComponent($"우승자", TextColor.Gold),
             new TextComponent($"가 됩니다!\n", TextColor.White),
             new TextComponent($"\n", TextColor.White),
-            new TextComponent($"킬 당 포인트:       {ScoreboardPlayerRow.PointsPerKill}\n",  TextColor.Gray),
-            new TextComponent($"데스 당 포인트:     {ScoreboardPlayerRow.PointsPerDeath}\n", TextColor.Gray),
+            new TextComponent($"킬      +포인트:    {ScoreboardPlayerRow.PointsPerKill}\n",  TextColor.Gray),
+            new TextComponent($"데스    +포인트:     {ScoreboardPlayerRow.PointsPerDeath}\n", TextColor.Gray),
+            new TextComponent($"생존    +포인트:     {ScoreboardPlayerRow.PoinsPerSurviving}\n", TextColor.Gray),
+            new TextComponent($"술래승리 +포인트:    {GameContext.SEEKER_ROUND_WIN_ADDITIONAL_POINTS}\n", TextColor.Gray),
+            new TextComponent($"생존승리 +포인트:    {GameContext.HIDER_ROUND_WIN_ADDITIONAL_POINTS}\n", TextColor.Gray),
+            new TextComponent($"킬      +코인:      {GameContext.KILL_COINS}\n",  TextColor.Gray),
+            new TextComponent($"생존    +코인:      {GameContext.SurvivingCoins}\n",  TextColor.Gray),
+            new TextComponent($"술래승리 +코인:      {GameContext.SEEKER_ROUND_WIN_COINS}\n", TextColor.Gray),
+            new TextComponent($"생존승리 +코인:      {GameContext.HIDER_ROUND_WIN_COINS}\n", TextColor.Gray),
             new TextComponent($"\n", TextColor.White),
             new TextComponent($"* 라운드는 참여한 플레이어 수만큼 진행됩니다.\n", TextColor.Gray),
             new TextComponent($"\n", TextColor.White),
@@ -429,7 +436,7 @@ namespace TestMinecraftServerApplication
         //public readonly static Time NormalTimeDuration = Time.FromMinutes(2);
         //public readonly static Time BurningTimeDuration = Time.FromMinutes(1);
 
-        public readonly static Time NormalTimeDuration = Time.FromSeconds(5);  // for debug
+        public readonly static Time NormalTimeDuration = Time.FromSeconds(30);  // for debug
         public readonly static Time BurningTimeDuration = Time.FromSeconds(5);  // for debug
 
         private readonly Time _StartTime = Time.Now();
@@ -472,7 +479,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(ctx != null);
             System.Diagnostics.Debug.Assert(world != null);
 
-            if (ctx.IsSeekerDeath == true)
+            if (ctx.IsHiderWin == true)
             {
                 if (_progressBarId != System.Guid.Empty)
                 {
@@ -484,9 +491,38 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(world != null);
                 world.DisplayTitle(
                     Time.Zero, Time.FromSeconds(1), Time.Zero,
-                    new TextComponent($"술래가 사망하였습니다...", TextColor.DarkGray));
+                    new TextComponent($"술래가 사망하였습니다!", TextColor.BrightGreen));
 
+                ctx.PlaySound("entity.player.levelup", 0, 1.0, 1.5);
                 ctx.PlaySound("entity.illusion_illager.ambient", 0, 1.0, 1.5);
+
+                //world.WriteMessageInChatBox([
+                //    new TextComponent($"생존승리! (+{GameContext.HIDER_ROUND_WIN_ADDITIONAL_POINTS}포인트, +{GameContext.HIDER_ROUND_WIN_COINS}코인)", TextColor.Gray),
+                //    ]);
+
+                return true;
+            }
+
+            if (ctx.IsSeekerWin == true)
+            {
+                if (_progressBarId != System.Guid.Empty)
+                {
+                    System.Diagnostics.Debug.Assert(_progressBarId != System.Guid.Empty);
+                    System.Diagnostics.Debug.Assert(world != null);
+                    world.CloseProgressBar(_progressBarId);
+                }
+
+                System.Diagnostics.Debug.Assert(world != null);
+                world.DisplayTitle(
+                    Time.Zero, Time.FromSeconds(1), Time.Zero,
+                    new TextComponent($"도망자 모두가 사망하였습니다!", TextColor.BrightGreen));
+
+                ctx.PlaySound("entity.player.levelup", 0, 1.0, 1.5);
+                ctx.PlaySound("entity.illusion_illager.ambient", 0, 1.0, 1.5);
+
+                //world.WriteMessageInChatBox([
+                //    new TextComponent($"술래승리! (+{GameContext.SEEKER_ROUND_WIN_ADDITIONAL_POINTS}포인트, +{GameContext.SEEKER_ROUND_WIN_COINS}코인)", TextColor.Gray),
+                //    ]);
 
                 return true;
             }
@@ -656,6 +692,9 @@ namespace TestMinecraftServerApplication
             {
                 ctx.EndRound();
 
+                world.WriteMessageInChatBox([
+                    new TextComponent("라운드 종료", TextColor.Gray),
+                    ]);
 
                 return true;
             }

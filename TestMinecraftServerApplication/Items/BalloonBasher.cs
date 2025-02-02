@@ -7,7 +7,7 @@ namespace TestMinecraftServerApplication.Items
 
     public static class BalloonBasher
     {
-        public const ItemQualityTier Tier = ItemQualityTier.Unique;
+        public const ItemQualityTier Tier = ItemQualityTier.Basic;
         public const ItemType Type = ItemType.DiamondSword;
         public const string Name = "Balloon Basher";
 
@@ -29,7 +29,7 @@ namespace TestMinecraftServerApplication.Items
 
         public static readonly int DefaultCount = MinecraftServerEngine.Item.MinCount;
 
-        public static bool CanPurchase = true;
+        //public static bool CanPurchase = true;
 
 
     }

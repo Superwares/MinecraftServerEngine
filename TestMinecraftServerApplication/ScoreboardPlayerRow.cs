@@ -5,14 +5,15 @@ namespace TestMinecraftServerApplication
 {
     public sealed class ScoreboardPlayerRow
     {
-        public const int PointsPerKill = 3;
-        public const int PointsPerDeath = -2;
+        public const int PointsPerKill = 13;
+        public const int PointsPerDeath = -8;
+        public const int PoinsPerSurviving = 10;
 
         public const int DefaultAdditionalPoints = 30;
 
         public readonly UserId UserId;
         public readonly string Username;
-        public int Kills, Deaths;
+        public int Kills, Deaths, Surviving;
         public int AdditionalPoints = DefaultAdditionalPoints;
 
         public int TotalPoints
@@ -31,7 +32,7 @@ namespace TestMinecraftServerApplication
         {
             UserId = id;
             Username = username;
-            Kills = 0; Deaths = 0;
+            Kills = 0; Deaths = 0; Surviving = 0;
             AdditionalPoints = DefaultAdditionalPoints;
         }
     }

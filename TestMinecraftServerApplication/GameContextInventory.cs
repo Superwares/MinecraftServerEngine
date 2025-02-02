@@ -88,6 +88,7 @@ namespace TestMinecraftServerApplication
                             $"현재 참여한 플레이어입니다.",
                             $"",
                             $"킬/데스         {row.Kills}/{row.Deaths}",
+                            $"생존            {row.Surviving}",
                             $"총 포인트       {row.TotalPoints}",
                         ]));
                 }
