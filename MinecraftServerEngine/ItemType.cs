@@ -97,6 +97,10 @@ namespace MinecraftServerEngine
 
         PlayerSkull,               // 397  minecraft:skull
 
+        IronHorseArmor,            // 417  minecraft:iron_horse_armor
+        GoldenHorseArmor,          // 418  minecraft:golden_horse_armor
+        DiamondHorseArmor,         // 419  minecraft:diamond_horse_armor
+
 
         EndCrystal,                // 426  minecraft:end_crystal
 

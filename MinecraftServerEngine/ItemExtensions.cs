@@ -325,6 +325,18 @@ namespace MinecraftServerEngine
                     64,
                     3),
 
+                new ItemContext(
+                    ItemType.IronHorseArmor, 417, "iron_horse_armor",
+                    1,
+                    0),
+                new ItemContext(
+                    ItemType.GoldenHorseArmor, 418, "golden_horse_armor",
+                    1,
+                    0),
+                new ItemContext(
+                    ItemType.DiamondHorseArmor, 419, "diamond_horse_armor",
+                    1,
+                    0),
 
                 new ItemContext(
                     ItemType.EndCrystal, 426, "end_crystal",

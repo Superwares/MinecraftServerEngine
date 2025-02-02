@@ -149,6 +149,16 @@ namespace TestMinecraftServerApplication
                         ])
                     );
 
+                slots[offset + 4] = (
+                    true,
+                    ItemStack.Create(Dash.Item, Dash.DefaultCount, [
+                        $"",
+                        // Left-click (Purchase)
+                        $"왼클릭(구매)          {Dash.PurchasePrice * Coin.DefaultCount} Coins",
+                        // Right-click (Sell)
+                        $"우클릭(판매)          {Dash.SellPrice * Coin.DefaultCount} Coins",
+                        ])
+                    );
                 slots[offset + 5] = (
                     true,
                     ItemStack.Create(Hint.Item, Hint.DefaultCount, [
@@ -273,6 +283,16 @@ namespace TestMinecraftServerApplication
                             Coin.Item, Coin.DefaultCount * BalloonBasher.PurchasePrice);
 
                         success = (taked != null);
+                    }
+                    break;
+                case Dash.Type:
+                    {
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                            Dash.Item, Dash.DefaultCount,
+                            Coin.Item, Coin.DefaultCount * Dash.PurchasePrice);
+
+                        success = (taked != null);
+
                     }
                     break;
                 case Hint.Type:
@@ -464,6 +484,16 @@ namespace TestMinecraftServerApplication
                             BalloonBasher.Item, BalloonBasher.DefaultCount);
 
                         success = taked != null;
+                    }
+                    break;
+                case Dash.Type:
+                    {
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                            Coin.Item, Coin.DefaultCount * Dash.SellPrice,
+                            Dash.Item, Dash.DefaultCount);
+
+                        success = taked != null;
+
                     }
                     break;
                 case Hint.Type:

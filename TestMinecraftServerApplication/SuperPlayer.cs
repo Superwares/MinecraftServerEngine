@@ -516,6 +516,25 @@ namespace TestMinecraftServerApplication
 
         }
 
+        private void UseDash(SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            ItemStack[] takedItemStacks = TakeItemStacks(Dash.Item, Dash.DefaultCount);
+            if (takedItemStacks == null)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(takedItemStacks.Length > 0);
+
+            Vector d = Look.GetUnitVector();
+
+            ApplyForce(d * Dash.Power);
+
+            world.PlaySound("entity.llama.swag", 0, Position, 0.5, 1.0);
+        }
+
         private void UseHint(SuperWorld world)
         {
             System.Diagnostics.Debug.Assert(world != null);
@@ -671,6 +690,9 @@ namespace TestMinecraftServerApplication
                         breaked = HandleDoombringerAttack(world, attackCharge);
                         break;
 
+                    case Dash.Type:
+                        UseDash(world);
+                        break;
                     case Hint.Type:
                         UseHint(world);
                         break;
@@ -805,6 +827,9 @@ namespace TestMinecraftServerApplication
                         UseEmergencyEscape(world);
                         break;
 
+                    case Dash.Type:
+                        UseDash(world);
+                        break;
                     case Hint.Type:
                         UseHint(world);
                         break;
