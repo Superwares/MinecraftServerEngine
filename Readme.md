@@ -139,6 +139,8 @@ If disposable objects were used as members of class and struct, they must be dis
 
 - 아이템을 Give 할때 이미 존재하는 slot 을 수색하고 꽉 채우기
 
+- 아이템 구매하면 핫바로 가도록.
+
 ### Done 
 
 - DetermineToDespawnPlayerOnDisconnect 가 동적으로 적용되나 테스트해야됨.
