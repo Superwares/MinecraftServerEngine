@@ -5,47 +5,47 @@ namespace MinecraftServerEngine
 {
     public enum Block : int
     {
-        Air,
-        Stone,
-        Granite,
-        PolishedGranite,
-        Diorite,
-        PolishedDiorite,
-        Andesite,
-        PolishedAndesite,
-        GrassBlock,
-        Dirt,
-        CoarseDirt,
-        Podzol,
-        Cobblestone,
-        OakWoodPlanks,
-        SpruceWoodPlanks,
-        BirchWoodPlanks,
-        JungleWoodPlanks,
-        AcaciaWoodPlanks,
-        DarkOakWoodPlanks,
-        OakSapling,
-        SpruceSapling,
-        BirchSapling,
-        JungleSapling,
-        AcaciaSapling,
-        DarkOakSapling,
-        Bedrock,
-        FlowingWater,
-        StillWater,
-        FlowingLava,
-        StillLava,
-        Sand,
-        RedSand,
-        Gravel,
-        GoldOre,
-        IronOre,
-        CoalOre,
-        OakWood,
-        SpruceWood,
-        BirchWood,
-        JungleWood,
-        OakLeaves,         // 18:0
+        Air,                         // 0:0
+        Stone,                       // 1:0
+        Granite,                     // 1:1
+        PolishedGranite,             // 1:2
+        Diorite,                     // 1:3
+        PolishedDiorite,             // 1:4
+        Andesite,                    // 1:5
+        PolishedAndesite,            // 1:6
+        GrassBlock,                  // 2:0
+        Dirt,                        // 3:0
+        CoarseDirt,                  // 3:1
+        Podzol,                      // 3:2
+        Cobblestone,                 // 4:0
+        OakWoodPlanks,               // 5:0
+        SpruceWoodPlanks,            // 5:1
+        BirchWoodPlanks,             // 5:2
+        JungleWoodPlanks,            // 5:3
+        AcaciaWoodPlanks,            // 5:4
+        DarkOakWoodPlanks,           // 5:5
+        OakSapling,                  // 6:0
+        SpruceSapling,               // 6:1
+        BirchSapling,                // 6:2
+        JungleSapling,               // 6:3
+        AcaciaSapling,               // 6:4
+        DarkOakSapling,              // 6:5
+        Bedrock,                     // 7:0
+        FlowingWater,                // 8:0
+        StillWater,                  // 9:0
+        FlowingLava,                 // 10:0
+        StillLava,                   // 11:0
+        Sand,                        // 12:0
+        RedSand,                     // 12:1
+        Gravel,                      // 13:0
+        GoldOre,                     // 14:0
+        IronOre,                     // 15:0
+        CoalOre,                     // 16:0
+        OakWood,                     // 17:0
+        SpruceWood,                  // 17:1
+        BirchWood,                   // 17:2
+        JungleWood,                  // 17:3
+        OakLeaves,                   // 18:0
         SpruceLeaves,
         BirchLeaves,
         JungleLeaves,
@@ -54,7 +54,14 @@ namespace MinecraftServerEngine
         Glass,
         LapisLazuliOre,
         LapisLazuliBlock,
-        Dispenser,
+
+        BottomDispenser,             // 23:0
+        TopDispenser,                // 23:1
+        NorthDispenser,              // 23:2
+        SouthDispenser,              // 23:3
+        WestDispenser,               // 23:4
+        EastDispenser,               // 23:5
+
         Sandstone,
         ChiseledSandstone,
         SmoothSandstone,
@@ -169,48 +176,57 @@ namespace MinecraftServerEngine
         NorthTopCobblestoneStairs,       // 67:7
 
 
-        OakFence,      // 85:0
-        SouthPumpkin,  // 86:0
-        WestPumpkin,   // 86:1
-        NorthPumpkin,  // 86:2
-        EastPumpkin,   // 86:3
+        OakFence,                       // 85:0
+        SouthPumpkin,                   // 86:0
+        WestPumpkin,                    // 86:1
+        NorthPumpkin,                   // 86:2
+        EastPumpkin,                    // 86:3
 
 
-        WhiteStainedGlass,        // 95:0
-        OrangeStainedGlass,       // 95:1
-        MagentaStainedGlass,      // 95:2
-        LightBlueStainedGlass,    // 95:3
-        YellowStainedGlass,       // 95:4
-        LimeStainedGlass,         // 95:5
-        PinkStainedGlass,         // 95:6
-        GrayStainedGlass,         // 95:7
-        LightGrayStainedGlass,    // 95:8
-        CyanStainedGlass,         // 95:9
-        PurpleStainedGlass,       // 95:10
-        BlueStainedGlass,         // 95:11
-        BrownStainedGlass,        // 95:12
-        GreenStainedGlass,        // 95:13
-        RedStainedGlass,          // 95:14
-        BlackStainedGlass,        // 95:15
+        WhiteStainedGlass,              // 95:0
+        OrangeStainedGlass,             // 95:1
+        MagentaStainedGlass,            // 95:2
+        LightBlueStainedGlass,          // 95:3
+        YellowStainedGlass,             // 95:4
+        LimeStainedGlass,               // 95:5
+        PinkStainedGlass,               // 95:6
+        GrayStainedGlass,               // 95:7
+        LightGrayStainedGlass,          // 95:8
+        CyanStainedGlass,               // 95:9
+        PurpleStainedGlass,             // 95:10
+        BlueStainedGlass,               // 95:11
+        BrownStainedGlass,              // 95:12
+        GreenStainedGlass,              // 95:13
+        RedStainedGlass,                // 95:14
+        BlackStainedGlass,              // 95:15
 
-        StoneMonsterEgg,                  // 97:0
-        CobblestoneMonsterEgg,            // 97:1
-        StoneBrickMonsterEgg,             // 97:2
-        MossyStoneBrickMonsterEgg,        // 97:3
-        CrackedStoneBrickMonsterEgg,      // 97:4
-        ChiseledStoneBrickMonsterEgg,     // 97:5
-        StoneBricks,                      // 98:0
-        MossyStoneBricks,                 // 98:1
-        CrackedStoneBricks,               // 98:2
-        ChiseledStoneBricks,              // 98:3
-        BrownMushroomBlock,               // 99:0
-        RedMushroomBlock,                 // 100:0
-        IronBars,                         // 101:0
-        GlassPane,                        // 102:0
-        MelonBlock,                       // 103:0
+        StoneMonsterEgg,                // 97:0
+        CobblestoneMonsterEgg,          // 97:1
+        StoneBrickMonsterEgg,           // 97:2
+        MossyStoneBrickMonsterEgg,      // 97:3
+        CrackedStoneBrickMonsterEgg,    // 97:4
+        ChiseledStoneBrickMonsterEgg,   // 97:5
+        StoneBricks,                    // 98:0
+        MossyStoneBricks,               // 98:1
+        CrackedStoneBricks,             // 98:2
+        ChiseledStoneBricks,            // 98:3
+        BrownMushroomBlock,             // 99:0
+        RedMushroomBlock,               // 100:0
+        IronBars,                       // 101:0
+        GlassPane,                      // 102:0
+        MelonBlock,                     // 103:0
 
-        InactiveRedstoneLamp,     // 123:0
-        ActiveRedstoneLamp,       // 124:0
+        EastBottomStoneBrickStairs,    // 109:0  minecraft:stone_brick_stairs
+        WestBottomStoneBrickStairs,    // 109:1  minecraft:stone_brick_stairs
+        SouthBottomStoneBrickStairs,   // 109:2  minecraft:stone_brick_stairs
+        NorthBottomStoneBrickStairs,   // 109:3  minecraft:stone_brick_stairs
+        EastTopStoneBrickStairs,       // 109:4  minecraft:stone_brick_stairs
+        WestTopStoneBrickStairs,       // 109:5  minecraft:stone_brick_stairs
+        SouthTopStoneBrickStairs,      // 109:6  minecraft:stone_brick_stairs
+        NorthTopStoneBrickStairs,      // 109:7  minecraft:stone_brick_stairs
+
+        InactiveRedstoneLamp,           // 123:0
+        ActiveRedstoneLamp,             // 124:0
 
 
         DoubleOakWoodSlab,              // 125:0
@@ -264,22 +280,26 @@ namespace MinecraftServerEngine
         CobblestoneWall,                // 139:0
         MossyCobblestoneWall,           // 139:1
 
-        WhiteCarpet,       // 171:0
-        OrangeCarpet,      // 171:1
-        MagentaCarpet,     // 171:2
-        LightBlueCarpet,   // 171:3
-        YellowCarpet,      // 171:4
-        LimeCarpet,        // 171:5
-        PinkCarpet,        // 171:6
-        GrayCarpet,        // 171:7
-        LightGrayCarpet,   // 171:8
-        CyanCarpet,        // 171:9
-        PurpleCarpet,      // 171:10
-        BlueCarpet,        // 171:11
-        BrownCarpet,       // 171:12
-        GreenCarpet,       // 171:13
-        RedCarpet,         // 171:14
-        BlackCarpet,       // 171:15
+        HayBale_AxisY,                   // 170:0  minecraft:hay_block
+        HayBale_AxisX,                   // 170:4  minecraft:hay_block
+        HayBale_AxisZ,                   // 170:8  minecraft:hay_block
+
+        WhiteCarpet,                    // 171:0
+        OrangeCarpet,                   // 171:1
+        MagentaCarpet,                  // 171:2
+        LightBlueCarpet,                // 171:3
+        YellowCarpet,                   // 171:4
+        LimeCarpet,                     // 171:5
+        PinkCarpet,                     // 171:6
+        GrayCarpet,                     // 171:7
+        LightGrayCarpet,                // 171:8
+        CyanCarpet,                     // 171:9
+        PurpleCarpet,                   // 171:10
+        BlueCarpet,                     // 171:11
+        BrownCarpet,                    // 171:12
+        GreenCarpet,                    // 171:13
+        RedCarpet,                      // 171:14
+        BlackCarpet,                    // 171:15
 
 
 

@@ -281,11 +281,38 @@ namespace MinecraftServerEngine
                     (22 << 4) | 0,
                     "lapis_block",
                     BlockShape.Cube),
+
                 new BlockContext(
-                    Block.Dispenser,
+                    Block.BottomDispenser,
                     (23 << 4) | 0,
                     "dispenser",
                     BlockShape.Cube),
+                new BlockContext(
+                    Block.TopDispenser,
+                    (23 << 4) | 1,
+                    "dispenser",
+                    BlockShape.Cube),
+                new BlockContext(
+                    Block.NorthDispenser,
+                    (23 << 4) | 2,
+                    "dispenser",
+                    BlockShape.Cube),
+                new BlockContext(
+                    Block.SouthDispenser,
+                    (23 << 4) | 3,
+                    "dispenser",
+                    BlockShape.Cube),
+                new BlockContext(
+                    Block.WestDispenser,
+                    (23 << 4) | 4,
+                    "dispenser",
+                    BlockShape.Cube),
+                new BlockContext(
+                    Block.EastDispenser,
+                    (23 << 4) | 5,
+                    "dispenser",
+                    BlockShape.Cube),
+
                 new BlockContext(
                     Block.Sandstone,
                     (24 << 4) | 0,
@@ -1001,6 +1028,46 @@ namespace MinecraftServerEngine
                     "melon_block",
                     BlockShape.Cube),
 
+                new BlockContext(
+                    Block.EastBottomStoneBrickStairs,
+                    (109 << 4) | 0,
+                    "stone_brick_stairs",
+                    BlockShape.Stairs),
+                new BlockContext(
+                    Block.WestBottomStoneBrickStairs,
+                    (109 << 4) | 1,
+                    "stone_brick_stairs",
+                    BlockShape.Stairs),
+                new BlockContext(
+                    Block.SouthBottomStoneBrickStairs,
+                    (109 << 4) | 2,
+                    "stone_brick_stairs",
+                    BlockShape.Stairs),
+                new BlockContext(
+                    Block.NorthBottomStoneBrickStairs,
+                    (109 << 4) | 3,
+                    "stone_brick_stairs",
+                    BlockShape.Stairs),
+                new BlockContext(
+                    Block.EastTopStoneBrickStairs,
+                    (109 << 4) | 4,
+                    "stone_brick_stairs",
+                    BlockShape.Stairs),
+                new BlockContext(
+                    Block.WestTopStoneBrickStairs,
+                    (109 << 4) | 5,
+                    "stone_brick_stairs",
+                    BlockShape.Stairs),
+                new BlockContext(
+                    Block.SouthTopStoneBrickStairs,
+                    (109 << 4) | 6,
+                    "stone_brick_stairs",
+                    BlockShape.Stairs),
+                new BlockContext(
+                    Block.NorthTopStoneBrickStairs,
+                    (109 << 4) | 7,
+                    "stone_brick_stairs",
+                    BlockShape.Stairs),
 
                 new BlockContext(
                     Block.InactiveRedstoneLamp,
@@ -1257,6 +1324,21 @@ namespace MinecraftServerEngine
                     "cobblestone_wall",
                     BlockShape.Wall),
 
+                new BlockContext(
+                    Block.HayBale_AxisY,
+                    (170 << 4) | 0,  // 0~3, 12~15
+                    "hay_block",
+                    BlockShape.Cube),
+                new BlockContext(
+                    Block.HayBale_AxisX,
+                    (170 << 4) | 4,  // 4~7
+                    "hay_block",
+                    BlockShape.Cube),
+                new BlockContext(
+                    Block.HayBale_AxisZ,
+                    (170 << 4) | 8,  // 8~11
+                    "hay_block",
+                    BlockShape.Cube),
 
                 new BlockContext(
                     Block.WhiteCarpet,
@@ -1350,7 +1432,7 @@ namespace MinecraftServerEngine
                 _BLOCK_ENUM_TO_CTX_MAP.Insert(ctx.Block, ctx);
                 //try
                 //{
-                    
+
                 //}
                 //catch (DuplicateKeyException)
                 //{
