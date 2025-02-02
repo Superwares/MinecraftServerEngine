@@ -6,6 +6,8 @@ namespace MinecraftPrimitives
     {
         public readonly static Time TimePerTick = Time.FromMilliseconds(50);
 
+        public const int TicksPerSeconds = 20;
+
         //public readonly static Time OneSecond = Time.FromMicroseconds(13_888);   // Real time: 0.013888888... seconds
         //public readonly static Time OneMinute = Time.FromMicroseconds(833_333);  // Real time: 0.833333333... seconds
         public readonly static Time OneHour = Time.FromSeconds(50);             // Real time: 50 seconds

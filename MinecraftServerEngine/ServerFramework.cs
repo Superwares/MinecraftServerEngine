@@ -14,6 +14,8 @@ namespace MinecraftServerEngine
             private readonly int N;
             private int _i = 0;
 
+            public int CurrentTaskIndex => _i;
+
             private int _count = 0;
             private Time[] _totalTimes;
 
@@ -40,8 +42,28 @@ namespace MinecraftServerEngine
                     ++_count;
                 }
 
-                /*Console.Printl($"i: {_i}");*/
+                //MyConsole.Debug($"Record: i: {_i}");
                 _totalTimes[_i++] += elapsed;
+
+                if (_i > N)
+                {
+                    _i = 0;
+                }
+            }
+
+            public void Pass()
+            {
+                System.Diagnostics.Debug.Assert(_i >= 0);
+                System.Diagnostics.Debug.Assert(_i <= N);
+
+                System.Diagnostics.Debug.Assert(_count >= 0);
+                if (_i == 0)
+                {
+                    ++_count;
+                }
+
+                //MyConsole.Debug($"Pass: i: {_i}");
+                ++_i;
 
                 if (_i > N)
                 {
@@ -88,31 +110,41 @@ namespace MinecraftServerEngine
         {
             internal readonly bool Parallel;
 
+            public readonly bool EnsureOneTick;
+
             private readonly VoidMethod InitRoutine = null;
             private readonly VoidMethod StartRoutine = null;
 
-            public Task(VoidMethod initRoutine, VoidMethod startRoutine)
+            public Task(bool ensureOneTick, VoidMethod initRoutine, VoidMethod startRoutine)
             {
                 System.Diagnostics.Debug.Assert(initRoutine != null);
                 System.Diagnostics.Debug.Assert(startRoutine != null);
 
                 InitRoutine = initRoutine; StartRoutine = startRoutine;
-            }
 
-            public Task(VoidMethod startRoutine)
-            {
-                System.Diagnostics.Debug.Assert(startRoutine != null);
-
-                StartRoutine = startRoutine;
+                EnsureOneTick = ensureOneTick;
 
                 Parallel = true;
             }
 
-            public Task(VoidMethod startRoutine, bool parallel)
+            public Task(bool ensureOneTick, VoidMethod startRoutine)
             {
                 System.Diagnostics.Debug.Assert(startRoutine != null);
 
                 StartRoutine = startRoutine;
+
+                EnsureOneTick = ensureOneTick;
+
+                Parallel = true;
+            }
+
+            public Task(bool ensureOneTick, VoidMethod startRoutine, bool parallel)
+            {
+                System.Diagnostics.Debug.Assert(startRoutine != null);
+
+                StartRoutine = startRoutine;
+
+                EnsureOneTick = ensureOneTick;
 
                 Parallel = parallel;
             }
@@ -153,7 +185,7 @@ namespace MinecraftServerEngine
                 /*Console.Printl($"{System.Environment.ProcessorCount}");*/
             }
 
-            public void Start(PerformanceMonitor sys)
+            public void Start(bool shouldExecuteOneTick, PerformanceMonitor sys)
             {
                 System.Diagnostics.Debug.Assert(sys != null);
 
@@ -164,8 +196,18 @@ namespace MinecraftServerEngine
                 {
                     Task task = Tasks[i];
 
+                    System.Diagnostics.Debug.Assert(task != null);
+                    if (shouldExecuteOneTick == false && task.EnsureOneTick == true)
+                    {
+                        System.Diagnostics.Debug.Assert(sys != null);
+                        sys.Pass();
+
+                        continue;
+                    }
+
                     Time start = Time.Now(), end;
 
+                    System.Diagnostics.Debug.Assert(task != null);
                     task.Init();
 
                     if (task.Parallel)
@@ -180,9 +222,13 @@ namespace MinecraftServerEngine
                     }
 
                     end = Time.Now();
+
+                    System.Diagnostics.Debug.Assert(sys != null);
                     sys.Record(end - start);
 
                 }
+
+                //MyConsole.Debug($"Current task index: {sys.CurrentTaskIndex}");
             }
         }
 
@@ -256,36 +302,47 @@ namespace MinecraftServerEngine
 
             TaskManager manager = new(
                 new Task(  // 0
+                    true,  // EnsureOneTick
                     () => World.SwapObjectQueue(),
                     () => World.ControlPlayers()),
                 new Task(  // 1
+                    false,  // EnsureOneTick
                     () => World.SwapObjectQueue(),
                     () => World.HandleDeathEvents()),
                 new Task(  // 2
+                    false,  // EnsureOneTick
                     () => World.SwapObjectQueue(),
                     () => World.HandleDisconnections()),
                 new Task(  // 3
+                    false,  // EnsureOneTick
                     () => World.SwapObjectQueue(),
                     () => World.DestroyObjects()),
                 new Task(  // 4
+                    true,  // EnsureOneTick
                     () => World.SwapObjectQueue(),
                     () => World.MoveObjects()),
                 new Task(  // 5
+                    false,  // EnsureOneTick
                     () => World.CreateObjects()),
                 new Task(  // 6
+                    true,  // EnsureOneTick
                     () => connListener.Accept(World)),
                 new Task(  // 7
+                    false,  // EnsureOneTick
                     () => World.SwapObjectQueue(),
                     () => World.LoadAndSendData()),
                 new Task(  // 8
+                    false,  // EnsureOneTick
                     () => World._StartRoutine(), false),
                 new Task(  // 9
+                    false,  // EnsureOneTick
                     () => World.SwapObjectQueue(),
-                    () => World.StartObjectRoutines()));
+                    () => World.StartObjectRoutines())
+                );
 
             PerformanceMonitor sys = new(manager.TotalTaskCount);
 
-            bool f;
+            bool shouldExecuteOneTick;
 
             ulong ticks = 0;
 
@@ -298,13 +355,9 @@ namespace MinecraftServerEngine
 
             while (_running)
             {
-                f = (accumulated >= interval);
-                if (f == true)
-                {
-                    /*System.Diagnostics.Debug.Assert(_ticks >= 0);*/
+                shouldExecuteOneTick = accumulated >= interval;
 
-                    manager.Start(sys);
-                }
+                manager.Start(shouldExecuteOneTick, sys);
 
                 end = Time.Now();
                 elapsed = end - start;
@@ -318,7 +371,7 @@ namespace MinecraftServerEngine
                 //    MyConsole.Warn($"The task is taking longer, Elapsed: {elapsed}!");
                 //}
 
-                if (f)
+                if (shouldExecuteOneTick == true)
                 {
                     accumulated -= interval;
                     ++ticks;
@@ -326,10 +379,13 @@ namespace MinecraftServerEngine
                     sys.Record(elapsed);
 
                     /*Console.Printl($"total % Time.FromSeconds(5): {total % Time.FromSeconds(5)}");*/
-                    if (ticks % (20 * 5) == 0)
+                    if (ticks % (MinecraftTimes.TicksPerSeconds * 5) == 0)
                     {
                         sys.Print(interval);
                     }
+                } else
+                {
+                    sys.Pass();
                 }
 
             }
