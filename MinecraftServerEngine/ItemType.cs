@@ -72,10 +72,13 @@ namespace MinecraftServerEngine
         StoneSword,                // 272  minecraft:stone_sword
 
         DiamondSword,              // 276  minecraft:diamond_sword
-
-        GoldenSword,               // 283  minecraft:golden_sword
+        DiamondShovel,             // 277  minecraft:diamond_shovel
+        DiamondPickaxe,            // 278  minecraft:diamond_pickaxe
+        DiamondAxe,                // 279  minecraft:diamond_axe
 
         Stick,                     // 280  minecraft:stick
+        
+        GoldenSword,               // 283  minecraft:golden_sword
 
         Flint,                     // 318  minecraft:flint
 

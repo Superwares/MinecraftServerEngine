@@ -53,8 +53,8 @@ namespace MinecraftServerEngine
 
 
         private Locker LockerGamemode = new();
-        private Gamemode _nextGamemode, _gamemode;
-        public Gamemode Gamemode => _gamemode;
+        private Gamemode _newGamemode, _gamemode;
+        public Gamemode Gamemode => _newGamemode;
 
 
         private float _experienceBarRatio = 0.0F;
@@ -85,7 +85,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(Sneaking == false);
             System.Diagnostics.Debug.Assert(Sprinting == false);
 
-            _nextGamemode = gamemode;
+            _newGamemode = gamemode;
             _gamemode = gamemode;
         }
 
@@ -391,7 +391,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            return (_nextGamemode == Gamemode.Spectator) ?
+            return (_newGamemode == Gamemode.Spectator) ?
                 GetSpectatorHitbox() : GetAdventureHitbox(false);
         }
 
@@ -452,9 +452,9 @@ namespace MinecraftServerEngine
 
             LockerGamemode.Hold();
 
-            if (_nextGamemode != gamemode)
+            if (_newGamemode != gamemode)
             {
-                _nextGamemode = gamemode;
+                _newGamemode = gamemode;
             }
 
             LockerGamemode.Release();
@@ -534,13 +534,13 @@ namespace MinecraftServerEngine
 
                 volume = GetHitbox().Convert(_pControl);
 
-                if (_gamemode != _nextGamemode)
+                if (_gamemode != _newGamemode)
                 {
-                    Conn.SetGamemode(Id, _nextGamemode);
+                    Conn.SetGamemode(Id, _newGamemode);
                 }
             }
 
-            _gamemode = _nextGamemode;
+            _gamemode = _newGamemode;
 
             base.Move(world, volume, v);
         }

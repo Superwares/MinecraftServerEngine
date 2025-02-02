@@ -275,12 +275,24 @@ namespace MinecraftServerEngine
                     1,
                     0),
                 new ItemContext(
-                    ItemType.GoldenSword, 283, "golden_sword",
+                    ItemType.DiamondShovel, 277, "diamond_shovel",
+                    1,
+                    0),
+                new ItemContext(
+                    ItemType.DiamondPickaxe, 278, "diamond_pickaxe",
+                    1,
+                    0),
+                new ItemContext(
+                    ItemType.DiamondAxe, 279, "diamond_axe",
                     1,
                     0),
                 new ItemContext(
                     ItemType.Stick, 280, "stick",
                     64,
+                    0),
+                new ItemContext(
+                    ItemType.GoldenSword, 283, "golden_sword",
+                    1,
                     0),
                 new ItemContext(
                     ItemType.Flint, 318, "flint",

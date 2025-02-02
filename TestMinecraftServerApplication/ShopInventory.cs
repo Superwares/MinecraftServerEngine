@@ -16,8 +16,9 @@ namespace TestMinecraftServerApplication
 
         public const int UniqueItemLineOffset = (SlotCountPerLine * 1) + 0;
         //public const int BalloonBasherSlot = UniqueItemLineOffset + 1;
-        public const int BlastCoreSlot = UniqueItemLineOffset + 6;
-        public const int EclipseCrystalSlot = UniqueItemLineOffset + 8;
+        public const int BlastCoreSlot = UniqueItemLineOffset + 3;
+        public const int EclipseCrystalSlot = UniqueItemLineOffset + 5;
+        public const int DoombringerSlot = UniqueItemLineOffset + 8;
 
 
         //public void ResetBalloonBasherSlot(string username)
@@ -79,6 +80,26 @@ namespace TestMinecraftServerApplication
                     $"왼클릭(구매)          {EclipseCrystal.PurchasePrice * Coin.DefaultCount} Coins",
                     // Right-click (Sell)
                     $"우클릭(판매)          {EclipseCrystal.SellPrice * Coin.DefaultCount} Coins",
+                    $"구매자                {username}",
+                ]));
+        }
+
+        public void ResetDoombringerSlot(string username)
+        {
+            if (username == null || string.IsNullOrEmpty(username) == true)
+            {
+                username = "없음";
+            }
+
+            SetSlot(DoombringerSlot, ItemStack.Create(Doombringer.Item, Doombringer.DefaultCount, [
+                    $"",
+                    // A cursed relic that holds the power of instantaneous death.
+                    $"즉각적인 죽음의 힘을 지닌 저주받은 유물.",
+                    $"",
+                    // Left-click (Purchase)
+                    $"왼클릭(구매)          {Doombringer.PurchasePrice * Coin.DefaultCount} Coins",
+                    // Right-click (Sell)
+                    $"우클릭(판매)          {Doombringer.SellPrice * Coin.DefaultCount} Coins",
                     $"구매자                {username}",
                 ]));
         }
@@ -171,6 +192,7 @@ namespace TestMinecraftServerApplication
                 //ResetBalloonBasherSlot(null);
                 ResetEclipseCrystalSlot(null);
                 ResetBlastCoreSlot(null);
+                ResetDoombringerSlot(null);
             }
 
             // Utility items
@@ -338,6 +360,31 @@ namespace TestMinecraftServerApplication
 
                     }
                     break;
+                case Doombringer.Type:
+                    {
+                        if (Doombringer.CanPurchase == false)
+                        {
+                            break;
+                        }
+
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                           Doombringer.Item, Doombringer.DefaultCount,
+                           Coin.Item, Coin.DefaultCount * Doombringer.PurchasePrice);
+
+                        if (taked != null && SuperWorld.GameContext.IsStarted == true)
+                        {
+                            System.Diagnostics.Debug.Assert(player.Username != null);
+                            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(player.Username) == false);
+                            System.Diagnostics.Debug.Assert(i == DoombringerSlot);
+                            ResetDoombringerSlot(player.Username);
+
+                            Doombringer.CanPurchase = false;
+                        }
+
+                        success = (taked != null);
+
+                    }
+                    break;
 
                 case GlobalChestItem.Type:
                     {
@@ -472,6 +519,24 @@ namespace TestMinecraftServerApplication
                             ResetEclipseCrystalSlot(null);
 
                             EclipseCrystal.CanPurchase = true;
+                        }
+
+                        success = taked != null;
+
+                    }
+                    break;
+                case Doombringer.Type:
+                    {
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                            Coin.Item, Coin.DefaultCount * Doombringer.SellPrice,
+                            Doombringer.Item, Doombringer.DefaultCount);
+
+                        if (taked != null && SuperWorld.GameContext.IsStarted == true)
+                        {
+                            System.Diagnostics.Debug.Assert(i == DoombringerSlot);
+                            ResetDoombringerSlot(null);
+
+                            Doombringer.CanPurchase = true;
                         }
 
                         success = taked != null;

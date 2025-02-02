@@ -8,7 +8,6 @@ using MinecraftServerEngine.PhysicsEngine;
 namespace TestMinecraftServerApplication
 {
     using Items;
-    using static System.Net.Mime.MediaTypeNames;
 
     public sealed class SuperPlayer : AbstractPlayer
     {
@@ -234,6 +233,7 @@ namespace TestMinecraftServerApplication
                         //ShopInventory.ResetBalloonBasherSlot(null);
                     }
                     break;
+
                 case BlastCore.Type:
                     {
                         //System.Diagnostics.Debug.Assert(BlastCore.CanPurchase == false);
@@ -248,6 +248,14 @@ namespace TestMinecraftServerApplication
                         EclipseCrystal.CanPurchase = true;
 
                         ShopInventory.ResetEclipseCrystalSlot(null);
+                    }
+                    break;
+                case Doombringer.Type:
+                    {
+                        //System.Diagnostics.Debug.Assert(Doombringer.CanPurchase == false);
+                        Doombringer.CanPurchase = true;
+
+                        ShopInventory.ResetDoombringerSlot(null);
                     }
                     break;
             }
@@ -299,7 +307,12 @@ namespace TestMinecraftServerApplication
                 //MyConsole.Debug("Attack!");
 
                 System.Diagnostics.Debug.Assert(health >= 0.0);
-                if (damaged == true && health == 0.0 && SuperWorld.GameContext.IsStarted == true)
+                if (
+                    livingEntity is SuperPlayer &&
+                    damaged == true &&
+                    health == 0.0 &&
+                    SuperWorld.GameContext.IsStarted == true
+                    )
                 {
                     System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
                     System.Diagnostics.Debug.Assert(UserId != UserId.Null);
@@ -318,7 +331,7 @@ namespace TestMinecraftServerApplication
             }
         }
 
-        private void HandleWoodenSwordAttack(SuperWorld world, double attackCharge)
+        private bool HandleWoodenSwordAttack(SuperWorld world, double attackCharge)
         {
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(attackCharge >= 0.0);
@@ -328,7 +341,7 @@ namespace TestMinecraftServerApplication
 
             if (world.CanCombat == false)
             {
-                return;
+                return true;
             }
 
             double damage = WoodenSword.Damage;
@@ -346,7 +359,7 @@ namespace TestMinecraftServerApplication
             //MyConsole.Debug($"Damage: {damage:F2}");
             if (damage == 0.0F)
             {
-                return;
+                return true;
             }
 
 
@@ -363,7 +376,12 @@ namespace TestMinecraftServerApplication
                 (bool damaged, double health) = livingEntity.Damage(damage);
 
                 System.Diagnostics.Debug.Assert(health >= 0.0);
-                if (damaged == true && health == 0.0 && SuperWorld.GameContext.IsStarted == true)
+                if (
+                    livingEntity is SuperPlayer &&
+                    damaged == true &&
+                    health == 0.0 &&
+                    SuperWorld.GameContext.IsStarted == true
+                    )
                 {
                     System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
                     System.Diagnostics.Debug.Assert(UserId != UserId.Null);
@@ -379,9 +397,11 @@ namespace TestMinecraftServerApplication
 
                 world.PlaySound("entity.player.attack.strong", 7, v, 1.0F, 2.0F);
             }
+
+            return true;
         }
 
-        private void HandleBalloonBasherAttack(SuperWorld world, double attackCharge)
+        private bool HandleBalloonBasherAttack(SuperWorld world, double attackCharge)
         {
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(attackCharge >= 0.0);
@@ -391,7 +411,7 @@ namespace TestMinecraftServerApplication
 
             if (world.CanCombat == false)
             {
-                return;
+                return true;
             }
 
             double damage = BalloonBasher.Damage;
@@ -409,7 +429,7 @@ namespace TestMinecraftServerApplication
             //MyConsole.Debug($"Damage: {damage:F2}");
             if (damage == 0.0F)
             {
-                return;
+                return true;
             }
 
 
@@ -428,7 +448,12 @@ namespace TestMinecraftServerApplication
                 (bool damaged, double health) = livingEntity.Damage(damage);
 
                 System.Diagnostics.Debug.Assert(health >= 0.0);
-                if (damaged == true && health == 0.0 && SuperWorld.GameContext.IsStarted == true)
+                if (
+                    livingEntity is SuperPlayer &&
+                    damaged == true &&
+                    health == 0.0 &&
+                    SuperWorld.GameContext.IsStarted == true
+                    )
                 {
                     System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
                     System.Diagnostics.Debug.Assert(UserId != UserId.Null);
@@ -441,6 +466,8 @@ namespace TestMinecraftServerApplication
 
                 livingEntity.EmitParticles(Particle.LargeExplode, 1.0, 1);
             }
+
+            return true;
         }
 
         private void UseBlastCore(SuperWorld world)
@@ -459,12 +486,13 @@ namespace TestMinecraftServerApplication
 
             foreach (PhysicsObject obj in objs.GetKeys())
             {
-                if (obj is SuperPlayer player)
+                if (obj is LivingEntity livingEntity)
                 {
-                    (bool damaged, double health) = player.Damage(BlastCore.Damage);
+                    (bool damaged, double health) = livingEntity.Damage(BlastCore.Damage);
 
                     System.Diagnostics.Debug.Assert(health >= 0.0);
                     if (
+                        livingEntity is SuperPlayer &&
                         damaged == true &&
                         health == 0.0 &&
                         SuperWorld.GameContext.IsStarted == true
@@ -475,10 +503,10 @@ namespace TestMinecraftServerApplication
                         SuperWorld.GameContext.HandleKillEvent(this);
                     }
 
-                    d = player.Position - v;
+                    d = livingEntity.Position - v;
                     d = d.Clamp(MinecraftPhysics.MinVelocity, MinecraftPhysics.MaxVelocity);
 
-                    player.ApplyForce(d);
+                    livingEntity.ApplyForce(d);
                 }
             }
 
@@ -487,6 +515,82 @@ namespace TestMinecraftServerApplication
             EmitParticles(BlastCore.EffectParticle, 1.0, 10);
 
         }
+
+        private bool HandleDoombringerAttack(SuperWorld world, double attackCharge)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(attackCharge >= 0.0);
+            System.Diagnostics.Debug.Assert(attackCharge <= 1.0);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (world.CanCombat == false)
+            {
+                return false;
+            }
+
+            double damage = Doombringer.Damage;
+            damage *= (attackCharge * attackCharge);
+            damage *= GenerateRandomValueBetween(0.98, 1.01);
+
+            System.Diagnostics.Debug.Assert(damage >= 0.0F);
+
+            double directionScale = 1.0;
+            double knockbackScale = GenerateRandomValueBetween(0.1, 0.3123);
+
+            System.Diagnostics.Debug.Assert(directionScale > 0.0F);
+            System.Diagnostics.Debug.Assert(knockbackScale > 0.0F);
+
+            //MyConsole.Debug($"Damage: {damage:F2}");
+            if (damage == 0.0F)
+            {
+                return true;
+            }
+
+
+            Vector o = GetEyeOrigin();
+            Vector d = Look.GetUnitVector();
+            Vector d_prime = d * directionScale;
+
+            //MyConsole.Debug($"Eye origin: {eyeOrigin}, Scaled direction vector: {scaled_d}");
+
+            PhysicsObject obj = world.SearchClosestObject(o, d_prime, this);
+
+            if (obj != null && obj is LivingEntity livingEntity)
+            {
+                (bool damaged, double health) = livingEntity.Damage(damage);
+
+                System.Diagnostics.Debug.Assert(health >= 0.0);
+                if (
+                    livingEntity is SuperPlayer &&
+                    damaged == true &&
+                    health == 0.0 &&
+                    SuperWorld.GameContext.IsStarted == true
+                    )
+                {
+                    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+                    SuperWorld.GameContext.HandleKillEvent(this);
+                }
+
+                livingEntity.ApplyForce(d * knockbackScale);
+
+                Vector v = new(
+                    livingEntity.Position.X,
+                    livingEntity.Position.Y + livingEntity.GetEyeHeight(),
+                    livingEntity.Position.Z);
+
+                world.PlaySound("entity.irongolem.hurt", 0, v, 1.0, 2.0);
+                world.PlaySound("entity.lightning.impact", 0, v, 1.0, 2.0);
+
+                livingEntity.EmitParticles(Particle.Smoke, 0.23, 999);
+
+                return true;
+            }
+
+            return false;
+        }
+
 
         protected override void OnAttack(World _world, double attackCharge)
         {
@@ -514,24 +618,33 @@ namespace TestMinecraftServerApplication
 
             if (_world is SuperWorld world)
             {
+                bool breaked = false;
+
                 switch (itemStack.Type)
                 {
                     default:
                         HandleDefaultAttack(world, attackCharge);
+                        breaked = true;
                         break;
                     case WoodenSword.Type:
-                        HandleWoodenSwordAttack(world, attackCharge);
+                        breaked = HandleWoodenSwordAttack(world, attackCharge);
                         break;
                     case BalloonBasher.Type:
-                        HandleBalloonBasherAttack(world, attackCharge);
+                        breaked = HandleBalloonBasherAttack(world, attackCharge);
                         break;
 
                     case BlastCore.Type:
                         UseBlastCore(world);
                         break;
+                    case Doombringer.Type:
+                        breaked = HandleDoombringerAttack(world, attackCharge);
+                        break;
                 }
 
-                itemStack.Damage(1);
+                if (breaked == true)
+                {
+                    itemStack.Damage(1);
+                }
             }
 
         }

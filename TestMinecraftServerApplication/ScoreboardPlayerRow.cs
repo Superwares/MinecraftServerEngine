@@ -24,7 +24,7 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(Deaths >= 0);
                 System.Diagnostics.Debug.Assert(AdditionalPoints >= 0);
 
-                return (Kills * PointsPerKill) + (Deaths * PointsPerDeath) + AdditionalPoints;
+                return (Kills * PointsPerKill) + (Deaths * PointsPerDeath) + (Surviving * PoinsPerSurviving) + AdditionalPoints;
             }
         }
 
