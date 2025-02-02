@@ -828,7 +828,7 @@ namespace MinecraftServerEngine
         private BlockContext(
             Table<ChunkLocation, ChunkData> chunks)
         {
-            Chunks = chunks;
+            Chunks = chunks.Clone();
         }
 
         private BlockContext()

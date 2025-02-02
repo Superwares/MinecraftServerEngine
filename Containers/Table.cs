@@ -46,6 +46,31 @@ namespace Containers
             Comparer = comparer;
         }
 
+        private Table(
+            System.Collections.Generic.IEqualityComparer<K> comparer,
+            bool[] flags,
+            K[] keys,
+            T[] values,
+            int length,
+            int count
+            )
+        {
+            System.Diagnostics.Debug.Assert(comparer != null);
+            Comparer = comparer;
+
+            System.Diagnostics.Debug.Assert(flags != null);
+            System.Diagnostics.Debug.Assert(keys != null);
+            System.Diagnostics.Debug.Assert(values != null);
+            System.Diagnostics.Debug.Assert(length >= MinLength);
+            System.Diagnostics.Debug.Assert(count >= 0);
+            _flags = flags;
+            _keys = keys;
+            _values = values;
+            _length = length;
+            _count = count;
+
+        }
+
         ~Table()
         {
             System.Diagnostics.Debug.Assert(false);
@@ -523,6 +548,37 @@ namespace Containers
             }
 
         }
+
+        public virtual Table<K, T> Clone()
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(_flags != null);
+            System.Diagnostics.Debug.Assert(_keys != null);
+            System.Diagnostics.Debug.Assert(_values != null);
+            System.Diagnostics.Debug.Assert(_length >= MinLength);
+            System.Diagnostics.Debug.Assert(_count >= 0);
+            bool[] flags = new bool[_flags.Length];
+            K[] keys = new K[_keys.Length];
+            T[] values = new T[_values.Length];
+            int length = _length;
+            int count = _count;
+
+            Table<K, T> clone = new(
+                Comparer,
+                flags,
+                keys,
+                values,
+                length,
+                count
+                );
+
+            return clone;
+        }
+
 
         public void Dispose()
         {

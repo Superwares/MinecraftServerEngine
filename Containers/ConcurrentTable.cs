@@ -34,6 +34,7 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
+            System.Diagnostics.Debug.Assert(Locker != null);
             Locker.Hold();
 
             try
@@ -42,6 +43,7 @@ namespace Containers
             }
             finally
             {
+                System.Diagnostics.Debug.Assert(Locker != null);
                 Locker.Release();
             }
 
@@ -60,20 +62,19 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
+            System.Diagnostics.Debug.Assert(Locker != null);
             Locker.Hold();
-
-            T v;
 
             try
             {
-                v = base.Extract(key);
+                return base.Extract(key);
             }
             finally
             {
+                System.Diagnostics.Debug.Assert(Locker != null);
                 Locker.Release();
             }
 
-            return v;
         }
 
         /// <summary>
@@ -89,19 +90,19 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
+            System.Diagnostics.Debug.Assert(Locker != null);
             Locker.Read();
 
-            T v;
             try
             {
-                v = base.Lookup(key);
+                return base.Lookup(key);
             }
             finally
             {
+                System.Diagnostics.Debug.Assert(Locker != null);
                 Locker.Release();
             }
 
-            return v;
         }
 
         public override bool Contains(K key)
@@ -111,13 +112,18 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
+            System.Diagnostics.Debug.Assert(Locker != null);
             Locker.Read();
 
-            bool f = base.Contains(key);
-
-            Locker.Release();
-
-            return f;
+            try
+            {
+                return base.Contains(key);
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(Locker != null);
+                Locker.Release();
+            }
         }
 
         public override (K, T)[] Flush()
@@ -127,13 +133,19 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
+            System.Diagnostics.Debug.Assert(Locker != null);
             Locker.Hold();
 
-            var ret = base.Flush();
+            try
+            {
 
-            Locker.Release();
-
-            return ret;
+                return base.Flush();
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(Locker != null);
+                Locker.Release();
+            }
         }
 
         public new System.Collections.Generic.IEnumerable<(K, T)> GetElements()
@@ -149,28 +161,36 @@ namespace Containers
             System.Diagnostics.Debug.Assert(_length >= MinLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
+            System.Diagnostics.Debug.Assert(Locker != null);
             Locker.Read();
 
-            if (!Empty)
+            try
             {
-                int i = 0;
-                for (int j = 0; j < _length; ++j)
+                if (!Empty)
                 {
-                    if (!_flags[j])
+                    int i = 0;
+                    for (int j = 0; j < _length; ++j)
                     {
-                        continue;
-                    }
+                        if (!_flags[j])
+                        {
+                            continue;
+                        }
 
-                    yield return (_keys[j], _values[j]);
+                        yield return (_keys[j], _values[j]);
 
-                    if (++i == _count)
-                    {
-                        break;
+                        if (++i == _count)
+                        {
+                            break;
+                        }
                     }
                 }
-            }
 
-            Locker.Release();
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(Locker != null);
+                Locker.Release();
+            }
         }
 
         public new System.Collections.Generic.IEnumerable<K> GetKeys()
@@ -186,28 +206,36 @@ namespace Containers
             System.Diagnostics.Debug.Assert(_length >= MinLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
+            System.Diagnostics.Debug.Assert(Locker != null);
             Locker.Read();
 
-            if (!Empty)
+            try
             {
-                int i = 0;
-                for (int j = 0; j < _length; ++j)
+                if (!Empty)
                 {
-                    if (!_flags[j])
+                    int i = 0;
+                    for (int j = 0; j < _length; ++j)
                     {
-                        continue;
-                    }
+                        if (!_flags[j])
+                        {
+                            continue;
+                        }
 
-                    yield return _keys[j];
+                        yield return _keys[j];
 
-                    if (++i == _count)
-                    {
-                        break;
+                        if (++i == _count)
+                        {
+                            break;
+                        }
                     }
                 }
-            }
 
-            Locker.Release();
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(Locker != null);
+                Locker.Release();
+            }
         }
 
         public new System.Collections.Generic.IEnumerable<T> GetValues()
@@ -223,28 +251,57 @@ namespace Containers
             System.Diagnostics.Debug.Assert(_length >= MinLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
+            System.Diagnostics.Debug.Assert(Locker != null);
             Locker.Read();
 
-            if (!Empty)
+            try
             {
-                int i = 0;
-                for (int j = 0; j < _length; ++j)
+                if (!Empty)
                 {
-                    if (!_flags[j])
+                    int i = 0;
+                    for (int j = 0; j < _length; ++j)
                     {
-                        continue;
-                    }
+                        if (!_flags[j])
+                        {
+                            continue;
+                        }
 
-                    yield return _values[j];
+                        yield return _values[j];
 
-                    if (++i == _count)
-                    {
-                        break;
+                        if (++i == _count)
+                        {
+                            break;
+                        }
                     }
                 }
+
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(Locker != null);
+                Locker.Release();
+            }
+        }
+
+        public override Table<K, T> Clone()
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            Locker.Release();
+            System.Diagnostics.Debug.Assert(Locker != null);
+            Locker.Read();
+
+            try
+            {
+                return base.Clone();
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(Locker != null);
+                Locker.Release();
+            }
         }
 
         protected override void Dispose(bool disposing)
