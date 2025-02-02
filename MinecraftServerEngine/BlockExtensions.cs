@@ -1,13 +1,6 @@
 ﻿
 using Common;
 using Containers;
-using System.ComponentModel;
-using System.Net.NetworkInformation;
-using System;
-using static System.Formats.Asn1.AsnWriter;
-using System.Diagnostics.Metrics;
-using static MinecraftPrimitives.Packet;
-using System.Runtime.InteropServices;
 
 namespace MinecraftServerEngine
 {
@@ -241,6 +234,7 @@ namespace MinecraftServerEngine
                     (17 << 4) | 3,
                     "log",
                     BlockShape.Cube),
+
                 new BlockContext(
                     Block.OakLeaves,
                     (18 << 4) | 0,
@@ -261,6 +255,7 @@ namespace MinecraftServerEngine
                     (18 << 4) | 3,
                     "leaves",
                     BlockShape.Cube),
+
                 new BlockContext(
                     Block.Sponge,
                     (19 << 4) | 0,
@@ -1353,6 +1348,21 @@ namespace MinecraftServerEngine
             foreach (BlockContext ctx in _map)
             {
                 _BLOCK_ENUM_TO_CTX_MAP.Insert(ctx.Block, ctx);
+                //try
+                //{
+                    
+                //}
+                //catch (DuplicateKeyException)
+                //{
+                //    // continue.
+                //    // We must handle the same block with different block id like below:
+                //    /**
+                //     * 18:0 <- 18:4
+                //     * 18:1 <- 18:5
+                //     * 18:2 <- 18:6  (I discover this error...)
+                //     * 18:3 <- 18:7
+                //     */
+                //}
             }
 
         }

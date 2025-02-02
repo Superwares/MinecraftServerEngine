@@ -143,6 +143,7 @@ namespace TestMinecraftServerApplication
 
             if (block == Block.Air && belowBlock != Block.Air)
             {
+                MyConsole.Debug($"belowBlock: {belowBlock}");
                 ApplyBlockAppearance(belowBlock);
             }
             else

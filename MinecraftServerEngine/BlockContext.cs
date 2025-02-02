@@ -5,8 +5,6 @@ using Containers;
 
 using MinecraftPrimitives;
 using MinecraftServerEngine.PhysicsEngine;
-using System.Runtime.InteropServices;
-using System;
 
 namespace MinecraftServerEngine
 {
@@ -23,6 +21,9 @@ namespace MinecraftServerEngine
                 public const int BlocksPerWidth = ChunkData.BlocksPerWidth;
                 public const int BlocksPerHeight = ChunkData.BlocksPerHeight / SectionCount;
                 public const int TotalBlockCount = BlocksPerWidth * BlocksPerWidth * BlocksPerHeight;
+
+                public const byte MaxBitsPerBlock = 13;
+                public const int MaxMetadataBits = 4;
 
                 private byte _bitsPerBlock;
 
@@ -46,7 +47,7 @@ namespace MinecraftServerEngine
                         return null;
                     }
 
-                    byte bitsPerBlock = 13;
+                    byte bitsPerBlock = MaxBitsPerBlock;
                     (int, int)[] palette = [];
 
                     int dataLength = GetDataLength(bitsPerBlock);
@@ -55,7 +56,7 @@ namespace MinecraftServerEngine
                     {
                         int i;
                         ulong metadata;
-                        ulong value;
+                        ulong id;
 
                         int start, offset, end;
 
@@ -72,23 +73,43 @@ namespace MinecraftServerEngine
                                     if (i % 2 == 0)
                                     {
                                         metadata &= 0b00001111;
-                                    } else {
+                                    }
+                                    else
+                                    {
                                         metadata = metadata >> 4;
                                     }
 
-                                    value = ((ulong)blocks[i] << 4) | metadata;
+                                    byte block = blocks[i];
+
+                                    id = (ulong)block << 4 | metadata;
+
+                                    //if (id != 0)
+                                    //{
+                                    //    Block _block = BlockExtensions.ToBlock((int)id, 0);
+                                    //    if (_block == 0)
+                                    //    {
+                                    //        //                                            MyConsole.Warn(
+                                    //        //$"It is not exists block id in this engine. \n" +
+                                    //        //$"\tblock: {block} (0x{block:X}, 0b{System.Convert.ToString(block, 2).PadLeft(MaxBitsPerBlock - MaxMetadataBits, '0')}), \n" +
+                                    //        //$"\tmetadata: {metadata} (0x{metadata:X}, 0b{System.Convert.ToString((long)metadata, 2).PadLeft(MaxMetadataBits, '0')}), \n" +
+                                    //        //$"\tid: {id} 0b{System.Convert.ToString((long)id, 2).PadLeft(MaxBitsPerBlock, '0')})"
+                                    //        //                                                );
+
+                                    //        id = 0;
+                                    //    }
+                                    //}
 
                                     start = (i * bitsPerBlock) / _BITS_PER_DATA_UNIT;
                                     offset = (i * bitsPerBlock) % _BITS_PER_DATA_UNIT;
                                     end = (((i + 1) * bitsPerBlock) - 1) / _BITS_PER_DATA_UNIT;
 
                                     System.Diagnostics.Debug.Assert(
-                                        (value & ~((1UL << bitsPerBlock) - 1UL)) == 0);
-                                    data[start] |= (value << offset);
+                                        (id & ~((1UL << bitsPerBlock) - 1UL)) == 0);
+                                    data[start] |= (id << offset);
 
                                     if (start != end)
                                     {
-                                        data[end] = value >> (_BITS_PER_DATA_UNIT - offset);
+                                        data[end] = id >> (_BITS_PER_DATA_UNIT - offset);
                                     }
 
                                 }
@@ -735,9 +756,11 @@ namespace MinecraftServerEngine
         {
             string regionFilePattern = @"r\.(-?\d+)\.(-?\d+)\.mca$";
 
+            Table<ChunkLocation, ChunkData> chunks = new();
+
             try
             {
-                using Table<ChunkLocation, ChunkData> chunks = new();
+
 
                 string[] regionFiles = System.IO.Directory.GetFiles(
                     folderPath,
@@ -820,15 +843,14 @@ namespace MinecraftServerEngine
             }
             catch (System.IO.DirectoryNotFoundException)
             {
-                return new BlockContext();
+                return new BlockContext(chunks);
             }
 
         }
 
-        private BlockContext(
-            Table<ChunkLocation, ChunkData> chunks)
+        private BlockContext(Table<ChunkLocation, ChunkData> chunks)
         {
-            Chunks = chunks.Clone();
+            Chunks = chunks;
         }
 
         private BlockContext()
@@ -924,7 +946,30 @@ namespace MinecraftServerEngine
                 y = loc.Y,
                 z = loc.Z - (locChunk.Z * ChunkLocation.BlocksPerWidth);
             int id = chunk.GetId(DefaultBlock.GetId(), x, y, z);
-            return BlockExtensions.ToBlock(id, DefaultBlock);
+
+            int defaultBlockId = DefaultBlock.GetId();
+            if (defaultBlockId == id)
+            {
+                return DefaultBlock;
+            }
+
+            Block block = BlockExtensions.ToBlock(id, DefaultBlock);
+
+            if (block == DefaultBlock)
+            {
+                MyConsole.Warn(
+                    $"It is not exists block id in this engine. \n" +
+                    $"\tLocation: {loc} \n" +
+                    //$"\tblock: {block} (0x{block:X}, 0b{System.Convert.ToString(block, 2).PadLeft(MaxBitsPerBlock - MaxMetadataBits, '0')}), \n" +
+                    //$"\tmetadata: {metadata} (0x{metadata:X}, 0b{System.Convert.ToString((long)metadata, 2).PadLeft(MaxMetadataBits, '0')}), \n" +
+                    $"\tid: {id} 0b{System.Convert.ToString((long)id, 2).PadLeft(13, '0')})"
+                    );
+
+            }
+
+
+
+            return block;
         }
 
         private Block GetBlock(BlockLocation loc, BlockDirection d, int s)
