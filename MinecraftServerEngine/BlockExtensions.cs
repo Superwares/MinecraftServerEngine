@@ -724,11 +724,37 @@ namespace MinecraftServerEngine
                     BlockShape.Cube),
 
 
+                //new BlockContext(
+                //    Block.Torch,
+                //    (50 << 4) | 0,
+                //    "torch",
+                //    BlockShape.None),
                 new BlockContext(
-                    Block.Torch,
-                    (50 << 4) | 0,
+                    Block.EastTorch,
+                    (50 << 4) | 1,
                     "torch",
                     BlockShape.None),
+                new BlockContext(
+                    Block.WestTorch,
+                    (50 << 4) | 2,
+                    "torch",
+                    BlockShape.None),
+                new BlockContext(
+                    Block.SouthTorch,
+                    (50 << 4) | 3,
+                    "torch",
+                    BlockShape.None),
+                new BlockContext(
+                    Block.NorthTorch,
+                    (50 << 4) | 4,
+                    "torch",
+                    BlockShape.None),
+                new BlockContext(
+                    Block.Torch,
+                    (50 << 4) | 5,
+                    "torch",
+                    BlockShape.None),
+
                 new BlockContext(
                     Block.Fire,
                     (51 << 4) | 0,
@@ -1029,6 +1055,87 @@ namespace MinecraftServerEngine
                     BlockShape.Cube),
 
                 new BlockContext(
+                    Block.Vines,
+                    (106 << 4) | 0,
+                    "vine",
+                    BlockShape.None),
+                new BlockContext(
+                    Block.SouthVines,
+                    (106 << 4) | 1,
+                    "vine",
+                    BlockShape.None),
+                new BlockContext(
+                    Block.WestVines,
+                    (106 << 4) | 2,
+                    "vine",
+                    BlockShape.None),
+                new BlockContext(
+                    Block.SouthWestVines,
+                    (106 << 4) | 3,
+                    "vine",
+                    BlockShape.None),
+                  new BlockContext(
+                    Block.NorthVines,
+                    (106 << 4) | 4,
+                    "vine",
+                    BlockShape.None),
+                new BlockContext(
+                    Block.NorthSouthVines,
+                    (106 << 4) | 5,
+                    "vine",
+                    BlockShape.None),
+                new BlockContext(
+                    Block.NorthWestVines,
+                    (106 << 4) | 6,
+                    "vine",
+                    BlockShape.None),
+                new BlockContext(
+                    Block.NorthSouthWestVines,
+                    (106 << 4) | 7,
+                    "vine",
+                    BlockShape.None),
+                  new BlockContext(
+                    Block.EastVines,
+                    (106 << 4) | 8,
+                    "vine",
+                    BlockShape.None),
+                new BlockContext(
+                    Block.EastSouthVines,
+                    (106 << 4) | 9,
+                    "vine",
+                    BlockShape.None),
+                new BlockContext(
+                    Block.EastWestVines,
+                    (106 << 4) | 10,
+                    "vine",
+                    BlockShape.None),
+                new BlockContext(
+                    Block.EastSouthWestVines,
+                    (106 << 4) | 11,
+                    "vine",
+                    BlockShape.None),
+                  new BlockContext(
+                    Block.EastNorthVines,
+                    (106 << 4) | 12,
+                    "vine",
+                    BlockShape.None),
+                new BlockContext(
+                    Block.EastNorthSouthVines,
+                    (106 << 4) | 13,
+                    "vine",
+                    BlockShape.None),
+                new BlockContext(
+                    Block.EastNorthWestVines,
+                    (106 << 4) | 14,
+                    "vine",
+                    BlockShape.None),
+                new BlockContext(
+                    Block.EastNorthSouthWestVines,
+                    (106 << 4) | 15,
+                    "vine",
+                    BlockShape.None),
+
+                new BlockContext(
                     Block.EastBottomStoneBrickStairs,
                     (109 << 4) | 0,
                     "stone_brick_stairs",
@@ -1112,33 +1219,63 @@ namespace MinecraftServerEngine
                     BlockShape.Cube),
 
                 new BlockContext(
-                    Block.OakWoodSlab,
+                    Block.BottomOakWoodSlab,
                     (126 << 4) | 0,
                     "wooden_slab",
                     BlockShape.Slab),
                 new BlockContext(
-                    Block.SpruceWoodSlab,
+                    Block.BottomSpruceWoodSlab,
                     (126 << 4) | 1,
                     "wooden_slab",
                     BlockShape.Slab),
                 new BlockContext(
-                    Block.BirchWoodSlab,
+                    Block.BottomBirchWoodSlab,
                     (126 << 4) | 2,
                     "wooden_slab",
                     BlockShape.Slab),
                 new BlockContext(
-                    Block.JungleWoodSlab,
+                    Block.BottomJungleWoodSlab,
                     (126 << 4) | 3,
                     "wooden_slab",
                     BlockShape.Slab),
                 new BlockContext(
-                    Block.AcaciaWoodSlab,
+                    Block.BottomAcaciaWoodSlab,
                     (126 << 4) | 4,
                     "wooden_slab",
                     BlockShape.Slab),
                 new BlockContext(
-                    Block.DarkOakWoodSlab,
+                    Block.BottomDarkOakWoodSlab,
                     (126 << 4) | 5,
+                    "wooden_slab",
+                    BlockShape.Slab),
+                new BlockContext(
+                    Block.TopOakWoodSlab,
+                    (126 << 4) | 8,
+                    "wooden_slab",
+                    BlockShape.Slab),
+                new BlockContext(
+                    Block.TopSpruceWoodSlab,
+                    (126 << 4) | 9,
+                    "wooden_slab",
+                    BlockShape.Slab),
+                new BlockContext(
+                    Block.TopBirchWoodSlab,
+                    (126 << 4) | 10,
+                    "wooden_slab",
+                    BlockShape.Slab),
+                new BlockContext(
+                    Block.TopJungleWoodSlab,
+                    (126 << 4) | 11,
+                    "wooden_slab",
+                    BlockShape.Slab),
+                new BlockContext(
+                    Block.TopAcaciaWoodSlab,
+                    (126 << 4) | 12,
+                    "wooden_slab",
+                    BlockShape.Slab),
+                new BlockContext(
+                    Block.TopDarkOakWoodSlab,
+                    (126 << 4) | 13,
                     "wooden_slab",
                     BlockShape.Slab),
 

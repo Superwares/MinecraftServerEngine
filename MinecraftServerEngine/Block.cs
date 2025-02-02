@@ -144,27 +144,34 @@ namespace MinecraftServerEngine
         NetherBrickTopSlab,             // 44:14
         QuartzTopSlab,                  // 44:15
 
-        Bricks,                   // 45:0
-        TNT,                      // 46:0
-        Bookshelf,                // 47:0
-        MossStone,                // 48:0
-        Obsidian,                 // 49:0
-        Torch,                    // 50:0
-        Fire,                     // 51:0
+        Bricks,                         // 45:0
+        TNT,                            // 46:0
+        Bookshelf,                      // 47:0
+        MossStone,                      // 48:0
+        Obsidian,                       // 49:0
+        
+        //Torch,                          // 50:0  minecraft:torch
+        EastTorch,                      // 50:1  minecraft:torch
+        WestTorch,                      // 50:2  minecraft:torch
+        SouthTorch,                     // 50:3  minecraft:torch
+        NorthTorch,                     // 50:4  minecraft:torch
+        Torch,                          // 50:5  minecraft:torch
 
-        EastBottomOakWoodStairs,    // 53:0
-        WestBottomOakWoodStairs,    // 53:1
-        SouthBottomOakWoodStairs,   // 53:2
-        NorthBottomOakWoodStairs,   // 53:3
-        EastTopOakWoodStairs,       // 53:4
-        WestTopOakWoodStairs,       // 53:5
-        SouthTopOakWoodStairs,      // 53:6
-        NorthTopOakWoodStairs,      // 53:7
+        Fire,                           // 51:0
 
-        DiamondBlock,             // 57:0
-        CraftingTable,            // 58:0
-        WheatCrops,               // 59:0
-        Farmland,                 // 60:0
+        EastBottomOakWoodStairs,        // 53:0
+        WestBottomOakWoodStairs,        // 53:1
+        SouthBottomOakWoodStairs,       // 53:2
+        NorthBottomOakWoodStairs,       // 53:3
+        EastTopOakWoodStairs,           // 53:4
+        WestTopOakWoodStairs,           // 53:5
+        SouthTopOakWoodStairs,          // 53:6
+        NorthTopOakWoodStairs,          // 53:7
+
+        DiamondBlock,                   // 57:0
+        CraftingTable,                  // 58:0
+        WheatCrops,                     // 59:0
+        Farmland,                       // 60:0
 
         EastBottomCobblestoneStairs,     // 67:0
         WestBottomCobblestoneStairs,     // 67:1
@@ -216,14 +223,31 @@ namespace MinecraftServerEngine
         GlassPane,                      // 102:0
         MelonBlock,                     // 103:0
 
-        EastBottomStoneBrickStairs,    // 109:0  minecraft:stone_brick_stairs
-        WestBottomStoneBrickStairs,    // 109:1  minecraft:stone_brick_stairs
-        SouthBottomStoneBrickStairs,   // 109:2  minecraft:stone_brick_stairs
-        NorthBottomStoneBrickStairs,   // 109:3  minecraft:stone_brick_stairs
-        EastTopStoneBrickStairs,       // 109:4  minecraft:stone_brick_stairs
-        WestTopStoneBrickStairs,       // 109:5  minecraft:stone_brick_stairs
-        SouthTopStoneBrickStairs,      // 109:6  minecraft:stone_brick_stairs
-        NorthTopStoneBrickStairs,      // 109:7  minecraft:stone_brick_stairs
+        Vines,                          // 106:0  minecraft:vine
+        SouthVines,                     // 106:1  minecraft:vine
+        WestVines,                      // 106:2  minecraft:vine
+        SouthWestVines,                 // 106:3  minecraft:vine
+        NorthVines,                     // 106:4  minecraft:vine 
+        NorthSouthVines,                // 106:5  minecraft:vine
+        NorthWestVines,                 // 106:6  minecraft:vine
+        NorthSouthWestVines,            // 106:7  minecraft:vine
+        EastVines,                      // 106:8  minecraft:vine
+        EastSouthVines,                 // 106:9  minecraft:vine
+        EastWestVines,                  // 106:10  minecraft:vine
+        EastSouthWestVines,             // 106:11  minecraft:vine
+        EastNorthVines,                 // 106:12  minecraft:vine
+        EastNorthSouthVines,            // 106:13  minecraft:vine
+        EastNorthWestVines,             // 106:14  minecraft:vine 
+        EastNorthSouthWestVines,        // 106:15  minecraft:vine
+
+        EastBottomStoneBrickStairs,     // 109:0  minecraft:stone_brick_stairs
+        WestBottomStoneBrickStairs,     // 109:1  minecraft:stone_brick_stairs
+        SouthBottomStoneBrickStairs,    // 109:2  minecraft:stone_brick_stairs
+        NorthBottomStoneBrickStairs,    // 109:3  minecraft:stone_brick_stairs
+        EastTopStoneBrickStairs,        // 109:4  minecraft:stone_brick_stairs
+        WestTopStoneBrickStairs,        // 109:5  minecraft:stone_brick_stairs
+        SouthTopStoneBrickStairs,       // 109:6  minecraft:stone_brick_stairs
+        NorthTopStoneBrickStairs,       // 109:7  minecraft:stone_brick_stairs
 
         InactiveRedstoneLamp,           // 123:0
         ActiveRedstoneLamp,             // 124:0
@@ -235,12 +259,19 @@ namespace MinecraftServerEngine
         DoubleJungleWoodSlab,           // 125:3
         DoubleAcaciaWoodSlab,           // 125:4
         DoubleDarkOakWoodSlab,          // 125:5
-        OakWoodSlab,                    // 126:0
-        SpruceWoodSlab,                 // 126:1
-        BirchWoodSlab,                  // 126:2
-        JungleWoodSlab,                 // 126:3
-        AcaciaWoodSlab,                 // 126:4
-        DarkOakWoodSlab,                // 126:5
+
+        BottomOakWoodSlab,              // 126:0  minecraft:wooden_slab
+        BottomSpruceWoodSlab,           // 126:1  minecraft:wooden_slab
+        BottomBirchWoodSlab,            // 126:2  minecraft:wooden_slab
+        BottomJungleWoodSlab,           // 126:3  minecraft:wooden_slab
+        BottomAcaciaWoodSlab,           // 126:4  minecraft:wooden_slab
+        BottomDarkOakWoodSlab,          // 126:5  minecraft:wooden_slab
+        TopOakWoodSlab,                 // 126:8  minecraft:wooden_slab
+        TopSpruceWoodSlab,              // 126:9  minecraft:wooden_slab
+        TopBirchWoodSlab,               // 126:10  minecraft:wooden_slab
+        TopJungleWoodSlab,              // 126:11  minecraft:wooden_slab
+        TopAcaciaWoodSlab,              // 126:12  minecraft:wooden_slab
+        TopDarkOakWoodSlab,             // 126:13  minecraft:wooden_slab
 
         EastBottomSandstoneStairs,      // 128:0
         WestBottomSandstoneStairs,      // 128:1
