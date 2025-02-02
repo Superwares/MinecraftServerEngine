@@ -300,8 +300,8 @@ namespace TestMinecraftServerApplication
     // The seeker closes their eyes and counts to a number.
     public sealed class SeekerCountNode : IGameProgressNode
     {
-        //public readonly static Time Duration = Time.FromSeconds(30);
-        public readonly static Time Duration = Time.FromSeconds(5);  // for debug
+        public readonly static Time Duration = Time.FromSeconds(30);
+        //public readonly static Time Duration = Time.FromSeconds(5);  // for debug
 
         private readonly Time _StartTime = Time.Now();
 
@@ -433,11 +433,11 @@ namespace TestMinecraftServerApplication
 
     public sealed class FindHidersNode : IGameProgressNode
     {
-        //public readonly static Time NormalTimeDuration = Time.FromMinutes(2);
-        //public readonly static Time BurningTimeDuration = Time.FromMinutes(1);
+        public readonly static Time NormalTimeDuration = Time.FromMinutes(2);
+        public readonly static Time BurningTimeDuration = Time.FromMinutes(1);
 
-        public readonly static Time NormalTimeDuration = Time.FromSeconds(30);  // for debug
-        public readonly static Time BurningTimeDuration = Time.FromSeconds(5);  // for debug
+        //public readonly static Time NormalTimeDuration = Time.FromSeconds(30);  // for debug
+        //public readonly static Time BurningTimeDuration = Time.FromSeconds(5);  // for debug
 
         private readonly Time _StartTime = Time.Now();
 

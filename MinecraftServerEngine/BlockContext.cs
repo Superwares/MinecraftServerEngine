@@ -737,7 +737,7 @@ namespace MinecraftServerEngine
 
             try
             {
-                Table<ChunkLocation, ChunkData> chunks = new();
+                using Table<ChunkLocation, ChunkData> chunks = new();
 
                 string[] regionFiles = System.IO.Directory.GetFiles(
                     folderPath,
