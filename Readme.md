@@ -12,6 +12,8 @@ One of the standout features of the Minecraft Server Engine is its support for p
 which significantly enhances server performance and scalability.
 * Non-blocking Network
 
+### No Limit Ticks
+
 ### Continuous Physics
 
 ### Single World
