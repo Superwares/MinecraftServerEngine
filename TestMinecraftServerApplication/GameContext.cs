@@ -25,6 +25,8 @@ namespace TestMinecraftServerApplication
         public const double BurnedSeekerMaxHealth = 80.0;
         public const double BurnedSeekerMovementSpeed = LivingEntity.DefaultMovementSpeed + 0.1;
 
+        public const int DefaultSeekerHints = 3;
+
         public const int MinPlayers = 2;
         public const int MaxPlayers = 18;
         public const int MaxRounds = MaxPlayers;
@@ -418,6 +420,9 @@ namespace TestMinecraftServerApplication
             player.SetMovementSpeed(DefaultSeekerMovementSpeed);
 
             _currentSeeker.HealFully();
+
+            System.Diagnostics.Debug.Assert(DefaultSeekerHints >= 0);
+            _currentSeeker.GiveItemStacks(Hint.Item, DefaultSeekerHints);
         }
 
         public void StartSeekerCount()

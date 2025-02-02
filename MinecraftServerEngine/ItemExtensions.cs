@@ -306,6 +306,12 @@ namespace MinecraftServerEngine
                 //    ItemType.Snowball, 332, "snowball",
                 //    1, 16,
                 //    0),
+                
+                new ItemContext(
+                    ItemType.Paper, 339, "paper",
+                    64,
+                    0),
+
                 new ItemContext(
                     ItemType.GoldNugget, 371, "gold_nugget",
                     64,
@@ -318,6 +324,7 @@ namespace MinecraftServerEngine
                     ItemType.PlayerSkull, 397, "skull",
                     64,
                     3),
+
 
                 new ItemContext(
                     ItemType.EndCrystal, 426, "end_crystal",

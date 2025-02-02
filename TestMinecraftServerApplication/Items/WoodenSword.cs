@@ -13,7 +13,6 @@ namespace TestMinecraftServerApplication.Items
 
         public const double Damage = 2.0;
 
-        public const int MaxPurchaseCount = 10;
         public const int PurchasePrice = 5;
         public const int SellPrice = 1;
 
@@ -28,21 +27,5 @@ namespace TestMinecraftServerApplication.Items
 
         public static readonly int DefaultCount = MinecraftServerEngine.Item.MinCount;
 
-        //public static ItemStack Create()
-        //{
-        //    System.Diagnostics.Debug.Assert(Damage >= 0);
-        //    return ItemStack.Create(Item, DefaultCount);
-        //}
-
-        //public static ItemStack CreateShopItemStack(string[] descriptions)
-        //{
-        //    System.Diagnostics.Debug.Assert(Damage >= 0);
-        //    return ItemStack.Create(
-        //        Item,
-        //        DefaultCount,
-        //        [
-        //            ..descriptions,
-        //        ]);
-        //}
     }
 }

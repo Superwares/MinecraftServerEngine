@@ -516,6 +516,37 @@ namespace TestMinecraftServerApplication
 
         }
 
+        private void UseHint(SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            ItemStack[] takedItemStacks = TakeItemStacks(Hint.Item, Hint.DefaultCount);
+            if (takedItemStacks == null)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(takedItemStacks.Length > 0);
+
+            foreach (AbstractPlayer player in world.AllPlayers)
+            {
+                System.Diagnostics.Debug.Assert(player != null);
+
+                if (object.ReferenceEquals(player, this) == true)
+                {
+                    continue;
+                }
+                Vector offset = new Vector(0.0, player.GetEyeHeight(), 0.0);
+                Vector v = player.Position + offset;
+
+                world.PlaySound("entity.firework.large_blast", 0, v, 1.0, 2.0);
+
+                player.EmitParticles(Particle.FireworksSpark, offset, 0.1, 100);
+            }
+
+        }
+
+
         private bool HandleDoombringerAttack(SuperWorld world, double attackCharge)
         {
             System.Diagnostics.Debug.Assert(world != null);
@@ -638,6 +669,10 @@ namespace TestMinecraftServerApplication
                         break;
                     case Doombringer.Type:
                         breaked = HandleDoombringerAttack(world, attackCharge);
+                        break;
+
+                    case Hint.Type:
+                        UseHint(world);
                         break;
                 }
 
@@ -768,6 +803,10 @@ namespace TestMinecraftServerApplication
 
                     case EmergencyEscape.Type:
                         UseEmergencyEscape(world);
+                        break;
+
+                    case Hint.Type:
+                        UseHint(world);
                         break;
                 }
             }

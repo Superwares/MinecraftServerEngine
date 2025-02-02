@@ -149,6 +149,17 @@ namespace TestMinecraftServerApplication
                         ])
                     );
 
+                slots[offset + 5] = (
+                    true,
+                    ItemStack.Create(Hint.Item, Hint.DefaultCount, [
+                        $"",
+                        // Left-click (Purchase)
+                        $"왼클릭(구매)          {Hint.PurchasePrice * Coin.DefaultCount} Coins",
+                        // Right-click (Sell)
+                        $"우클릭(판매)          {Hint.SellPrice * Coin.DefaultCount} Coins",
+                        ])
+                    );
+
                 slots[offset + 7] = (
                     true,
                     ItemStack.Create(EmergencyEscape.Item, EmergencyEscape.DefaultCount, [
@@ -262,6 +273,16 @@ namespace TestMinecraftServerApplication
                             Coin.Item, Coin.DefaultCount * BalloonBasher.PurchasePrice);
 
                         success = (taked != null);
+                    }
+                    break;
+                case Hint.Type:
+                    {
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                            Hint.Item, Hint.DefaultCount,
+                            Coin.Item, Coin.DefaultCount * Hint.PurchasePrice);
+
+                        success = (taked != null);
+
                     }
                     break;
                 case EmergencyEscape.Type:
@@ -445,11 +466,11 @@ namespace TestMinecraftServerApplication
                         success = taked != null;
                     }
                     break;
-                case StoneOfSwiftness.Type:
+                case Hint.Type:
                     {
                         taked = playerInventory.GiveAndTakeItemStacks(
-                            Coin.Item, Coin.DefaultCount * StoneOfSwiftness.SellPrice,
-                            StoneOfSwiftness.Item, StoneOfSwiftness.DefaultCount);
+                            Coin.Item, Coin.DefaultCount * Hint.SellPrice,
+                            Hint.Item, Hint.DefaultCount);
 
                         success = taked != null;
 
@@ -460,6 +481,16 @@ namespace TestMinecraftServerApplication
                         taked = playerInventory.GiveAndTakeItemStacks(
                             Coin.Item, Coin.DefaultCount * EmergencyEscape.SellPrice,
                             EmergencyEscape.Item, EmergencyEscape.DefaultCount);
+
+                        success = taked != null;
+
+                    }
+                    break;
+                case StoneOfSwiftness.Type:
+                    {
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                            Coin.Item, Coin.DefaultCount * StoneOfSwiftness.SellPrice,
+                            StoneOfSwiftness.Item, StoneOfSwiftness.DefaultCount);
 
                         success = taked != null;
 
