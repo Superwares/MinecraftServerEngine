@@ -369,7 +369,7 @@ namespace MinecraftServerEngine
             int payload = Random.NextInt();
             OutPackets.Enqueue(new TeleportPacket(
                 p.X, p.Y, p.Z,
-                look.Yaw, look.Pitch,
+                (float)look.Yaw, (float)look.Pitch,
                 false, false, false, false, false,
                 payload));
 
@@ -1635,7 +1635,7 @@ namespace MinecraftServerEngine
 
             int payload = Random.NextInt();
             TeleportPacket packet = new(
-                p.X, p.Y, p.Z, look.Yaw, look.Pitch,
+                p.X, p.Y, p.Z, (float)look.Yaw, (float)look.Pitch,
                 false, false, false, false, false,
                 payload);
 

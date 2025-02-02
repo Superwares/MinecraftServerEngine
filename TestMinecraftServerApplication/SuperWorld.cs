@@ -11,15 +11,15 @@ namespace TestMinecraftServerApplication
     {
         public readonly static GameContext GameContext = new();
 
-        public const double CenterX = 120.0;
-        public const double CenterZ = 216.0;
-        public const double DefaultWorldBorderRadiusInMeters = 40.0;
+        //public const double CenterX = 120.0;
+        //public const double CenterZ = 216.0;
+        //public const double DefaultWorldBorderRadiusInMeters = 40.0;
 
         public readonly static Time DefaultWorldTime = MinecraftTimes.DaytimeMid;
 
-        public static readonly Vector PosSpawning = new(151.5, 20.0, 214.5);
+        //public static readonly Vector PosSpawning = new(151.5, 20.0, 214.5);
         //public static readonly Vector PosSpawning = new(5.0, 5.0, 5.0);
-        public static readonly Angles LookSpawning = new(90.0F, 0.0F);
+        //public static readonly Angles LookSpawning = new(90.0, 0.0);
 
         private bool _disposed = false;
 
@@ -33,17 +33,34 @@ namespace TestMinecraftServerApplication
             }
         }
 
+        public readonly double DefaultWorldBorderRadiusInMeters;
+
+        public readonly Vector RespawningPosition;
+        public readonly Angles RespawningLook;
+
 
         private IGameProgressNode _currentGameProgressNode = new LobbyNode();
 
 
-        public SuperWorld()
+        public SuperWorld(
+
+            double centerX, double centerZ,
+            double defaultWorldBorderRadiusInMeters,
+
+            Vector respawningPos,
+            Angles respawningLook
+            )
             : base(
-                  CenterX, CenterZ,
-                  DefaultWorldBorderRadiusInMeters,
+                  centerX, centerZ,
+                  defaultWorldBorderRadiusInMeters,
                   DefaultWorldTime
                   )
         {
+            System.Diagnostics.Debug.Assert(defaultWorldBorderRadiusInMeters > 0.0);
+            DefaultWorldBorderRadiusInMeters = defaultWorldBorderRadiusInMeters;
+
+            RespawningPosition = respawningPos;
+            RespawningLook = respawningLook;
         }
 
         ~SuperWorld()
@@ -87,7 +104,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(userId != UserId.Null);
             System.Diagnostics.Debug.Assert(username != null && string.IsNullOrEmpty(username) == false);
 
-            return new SuperPlayer(userId, username, PosSpawning, LookSpawning);
+            return new SuperPlayer(userId, username, RespawningPosition, RespawningLook);
         }
 
         protected override void Dispose(bool disposing)

@@ -137,7 +137,7 @@ namespace TestMinecraftServerApplication
             ctx.Start();
 
             world.ChangeWorldTimeOfDay(SuperWorld.DefaultWorldTime, Time.Zero);
-            world.ChangeWorldBorderSize(SuperWorld.DefaultWorldBorderRadiusInMeters, Time.Zero);
+            world.ChangeWorldBorderSize(world.DefaultWorldBorderRadiusInMeters, Time.Zero);
 
             return true;
         }
@@ -168,7 +168,7 @@ namespace TestMinecraftServerApplication
             ctx.StartRound();
 
             world.ChangeWorldTimeOfDay(SuperWorld.DefaultWorldTime, Time.Zero);
-            world.ChangeWorldBorderSize(SuperWorld.DefaultWorldBorderRadiusInMeters, Time.Zero);
+            world.ChangeWorldBorderSize(world.DefaultWorldBorderRadiusInMeters, Time.Zero);
 
             return true;
         }

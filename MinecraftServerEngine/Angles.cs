@@ -8,22 +8,22 @@ namespace MinecraftServerEngine
     {
         public static readonly Angles Zero = new(0.0F, 0.0F);
 
-        internal const float MaxYaw = 180, MinYaw = -180;
-        internal const float MaxPitch = 90, MinPitch = -90;
+        internal const double MaxYaw = 180, MinYaw = -180;
+        internal const double MaxPitch = 90, MinPitch = -90;
 
-        public readonly float Yaw, Pitch;
+        public readonly double Yaw, Pitch;
 
-        private static float Frem(float angle)
+        private static double Frem(double angle)
         {
-            float x = 360.0f;
-            return angle - (x * (float)System.Math.Floor(angle / x));
+            double x = 360.0f;
+            return angle - (x * (double)System.Math.Floor(angle / x));
         }
 
         public static bool TryParse(string _yaw, string _pitch, out Angles angles)
         {
             if (
-                float.TryParse(_yaw, out float yaw) == false ||
-                float.TryParse(_pitch, out float pitch) == false)
+                double.TryParse(_yaw, out double yaw) == false ||
+                double.TryParse(_pitch, out double pitch) == false)
             {
                 angles = Zero;
                 return false;
@@ -39,7 +39,7 @@ namespace MinecraftServerEngine
             return true;
         }
 
-        public static bool TryParse(float yaw, float pitch, out Angles angles)
+        public static bool TryParse(double yaw, double pitch, out Angles angles)
         {
             if (yaw < MinYaw || MaxYaw < yaw)
             {
@@ -51,7 +51,7 @@ namespace MinecraftServerEngine
             return true;
         }
 
-        public Angles(float yaw, float pitch)
+        public Angles(double yaw, double pitch)
         {
             // TODO: map yaw from 180 to -180.
             /*System.Diagnostics.Debug.Assert(yaw >= MinYaw);
@@ -89,8 +89,8 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(Pitch >= MinPitch);
             System.Diagnostics.Debug.Assert(Pitch <= MaxPitch);
 
-            float x = Frem(Yaw);
-            float y = Frem(Pitch);
+            double x = Frem(Yaw);
+            double y = Frem(Pitch);
 
             return (
                 (byte)((byte.MaxValue * x) / 360),

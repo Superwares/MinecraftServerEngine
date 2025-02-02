@@ -2,10 +2,12 @@
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
-		
+
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>disable</Nullable>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+		<!--The following statements cannot be reached-->
 		<WarningsNotAsErrors>0162</WarningsNotAsErrors>
 
 	</PropertyGroup>
@@ -20,5 +22,5 @@
 	<ItemGroup>
 		<InternalsVisibleTo Include="Testing" />
 	</ItemGroup>
-	
+
 </Project>

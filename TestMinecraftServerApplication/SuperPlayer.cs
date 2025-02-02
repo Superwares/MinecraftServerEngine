@@ -720,7 +720,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(takedItemStacks.Length > 0);
 
             world.ChangeWorldBorderSize(
-                SuperWorld.DefaultWorldBorderRadiusInMeters / 2.0,
+                world.DefaultWorldBorderRadiusInMeters / 2.0,
                 Time.FromMilliseconds(400)
                 );
 

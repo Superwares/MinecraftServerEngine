@@ -32,8 +32,8 @@ namespace MinecraftPrimitives
             this.regionFile = regionFile;
             fileSize = 0;
 
-            try
-            {
+            //try
+            //{
                 if (regionFile.Exists == true)
                 {
                     lastModified = regionFile.LastWriteTimeUtc.Ticks;
@@ -90,11 +90,11 @@ namespace MinecraftPrimitives
                     int value = DataInputStreamUtils.ReadInt(fileStream);
                     chunkTimestamps[i] = value;
                 }
-            }
-            catch (IOException ex)
-            {
-                throw ex;
-            }
+            //}
+            //catch (IOException ex)
+            //{
+            //    throw ex;
+            //}
         }
 
         public Stream ReadChunk(int x, int z)
@@ -104,8 +104,8 @@ namespace MinecraftPrimitives
                 return null;
             }
 
-            try
-            {
+            //try
+            //{
                 int offset = GetOffset(x, z);
                 if (offset == 0)
                 {
@@ -165,12 +165,12 @@ namespace MinecraftPrimitives
                     return null;
                 }
 
-            }
-            catch (IOException ex)
-            {
-                // TODO: Print warning message and returns null
-                throw ex;
-            }
+            //}
+            //catch (IOException ex)
+            //{
+            //    // TODO: Print warning message and returns null
+            //    throw ex;
+            //}
         }
 
         private bool IsOutOfBounds(int x, int z)
