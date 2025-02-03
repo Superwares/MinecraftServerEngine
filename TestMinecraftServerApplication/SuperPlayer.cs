@@ -110,7 +110,7 @@ namespace TestMinecraftServerApplication
 
                 if (_running_EmergencyEscape == true)
                 {
-                    EmitParticles(EmergencyEscape.LaunchParticle, 1.0, 10);
+                    EmitParticles(EmergencyEscape.LaunchParticle, 1.0, 1);
 
                     Time elapsedTime = Time.Now() - _startTime_EmergencyEscape;
                     if (elapsedTime > EmergencyEscape.ParticleDuration)
@@ -876,6 +876,13 @@ namespace TestMinecraftServerApplication
             }
 
             SwitchGamemode(Gamemode.Spectator);
+
+            if (attacker is SuperPlayer attackPlayer)
+            {
+                System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+                SuperWorld.GameContext.HandleKillEvent(attackPlayer);
+            }
 
             System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
             System.Diagnostics.Debug.Assert(UserId != UserId.Null);
