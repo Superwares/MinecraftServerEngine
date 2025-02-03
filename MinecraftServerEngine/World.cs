@@ -112,7 +112,7 @@ namespace MinecraftServerEngine
                 public void Dispose()
                 {
                     // Assertions.
-                    System.Diagnostics.Debug.Assert(!_disposed);
+                    System.Diagnostics.Debug.Assert(_disposed == false);
 
                     // Release resources.
                     Queue0.Dispose();
@@ -341,7 +341,7 @@ namespace MinecraftServerEngine
             public void Dispose()
             {
                 // Assertions.
-                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_disposed == false);
 
                 System.Diagnostics.Debug.Assert(_serving == false);
 
@@ -461,130 +461,9 @@ namespace MinecraftServerEngine
         }
 
 
-        protected internal override void _StartRoutine()
-        {
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            if (_worldBorder_transitionStartTime > Time.Zero)
-            {
-                System.Diagnostics.Debug.Assert(LockerWorldBorder != null);
-                LockerWorldBorder.Hold();
-
-                try
-                {
-                    System.Diagnostics.Debug.Assert(
-                        Math.AreDoublesEqual(
-                            _worldBorder_currentRadiusInMeters,
-                            _worldBorder_targetRadiusInMeters) == false
-                            );
-                    System.Diagnostics.Debug.Assert(_worldBorder_transitionStartTime != Time.Zero);
-                    Time elapsedTime = Time.Now() - _worldBorder_transitionStartTime;
-
-                    System.Diagnostics.Debug.Assert(_worldBorder_targetRadiusInMeters > 0.0);
-                    System.Diagnostics.Debug.Assert(_worldBorder_currentRadiusInMeters > 0.0);
-                    double remainingDistanceInMeters =
-                        _worldBorder_targetRadiusInMeters - _worldBorder_currentRadiusInMeters;
-                    Time remainingTransitionTime =
-                        _worldBorder_transitionTimePerMeter * Math.Abs(remainingDistanceInMeters);
-
-                    if (elapsedTime >= remainingTransitionTime)
-                    {
-                        System.Diagnostics.Debug.Assert(_worldBorder_targetRadiusInMeters <= MaxWorldBorderRadiusInMeters);
-                        _worldBorder_currentRadiusInMeters = _worldBorder_targetRadiusInMeters;
-
-                        _worldBorder_transitionStartTime = Time.Zero;
-                        _worldBorder_transitionTimePerMeter = Time.Zero;
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.Assert(remainingTransitionTime > elapsedTime);
-                        // Calculate Transition Progress:
-                        double transitionProgress =
-                            (double)elapsedTime.Amount / (double)remainingTransitionTime.Amount;
-
-                        // Ensure transition progress does not exceed 1.0
-                        transitionProgress = System.Math.Min(transitionProgress, 1.0);
-
-                        // Update Old Radius:
-                        _worldBorder_currentRadiusInMeters = _worldBorder_currentRadiusInMeters +
-                            (remainingDistanceInMeters * transitionProgress);
-                        System.Diagnostics.Debug.Assert(_worldBorder_currentRadiusInMeters <= MaxWorldBorderRadiusInMeters);
-
-                        // Update Transition Start Time
-                        _worldBorder_transitionStartTime = Time.Now();
-                    }
-
-
-
-                }
-                finally
-                {
-                    System.Diagnostics.Debug.Assert(LockerWorldBorder != null);
-                    LockerWorldBorder.Release();
-                }
-            }
-
-            if (_worldTime_transitionStartTime > Time.Zero)
-            {
-                System.Diagnostics.Debug.Assert(LockerWorldTime != null);
-                LockerWorldTime.Hold();
-
-                try
-                {
-
-                    System.Diagnostics.Debug.Assert(_worldTime_transitionStartTime != Time.Zero);
-                    Time elapsedTime = Time.Now() - _worldTime_transitionStartTime;
-
-                    System.Diagnostics.Debug.Assert(elapsedTime >= Time.Zero);
-                    System.Diagnostics.Debug.Assert(_worldTime_transitionTime >= Time.Zero);
-                    if (elapsedTime >= _worldTime_transitionTime)
-                    {
-                        _currentWorldTime = _targetWorldTime;
-                        //_targetWorldTime = _targetWorldTime;
-                        _worldTime_transitionStartTime = Time.Zero;
-                        _worldTime_transitionTime = Time.Zero;
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.Assert(elapsedTime.Amount < _worldTime_transitionTime.Amount);
-                        double transitionProgress =
-                                (double)elapsedTime.Amount / (double)_worldTime_transitionTime.Amount;
-
-                        Time remaningWorldTime = _targetWorldTime - _currentWorldTime;
-
-                        _currentWorldTime = _currentWorldTime + (remaningWorldTime * transitionProgress);
-
-                        _worldTime_transitionTime = _worldTime_transitionTime - elapsedTime;
-                        _worldTime_transitionStartTime = Time.Now();
-                    }
-
-                    {
-                        Time currentWorldTime = new(
-                            Math.Normalize(_currentWorldTime.Amount, MinecraftTimes.OneDay.Amount)
-                            );
-
-                        System.Diagnostics.Debug.Assert(WorldRenderersByUserId != null);
-                        foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
-                        {
-                            System.Diagnostics.Debug.Assert(renderer != null);
-                            renderer.UpdateWorldTime(currentWorldTime);
-                        }
-                    }
-
-                }
-                finally
-                {
-                    System.Diagnostics.Debug.Assert(LockerWorldTime != null);
-                    LockerWorldTime.Release();
-                }
-            }
-
-            base._StartRoutine();
-        }
-
         internal void Connect(UserId id, ConcurrentQueue<ClientboundPlayingPacket> OutPackets)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             PlayerListRenderer plRenderer = new(OutPackets);
             PlayerList.Connect(id, plRenderer);
@@ -1097,7 +976,7 @@ namespace MinecraftServerEngine
 
         internal void Disconnect(UserId id)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             PlayerList.Disconnect(id);
 
@@ -1125,7 +1004,7 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(obj is not AbstractPlayer);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(ObjectSpawningPool != null);
             ObjectSpawningPool.Enqueue(obj);
@@ -1135,36 +1014,15 @@ namespace MinecraftServerEngine
 
         internal void StartTask()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(_ObjectQueue != null);
             _ObjectQueue.StartServing();
         }
 
-        internal void StartObjectRoutines()
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            while (_ObjectQueue.Dequeue(out PhysicsObject obj))
-            {
-                System.Diagnostics.Debug.Assert(obj != null);
-
-                obj.StartRoutine(this);
-
-                _ObjectQueue.Enqueue(obj);
-            }
-        }
-
-        internal void HandleLivingEntityDamageEvents()
-        {
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-
-        }
-
         internal void ControlPlayers()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             while (_ObjectQueue.DequeuePlayer(out AbstractPlayer player))
             {
@@ -1282,7 +1140,7 @@ namespace MinecraftServerEngine
 
         internal void MoveObjects()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             while (_ObjectQueue.Dequeue(out PhysicsObject obj))
             {
@@ -1304,11 +1162,11 @@ namespace MinecraftServerEngine
         internal void ConnectPlayer(User user)
         {
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             AbstractPlayer player;
 
-            if (DisconnectedPlayers.Contains(user.Id))
+            if (DisconnectedPlayers.Contains(user.Id) == true)
             {
                 player = DisconnectedPlayers.Extract(user.Id);
                 System.Diagnostics.Debug.Assert(player != null);
@@ -1332,7 +1190,7 @@ namespace MinecraftServerEngine
 
         internal void CreateObjects()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             while (ObjectSpawningPool.Dequeue(out PhysicsObject obj) == true)
             {
@@ -1354,7 +1212,7 @@ namespace MinecraftServerEngine
 
         internal void LoadAndSendData()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             while (_ObjectQueue.DequeuePlayer(out AbstractPlayer player))
             {
@@ -1367,9 +1225,158 @@ namespace MinecraftServerEngine
 
         }
 
+        protected internal override void _StartRoutine()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (_worldBorder_transitionStartTime > Time.Zero)
+            {
+                System.Diagnostics.Debug.Assert(LockerWorldBorder != null);
+                LockerWorldBorder.Hold();
+
+                try
+                {
+                    System.Diagnostics.Debug.Assert(
+                        Math.AreDoublesEqual(
+                            _worldBorder_currentRadiusInMeters,
+                            _worldBorder_targetRadiusInMeters) == false
+                            );
+                    System.Diagnostics.Debug.Assert(_worldBorder_transitionStartTime != Time.Zero);
+                    Time elapsedTime = Time.Now() - _worldBorder_transitionStartTime;
+
+                    System.Diagnostics.Debug.Assert(_worldBorder_targetRadiusInMeters > 0.0);
+                    System.Diagnostics.Debug.Assert(_worldBorder_currentRadiusInMeters > 0.0);
+                    double remainingDistanceInMeters =
+                        _worldBorder_targetRadiusInMeters - _worldBorder_currentRadiusInMeters;
+                    Time remainingTransitionTime =
+                        _worldBorder_transitionTimePerMeter * Math.Abs(remainingDistanceInMeters);
+
+                    if (elapsedTime >= remainingTransitionTime)
+                    {
+                        System.Diagnostics.Debug.Assert(_worldBorder_targetRadiusInMeters <= MaxWorldBorderRadiusInMeters);
+                        _worldBorder_currentRadiusInMeters = _worldBorder_targetRadiusInMeters;
+
+                        _worldBorder_transitionStartTime = Time.Zero;
+                        _worldBorder_transitionTimePerMeter = Time.Zero;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.Assert(remainingTransitionTime > elapsedTime);
+                        // Calculate Transition Progress:
+                        double transitionProgress =
+                            (double)elapsedTime.Amount / (double)remainingTransitionTime.Amount;
+
+                        // Ensure transition progress does not exceed 1.0
+                        transitionProgress = System.Math.Min(transitionProgress, 1.0);
+
+                        // Update Old Radius:
+                        _worldBorder_currentRadiusInMeters = _worldBorder_currentRadiusInMeters +
+                            (remainingDistanceInMeters * transitionProgress);
+                        System.Diagnostics.Debug.Assert(_worldBorder_currentRadiusInMeters <= MaxWorldBorderRadiusInMeters);
+
+                        // Update Transition Start Time
+                        _worldBorder_transitionStartTime = Time.Now();
+                    }
+
+
+
+                }
+                finally
+                {
+                    System.Diagnostics.Debug.Assert(LockerWorldBorder != null);
+                    LockerWorldBorder.Release();
+                }
+            }
+
+            if (_worldTime_transitionStartTime > Time.Zero)
+            {
+                System.Diagnostics.Debug.Assert(LockerWorldTime != null);
+                LockerWorldTime.Hold();
+
+                try
+                {
+
+                    System.Diagnostics.Debug.Assert(_worldTime_transitionStartTime != Time.Zero);
+                    Time elapsedTime = Time.Now() - _worldTime_transitionStartTime;
+
+                    System.Diagnostics.Debug.Assert(elapsedTime >= Time.Zero);
+                    System.Diagnostics.Debug.Assert(_worldTime_transitionTime >= Time.Zero);
+                    if (elapsedTime >= _worldTime_transitionTime)
+                    {
+                        _currentWorldTime = _targetWorldTime;
+                        //_targetWorldTime = _targetWorldTime;
+                        _worldTime_transitionStartTime = Time.Zero;
+                        _worldTime_transitionTime = Time.Zero;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.Assert(elapsedTime.Amount < _worldTime_transitionTime.Amount);
+                        double transitionProgress =
+                                (double)elapsedTime.Amount / (double)_worldTime_transitionTime.Amount;
+
+                        Time remaningWorldTime = _targetWorldTime - _currentWorldTime;
+
+                        _currentWorldTime = _currentWorldTime + (remaningWorldTime * transitionProgress);
+
+                        _worldTime_transitionTime = _worldTime_transitionTime - elapsedTime;
+                        _worldTime_transitionStartTime = Time.Now();
+                    }
+
+                    {
+                        Time currentWorldTime = new(
+                            Math.Normalize(_currentWorldTime.Amount, MinecraftTimes.OneDay.Amount)
+                            );
+
+                        System.Diagnostics.Debug.Assert(WorldRenderersByUserId != null);
+                        foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
+                        {
+                            System.Diagnostics.Debug.Assert(renderer != null);
+                            renderer.UpdateWorldTime(currentWorldTime);
+                        }
+                    }
+
+                }
+                finally
+                {
+                    System.Diagnostics.Debug.Assert(LockerWorldTime != null);
+                    LockerWorldTime.Release();
+                }
+            }
+
+            base._StartRoutine();
+        }
+
+        internal void StartObjectRoutines()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            while (_ObjectQueue.Dequeue(out PhysicsObject obj) == true)
+            {
+                System.Diagnostics.Debug.Assert(obj != null);
+
+                obj.StartRoutine(this);
+
+                _ObjectQueue.Enqueue(obj);
+            }
+        }
+
+        internal void HandleLivingEntityDamageEvents()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            while (_ObjectQueue.DequeueLivingEntity(out LivingEntity livingEntity) == true)
+            {
+                System.Diagnostics.Debug.Assert(livingEntity != null);
+
+                throw new System.NotImplementedException();
+
+                _ObjectQueue.Enqueue(livingEntity);
+            }
+        }
+
         internal void EndTask()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(_ObjectQueue != null);
             _ObjectQueue.EndServing();

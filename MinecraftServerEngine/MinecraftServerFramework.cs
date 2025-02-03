@@ -390,7 +390,7 @@ namespace MinecraftServerEngine
 
             {
                 Thread t;
-                while (!Threads.Empty)
+                while (Threads.Empty == false)
                 {
                     t = Threads.Dequeue();
 
@@ -416,6 +416,7 @@ namespace MinecraftServerEngine
             if (_disposed == false)
             {
                 System.Diagnostics.Debug.Assert(_running == false);
+                System.Diagnostics.Debug.Assert(Threads != null);
                 System.Diagnostics.Debug.Assert(Threads.Empty == true);
 
                 // If disposing equals true, dispose all managed
