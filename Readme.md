@@ -154,6 +154,10 @@ If disposable objects were used as members of class and struct, they must be dis
 	- 실제 인벤토리에 아이템을 넣지 말고 보이는 것만 으로 처리
 - Entity appearance 일떄 머리에 해당 entity 에 맞는 모자? 씌우기
 	- 실제 인벤토리에 아이템을 넣지 말고 보이는 것만 으로 처리
+
+- Physics world cell 의 width 와 chunk location, grid 에서 사용되는 width 를 통합해야됨.
+	- 무조건 너비가 같아야 됩니다. (클라이언트에서 렌더거리를 이용한 엔티티 렌더링에서 무조건 해당 chunk width 를 단위로 사용함. 정확히 계산되어야됨.)
+
 ### Done 
 
 - DetermineToDespawnPlayerOnDisconnect 가 동적으로 적용되나 테스트해야됨.
