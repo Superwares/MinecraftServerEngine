@@ -409,34 +409,15 @@ namespace MinecraftServerEngine
             }
 
             //{
-            //    OutPackets.Enqueue(new WorldBorderInitPacket(0.0, 0.0, 20.0, 10.0, 1000 * 5));
-            //    OutPackets.Enqueue(new WorldBorderInitPacket(0.0, 0.0, 10.0, 20.0, 1000 * 5));
+            //    using MinecraftProtocolDataStream s = new();
+
+            //    ItemStack itemStack = new ItemStack(ItemType.RedstoneOre, "Hello");
+
+            //    itemStack.WriteData(s);
+
+            //    OutPackets.Enqueue(new EntityEquipmentPacket(idEntity, 5, s.ReadData()));
             //}
 
-            //var title = new
-            //{
-            //    text = "",
-            //    //color = "",
-            //    extra = new[]
-            //    {
-            //        new
-            //        {
-            //            text = "Hello,",
-            //            color = "green"
-            //        },
-            //        new
-            //        {
-            //            text = "World!",
-            //            color = "red"
-            //        },
-            //    }
-            //};
-
-            //OutPackets.Enqueue(new SetTimesAndDisplayTitlePacket(50, 20 * 10, 50));
-
-            //OutPackets.Enqueue(new SetTitlePacket(System.Text.Json.JsonSerializer.Serialize(title)));
-            //OutPackets.Enqueue(new SetSubtitlePacket(System.Text.Json.JsonSerializer.Serialize(title)));
-            //OutPackets.Enqueue(new SetActionBarPacket(System.Text.Json.JsonSerializer.Serialize(title)));
         }
 
         ~Connection()

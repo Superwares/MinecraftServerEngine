@@ -149,10 +149,10 @@ namespace TestMinecraftServerApplication
             BlockLocation belowBlockLoc = new(blockLoc.X, blockLoc.Y - 1, blockLoc.Z);
 
             System.Diagnostics.Debug.Assert(world.BlockContext != null);
-            Block block = world.BlockContext.GetBlock(blockLoc);
+            //Block block = world.BlockContext.GetBlock(blockLoc);
             Block belowBlock = world.BlockContext.GetBlock(belowBlockLoc);
 
-            if (block == Block.Air && belowBlock != Block.Air)
+            if (belowBlock != Block.Air)
             {
                 //MyConsole.Debug($"belowBlock: {belowBlock}");
                 //MyConsole.Debug($"_lastHideBlock: {_lastHideBlock}");
@@ -167,7 +167,7 @@ namespace TestMinecraftServerApplication
             }
             else
             {
-                
+
 
                 if (_lastHideBlock != Block.Air)
                 {
@@ -181,7 +181,7 @@ namespace TestMinecraftServerApplication
             }
 
 
-            
+
         }
 
         protected override void OnMove(PhysicsWorld _world)

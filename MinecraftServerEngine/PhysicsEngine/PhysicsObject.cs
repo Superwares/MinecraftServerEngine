@@ -216,7 +216,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             _v = v;
         }
 
-        internal virtual void Flush()
+        internal virtual void Flush(PhysicsWorld world)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
         }

@@ -1127,7 +1127,7 @@ namespace MinecraftServerEngine
 
                 CloseObjectMapping(obj);
 
-                obj.Flush();
+                obj.Flush(this);
                 obj.Dispose();
 
                 if (obj is Entity entity)

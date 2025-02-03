@@ -164,13 +164,12 @@ namespace MinecraftServerEngine
 
             OnAttack(world, attackCharge);
 
-            if (_noRendering)
+            System.Diagnostics.Debug.Assert(Renderers != null);
+            if (Renderers.Empty == true)
             {
-                System.Diagnostics.Debug.Assert(Renderers.Empty);
                 return;
             }
 
-            System.Diagnostics.Debug.Assert(Renderers != null);
             foreach (EntityRenderer renderer in Renderers.GetKeys())
             {
                 System.Diagnostics.Debug.Assert(renderer != null);
@@ -190,13 +189,12 @@ namespace MinecraftServerEngine
 
             OnAttack(world, stack, attackCharge);
 
-            if (_noRendering == true)
+            System.Diagnostics.Debug.Assert(Renderers != null);
+            if (Renderers.Empty == true)
             {
-                System.Diagnostics.Debug.Assert(Renderers.Empty);
                 return;
             }
 
-            System.Diagnostics.Debug.Assert(Renderers != null);
             foreach (EntityRenderer renderer in Renderers.GetKeys())
             {
                 System.Diagnostics.Debug.Assert(renderer != null);
