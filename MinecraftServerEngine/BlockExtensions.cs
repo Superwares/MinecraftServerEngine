@@ -1462,6 +1462,12 @@ namespace MinecraftServerEngine
                     BlockShape.Wall),
 
                 new BlockContext(
+                    Block.RedstoneBlock,
+                    (152 << 4) | 0,
+                    "redstone_block",
+                    BlockShape.Cube),
+
+                new BlockContext(
                     Block.HayBale_AxisY,
                     (170 << 4) | 0,  // 0~3, 12~15
                     "hay_block",

@@ -75,57 +75,57 @@ namespace MinecraftServerEngine
         WestStickyPiston,       // 29:4
         EastStickyPiston,       // 29:5
 
-        DeadShrub,        // 31:0
-        Grass,            // 31:1
-        Fern,             // 31:2
-        DeadBush,         // 32:0
-        BottomPiston,     // 33:0
-        TopPiston,        // 33:1
-        NorthPiston,      // 33:2
-        SouthPiston,      // 33:3
-        WestPiston,       // 33:4
-        EastPiston,       // 33:5
+        DeadShrub,                      // 31:0
+        Grass,                          // 31:1
+        Fern,                           // 31:2
+        DeadBush,                       // 32:0
+        BottomPiston,                   // 33:0
+        TopPiston,                      // 33:1
+        NorthPiston,                    // 33:2
+        SouthPiston,                    // 33:3
+        WestPiston,                     // 33:4
+        EastPiston,                     // 33:5
 
-        WhiteWool,        // 35:0
-        OrangeWool,       // 35:1
-        MagentaWool,      // 35:2
-        LightBlueWool,    // 35:3
-        YellowWool,       // 35:4
-        LimeWool,         // 35:5
-        PinkWool,         // 35:6
-        GrayWool,         // 35:7
-        LightGrayWool,    // 35:8
-        CyanWool,         // 35:9
-        PurpleWool,       // 35:10
-        BlueWool,         // 35:11
-        BrownWool,        // 35:12
-        GreenWool,        // 35:13
-        RedWool,          // 35:14
-        BlackWool,        // 35:15
+        WhiteWool,                      // 35:0
+        OrangeWool,                     // 35:1
+        MagentaWool,                    // 35:2
+        LightBlueWool,                  // 35:3
+        YellowWool,                     // 35:4
+        LimeWool,                       // 35:5
+        PinkWool,                       // 35:6
+        GrayWool,                       // 35:7
+        LightGrayWool,                  // 35:8
+        CyanWool,                       // 35:9
+        PurpleWool,                     // 35:10
+        BlueWool,                       // 35:11
+        BrownWool,                      // 35:12
+        GreenWool,                      // 35:13
+        RedWool,                        // 35:14
+        BlackWool,                      // 35:15
 
 
-        Dandelion,                // 37:0
-        Poppy,                    // 38:0
-        BlueOrchid,               // 38:1
-        Allium,                   // 38:2
-        AzureBluet,               // 38:3
-        RedTulip,                 // 38:4
-        OrangeTulip,              // 38:5
-        WhiteTulip,               // 38:6
-        PinkTulip,                // 38:7
-        OxeyeDaisy,               // 38:8
-        BrownMushroom,            // 39:0
-        RedMushroom,              // 40:0
-        GoldBlock,                // 41:0
-        IronBlock,                // 42:0
-        DoubleStoneSlab,          // 43:0
-        DoubleSandstoneSlab,      // 43:1
-        DoubleWoodenSlab,         // 43:2
-        DoubleCobblestoneSlab,    // 43:3
-        DoubleBrickSlab,          // 43:4
-        DoubleStoneBrickSlab,     // 43:5
-        DoubleNetherBrickSlab,    // 43:6
-        DoubleQuartzSlab,         // 43:7
+        Dandelion,                      // 37:0
+        Poppy,                          // 38:0
+        BlueOrchid,                     // 38:1
+        Allium,                         // 38:2
+        AzureBluet,                     // 38:3
+        RedTulip,                       // 38:4
+        OrangeTulip,                    // 38:5
+        WhiteTulip,                     // 38:6
+        PinkTulip,                      // 38:7
+        OxeyeDaisy,                     // 38:8
+        BrownMushroom,                  // 39:0
+        RedMushroom,                    // 40:0
+        GoldBlock,                      // 41:0
+        IronBlock,                      // 42:0
+        DoubleStoneSlab,                // 43:0
+        DoubleSandstoneSlab,            // 43:1
+        DoubleWoodenSlab,               // 43:2
+        DoubleCobblestoneSlab,          // 43:3
+        DoubleBrickSlab,                // 43:4
+        DoubleStoneBrickSlab,           // 43:5
+        DoubleNetherBrickSlab,          // 43:6
+        DoubleQuartzSlab,               // 43:7
 
         StoneBottomSlab,                // 44:0
         SandstoneBottomSlab,            // 44:1
@@ -310,6 +310,8 @@ namespace MinecraftServerEngine
 
         CobblestoneWall,                // 139:0
         MossyCobblestoneWall,           // 139:1
+
+        RedstoneBlock,                  // 152:0 minecraft:redstone_block
 
         HayBale_AxisY,                   // 170:0  minecraft:hay_block
         HayBale_AxisX,                   // 170:4  minecraft:hay_block
