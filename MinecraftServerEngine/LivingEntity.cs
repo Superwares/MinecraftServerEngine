@@ -1,5 +1,6 @@
 ﻿using Common;
 using Sync;
+using Containers;
 
 namespace MinecraftServerEngine
 {
@@ -18,9 +19,11 @@ namespace MinecraftServerEngine
          * 
          * The additional health cannot be self-healed, only damaged.
          */
-        protected readonly Locker LockerHealths = new();
+
+        protected readonly Locker LockerHealths = new();  // TODO: Deprecated Locker Healths...
         protected double _additionalHealth = 0.0;
         protected double _maxHealth = 20.0;
+        // This health value must be handled only by HandleDamageEvent if will be decreased.
         protected double _health;
         public double AdditionalHealth
         {
@@ -85,6 +88,11 @@ namespace MinecraftServerEngine
 
         private Time _lastAttackTime = Time.Now();
 
+
+        private readonly Locker _LockerDamage = new();  // Disposable
+        private readonly Queue<(double damage, LivingEntity attacker)> _DamageQueue = new();  // Disposable
+
+
         private protected LivingEntity(
             System.Guid uniqueId,
             Vector p, Angles look,
@@ -124,7 +132,6 @@ namespace MinecraftServerEngine
             return _health == 0.0D;
         }
 
-        protected virtual void OnDeath(World world) { }
 
 
         protected internal virtual void OnAttack(World world, double attackCharge) { }
@@ -209,35 +216,83 @@ namespace MinecraftServerEngine
         }
 
 
-        protected virtual void OnDamaged(World world, double amount, LivingEntity attacker)
+
+
+        public void Damage(double amount, LivingEntity attacker = null)
+        {
+            if (amount < 0.0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(_LockerDamage != null);
+            _LockerDamage.Hold();
+
+            try
+            {
+                System.Diagnostics.Debug.Assert(_DamageQueue != null);
+                _DamageQueue.Enqueue((amount, attacker));
+            }
+            finally
+            {
+
+                System.Diagnostics.Debug.Assert(_LockerDamage != null);
+                _LockerDamage.Release();
+            }
+        }
+
+
+        protected virtual void OnDeath(World world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+        }
+
+        protected virtual void OnDeath(World world, LivingEntity attacker)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(attacker != null);
+        }
+
+        protected virtual void OnDamaged(World world, double amount)
         {
             System.Diagnostics.Debug.Assert(amount >= 0.0);
         }
-
-        protected virtual void OnDeath(World world, LivingEntity attacker) { }
-
-        protected virtual (bool, double) _Damage(double amount, LivingEntity attacker)
+        protected virtual void OnDamaged(World world, double amount, LivingEntity attacker)
         {
+            System.Diagnostics.Debug.Assert(amount >= 0.0);
+            System.Diagnostics.Debug.Assert(attacker != null);
+        }
+
+        protected virtual void HandleDamageEvent(World world, double amount, LivingEntity attacker)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(amount >= 0.0D);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(LockerHealths != null);
-            LockerHealths.Hold();
+            // Anyway, thread safety, so no need for locker
+            //System.Diagnostics.Debug.Assert(LockerHealths != null);
+            //LockerHealths.Hold();
 
             try
             {
+                System.Diagnostics.Debug.Assert(_health > 0.0);
 
                 if (amount == 0.0D)
                 {
-                    return (false, _health);
+                    return;
                 }
 
-                System.Diagnostics.Debug.Assert(_health >= 0.0);
-                if (_health == 0.0)
-                {
-                    return (false, 0.0);
-                }
+                System.Diagnostics.Debug.Assert(_health > 0.0);
+                //if (_health == 0.0)
+                //{
+                //    return (false, 0.0);
+                //}
 
                 System.Diagnostics.Debug.Assert(_additionalHealth >= 0.0);
                 if (_additionalHealth > 0.0)
@@ -279,29 +334,72 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(_health >= 0.0D);
                 System.Diagnostics.Debug.Assert(_health <= _maxHealth);
-                return (true, _health);
+                return;
             }
             finally
             {
-                System.Diagnostics.Debug.Assert(LockerHealths != null);
-                LockerHealths.Release();
+                // Anyway, thread safety, so no need for locker
+                //System.Diagnostics.Debug.Assert(LockerHealths != null);
+                //LockerHealths.Release();
 
             }
         }
 
-        public (bool, double) Damage(double amount, LivingEntity attacker)
+        internal void HandleDamageEvents(World world)
         {
-            if (amount < 0.0)
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_health >= 0.0);
+            if (_health == 0.0)
             {
-                throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
+                return;
             }
 
-            if (_disposed == true)
+            System.Diagnostics.Debug.Assert(_DamageQueue != null);
+            while (_DamageQueue.Dequeue(out (double damage, LivingEntity attacker) damageInfo) == true)
             {
-                throw new System.ObjectDisposedException(GetType().Name);
+                HandleDamageEvent(world, damageInfo.damage, damageInfo.attacker);
+
+                if (damageInfo.attacker != null)
+                {
+                    System.Diagnostics.Debug.Assert(world != null);
+                    OnDamaged(world, damageInfo.damage, damageInfo.attacker);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.Assert(world != null);
+                    OnDamaged(world, damageInfo.damage);
+                }
+
+                System.Diagnostics.Debug.Assert(_health >= 0.0);
+                if (_health == 0.0)
+                {
+                    if (damageInfo.attacker != null)
+                    {
+                        System.Diagnostics.Debug.Assert(world != null);
+                        OnDeath(world, damageInfo.attacker);
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.Assert(world != null);
+                        OnDeath(world);
+                    }
+
+                    System.Diagnostics.Debug.Assert(_health >= 0.0);
+                    if (_health == 0.0)
+                    {
+                        System.Diagnostics.Debug.Assert(_DamageQueue != null);
+                        _DamageQueue.Flush();
+
+                        break;
+                    }
+                }
+
             }
 
-            return _Damage(amount, attacker);
+            System.Diagnostics.Debug.Assert(_DamageQueue.Empty == true);
         }
 
         protected virtual double _Heal(double amount)
@@ -515,8 +613,16 @@ namespace MinecraftServerEngine
                 if (disposing == true)
                 {
                     // Dispose managed resources.
+                    System.Diagnostics.Debug.Assert(LockerHealths != null);
                     LockerHealths.Dispose();
+
+                    System.Diagnostics.Debug.Assert(LockerMovementSpeed != null);
                     LockerMovementSpeed.Dispose();
+
+                    System.Diagnostics.Debug.Assert(_LockerDamage != null);
+                    _LockerDamage.Dispose();
+                    System.Diagnostics.Debug.Assert(_DamageQueue != null);
+                    _DamageQueue.Dispose();
                 }
 
                 // Call the appropriate methods to clean up

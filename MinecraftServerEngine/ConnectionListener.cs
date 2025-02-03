@@ -27,7 +27,7 @@ namespace MinecraftServerEngine
 
             while (Users.Dequeue(out User user) == true)
             {
-                if (!world.CanJoinWorld())
+                if (world.CanJoinWorld() == false)
                 {
                     // TODO: Send message why disconnected.
                     user.Client.Dispose();

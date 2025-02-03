@@ -171,18 +171,20 @@ namespace MinecraftServerEngine
 
         //}
 
-        protected override (bool, double) _Damage(double amount, LivingEntity attacker)
+        protected override void HandleDamageEvent(World world, double amount, LivingEntity attacker)
         {
+            System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(amount >= 0.0D);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(LockerHealths != null);
-            LockerHealths.Hold();
+            // Anyway, thread safety, so no need for locker
+            //System.Diagnostics.Debug.Assert(LockerHealths != null);
+            //LockerHealths.Hold();
 
             try
             {
-                (bool damaged, double health) = base._Damage(amount, attacker);
+                base.HandleDamageEvent(world, amount, attacker);
 
                 if (Connected == true)
                 {
@@ -192,13 +194,12 @@ namespace MinecraftServerEngine
                     Conn.UpdateHealth(Health);
                 }
 
-                System.Diagnostics.Debug.Assert(health >= 0.0);
-                return (damaged, health);
             }
             finally
             {
-                System.Diagnostics.Debug.Assert(LockerHealths != null);
-                LockerHealths.Release();
+                // Anyway, thread safety, so no need for locker
+                //System.Diagnostics.Debug.Assert(LockerHealths != null);
+                //LockerHealths.Release();
             }
 
         }
@@ -582,7 +583,7 @@ namespace MinecraftServerEngine
             }
 
         }
-        
+
 
         // deprecated...  Replace to the OnDespawn when player is disconnected and world can despawn the player on disconnect.
         //protected internal virtual void OnDisconnected()

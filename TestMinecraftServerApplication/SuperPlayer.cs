@@ -309,22 +309,22 @@ namespace TestMinecraftServerApplication
 
             if (obj != null && obj is LivingEntity livingEntity)
             {
-                (bool damaged, double health) = livingEntity.Damage(damage, this);
+                livingEntity.Damage(damage, this);
 
                 //MyConsole.Debug("Attack!");
 
-                System.Diagnostics.Debug.Assert(health >= 0.0);
-                if (
-                    livingEntity is SuperPlayer &&
-                    damaged == true &&
-                    health == 0.0 &&
-                    SuperWorld.GameContext.IsStarted == true
-                    )
-                {
-                    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
-                    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                    SuperWorld.GameContext.HandleKillEvent(this);
-                }
+                //System.Diagnostics.Debug.Assert(health >= 0.0);
+                //if (
+                //    livingEntity is SuperPlayer &&
+                //    damaged == true &&
+                //    health == 0.0 &&
+                //    SuperWorld.GameContext.IsStarted == true
+                //    )
+                //{
+                //    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                //    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+                //    SuperWorld.GameContext.HandleKillEvent(this);
+                //}
 
                 livingEntity.ApplyForce(d * knockbackScale);
 
@@ -380,20 +380,20 @@ namespace TestMinecraftServerApplication
 
             if (obj != null && obj is LivingEntity livingEntity)
             {
-                (bool damaged, double health) = livingEntity.Damage(damage, this);
+                livingEntity.Damage(damage, this);
 
-                System.Diagnostics.Debug.Assert(health >= 0.0);
-                if (
-                    livingEntity is SuperPlayer &&
-                    damaged == true &&
-                    health == 0.0 &&
-                    SuperWorld.GameContext.IsStarted == true
-                    )
-                {
-                    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
-                    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                    SuperWorld.GameContext.HandleKillEvent(this);
-                }
+                //System.Diagnostics.Debug.Assert(health >= 0.0);
+                //if (
+                //    livingEntity is SuperPlayer &&
+                //    damaged == true &&
+                //    health == 0.0 &&
+                //    SuperWorld.GameContext.IsStarted == true
+                //    )
+                //{
+                //    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                //    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+                //    SuperWorld.GameContext.HandleKillEvent(this);
+                //}
 
                 livingEntity.ApplyForce(d * knockbackScale);
 
@@ -452,20 +452,20 @@ namespace TestMinecraftServerApplication
 
             if (obj != null && obj is LivingEntity livingEntity)
             {
-                (bool damaged, double health) = livingEntity.Damage(damage, this);
+                livingEntity.Damage(damage, this);
 
-                System.Diagnostics.Debug.Assert(health >= 0.0);
-                if (
-                    livingEntity is SuperPlayer &&
-                    damaged == true &&
-                    health == 0.0 &&
-                    SuperWorld.GameContext.IsStarted == true
-                    )
-                {
-                    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
-                    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                    SuperWorld.GameContext.HandleKillEvent(this);
-                }
+                //System.Diagnostics.Debug.Assert(health >= 0.0);
+                //if (
+                //    livingEntity is SuperPlayer &&
+                //    damaged == true &&
+                //    health == 0.0 &&
+                //    SuperWorld.GameContext.IsStarted == true
+                //    )
+                //{
+                //    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                //    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+                //    SuperWorld.GameContext.HandleKillEvent(this);
+                //}
 
                 livingEntity.ApplyForce(k * knockbackScale);
 
@@ -495,20 +495,20 @@ namespace TestMinecraftServerApplication
             {
                 if (obj is LivingEntity livingEntity)
                 {
-                    (bool damaged, double health) = livingEntity.Damage(BlastCore.Damage, this);
+                    livingEntity.Damage(BlastCore.Damage, this);
 
-                    System.Diagnostics.Debug.Assert(health >= 0.0);
-                    if (
-                        livingEntity is SuperPlayer &&
-                        damaged == true &&
-                        health == 0.0 &&
-                        SuperWorld.GameContext.IsStarted == true
-                        )
-                    {
-                        System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
-                        System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                        SuperWorld.GameContext.HandleKillEvent(this);
-                    }
+                    //System.Diagnostics.Debug.Assert(health >= 0.0);
+                    //if (
+                    //    livingEntity is SuperPlayer &&
+                    //    damaged == true &&
+                    //    health == 0.0 &&
+                    //    SuperWorld.GameContext.IsStarted == true
+                    //    )
+                    //{
+                    //    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                    //    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+                    //    SuperWorld.GameContext.HandleKillEvent(this);
+                    //}
 
                     d = livingEntity.Position - v;
                     d = d.Clamp(MinecraftPhysics.MinVelocity, MinecraftPhysics.MaxVelocity);
@@ -615,20 +615,20 @@ namespace TestMinecraftServerApplication
 
             if (obj != null && obj is LivingEntity livingEntity)
             {
-                (bool damaged, double health) = livingEntity.Damage(damage, this);
+                livingEntity.Damage(damage, this);
 
-                System.Diagnostics.Debug.Assert(health >= 0.0);
-                if (
-                    livingEntity is SuperPlayer &&
-                    damaged == true &&
-                    health == 0.0 &&
-                    SuperWorld.GameContext.IsStarted == true
-                    )
-                {
-                    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
-                    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                    SuperWorld.GameContext.HandleKillEvent(this);
-                }
+                //System.Diagnostics.Debug.Assert(health >= 0.0);
+                //if (
+                //    livingEntity is SuperPlayer &&
+                //    damaged == true &&
+                //    health == 0.0 &&
+                //    SuperWorld.GameContext.IsStarted == true
+                //    )
+                //{
+                //    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                //    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+                //    SuperWorld.GameContext.HandleKillEvent(this);
+                //}
 
                 livingEntity.ApplyForce(d * knockbackScale);
 
@@ -862,29 +862,25 @@ namespace TestMinecraftServerApplication
 
         }
 
-        /**
-         * If not use HealFully method after death, the method OnDeath is called everytime...
-         * Bacause the health is zero if not heal fully after death.
-         */
-        //protected override void OnDeath(PhysicsWorld world)
-        //{
-        //    System.Diagnostics.Debug.Assert(world != null);
+        protected override void OnDeath(World world, LivingEntity attacker)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
 
-        //    System.Diagnostics.Debug.Assert(_disposed == false);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
-        //    HealFully();
+            HealFully();
 
-        //    if (SuperWorld.GameContext.IsStarted == false)
-        //    {
-        //        return;
-        //    }
+            if (SuperWorld.GameContext.IsStarted == false)
+            {
+                return;
+            }
 
-        //    SwitchGamemode(Gamemode.Spectator);
+            SwitchGamemode(Gamemode.Spectator);
 
-        //    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
-        //    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-        //    SuperWorld.GameContext.HandleDeathEvent(UserId);
-        //}
+            System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+            System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+            SuperWorld.GameContext.HandleDeathEvent(UserId);
+        }
 
         protected override void Dispose(bool disposing)
         {

@@ -291,51 +291,56 @@ namespace MinecraftServerEngine
             TaskManager manager = new(
                 World.StartTask,
                 World.EndTask,
-                new Task(  // 0
-                    true,  // EnsureOneTick
-                    true,  // Parallel
-                    () => World.ControlPlayers()),
-                new Task(  // 1
-                    false,  // EnsureOneTick
-                    true,  // Parallel
-                    () => World.HandlePlayerDisconnections()),
-                new Task(  // 2
-                    false,  // EnsureOneTick
-                    true,  // Parallel
-                    () => World.HandleDespawning()),
-                new Task(  // 3
-                    false,  // EnsureOneTick
-                    true,  // Parallel
-                    () => World.DestroyObjects()),
-                new Task(  // 4
-                    true,  // EnsureOneTick
-                    true,  // Parallel
-                    () => World.MoveObjects()),
-                new Task(  // 5
-                    false,  // EnsureOneTick
-                    true,  // Parallel
-                    () => World.CreateObjects()),
-                new Task(  // 6
-                    true,  // EnsureOneTick
-                    true,  // Parallel
-                    () => connListener.Accept(World)),
-                new Task(  // 7
-                    false,  // EnsureOneTick
-                    true,  // Parallel
-                    () => World.LoadAndSendData()),
-                new Task(  // 8
-                    false,  // EnsureOneTick
-                    false,  // Parallel
-                    () => World._StartRoutine()),
-                new Task(  // 9
-                    false,  // EnsureOneTick
-                    true,  // Parallel
-                    () => World.StartObjectRoutines()),
-                new Task(  // 9
-                    false,  // EnsureOneTick
-                    true,  // Parallel
-                    () => World.HandleLivingEntityDamageEvents())
-                );
+                [
+                    new Task(  // 0
+                        false,  // EnsureOneTick
+                        true,  // Parallel
+                        () => World.HandlePlayerDisconnections()),
+                    new Task(  // 1
+                        false,  // EnsureOneTick
+                        true,  // Parallel
+                        () => World.HandleLivingEntityDamageEvents()),
+                    new Task(  // 2
+                        false,  // EnsureOneTick
+                        true,  // Parallel
+                        () => World.HandleDespawning()),
+                    new Task(  // 3
+                        false,  // EnsureOneTick
+                        true,  // Parallel
+                        () => World.DestroyObjects()),
+
+                    new Task(  // 4
+                        true,  // EnsureOneTick
+                        true,  // Parallel
+                        () => World.MoveObjects()),
+
+                    new Task(  // 5
+                        true,  // EnsureOneTick
+                        true,  // Parallel
+                        () => connListener.Accept(World)),
+                    new Task(  // 6
+                        false,  // EnsureOneTick
+                        true,  // Parallel
+                        () => World.CreateObjects()),
+
+                    new Task(  // 7
+                        false,  // EnsureOneTick
+                        true,  // Parallel
+                        () => World.LoadAndSendData()),
+
+                    new Task(  // 8
+                        false,  // EnsureOneTick
+                        false,  // Parallel
+                        () => World._StartRoutine()),
+                    new Task(  // 9
+                        false,  // EnsureOneTick
+                        true,  // Parallel
+                        () => World.StartObjectRoutines()),
+                    new Task(  // 10
+                        true,  // EnsureOneTick
+                        true,  // Parallel
+                        () => World.ControlPlayers()),
+                ]);
 
             PerformanceMonitor sys = new(manager.TotalTaskCount);
 

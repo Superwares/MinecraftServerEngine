@@ -111,7 +111,9 @@ If disposable objects were used as members of class and struct, they must be dis
 - PlayerList.Connect 이 실행되기 전에 PlayerList.Add 되는 문제
 	- 같은 userId 와 username 으로 접속한 client 가 중복되지 않도록 방지하면 해결될 것 같음.
 - Abstract Player 의 Guest 와 SuperPlayer 두 객체를 넘어갈 수 있도록 구현
+
 - CanJoinWorld 는 이미 존재하는 player 객체에 연결하는 것이면 넘어가기. 새로운 client 에만 나가기
+
 - 같은 username 과 userId 로 접속시 튕기도록
 - BossBar 은 Player 개인 또는 World 에 할당할 수 있도록
 - y < 0 으로 떨어지면 Arrert 해결하기

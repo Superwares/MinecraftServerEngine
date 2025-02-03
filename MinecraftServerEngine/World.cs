@@ -1367,8 +1367,7 @@ namespace MinecraftServerEngine
             while (_ObjectQueue.DequeueLivingEntity(out LivingEntity livingEntity) == true)
             {
                 System.Diagnostics.Debug.Assert(livingEntity != null);
-
-                throw new System.NotImplementedException();
+                livingEntity.HandleDamageEvents(this);
 
                 _ObjectQueue.Enqueue(livingEntity);
             }
