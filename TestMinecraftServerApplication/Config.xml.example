@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Config>
+	<World>
+		<CenterX>120.0</CenterX>
+		<CenterZ>216.0</CenterZ>
+		<DefaultWorldBorderRadiusInMeters>40.0</DefaultWorldBorderRadiusInMeters>
+
+		<RespawningX>151.5</RespawningX>
+		<RespawningY>20.0</RespawningY>
+		<RespawningZ>214.5</RespawningZ>
+		<RespawningYaw>90.0</RespawningYaw>
+		<RespawningPitch>0.0</RespawningPitch>
+	</World>
+
+	<Game>
+		<Scoreboard>
+			<PointsPerKill>13</PointsPerKill>
+			<PointsPerDeath>-8</PointsPerDeath>
+			<PoinsPerSurviving>10</PoinsPerSurviving>
+			<DefaultAdditionalPoints>30</DefaultAdditionalPoints>
+		</Scoreboard>
+
+		<!--The number of coins awarded for a kill in the game-->
+		<KillCoins>59</KillCoins>
+		<!--The default number of coins a player starts with in the game-->
+		<DefaultCoins>110</DefaultCoins>
+
+		<Round>
+			<!--The number of coins awarded for surviving the round in the game-->
+			<SurvivingCoins>31</SurvivingCoins>
+
+			<!--The additional points awarded to the seeker for winning a round in the game-->
+			<SeekerWinAdditionalPoints>55</SeekerWinAdditionalPoints>
+			<!--The number of coins awarded to the seeker for winning a round in the game-->
+			<SeekerWinCoins>210</SeekerWinCoins>
+			<!--The additional points awarded to a hider for winning a round in the game-->
+			<HiderWinAdditionalPoints>11</HiderWinAdditionalPoints>
+			<!--The number of coins awarded to a hider for winning a round in the game-->
+			<HiderWinCoins>22</HiderWinCoins>
+		</Round>
+
+
+	</Game>
+</Config>
