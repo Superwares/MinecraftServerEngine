@@ -459,13 +459,15 @@ namespace TestMinecraftServerApplication
                     livingEntity.Damage(BlastCore.Damage, this);
 
                     d = livingEntity.Position - v;
+                    d *= BlastCore.Power;
+                    d += new Vector(0.0, 0.3, 0.0);
                     d = d.Clamp(MinecraftPhysics.MinVelocity, MinecraftPhysics.MaxVelocity);
 
                     livingEntity.ApplyForce(d);
                 }
             }
 
-            world.PlaySound("block.end_gateway.spawn", 0, v, 1.0, 2.0);
+            world.PlaySound("block.end_gateway.spawn", 0, v, 1.0, 1.5);
 
             EmitParticles(BlastCore.EffectParticle, 1.0, 10);
 
@@ -847,21 +849,21 @@ namespace TestMinecraftServerApplication
 
             HealFully();
 
-            if (UsePhoenixFeather(world) == false && Gamemode != Gamemode.Spectator)
+            if (
+                UsePhoenixFeather(world) == false &&
+                SuperWorld.GameContext.IsStarted == true &&
+                Gamemode != Gamemode.Spectator
+                )
             {
                 SwitchGamemode(Gamemode.Spectator);
 
-                if (SuperWorld.GameContext.IsStarted == true)
-                {
-                    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
-                    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                    SuperWorld.GameContext.HandleKillEventForSeeker();
+                System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+                SuperWorld.GameContext.HandleKillEventForSeeker();
 
-                    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
-                    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                    SuperWorld.GameContext.HandleDeathEvent(UserId);
-                }
-
+                System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+                SuperWorld.GameContext.HandleDeathEvent(UserId);
 
             }
 
@@ -878,26 +880,25 @@ namespace TestMinecraftServerApplication
 
             HealFully();
 
-            if (UsePhoenixFeather(world) == false && Gamemode != Gamemode.Spectator)
+            if (
+                UsePhoenixFeather(world) == false &&
+                SuperWorld.GameContext.IsStarted == true &&
+                Gamemode != Gamemode.Spectator
+                )
             {
                 SwitchGamemode(Gamemode.Spectator);
 
-                if (SuperWorld.GameContext.IsStarted == true)
+                System.Diagnostics.Debug.Assert(attacker != null);
+                if (attacker is SuperPlayer attackPlayer)
                 {
-                    System.Diagnostics.Debug.Assert(attacker != null);
-                    if (attacker is SuperPlayer attackPlayer)
-                    {
-                        System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
-                        System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                        SuperWorld.GameContext.HandleKillEvent(attackPlayer);
-                    }
-
                     System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
                     System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                    SuperWorld.GameContext.HandleDeathEvent(UserId);
+                    SuperWorld.GameContext.HandleKillEvent(attackPlayer);
                 }
 
-
+                System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+                SuperWorld.GameContext.HandleDeathEvent(UserId);
 
             }
 

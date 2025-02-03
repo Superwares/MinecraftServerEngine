@@ -12,6 +12,7 @@ namespace TestMinecraftServerApplication.Items
         public const Particle EffectParticle = Particle.LargeExplode;
         public const double Radius = 3.0;
         public const double Damage = 4.0;
+        public const double Power = 5.0;
 
         public const int MaxDurability = 19;
 
@@ -27,6 +28,7 @@ namespace TestMinecraftServerApplication.Items
                 $"Tier            {Tier.ToString()}",  // Quality Tier
                 $"Radius          {Radius}",
                 $"Damage          {Damage}",
+                $"Power           {Power}",
             ]);
 
         public static readonly int DefaultCount = MinecraftServerEngine.Item.MinCount;
@@ -34,3 +36,4 @@ namespace TestMinecraftServerApplication.Items
         public static bool CanPurchase = true;
     }
 }
+
