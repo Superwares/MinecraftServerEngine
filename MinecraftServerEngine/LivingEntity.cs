@@ -490,6 +490,28 @@ namespace MinecraftServerEngine
             }
         }
 
+        protected virtual void _AddAdditionalHealth(double amount)
+        {
+            System.Diagnostics.Debug.Assert(amount >= 0.0D);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(LockerHealths != null);
+            LockerHealths.Hold();
+
+            try
+            {
+                System.Diagnostics.Debug.Assert(amount >= 0.0);
+                _additionalHealth += amount;
+
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerHealths != null);
+                LockerHealths.Release();
+            }
+        }
+
         protected virtual void _SetMovementSpeed(double amount)
         {
             System.Diagnostics.Debug.Assert(amount >= 0.0);
@@ -569,6 +591,25 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             _SetAdditionalHealth(amount);
+        }
+
+        public void AddAdditionalHealth(double amount)
+        {
+            if (amount < 0.0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(amount >= 0.0D);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _AddAdditionalHealth(amount);
         }
 
         public void SetMovementSpeed(double amount)

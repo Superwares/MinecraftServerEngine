@@ -18,6 +18,7 @@ namespace TestMinecraftServerApplication
         //public const int BalloonBasherSlot = UniqueItemLineOffset + 1;
         public const int BlastCoreSlot = UniqueItemLineOffset + 3;
         public const int EclipseCrystalSlot = UniqueItemLineOffset + 5;
+        public const int PhoenixFeatherSlot = UniqueItemLineOffset + 6;
         public const int DoombringerSlot = UniqueItemLineOffset + 8;
 
 
@@ -83,6 +84,27 @@ namespace TestMinecraftServerApplication
                     $"구매자                {username}",
                 ]));
         }
+
+        public void ResetPhoenixFeatherSlot(string username)
+        {
+            if (username == null || string.IsNullOrEmpty(username) == true)
+            {
+                username = "없음";
+            }
+
+            SetSlot(PhoenixFeatherSlot, ItemStack.Create(PhoenixFeather.Item, PhoenixFeather.DefaultCount, [
+                    $"",
+                    // A mystical feather that can revive upon death.
+                    $"죽음에서 부활시킬 수 있는 신비한 깃털입니다.",
+                    $"",
+                    // Left-click (Purchase)
+                    $"왼클릭(구매)          {PhoenixFeather.PurchasePrice * Coin.DefaultCount} Coins",
+                    // Right-click (Sell)
+                    $"우클릭(판매)          {PhoenixFeather.SellPrice * Coin.DefaultCount} Coins",
+                    $"구매자                {username}",
+                ]));
+        }
+
 
         public void ResetDoombringerSlot(string username)
         {
@@ -211,8 +233,9 @@ namespace TestMinecraftServerApplication
                     );
 
                 //ResetBalloonBasherSlot(null);
-                ResetEclipseCrystalSlot(null);
                 ResetBlastCoreSlot(null);
+                ResetEclipseCrystalSlot(null);
+                ResetPhoenixFeatherSlot(null);
                 ResetDoombringerSlot(null);
             }
 
@@ -401,6 +424,31 @@ namespace TestMinecraftServerApplication
 
                     }
                     break;
+                case PhoenixFeather.Type:
+                    {
+                        if (PhoenixFeather.CanPurchase == false)
+                        {
+                            break;
+                        }
+
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                           PhoenixFeather.Item, PhoenixFeather.DefaultCount,
+                           Coin.Item, Coin.DefaultCount * PhoenixFeather.PurchasePrice);
+
+                        if (taked != null && SuperWorld.GameContext.IsStarted == true)
+                        {
+                            System.Diagnostics.Debug.Assert(player.Username != null);
+                            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(player.Username) == false);
+                            System.Diagnostics.Debug.Assert(i == PhoenixFeatherSlot);
+                            ResetPhoenixFeatherSlot(player.Username);
+
+                            PhoenixFeather.CanPurchase = false;
+                        }
+
+                        success = (taked != null);
+
+                    }
+                    break;
                 case Doombringer.Type:
                     {
                         if (Doombringer.CanPurchase == false)
@@ -580,6 +628,24 @@ namespace TestMinecraftServerApplication
                             ResetEclipseCrystalSlot(null);
 
                             EclipseCrystal.CanPurchase = true;
+                        }
+
+                        success = taked != null;
+
+                    }
+                    break;
+                case PhoenixFeather.Type:
+                    {
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                            Coin.Item, Coin.DefaultCount * PhoenixFeather.SellPrice,
+                            PhoenixFeather.Item, PhoenixFeather.DefaultCount);
+
+                        if (taked != null && SuperWorld.GameContext.IsStarted == true)
+                        {
+                            System.Diagnostics.Debug.Assert(i == PhoenixFeatherSlot);
+                            ResetPhoenixFeatherSlot(null);
+
+                            PhoenixFeather.CanPurchase = true;
                         }
 
                         success = taked != null;

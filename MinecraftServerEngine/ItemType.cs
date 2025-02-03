@@ -80,6 +80,8 @@ namespace MinecraftServerEngine
         
         GoldenSword,               // 283  minecraft:golden_sword
 
+        Feather,                   // 288  minecraft:feather
+
         Flint,                     // 318  minecraft:flint
 
         Sign,                      // 323  minecraft:sign

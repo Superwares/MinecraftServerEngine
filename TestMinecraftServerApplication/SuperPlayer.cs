@@ -22,8 +22,9 @@ namespace TestMinecraftServerApplication
         private readonly static ChestInventory ChestInventory = new(GlobalChestItem.InventoryLines);
         private readonly static ShopInventory ShopInventory = new();
 
-        private bool _running_StoneOfSwiftness = false;
-        private Time _startTime_StoneOfSwiftness = Time.Zero;
+        private bool _speedup_running = false;
+        private Time _speedup_duration = Time.Zero;
+        private Time _speedup_startTime = Time.Zero;
 
         private bool _running_EmergencyEscape = false;
         private Time _startTime_EmergencyEscape = Time.Zero;
@@ -94,17 +95,17 @@ namespace TestMinecraftServerApplication
 
             if (_world is SuperWorld world)
             {
-                if (_running_StoneOfSwiftness == true)
+                if (_speedup_running == true)
                 {
                     EmitParticles(Particle.Spell, 1.0, 1);
 
-                    Time elapsedTime = Time.Now() - _startTime_StoneOfSwiftness;
-                    if (elapsedTime > StoneOfSwiftness.Duration)
+                    Time elapsedTime = Time.Now() - _speedup_startTime;
+                    if (elapsedTime > _speedup_duration)
                     {
                         SetMovementSpeed(DefaultMovementSpeed);
 
-                        _running_StoneOfSwiftness = false;
-                        _startTime_StoneOfSwiftness = Time.Zero;
+                        _speedup_running = false;
+                        _speedup_startTime = Time.Zero;
                     }
                 }
 
@@ -311,21 +312,6 @@ namespace TestMinecraftServerApplication
             {
                 livingEntity.Damage(damage, this);
 
-                //MyConsole.Debug("Attack!");
-
-                //System.Diagnostics.Debug.Assert(health >= 0.0);
-                //if (
-                //    livingEntity is SuperPlayer &&
-                //    damaged == true &&
-                //    health == 0.0 &&
-                //    SuperWorld.GameContext.IsStarted == true
-                //    )
-                //{
-                //    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
-                //    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                //    SuperWorld.GameContext.HandleKillEvent(this);
-                //}
-
                 livingEntity.ApplyForce(d * knockbackScale);
 
                 Vector v = new(
@@ -381,19 +367,6 @@ namespace TestMinecraftServerApplication
             if (obj != null && obj is LivingEntity livingEntity)
             {
                 livingEntity.Damage(damage, this);
-
-                //System.Diagnostics.Debug.Assert(health >= 0.0);
-                //if (
-                //    livingEntity is SuperPlayer &&
-                //    damaged == true &&
-                //    health == 0.0 &&
-                //    SuperWorld.GameContext.IsStarted == true
-                //    )
-                //{
-                //    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
-                //    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                //    SuperWorld.GameContext.HandleKillEvent(this);
-                //}
 
                 livingEntity.ApplyForce(d * knockbackScale);
 
@@ -454,19 +427,6 @@ namespace TestMinecraftServerApplication
             {
                 livingEntity.Damage(damage, this);
 
-                //System.Diagnostics.Debug.Assert(health >= 0.0);
-                //if (
-                //    livingEntity is SuperPlayer &&
-                //    damaged == true &&
-                //    health == 0.0 &&
-                //    SuperWorld.GameContext.IsStarted == true
-                //    )
-                //{
-                //    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
-                //    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                //    SuperWorld.GameContext.HandleKillEvent(this);
-                //}
-
                 livingEntity.ApplyForce(k * knockbackScale);
 
                 world.PlaySound("entity.generic.explode", 7, livingEntity.Position, 0.2, 0.5);
@@ -496,19 +456,6 @@ namespace TestMinecraftServerApplication
                 if (obj is LivingEntity livingEntity)
                 {
                     livingEntity.Damage(BlastCore.Damage, this);
-
-                    //System.Diagnostics.Debug.Assert(health >= 0.0);
-                    //if (
-                    //    livingEntity is SuperPlayer &&
-                    //    damaged == true &&
-                    //    health == 0.0 &&
-                    //    SuperWorld.GameContext.IsStarted == true
-                    //    )
-                    //{
-                    //    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
-                    //    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                    //    SuperWorld.GameContext.HandleKillEvent(this);
-                    //}
 
                     d = livingEntity.Position - v;
                     d = d.Clamp(MinecraftPhysics.MinVelocity, MinecraftPhysics.MaxVelocity);
@@ -768,8 +715,9 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(takedItemStacks.Length == 1);
             System.Diagnostics.Debug.Assert(takedItemStacks[0].Count == StoneOfSwiftness.DefaultCount);
 
-            _running_StoneOfSwiftness = true;
-            _startTime_StoneOfSwiftness = Time.Now();
+            _speedup_running = true;
+            _speedup_duration = StoneOfSwiftness.Duration;
+            _speedup_startTime = Time.Now();
 
             SetMovementSpeed(StoneOfSwiftness.MovementSpeed);
 
@@ -870,23 +818,41 @@ namespace TestMinecraftServerApplication
 
             HealFully();
 
-            if (SuperWorld.GameContext.IsStarted == false)
+
+
+            ItemStack[] takedItemStacks = TakeItemStacks(PhoenixFeather.Item, PhoenixFeather.DefaultCount);
+            if (takedItemStacks == null)
             {
-                return;
+                SwitchGamemode(Gamemode.Spectator);
+
+                if (SuperWorld.GameContext.IsStarted == true)
+                {
+                    if (attacker is SuperPlayer attackPlayer)
+                    {
+                        System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                        System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+                        SuperWorld.GameContext.HandleKillEvent(attackPlayer);
+                    }
+
+                    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+                    SuperWorld.GameContext.HandleDeathEvent(UserId);
+                }
+               
+            }
+            else
+            {
+                AddAdditionalHealth(PhoenixFeather.AdditionalHearts);
+                SetMovementSpeed(PhoenixFeather.MovementSpeed);
+
+                EmitParticles(Particle.Lava, 0.8, 1_000);
+
+                _speedup_running = true;
+                _speedup_duration = PhoenixFeather.MovementSpeedDuration;
+                _speedup_startTime = Time.Now();
             }
 
-            SwitchGamemode(Gamemode.Spectator);
 
-            if (attacker is SuperPlayer attackPlayer)
-            {
-                System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
-                System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                SuperWorld.GameContext.HandleKillEvent(attackPlayer);
-            }
-
-            System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
-            System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-            SuperWorld.GameContext.HandleDeathEvent(UserId);
         }
 
         protected override void Dispose(bool disposing)

@@ -295,6 +295,10 @@ namespace MinecraftServerEngine
                     1,
                     0),
                 new ItemContext(
+                    ItemType.Feather, 288, "feather",
+                    64,
+                    0),
+                new ItemContext(
                     ItemType.Flint, 318, "flint",
                     64,
                     0),
