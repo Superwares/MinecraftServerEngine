@@ -104,7 +104,7 @@ namespace TestMinecraftServerApplication
 
                     _prevDisplayTime = Time.Now();
 
-                    ctx.PlaySound("entity.llama.chest", 0, 1.0, 1.5);
+                    ctx.PlaySound("entity.llama.chest", 0, 0.5, 1.0);
                 }
 
                 return false;
@@ -246,7 +246,7 @@ namespace TestMinecraftServerApplication
 
                 ctx.SeletSeeker(seeker);
 
-                ctx.PlaySound("entity.player.levelup", 0, 1.0, 1.5);
+                ctx.PlaySound("entity.player.levelup", 0, 0.5, 1.0);
 
                 return true;
             }
@@ -265,7 +265,7 @@ namespace TestMinecraftServerApplication
                 //_repeat += 1;
                 i = 0;
 
-                ctx.PlaySound("entity.item.pickup", 0, 1.0, 1.5);
+                ctx.PlaySound("entity.item.pickup", 0, 0.5, 1.0);
             }
             else
             {
@@ -288,7 +288,7 @@ namespace TestMinecraftServerApplication
 
                     _time = Time.Now();
 
-                    ctx.PlaySound("entity.item.pickup", 0, 1.0, 1.5);
+                    ctx.PlaySound("entity.item.pickup", 0, 0.5, 1.0);
                 }
 
             }
@@ -422,7 +422,7 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_progressBarId != System.Guid.Empty);
                 world.CloseProgressBar(_progressBarId);
 
-                ctx.PlaySound("entity.player.levelup", 0, 1.0, 1.5);
+                ctx.PlaySound("entity.player.levelup", 0, 0.5, 1.0);
 
                 return true;
             }
@@ -493,8 +493,8 @@ namespace TestMinecraftServerApplication
                     Time.Zero, Time.FromSeconds(1), Time.Zero,
                     new TextComponent($"술래가 사망하였습니다!", TextColor.BrightGreen));
 
-                ctx.PlaySound("entity.player.levelup", 0, 1.0, 1.5);
-                ctx.PlaySound("entity.illusion_illager.ambient", 0, 1.0, 1.5);
+                ctx.PlaySound("entity.player.levelup", 0, 0.5, 1.0);
+                ctx.PlaySound("entity.illusion_illager.ambient", 0, 0.5, 1.0);
 
                 //world.WriteMessageInChatBox([
                 //    new TextComponent($"생존승리! (+{GameContext.HIDER_ROUND_WIN_ADDITIONAL_POINTS}포인트, +{GameContext.HIDER_ROUND_WIN_COINS}코인)", TextColor.Gray),
@@ -517,8 +517,8 @@ namespace TestMinecraftServerApplication
                     Time.Zero, Time.FromSeconds(1), Time.Zero,
                     new TextComponent($"도망자 모두가 사망하였습니다!", TextColor.BrightGreen));
 
-                ctx.PlaySound("entity.player.levelup", 0, 1.0, 1.5);
-                ctx.PlaySound("entity.illusion_illager.ambient", 0, 1.0, 1.5);
+                ctx.PlaySound("entity.player.levelup", 0, 0.5, 1.0);
+                ctx.PlaySound("entity.illusion_illager.ambient", 0, 0.5, 1.0);
 
                 //world.WriteMessageInChatBox([
                 //    new TextComponent($"술래승리! (+{GameContext.SEEKER_ROUND_WIN_ADDITIONAL_POINTS}포인트, +{GameContext.SEEKER_ROUND_WIN_COINS}코인)", TextColor.Gray),
@@ -549,7 +549,7 @@ namespace TestMinecraftServerApplication
                         BossBarColor.Red,
                         BossBarDivision.Notches_20);
 
-                    ctx.PlaySound("entity.player.levelup", 0, 1.0, 1.5);
+                    ctx.PlaySound("entity.player.levelup", 0, 0.5, 1.0);
 
                     _initNormal = true;
                 }
@@ -596,7 +596,7 @@ namespace TestMinecraftServerApplication
 
                     ctx.StartBuringTime();
 
-                    ctx.PlaySound("entity.player.levelup", 0, 1.0, 1.5);
+                    ctx.PlaySound("entity.player.levelup", 0, 0.5, 1.0);
 
                     _initBurning = true;
                 }
@@ -619,7 +619,7 @@ namespace TestMinecraftServerApplication
                 System.Diagnostics.Debug.Assert(_progressBarId != System.Guid.Empty);
                 world.CloseProgressBar(_progressBarId);
 
-                ctx.PlaySound("entity.player.levelup", 0, 1.0, 1.5);
+                ctx.PlaySound("entity.player.levelup", 0, 0.5, 1.0);
 
                 return true;
             }
@@ -817,7 +817,7 @@ namespace TestMinecraftServerApplication
                         Time.Zero, Time.FromSeconds(5), Time.FromSeconds(5),
                         new TextComponent($"! {_winner.Username} !", TextColor.BrightGreen));
 
-                    ctx.PlaySound("entity.player.levelup", 0, 1.0, 1.5);
+                    ctx.PlaySound("entity.player.levelup", 0, 0.5, 1.0);
 
                     _displayWinner = true;
                 }
@@ -826,225 +826,225 @@ namespace TestMinecraftServerApplication
                 {
                     _fireworkLaunch_0 = true;
 
-                    ctx.PlaySound("entity.firework.launch", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.launch", 0, 0.5, 1.0);
                 }
                 else if (_fireworkLaunch_1 == false && elapsedTime > FireworkLaunchTime_1)
                 {
                     _fireworkLaunch_1 = true;
 
-                    ctx.PlaySound("entity.firework.launch", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.launch", 0, 0.5, 1.0);
                 }
                 else if (_fireworkLaunch_2 == false && elapsedTime > FireworkLaunchTime_2)
                 {
                     _fireworkLaunch_2 = true;
 
-                    ctx.PlaySound("entity.firework.launch", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.launch", 0, 0.5, 1.0);
                 }
                 else if (_fireworkLaunch_3 == false && elapsedTime > FireworkLaunchTime_3)
                 {
                     _fireworkLaunch_3 = true;
 
-                    ctx.PlaySound("entity.firework.launch", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.blast", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.launch", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.blast", 0, 0.5, 1.0);
                 }
                 else if (_fireworkLaunch_4 == false && elapsedTime > FireworkLaunchTime_4)
                 {
                     _fireworkLaunch_4 = true;
 
-                    ctx.PlaySound("entity.firework.launch", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.blast_far", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.launch", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.blast_far", 0, 0.5, 1.0);
                 }
                 else if (_fireworkLaunch_5 == false && elapsedTime > FireworkLaunchTime_5)
                 {
                     _fireworkLaunch_5 = true;
 
-                    ctx.PlaySound("entity.firework.launch", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.blast", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.launch", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.blast", 0, 0.5, 1.0);
                 }
                 else if (_fireworkLaunch_6 == false && elapsedTime > FireworkLaunchTime_6)
                 {
                     _fireworkLaunch_6 = true;
 
-                    ctx.PlaySound("entity.firework.launch", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.large_blast", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.launch", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.large_blast", 0, 0.5, 1.0);
                 }
                 else if (_fireworkLaunch_7 == false && elapsedTime > FireworkLaunchTime_7)
                 {
                     _fireworkLaunch_7 = true;
 
-                    ctx.PlaySound("entity.firework.launch", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.blast", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.launch", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.blast", 0, 0.5, 1.0);
                 }
                 else if (_fireworkLaunch_8 == false && elapsedTime > FireworkLaunchTime_8)
                 {
                     _fireworkLaunch_8 = true;
 
-                    ctx.PlaySound("entity.firework.launch", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.large_blast", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.launch", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.large_blast", 0, 0.5, 1.0);
                 }
                 else if (_fireworkLaunch_9 == false && elapsedTime > FireworkLaunchTime_9)
                 {
                     _fireworkLaunch_9 = true;
 
-                    ctx.PlaySound("entity.firework.launch", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.large_blast", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.launch", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.large_blast", 0, 0.5, 1.0);
                 }
 
                 if (_fireworkBlast_0 == false && elapsedTime > FireworkBlastTime_0)
                 {
                     _fireworkBlast_0 = true;
 
-                    ctx.PlaySound("entity.firework.launch", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.large_blast_far", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.launch", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.large_blast_far", 0, 0.5, 1.0);
                 }
                 else if (_fireworkBlast_1 == false && elapsedTime > FireworkBlastTime_1)
                 {
                     _fireworkBlast_1 = true;
 
-                    ctx.PlaySound("entity.firework.launch", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.blast_far", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.launch", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.blast_far", 0, 0.5, 1.0);
                 }
                 else if (_fireworkBlast_2 == false && elapsedTime > FireworkBlastTime_2)
                 {
                     _fireworkBlast_2 = true;
 
-                    ctx.PlaySound("entity.firework.blast", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.large_blast_far", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.blast", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.large_blast_far", 0, 0.5, 1.0);
                 }
                 else if (_fireworkBlast_3 == false && elapsedTime > FireworkBlastTime_3)
                 {
                     _fireworkBlast_3 = true;
 
-                    ctx.PlaySound("entity.firework.launch", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.blast", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.launch", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.blast", 0, 0.5, 1.0);
                 }
                 else if (_fireworkBlast_4 == false && elapsedTime > FireworkBlastTime_4)
                 {
                     _fireworkBlast_4 = true;
 
-                    ctx.PlaySound("entity.firework.launch", 0, 1.0, 2.0);
-                    //ctx.PlaySound("entity.firework.blast", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.blast_far", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.launch", 0, 0.5, 1.0);
+                    //ctx.PlaySound("entity.firework.blast", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.blast_far", 0, 0.5, 1.0);
                 }
                 else if (_fireworkBlast_5 == false && elapsedTime > FireworkBlastTime_5)
                 {
                     _fireworkBlast_5 = true;
 
-                    ctx.PlaySound("entity.firework.launch", 0, 1.0, 2.0);
-                    //ctx.PlaySound("entity.firework.blast", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.large_blast_far", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.launch", 0, 0.5, 1.0);
+                    //ctx.PlaySound("entity.firework.blast", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.large_blast_far", 0, 0.5, 1.0);
                 }
                 else if (_fireworkBlast_6 == false && elapsedTime > FireworkBlastTime_6)
                 {
                     _fireworkBlast_6 = true;
 
-                    ctx.PlaySound("entity.firework.launch", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.blast_far", 0, 1.0, 2.0);
-                    //ctx.PlaySound("entity.firework.large_blast", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.launch", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.blast_far", 0, 0.5, 1.0);
+                    //ctx.PlaySound("entity.firework.large_blast", 0, 0.5, 1.0);
                 }
                 else if (_fireworkBlast_7 == false && elapsedTime > FireworkBlastTime_7)
                 {
                     _fireworkBlast_7 = true;
 
-                    ctx.PlaySound("entity.firework.blast", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.large_blast_far", 0, 1.0, 2.0);
-                    //ctx.PlaySound("entity.firework.blast_far", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.blast", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.large_blast_far", 0, 0.5, 1.0);
+                    //ctx.PlaySound("entity.firework.blast_far", 0, 0.5, 1.0);
                 }
                 else if (_fireworkBlast_8 == false && elapsedTime > FireworkBlastTime_8)
                 {
                     _fireworkBlast_8 = true;
 
-                    //ctx.PlaySound("entity.firework.large_blast", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.blast_far", 0, 1.0, 2.0);
+                    //ctx.PlaySound("entity.firework.large_blast", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.blast_far", 0, 0.5, 1.0);
                 }
                 else if (_fireworkBlast_9 == false && elapsedTime > FireworkBlastTime_9)
                 {
                     _fireworkBlast_9 = true;
 
-                    ctx.PlaySound("entity.firework.large_blast", 0, 1.0, 2.0);
-                    //ctx.PlaySound("entity.firework.blast_far", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.large_blast", 0, 0.5, 1.0);
+                    //ctx.PlaySound("entity.firework.blast_far", 0, 0.5, 1.0);
                 }
 
                 if (_fireworkTwinkle_0 == false && elapsedTime > FireworkTwinkleTime_0)
                 {
                     _fireworkTwinkle_0 = true;
 
-                    ctx.PlaySound("entity.firework.twinkle", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.large_blast_far", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.twinkle", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.large_blast_far", 0, 0.5, 1.0);
                 }
                 else if (_fireworkTwinkle_1 == false && elapsedTime > FireworkTwinkleTime_1)
                 {
                     _fireworkTwinkle_1 = true;
 
-                    ctx.PlaySound("entity.firework.twinkle", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.twinkle_far", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.blast_far", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.twinkle", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.twinkle_far", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.blast_far", 0, 0.5, 1.0);
                 }
                 else if (_fireworkTwinkle_2 == false && elapsedTime > FireworkTwinkleTime_2)
                 {
                     _fireworkTwinkle_2 = true;
 
-                    ctx.PlaySound("entity.firework.blast", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.twinkle", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.large_blast_far", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.blast", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.twinkle", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.large_blast_far", 0, 0.5, 1.0);
                 }
                 else if (_fireworkTwinkle_3 == false && elapsedTime > FireworkTwinkleTime_3)
                 {
                     _fireworkTwinkle_3 = true;
 
-                    ctx.PlaySound("entity.firework.twinkle", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.blast", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.twinkle", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.blast", 0, 0.5, 1.0);
                 }
                 else if (_fireworkTwinkle_4 == false && elapsedTime > FireworkTwinkleTime_4)
                 {
                     _fireworkTwinkle_4 = true;
 
-                    ctx.PlaySound("entity.firework.blast", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.twinkle_far", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.blast_far", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.blast", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.twinkle_far", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.blast_far", 0, 0.5, 1.0);
                 }
                 else if (_fireworkTwinkle_5 == false && elapsedTime > FireworkTwinkleTime_5)
                 {
                     _fireworkTwinkle_5 = true;
 
-                    ctx.PlaySound("entity.firework.twinkle", 0, 1.0, 2.0);
-                    //ctx.PlaySound("entity.firework.twinkle_far", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.blast", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.large_blast_far", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.twinkle", 0, 0.5, 1.0);
+                    //ctx.PlaySound("entity.firework.twinkle_far", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.blast", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.large_blast_far", 0, 0.5, 1.0);
                 }
                 else if (_fireworkTwinkle_6 == false && elapsedTime > FireworkTwinkleTime_6)
                 {
                     _fireworkTwinkle_6 = true;
 
-                    ctx.PlaySound("entity.firework.twinkle_far", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.blast_far", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.large_blast", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.twinkle_far", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.blast_far", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.large_blast", 0, 0.5, 1.0);
                 }
                 else if (_fireworkTwinkle_7 == false && elapsedTime > FireworkTwinkleTime_7)
                 {
                     _fireworkTwinkle_7 = true;
 
-                    ctx.PlaySound("entity.firework.twinkle_far", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.large_blast_far", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.blast_far", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.twinkle_far", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.large_blast_far", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.blast_far", 0, 0.5, 1.0);
                 }
                 else if (_fireworkTwinkle_8 == false && elapsedTime > FireworkTwinkleTime_8)
                 {
                     _fireworkTwinkle_8 = true;
 
-                    ctx.PlaySound("entity.firework.large_blast", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.blast_far", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.twinkle", 0, 1.0, 2.0);
-                    //ctx.PlaySound("entity.firework.twinkle_far", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.large_blast", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.blast_far", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.twinkle", 0, 0.5, 1.0);
+                    //ctx.PlaySound("entity.firework.twinkle_far", 0, 0.5, 1.0);
                 }
                 else if (_fireworkTwinkle_9 == false && elapsedTime > FireworkTwinkleTime_9)
                 {
                     _fireworkTwinkle_9 = true;
 
-                    ctx.PlaySound("entity.firework.large_blast", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.blast_far", 0, 1.0, 2.0);
-                    //ctx.PlaySound("entity.firework.twinkle", 0, 1.0, 2.0);
-                    ctx.PlaySound("entity.firework.twinkle_far", 0, 1.0, 2.0);
+                    ctx.PlaySound("entity.firework.large_blast", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.blast_far", 0, 0.5, 1.0);
+                    //ctx.PlaySound("entity.firework.twinkle", 0, 0.5, 1.0);
+                    ctx.PlaySound("entity.firework.twinkle_far", 0, 0.5, 1.0);
                 }
 
                 if (elapsedTime > WinnerDisplayDuration)
@@ -1082,7 +1082,7 @@ namespace TestMinecraftServerApplication
                     //_repeat += 1;
                     i = 0;
 
-                    ctx.PlaySound("entity.item.pickup", 0, 1.0, 1.5);
+                    ctx.PlaySound("entity.item.pickup", 0, 0.5, 1.0);
                 }
                 else
                 {
@@ -1103,7 +1103,7 @@ namespace TestMinecraftServerApplication
 
                         _time = Time.Now();
 
-                        ctx.PlaySound("entity.item.pickup", 0, 1.0, 1.5);
+                        ctx.PlaySound("entity.item.pickup", 0, 0.5, 1.0);
                     }
 
                 }
@@ -1119,7 +1119,7 @@ namespace TestMinecraftServerApplication
                     Time.Zero, Time.FromSeconds(4), Time.FromSeconds(1),
                     new TextComponent($"우승자는!", TextColor.Gold));
 
-                ctx.PlaySound("block.note.pling", 0, 1.0, 1.5);
+                ctx.PlaySound("block.note.pling", 0, 0.5, 1.0);
 
                 _init = true;
             }
@@ -1134,7 +1134,7 @@ namespace TestMinecraftServerApplication
                 _intervalTime /= _Winners.Length;
                 _time = Time.Now() - _intervalTime;
 
-                ctx.PlaySound("block.note.pling", 0, 1.0, 1.5);
+                ctx.PlaySound("block.note.pling", 0, 0.5, 1.0);
             }
 
             return false;
