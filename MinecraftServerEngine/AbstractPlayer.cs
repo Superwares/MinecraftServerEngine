@@ -641,7 +641,7 @@ namespace MinecraftServerEngine
             return false;
         }
 
-        public void LoadAndSendData(World world)
+        public void LoadWorld(World world)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
@@ -651,11 +651,24 @@ namespace MinecraftServerEngine
             }
 
             System.Diagnostics.Debug.Assert(Conn != null);
-            Conn.LoadAndSendData(
-                world,
+            Conn.LoadWorld(
                 Id,
-                Position, Look,
+                world,
+                Position,
                 Blindness);
+        }
+
+        public void SendData()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (Disconnected == true)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(Conn != null);
+            Conn.SendData();
         }
 
         public bool OpenInventory(SharedInventory sharedInventory)

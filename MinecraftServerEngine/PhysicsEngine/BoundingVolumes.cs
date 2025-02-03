@@ -344,10 +344,11 @@ namespace MinecraftServerEngine.PhysicsEngine
             throw new System.NotImplementedException();
         }
 
-        /*public override string ToString()
+        public override string ToString()
         {
-            return $"";
-        }*/
+            return $"( Max: ({Max.X}, {Max.Y}, {Max.Z}), Min: ({Min.X}, {Min.Y}, {Min.Z}) )";
+        }
+
 
     }
 

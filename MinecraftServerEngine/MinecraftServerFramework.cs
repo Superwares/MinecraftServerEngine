@@ -324,19 +324,23 @@ namespace MinecraftServerEngine
                         () => World.CreateObjects()),
 
                     new Task(  // 7
+                        true,  // EnsureOneTick
+                        true,  // Parallel
+                        () => World.LoadWorld()),
+                    new Task(  // 8
                         false,  // EnsureOneTick
                         true,  // Parallel
-                        () => World.LoadAndSendData()),
+                        () => World.SendData()),
 
-                    new Task(  // 8
+                    new Task(  // 9
                         false,  // EnsureOneTick
                         false,  // Parallel
                         () => World._StartRoutine()),
-                    new Task(  // 9
+                    new Task(  // 10
                         false,  // EnsureOneTick
                         true,  // Parallel
                         () => World.StartObjectRoutines()),
-                    new Task(  // 10
+                    new Task(  // 11
                         true,  // EnsureOneTick
                         true,  // Parallel
                         () => World.ControlPlayers()),

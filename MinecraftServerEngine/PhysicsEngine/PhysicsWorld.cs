@@ -12,9 +12,32 @@ namespace MinecraftServerEngine.PhysicsEngine
 
         private readonly struct Cell : System.IEquatable<Cell>
         {
+            // It must be the same as the chunk width because the client uses the chunk width as a unit when rendering entities based on the render distance.
+            // TODO: Integrate with chunk width constant
             public const double Width = 16.0D;
 
-            public static Cell Generate(Vector p)
+            public static Cell GenerateForMax(Vector p)
+            {
+                // TODO: Assertion
+                int x = (int)(p.X / Width),
+                    z = (int)(p.Z / Width);
+
+                double r1 = p.X % Width,
+                       r3 = p.Z % Width;
+                if (r1 < 0.0 || (p.X >= 0.0 && Math.AreDoublesEqual(r1, 0.0)))
+                {
+                    --x;
+                }
+                if (r3 < 0.0 || (p.Z >= 0.0 && Math.AreDoublesEqual(r3, 0.0)))
+                {
+                    --z;
+                }
+
+                return new(x, z);
+
+            }
+
+            public static Cell GenerateForMin(Vector p)
             {
                 // TODO: Assertion
                 int x = (int)(p.X / Width),
@@ -70,8 +93,8 @@ namespace MinecraftServerEngine.PhysicsEngine
             {
                 System.Diagnostics.Debug.Assert(aabb != null);
 
-                Cell max = Cell.Generate(aabb.Max),
-                     min = Cell.Generate(aabb.Min);
+                Cell max = Cell.GenerateForMax(aabb.Max),
+                     min = Cell.GenerateForMin(aabb.Min);
 
                 return new(max, min);
             }

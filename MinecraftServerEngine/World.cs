@@ -997,7 +997,7 @@ namespace MinecraftServerEngine
                 throw new System.ArgumentException("Cannot spawn an AbstractPlayer object.");
             }
 
-            if (_disposed == true )
+            if (_disposed == true)
             {
                 throw new System.ObjectDisposedException(GetType().Name);
             }
@@ -1010,7 +1010,7 @@ namespace MinecraftServerEngine
             ObjectSpawningPool.Enqueue(obj);
         }
 
-        
+
 
         internal void StartTask()
         {
@@ -1210,15 +1210,30 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(ObjectSpawningPool.Empty);
         }
 
-        internal void LoadAndSendData()
+        internal void LoadWorld()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            System.Diagnostics.Debug.Assert(_ObjectQueue != null);
             while (_ObjectQueue.DequeuePlayer(out AbstractPlayer player))
             {
                 System.Diagnostics.Debug.Assert(player != null);
+                player.LoadWorld(this);
 
-                player.LoadAndSendData(this);
+                _ObjectQueue.Enqueue(player);
+            }
+
+        }
+
+        internal void SendData()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_ObjectQueue != null);
+            while (_ObjectQueue.DequeuePlayer(out AbstractPlayer player))
+            {
+                System.Diagnostics.Debug.Assert(player != null);
+                player.SendData();
 
                 _ObjectQueue.Enqueue(player);
             }

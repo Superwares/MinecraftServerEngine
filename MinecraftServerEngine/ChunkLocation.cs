@@ -9,6 +9,8 @@ namespace MinecraftServerEngine
     internal readonly struct ChunkLocation : System.IEquatable<ChunkLocation>
     {
         public const int BlocksPerWidth = MinecraftConstants.BlocksPerChunk;
+
+        // TODO: Integrate with physics world's cell width. They must be same.
         public const double Width = Terrain.BlockWidth * BlocksPerWidth;
 
         public const int BlocksPerHeight = MinecraftConstants.BlocksPerChunk * MinecraftConstants.BlocksPerChunk;
