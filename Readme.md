@@ -151,8 +151,9 @@ If disposable objects were used as members of class and struct, they must be dis
 	- SetCompressionPacket
 
 - Block appearance 일때 머리에 블럭 씌우기
+	- 실제 인벤토리에 아이템을 넣지 말고 보이는 것만 으로 처리
 - Entity appearance 일떄 머리에 해당 entity 에 맞는 모자? 씌우기
-
+	- 실제 인벤토리에 아이템을 넣지 말고 보이는 것만 으로 처리
 ### Done 
 
 - DetermineToDespawnPlayerOnDisconnect 가 동적으로 적용되나 테스트해야됨.
