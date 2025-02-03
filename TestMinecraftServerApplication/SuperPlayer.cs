@@ -868,6 +868,9 @@ namespace TestMinecraftServerApplication
 
             world.PlaySound("block.anvil.land", 4, Position, 1.0, 2.0);
 
+            PhoenixFeather.CanPurchase = true;
+            ShopInventory.ResetPhoenixFeatherSlot(null);
+
             return true;
         }
 
