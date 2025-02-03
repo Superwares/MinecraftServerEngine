@@ -6,38 +6,75 @@ using MinecraftServerEngine;
 using MinecraftServerEngine.PhysicsEngine;
 using TestMinecraftServerApplication;
 
+
+const ushort port = 25565;
+
+
 MyConsole.Info("Hello, World!");
 
 Config.Deserialize("Config.xml");
 
-IConfigWorld worldConfig = Config.Instance.World;
+double worldCenterX, worldCenterZ;
+double defaultWorldBorderRadiusInMeters;
+Vector respawningPos;
+Angles respawningLook;
 
-if (worldConfig == null)
 {
-    throw new System.InvalidOperationException("Config.World is null");
+    IConfigWorld configWorld = Config.Instance.World;
+
+    if (configWorld == null)
+    {
+        MyConsole.Warn("Config.World is null");
+
+        configWorld = new ConfigWorld()
+        {
+            CenterX = 0.0,
+            CenterZ = 0.0,
+            DefaultWorldBorderRadiusInMeters = World.MaxWorldBorderRadiusInMeters,
+
+            RespawningX = 0.0,
+            RespawningY = 0.0,
+            RespawningZ = 0.0,
+            RespawningYaw = 0.0,
+            RespawningPitch = 0.0,
+        };
+    }
+
+    worldCenterX = configWorld.CenterX;
+    worldCenterZ = configWorld.CenterZ;
+
+    respawningPos = new Vector(
+        configWorld.RespawningX,
+        configWorld.RespawningY,
+        configWorld.RespawningZ
+        );
+    respawningLook = new Angles(
+        configWorld.RespawningYaw,
+        configWorld.RespawningPitch
+        );
+
+    if (configWorld.DefaultWorldBorderRadiusInMeters <= 0)
+    {
+        MyConsole.Warn(
+            $"Config.World.DefaultWorldBorderRadiusInMeters must be greater than 0: " +
+            $"{configWorld.DefaultWorldBorderRadiusInMeters}");
+
+        defaultWorldBorderRadiusInMeters = World.MaxWorldBorderRadiusInMeters;
+    }
+    else
+    {
+        defaultWorldBorderRadiusInMeters = configWorld.DefaultWorldBorderRadiusInMeters;
+    }
+
 }
 
-if (worldConfig.DefaultWorldBorderRadiusInMeters <= 0)
-{
-    throw new System.InvalidOperationException(
-        $"Config.World.DefaultWorldBorderRadiusInMeters must be greater than 0: " +
-        $"{worldConfig.DefaultWorldBorderRadiusInMeters}");
-}
 
-const ushort port = 25565;
 
 using World world = new SuperWorld(
-    worldConfig.CenterX,
-    worldConfig.CenterZ,
-    worldConfig.DefaultWorldBorderRadiusInMeters,
+    worldCenterX, worldCenterZ,
+    defaultWorldBorderRadiusInMeters,
 
-    new Vector(
-        worldConfig.RespawningX,
-        worldConfig.RespawningY,
-        worldConfig.RespawningZ),
-    new Angles(
-        worldConfig.RespawningYaw,
-        worldConfig.RespawningPitch)
+    respawningPos, respawningLook
     );
 
 using ServerFramework framework = new(world);

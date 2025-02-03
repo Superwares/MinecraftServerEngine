@@ -275,6 +275,8 @@ namespace MinecraftServerEngine
         private readonly Map<System.Guid, ProgressBar> ProgressBars = new();  // Disposable
 
 
+        public const double MaxWorldBorderRadiusInMeters = 999999.0;
+
         private readonly ReadLocker LockerWorldBorder = new();  // Disposable
         private double _worldBorder_centerX;
         private double _worldBorder_centerZ;
@@ -301,6 +303,12 @@ namespace MinecraftServerEngine
                 throw new System.ArgumentOutOfRangeException(
                     nameof(worldBorderRadiusInMeters),
                     "World border radius must be greater than 0.");
+            }
+            if (worldBorderRadiusInMeters > MaxWorldBorderRadiusInMeters)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(worldBorderRadiusInMeters),
+                    $"World border radius must be less than or equal to {MaxWorldBorderRadiusInMeters}.");
             }
 
             _worldBorder_centerX = centerX;
@@ -361,6 +369,7 @@ namespace MinecraftServerEngine
 
                     if (elapsedTime >= remainingTransitionTime)
                     {
+                        System.Diagnostics.Debug.Assert(_worldBorder_targetRadiusInMeters <= MaxWorldBorderRadiusInMeters);
                         _worldBorder_currentRadiusInMeters = _worldBorder_targetRadiusInMeters;
 
                         _worldBorder_transitionStartTime = Time.Zero;
@@ -379,6 +388,7 @@ namespace MinecraftServerEngine
                         // Update Old Radius:
                         _worldBorder_currentRadiusInMeters = _worldBorder_currentRadiusInMeters +
                             (remainingDistanceInMeters * transitionProgress);
+                        System.Diagnostics.Debug.Assert(_worldBorder_currentRadiusInMeters <= MaxWorldBorderRadiusInMeters);
 
                         // Update Transition Start Time
                         _worldBorder_transitionStartTime = Time.Now();
@@ -488,6 +498,10 @@ namespace MinecraftServerEngine
             LockerWorldBorder.Read();
             try
             {
+                System.Diagnostics.Debug.Assert(_worldBorder_currentRadiusInMeters > 0);
+                System.Diagnostics.Debug.Assert(_worldBorder_currentRadiusInMeters <= MaxWorldBorderRadiusInMeters);
+                System.Diagnostics.Debug.Assert(_worldBorder_targetRadiusInMeters > 0);
+                System.Diagnostics.Debug.Assert(_worldBorder_targetRadiusInMeters <= MaxWorldBorderRadiusInMeters);
                 double remainingDistanceInMeters =
                         _worldBorder_targetRadiusInMeters - _worldBorder_currentRadiusInMeters;
                 Time remainingTransitionTime =
@@ -778,6 +792,7 @@ namespace MinecraftServerEngine
                 double dz = Math.Abs(p.Z - _worldBorder_centerZ);
 
                 System.Diagnostics.Debug.Assert(_worldBorder_currentRadiusInMeters > 0.0);
+                System.Diagnostics.Debug.Assert(_worldBorder_currentRadiusInMeters <= MaxWorldBorderRadiusInMeters);
                 return (dx > _worldBorder_currentRadiusInMeters) || (dz > _worldBorder_currentRadiusInMeters);
             }
             finally
@@ -794,6 +809,12 @@ namespace MinecraftServerEngine
                 throw new System.ArgumentOutOfRangeException(
                     nameof(radiusInMeters),
                     "World border radius must be greater than 0.");
+            }
+            if (radiusInMeters > MaxWorldBorderRadiusInMeters)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(radiusInMeters),
+                    $"World border radius must be less than or equal to {MaxWorldBorderRadiusInMeters}.");
             }
 
             if (transitionTimePerMeter < Time.Zero)
@@ -820,6 +841,8 @@ namespace MinecraftServerEngine
 
                     _worldBorder_transitionStartTime = Time.Now();
 
+                    System.Diagnostics.Debug.Assert(_worldBorder_currentRadiusInMeters > 0.0);
+                    System.Diagnostics.Debug.Assert(_worldBorder_currentRadiusInMeters <= MaxWorldBorderRadiusInMeters);
                     double remainingDistanceInMeters =
                         _worldBorder_targetRadiusInMeters - _worldBorder_currentRadiusInMeters;
                     Time remainingTransitionTime =
@@ -829,6 +852,8 @@ namespace MinecraftServerEngine
                     foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
                     {
                         System.Diagnostics.Debug.Assert(renderer != null);
+                        System.Diagnostics.Debug.Assert(_worldBorder_currentRadiusInMeters > 0.0);
+                        System.Diagnostics.Debug.Assert(_worldBorder_currentRadiusInMeters <= MaxWorldBorderRadiusInMeters);
                         renderer.InitWorldBorder(_worldBorder_centerX, _worldBorder_centerZ,
                             _worldBorder_currentRadiusInMeters, _worldBorder_targetRadiusInMeters,
                             remainingTransitionTime);

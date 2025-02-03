@@ -57,6 +57,7 @@ namespace TestMinecraftServerApplication
                   )
         {
             System.Diagnostics.Debug.Assert(defaultWorldBorderRadiusInMeters > 0.0);
+            System.Diagnostics.Debug.Assert(defaultWorldBorderRadiusInMeters <= MaxWorldBorderRadiusInMeters);
             DefaultWorldBorderRadiusInMeters = defaultWorldBorderRadiusInMeters;
 
             RespawningPosition = respawningPos;

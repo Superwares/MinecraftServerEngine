@@ -1,6 +1,7 @@
 ﻿
 
 using Common;
+using MinecraftServerEngine;
 
 namespace TestMinecraftServerApplication
 {
@@ -54,16 +55,9 @@ namespace TestMinecraftServerApplication
     [System.Xml.Serialization.XmlRoot("Config")]
     public class Config : IConfig
     {
-
         [System.Xml.Serialization.XmlElement("World")]
         public ConfigWorld World { get; set; }
-        IConfigWorld IConfig.World
-        {
-            get
-            {
-                return World;
-            }
-        }
+        IConfigWorld IConfig.World => World;
 
 
 
@@ -91,6 +85,7 @@ namespace TestMinecraftServerApplication
 
                 config = new System.Xml.Serialization.XmlSerializer(typeof(Config)).Deserialize(reader) as Config;
             }
+            //catch (System.InvalidOperationException e) { }
             finally
             {
 
