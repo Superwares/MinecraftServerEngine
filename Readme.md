@@ -141,6 +141,8 @@ If disposable objects were used as members of class and struct, they must be dis
 
 - 아이템 구매하면 핫바로 가도록.
 
+- turn off debug console print...
+
 ### Done 
 
 - DetermineToDespawnPlayerOnDisconnect 가 동적으로 적용되나 테스트해야됨.
