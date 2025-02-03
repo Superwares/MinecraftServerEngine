@@ -8,7 +8,7 @@ namespace TestMinecraftServerApplication.Items
         public const ItemType Type = ItemType.IronHorseArmor;
         public const string Name = "Dash";
 
-        public const double Power = 1.0;
+        public const double Power = 2.0;
 
         public const int PurchasePrice = 10;
         public const int SellPrice = 7;

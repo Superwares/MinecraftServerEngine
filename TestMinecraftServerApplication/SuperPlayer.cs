@@ -25,6 +25,7 @@ namespace TestMinecraftServerApplication
         private bool _speedup_running = false;
         private Time _speedup_duration = Time.Zero;
         private Time _speedup_startTime = Time.Zero;
+        private int _speedup_x = 0;
 
         private bool _running_EmergencyEscape = false;
         private Time _startTime_EmergencyEscape = Time.Zero;
@@ -95,7 +96,7 @@ namespace TestMinecraftServerApplication
 
             if (_world is SuperWorld world)
             {
-                if (_speedup_running == true)
+                if (_speedup_running == true && _speedup_x++ % 10 == 0)
                 {
                     EmitParticles(Particle.Spell, 1.0, 1);
 
@@ -482,9 +483,11 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(takedItemStacks.Length > 0);
 
-            Vector d = Look.GetUnitVector();
+            Vector d = Look.GetUnitVector() + new Vector(0.0, 0.1, 0.0);
 
             ApplyForce(d * Dash.Power);
+
+            EmitParticles(Particle.InstantSpell, 0.1, 150);
 
             world.PlaySound("entity.llama.swag", 0, Position, 0.5, 1.0);
         }
@@ -810,7 +813,33 @@ namespace TestMinecraftServerApplication
 
         }
 
-        protected override void OnDeath(World world, LivingEntity attacker)
+        private bool UsePhoenixFeather(World world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            ItemStack[] takedItemStacks = TakeItemStacks(PhoenixFeather.Item, PhoenixFeather.DefaultCount);
+            if (takedItemStacks == null)
+            {
+                return false;
+            }
+
+            AddAdditionalHealth(PhoenixFeather.AdditionalHearts);
+            SetMovementSpeed(PhoenixFeather.MovementSpeed);
+
+            EmitParticles(Particle.Lava, 0.8, 1_000);
+
+            _speedup_running = true;
+            _speedup_duration = PhoenixFeather.MovementSpeedDuration;
+            _speedup_startTime = Time.Now();
+
+            world.PlaySound("block.anvil.land", 4, Position, 1.0, 2.0);
+
+            return true;
+        }
+
+        protected override void OnDeath(World world)
         {
             System.Diagnostics.Debug.Assert(world != null);
 
@@ -818,15 +847,44 @@ namespace TestMinecraftServerApplication
 
             HealFully();
 
-
-
-            ItemStack[] takedItemStacks = TakeItemStacks(PhoenixFeather.Item, PhoenixFeather.DefaultCount);
-            if (takedItemStacks == null)
+            if (UsePhoenixFeather(world) == false && Gamemode != Gamemode.Spectator)
             {
                 SwitchGamemode(Gamemode.Spectator);
 
                 if (SuperWorld.GameContext.IsStarted == true)
                 {
+                    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+                    SuperWorld.GameContext.HandleKillEventForSeeker();
+
+                    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+                    SuperWorld.GameContext.HandleDeathEvent(UserId);
+                }
+
+
+            }
+
+
+        }
+
+
+        protected override void OnDeath(World world, LivingEntity attacker)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(attacker != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            HealFully();
+
+            if (UsePhoenixFeather(world) == false && Gamemode != Gamemode.Spectator)
+            {
+                SwitchGamemode(Gamemode.Spectator);
+
+                if (SuperWorld.GameContext.IsStarted == true)
+                {
+                    System.Diagnostics.Debug.Assert(attacker != null);
                     if (attacker is SuperPlayer attackPlayer)
                     {
                         System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
@@ -838,20 +896,9 @@ namespace TestMinecraftServerApplication
                     System.Diagnostics.Debug.Assert(UserId != UserId.Null);
                     SuperWorld.GameContext.HandleDeathEvent(UserId);
                 }
-               
-            }
-            else
-            {
-                AddAdditionalHealth(PhoenixFeather.AdditionalHearts);
-                SetMovementSpeed(PhoenixFeather.MovementSpeed);
 
-                EmitParticles(Particle.Lava, 0.8, 1_000);
 
-                _speedup_running = true;
-                _speedup_duration = PhoenixFeather.MovementSpeedDuration;
-                _speedup_startTime = Time.Now();
 
-                world.PlaySound("block.anvil.land", 4, Position, 1.0, 2.0);
             }
 
 

@@ -43,13 +43,13 @@ namespace TestMinecraftServerApplication
             int DefaultAdditionalPoints;
 
 
-            IConfigGameScroeboard config = Config.Instance.Game?.Scroeboard;
+            IConfigGameScoreboard config = Config.Instance.Game?.Scoreboard;
 
             if (config == null)
             {
                 MyConsole.Warn("Config.Game.Scroeboard is null");
 
-                config = new ConfigGameScroeboard()
+                config = new ConfigGameScoreboard()
                 {
                     PointsPerKill = 13,
                     PointsPerDeath = -8,

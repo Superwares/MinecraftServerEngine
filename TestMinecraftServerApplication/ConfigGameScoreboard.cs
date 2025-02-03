@@ -2,7 +2,7 @@
 
 namespace TestMinecraftServerApplication
 {
-    public interface IConfigGameScroeboard
+    public interface IConfigGameScoreboard
     {
         public int PointsPerKill { get; }
         public int PointsPerDeath { get; }
@@ -10,7 +10,7 @@ namespace TestMinecraftServerApplication
         public int DefaultAdditionalPoints { get; }
     }
 
-    public class ConfigGameScroeboard : IConfigGameScroeboard
+    public class ConfigGameScoreboard : IConfigGameScoreboard
     {
         [System.Xml.Serialization.XmlElement("PointsPerKill")]
         public int PointsPerKill { get; set; }

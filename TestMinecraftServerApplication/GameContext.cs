@@ -84,12 +84,15 @@ namespace TestMinecraftServerApplication
                     KillCoins = 59,
                     DefaultCoins = 110,
 
-                    SurvivingRoundCoins = 31,
+                    Round = new ConfigGameRound()
+                    {
+                        SurvivingCoins = 31,
 
-                    RoundSeekerWinAdditionalPoints = 55,
-                    RoundSeekerWinCoins = 210,
-                    RoundHiderWinAdditionalPoints = 11,
-                    RoundHiderWinCoins = 22,
+                        SeekerWinAdditionalPoints = 55,
+                        SeekerWinCoins = 210,
+                        HiderWinAdditionalPoints = 11,
+                        HiderWinCoins = 22,
+                    },
 
                 };
             }
@@ -97,12 +100,12 @@ namespace TestMinecraftServerApplication
             KillCoins = config.KillCoins;
             DefaultCoins = config.DefaultCoins;
 
-            SurvivingRoundCoins = config.SurvivingRoundCoins;
+            SurvivingRoundCoins = config.Round.SurvivingCoins;
 
-            RoundSeekerWinAdditionalPoints = config.RoundSeekerWinAdditionalPoints;
-            RoundSeekerWinCoins = config.RoundSeekerWinCoins;
-            RoundHiderWinAdditionalPoints = config.RoundHiderWinAdditionalPoints;
-            RoundHiderWinCoins = config.RoundHiderWinCoins;
+            RoundSeekerWinAdditionalPoints = config.Round.SeekerWinAdditionalPoints;
+            RoundSeekerWinCoins = config.Round.SeekerWinCoins;
+            RoundHiderWinAdditionalPoints = config.Round.HiderWinAdditionalPoints;
+            RoundHiderWinCoins = config.Round.HiderWinCoins;
 
             if (config.KillCoins < 0)
             {
@@ -118,23 +121,23 @@ namespace TestMinecraftServerApplication
                 DefaultCoins = 110;
             }
 
-            if (config.SurvivingRoundCoins < 0)
+            if (config.Round.SurvivingCoins < 0)
             {
-                MyConsole.Warn($"Config.Game.SurvivingRoundCoins value is negative: {config.SurvivingRoundCoins}");
+                MyConsole.Warn($"Config.Game.Round.SurvivingCoins value is negative: {config.Round.SurvivingCoins}");
 
                 SurvivingRoundCoins = 31;
             }
 
-            if (config.RoundSeekerWinCoins < 0)
+            if (config.Round.SeekerWinCoins < 0)
             {
-                MyConsole.Warn($"Config.Game.RoundSeekerWinCoins value is negative: {config.RoundSeekerWinCoins}");
+                MyConsole.Warn($"Config.Game.Round.SeekerWinCoins value is negative: {config.Round.SeekerWinCoins}");
 
                 RoundSeekerWinCoins = 210;
             }
 
-            if (config.RoundHiderWinCoins < 0)
+            if (config.Round.HiderWinCoins < 0)
             {
-                MyConsole.Warn($"Config.Game.RoundHiderWinCoins value is negative: {config.RoundHiderWinCoins}");
+                MyConsole.Warn($"Config.Game.Round.HiderWinCoins value is negative: {config.Round.HiderWinCoins}");
 
                 RoundHiderWinCoins = 22;
             }
@@ -590,6 +593,54 @@ namespace TestMinecraftServerApplication
                 player.GiveItemStacks(Coin.Item, KillCoins);
 
                 player.WriteMessageInChatBox([
+                    new TextComponent($"킬! (+{GameContext.KillCoins}코인)", TextColor.DarkGreen),
+                    ]);
+
+            }
+            catch (KeyNotFoundException)
+            {
+
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(_LockerScoreboard != null);
+                _LockerScoreboard.Release();
+            }
+
+        }
+
+        public void HandleKillEventForSeeker()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_ready == true);
+            System.Diagnostics.Debug.Assert(_started == true);
+
+            System.Diagnostics.Debug.Assert(_LockerScoreboard != null);
+            _LockerScoreboard.Hold();
+
+            try
+            {
+                if (_inRound == false)
+                {
+                    return;
+                }
+
+                System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
+                System.Diagnostics.Debug.Assert(_currentSeeker != null);
+                ScoreboardPlayerRow row = _ScoreboardByUserId.Lookup(_currentSeeker.UserId);
+
+                ++row.Kills;
+
+                System.Diagnostics.Debug.Assert(_players != null);
+                System.Diagnostics.Debug.Assert(_ScoreboardByUserId != null);
+                Inventory.UpdatePlayerScores(_players, _ScoreboardByUserId);
+
+                System.Diagnostics.Debug.Assert(_currentSeeker != null);
+                System.Diagnostics.Debug.Assert(KillCoins >= 0);
+                _currentSeeker.GiveItemStacks(Coin.Item, KillCoins);
+
+                _currentSeeker.WriteMessageInChatBox([
                     new TextComponent($"킬! (+{GameContext.KillCoins}코인)", TextColor.DarkGreen),
                     ]);
 
