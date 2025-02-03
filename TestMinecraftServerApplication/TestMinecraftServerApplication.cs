@@ -20,13 +20,13 @@ Vector respawningPos;
 Angles respawningLook;
 
 {
-    IConfigWorld configWorld = Config.Instance.World;
+    IConfigWorld config = Config.Instance.World;
 
-    if (configWorld == null)
+    if (config == null)
     {
         MyConsole.Warn("Config.World is null");
 
-        configWorld = new ConfigWorld()
+        config = new ConfigWorld()
         {
             CenterX = 0.0,
             CenterZ = 0.0,
@@ -40,30 +40,30 @@ Angles respawningLook;
         };
     }
 
-    worldCenterX = configWorld.CenterX;
-    worldCenterZ = configWorld.CenterZ;
+    worldCenterX = config.CenterX;
+    worldCenterZ = config.CenterZ;
 
     respawningPos = new Vector(
-        configWorld.RespawningX,
-        configWorld.RespawningY,
-        configWorld.RespawningZ
+        config.RespawningX,
+        config.RespawningY,
+        config.RespawningZ
         );
     respawningLook = new Angles(
-        configWorld.RespawningYaw,
-        configWorld.RespawningPitch
+        config.RespawningYaw,
+        config.RespawningPitch
         );
 
-    if (configWorld.DefaultWorldBorderRadiusInMeters <= 0)
+    if (config.DefaultWorldBorderRadiusInMeters <= 0)
     {
         MyConsole.Warn(
             $"Config.World.DefaultWorldBorderRadiusInMeters must be greater than 0: " +
-            $"{configWorld.DefaultWorldBorderRadiusInMeters}");
+            $"{config.DefaultWorldBorderRadiusInMeters}");
 
         defaultWorldBorderRadiusInMeters = World.MaxWorldBorderRadiusInMeters;
     }
     else
     {
-        defaultWorldBorderRadiusInMeters = configWorld.DefaultWorldBorderRadiusInMeters;
+        defaultWorldBorderRadiusInMeters = config.DefaultWorldBorderRadiusInMeters;
     }
 
 }
