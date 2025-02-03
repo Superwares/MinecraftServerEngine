@@ -143,6 +143,8 @@ If disposable objects were used as members of class and struct, they must be dis
 
 - turn off debug console print...
 
+- Move objects task 도 Ensure one tick 을 풀수 있는지 검토하기...
+
 ### Done 
 
 - DetermineToDespawnPlayerOnDisconnect 가 동적으로 적용되나 테스트해야됨.
