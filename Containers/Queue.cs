@@ -147,6 +147,38 @@ namespace Containers
             return true;
         }
 
+        public virtual void Dequeue(out T value, T defaultValue)
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            if (_count == 0)
+            {
+                value = defaultValue;
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(_inNode != null);
+            System.Diagnostics.Debug.Assert(_outNode != null);
+            value = _outNode.Value;
+
+            if (_count == 1)
+            {
+                _inNode = _outNode = null;
+            }
+            else
+            {
+                System.Diagnostics.Debug.Assert(_count > 1);
+                _outNode = _outNode.NextNode;
+            }
+
+            --_count;
+
+            return;
+        }
+
         public virtual T[] Flush()
         {
             if (_disposed == true)

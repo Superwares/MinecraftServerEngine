@@ -7,7 +7,7 @@ namespace Containers
     {
         private bool _disposed = false;
 
-        private readonly ReadLocker Locker = new();
+        private readonly ReadLocker ReadLocker = new();
 
         public ConcurrentQueue() { }
 
@@ -25,7 +25,8 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            Locker.Hold();
+            System.Diagnostics.Debug.Assert(ReadLocker != null);
+            ReadLocker.Hold();
 
             try
             {
@@ -34,7 +35,8 @@ namespace Containers
             }
             finally
             {
-                Locker.Release();
+                System.Diagnostics.Debug.Assert(ReadLocker != null);
+                ReadLocker.Release();
             }
         }
 
@@ -50,7 +52,8 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            Locker.Hold();
+            System.Diagnostics.Debug.Assert(ReadLocker != null);
+            ReadLocker.Hold();
 
             try
             {
@@ -58,13 +61,20 @@ namespace Containers
             }
             finally
             {
-                Locker.Release();
+                System.Diagnostics.Debug.Assert(ReadLocker != null);
+                ReadLocker.Release();
             }
         }
 
         public override bool Dequeue(out T value)
         {
-            Locker.Hold();
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(ReadLocker != null);
+            ReadLocker.Hold();
 
             try
             {
@@ -72,7 +82,29 @@ namespace Containers
             }
             finally
             {
-                Locker.Release();
+                System.Diagnostics.Debug.Assert(ReadLocker != null);
+                ReadLocker.Release();
+            }
+        }
+
+        public override void Dequeue(out T value, T defaultValue)
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(ReadLocker != null);
+            ReadLocker.Hold();
+
+            try
+            {
+                base.Dequeue(out value, defaultValue);
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(ReadLocker != null);
+                ReadLocker.Release();
             }
         }
 
@@ -83,7 +115,8 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            Locker.Hold();
+            System.Diagnostics.Debug.Assert(ReadLocker != null);
+            ReadLocker.Hold();
 
             try
             {
@@ -91,7 +124,8 @@ namespace Containers
             }
             finally
             {
-                Locker.Release();
+                System.Diagnostics.Debug.Assert(ReadLocker != null);
+                ReadLocker.Release();
             }
 
         }
@@ -103,7 +137,8 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            Locker.Read();
+            System.Diagnostics.Debug.Assert(ReadLocker != null);
+            ReadLocker.Read();
 
             try
             {
@@ -125,7 +160,8 @@ namespace Containers
             }
             finally
             {
-                Locker.Release();
+                System.Diagnostics.Debug.Assert(ReadLocker != null);
+                ReadLocker.Release();
             }
         }
 
@@ -139,7 +175,7 @@ namespace Containers
                 if (disposing == true)
                 {
                     // Dispose managed resources.
-                    Locker.Dispose();
+                    ReadLocker.Dispose();
                 }
 
                 // Call the appropriate methods to clean up
