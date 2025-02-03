@@ -34,6 +34,9 @@ namespace TestMinecraftServerApplication
         private Time _worldBorderOutsideDamage_startTime = Time.Now();
 
 
+        private Block _lastHideBlock = Block.Air;
+
+
         public SuperPlayer(
             UserId userId, string username,
             Vector p, Angles look)
@@ -152,12 +155,33 @@ namespace TestMinecraftServerApplication
             if (block == Block.Air && belowBlock != Block.Air)
             {
                 //MyConsole.Debug($"belowBlock: {belowBlock}");
+                //MyConsole.Debug($"_lastHideBlock: {_lastHideBlock}");
+                if (_lastHideBlock != belowBlock)
+                {
+                    WriteMessageInChatBox([
+                        new TextComponent($"현재 블럭: {belowBlock.GetId()}", TextColor.Gray),
+                    ]);
+                }
                 ApplyBlockAppearance(belowBlock);
+                _lastHideBlock = belowBlock;
             }
             else
             {
+                
+
+                if (_lastHideBlock != Block.Air)
+                {
+                    WriteMessageInChatBox([
+                        new TextComponent($"모습 초기화!", TextColor.Gray),
+                    ]);
+                }
                 ResetBlockAppearance();
+
+                _lastHideBlock = Block.Air;
             }
+
+
+            
         }
 
         protected override void OnMove(PhysicsWorld _world)
@@ -211,7 +235,13 @@ namespace TestMinecraftServerApplication
                 }
                 else
                 {
+                    WriteMessageInChatBox([
+                        new TextComponent($"모습 초기화!", TextColor.Gray),
+                    ]);
+
                     ResetBlockAppearance();
+
+                    _lastHideBlock = Block.Air;
 
                     //ApplyBilndness(false);
                 }

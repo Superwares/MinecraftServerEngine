@@ -4,7 +4,7 @@ using Containers;
 
 namespace MinecraftServerEngine
 {
-    internal static class BlockExtensions
+    public static class BlockExtensions
     {
         private struct BlockContext
         {

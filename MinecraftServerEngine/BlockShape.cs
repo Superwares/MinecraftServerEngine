@@ -1,7 +1,7 @@
 ﻿
 namespace MinecraftServerEngine
 {
-    enum BlockShape
+    public enum BlockShape : int
     {
         None = 0,
         Cube = 1,
