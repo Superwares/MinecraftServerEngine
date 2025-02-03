@@ -850,6 +850,8 @@ namespace TestMinecraftServerApplication
                 _speedup_running = true;
                 _speedup_duration = PhoenixFeather.MovementSpeedDuration;
                 _speedup_startTime = Time.Now();
+
+                world.PlaySound("block.anvil.land", 4, Position, 1.0, 2.0);
             }
 
 
