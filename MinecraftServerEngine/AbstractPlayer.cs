@@ -171,7 +171,7 @@ namespace MinecraftServerEngine
 
         //}
 
-        protected override (bool, double) _Damage(double amount)
+        protected override (bool, double) _Damage(double amount, LivingEntity attacker)
         {
             System.Diagnostics.Debug.Assert(amount >= 0.0D);
 
@@ -182,7 +182,7 @@ namespace MinecraftServerEngine
 
             try
             {
-                (bool damaged, double health) = base._Damage(amount);
+                (bool damaged, double health) = base._Damage(amount, attacker);
 
                 if (Connected == true)
                 {
@@ -582,14 +582,16 @@ namespace MinecraftServerEngine
             }
 
         }
+        
 
-        protected internal virtual void OnDisconnected()
-        {
-            if (_disposed == true)
-            {
-                throw new System.ObjectDisposedException(GetType().Name);
-            }
-        }
+        // deprecated...  Replace to the OnDespawn when player is disconnected and world can despawn the player on disconnect.
+        //protected internal virtual void OnDisconnected()
+        //{
+        //    if (_disposed == true)
+        //    {
+        //        throw new System.ObjectDisposedException(GetType().Name);
+        //    }
+        //}
 
         public bool HandleDisconnection(out UserId userId, World world)
         {

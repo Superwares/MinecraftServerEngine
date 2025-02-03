@@ -1,8 +1,9 @@
 ﻿
 using Common;
 using Containers;
-using MinecraftPrimitives;
 using Sync;
+
+using MinecraftPrimitives;
 
 namespace MinecraftServerEngine.PhysicsEngine
 {
@@ -121,14 +122,14 @@ namespace MinecraftServerEngine.PhysicsEngine
             Dispose(false);
         }
 
-        protected internal virtual bool HandleDeath()
+        protected internal virtual bool HandleDespawning()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             return false;
         }
 
-        protected internal virtual void OnDeath(PhysicsWorld world) { }
+        protected internal virtual void OnDespawn(PhysicsWorld world) { }
 
         public abstract void StartRoutine(PhysicsWorld world);
 
@@ -174,7 +175,7 @@ namespace MinecraftServerEngine.PhysicsEngine
 
             (BoundingVolume volume, bool noGravity) = GetCurrentStatus();
 
-            if (!noGravity)
+            if (noGravity == false)
             {
                 Forces.Enqueue(Mass * 0.08D * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
             }
@@ -182,7 +183,7 @@ namespace MinecraftServerEngine.PhysicsEngine
             Vector v = _v;
 
             System.Diagnostics.Debug.Assert(Mass > 0.0D);
-            while (!Forces.Empty)
+            while (Forces.Empty == false)
             {
                 Vector force = Forces.Dequeue();
 

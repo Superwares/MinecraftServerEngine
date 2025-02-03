@@ -16,61 +16,57 @@ namespace MinecraftServerEngine
             {
                 private bool _disposed = false;
 
-                private int dequeue = 1;
-                private readonly ConcurrentQueue<T> Queue1 = new();  // Disposable
-                private readonly ConcurrentQueue<T> Queue2 = new();  // Disposable
+                private int dequeue = 0;
 
-                private ConcurrentQueue<T> GetQueueForDequeue()
+                // TODO: Implement using array
+                private readonly Queue<T> Queue0 = new();  // Disposable
+                private readonly Queue<T> Queue1 = new();  // Disposable
+
+                private Queue<T> GetQueueForDequeue()
                 {
-                    System.Diagnostics.Debug.Assert(!_disposed);
+                    System.Diagnostics.Debug.Assert(_disposed == false);
 
-                    if (dequeue == 1)
+                    if (dequeue == 0)
                     {
-                        return Queue1;
-                    }
-                    else if (dequeue == 2)
-                    {
-                        return Queue2;
+                        System.Diagnostics.Debug.Assert(Queue0 != null);
+                        return Queue0;
                     }
                     else
                     {
-                        System.Diagnostics.Debug.Assert(false);
+                        System.Diagnostics.Debug.Assert(Queue1 != null);
+                        return Queue1;
                     }
-
-                    throw new System.NotImplementedException();
                 }
 
-                private ConcurrentQueue<T> GetQueueForEnqueue()
+                private Queue<T> GetQueueForEnqueue()
                 {
-                    System.Diagnostics.Debug.Assert(!_disposed);
+                    System.Diagnostics.Debug.Assert(_disposed == false);
 
-                    if (dequeue == 1)
+                    if (dequeue == 0)
                     {
-                        return Queue2;
-                    }
-                    else if (dequeue == 2)
-                    {
+                        System.Diagnostics.Debug.Assert(Queue1 != null);
                         return Queue1;
                     }
                     else
                     {
-                        System.Diagnostics.Debug.Assert(false);
+                        System.Diagnostics.Debug.Assert(Queue0 != null);
+                        return Queue0;
                     }
-
-                    throw new System.NotImplementedException();
                 }
 
-                public int Count
+                public int CountForDequeue
                 {
                     get
                     {
-                        System.Diagnostics.Debug.Assert(!_disposed);
+                        System.Diagnostics.Debug.Assert(_disposed == false);
 
-                        ConcurrentQueue<T> queue = GetQueueForDequeue();
+                        Queue<T> queue = GetQueueForDequeue();
+
+                        System.Diagnostics.Debug.Assert(queue != null);
                         return queue.Count;
                     }
                 }
-                public bool Empty => (Count == 0);
+                public bool EmptyForDequeue => (CountForDequeue == 0);
 
                 public SwapQueue() { }
 
@@ -78,47 +74,38 @@ namespace MinecraftServerEngine
 
                 public void Swap()
                 {
-                    System.Diagnostics.Debug.Assert(!_disposed);
+                    System.Diagnostics.Debug.Assert(_disposed == false);
 
-                    ConcurrentQueue<T> queue = GetQueueForDequeue();
-
-                    if (queue.Empty)
+                    if (dequeue == 0)
                     {
-                        if (dequeue == 1)
-                        {
-                            System.Diagnostics.Debug.Assert(Queue1.Empty);
-
-                            dequeue = 2;
-                        }
-                        else if (dequeue == 2)
-                        {
-                            System.Diagnostics.Debug.Assert(Queue2.Empty);
-
-                            dequeue = 1;
-                        }
-                        else
-                        {
-                            System.Diagnostics.Debug.Assert(false);
-                        }
+                        dequeue = 1;
+                    }
+                    else
+                    {
+                        dequeue = 0;
                     }
                 }
 
                 public bool Dequeue(out T value)
                 {
-                    System.Diagnostics.Debug.Assert(!_disposed);
+                    System.Diagnostics.Debug.Assert(_disposed == false);
 
-                    ConcurrentQueue<T> queue = GetQueueForDequeue();
+                    Queue<T> queue = GetQueueForDequeue();
 
+                    System.Diagnostics.Debug.Assert(queue != null);
                     return queue.Dequeue(out value);
                 }
+
 
                 public void Enqueue(T value)
                 {
                     System.Diagnostics.Debug.Assert(value != null);
 
-                    System.Diagnostics.Debug.Assert(!_disposed);
+                    System.Diagnostics.Debug.Assert(_disposed == false);
 
-                    ConcurrentQueue<T> queue = GetQueueForEnqueue();
+                    Queue<T> queue = GetQueueForEnqueue();
+
+                    System.Diagnostics.Debug.Assert(queue != null);
                     queue.Enqueue(value);
                 }
 
@@ -128,8 +115,8 @@ namespace MinecraftServerEngine
                     System.Diagnostics.Debug.Assert(!_disposed);
 
                     // Release resources.
+                    Queue0.Dispose();
                     Queue1.Dispose();
-                    Queue2.Dispose();
 
                     // Finish.
                     System.GC.SuppressFinalize(this);
@@ -141,84 +128,213 @@ namespace MinecraftServerEngine
 
             private readonly Locker Locker = new();  // Disposable
 
-            private readonly SwapQueue<PhysicsObject> Objects = new();  // Disposable
-            private readonly SwapQueue<AbstractPlayer> Players = new();
+            private bool _serving = false;
+
+            private readonly SwapQueue<PhysicsObject> _Objects = new();  // Disposable
+            private readonly SwapQueue<LivingEntity> _LivingEntities = new();  // Disposable
+            private readonly SwapQueue<AbstractPlayer> _Players = new();  // Disposable
+
+            private bool IsAllQueueEmptyForDequeue
+            {
+                get
+                {
+                    System.Diagnostics.Debug.Assert(_disposed == false);
+                    return _Objects.EmptyForDequeue == true && _Players.EmptyForDequeue == true;
+                }
+            }
 
             ~ObjectQueue() => System.Diagnostics.Debug.Assert(false);
 
-            public void Swap()
+            internal void StartServing()
             {
-                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_disposed == false);
 
-                Objects.Swap();
-                Players.Swap();
+                System.Diagnostics.Debug.Assert(_serving == false);
+                _serving = true;
             }
 
-            /// <summary>
-            /// 
-            /// </summary>
-            /// <returns></returns>
-            /// <exception cref="EmptyContainerException" />
-            public bool Dequeue(out PhysicsObject obj)
+            internal bool Dequeue(out PhysicsObject obj)
             {
-                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_disposed == false);
 
+                System.Diagnostics.Debug.Assert(Locker != null);
                 Locker.Hold();
 
-                bool f;
+                System.Diagnostics.Debug.Assert(_serving == true);
 
-                if (!Objects.Empty)
+                try
                 {
-                    f = Objects.Dequeue(out obj);
+
+                    if (_Objects.EmptyForDequeue == false)
+                    {
+                        return _Objects.Dequeue(out obj);
+                    }
+                    else if (_LivingEntities.EmptyForDequeue == false)
+                    {
+                        System.Diagnostics.Debug.Assert(_LivingEntities != null);
+                        bool success = _LivingEntities.Dequeue(out LivingEntity livingEntity);
+                        obj = livingEntity;
+
+                        return success;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.Assert(_Players != null);
+                        bool success = _Players.Dequeue(out AbstractPlayer player);
+                        obj = player;
+
+                        return success;
+                    }
                 }
-                else
+                finally
                 {
-                    f = Players.Dequeue(out AbstractPlayer player);
-                    obj = player;
+                    System.Diagnostics.Debug.Assert(Locker != null);
+                    Locker.Release();
                 }
 
-                Locker.Release();
 
-                return f;
             }
 
-            /// <summary>
-            /// 
-            /// </summary>
-            /// <returns></returns>
-            /// <exception cref="EmptyContainerException" />
-            public bool DequeuePlayer(out AbstractPlayer player)
+            internal bool DequeueNonPlayer(out PhysicsObject obj)
             {
-                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_disposed == false);
 
-                return Players.Dequeue(out player);
+                System.Diagnostics.Debug.Assert(Locker != null);
+                Locker.Hold();
+
+                System.Diagnostics.Debug.Assert(_serving == true);
+
+                try
+                {
+                    if (_Objects.EmptyForDequeue == false)
+                    {
+                        return _Objects.Dequeue(out obj);
+                    }
+                    else
+                    {
+                        bool success = _LivingEntities.Dequeue(out LivingEntity livingEntity);
+                        obj = livingEntity;
+
+                        return success;
+                    }
+                }
+                finally
+                {
+                    System.Diagnostics.Debug.Assert(Locker != null);
+                    Locker.Release();
+                }
             }
 
-            /// <summary>
-            /// 
-            /// </summary>
-            /// <returns></returns>
-            /// <exception cref="EmptyContainerException" />
-            public bool DequeueNonPlayer(out PhysicsObject obj)
+            internal bool DequeueLivingEntity(out LivingEntity livingEntity)
             {
-                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_disposed == false);
 
-                return Objects.Dequeue(out obj);
+                System.Diagnostics.Debug.Assert(Locker != null);
+                Locker.Hold();
+
+                System.Diagnostics.Debug.Assert(_serving == true);
+
+                try
+                {
+                    if (_LivingEntities.EmptyForDequeue == false)
+                    {
+                        return _LivingEntities.Dequeue(out livingEntity);
+                    }
+                    else
+                    {
+                        bool success = _Players.Dequeue(out AbstractPlayer player);
+                        livingEntity = player;
+
+                        return success;
+                    }
+                }
+                finally
+                {
+                    System.Diagnostics.Debug.Assert(Locker != null);
+                    Locker.Release();
+                }
             }
 
-            public void Enqueue(PhysicsObject obj)
+            internal bool DequeuePlayer(out AbstractPlayer player)
+            {
+                System.Diagnostics.Debug.Assert(_disposed == false);
+
+                System.Diagnostics.Debug.Assert(Locker != null);
+                Locker.Hold();
+
+                System.Diagnostics.Debug.Assert(_serving == true);
+
+                try
+                {
+                    return _Players.Dequeue(out player);
+                }
+                finally
+                {
+                    System.Diagnostics.Debug.Assert(Locker != null);
+                    Locker.Release();
+                }
+            }
+
+            internal void Enqueue(PhysicsObject obj)
             {
                 System.Diagnostics.Debug.Assert(obj != null);
 
-                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_disposed == false);
 
-                if (obj is AbstractPlayer player)
+                System.Diagnostics.Debug.Assert(Locker != null);
+                Locker.Hold();
+
+                System.Diagnostics.Debug.Assert(_serving == true);
+
+                try
                 {
-                    Players.Enqueue(player);
+
+                    if (obj is AbstractPlayer player)
+                    {
+                        System.Diagnostics.Debug.Assert(_Players != null);
+                        _Players.Enqueue(player);
+                    }
+                    else if (obj is LivingEntity livingEntity)
+                    {
+                        System.Diagnostics.Debug.Assert(_LivingEntities != null);
+                        _LivingEntities.Enqueue(livingEntity);
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.Assert(_Objects != null);
+                        _Objects.Enqueue(obj);
+                    }
                 }
-                else
+                finally
                 {
-                    Objects.Enqueue(obj);
+                    System.Diagnostics.Debug.Assert(Locker != null);
+                    Locker.Release();
+                }
+            }
+
+            internal void EndServing()
+            {
+                System.Diagnostics.Debug.Assert(_disposed == false);
+
+                System.Diagnostics.Debug.Assert(_serving == true);
+                _serving = false;
+
+                System.Diagnostics.Debug.Assert(_Objects != null);
+                if (_Objects.EmptyForDequeue == true)
+                {
+                    _Objects.Swap();
+                }
+
+                System.Diagnostics.Debug.Assert(_LivingEntities != null);
+                if (_LivingEntities.EmptyForDequeue == true)
+                {
+                    _LivingEntities.Swap();
+                }
+
+                System.Diagnostics.Debug.Assert(_Players != null);
+                if (_Players.EmptyForDequeue == true)
+                {
+                    _Players.Swap();
                 }
             }
 
@@ -227,14 +343,18 @@ namespace MinecraftServerEngine
                 // Assertions.
                 System.Diagnostics.Debug.Assert(!_disposed);
 
-                System.Diagnostics.Debug.Assert(Objects.Empty);
-                System.Diagnostics.Debug.Assert(Players.Empty);
+                System.Diagnostics.Debug.Assert(_serving == false);
+
+                System.Diagnostics.Debug.Assert(_Objects.EmptyForDequeue);
+                System.Diagnostics.Debug.Assert(_LivingEntities.EmptyForDequeue);
+                System.Diagnostics.Debug.Assert(_Players.EmptyForDequeue);
 
                 // Release resources.
                 Locker.Dispose();
 
-                Objects.Dispose();
-                Players.Dispose();
+                _Objects.Dispose();
+                _LivingEntities.Dispose();
+                _Players.Dispose();
 
                 // Finish.
                 System.GC.SuppressFinalize(this);
@@ -250,7 +370,7 @@ namespace MinecraftServerEngine
         private readonly ConcurrentQueue<PhysicsObject> ObjectSpawningPool = new();  // Disposable
         private readonly ConcurrentQueue<PhysicsObject> ObjectDespawningPool = new();  // Disposable
 
-        private readonly ObjectQueue Objects = new();  // Disposable
+        private readonly ObjectQueue _ObjectQueue = new();  // Disposable
 
         internal readonly ConcurrentTable<int, Entity> EntitiesById = new();  // Disposable
         internal readonly ConcurrentTable<UserId, AbstractPlayer> PlayersByUserId = new();  // Disposable
@@ -989,86 +1109,79 @@ namespace MinecraftServerEngine
 
         public abstract bool CanJoinWorld();
 
+        protected abstract bool CanDespawnPlayerOnDisconnect();
+
         public void SpawnObject(PhysicsObject obj)
         {
+            if (obj is AbstractPlayer)
+            {
+                throw new System.ArgumentException("Cannot spawn an AbstractPlayer object.");
+            }
+
+            if (_disposed == true )
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
             System.Diagnostics.Debug.Assert(obj is not AbstractPlayer);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(ObjectSpawningPool != null);
             ObjectSpawningPool.Enqueue(obj);
         }
 
-        protected abstract bool DetermineToDespawnPlayerOnDisconnect();
+        
 
-        internal void SwapObjectQueue()
+        internal void StartTask()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(Objects != null);
-            Objects.Swap();
+            System.Diagnostics.Debug.Assert(_ObjectQueue != null);
+            _ObjectQueue.StartServing();
         }
 
         internal void StartObjectRoutines()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            while (Objects.Dequeue(out PhysicsObject obj))
+            while (_ObjectQueue.Dequeue(out PhysicsObject obj))
             {
                 System.Diagnostics.Debug.Assert(obj != null);
 
                 obj.StartRoutine(this);
 
-                Objects.Enqueue(obj);
+                _ObjectQueue.Enqueue(obj);
             }
+        }
+
+        internal void HandleLivingEntityDamageEvents()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+
         }
 
         internal void ControlPlayers()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            while (Objects.DequeuePlayer(out AbstractPlayer player))
+            while (_ObjectQueue.DequeuePlayer(out AbstractPlayer player))
             {
                 System.Diagnostics.Debug.Assert(player != null);
 
                 player.Control(this);
 
-                Objects.Enqueue(player);
+                _ObjectQueue.Enqueue(player);
             }
         }
 
-        internal void HandleDeathEvents()
+        internal void HandlePlayerDisconnections()
         {
-            while (Objects.Dequeue(out PhysicsObject obj))
-            {
-                System.Diagnostics.Debug.Assert(obj != null);
-
-                if (obj.HandleDeath())
-                {
-                    //if (obj is AbstractPlayer player)
-                    //{
-                    //    player.Respawn();
-                    //}
-
-                    obj.OnDeath(this);
-
-                    if (obj is not AbstractPlayer)
-                    {
-                        ObjectDespawningPool.Enqueue(obj);
-
-                        continue;
-                    }
-                }
-
-                Objects.Enqueue(obj);
-            }
-        }
-
-        internal void HandleDisconnections()
-        {
-            bool despawned = DetermineToDespawnPlayerOnDisconnect();
+            bool despawned = CanDespawnPlayerOnDisconnect();
             bool cleanup;
 
-            while (Objects.DequeuePlayer(out AbstractPlayer player))
+            while (_ObjectQueue.DequeuePlayer(out AbstractPlayer player))
             {
                 System.Diagnostics.Debug.Assert(player != null);
 
@@ -1105,7 +1218,10 @@ namespace MinecraftServerEngine
 
                         ObjectDespawningPool.Enqueue(player);
 
-                        player.OnDisconnected();
+                        System.Diagnostics.Debug.Assert(player != null);
+                        player.OnDespawn(this);
+
+                        //player.OnDisconnected();
 
                         continue;
                     }
@@ -1114,14 +1230,38 @@ namespace MinecraftServerEngine
                 }
 
 
-                Objects.Enqueue(player);
+                _ObjectQueue.Enqueue(player);
             }
 
         }
 
+        internal void HandleDespawning()
+        {
+            while (_ObjectQueue.DequeueNonPlayer(out PhysicsObject obj))
+            {
+                System.Diagnostics.Debug.Assert(obj != null);
+
+                System.Diagnostics.Debug.Assert(obj != null);
+                if (obj.HandleDespawning() == true)
+                {
+                    System.Diagnostics.Debug.Assert(obj is not AbstractPlayer);
+
+                    System.Diagnostics.Debug.Assert(ObjectDespawningPool != null);
+                    ObjectDespawningPool.Enqueue(obj);
+
+                    System.Diagnostics.Debug.Assert(obj != null);
+                    obj.OnDespawn(this);
+
+                    continue;
+                }
+
+                _ObjectQueue.Enqueue(obj);
+            }
+        }
+
         internal void DestroyObjects()
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             while (ObjectDespawningPool.Dequeue(out PhysicsObject obj))
             {
@@ -1144,7 +1284,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            while (Objects.Dequeue(out PhysicsObject obj))
+            while (_ObjectQueue.Dequeue(out PhysicsObject obj))
             {
                 System.Diagnostics.Debug.Assert(obj != null);
 
@@ -1154,7 +1294,7 @@ namespace MinecraftServerEngine
 
                 UpdateObjectMapping(obj);
 
-                Objects.Enqueue(obj);
+                _ObjectQueue.Enqueue(obj);
             }
 
         }
@@ -1200,7 +1340,7 @@ namespace MinecraftServerEngine
 
                 InitObjectMapping(obj);
 
-                Objects.Enqueue(obj);
+                _ObjectQueue.Enqueue(obj);
 
                 if (obj is Entity entity)
                 {
@@ -1216,15 +1356,23 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            while (Objects.DequeuePlayer(out AbstractPlayer player))
+            while (_ObjectQueue.DequeuePlayer(out AbstractPlayer player))
             {
                 System.Diagnostics.Debug.Assert(player != null);
 
                 player.LoadAndSendData(this);
 
-                Objects.Enqueue(player);
+                _ObjectQueue.Enqueue(player);
             }
 
+        }
+
+        internal void EndTask()
+        {
+            System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(_ObjectQueue != null);
+            _ObjectQueue.EndServing();
         }
 
         protected override void Dispose(bool disposing)
@@ -1248,7 +1396,7 @@ namespace MinecraftServerEngine
                     ObjectSpawningPool.Dispose();
                     ObjectDespawningPool.Dispose();
 
-                    Objects.Dispose();
+                    _ObjectQueue.Dispose();
 
                     EntitiesById.Dispose();
                     PlayersByUserId.Dispose();

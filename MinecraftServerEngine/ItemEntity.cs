@@ -60,7 +60,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(world != null);
         }
 
-        protected internal override bool HandleDeath()
+        protected internal override bool HandleDespawning()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 

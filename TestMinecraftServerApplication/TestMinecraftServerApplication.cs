@@ -77,6 +77,6 @@ using World world = new SuperWorld(
     respawningPos, respawningLook
     );
 
-using ServerFramework framework = new(world);
+using MinecraftServerFramework framework = new(world);
 framework.Run(port);
 

@@ -7,7 +7,7 @@ using MinecraftPrimitives;
 
 namespace MinecraftServerEngine
 {
-    public sealed class ServerFramework : System.IDisposable
+    public sealed class MinecraftServerFramework : System.IDisposable
     {
         internal sealed class PerformanceMonitor
         {
@@ -112,58 +112,26 @@ namespace MinecraftServerEngine
 
             public readonly bool EnsureOneTick;
 
-            private readonly VoidMethod InitRoutine = null;
-            private readonly VoidMethod StartRoutine = null;
+            private readonly VoidMethod _Start = null;
 
-            public Task(bool ensureOneTick, VoidMethod initRoutine, VoidMethod startRoutine)
+            public Task(
+                bool ensureOneTick, bool parallel,
+                VoidMethod start
+                )
             {
-                System.Diagnostics.Debug.Assert(initRoutine != null);
-                System.Diagnostics.Debug.Assert(startRoutine != null);
-
-                InitRoutine = initRoutine; StartRoutine = startRoutine;
+                System.Diagnostics.Debug.Assert(start != null);
 
                 EnsureOneTick = ensureOneTick;
-
-                Parallel = true;
-            }
-
-            public Task(bool ensureOneTick, VoidMethod startRoutine)
-            {
-                System.Diagnostics.Debug.Assert(startRoutine != null);
-
-                StartRoutine = startRoutine;
-
-                EnsureOneTick = ensureOneTick;
-
-                Parallel = true;
-            }
-
-            public Task(bool ensureOneTick, VoidMethod startRoutine, bool parallel)
-            {
-                System.Diagnostics.Debug.Assert(startRoutine != null);
-
-                StartRoutine = startRoutine;
-
-                EnsureOneTick = ensureOneTick;
-
                 Parallel = parallel;
+
+                _Start = start;
             }
 
-            public void Init()
-            {
-                if (InitRoutine == null)
-                {
-                    return;
-                }
-
-                InitRoutine();
-            }
 
             public void Start()
             {
-                System.Diagnostics.Debug.Assert(StartRoutine != null);
-
-                StartRoutine();
+                System.Diagnostics.Debug.Assert(_Start != null);
+                _Start();
             }
         }
 
@@ -175,9 +143,22 @@ namespace MinecraftServerEngine
             public readonly int TotalTaskCount;
             private readonly Task[] Tasks;
 
-            public TaskManager(params Task[] tasks)
+            private readonly VoidMethod _Initialize = null;
+            private readonly VoidMethod _Terminate = null;
+
+            public TaskManager(
+                VoidMethod initialize,
+                VoidMethod terminate,
+                params Task[] tasks
+                )
             {
+                System.Diagnostics.Debug.Assert(initialize != null);
+                System.Diagnostics.Debug.Assert(terminate != null);
+
                 System.Diagnostics.Debug.Assert(tasks != null);
+
+                _Initialize = initialize;
+                _Terminate = terminate;
 
                 TotalTaskCount = tasks.Length;
                 Tasks = tasks;
@@ -205,27 +186,34 @@ namespace MinecraftServerEngine
                         continue;
                     }
 
-                    Time start = Time.Now(), end;
+                    Time start = Time.Now();
 
-                    System.Diagnostics.Debug.Assert(task != null);
-                    task.Init();
+                    System.Diagnostics.Debug.Assert(_Initialize != null);
+                    _Initialize();
 
-                    if (task.Parallel)
+                    try
                     {
-                        result = System.Threading.Tasks.Parallel.For(
-                            0, ProcessorCount, (_) => task.Start());
-                        System.Diagnostics.Debug.Assert(result.IsCompleted);
+                        System.Diagnostics.Debug.Assert(task != null);
+                        if (task.Parallel)
+                        {
+                            result = System.Threading.Tasks.Parallel.For(
+                                0, ProcessorCount, (_) => task.Start());
+                            System.Diagnostics.Debug.Assert(result.IsCompleted);
+                        }
+                        else
+                        {
+                            task.Start();
+                        }
+
                     }
-                    else
+                    finally
                     {
-                        task.Start();
+                        System.Diagnostics.Debug.Assert(sys != null);
+                        sys.Record(Time.Now() - start);
+
+                        System.Diagnostics.Debug.Assert(_Terminate != null);
+                        _Terminate();
                     }
-
-                    end = Time.Now();
-
-                    System.Diagnostics.Debug.Assert(sys != null);
-                    sys.Record(end - start);
-
                 }
 
                 //MyConsole.Debug($"Current task index: {sys.CurrentTaskIndex}");
@@ -244,14 +232,14 @@ namespace MinecraftServerEngine
         private readonly World World;
 
 
-        public ServerFramework(World world)
+        public MinecraftServerFramework(World world)
         {
             System.Diagnostics.Debug.Assert(world != null);
 
             World = world;
         }
 
-        ~ServerFramework()
+        ~MinecraftServerFramework()
         {
             System.Diagnostics.Debug.Assert(false);
 
@@ -301,43 +289,52 @@ namespace MinecraftServerEngine
 
 
             TaskManager manager = new(
+                World.StartTask,
+                World.EndTask,
                 new Task(  // 0
                     true,  // EnsureOneTick
-                    () => World.SwapObjectQueue(),
+                    true,  // Parallel
                     () => World.ControlPlayers()),
                 new Task(  // 1
                     false,  // EnsureOneTick
-                    () => World.SwapObjectQueue(),
-                    () => World.HandleDeathEvents()),
+                    true,  // Parallel
+                    () => World.HandlePlayerDisconnections()),
                 new Task(  // 2
                     false,  // EnsureOneTick
-                    () => World.SwapObjectQueue(),
-                    () => World.HandleDisconnections()),
+                    true,  // Parallel
+                    () => World.HandleDespawning()),
                 new Task(  // 3
                     false,  // EnsureOneTick
-                    () => World.SwapObjectQueue(),
+                    true,  // Parallel
                     () => World.DestroyObjects()),
                 new Task(  // 4
                     true,  // EnsureOneTick
-                    () => World.SwapObjectQueue(),
+                    true,  // Parallel
                     () => World.MoveObjects()),
                 new Task(  // 5
                     false,  // EnsureOneTick
+                    true,  // Parallel
                     () => World.CreateObjects()),
                 new Task(  // 6
                     true,  // EnsureOneTick
+                    true,  // Parallel
                     () => connListener.Accept(World)),
                 new Task(  // 7
                     false,  // EnsureOneTick
-                    () => World.SwapObjectQueue(),
+                    true,  // Parallel
                     () => World.LoadAndSendData()),
                 new Task(  // 8
                     false,  // EnsureOneTick
-                    () => World._StartRoutine(), false),
+                    false,  // Parallel
+                    () => World._StartRoutine()),
                 new Task(  // 9
                     false,  // EnsureOneTick
-                    () => World.SwapObjectQueue(),
-                    () => World.StartObjectRoutines())
+                    true,  // Parallel
+                    () => World.StartObjectRoutines()),
+                new Task(  // 9
+                    false,  // EnsureOneTick
+                    true,  // Parallel
+                    () => World.HandleLivingEntityDamageEvents())
                 );
 
             PerformanceMonitor sys = new(manager.TotalTaskCount);
@@ -383,7 +380,8 @@ namespace MinecraftServerEngine
                     {
                         sys.Print(interval);
                     }
-                } else
+                }
+                else
                 {
                     sys.Pass();
                 }

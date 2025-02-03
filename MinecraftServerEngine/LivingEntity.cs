@@ -116,13 +116,16 @@ namespace MinecraftServerEngine
             return new Vector(x, y, z);
         }
 
-        protected internal override bool HandleDeath()
+        protected internal override bool HandleDespawning()
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             System.Diagnostics.Debug.Assert(_health >= 0.0D);
             return _health == 0.0D;
         }
+
+        protected virtual void OnDeath(World world) { }
+
 
         protected internal virtual void OnAttack(World world, double attackCharge) { }
         protected internal virtual void OnAttack(World world, ItemStack itemStack, double attackCharge) { }
@@ -205,7 +208,15 @@ namespace MinecraftServerEngine
             OnItemBreak(world, stack);
         }
 
-        protected virtual (bool, double) _Damage(double amount)
+
+        protected virtual void OnDamaged(World world, double amount, LivingEntity attacker)
+        {
+            System.Diagnostics.Debug.Assert(amount >= 0.0);
+        }
+
+        protected virtual void OnDeath(World world, LivingEntity attacker) { }
+
+        protected virtual (bool, double) _Damage(double amount, LivingEntity attacker)
         {
             System.Diagnostics.Debug.Assert(amount >= 0.0D);
 
@@ -278,7 +289,7 @@ namespace MinecraftServerEngine
             }
         }
 
-        public (bool, double) Damage(double amount)
+        public (bool, double) Damage(double amount, LivingEntity attacker)
         {
             if (amount < 0.0)
             {
@@ -290,7 +301,7 @@ namespace MinecraftServerEngine
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            return _Damage(amount);
+            return _Damage(amount, attacker);
         }
 
         protected virtual double _Heal(double amount)

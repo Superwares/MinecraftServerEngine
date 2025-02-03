@@ -29,12 +29,12 @@ namespace TestMinecraftServerApplication
             Dispose(false);
         }
 
-        protected override bool HandleDeath()
+        protected override bool HandleDespawning()
         {
             return (ticks >= (20 * 1));
         }
 
-        protected override void OnDeath(PhysicsWorld world)
+        protected override void OnDespawn(PhysicsWorld world)
         {
             System.Diagnostics.Debug.Assert(world != null);
 
@@ -61,7 +61,7 @@ namespace TestMinecraftServerApplication
             {
                 if (obj is LivingEntity livingEntity && ReferenceEquals(_Owner, obj) == false)
                 {
-                    livingEntity.Damage(0.1F);
+                    livingEntity.Damage(0.1F, null);
                 }
             }
         }

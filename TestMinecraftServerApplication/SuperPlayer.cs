@@ -65,13 +65,19 @@ namespace TestMinecraftServerApplication
             Dispose(false);
         }
 
-        protected override void OnDisconnected()
+        protected override void OnDespawn(PhysicsWorld _world)
         {
+            System.Diagnostics.Debug.Assert(_world != null);
+
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
-            System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-            SuperWorld.GameContext.RemovePlayer(UserId);
+            if (_world is SuperWorld world)
+            {
+                System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+                SuperWorld.GameContext.RemovePlayer(UserId);
+            }
+
         }
 
         private double GenerateRandomValueBetween(double min, double max)
@@ -120,7 +126,7 @@ namespace TestMinecraftServerApplication
                     Time.Now() - _worldBorderOutsideDamage_startTime > WorldBorderOutsideDamageInterval
                     )
                 {
-                    Damage(3.2390842905234);
+                    Damage(3.2390842905234, null);
                     world.PlaySound("entity.player.hurt", 7, Position, 0.5, 1.0);
                     _worldBorderOutsideDamage_startTime = Time.Now();
                 }
@@ -303,7 +309,7 @@ namespace TestMinecraftServerApplication
 
             if (obj != null && obj is LivingEntity livingEntity)
             {
-                (bool damaged, double health) = livingEntity.Damage(damage);
+                (bool damaged, double health) = livingEntity.Damage(damage, this);
 
                 //MyConsole.Debug("Attack!");
 
@@ -374,7 +380,7 @@ namespace TestMinecraftServerApplication
 
             if (obj != null && obj is LivingEntity livingEntity)
             {
-                (bool damaged, double health) = livingEntity.Damage(damage);
+                (bool damaged, double health) = livingEntity.Damage(damage, this);
 
                 System.Diagnostics.Debug.Assert(health >= 0.0);
                 if (
@@ -446,7 +452,7 @@ namespace TestMinecraftServerApplication
 
             if (obj != null && obj is LivingEntity livingEntity)
             {
-                (bool damaged, double health) = livingEntity.Damage(damage);
+                (bool damaged, double health) = livingEntity.Damage(damage, this);
 
                 System.Diagnostics.Debug.Assert(health >= 0.0);
                 if (
@@ -489,7 +495,7 @@ namespace TestMinecraftServerApplication
             {
                 if (obj is LivingEntity livingEntity)
                 {
-                    (bool damaged, double health) = livingEntity.Damage(BlastCore.Damage);
+                    (bool damaged, double health) = livingEntity.Damage(BlastCore.Damage, this);
 
                     System.Diagnostics.Debug.Assert(health >= 0.0);
                     if (
@@ -609,7 +615,7 @@ namespace TestMinecraftServerApplication
 
             if (obj != null && obj is LivingEntity livingEntity)
             {
-                (bool damaged, double health) = livingEntity.Damage(damage);
+                (bool damaged, double health) = livingEntity.Damage(damage, this);
 
                 System.Diagnostics.Debug.Assert(health >= 0.0);
                 if (
@@ -736,7 +742,7 @@ namespace TestMinecraftServerApplication
 
                 if (object.ReferenceEquals(this, player) == false)
                 {
-                    player.Damage(EclipseCrystal.Damage);
+                    player.Damage(EclipseCrystal.Damage, this);
                 }
             }
 
@@ -860,25 +866,25 @@ namespace TestMinecraftServerApplication
          * If not use HealFully method after death, the method OnDeath is called everytime...
          * Bacause the health is zero if not heal fully after death.
          */
-        protected override void OnDeath(PhysicsWorld world)
-        {
-            System.Diagnostics.Debug.Assert(world != null);
+        //protected override void OnDeath(PhysicsWorld world)
+        //{
+        //    System.Diagnostics.Debug.Assert(world != null);
 
-            System.Diagnostics.Debug.Assert(_disposed == false);
+        //    System.Diagnostics.Debug.Assert(_disposed == false);
 
-            HealFully();
+        //    HealFully();
 
-            if (SuperWorld.GameContext.IsStarted == false)
-            {
-                return;
-            }
+        //    if (SuperWorld.GameContext.IsStarted == false)
+        //    {
+        //        return;
+        //    }
 
-            SwitchGamemode(Gamemode.Spectator);
+        //    SwitchGamemode(Gamemode.Spectator);
 
-            System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
-            System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-            SuperWorld.GameContext.HandleDeathEvent(UserId);
-        }
+        //    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+        //    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
+        //    SuperWorld.GameContext.HandleDeathEvent(UserId);
+        //}
 
         protected override void Dispose(bool disposing)
         {

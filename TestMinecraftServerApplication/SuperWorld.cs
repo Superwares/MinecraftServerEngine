@@ -78,7 +78,7 @@ namespace TestMinecraftServerApplication
             return true;
         }
 
-        protected override bool DetermineToDespawnPlayerOnDisconnect()
+        protected override bool CanDespawnPlayerOnDisconnect()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
