@@ -410,17 +410,21 @@ namespace MinecraftServerEngine
             InventorySlot slot;
 
             using Queue<InventorySlot> slots = new();
+            using Queue<InventorySlot> emptySlots = new();
 
             int _preMovedCount;
             int _preRemainingCount = count;
 
-            for (int i = 0; i < PrimarySlotCount && _preRemainingCount > 0; ++i)
+            for (int i = 0; i < PrimarySlotCount; ++i)
             {
+                System.Diagnostics.Debug.Assert(_preRemainingCount > 0);
+
                 slot = GetPrimarySlot(i);
                 System.Diagnostics.Debug.Assert(slot != null);
 
                 if (slot.Empty == true)
                 {
+                    emptySlots.Enqueue(slot);
                     continue;
                 }
 
@@ -438,42 +442,21 @@ namespace MinecraftServerEngine
                 {
                     break;
                 }
+
             }
 
-
-            for (int i = 0; i < PrimarySlotCount && _preRemainingCount > 0; ++i)
-            {
-                slot = GetPrimarySlot(i);
-                System.Diagnostics.Debug.Assert(slot != null);
-
-                if (slot.Empty == false)
-                {
-                    continue;
-                }
-
-                _preMovedCount = slot.PreMove(item, _preRemainingCount);
-
-                if (_preRemainingCount == _preMovedCount)
-                {
-                    continue;
-                }
-
-                _preRemainingCount = _preMovedCount;
-                slots.Enqueue(slot);
-
-                if (_preRemainingCount == 0)
-                {
-                    break;
-                }
-            }
-
-            if (_preRemainingCount > 0)
+            if (
+                _preRemainingCount > 0 && 
+                _preRemainingCount > (emptySlots.Length * item.MaxCount)
+                )
             {
                 return false;
             }
 
             while (slots.Empty == false)
             {
+                System.Diagnostics.Debug.Assert(count > 0);
+
                 slot = slots.Dequeue();
 
                 count = slot.Move(item, count);
@@ -485,7 +468,22 @@ namespace MinecraftServerEngine
                 }
             }
 
+            while (count > 0 && emptySlots.Empty == false)
+            {
+                slot = emptySlots.Dequeue();
+
+                count = slot.Move(item, count);
+
+                System.Diagnostics.Debug.Assert(count >= 0);
+                if (count == 0)
+                {
+                    break;
+                }
+            }
+
             System.Diagnostics.Debug.Assert(count == 0);
+
+            slots.Flush();
 
             return true;
         }
@@ -1220,7 +1218,7 @@ namespace MinecraftServerEngine
             return slot.DropFull();
         }
 
-  
+
         internal void WriteMainHandData(MinecraftProtocolDataStream buffer)
         {
             System.Diagnostics.Debug.Assert(buffer != null);

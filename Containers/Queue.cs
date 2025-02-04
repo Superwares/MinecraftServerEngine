@@ -19,8 +19,8 @@ namespace Containers
 
         protected Node _outNode = null, _inNode = null;
 
-        private int _count = 0;
-        public int Count
+        private int _length = 0;
+        public int Length
         {
             get
             {
@@ -29,11 +29,11 @@ namespace Containers
                     throw new System.ObjectDisposedException(GetType().Name);
                 }
 
-                return _count;
+                return _length;
             }
         }
 
-        public bool Empty => (_count == 0);
+        public bool Empty => (_length == 0);
 
         public Queue() { }
 
@@ -58,7 +58,7 @@ namespace Containers
 
             Node newNode = new(value);
 
-            if (_count == 0)
+            if (_length == 0)
             {
                 System.Diagnostics.Debug.Assert(_outNode == null);
                 System.Diagnostics.Debug.Assert(_inNode == null);
@@ -74,7 +74,7 @@ namespace Containers
                 _inNode = newNode;
             }
 
-            _count++;
+            _length++;
         }
 
         /// <summary>
@@ -89,7 +89,7 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            if (_count == 0)
+            if (_length == 0)
             {
                 throw new EmptyContainerException();
             }
@@ -98,17 +98,17 @@ namespace Containers
             System.Diagnostics.Debug.Assert(_outNode != null);
             T value = _outNode.Value;
 
-            if (_count == 1)
+            if (_length == 1)
             {
                 _inNode = _outNode = null;
             }
             else
             {
-                System.Diagnostics.Debug.Assert(_count > 1);
+                System.Diagnostics.Debug.Assert(_length > 1);
                 _outNode = _outNode.NextNode;
             }
 
-            --_count;
+            --_length;
 
             System.Diagnostics.Debug.Assert(value != null);
             return value;
@@ -121,7 +121,7 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            if (_count == 0)
+            if (_length == 0)
             {
                 value = default;
                 return false;
@@ -131,17 +131,17 @@ namespace Containers
             System.Diagnostics.Debug.Assert(_outNode != null);
             value = _outNode.Value;
 
-            if (_count == 1)
+            if (_length == 1)
             {
                 _inNode = _outNode = null;
             }
             else
             {
-                System.Diagnostics.Debug.Assert(_count > 1);
+                System.Diagnostics.Debug.Assert(_length > 1);
                 _outNode = _outNode.NextNode;
             }
 
-            --_count;
+            --_length;
 
             System.Diagnostics.Debug.Assert(value != null);
             return true;
@@ -154,7 +154,7 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            if (_count == 0)
+            if (_length == 0)
             {
                 value = defaultValue;
                 return;
@@ -164,17 +164,17 @@ namespace Containers
             System.Diagnostics.Debug.Assert(_outNode != null);
             value = _outNode.Value;
 
-            if (_count == 1)
+            if (_length == 1)
             {
                 _inNode = _outNode = null;
             }
             else
             {
-                System.Diagnostics.Debug.Assert(_count > 1);
+                System.Diagnostics.Debug.Assert(_length > 1);
                 _outNode = _outNode.NextNode;
             }
 
-            --_count;
+            --_length;
 
             return;
         }
@@ -186,7 +186,7 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            if (_count == 0)
+            if (_length == 0)
             {
                 return [];
             }
@@ -194,11 +194,11 @@ namespace Containers
             System.Diagnostics.Debug.Assert(_inNode != null);
             System.Diagnostics.Debug.Assert(_outNode != null);
 
-            T[] values = new T[_count];
+            T[] values = new T[_length];
 
             Node node = _outNode;
 
-            for (int i = 0; i < _count; ++i)
+            for (int i = 0; i < _length; ++i)
             {
                 System.Diagnostics.Debug.Assert(node != null);
                 values[i] = node.Value;
@@ -208,7 +208,7 @@ namespace Containers
 
             _inNode = null;
             _outNode = null;
-            _count = 0;
+            _length = 0;
 
             return values;
         }
@@ -220,7 +220,7 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            if (_count == 0)
+            if (_length == 0)
             {
                 yield break;
             }

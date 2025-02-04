@@ -674,8 +674,8 @@ namespace MinecraftPrimitives
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            int count = Visitors.Count;
-            System.Diagnostics.Debug.Assert(count == LevelQueue.Count);
+            int count = Visitors.Length;
+            System.Diagnostics.Debug.Assert(count == LevelQueue.Length);
             if (count == 0) return 0;
 
             bool close, success;
@@ -967,7 +967,7 @@ namespace MinecraftPrimitives
 
             }
 
-            return Visitors.Count;
+            return Visitors.Length;
         }
 
         public void StartRoutine()

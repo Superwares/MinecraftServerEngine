@@ -63,7 +63,7 @@ namespace MinecraftServerEngine
                         Queue<T> queue = GetQueueForDequeue();
 
                         System.Diagnostics.Debug.Assert(queue != null);
-                        return queue.Count;
+                        return queue.Length;
                     }
                 }
                 public bool EmptyForDequeue => (CountForDequeue == 0);

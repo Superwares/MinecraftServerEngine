@@ -162,6 +162,8 @@ If disposable objects were used as members of class and struct, they must be dis
 
 - queue 에 배열을 넣으면 그대로 enqueue 되도록.
 
+- data sturucture 의 Count -> Length
+
 ### Done 
 
 - DetermineToDespawnPlayerOnDisconnect 가 동적으로 적용되나 테스트해야됨.
