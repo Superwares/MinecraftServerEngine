@@ -2,7 +2,7 @@
 using Common;
 using MinecraftServerEngine.Physics;
 
-namespace MinecraftServerEngine
+namespace MinecraftServerEngine.Blocks
 {
 
     internal readonly struct ChunkGrid : System.IEquatable<ChunkGrid>
@@ -91,9 +91,9 @@ namespace MinecraftServerEngine
 
         public readonly bool Contains(ChunkLocation p)
         {
-            return (
+            return
                 p.X <= Max.X && p.X >= Min.X &&
-                p.Z <= Max.Z && p.Z >= Min.Z);
+                p.Z <= Max.Z && p.Z >= Min.Z;
         }
 
         public readonly AxisAlignedBoundingBox GetMinBoundingBox()
@@ -131,7 +131,7 @@ namespace MinecraftServerEngine
 
         public readonly bool Equals(ChunkGrid other)
         {
-            return (Max.Equals(other.Max) && Min.Equals(other.Min));
+            return Max.Equals(other.Max) && Min.Equals(other.Min);
         }
 
     }

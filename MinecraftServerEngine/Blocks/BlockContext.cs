@@ -3,7 +3,6 @@
 using Common;
 using Containers;
 
-using MinecraftServerEngine;
 using MinecraftServerEngine.NBT;
 using MinecraftServerEngine.Protocols;
 using MinecraftServerEngine.Physics;
@@ -16,13 +15,18 @@ namespace MinecraftServerEngine.Blocks
 
         private sealed class ChunkData : System.IDisposable
         {
+
+            public const int BlocksPerWidth = MinecraftUnits.BlocksInChunkWidth;
+            public const int BlocksPerHeight = MinecraftUnits.BlocksInChunkHeight;
+            public const int SectionCount = MinecraftUnits.ChunkSectionsInChunkHeight;
+
             private sealed class SectionData : System.IDisposable
             {
                 private bool _disposed = false;
 
                 public const int BlocksPerWidth = ChunkData.BlocksPerWidth;
-                public const int BlocksPerHeight = ChunkData.BlocksPerHeight / SectionCount;
-                public const int TotalBlockCount = BlocksPerWidth * BlocksPerWidth * BlocksPerHeight;
+                public const int BlocksPerHeight = MinecraftUnits.BlocksInChunkSectionHeight;
+                public const int TotalBlockCount = MinecraftUnits.BlocksInChunkSection;
 
                 public const byte MaxBitsPerBlock = 13;
                 public const int MaxMetadataBits = 4;
@@ -248,7 +252,7 @@ namespace MinecraftServerEngine.Blocks
 
                 public int GetId(int x, int y, int z)
                 {
-                    System.Diagnostics.Debug.Assert(!_disposed);
+                    System.Diagnostics.Debug.Assert(_disposed == false);
 
                     System.Diagnostics.Debug.Assert(x >= 0 && x <= BlocksPerWidth);
                     System.Diagnostics.Debug.Assert(z >= 0 && z <= BlocksPerWidth);
@@ -293,7 +297,7 @@ namespace MinecraftServerEngine.Blocks
 
                 private void ExpandData(byte bitsPerBlock)
                 {
-                    System.Diagnostics.Debug.Assert(!_disposed);
+                    System.Diagnostics.Debug.Assert(_disposed == false);
 
                     System.Diagnostics.Debug.Assert(_palette != null);
                     System.Diagnostics.Debug.Assert(bitsPerBlock > _bitsPerBlock);
@@ -420,7 +424,7 @@ namespace MinecraftServerEngine.Blocks
 
                 private ulong MakeValue(int id)
                 {
-                    System.Diagnostics.Debug.Assert(!_disposed);
+                    System.Diagnostics.Debug.Assert(_disposed == false);
 
                     ulong value;
 
@@ -522,7 +526,7 @@ namespace MinecraftServerEngine.Blocks
 
                 public void SetId(int x, int y, int z, int id)
                 {
-                    System.Diagnostics.Debug.Assert(!_disposed);
+                    System.Diagnostics.Debug.Assert(_disposed == false);
 
                     System.Diagnostics.Debug.Assert(x >= 0 && x <= BlocksPerWidth);
                     System.Diagnostics.Debug.Assert(y >= 0 && y <= BlocksPerHeight);
@@ -548,7 +552,7 @@ namespace MinecraftServerEngine.Blocks
                 public void Dispose()
                 {
                     // Assertion.
-                    System.Diagnostics.Debug.Assert(!_disposed);
+                    System.Diagnostics.Debug.Assert(_disposed == false);
 
                     // Release resources.
                     _palette = null;
@@ -564,11 +568,6 @@ namespace MinecraftServerEngine.Blocks
 
 
             }
-
-            public const int BlocksPerWidth = ChunkLocation.BlocksPerWidth;
-
-            public const int BlocksPerHeight = ChunkLocation.BlocksPerHeight;
-            public const int SectionCount = 16;
 
             private bool _disposed = false;
 
@@ -665,7 +664,7 @@ namespace MinecraftServerEngine.Blocks
 
             public void SetId(int defaultId, int x, int y, int z, int id)
             {
-                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_disposed == false);
 
                 System.Diagnostics.Debug.Assert(x >= 0 && x < BlocksPerWidth);
                 System.Diagnostics.Debug.Assert(z >= 0 && z < BlocksPerWidth);
@@ -695,7 +694,7 @@ namespace MinecraftServerEngine.Blocks
 
             public int GetId(int defaultId, int x, int y, int z)
             {
-                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_disposed == false);
 
                 System.Diagnostics.Debug.Assert(x >= 0 && x < BlocksPerWidth);
                 System.Diagnostics.Debug.Assert(z >= 0 && z < BlocksPerWidth);
@@ -726,7 +725,7 @@ namespace MinecraftServerEngine.Blocks
             public void Dispose()
             {
                 // Assertion.
-                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_disposed == false);
 
                 // Release resources.
                 for (int i = 0; i < _sections.Length; ++i)
@@ -798,10 +797,10 @@ namespace MinecraftServerEngine.Blocks
                     //MyConsole.Debug($"Valid filename: {name}");
                     //MyConsole.Debug($"regionX = {regionX}, regionZ = {regionZ}");
 
-                    int chunkX_min = regionX * MinecraftConstants.ChunksPerRegion;
-                    int chunkZ_min = regionZ * MinecraftConstants.ChunksPerRegion;
-                    int chunkX_max = chunkX_min + MinecraftConstants.ChunksPerRegion - 1;
-                    int chunkZ_max = chunkZ_min + MinecraftConstants.ChunksPerRegion - 1;
+                    int chunkX_min = regionX * MinecraftUnits.ChunkSectionsInRegionWidth;
+                    int chunkZ_min = regionZ * MinecraftUnits.ChunkSectionsInRegionWidth;
+                    int chunkX_max = chunkX_min + MinecraftUnits.ChunkSectionsInRegionWidth - 1;
+                    int chunkZ_max = chunkZ_min + MinecraftUnits.ChunkSectionsInRegionWidth - 1;
 
                     for (int chunkX = chunkX_min; chunkX <= chunkX_max; ++chunkX)
                     {
@@ -866,29 +865,15 @@ namespace MinecraftServerEngine.Blocks
 
         ~BlockContext() => System.Diagnostics.Debug.Assert(false);
 
-        //public BlockContext() 
-        //{
-        //    // Dummy code.
-        //    for (int z = -10; z <= 10; ++z)
-        //    {
-        //        for (int x = -10; x <= 10; ++x)
-        //        {
-        //            BlockLocation loc = new(x, 100, z);
-
-        //            SetBlock(loc, Blocks.Stone);
-        //        }
-        //    }
-        //}
-
         private ChunkLocation BlockToChunk(BlockLocation loc)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
-            int x = loc.X / ChunkLocation.BlocksPerWidth,
-                z = loc.Z / ChunkLocation.BlocksPerWidth;
+            int x = loc.X / MinecraftUnits.BlocksInChunkWidth;
+            int z = loc.Z / MinecraftUnits.BlocksInChunkWidth;
 
-            double r1 = loc.X % (double)ChunkLocation.BlocksPerWidth,
-                   r2 = loc.Z % (double)ChunkLocation.BlocksPerWidth;
+            double r1 = loc.X % (double)MinecraftUnits.BlocksInChunkWidth,
+                   r2 = loc.Z % (double)MinecraftUnits.BlocksInChunkWidth;
             if (r1 < 0.0D)
             {
                 --x;
@@ -903,12 +888,12 @@ namespace MinecraftServerEngine.Blocks
 
         private void SetBlock(BlockLocation loc, Block block)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             ChunkData chunk;
 
             ChunkLocation locChunk = BlockToChunk(loc);
-            if (!Chunks.Contains(locChunk))
+            if (Chunks.Contains(locChunk) == false)
             {
                 if (block == DefaultBlock)
                 {
@@ -923,9 +908,9 @@ namespace MinecraftServerEngine.Blocks
                 chunk = Chunks.Lookup(locChunk);
             }
 
-            int x = loc.X - locChunk.X * ChunkLocation.BlocksPerWidth,
+            int x = loc.X - (locChunk.X * MinecraftUnits.BlocksInChunkWidth),
                 y = loc.Y,
-                z = loc.Z - locChunk.Z * ChunkLocation.BlocksPerWidth;
+                z = loc.Z - (locChunk.Z * MinecraftUnits.BlocksInChunkWidth);
             chunk.SetId(DefaultBlock.GetId(), x, y, z, block.GetId());
         }
 
@@ -937,16 +922,16 @@ namespace MinecraftServerEngine.Blocks
             }
 
             ChunkLocation locChunk = BlockToChunk(loc);
-            if (!Chunks.Contains(locChunk))
+            if (Chunks.Contains(locChunk) == false)
             {
                 return DefaultBlock;
             }
 
 
             ChunkData chunk = Chunks.Lookup(locChunk);
-            int x = loc.X - locChunk.X * ChunkLocation.BlocksPerWidth,
+            int x = loc.X - (locChunk.X * MinecraftUnits.BlocksInChunkWidth),
                 y = loc.Y,
-                z = loc.Z - locChunk.Z * ChunkLocation.BlocksPerWidth;
+                z = loc.Z - (locChunk.Z * MinecraftUnits.BlocksInChunkWidth);
             int id = chunk.GetId(DefaultBlock.GetId(), x, y, z);
 
             int defaultBlockId = DefaultBlock.GetId();
@@ -1009,7 +994,7 @@ namespace MinecraftServerEngine.Blocks
         {
             System.Diagnostics.Debug.Assert(queue != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             Vector min = loc.GetMinVector(),
                    max = loc.GetMaxVector();
@@ -1024,15 +1009,20 @@ namespace MinecraftServerEngine.Blocks
         {
             System.Diagnostics.Debug.Assert(queue != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(block.GetShape() == BlockShape.Slab);
 
             Vector _min = loc.GetMinVector(),
                    _max = loc.GetMaxVector();
 
-            Vector min = block.IsBottomSlab() == true ? _min : new(_min.X, _min.Y + BlockWidth / 2.0, _min.Z),
-                max = block.IsBottomSlab() == true ? new(_max.X, _max.Y - BlockWidth / 2.0, _max.Z) : _max;
+            Vector min = block.IsBottomSlab() == true
+                ? _min
+                : new(_min.X, _min.Y + MinecraftUnits.BlockWidth / 2.0, _min.Z);
+            Vector max = block.IsBottomSlab() == true 
+                ? new(_max.X, _max.Y - MinecraftUnits.BlockWidth / 2.0, _max.Z) 
+                : _max;
+
             AxisAlignedBoundingBox aabb = new(max, min);
 
             queue.Enqueue(aabb);
@@ -1112,7 +1102,7 @@ namespace MinecraftServerEngine.Blocks
         {
             System.Diagnostics.Debug.Assert(queue != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             (BlockDirection d, bool bottom, int b) = DetermineStairsBlockShape(loc, block);
 
@@ -1124,7 +1114,7 @@ namespace MinecraftServerEngine.Blocks
         {
             System.Diagnostics.Debug.Assert(queue != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             Vector min = loc.GetMinVector(),
                    _max = loc.GetMaxVector();
@@ -1136,47 +1126,54 @@ namespace MinecraftServerEngine.Blocks
         }
 
         protected override void GenerateBoundingBoxForBlock(
-            Queue<AxisAlignedBoundingBox> queue, BlockLocation loc)
+            Queue<AxisAlignedBoundingBox> queue,
+            AxisAlignedBoundingBox volume)
         {
             System.Diagnostics.Debug.Assert(queue != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
-            Block block = GetBlock(loc);
+            BlockGrid grid = BlockGrid.Generate(volume);
 
-            switch (block.GetShape())
+            foreach (BlockLocation loc in grid.GetBlockLocations())
             {
-                default:
-                    throw new System.NotImplementedException();
-                case BlockShape.None:
-                    break;
-                case BlockShape.Cube:
-                    GenerateBoundingBoxForCubeBlock(queue, loc);
-                    break;
-                case BlockShape.Slab:
-                    GenerateBoundingBoxForSlabBlock(queue, loc, block);
-                    break;
-                case BlockShape.Stairs:
-                    //GenerateBoundingBoxForStairsBlock(queue, loc, block);
-                    break;
-                case BlockShape.Fence:
-                    // TODO
-                    break;
-                case BlockShape.Bars:
-                    // TODO
-                    break;
-                case BlockShape.Wall:
-                    // TODO
-                    break;
-                case BlockShape.Carpet:
-                    GenerateBoundingBoxForCarpetBlock(queue, loc);
-                    break;
+                Block block = GetBlock(loc);
+
+                switch (block.GetShape())
+                {
+                    default:
+                        throw new System.NotImplementedException();
+                    case BlockShape.None:
+                        break;
+                    case BlockShape.Cube:
+                        GenerateBoundingBoxForCubeBlock(queue, loc);
+                        break;
+                    case BlockShape.Slab:
+                        GenerateBoundingBoxForSlabBlock(queue, loc, block);
+                        break;
+                    case BlockShape.Stairs:
+                        //GenerateBoundingBoxForStairsBlock(queue, loc, block);
+                        break;
+                    case BlockShape.Fence:
+                        // TODO
+                        break;
+                    case BlockShape.Bars:
+                        // TODO
+                        break;
+                    case BlockShape.Wall:
+                        // TODO
+                        break;
+                    case BlockShape.Carpet:
+                        GenerateBoundingBoxForCarpetBlock(queue, loc);
+                        break;
+                }
             }
+            
         }
 
         internal (int, byte[]) GetChunkData(ChunkLocation loc)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (Chunks.Contains(loc))
             {

@@ -2,28 +2,27 @@
 
 using Common;
 
-
 using MinecraftServerEngine.Physics;
 
-namespace MinecraftServerEngine
+namespace MinecraftServerEngine.Blocks
 {
     internal readonly struct ChunkLocation : System.IEquatable<ChunkLocation>
     {
-        public const int BlocksPerWidth = MinecraftConstants.BlocksPerChunk;
+        //public const int BlocksPerWidth = MinecraftConstants.BlocksInChunkWidth;
 
         // TODO: Integrate with physics world's cell width. They must be same.
-        public const double Width = Terrain.BlockWidth * BlocksPerWidth;
+        //public const double Width = Terrain.BlockWidth * BlocksPerWidth;
 
-        public const int BlocksPerHeight = MinecraftConstants.BlocksPerChunk * MinecraftConstants.BlocksPerChunk;
-        public const double Height = Terrain.BlockHeight * BlocksPerHeight;
+        //public const int BlocksPerHeight = MinecraftConstants.BlocksInChunkWidth * MinecraftConstants.BlocksInChunkWidth;
+        //public const double Height = Terrain.BlockHeight * BlocksPerHeight;
 
         public static ChunkLocation Generate(Vector p)
         {
-            int x = (int)(p.X / Width),
-                z = (int)(p.Z / Width);
+            int x = (int)(p.X / MinecraftUnits.ChunkWidth),
+                z = (int)(p.Z / MinecraftUnits.ChunkWidth);
 
-            double r1 = p.X % Width,
-                   r2 = p.Z % Width;
+            double r1 = p.X % MinecraftUnits.ChunkWidth,
+                   r2 = p.Z % MinecraftUnits.ChunkWidth;
             if (r1 < 0.0D)
             {
                 --x;
@@ -65,17 +64,17 @@ namespace MinecraftServerEngine
 
         public readonly Vector GetMinVector()
         {
-            double x = (double)X * Width,
+            double x = X * MinecraftUnits.ChunkWidth,
                 y = 0.0D,
-                z = (double)Z * Width;
+                z = Z * MinecraftUnits.ChunkWidth;
             return new(x, y, z);
         }
 
         public readonly Vector GetMaxVector()
         {
-            double x = ((double)X * Width) + Width,
-                y = (double)Height,
-                z = ((double)Z * Width) + Width;
+            double x = X * MinecraftUnits.ChunkWidth + MinecraftUnits.ChunkWidth,
+                y = MinecraftUnits.ChunkHeight,
+                z = Z * MinecraftUnits.ChunkWidth + MinecraftUnits.ChunkWidth;
             return new(x, y, z);
         }
 
@@ -86,7 +85,7 @@ namespace MinecraftServerEngine
 
         public readonly bool Equals(ChunkLocation other)
         {
-            return (X == other.X) && (Z == other.Z);
+            return X == other.X && Z == other.Z;
         }
 
     }

@@ -1,8 +1,7 @@
-﻿
+﻿using MinecraftServerEngine.Physics;
 
 namespace MinecraftServerEngine.Blocks
 {
-    using Physics;
 
     public readonly struct BlockLocation : System.IEquatable<BlockLocation>
     {
@@ -12,9 +11,9 @@ namespace MinecraftServerEngine.Blocks
                 y = (int)p.Y,
                 z = (int)p.Z;
 
-            double r1 = p.X % Terrain.BlockWidth,
-                   r2 = p.Y % Terrain.BlockHeight,
-                   r3 = p.Z % Terrain.BlockWidth;
+            double r1 = p.X % MinecraftUnits.BlockWidth,
+                   r2 = p.Y % MinecraftUnits.BlockHeight,
+                   r3 = p.Z % MinecraftUnits.BlockWidth;
             if (r1 < 0.0D)
             {
                 --x;
@@ -50,9 +49,9 @@ namespace MinecraftServerEngine.Blocks
 
         public readonly Vector GetMaxVector()
         {
-            double x = X + Terrain.BlockWidth,
-                y = Y + Terrain.BlockHeight,
-                z = Z + Terrain.BlockWidth;
+            double x = X + MinecraftUnits.BlockWidth,
+                y = Y + MinecraftUnits.BlockHeight,
+                z = Z + MinecraftUnits.BlockWidth;
             return new(x, y, z);
         }
 

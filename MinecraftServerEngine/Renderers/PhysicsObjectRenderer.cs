@@ -3,6 +3,7 @@ using Containers;
 
 using MinecraftServerEngine.Protocols;
 using MinecraftServerEngine.Physics;
+using MinecraftServerEngine.Blocks;
 
 namespace MinecraftServerEngine.Renderers
 {
