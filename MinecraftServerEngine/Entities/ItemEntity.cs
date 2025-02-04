@@ -2,7 +2,7 @@
 
 using MinecraftServerEngine.Items;
 using MinecraftServerEngine.Renderers;
-using MinecraftServerEngine.PhysicsEngine;
+using MinecraftServerEngine.Physics;
 
 namespace MinecraftServerEngine.Entities
 {

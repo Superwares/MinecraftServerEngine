@@ -1,6 +1,6 @@
 ﻿
 
-namespace MinecraftServerEngine.PhysicsEngine
+namespace MinecraftServerEngine.Physics
 {
     internal static class Collisions
     {

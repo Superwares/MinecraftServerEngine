@@ -1,6 +1,6 @@
 ﻿
 using Common;
-using MinecraftServerEngine.PhysicsEngine;
+using MinecraftServerEngine.Physics;
 
 namespace MinecraftServerEngine
 {

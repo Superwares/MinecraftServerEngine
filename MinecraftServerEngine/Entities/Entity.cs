@@ -5,7 +5,7 @@ using Containers;
 
 using MinecraftServerEngine.Blocks;
 using MinecraftServerEngine.Renderers;
-using MinecraftServerEngine.PhysicsEngine;
+using MinecraftServerEngine.Physics;
 
 namespace MinecraftServerEngine.Entities
 {

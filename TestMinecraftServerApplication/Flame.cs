@@ -1,7 +1,7 @@
 ﻿using Common;
 using Containers;
 using MinecraftServerEngine.Entities;
-using MinecraftServerEngine.PhysicsEngine;
+using MinecraftServerEngine.Physics;
 
 namespace TestMinecraftServerApplication
 {

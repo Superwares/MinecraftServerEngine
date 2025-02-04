@@ -6,7 +6,7 @@ using Containers;
 using MinecraftServerEngine;
 using MinecraftServerEngine.NBT;
 using MinecraftServerEngine.Protocols;
-using MinecraftServerEngine.PhysicsEngine;
+using MinecraftServerEngine.Physics;
 
 namespace MinecraftServerEngine.Blocks
 {

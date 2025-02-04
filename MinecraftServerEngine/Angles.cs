@@ -2,7 +2,7 @@
 
 namespace MinecraftServerEngine
 {
-    using PhysicsEngine;
+    using Physics;
 
     public readonly struct Angles : System.IEquatable<Angles>
     {

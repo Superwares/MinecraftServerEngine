@@ -11,7 +11,7 @@ namespace MinecraftServerEngine
     using Protocols;
     using Items;
     using Renderers;
-    using PhysicsEngine;
+    using Physics;
 
     internal sealed class Connection : System.IDisposable
     {

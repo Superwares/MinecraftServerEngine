@@ -2,7 +2,7 @@
 
 namespace MinecraftServerEngine.Blocks
 {
-    using PhysicsEngine;
+    using Physics;
 
     public readonly struct BlockLocation : System.IEquatable<BlockLocation>
     {

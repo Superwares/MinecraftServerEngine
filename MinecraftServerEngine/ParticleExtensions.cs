@@ -1,6 +1,6 @@
 ﻿namespace MinecraftServerEngine
 {
-    using PhysicsEngine;
+    using Physics;
 
     internal static class ParticleExtensions
     {

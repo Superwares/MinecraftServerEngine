@@ -4,7 +4,7 @@ using Containers;
 using MinecraftServerEngine;
 using MinecraftServerEngine.Blocks;
 using MinecraftServerEngine.Inventories;
-using MinecraftServerEngine.PhysicsEngine;
+using MinecraftServerEngine.Physics;
 using MinecraftServerEngine.Entities;
 using MinecraftServerEngine.Items;
 using MinecraftServerEngine.Protocols;

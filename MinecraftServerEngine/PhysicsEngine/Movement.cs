@@ -1,6 +1,0 @@
-﻿
-
-namespace MinecraftServerEngine.PhysicsEngine
-{
-    
-}

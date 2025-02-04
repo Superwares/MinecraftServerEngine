@@ -5,7 +5,7 @@ using Containers;
 using Sync;
 
 
-namespace MinecraftServerEngine.PhysicsEngine
+namespace MinecraftServerEngine.Physics
 {
     public abstract class PhysicsWorld : System.IDisposable
     {

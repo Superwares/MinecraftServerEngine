@@ -3,7 +3,7 @@ using Common;
 
 using MinecraftServerEngine;
 using MinecraftServerEngine.Entities;
-using MinecraftServerEngine.PhysicsEngine;
+using MinecraftServerEngine.Physics;
 using MinecraftServerEngine.Protocols;
 
 namespace TestMinecraftServerApplication

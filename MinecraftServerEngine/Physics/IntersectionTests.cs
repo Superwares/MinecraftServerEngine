@@ -2,7 +2,7 @@
 
 using Common;
 
-namespace MinecraftServerEngine.PhysicsEngine
+namespace MinecraftServerEngine.Physics
 {
     internal static class IntersectionTests
     {

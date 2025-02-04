@@ -5,11 +5,11 @@ using MinecraftServerEngine.Entities;
 using MinecraftServerEngine.Protocols;
 using MinecraftServerEngine.Blocks;
 using MinecraftServerEngine.Items;
-using MinecraftServerEngine.PhysicsEngine;
+using MinecraftServerEngine.Physics;
 
 namespace MinecraftServerEngine.Renderers
 {
-    internal sealed class EntityRenderer : ObjectRenderer
+    internal sealed class EntityRenderer : PhysicsObjectRenderer
     {
 
 

@@ -2,7 +2,7 @@
 using Common;
 
 using MinecraftServerEngine;
-using MinecraftServerEngine.PhysicsEngine;
+using MinecraftServerEngine.Physics;
 using TestMinecraftServerApplication;
 using TestMinecraftServerApplication.Configs;
 

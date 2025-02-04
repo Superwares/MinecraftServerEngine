@@ -3,7 +3,7 @@ using Common;
 using Containers;
 
 using MinecraftServerEngine.Renderers;
-using MinecraftServerEngine.PhysicsEngine;
+using MinecraftServerEngine.Physics;
 
 namespace MinecraftServerEngine.Entities
 {

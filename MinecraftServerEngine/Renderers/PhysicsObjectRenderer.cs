@@ -1,11 +1,12 @@
 ﻿using Common;
 using Containers;
+
 using MinecraftServerEngine.Protocols;
-using MinecraftServerEngine.PhysicsEngine;
+using MinecraftServerEngine.Physics;
 
 namespace MinecraftServerEngine.Renderers
 {
-    internal abstract class ObjectRenderer : Renderer
+    internal abstract class PhysicsObjectRenderer : Renderer
     {
         private bool _blindness;
 
@@ -19,7 +20,7 @@ namespace MinecraftServerEngine.Renderers
         private int _d = -1;
 
 
-        internal ObjectRenderer(
+        internal PhysicsObjectRenderer(
             ConcurrentQueue<ClientboundPlayingPacket> outPackets,
             ChunkLocation loc, int d, bool blindness)
             : base(outPackets)

@@ -2,7 +2,7 @@
 using Containers;
 
 using MinecraftServerEngine.Protocols;
-using MinecraftServerEngine.PhysicsEngine;
+using MinecraftServerEngine.Physics;
 
 namespace MinecraftServerEngine.Renderers
 {

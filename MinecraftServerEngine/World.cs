@@ -9,7 +9,7 @@ namespace MinecraftServerEngine
     using Blocks;
     using Entities;
     using Renderers;
-    using PhysicsEngine;
+    using Physics;
 
     public abstract class World : PhysicsWorld
     {

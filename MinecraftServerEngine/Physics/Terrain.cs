@@ -3,7 +3,7 @@ using Common;
 using Containers;
 using MinecraftServerEngine.Blocks;
 
-namespace MinecraftServerEngine.PhysicsEngine
+namespace MinecraftServerEngine.Physics
 {
     public abstract class Terrain : System.IDisposable
     {

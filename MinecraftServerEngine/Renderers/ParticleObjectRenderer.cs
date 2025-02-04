@@ -3,11 +3,11 @@ using Containers;
 using MinecraftServerEngine.Protocols;
 using MinecraftServerEngine.Blocks;
 using MinecraftServerEngine.Items;
-using MinecraftServerEngine.PhysicsEngine;
+using MinecraftServerEngine.Physics;
 
 namespace MinecraftServerEngine.Renderers
 {
-    internal sealed class ParticleObjectRenderer : ObjectRenderer
+    internal sealed class ParticleObjectRenderer : PhysicsObjectRenderer
     {
         public ParticleObjectRenderer(
             ConcurrentQueue<ClientboundPlayingPacket> outPackets,
