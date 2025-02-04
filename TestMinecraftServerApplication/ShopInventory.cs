@@ -192,6 +192,20 @@ namespace TestMinecraftServerApplication
                         ])
                     );
 
+                slots[offset + 6] = (
+                    true,
+                    ItemStack.Create(ChaosSwap.Item, ChaosSwap.DefaultCount, [
+                        $"",
+                        // This item triggers a random swap of positions with another player.
+                        $"이 아이템은 다른 플레이어와 위치를 무작위로 바꿉니다.",
+                        $"",
+                        // Left-click (Purchase)
+                        $"왼클릭(구매)          {ChaosSwap.PurchasePrice * Coin.DefaultCount} Coins",
+                        // Right-click (Sell)
+                        $"우클릭(판매)          {ChaosSwap.SellPrice * Coin.DefaultCount} Coins",
+                        ])
+                    );
+
                 slots[offset + 7] = (
                     true,
                     ItemStack.Create(EmergencyEscape.Item, EmergencyEscape.DefaultCount, [
@@ -323,6 +337,16 @@ namespace TestMinecraftServerApplication
                         taked = playerInventory.GiveAndTakeItemStacks(
                             Hint.Item, Hint.DefaultCount,
                             Coin.Item, Coin.DefaultCount * Hint.PurchasePrice);
+
+                        success = (taked != null);
+
+                    }
+                    break;
+                case ChaosSwap.Type:
+                    {
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                            ChaosSwap.Item, ChaosSwap.DefaultCount,
+                            Coin.Item, Coin.DefaultCount * ChaosSwap.PurchasePrice);
 
                         success = (taked != null);
 
@@ -549,6 +573,16 @@ namespace TestMinecraftServerApplication
                         taked = playerInventory.GiveAndTakeItemStacks(
                             Coin.Item, Coin.DefaultCount * Hint.SellPrice,
                             Hint.Item, Hint.DefaultCount);
+
+                        success = taked != null;
+
+                    }
+                    break;
+                case ChaosSwap.Type:
+                    {
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                            Coin.Item, Coin.DefaultCount * ChaosSwap.SellPrice,
+                            ChaosSwap.Item, ChaosSwap.DefaultCount);
 
                         success = taked != null;
 

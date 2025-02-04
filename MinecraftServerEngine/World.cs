@@ -374,14 +374,34 @@ namespace MinecraftServerEngine
 
         internal readonly ConcurrentTable<int, Entity> EntitiesById = new();  // Disposable
         internal readonly ConcurrentTable<UserId, AbstractPlayer> PlayersByUserId = new();  // Disposable
-        public System.Collections.Generic.IEnumerable<AbstractPlayer> AllPlayers
+        public int AllPlayers
         {
             get
             {
+                if (_disposed == true)
+                {
+                    throw new System.ObjectDisposedException(GetType().Name);
+                }
+
+                System.Diagnostics.Debug.Assert(PlayersByUserId != null);
+                return PlayersByUserId.Count;
+            }
+        }
+        public System.Collections.Generic.IEnumerable<AbstractPlayer> Players
+        {
+            get
+            {
+                if (_disposed == true)
+                {
+                    throw new System.ObjectDisposedException(GetType().Name);
+                }
+
                 System.Diagnostics.Debug.Assert(PlayersByUserId != null);
                 return PlayersByUserId.GetValues();
             }
         }
+
+
         internal readonly ConcurrentTable<string, AbstractPlayer> PlayersByUsername = new();  // Disposable
 
         internal readonly ConcurrentMap<UserId, WorldRenderer> WorldRenderersByUserId = new();  // Disposable

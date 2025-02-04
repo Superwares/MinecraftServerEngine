@@ -301,12 +301,15 @@ namespace MinecraftServerEngine
 
         Paper,                     // 339:0  minecraft:paper
 
+        RedstoneRepeater,          // 356:0  minecraft:repeater
 
         GoldNugget,                // 371:0  minecraft:gold_nugget
 
         EyeOfEnder,                // 381:0  minecraft:ender_eye
 
         PlayerSkull,               // 397:0  minecraft:skull
+
+        ArmorStand,                // 416:0  minecraft:armor_stand
 
         IronHorseArmor,            // 417:0  minecraft:iron_horse_armor
         GoldenHorseArmor,          // 418:0  minecraft:golden_horse_armor

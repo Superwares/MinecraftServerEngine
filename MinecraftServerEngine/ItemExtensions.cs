@@ -813,6 +813,10 @@ namespace MinecraftServerEngine
                     64),
 
                 new ItemContext(
+                    ItemType.RedstoneRepeater, 356, 0, "repeater",
+                    64),
+
+                new ItemContext(
                     ItemType.GoldNugget, 371, 0, "gold_nugget",
                     64),
                 new ItemContext(
@@ -821,6 +825,10 @@ namespace MinecraftServerEngine
                 new ItemContext(
                     ItemType.PlayerSkull, 397, 3, "skull",
                     64),
+
+                new ItemContext(
+                    ItemType.ArmorStand, 416, 0, "armor_stand",
+                    16),
 
                 new ItemContext(
                     ItemType.IronHorseArmor, 417, 0, "iron_horse_armor",

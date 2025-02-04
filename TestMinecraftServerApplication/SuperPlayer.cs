@@ -520,7 +520,7 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(takedItemStacks.Length > 0);
 
-            foreach (AbstractPlayer player in world.AllPlayers)
+            foreach (AbstractPlayer player in world.Players)
             {
                 System.Diagnostics.Debug.Assert(player != null);
 
@@ -536,6 +536,46 @@ namespace TestMinecraftServerApplication
                 player.EmitParticles(Particle.FireworksSpark, offset, 0.1, 100);
             }
 
+        }
+
+
+        private void UseChaosSwap(SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            ItemStack[] takedItemStacks = TakeItemStacks(ChaosSwap.Item, ChaosSwap.DefaultCount);
+            if (takedItemStacks == null)
+            {
+                return;
+            }
+
+            int i = 0;
+            AbstractPlayer[] targetPlayers = new AbstractPlayer[world.AllPlayers];
+
+            foreach (AbstractPlayer player in world.Players)
+            {
+                if (player.Gamemode != Gamemode.Adventure)
+                {
+                    continue;
+                }
+
+                targetPlayers[i++] = player;
+            }
+
+            if (i > 0)
+            {
+                System.Random random = new System.Random();
+                AbstractPlayer randomPlayer = targetPlayers[random.Next(i)];
+
+                randomPlayer.Teleport(Position, Look);
+                Teleport(randomPlayer.Position, randomPlayer.Look);
+
+                EmitParticles(Particle.InstantSpell, 0.1, 150);
+
+                world.PlaySound("entity.llama.swag", 0, Position, 0.5, 1.0);
+            }
+
+            
         }
 
 
@@ -669,6 +709,10 @@ namespace TestMinecraftServerApplication
                     case Hint.Type:
                         UseHint(world);
                         break;
+
+                    case ChaosSwap.Type:
+                        UseChaosSwap(world);
+                        break;
                 }
 
                 if (breaked == true)
@@ -701,7 +745,7 @@ namespace TestMinecraftServerApplication
                 Time.FromSeconds(1)
                 );
 
-            foreach (AbstractPlayer player in world.AllPlayers)
+            foreach (AbstractPlayer player in world.Players)
             {
                 Vector v = new(player.Position.X, player.Position.Y + player.GetEyeHeight(), player.Position.Z);
                 world.PlaySound("block.end_portal.spawn", 6, v, 1.0, 2.0);
@@ -806,6 +850,10 @@ namespace TestMinecraftServerApplication
                         break;
                     case Hint.Type:
                         UseHint(world);
+                        break;
+
+                    case ChaosSwap.Type:
+                        UseChaosSwap(world);
                         break;
                 }
             }

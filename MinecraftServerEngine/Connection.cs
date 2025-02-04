@@ -816,15 +816,15 @@ namespace MinecraftServerEngine
                         EntityRenderer.Update(locChunk);
                         ParticleObjectRenderer.Update(locChunk);
 
-                        if (player.Sneaking)
-                        {
-                            player.Unsneak(world);
-                        }
+                        //if (player.Sneaking)
+                        //{
+                        //    player.Unsneak(world);
+                        //}
 
-                        if (player.Sprinting)
-                        {
-                            player.Unsprint(world);
-                        }
+                        //if (player.Sprinting)
+                        //{
+                        //    player.Unsprint(world);
+                        //}
                     }
                     break;
                 case ServerboundPlayingPacket.ServerboundChatMessagePacketId:
@@ -1083,7 +1083,7 @@ namespace MinecraftServerEngine
                                 /*Console.Printl($"ActionId: {packet.ActionId}");*/
                                 throw new UnexpectedValueException("EntityAction.ActoinId");
                             case 0:
-                                /*Console.Print("Seanking!");*/
+                                //MyConsole.Debug("Seanking!");
                                 if (player.Sneaking)
                                 {
                                     throw new UnexpectedValueException("EntityActionPacket.ActionId");
@@ -1093,7 +1093,7 @@ namespace MinecraftServerEngine
 
                                 break;
                             case 1:
-                                /*Console.Print("Unseanking!");*/
+                                //MyConsole.Debug("Unseanking!");
                                 if (!player.Sneaking)
                                 {
                                     throw new UnexpectedValueException("EntityActionPacket.ActionId");

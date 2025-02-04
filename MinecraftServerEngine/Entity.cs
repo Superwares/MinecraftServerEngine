@@ -497,31 +497,30 @@ namespace MinecraftServerEngine
             }
         }
 
-        public virtual void Teleport(Vector p, Angles look)
-        {
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            LockerTeleport.Hold();
-
-            _teleported = true;
-            _pTeleport = p;
-
-            Rotate(look);
-
-            LockerTeleport.Release();
-        }
-
         internal void Rotate(Angles look)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(LockerTeleport != null);
             LockerRotate.Hold();
 
-            _rotated = true;
-            _look = look;
+            try
+            {
+                _rotated = true;
+                _look = look;
 
-            LockerRotate.Release();
+
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerTeleport != null);
+                LockerRotate.Release();
+            }
         }
+
+
+
+
 
         private void ChangeForms(bool sneaking, bool sprinting)
         {
@@ -537,6 +536,30 @@ namespace MinecraftServerEngine
             {
                 System.Diagnostics.Debug.Assert(renderer != null);
                 renderer.ChangeForms(Id, sneaking, sprinting);
+            }
+        }
+
+
+        // Entity's forms was reset after teleported in minecraft client...
+        private void ResetForms()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            return;
+
+            _sneaking = false;
+            _sprinting = false;
+
+            System.Diagnostics.Debug.Assert(Renderers != null);
+            if (Renderers.Empty == true)
+            {
+                return;
+            }
+
+            foreach (EntityRenderer renderer in Renderers.GetKeys())
+            {
+                System.Diagnostics.Debug.Assert(renderer != null);
+                renderer.ChangeForms(Id, _sneaking, _sprinting);
             }
         }
 
@@ -600,6 +623,28 @@ namespace MinecraftServerEngine
             ChangeForms(_sneaking, _sprinting);
         }
 
+        public virtual void Teleport(Vector p, Angles look)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(LockerTeleport != null);
+            LockerTeleport.Hold();
+
+            try
+            {
+                _teleported = true;
+                _pTeleport = p;
+
+                Rotate(look);
+
+                ResetForms();
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerTeleport != null);
+                LockerTeleport.Release();
+            }
+        }
         internal virtual void _Animate(EntityAnimation animation)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);

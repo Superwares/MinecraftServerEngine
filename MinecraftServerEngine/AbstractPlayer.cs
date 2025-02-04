@@ -577,18 +577,28 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            System.Diagnostics.Debug.Assert(LockerTeleport != null);
             LockerTeleport.Hold();
 
-            if (Connected == true)
+            try
             {
-                _pControl = p;
+                if (Connected == true)
+                {
+                    _pControl = p;
 
-                Conn.Teleport(p, look);
+                    System.Diagnostics.Debug.Assert(Conn != null);
+                    Conn.Teleport(p, look);
+                }
+
+                base.Teleport(p, look);
+
+
             }
-
-            base.Teleport(p, look);
-
-            LockerTeleport.Release();
+            finally
+            {
+                System.Diagnostics.Debug.Assert(LockerTeleport != null);
+                LockerTeleport.Release();
+            }
         }
 
         internal void ControlMovement(Vector p)
