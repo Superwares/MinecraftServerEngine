@@ -102,7 +102,7 @@ namespace MinecraftServerEngine.Entities
             double mass, double maxStepHeight)
             : base(p, mass, hitbox.Convert(p), new StepableMovement(maxStepHeight))
         {
-            Id = EntityIdAllocator.Alloc();
+            Id = EntityIdAllocator.Allocate();
             UniqueId = uniqueId;
 
             System.Diagnostics.Debug.Assert(!_rotated);
@@ -879,7 +879,7 @@ namespace MinecraftServerEngine.Entities
                 if (disposing == true)
                 {
                     // Dispose managed resources.
-                    EntityIdAllocator.Dealloc(Id);
+                    EntityIdAllocator.Deallocate(Id);
                     Renderers.Dispose();
 
                     LockerRotate.Dispose();

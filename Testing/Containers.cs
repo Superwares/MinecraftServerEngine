@@ -1,4 +1,5 @@
-﻿namespace Containers
+﻿
+namespace Containers
 {
 
     internal class QueueTests
@@ -256,4 +257,69 @@
         }
 
     }
+
+    internal class NumberListTests
+    {
+        [Test]
+        public void Test1()
+        {
+            const int N = 10_000;
+
+            using NumberList numberList = new();
+
+            for (int i = 0; i < N; ++i)
+            {
+                int num = numberList.Allocate();
+                Assert.That(num, Is.EqualTo(i));
+            }
+
+            for (int i = 0; i < N / 2; ++i)
+            {
+                int j = i * 2;
+                numberList.Deallocate(j);
+            }
+
+            for (int i = 0; i < N / 2; ++i)
+            {
+                int j = (i * 2) + 1;
+                numberList.Deallocate(j);
+            }
+
+        }
+
+        [Test]
+        public void Test2()
+        {
+            const int N = 10_000;
+
+            using NumberList numberList = new();
+
+            for (int i = 0; i < N; ++i)
+            {
+                int num = numberList.Allocate();
+                Assert.That(num, Is.EqualTo(i));
+            }
+
+            for (int i = 0; i < N / 2; ++i)
+            {
+                int j = i * 2;
+                numberList.Deallocate(j);
+            }
+
+            for (int i = 0; i < N / 2; ++i)
+            {
+                int j = i * 2;
+                int num = numberList.Allocate();
+                Assert.That(num, Is.EqualTo(j));
+            }
+
+            for (int i = 0; i < N; ++i)
+            {
+                numberList.Deallocate(i);
+            }
+
+        }
+
+    }
+
 }
