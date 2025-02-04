@@ -5,6 +5,7 @@ using MinecraftServerEngine;
 using MinecraftServerEngine.Entities;
 using MinecraftServerEngine.Physics;
 using MinecraftServerEngine.Protocols;
+using TestMinecraftServerApplication.GameStages;
 
 namespace TestMinecraftServerApplication
 {
