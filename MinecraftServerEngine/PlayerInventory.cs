@@ -1,7 +1,9 @@
 ﻿
 
 using Containers;
+
 using MinecraftPrimitives;
+using static System.Reflection.Metadata.BlobBuilder;
 
 namespace MinecraftServerEngine
 {
@@ -31,7 +33,14 @@ namespace MinecraftServerEngine
         private bool _disposed = false;
 
         private int _activeMainHandIndex = 0;  // 0-8
-        internal int ActiveMainHandIndex => _activeMainHandIndex;
+        internal int ActiveMainHandIndex
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(_disposed == false);
+                return _activeMainHandIndex;
+            }
+        }
 
 
         internal PlayerInventory() : base(TotalSlotCount)
@@ -339,77 +348,85 @@ namespace MinecraftServerEngine
             using Queue<InventorySlot> slots = new();
             InventorySlot emptySlot = null;
 
-            int _preMovedCount;
-            int _preRemainingCount = itemStack.Count;
-
-            for (int i = 0; i < PrimarySlotCount; ++i)
+            try
             {
-                System.Diagnostics.Debug.Assert(_preRemainingCount > 0);
+                int _preMovedCount;
+                int _preRemainingCount = itemStack.Count;
 
-                slot = GetPrimarySlot(i);
-                System.Diagnostics.Debug.Assert(slot != null);
-
-                if (slot.Empty == true)
+                for (int i = 0; i < PrimarySlotCount; ++i)
                 {
-                    if (emptySlot == null)
+                    System.Diagnostics.Debug.Assert(_preRemainingCount > 0);
+
+                    slot = GetPrimarySlot(i);
+                    System.Diagnostics.Debug.Assert(slot != null);
+
+                    if (slot.Empty == true)
                     {
-                        emptySlot = slot;
+                        if (emptySlot == null)
+                        {
+                            emptySlot = slot;
+                        }
+
+                        continue;
                     }
 
-                    continue;
+                    _preMovedCount = slot.PreMove(itemStack, _preRemainingCount);
+
+                    if (_preRemainingCount == _preMovedCount)
+                    {
+                        continue;
+                    }
+
+                    _preRemainingCount = _preMovedCount;
+                    slots.Enqueue(slot);
+
+                    if (_preRemainingCount == 0)
+                    {
+                        break;
+                    }
+
                 }
 
-                _preMovedCount = slot.PreMove(itemStack, _preRemainingCount);
 
-                if (_preRemainingCount == _preMovedCount)
+                if (
+                    _preRemainingCount > 0 &&
+                    emptySlot == null
+                    )
                 {
-                    continue;
+                    return false;
                 }
+                System.Diagnostics.Debug.Assert(itemStack.MaxCount >= Item.MinCount);
+                System.Diagnostics.Debug.Assert(_preRemainingCount <= itemStack.MaxCount);
 
-                _preRemainingCount = _preMovedCount;
-                slots.Enqueue(slot);
-
-                if (_preRemainingCount == 0)
+                System.Diagnostics.Debug.Assert(slots != null);
+                while (slots.Length > 0)
                 {
-                    break;
+                    System.Diagnostics.Debug.Assert(itemStack != null);
+
+                    slot = slots.Dequeue();
+
+                    slot.Move(ref itemStack);
+
+                    if (slot.MoveAll(ref itemStack) == true)
+                    {
+                        break;
+                    }
                 }
 
-            }
-
-            
-            if (
-                _preRemainingCount > 0 &&
-                emptySlot == null
-                )
-            {
-                return false;
-            }
-            System.Diagnostics.Debug.Assert(itemStack.MaxCount >= Item.MinCount);
-            System.Diagnostics.Debug.Assert(_preRemainingCount <= itemStack.MaxCount);
-
-            System.Diagnostics.Debug.Assert(slots != null);
-            while (slots.Length > 0)
-            {
-                System.Diagnostics.Debug.Assert(itemStack != null);
-
-                slot = slots.Dequeue();
-
-                slot.Move(ref itemStack);
-
-                if (slot.MoveAll(ref itemStack) == true)
+                if (itemStack != null)
                 {
-                    break;
+                    System.Diagnostics.Debug.Assert(emptySlot != null);
+                    System.Diagnostics.Debug.Assert(emptySlot.Empty == true);
+                    emptySlot.MoveAll(ref itemStack);
                 }
-            }
 
-            if (itemStack != null)
+                return true;
+            }
+            finally
             {
-                System.Diagnostics.Debug.Assert(emptySlot != null);
-                System.Diagnostics.Debug.Assert(emptySlot.Empty == true);
-                emptySlot.MoveAll(ref itemStack);
+                System.Diagnostics.Debug.Assert(slots != null);
+                slots.Flush();
             }
-
-            return true;
         }
 
         public bool GiveItemStacksFromLeftInPrimary(IReadOnlyItem item, int count)
@@ -442,81 +459,92 @@ namespace MinecraftServerEngine
             using Queue<InventorySlot> slots = new();
             using Queue<InventorySlot> emptySlots = new();
 
-            int _preMovedCount;
-            int _preRemainingCount = count;
-
-            for (int i = 0; i < PrimarySlotCount; ++i)
+            try
             {
-                System.Diagnostics.Debug.Assert(_preRemainingCount > 0);
+                int _preMovedCount;
+                int _preRemainingCount = count;
 
-                slot = GetPrimarySlot(i);
-                System.Diagnostics.Debug.Assert(slot != null);
-
-                if (slot.Empty == true)
+                for (int i = 0; i < PrimarySlotCount; ++i)
                 {
-                    emptySlots.Enqueue(slot);
-                    continue;
+                    System.Diagnostics.Debug.Assert(_preRemainingCount > 0);
+
+                    slot = GetPrimarySlot(i);
+                    System.Diagnostics.Debug.Assert(slot != null);
+
+                    if (slot.Empty == true)
+                    {
+                        emptySlots.Enqueue(slot);
+                        continue;
+                    }
+
+                    _preMovedCount = slot.PreMove(item, _preRemainingCount);
+
+                    if (_preRemainingCount == _preMovedCount)
+                    {
+                        continue;
+                    }
+
+                    _preRemainingCount = _preMovedCount;
+                    slots.Enqueue(slot);
+
+                    if (_preRemainingCount == 0)
+                    {
+                        break;
+                    }
+
                 }
 
-                _preMovedCount = slot.PreMove(item, _preRemainingCount);
-
-                if (_preRemainingCount == _preMovedCount)
+                System.Diagnostics.Debug.Assert(item.MaxCount >= Item.MinCount);
+                if (
+                    _preRemainingCount > 0 &&
+                    _preRemainingCount > (emptySlots.Length * item.MaxCount)
+                    )
                 {
-                    continue;
+                    return false;
                 }
 
-                _preRemainingCount = _preMovedCount;
-                slots.Enqueue(slot);
-
-                if (_preRemainingCount == 0)
+                while (slots.Empty == false)
                 {
-                    break;
+                    System.Diagnostics.Debug.Assert(count > 0);
+
+                    slot = slots.Dequeue();
+
+                    count = slot.Move(item, count);
+
+                    System.Diagnostics.Debug.Assert(count >= 0);
+                    if (count == 0)
+                    {
+                        break;
+                    }
                 }
 
+                while (emptySlots.Empty == false && count > 0)
+                {
+                    slot = emptySlots.Dequeue();
+
+                    count = slot.Move(item, count);
+
+                    System.Diagnostics.Debug.Assert(count >= 0);
+                    if (count == 0)
+                    {
+                        break;
+                    }
+                }
+
+                System.Diagnostics.Debug.Assert(count == 0);
+
+                return true;
             }
 
-            System.Diagnostics.Debug.Assert(item.MaxCount >= Item.MinCount);
-            if (
-                _preRemainingCount > 0 && 
-                _preRemainingCount > (emptySlots.Length * item.MaxCount)
-                )
+            finally
             {
-                return false;
+                System.Diagnostics.Debug.Assert(slots != null);
+                slots.Flush();
+                System.Diagnostics.Debug.Assert(emptySlots != null);
+                emptySlots.Flush();
             }
+            
 
-            while (slots.Empty == false)
-            {
-                System.Diagnostics.Debug.Assert(count > 0);
-
-                slot = slots.Dequeue();
-
-                count = slot.Move(item, count);
-
-                System.Diagnostics.Debug.Assert(count >= 0);
-                if (count == 0)
-                {
-                    break;
-                }
-            }
-
-            while (count > 0 && emptySlots.Empty == false)
-            {
-                slot = emptySlots.Dequeue();
-
-                count = slot.Move(item, count);
-
-                System.Diagnostics.Debug.Assert(count >= 0);
-                if (count == 0)
-                {
-                    break;
-                }
-            }
-
-            System.Diagnostics.Debug.Assert(count == 0);
-
-            slots.Flush();
-
-            return true;
         }
 
         public ItemStack[] TakeItemStacksInPrimary(IReadOnlyItem item, int count)
@@ -543,14 +571,9 @@ namespace MinecraftServerEngine
                 return [];
             }
 
-            System.Diagnostics.Debug.Assert(item.Type.GetMaxCount() > 0);
-            int minLength = (int)System.Math.Ceiling((double)count / (double)item.Type.GetMaxCount());
-            ItemStack[] itemStacks = new ItemStack[minLength];
-
             int leftCount = count;
 
             InventorySlot slot;
-            ItemStack targetItemStack;
 
             for (int i = 0; i < PrimarySlotCount && leftCount > 0; ++i)
             {
@@ -562,19 +585,14 @@ namespace MinecraftServerEngine
                     continue;
                 }
 
-                targetItemStack = slot.Stack;
+                int takedCount = slot.PreTake(item, leftCount);
 
-                if (targetItemStack.Equals(item) == true)
+                System.Diagnostics.Debug.Assert(takedCount >= 0);
+                System.Diagnostics.Debug.Assert(takedCount <= count);
+
+                if (takedCount > 0)
                 {
-                    int takedCount = slot.PreTake(leftCount);
-
-                    System.Diagnostics.Debug.Assert(takedCount >= 0);
-                    System.Diagnostics.Debug.Assert(takedCount <= count);
-
-                    if (takedCount > 0)
-                    {
-                        leftCount -= takedCount;
-                    }
+                    leftCount -= takedCount;
                 }
 
             }
@@ -585,9 +603,14 @@ namespace MinecraftServerEngine
             }
 
             leftCount = count;
+
             int k = 0;
 
-            ItemStack takedItemStack = null;
+            System.Diagnostics.Debug.Assert(item.Type.GetMaxCount() > 0);
+            int minLength = (int)System.Math.Ceiling((double)count / (double)item.Type.GetMaxCount());
+            ItemStack[] itemStacks = new ItemStack[minLength];
+
+            ItemStack takedItemStack;
 
             for (int i = 0; i < PrimarySlotCount && leftCount > 0; ++i)
             {
@@ -599,46 +622,39 @@ namespace MinecraftServerEngine
                     continue;
                 }
 
-                targetItemStack = slot.Stack;
+                int takedCount = slot.Take(out takedItemStack, item, leftCount);
 
-                if (targetItemStack.Equals(item) == true)
+                System.Diagnostics.Debug.Assert(takedCount >= 0);
+                System.Diagnostics.Debug.Assert(takedCount <= count);
+
+                if (takedCount > 0)
                 {
-                    int takedCount = takedItemStack == null
-                        ? slot.Take(out takedItemStack, leftCount)
-                        : takedItemStack.Count;
+                    System.Diagnostics.Debug.Assert(takedItemStack != null);
 
-                    System.Diagnostics.Debug.Assert(takedCount >= 0);
-                    System.Diagnostics.Debug.Assert(takedCount <= count);
-
-                    if (takedCount > 0)
+                    if (itemStacks[k] == null)
                     {
-                        System.Diagnostics.Debug.Assert(takedItemStack != null);
-
-                        if (itemStacks[k] == null)
-                        {
-                            itemStacks[k] = takedItemStack;
-                        }
-                        else
-                        {
-                            itemStacks[k].Move(ref takedItemStack);
-
-                            if (takedItemStack != null)
-                            {
-                                itemStacks[++k] = takedItemStack;
-                            }
-                        }
-
-                        leftCount -= takedCount;
-                        takedItemStack = null;
-
-                        System.Diagnostics.Debug.Assert(itemStacks[k].Count <= itemStacks[k].MaxCount);
-                        if (itemStacks[k].Count == itemStacks[k].MaxCount)
-                        {
-                            ++k;
-                        }
-
-
+                        itemStacks[k] = takedItemStack;
                     }
+                    else
+                    {
+                        itemStacks[k].Move(ref takedItemStack);
+
+                        if (takedItemStack != null)
+                        {
+                            itemStacks[++k] = takedItemStack;
+                        }
+                    }
+
+                    leftCount -= takedCount;
+                    takedItemStack = null;
+
+                    System.Diagnostics.Debug.Assert(itemStacks[k].Count <= itemStacks[k].MaxCount);
+                    if (itemStacks[k].Count == itemStacks[k].MaxCount)
+                    {
+                        ++k;
+                    }
+
+
                 }
 
             }
@@ -679,64 +695,74 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            using Queue<InventorySlot> slots = new();
-
             InventorySlot slot;
 
-            if (giveCount > 0)
+            using Queue<InventorySlot> giveSlots = new();
+            using Queue<InventorySlot> giveEmptySlots = new();
+
+            try
             {
-                int _preMovedCount;
-                int _preRemainingCount = giveCount;
-
-                for (int i = 0; i < PrimarySlotCount; ++i)
+                if (giveCount > 0)
                 {
-                    slot = GetPrimarySlot(i);
-                    System.Diagnostics.Debug.Assert(slot != null);
+                    int _preMovedCount;
+                    int _preRemainingCount = giveCount;
 
-                    _preMovedCount = slot.PreMove(giveItem, _preRemainingCount);
-
-                    if (_preRemainingCount == _preMovedCount)
+                    for (int i = 0; i < PrimarySlotCount; ++i)
                     {
-                        continue;
+                        System.Diagnostics.Debug.Assert(_preRemainingCount > 0);
+
+                        slot = GetPrimarySlot(i);
+                        System.Diagnostics.Debug.Assert(slot != null);
+
+                        if (slot.Empty == true)
+                        {
+                            giveEmptySlots.Enqueue(slot);
+                            continue;
+                        }
+
+                        _preMovedCount = slot.PreMove(giveItem, _preRemainingCount);
+
+                        if (_preRemainingCount == _preMovedCount)
+                        {
+                            continue;
+                        }
+
+                        _preRemainingCount = _preMovedCount;
+                        giveSlots.Enqueue(slot);
+
+                        if (_preRemainingCount == 0)
+                        {
+                            break;
+                        }
+
                     }
 
-                    _preRemainingCount = _preMovedCount;
-                    slots.Enqueue(slot);
-
-
-                    if (_preRemainingCount == 0)
+                    System.Diagnostics.Debug.Assert(giveItem.MaxCount >= Item.MinCount);
+                    if (
+                        _preRemainingCount > 0 &&
+                        _preRemainingCount > (giveEmptySlots.Length * giveItem.MaxCount)
+                        )
                     {
-                        break;
+                        return null;
                     }
+
                 }
 
-                if (_preRemainingCount > 0)
+                if (takeCount > 0)
                 {
-                    return null;
-                }
+                    int leftCount = takeCount;
 
-            }
-
-            if (takeCount > 0)
-            {
-                ItemStack targetItemStack;
-                int leftCount = takeCount;
-
-                for (int i = 0; i < PrimarySlotCount && leftCount > 0; ++i)
-                {
-                    slot = GetPrimarySlot(i);
-                    System.Diagnostics.Debug.Assert(slot != null);
-
-                    if (slot.Empty == true)
+                    for (int i = 0; i < PrimarySlotCount && leftCount > 0; ++i)
                     {
-                        continue;
-                    }
+                        slot = GetPrimarySlot(i);
+                        System.Diagnostics.Debug.Assert(slot != null);
 
-                    targetItemStack = slot.Stack;
+                        if (slot.Empty == true)
+                        {
+                            continue;
+                        }
 
-                    if (targetItemStack.Equals(takeItem) == true)
-                    {
-                        int takedCount = slot.PreTake(leftCount);
+                        int takedCount = slot.PreTake(takeItem, leftCount);
 
                         System.Diagnostics.Debug.Assert(takedCount >= 0);
                         System.Diagnostics.Debug.Assert(takedCount <= takeCount);
@@ -745,64 +771,71 @@ namespace MinecraftServerEngine
                         {
                             leftCount -= takedCount;
                         }
+
                     }
 
-                }
-
-                if (leftCount > 0)
-                {
-                    return null;
-                }
-            }
-
-            if (giveCount > 0)
-            {
-                while (slots.Empty == false)
-                {
-                    slot = slots.Dequeue();
-
-                    giveCount = slot.Move(giveItem, giveCount);
-
-                    System.Diagnostics.Debug.Assert(giveCount >= 0);
-                    if (giveCount == 0)
+                    if (leftCount > 0)
                     {
-                        break;
+                        return null;
                     }
                 }
 
-                System.Diagnostics.Debug.Assert(giveCount == 0);
-
-            }
-
-            if (takeCount > 0)
-            {
-                System.Diagnostics.Debug.Assert(takeItem.MaxCount > 0);
-                int minLength = (int)System.Math.Ceiling((double)takeCount / (double)takeItem.MaxCount);
-                ItemStack[] itemStacks = new ItemStack[minLength];
-
-                ItemStack targetItemStack;
-                ItemStack takedItemStack = null;
-
-                int leftCount = takeCount;
-                int k = 0;
-
-                for (int i = 0; i < PrimarySlotCount && leftCount > 0; ++i)
+                if (giveCount > 0)
                 {
-                    slot = GetPrimarySlot(i);
-                    System.Diagnostics.Debug.Assert(slot != null);
-
-                    if (slot.Empty == true)
+                    while (giveSlots.Empty == false)
                     {
-                        continue;
+                        System.Diagnostics.Debug.Assert(giveCount > 0);
+
+                        slot = giveSlots.Dequeue();
+
+                        giveCount = slot.Move(giveItem, giveCount);
+
+                        System.Diagnostics.Debug.Assert(giveCount >= 0);
+                        if (giveCount == 0)
+                        {
+                            break;
+                        }
                     }
 
-                    targetItemStack = slot.Stack;
-
-                    if (targetItemStack.Equals(takeItem) == true)
+                    while (giveEmptySlots.Empty == false && giveCount > 0)
                     {
-                        int takedCount = takedItemStack == null
-                            ? slot.Take(out takedItemStack, leftCount)
-                            : takedItemStack.Count;
+                        slot = giveEmptySlots.Dequeue();
+
+                        giveCount = slot.Move(giveItem, giveCount);
+
+                        System.Diagnostics.Debug.Assert(giveCount >= 0);
+                        if (giveCount == 0)
+                        {
+                            break;
+                        }
+                    }
+
+                    System.Diagnostics.Debug.Assert(giveCount == 0);
+
+                }
+
+                if (takeCount > 0)
+                {
+                    System.Diagnostics.Debug.Assert(takeItem.MaxCount > 0);
+                    int minLength = (int)System.Math.Ceiling((double)takeCount / (double)takeItem.MaxCount);
+                    ItemStack[] itemStacks = new ItemStack[minLength];
+
+                    ItemStack takedItemStack;
+
+                    int leftCount = takeCount;
+                    int k = 0;
+
+                    for (int i = 0; i < PrimarySlotCount && leftCount > 0; ++i)
+                    {
+                        slot = GetPrimarySlot(i);
+                        System.Diagnostics.Debug.Assert(slot != null);
+
+                        if (slot.Empty == true)
+                        {
+                            continue;
+                        }
+
+                        int takedCount = slot.Take(out takedItemStack, takeItem, leftCount);
 
                         System.Diagnostics.Debug.Assert(takedCount >= 0);
                         System.Diagnostics.Debug.Assert(takedCount <= takeCount);
@@ -836,16 +869,23 @@ namespace MinecraftServerEngine
 
 
                         }
+
                     }
 
+                    System.Diagnostics.Debug.Assert(leftCount == 0);
+
+                    return itemStacks;
                 }
 
-                System.Diagnostics.Debug.Assert(leftCount == 0);
-
-                return itemStacks;
+                return [];
+            } 
+            finally
+            {
+                System.Diagnostics.Debug.Assert(giveSlots != null);
+                giveSlots.Flush();
+                System.Diagnostics.Debug.Assert(giveEmptySlots != null);
+                giveEmptySlots.Flush();
             }
-
-            return [];
         }
 
 

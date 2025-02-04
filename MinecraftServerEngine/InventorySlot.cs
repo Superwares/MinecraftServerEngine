@@ -272,8 +272,9 @@ namespace MinecraftServerEngine
             return count - canMovedAmount;
         }
 
-        internal int Take(out ItemStack itemStack, int count)
+        internal int Take(out ItemStack itemStack, IReadOnlyItem item, int count)
         {
+            System.Diagnostics.Debug.Assert(item != null);
             System.Diagnostics.Debug.Assert(count >= 0);
 
             if (count == 0)
@@ -283,6 +284,12 @@ namespace MinecraftServerEngine
             }
 
             if (_itemStack == null)
+            {
+                itemStack = null;
+                return 0;
+            }
+
+            if (_itemStack.Equals(item) == false)
             {
                 itemStack = null;
                 return 0;
@@ -302,8 +309,9 @@ namespace MinecraftServerEngine
             return count;
         }
 
-        internal int PreTake(int count)
+        internal int PreTake(IReadOnlyItem item, int count)
         {
+            System.Diagnostics.Debug.Assert(item != null);
             System.Diagnostics.Debug.Assert(count >= 0);
 
             if (count == 0)
@@ -312,6 +320,11 @@ namespace MinecraftServerEngine
             }
 
             if (_itemStack == null)
+            {
+                return 0;
+            }
+
+            if (_itemStack.Equals(item) == false)
             {
                 return 0;
             }
