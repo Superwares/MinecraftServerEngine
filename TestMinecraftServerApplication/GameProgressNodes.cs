@@ -8,21 +8,21 @@ using MinecraftPrimitives;
 
 namespace TestMinecraftServerApplication
 {
-    public interface IGameProgressNode
+    public interface IGameStage
     {
-        public IGameProgressNode CreateNextNode(GameContext ctx);
+        public IGameStage CreateNextNode(GameContext ctx);
 
         public bool StartRoutine(GameContext ctx, SuperWorld world);
 
     }
 
-    public sealed class LobbyNode : IGameProgressNode
+    public sealed class LobbyStage : IGameStage
     {
-        public IGameProgressNode CreateNextNode(GameContext ctx)
+        public IGameStage CreateNextNode(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
-            return new CountdownNode();
+            return new CountdownStage();
         }
 
         public bool StartRoutine(GameContext ctx, SuperWorld world)
@@ -34,7 +34,7 @@ namespace TestMinecraftServerApplication
         }
     }
 
-    public sealed class CountdownNode : IGameProgressNode
+    public sealed class CountdownStage : IGameStage
     {
         private readonly static Time INTERVAL_TIME = Time.FromSeconds(1);
 
@@ -66,11 +66,11 @@ namespace TestMinecraftServerApplication
 
 
 
-        public IGameProgressNode CreateNextNode(GameContext ctx)
+        public IGameStage CreateNextNode(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
-            return new GameStartNode();
+            return new GameStartStage();
         }
 
         public bool StartRoutine(GameContext ctx, SuperWorld world)
@@ -112,17 +112,17 @@ namespace TestMinecraftServerApplication
         }
     }
 
-    public sealed class GameStartNode : IGameProgressNode
+    public sealed class GameStartStage : IGameStage
     {
-        public GameStartNode()
+        public GameStartStage()
         {
         }
 
-        public IGameProgressNode CreateNextNode(GameContext ctx)
+        public IGameStage CreateNextNode(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
-            return new RoundStartNode();
+            return new RoundStartStage();
         }
 
         public bool StartRoutine(GameContext ctx, SuperWorld world)
@@ -139,21 +139,21 @@ namespace TestMinecraftServerApplication
         }
     }
 
-    public sealed class RoundStartNode : IGameProgressNode
+    public sealed class RoundStartStage : IGameStage
     {
 
-        public RoundStartNode()
+        public RoundStartStage()
         {
         }
 
-        public IGameProgressNode CreateNextNode(GameContext ctx)
+        public IGameStage CreateNextNode(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
             List<int> nonSeekerIndexList = new List<int>();
             int length = ctx.MakeNonSeekerIndexList(nonSeekerIndexList);
 
-            return new RandomSeekerNode(nonSeekerIndexList);
+            return new RandomSeekerStage(nonSeekerIndexList);
         }
 
         public bool StartRoutine(GameContext ctx, SuperWorld world)
@@ -170,7 +170,7 @@ namespace TestMinecraftServerApplication
         }
     }
 
-    public sealed class RandomSeekerNode : IGameProgressNode
+    public sealed class RandomSeekerStage : IGameStage
     {
         private readonly System.Random _Random = new();
 
@@ -194,7 +194,7 @@ namespace TestMinecraftServerApplication
         private int i = 0;
 
 
-        public RandomSeekerNode(List<int> nonSeekerIndexList)
+        public RandomSeekerStage(List<int> nonSeekerIndexList)
         {
             System.Diagnostics.Debug.Assert(nonSeekerIndexList != null);
             _NonSeekerIndexList = nonSeekerIndexList;
@@ -204,7 +204,7 @@ namespace TestMinecraftServerApplication
 
         }
 
-        public IGameProgressNode CreateNextNode(GameContext ctx)
+        public IGameStage CreateNextNode(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
@@ -212,7 +212,7 @@ namespace TestMinecraftServerApplication
             _NonSeekerIndexList.Flush();
             _NonSeekerIndexList.Dispose();
 
-            return new SeekerCountNode();
+            return new SeekerCountStage();
         }
 
         public bool StartRoutine(GameContext ctx, SuperWorld world)
@@ -294,7 +294,7 @@ namespace TestMinecraftServerApplication
     }
 
     // The seeker closes their eyes and counts to a number.
-    public sealed class SeekerCountNode : IGameProgressNode
+    public sealed class SeekerCountStage : IGameStage
     {
         public readonly static Time Duration = Time.FromSeconds(30);
         //public readonly static Time Duration = Time.FromSeconds(5);  // for debug
@@ -340,15 +340,15 @@ namespace TestMinecraftServerApplication
         private bool _init = false;
 
 
-        public SeekerCountNode()
+        public SeekerCountStage()
         {
         }
 
-        public IGameProgressNode CreateNextNode(GameContext ctx)
+        public IGameStage CreateNextNode(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
-            return new FindHidersNode();
+            return new FindHidersStage();
         }
 
         public bool StartRoutine(GameContext ctx, SuperWorld world)
@@ -427,7 +427,7 @@ namespace TestMinecraftServerApplication
         }
     }
 
-    public sealed class FindHidersNode : IGameProgressNode
+    public sealed class FindHidersStage : IGameStage
     {
         public readonly static Time NormalTimeDuration = Time.FromMinutes(2);
         public readonly static Time BurningTimeDuration = Time.FromMinutes(1);
@@ -459,15 +459,15 @@ namespace TestMinecraftServerApplication
 
         private bool _initNormal = false, _initBurning = false;
 
-        public FindHidersNode()
+        public FindHidersStage()
         {
         }
 
-        public IGameProgressNode CreateNextNode(GameContext ctx)
+        public IGameStage CreateNextNode(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
-            return new RoundEndNode();
+            return new RoundEndStage();
         }
 
         public bool StartRoutine(GameContext ctx, SuperWorld world)
@@ -624,7 +624,7 @@ namespace TestMinecraftServerApplication
         }
     }
 
-    public sealed class RoundEndNode : IGameProgressNode
+    public sealed class RoundEndStage : IGameStage
     {
         //public readonly static Time Duration = Time.FromSeconds(30);
         public readonly static Time Duration = Time.FromSeconds(5);  // for debug
@@ -648,22 +648,22 @@ namespace TestMinecraftServerApplication
         ];
         private bool printMessage0 = false;
 
-        public RoundEndNode()
+        public RoundEndStage()
         {
 
         }
 
-        public IGameProgressNode CreateNextNode(GameContext ctx)
+        public IGameStage CreateNextNode(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
             if (ctx.IsFinalRound == true)
             {
-                return new WinnerNode();
+                return new WinnerStage();
             }
             else
             {
-                return new RoundStartNode();
+                return new RoundStartStage();
             }
 
         }
@@ -699,7 +699,7 @@ namespace TestMinecraftServerApplication
         }
     }
 
-    public sealed class WinnerNode : IGameProgressNode
+    public sealed class WinnerStage : IGameStage
     {
         public readonly static Time WinnerDisplayDuration = Time.FromSeconds(5);
         public readonly static Time FireworkLaunchTime_0 = Time.FromMilliseconds(100);
@@ -788,13 +788,13 @@ namespace TestMinecraftServerApplication
         private bool _fireworkTwinkle_9 = false;
 
 
-        public IGameProgressNode CreateNextNode(GameContext ctx)
+        public IGameStage CreateNextNode(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
             _Winners.Dispose();
 
-            return new GameEndNode();
+            return new GameEndStage();
         }
 
         public bool StartRoutine(GameContext ctx, SuperWorld world)
@@ -1137,18 +1137,18 @@ namespace TestMinecraftServerApplication
         }
     }
 
-    public sealed class GameEndNode : IGameProgressNode
+    public sealed class GameEndStage : IGameStage
     {
         //public readonly static Time Duration = Time.FromSeconds(30);
         public readonly static Time Duration = Time.FromSeconds(5);  // for debug
 
         private readonly Time _StartTime = Time.Now();
 
-        public IGameProgressNode CreateNextNode(GameContext ctx)
+        public IGameStage CreateNextNode(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
-            return new LobbyNode();
+            return new LobbyStage();
         }
 
         public bool StartRoutine(GameContext ctx, SuperWorld world)

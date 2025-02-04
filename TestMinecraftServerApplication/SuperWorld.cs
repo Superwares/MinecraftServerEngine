@@ -39,7 +39,7 @@ namespace TestMinecraftServerApplication
         public readonly Angles RespawningLook;
 
 
-        private IGameProgressNode _currentGameProgressNode = new LobbyNode();
+        private IGameStage _currentGameProgressNode = new LobbyStage();
 
 
         public SuperWorld(
