@@ -18,9 +18,9 @@ namespace MinecraftServerEngine
 
         /*private readonly AccessLevel Level;*/
 
-        private ItemStack _stack = null;
-        public ItemStack Stack => _stack;
-        internal bool Empty => (_stack == null);
+        private ItemStack _itemStack = null;
+        public ItemStack Stack => _itemStack;
+        internal bool Empty => (_itemStack == null);
 
         public InventorySlot() { }
 
@@ -29,36 +29,34 @@ namespace MinecraftServerEngine
             Level = level;
         }*/
 
-        internal ItemStack Reset(ItemStack stack)
+        internal ItemStack Reset(ItemStack itemStack)
         {
-            ItemStack stackTemp = _stack;
-            _stack = stack;
-            return stackTemp;
+            ItemStack prevItemStack = _itemStack;
+            _itemStack = itemStack;
+            return prevItemStack;
         }
 
         internal void LeftClick(InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(cursor != null);
 
-            ref ItemStack stackCursor = ref cursor._stack;
+            ref ItemStack stackCursor = ref cursor._itemStack;
 
             if (Empty == false)
             {
                 if (stackCursor == null)
                 {
-                    stackCursor = _stack;
-                    _stack = null;
+                    stackCursor = _itemStack;
+                    _itemStack = null;
                 }
-                else if (!_stack.Move(ref stackCursor))
+                else if (_itemStack.Move(ref stackCursor) == false)
                 {
-                    ItemStack stackTemp = stackCursor;
-                    stackCursor = _stack;
-                    _stack = stackTemp;
+                    (_itemStack, stackCursor) = (stackCursor, _itemStack);
                 }
             }
             else
             {
-                _stack = stackCursor;
+                _itemStack = stackCursor;
                 stackCursor = null;
             }
 
@@ -68,33 +66,33 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(cursor != null);
 
-            ref ItemStack stackCursor = ref cursor._stack;
+            ref ItemStack stackCursor = ref cursor._itemStack;
 
             if (stackCursor == null)
             {
-                if (Empty == false && _stack.DivideHalf(ref stackCursor) == false)
+                if (Empty == false && _itemStack.DivideHalf(ref stackCursor) == false)
                 {
-                    stackCursor = _stack;
-                    _stack = null;
+                    stackCursor = _itemStack;
+                    _itemStack = null;
                 }
             }
             else
             {
                 if (Empty == true)
                 {
-                    if (stackCursor.DivideMinToEmpty(ref _stack) == false)
+                    if (stackCursor.DivideMinToEmpty(ref _itemStack) == false)
                     {
-                        _stack = stackCursor;
+                        _itemStack = stackCursor;
                         stackCursor = null;
                     }
                 }
                 else
                 {
-                    if (_stack.DivideMinFrom(ref stackCursor) == false)
+                    if (_itemStack.DivideMinFrom(ref stackCursor) == false)
                     {
                         ItemStack stackTemp = stackCursor;
-                        stackCursor = _stack;
-                        _stack = stackTemp;
+                        stackCursor = _itemStack;
+                        _itemStack = stackTemp;
 
                     }
                 }
@@ -111,17 +109,17 @@ namespace MinecraftServerEngine
                 return;
             }
 
-            ref ItemStack stackFrom = ref from._stack;
+            ref ItemStack stackFrom = ref from._itemStack;
 
             if (Empty == true)
             {
-                _stack = stackFrom;
+                _itemStack = stackFrom;
                 stackFrom = null;
 
                 return;
             }
 
-            _stack.Move(ref stackFrom);
+            _itemStack.Move(ref stackFrom);
         }
 
         internal void Move(ref ItemStack from)
@@ -133,13 +131,13 @@ namespace MinecraftServerEngine
 
             if (Empty == true)
             {
-                _stack = from;
+                _itemStack = from;
                 from = null;
 
                 return;
             }
 
-            _stack.Move(ref from);
+            _itemStack.Move(ref from);
         }
 
         //internal int PreMove(ItemStack from, int count)
@@ -175,23 +173,23 @@ namespace MinecraftServerEngine
                 return 0;
             }
 
-            if (_stack == null)
+            if (_itemStack == null)
             {
                 if (count >= fromItem.MaxCount)
                 {
-                    _stack = ItemStack.Create(fromItem, fromItem.MaxCount);
+                    _itemStack = ItemStack.Create(fromItem, fromItem.MaxCount);
                     return count - fromItem.MaxCount;
                 }
                 else
                 {
-                    _stack = ItemStack.Create(fromItem, count);
+                    _itemStack = ItemStack.Create(fromItem, count);
                     return 0;
                 }
 
 
             }
 
-            return _stack.Move(fromItem, count);  // // remaning
+            return _itemStack.Move(fromItem, count);  // // remaning
         }
 
         internal int PreMove(IReadOnlyItem fromItem, int count)
@@ -203,7 +201,7 @@ namespace MinecraftServerEngine
                 return 0;
             }
 
-            if (_stack == null)
+            if (_itemStack == null)
             {
                 if (count >= fromItem.MaxCount)
                 {
@@ -217,12 +215,12 @@ namespace MinecraftServerEngine
 
             }
 
-            if (fromItem.Equals(_stack) == false || _stack.IsFull == true)
+            if (fromItem.Equals(_itemStack) == false || _itemStack.IsFull == true)
             {
                 return count;
             }
 
-            int canMovedAmount = (_stack.MaxCount - _stack.Count);
+            int canMovedAmount = (_itemStack.MaxCount - _itemStack.Count);
 
             if (count < canMovedAmount)
             {
@@ -241,12 +239,12 @@ namespace MinecraftServerEngine
                 return 0;
             }
 
-            if (_stack.IsFull == true)
+            if (_itemStack.IsFull == true)
             {
                 return count;
             }
 
-            int canMovedAmount = (_stack.MaxCount - _stack.Count);
+            int canMovedAmount = (_itemStack.MaxCount - _itemStack.Count);
 
             if (count < canMovedAmount)
             {
@@ -266,22 +264,22 @@ namespace MinecraftServerEngine
                 return 0;
             }
 
-            if (_stack == null)
+            if (_itemStack == null)
             {
                 itemStack = null;
                 return 0;
             }
 
-            if (_stack.Count <= count)
+            if (_itemStack.Count <= count)
             {
-                int temp = _stack.Count;
-                itemStack = _stack;
-                _stack = null;
+                int temp = _itemStack.Count;
+                itemStack = _itemStack;
+                _itemStack = null;
                 return temp;
             }
 
-            itemStack = _stack.Clone(count);
-            _stack.Spend(count);
+            itemStack = _itemStack.Clone(count);
+            _itemStack.Spend(count);
 
             return count;
         }
@@ -295,14 +293,14 @@ namespace MinecraftServerEngine
                 return 0;
             }
 
-            if (_stack == null)
+            if (_itemStack == null)
             {
                 return 0;
             }
 
-            if (_stack.Count <= count)
+            if (_itemStack.Count <= count)
             {
-                return _stack.Count;
+                return _itemStack.Count;
             }
 
             return count;
@@ -310,25 +308,25 @@ namespace MinecraftServerEngine
 
         internal ItemStack DropSingle()
         {
-            ItemStack stack = _stack;
+            ItemStack stack = _itemStack;
 
             if (stack != null && stack.Count > 1)
             {
                 stack.Spend(1);
 
-                return _stack.Clone(1);
+                return _itemStack.Clone(1);
             }
 
-            _stack = null;
+            _itemStack = null;
 
             return stack;
         }
 
         internal ItemStack DropFull()
         {
-            ItemStack stack = _stack;
+            ItemStack stack = _itemStack;
 
-            _stack = null;
+            _itemStack = null;
 
             return stack;
         }
@@ -337,13 +335,13 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(buffer != null);
 
-            if (_stack == null)
+            if (_itemStack == null)
             {
                 buffer.WriteShort(-1);
                 return;
             }
 
-            _stack.WriteData(buffer);
+            _itemStack.WriteData(buffer);
         }
 
         internal byte[] WriteData()
@@ -355,13 +353,13 @@ namespace MinecraftServerEngine
 
         public override string ToString()
         {
-            if (_stack == null)
+            if (_itemStack == null)
             {
                 return $"[None]";
             }
 
-            System.Diagnostics.Debug.Assert(_stack != null);
-            return $"[{_stack}]";
+            System.Diagnostics.Debug.Assert(_itemStack != null);
+            return $"[{_itemStack}]";
         }
     }
 }

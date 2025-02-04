@@ -611,7 +611,6 @@ namespace MinecraftServerEngine
 
         }
 
-
         // deprecated...  Replace to the OnDespawn when player is disconnected and world can despawn the player on disconnect.
         //protected internal virtual void OnDisconnected()
         //{
@@ -641,35 +640,6 @@ namespace MinecraftServerEngine
             return false;
         }
 
-        public void LoadWorld(World world)
-        {
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            if (Disconnected == true)
-            {
-                return;
-            }
-
-            System.Diagnostics.Debug.Assert(Conn != null);
-            Conn.LoadWorld(
-                Id,
-                world,
-                Position,
-                Blindness);
-        }
-
-        public void SendData()
-        {
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            if (Disconnected == true)
-            {
-                return;
-            }
-
-            System.Diagnostics.Debug.Assert(Conn != null);
-            Conn.SendData();
-        }
 
         public bool OpenInventory(SharedInventory sharedInventory)
         {
@@ -690,6 +660,47 @@ namespace MinecraftServerEngine
         //{
         //    System
         //}
+
+        public void SetHelmet(ItemStack itemStack)
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            if (itemStack == null)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(InventoryLocker != null);
+            InventoryLocker.Hold();
+
+            try
+            {
+                if (Conn != null)
+                {
+                    System.Diagnostics.Debug.Assert(Inventory != null);
+                    System.Diagnostics.Debug.Assert(Conn.Window != null);
+                    Conn.Window.SetHelmet(Inventory, itemStack);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.Assert(Inventory != null);
+                    Inventory.SetHelmet(itemStack);
+                }
+
+                System.Diagnostics.Debug.Assert(Inventory != null);
+                UpdateEntityEquipmentsData(Inventory.GetEquipmentsData());
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(InventoryLocker != null);
+                InventoryLocker.Release();
+            }
+        }
 
         public bool GiveItemStacks(IReadOnlyItem item, int count)
         {
@@ -875,7 +886,6 @@ namespace MinecraftServerEngine
 
         }
 
-
         public void FlushItems()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
@@ -951,6 +961,36 @@ namespace MinecraftServerEngine
             {
                 Conn.Animate(Id, animation);
             }
+        }
+
+        public void LoadWorld(World world)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (Disconnected == true)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(Conn != null);
+            Conn.LoadWorld(
+                Id,
+                world,
+                Position,
+                Blindness);
+        }
+
+        public void SendData()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (Disconnected == true)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(Conn != null);
+            Conn.SendData();
         }
 
         protected override void Dispose(bool disposing)

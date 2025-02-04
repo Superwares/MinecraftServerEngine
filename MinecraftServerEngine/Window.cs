@@ -363,6 +363,44 @@ namespace MinecraftServerEngine
             }
         }
 
+        internal void SetHelmet(PlayerInventory playerInventory, ItemStack itemStack)
+        {
+            System.Diagnostics.Debug.Assert(playerInventory != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (itemStack == null)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(_Locker != null);
+            _Locker.Hold();
+            if (_sharedInventory != null)
+            {
+                System.Diagnostics.Debug.Assert(_sharedInventory.Locker != null);
+                _sharedInventory.Locker.Hold();
+            }
+
+            try
+            {
+                playerInventory.SetHelmet(itemStack);
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(_Renderer != null);
+                _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
+
+                if (_sharedInventory != null)
+                {
+                    System.Diagnostics.Debug.Assert(_sharedInventory.Locker != null);
+                    _sharedInventory.Locker.Release();
+                }
+                System.Diagnostics.Debug.Assert(_Locker != null);
+                _Locker.Release();
+            }
+        }
+
         internal void UpdateMainHandSlot(PlayerInventory playerInventory)
         {
             System.Diagnostics.Debug.Assert(playerInventory != null);

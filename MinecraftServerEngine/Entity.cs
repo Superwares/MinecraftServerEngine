@@ -627,9 +627,10 @@ namespace MinecraftServerEngine
             _Animate(animation);
         }
 
-        internal void UpdateEntityEquipmentsData((
-            byte[] mainHand, byte[] offHand) equipmentsData)
+        internal void UpdateEntityEquipmentsData(
+            (byte[] helmet, byte[] mainHand, byte[] offHand) equipmentsData)
         {
+            System.Diagnostics.Debug.Assert(equipmentsData.helmet != null);
             System.Diagnostics.Debug.Assert(equipmentsData.mainHand != null);
             System.Diagnostics.Debug.Assert(equipmentsData.offHand != null);
 

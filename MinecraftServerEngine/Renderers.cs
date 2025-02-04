@@ -611,8 +611,9 @@ namespace MinecraftServerEngine
 
         internal void SetEquipmentsData(
             int id,
-            (byte[] mainHand, byte[] offHand) equipmentsData)
+            (byte[] helmet, byte[] mainHand, byte[] offHand) equipmentsData)
         {
+            System.Diagnostics.Debug.Assert(equipmentsData.helmet != null);
             System.Diagnostics.Debug.Assert(equipmentsData.mainHand != null);
             System.Diagnostics.Debug.Assert(equipmentsData.offHand != null);
 
@@ -620,6 +621,7 @@ namespace MinecraftServerEngine
 
             Render(new EntityEquipmentPacket(id, 0, equipmentsData.mainHand));
             Render(new EntityEquipmentPacket(id, 1, equipmentsData.offHand));
+            Render(new EntityEquipmentPacket(id, 5, equipmentsData.helmet));
         }
 
         internal void SetEntityStatus(int id, byte v)
@@ -633,7 +635,7 @@ namespace MinecraftServerEngine
             int id, System.Guid uniqueId,
             Vector p, Angles look,
             bool sneaking, bool sprinting,
-            (byte[], byte[]) equipmentsData)
+            (byte[] helmet, byte[] mainHand, byte[] offHand) equipmentsData)
         {
             System.Diagnostics.Debug.Assert(uniqueId != System.Guid.Empty);
 

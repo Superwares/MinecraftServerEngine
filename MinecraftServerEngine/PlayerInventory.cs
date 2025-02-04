@@ -1,8 +1,6 @@
 ﻿
 
 using Containers;
-using System.Diagnostics.Metrics;
-using static System.Reflection.Metadata.BlobBuilder;
 
 namespace MinecraftServerEngine
 {
@@ -243,14 +241,14 @@ namespace MinecraftServerEngine
             return mainSlot;
         }
 
-        internal (byte[], byte[]) GetEquipmentsData()
+        internal (byte[] helmet, byte[] mainHand, byte[] offHand) GetEquipmentsData()
         {
-            InventorySlot
-                slotMainHand = GetMainHandSlot(),
-                slotOffHand = GetOffHandSlot();
+            InventorySlot slotHelmet = GetArmorSlot(0);
+            InventorySlot slotMainHand = GetMainHandSlot();
+            InventorySlot slotOffHand = GetOffHandSlot();
             System.Diagnostics.Debug.Assert(slotMainHand != null);
             System.Diagnostics.Debug.Assert(slotOffHand != null);
-            return (slotMainHand.WriteData(), slotOffHand.WriteData());
+            return (slotHelmet.WriteData(), slotMainHand.WriteData(), slotOffHand.WriteData());
         }
 
 
@@ -379,6 +377,21 @@ namespace MinecraftServerEngine
 
             Refresh(renderer);
         }*/
+
+        internal void SetHelmet(ItemStack itemStack)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (itemStack == null)
+            {
+                return;
+            }
+
+            InventorySlot slot = GetArmorSlot(0);
+
+            System.Diagnostics.Debug.Assert(slot != null);
+            slot.Reset(itemStack);
+        }
 
         internal void LeftClick(InventorySlot slot, InventorySlot cursor)
         {

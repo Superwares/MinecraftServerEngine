@@ -54,7 +54,7 @@ namespace TestMinecraftServerApplication
             SetSlot(BlastCoreSlot, ItemStack.Create(BlastCore.Item, BlastCore.DefaultCount, [
                     $"",
                     // A powerful core that explodes on use, knocking back all nearby players.
-                    $"사용 시 폭발하여 주변의 모든 플레이어를 ",
+                    $"사용 시 폭발하여 주변의 모든 것을 ",
                     $"날려버리는 강력한 코어입니다.",
                     $"",
                     // Left-click (Purchase)

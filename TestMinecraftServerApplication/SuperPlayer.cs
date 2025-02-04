@@ -212,6 +212,8 @@ namespace TestMinecraftServerApplication
             {
                 if (f == true)
                 {
+                    SetHelmet(new ItemStack(ItemType.RedstoneOre, "Hello"));
+
                     HideBlock(world);
 
                     //OpenInventory(chestInventory);
