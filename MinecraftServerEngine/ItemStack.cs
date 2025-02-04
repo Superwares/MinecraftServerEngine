@@ -371,6 +371,11 @@ namespace MinecraftServerEngine
 
         public ItemStack Clone(int count)
         {
+            if (count < MinCount || count > MaxCount)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(count));
+            }
+
             return new ItemStack(
                 Type, Name, count,
                 MaxDurability, CurrentDurability,
@@ -379,6 +384,8 @@ namespace MinecraftServerEngine
 
         public ItemStack Clone()
         {
+            System.Diagnostics.Debug.Assert(Count >= MinCount);
+            System.Diagnostics.Debug.Assert(Count <= MaxCount);
             return Clone(Count);
         }
 
@@ -465,70 +472,6 @@ namespace MinecraftServerEngine
 
             NBTTagList<NBTTagString> lore = new(_lore);
             displayCompound.Add("Lore", lore);
-
-            //NBTTagList<NBTTagString> lore = new([
-            //    new NBTTagString("HELLO"),
-            //    new NBTTagString("DURABILITY"),
-            //    ]);
-            //displayCompound.Add("Lore", lore);
-
-            //if (Description != null)
-            //{
-
-
-            //    int minWidth = 20;
-            //    int maxKeyLength = 0;
-            //    int maxValueLength = 0;
-
-            //    foreach (var (key, value) in Attributes)
-            //    {
-            //        maxKeyLength = System.Math.Max(maxKeyLength, key.Length);
-            //        maxValueLength = System.Math.Max(maxValueLength, value.Length);
-            //    }
-
-            //    if (maxKeyLength + maxValueLength < minWidth)
-            //    {
-            //        maxKeyLength += minWidth - (maxKeyLength + maxValueLength);
-            //    }
-
-            //    int width = maxKeyLength + maxValueLength;
-
-            //    int minLines = (int)System.Math.Ceiling((double)Description.Length / (double)width);
-
-            //    int br = 1;
-
-            //    string line;
-
-            //    int startIndex;
-            //    int currentIndex = 0;
-            //    NBTTagString[] _lore = new NBTTagString[minLines + br + Attributes.Length];
-
-            //    for (int i = 0; i < minLines; ++i)
-            //    {
-            //        startIndex = i * width;
-            //        int length = System.Math.Min(width, Description.Length - startIndex);
-            //        line = Description.Substring(startIndex, length).Replace(" ", "  ");
-
-            //        _lore[currentIndex++] = new NBTTagString(line);
-            //    }
-
-            //    for (int i = 0; i < br; ++i)
-            //    {
-            //        _lore[currentIndex++] = new NBTTagString("");
-            //    }
-
-            //    for (int i = 0; i < Attributes.Length; ++i)
-            //    {
-            //        (string, string) attribute = Attributes[i];
-
-            //        line = $"{attribute.Item1.PadRight(maxKeyLength)}{attribute.Item2.PadLeft(maxValueLength - 2)}".Replace(" ", "  ");
-            //        _lore[currentIndex++] = new NBTTagString(line);
-            //    }
-
-            //    NBTTagList<NBTTagString> lore = new(_lore);
-
-            //    displayCompound.Add("Lore", lore);
-            //}
 
             if (Type == ItemType.PlayerSkull)
             {
