@@ -2579,7 +2579,9 @@ namespace MinecraftPrimitives
 
             EntityId = idEntity;
             Slot = slot;
-            Data = data;
+
+            Data = new byte[data.Length];
+            System.Array.Copy(data, Data, data.Length);
         }
 
         protected override void WriteData(MinecraftProtocolDataStream buffer)

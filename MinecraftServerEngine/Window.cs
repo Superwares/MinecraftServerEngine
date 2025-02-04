@@ -32,7 +32,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(false);
 
-            //Dispose(false);
+            Dispose(false);
         }
 
         internal bool Open(
@@ -232,7 +232,7 @@ namespace MinecraftServerEngine
                     world.SpawnObject(new ItemEntity(dropItem, player.Position));
                 }
 
-                player.UpdateEntityEquipmentsData(playerInventory.GetEquipmentsData());
+                player.UpdateEquipmentsData();
 
                 _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
 
@@ -629,9 +629,11 @@ namespace MinecraftServerEngine
 
             SharedInventory sharedInventory = _sharedInventory;
 
+            System.Diagnostics.Debug.Assert(_Locker != null);
             _Locker.Hold();
             if (sharedInventory != null)
             {
+                System.Diagnostics.Debug.Assert(sharedInventory != null);
                 sharedInventory.Locker.Hold();
             }
 
@@ -681,8 +683,10 @@ namespace MinecraftServerEngine
             {
                 if (sharedInventory != null)
                 {
+                    System.Diagnostics.Debug.Assert(sharedInventory != null);
                     sharedInventory.Locker.Release();
                 }
+                System.Diagnostics.Debug.Assert(_Locker != null);
                 _Locker.Release();
             }
         }
@@ -701,7 +705,7 @@ namespace MinecraftServerEngine
                 _sharedInventory = null;
             }
 
-            if (!_Cursor.Empty)
+            if (_Cursor.Empty == false)
             {
                 // TODO: Drop Item.
 
@@ -710,19 +714,40 @@ namespace MinecraftServerEngine
 
         }
 
+
         public void Dispose()
         {
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            // Assertion.
-            System.Diagnostics.Debug.Assert(_sharedInventory == null);
-            System.Diagnostics.Debug.Assert(_Cursor.Empty);
-
-            // Release Resources.
-            _Locker.Dispose();
-
+            Dispose(true);
             System.GC.SuppressFinalize(this);
-            _disposed = true;
+        }
+
+        private void Dispose(bool disposing)
+        {
+            // Check to see if Dispose has already been called.
+            if (_disposed == false)
+            {
+                System.Diagnostics.Debug.Assert(_sharedInventory == null);
+                System.Diagnostics.Debug.Assert(_Cursor.Empty);
+
+                // If disposing equals true, dispose all managed
+                // and unmanaged resources.
+                if (disposing == true)
+                {
+                    // Dispose managed resources.
+                    _Locker.Dispose();
+                }
+
+                // Call the appropriate methods to clean up
+                // unmanaged resources here.
+                // If disposing is false,
+                // only the following code is executed.
+                //CloseHandle(handle);
+                //handle = IntPtr.Zero;
+
+                // Note disposing has been done.
+                _disposed = true;
+            }
+
         }
 
     }

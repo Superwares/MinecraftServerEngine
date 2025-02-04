@@ -344,12 +344,12 @@ namespace MinecraftServerEngine
             _itemStack.WriteData(buffer);
         }
 
-        internal byte[] WriteData()
-        {
-            using MinecraftProtocolDataStream buffer = new();
-            WriteData(buffer);
-            return buffer.ReadData();
-        }
+        //internal byte[] WriteData()
+        //{
+        //    using MinecraftProtocolDataStream buffer = new();
+        //    WriteData(buffer);
+        //    return buffer.ReadData();
+        //}
 
         public override string ToString()
         {

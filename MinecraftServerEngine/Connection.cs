@@ -1138,8 +1138,8 @@ namespace MinecraftServerEngine
                             throw new UnexpectedValueException("ServerboundHeldItemSlotPacket.Slot");
                         }
 
-                        playerInventory.ChangeMainHand(packet.Slot);
-                        player.UpdateEntityEquipmentsData(playerInventory.GetEquipmentsData());
+                        playerInventory.ChangeActiveMainHandIndex(packet.Slot);
+                        player.UpdateEquipmentsData();
                     }
                     break;
                 case ServerboundPlayingPacket.ServerboundAnimationPacketId:
@@ -1211,7 +1211,7 @@ namespace MinecraftServerEngine
 
                                 player._ItemBreak(world, mainHandItemStack);
 
-                                player.UpdateEntityEquipmentsData(playerInventory.GetEquipmentsData());
+                                player.UpdateEquipmentsData();
 
                                 //MyConsole.Debug("Item break!");
                             }
@@ -1223,7 +1223,7 @@ namespace MinecraftServerEngine
                                 //MyConsole.Debug("Different status of prev and current item!");
                                 Window.UpdateMainHandSlot(playerInventory);
 
-                                player.UpdateEntityEquipmentsData(playerInventory.GetEquipmentsData());
+                                player.UpdateEquipmentsData();
                             }
 
 
@@ -1306,7 +1306,7 @@ namespace MinecraftServerEngine
 
                             player._ItemBreak(world, mainHandItemStack);
 
-                            player.UpdateEntityEquipmentsData(playerInventory.GetEquipmentsData());
+                            player.UpdateEquipmentsData();
 
                             //MyConsole.Debug("Item break!");
                         }
@@ -1319,7 +1319,7 @@ namespace MinecraftServerEngine
                             //MyConsole.Debug("Different status of prev and current item!");
                             Window.UpdateMainHandSlot(playerInventory);
 
-                            player.UpdateEntityEquipmentsData(playerInventory.GetEquipmentsData());
+                            player.UpdateEquipmentsData();
                         }
 
                     }

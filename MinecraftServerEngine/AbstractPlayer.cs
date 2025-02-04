@@ -445,8 +445,26 @@ namespace MinecraftServerEngine
             renderer.SpawnPlayer(
                 Id, UniqueId,
                 Position, Look,
-                Sneaking, Sprinting,
-                Inventory.GetEquipmentsData());
+                Sneaking, Sprinting);
+
+            {
+                using MinecraftProtocolDataStream stream = new();
+
+                Inventory.WriteMainHandData(stream);
+
+                byte[] mainHand = stream.ReadData();
+
+                Inventory.WriteOffHandData(stream);
+
+                byte[] offHand = stream.ReadData();
+
+                Inventory.WriteHelmetData(stream);
+
+                byte[] helmet = stream.ReadData();
+
+                System.Diagnostics.Debug.Assert(renderer != null);
+                renderer.SetEquipmentsData(Id, mainHand, offHand, helmet);
+            }
         }
 
         internal void Connect(MinecraftClient client, World world, UserId id)
@@ -698,7 +716,7 @@ namespace MinecraftServerEngine
                 }
 
                 System.Diagnostics.Debug.Assert(Inventory != null);
-                UpdateEntityEquipmentsData(Inventory.GetEquipmentsData());
+                UpdateEquipmentsData();
             }
             finally
             {
@@ -966,6 +984,43 @@ namespace MinecraftServerEngine
             {
                 Conn.Animate(Id, animation);
             }
+        }
+
+        internal void UpdateEquipmentsData()
+        {
+            //System.Diagnostics.Debug.Assert(equipmentsData.helmet != null);
+            //System.Diagnostics.Debug.Assert(equipmentsData.mainHand != null);
+            //System.Diagnostics.Debug.Assert(equipmentsData.offHand != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(Renderers != null);
+            if (Renderers.Empty == true)
+            {
+                return;
+            }
+
+            using MinecraftProtocolDataStream stream = new();
+
+            Inventory.WriteMainHandData(stream);
+
+            byte[] mainHand = stream.ReadData();
+
+            Inventory.WriteOffHandData(stream);
+
+            byte[] offHand = stream.ReadData();
+
+            Inventory.WriteHelmetData(stream);
+
+            byte[] helmet = stream.ReadData();
+
+            System.Diagnostics.Debug.Assert(Renderers != null);
+            foreach (EntityRenderer renderer in Renderers.GetKeys())
+            {
+                System.Diagnostics.Debug.Assert(renderer != null);
+                renderer.SetEquipmentsData(Id, mainHand, offHand, helmet);
+            }
+
         }
 
         public void LoadWorld(World world)

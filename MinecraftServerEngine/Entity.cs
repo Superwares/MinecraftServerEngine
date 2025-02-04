@@ -545,8 +545,6 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            return;
-
             _sneaking = false;
             _sprinting = false;
 
@@ -637,7 +635,6 @@ namespace MinecraftServerEngine
 
                 Rotate(look);
 
-                ResetForms();
             }
             finally
             {
@@ -670,30 +667,6 @@ namespace MinecraftServerEngine
             }
 
             _Animate(animation);
-        }
-
-        internal void UpdateEntityEquipmentsData(
-            (byte[] helmet, byte[] mainHand, byte[] offHand) equipmentsData)
-        {
-            System.Diagnostics.Debug.Assert(equipmentsData.helmet != null);
-            System.Diagnostics.Debug.Assert(equipmentsData.mainHand != null);
-            System.Diagnostics.Debug.Assert(equipmentsData.offHand != null);
-
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            System.Diagnostics.Debug.Assert(Renderers != null);
-            if (Renderers.Empty == true)
-            {
-                return;
-            }
-
-            System.Diagnostics.Debug.Assert(Renderers != null);
-            foreach (EntityRenderer renderer in Renderers.GetKeys())
-            {
-                System.Diagnostics.Debug.Assert(renderer != null);
-                renderer.SetEquipmentsData(Id, equipmentsData);
-            }
-
         }
 
         internal virtual void _AddEffect(

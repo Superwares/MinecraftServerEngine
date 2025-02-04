@@ -160,6 +160,8 @@ If disposable objects were used as members of class and struct, they must be dis
 - Physics world cell 의 width 와 chunk location, grid 에서 사용되는 width 를 통합해야됨.
 	- 무조건 너비가 같아야 됩니다. (클라이언트에서 렌더거리를 이용한 엔티티 렌더링에서 무조건 해당 chunk width 를 단위로 사용함. 정확히 계산되어야됨.)
 
+- queue 에 배열을 넣으면 그대로 enqueue 되도록.
+
 ### Done 
 
 - DetermineToDespawnPlayerOnDisconnect 가 동적으로 적용되나 테스트해야됨.

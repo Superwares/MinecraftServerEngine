@@ -6,7 +6,6 @@ using MinecraftPrimitives;
 namespace MinecraftServerEngine
 {
     using PhysicsEngine;
-    using System.Security.Principal;
 
     internal abstract class Renderer
     {
@@ -20,6 +19,20 @@ namespace MinecraftServerEngine
         protected void Render(ClientboundPlayingPacket packet)
         {
             OutPackets.Enqueue(packet);
+        }
+
+        protected void Render(params ClientboundPlayingPacket[] packets)
+        {
+            if (packets == null || packets.Length == 0)
+            {
+                return;
+            }
+
+            foreach (ClientboundPlayingPacket p in packets)
+            {
+                OutPackets.Enqueue(p);
+            }
+
         }
     }
 
@@ -233,7 +246,7 @@ namespace MinecraftServerEngine
 
             mainSlot.WriteData(buffer);
 
-            int slot = PlayerInventory.HotbarSlotsOffset + playerInventory.IndexMainHandSlot;
+            int slot = PlayerInventory.HotbarSlotsOffset + playerInventory.ActiveMainHandIndex;
 
             int windowId = 0;
             System.Diagnostics.Debug.Assert(windowId >= sbyte.MinValue);
@@ -611,22 +624,24 @@ namespace MinecraftServerEngine
 
         internal void SetEquipmentsData(
             int id,
-            (byte[] helmet, byte[] mainHand, byte[] offHand) equipmentsData)
+            byte[] mainHand,byte[] offHand,
+            byte[] helmet
+            )
         {
-            System.Diagnostics.Debug.Assert(equipmentsData.helmet != null);
-            System.Diagnostics.Debug.Assert(equipmentsData.mainHand != null);
-            System.Diagnostics.Debug.Assert(equipmentsData.offHand != null);
+            System.Diagnostics.Debug.Assert(helmet != null);
+            System.Diagnostics.Debug.Assert(mainHand != null);
+            System.Diagnostics.Debug.Assert(offHand != null);
 
-            System.Diagnostics.Debug.Assert(!Disconnected);
+            System.Diagnostics.Debug.Assert(Disconnected == false);
 
-            Render(new EntityEquipmentPacket(id, 0, equipmentsData.mainHand));
-            Render(new EntityEquipmentPacket(id, 1, equipmentsData.offHand));
-            Render(new EntityEquipmentPacket(id, 5, equipmentsData.helmet));
+            Render(new EntityEquipmentPacket(id, 0, mainHand));
+            Render(new EntityEquipmentPacket(id, 1, offHand));
+            Render(new EntityEquipmentPacket(id, 5, helmet));
         }
 
         internal void SetEntityStatus(int id, byte v)
         {
-            System.Diagnostics.Debug.Assert(!Disconnected);
+            System.Diagnostics.Debug.Assert(Disconnected == false);
 
             Render(new EntityStatusPacket(id, v));
         }
@@ -634,8 +649,8 @@ namespace MinecraftServerEngine
         internal void SpawnPlayer(
             int id, System.Guid uniqueId,
             Vector p, Angles look,
-            bool sneaking, bool sprinting,
-            (byte[] helmet, byte[] mainHand, byte[] offHand) equipmentsData)
+            bool sneaking, bool sprinting
+            )
         {
             System.Diagnostics.Debug.Assert(uniqueId != System.Guid.Empty);
 
@@ -663,8 +678,6 @@ namespace MinecraftServerEngine
                 p.X, p.Y, p.Z,
                 x, y,
                 metadata.WriteData()));
-
-            SetEquipmentsData(id, equipmentsData);
         }
 
         internal void SpawnItemEntity(
