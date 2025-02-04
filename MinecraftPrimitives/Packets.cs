@@ -2,61 +2,6 @@
 namespace MinecraftPrimitives
 {
 
-    /*public sealed class SlotData
-    {
-        public readonly short Id;
-        public readonly byte Count;
-        
-        public static SlotData Read(byte[] data)
-        {
-            using Buffer buffer = new();
-            buffer.WriteData(data);
-
-            short id = buffer.ReadShort();
-            if (id == -1)
-                return new();
-
-            byte count = buffer.ReadByte();
-            short damage = buffer.ReadShort();
-            Debug.Assert(damage == 0);
-            byte nbt = buffer.ReadByte();
-            Debug.Assert(nbt == 0x00);
-            return new(id, count);
-        }
-
-        public SlotData(short id, byte count)
-        {
-            Id = id;
-            Count = count;
-        }
-
-        public SlotData()
-        {
-            Id = -1;
-        }
-
-        public byte[] WriteData()
-        {
-            using Buffer buffer = new();
-
-            if (Id == -1)
-            {
-                buffer.WriteShort(-1);
-                return buffer.ReadData();
-            }
-
-            buffer.WriteShort(Id);
-            buffer.WriteByte(Count);
-            buffer.WriteShort(0);
-            buffer.WriteByte(0x00);  // no NBT
-
-            return buffer.ReadData();
-        }
-
-    }*/
-
-
-
     public abstract class Packet
     {
         public const string MinecraftVersion = "1.12.2";
@@ -263,6 +208,7 @@ namespace MinecraftPrimitives
         public const int UpdateHealthPacketId = 0x41;
         public const int TimeUpdatePacketId = 0x47;
         public const int TitlePacketId = 0x48;
+        public const int ItemCollectingPacketId = 0x4B;
         public const int EntityTeleportPacketId = 0x4C;
         public const int EntityPropertiesPacketId = 0x4E;
         public const int EntityEffectPacketId = 0x4F;
@@ -2750,6 +2696,46 @@ namespace MinecraftPrimitives
 
             buffer.WriteInt(0, true);
             buffer.WriteString(Data);
+        }
+    }
+    
+    public sealed class ItemCollectingPacket : ClientboundPlayingPacket
+    {
+        public readonly int CollectedEntityId;
+        public readonly int CollectorEntityId;
+        public readonly int PickupItemCount;
+
+        public static ItemCollectingPacket Read(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            throw new System.NotImplementedException();
+        }
+
+        public ItemCollectingPacket(
+            int collectedEntityId,
+            int collectorEntityId,
+            int pickupItemCount) 
+            : base(ItemCollectingPacketId)
+        {
+            CollectedEntityId = collectedEntityId;
+            CollectorEntityId = collectorEntityId;
+            PickupItemCount = pickupItemCount;
+        }
+
+        protected override void WriteData(MinecraftProtocolDataStream buffer)
+        {
+            if (buffer == null)
+            {
+                throw new System.ArgumentNullException(nameof(buffer));
+            }
+
+            buffer.WriteInt(CollectedEntityId, true);
+            buffer.WriteInt(CollectorEntityId, true);
+            buffer.WriteInt(PickupItemCount, true);
         }
     }
 

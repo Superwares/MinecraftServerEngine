@@ -162,7 +162,7 @@ namespace TestMinecraftServerApplication
             if (belowBlock != Block.Air && belowBlock.IsItemable() == true)
             {
                 ItemType blockItemType = belowBlock.GetItemType();
-              
+
                 SetHelmet(new ItemStack(blockItemType, "Below Block!"));
 
                 ApplyBlockAppearance(belowBlock);
@@ -202,7 +202,7 @@ namespace TestMinecraftServerApplication
             {
                 if (f == true)
                 {
-                    
+
 
                     HideBlock(world);
 
@@ -575,7 +575,7 @@ namespace TestMinecraftServerApplication
                 world.PlaySound("entity.llama.swag", 0, Position, 0.5, 1.0);
             }
 
-            
+
         }
 
 
@@ -666,7 +666,21 @@ namespace TestMinecraftServerApplication
 
             if (_world is SuperWorld world)
             {
-                HandleDefaultAttack(world, attackCharge);
+                Vector eyeOrigin = GetEyeOrigin();
+                Vector d = Look.GetUnitVector();
+                Vector scaled_d = d * GetEyeHeight();
+
+                PhysicsObject obj = world.SearchClosestObject(eyeOrigin, scaled_d, this);
+
+                if (obj is ItemEntity itemEntity)
+                {
+                    itemEntity.PickUp(this);
+                }
+                else
+                {
+                    HandleDefaultAttack(world, attackCharge);
+                }
+
             }
         }
 
@@ -681,44 +695,59 @@ namespace TestMinecraftServerApplication
 
             if (_world is SuperWorld world)
             {
-                bool breaked = false;
 
-                switch (itemStack.Type)
+                Vector eyeOrigin = GetEyeOrigin();
+                Vector d = Look.GetUnitVector();
+                Vector scaled_d = d * GetEyeHeight();
+
+                PhysicsObject obj = world.SearchClosestObject(eyeOrigin, scaled_d, this);
+
+                if (obj is ItemEntity itemEntity)
                 {
-                    default:
-                        HandleDefaultAttack(world, attackCharge);
-                        breaked = true;
-                        break;
-                    case WoodenSword.Type:
-                        breaked = HandleWoodenSwordAttack(world, attackCharge);
-                        break;
-                    case BalloonBasher.Type:
-                        breaked = HandleBalloonBasherAttack(world, attackCharge);
-                        break;
-
-                    case BlastCore.Type:
-                        UseBlastCore(world);
-                        break;
-                    case Doombringer.Type:
-                        breaked = HandleDoombringerAttack(world, attackCharge);
-                        break;
-
-                    case Dash.Type:
-                        UseDash(world);
-                        break;
-                    case Hint.Type:
-                        UseHint(world);
-                        break;
-
-                    case ChaosSwap.Type:
-                        UseChaosSwap(world);
-                        break;
+                    itemEntity.PickUp(this);
                 }
-
-                if (breaked == true)
+                else
                 {
-                    itemStack.Damage(1);
+                    bool breaked = false;
+
+                    switch (itemStack.Type)
+                    {
+                        default:
+                            HandleDefaultAttack(world, attackCharge);
+                            breaked = true;
+                            break;
+                        case WoodenSword.Type:
+                            breaked = HandleWoodenSwordAttack(world, attackCharge);
+                            break;
+                        case BalloonBasher.Type:
+                            breaked = HandleBalloonBasherAttack(world, attackCharge);
+                            break;
+
+                        case BlastCore.Type:
+                            UseBlastCore(world);
+                            break;
+                        case Doombringer.Type:
+                            breaked = HandleDoombringerAttack(world, attackCharge);
+                            break;
+
+                        case Dash.Type:
+                            UseDash(world);
+                            break;
+                        case Hint.Type:
+                            UseHint(world);
+                            break;
+
+                        case ChaosSwap.Type:
+                            UseChaosSwap(world);
+                            break;
+                    }
+
+                    if (breaked == true)
+                    {
+                        itemStack.Damage(1);
+                    }
                 }
+                
             }
 
         }

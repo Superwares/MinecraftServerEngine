@@ -67,23 +67,54 @@ namespace MinecraftServerEngine
             return _stack == null;
         }
 
-        internal void PickUp(AbstractPlayer player)
+        public void PickUp(AbstractPlayer player)
         {
-            System.Diagnostics.Debug.Assert(_disposed == false);
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
-            if (_stack == null)
+            if (player == null)
             {
                 return;
             }
 
+            System.Diagnostics.Debug.Assert(player != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+          
+
+            System.Diagnostics.Debug.Assert(DefaultLocker != null);
             DefaultLocker.Hold();
 
             try
             {
-                player.GiveItemStack(ref _stack);
-                
-            } finally
+                if (_stack == null)
+                {
+                    return;
+                }
+
+                System.Diagnostics.Debug.Assert(_stack.Count >= Item.MinCount);
+                int pickupCount = _stack.Count;
+
+                System.Diagnostics.Debug.Assert(player != null);
+                if (player.GiveItemStack(ref _stack) == true)
+                {
+                    System.Diagnostics.Debug.Assert(Renderers != null);
+                    if (Renderers.Empty == false)
+                    {
+                        foreach (EntityRenderer renderer in Renderers.GetKeys())
+                        {
+                            System.Diagnostics.Debug.Assert(renderer != null);
+                            renderer.CollectItemEntity(Id, player.Id, pickupCount);
+                        }
+                    }
+                }
+            } 
+            finally
             {
+                System.Diagnostics.Debug.Assert(DefaultLocker != null);
                 DefaultLocker.Release();
             }
 

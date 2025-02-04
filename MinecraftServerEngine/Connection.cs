@@ -1244,17 +1244,6 @@ namespace MinecraftServerEngine
                 case ServerboundPlayingPacket.BlockPlacementPacketId:
                     {
                         buffer.Flush();
-
-                        Vector eyeOrigin = player.GetEyeOrigin();
-                        Vector d = player.Look.GetUnitVector();
-                        Vector scaled_d = d * player.GetEyeHeight();
-
-                        PhysicsObject obj = world.SearchClosestObject(eyeOrigin, scaled_d, player);
-
-                        if (obj is ItemEntity itemEntity)
-                        {
-                            itemEntity.PickUp(player);
-                        }
                     }
                     break;
                 case ServerboundPlayingPacket.UseItemPacketId:

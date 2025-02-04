@@ -639,6 +639,18 @@ namespace MinecraftServerEngine
             Render(new EntityEquipmentPacket(id, 5, helmet));
         }
 
+        internal void CollectItemEntity(
+            int itemEntityId,
+            int collectorEntityId,
+            int pickupCount)
+        {
+            System.Diagnostics.Debug.Assert(pickupCount >= Item.MinCount);
+
+            System.Diagnostics.Debug.Assert(Disconnected == false);
+
+            Render(new ItemCollectingPacket(itemEntityId, collectorEntityId, pickupCount));
+        }
+
         internal void SetEntityStatus(int id, byte v)
         {
             System.Diagnostics.Debug.Assert(Disconnected == false);
