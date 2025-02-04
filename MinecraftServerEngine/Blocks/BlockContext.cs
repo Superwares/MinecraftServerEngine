@@ -248,7 +248,12 @@ namespace MinecraftServerEngine.Blocks
 
                 }
 
-                ~SectionData() => System.Diagnostics.Debug.Assert(false);
+                ~SectionData()
+                {
+                    System.Diagnostics.Debug.Assert(false);
+
+                    Dispose(false);
+                }
 
                 public int GetId(int x, int y, int z)
                 {
@@ -549,23 +554,41 @@ namespace MinecraftServerEngine.Blocks
                     }
                 }
 
+
                 public void Dispose()
                 {
-                    // Assertion.
-                    System.Diagnostics.Debug.Assert(_disposed == false);
-
-                    // Release resources.
-                    _palette = null;
-
-                    _data = null;
-
-                    _blockLights = null; _skyLights = null;
-
-                    // Finish.
+                    Dispose(true);
                     System.GC.SuppressFinalize(this);
-                    _disposed = true;
                 }
 
+                private void Dispose(bool disposing)
+                {
+                    // Check to see if Dispose has already been called.
+                    if (_disposed == false)
+                    {
+                        // If disposing equals true, dispose all managed
+                        // and unmanaged resources.
+                        if (disposing == true)
+                        {
+                            // Dispose managed resources.
+                            _palette = null;
+
+                            _data = null;
+
+                            _blockLights = null; _skyLights = null;
+                        }
+
+                        // Call the appropriate methods to clean up
+                        // unmanaged resources here.
+                        // If disposing is false,
+                        // only the following code is executed.
+                        //CloseHandle(handle);
+                        //handle = IntPtr.Zero;
+
+                        // Note disposing has been done.
+                        _disposed = true;
+                    }
+                }
 
             }
 
@@ -660,6 +683,8 @@ namespace MinecraftServerEngine.Blocks
             ~ChunkData()
             {
                 System.Diagnostics.Debug.Assert(false);
+
+                Dispose(false);
             }
 
             public void SetId(int defaultId, int x, int y, int z, int id)
@@ -724,26 +749,45 @@ namespace MinecraftServerEngine.Blocks
 
             public void Dispose()
             {
-                // Assertion.
-                System.Diagnostics.Debug.Assert(_disposed == false);
+                Dispose(true);
+                System.GC.SuppressFinalize(this);
+            }
 
-                // Release resources.
-                for (int i = 0; i < _sections.Length; ++i)
+            private void Dispose(bool disposing)
+            {
+                // Check to see if Dispose has already been called.
+                if (_disposed == false)
                 {
-                    SectionData data = _sections[i];
-                    if (data == null)
+                    // If disposing equals true, dispose all managed
+                    // and unmanaged resources.
+                    if (disposing == true)
                     {
-                        continue;
+                        // Dispose managed resources.
+                        for (int i = 0; i < _sections.Length; ++i)
+                        {
+                            SectionData data = _sections[i];
+                            if (data == null)
+                            {
+                                continue;
+                            }
+
+                            data.Dispose();
+                        }
+                        _sections = null;
                     }
 
-                    data.Dispose();
-                }
-                _sections = null;
+                    // Call the appropriate methods to clean up
+                    // unmanaged resources here.
+                    // If disposing is false,
+                    // only the following code is executed.
+                    //CloseHandle(handle);
+                    //handle = IntPtr.Zero;
 
-                // Finish.
-                System.GC.SuppressFinalize(this);
-                _disposed = true;
+                    // Note disposing has been done.
+                    _disposed = true;
+                }
             }
+
 
         }
 
@@ -863,7 +907,12 @@ namespace MinecraftServerEngine.Blocks
             SetBlock(loc, Block.Stone);
         }
 
-        ~BlockContext() => System.Diagnostics.Debug.Assert(false);
+        ~BlockContext()
+        {
+            System.Diagnostics.Debug.Assert(false);
+
+            Dispose(false);
+        }
 
         private ChunkLocation BlockToChunk(BlockLocation loc)
         {
