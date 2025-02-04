@@ -1086,7 +1086,7 @@ namespace MinecraftServerEngine
                                 //MyConsole.Debug("Seanking!");
                                 if (player.Sneaking)
                                 {
-                                    throw new UnexpectedValueException("EntityActionPacket.ActionId");
+                                    throw new UnexpectedValueException($"Invalid action id: {packet.ActionId}");
                                 }
 
                                 player.Sneak(world);
@@ -1096,7 +1096,7 @@ namespace MinecraftServerEngine
                                 //MyConsole.Debug("Unseanking!");
                                 if (!player.Sneaking)
                                 {
-                                    throw new UnexpectedValueException("EntityActionPacket.ActionId");
+                                    throw new UnexpectedValueException($"Invalid action id: {packet.ActionId}");
                                 }
 
                                 player.Unsneak(world);
@@ -1105,7 +1105,7 @@ namespace MinecraftServerEngine
                             case 3:
                                 if (player.Sprinting)
                                 {
-                                    throw new UnexpectedValueException("EntityActionPacket.ActionId");
+                                    throw new UnexpectedValueException($"Invalid action id: {packet.ActionId}");
                                 }
 
                                 player.Sprint(world);
@@ -1114,7 +1114,7 @@ namespace MinecraftServerEngine
                             case 4:
                                 if (!player.Sprinting)
                                 {
-                                    throw new UnexpectedValueException("EntityActionPacket.ActionId");
+                                    throw new UnexpectedValueException($"Invalid action id: {packet.ActionId}");
                                 }
 
                                 player.Unsprint(world);
@@ -1124,7 +1124,7 @@ namespace MinecraftServerEngine
 
                         if (packet.JumpBoost > 0)
                         {
-                            throw new UnexpectedValueException("EntityActionPacket.JumpBoost");
+                            throw new UnexpectedValueException($"Invalid jump boost: {packet.JumpBoost}");
                         }
 
                     }
