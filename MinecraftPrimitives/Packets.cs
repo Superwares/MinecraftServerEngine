@@ -1323,7 +1323,14 @@ namespace MinecraftPrimitives
             System.Diagnostics.Debug.Assert(WindowId > 0);
             buffer.WriteByte(WindowId);
             buffer.WriteString(WindowType);
-            buffer.WriteString("{\"text\":\"foo\"}");
+
+            var data = new
+            {
+                text = WindowTitle,
+            };
+            string jsonString = System.Text.Json.JsonSerializer.Serialize(data);
+
+            buffer.WriteString(jsonString);
             buffer.WriteByte(SlotCount);
         }
 
