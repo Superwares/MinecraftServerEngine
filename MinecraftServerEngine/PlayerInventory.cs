@@ -320,7 +320,7 @@ namespace MinecraftServerEngine
             RightClick(slot, cursor);
         }
 
-        public void GiveItemStackFromLeftInPrimary(ref ItemStack itemStack)
+        public bool GiveItemStackFromLeftInPrimary(ref ItemStack itemStack)
         {
             if (_disposed == true)
             {
@@ -331,19 +331,33 @@ namespace MinecraftServerEngine
 
             if (itemStack == null)
             {
-                return;
+                return true;
             }
 
+            InventorySlot slot;
+
             using Queue<InventorySlot> slots = new();
+            InventorySlot emptySlot = null;
 
             int _preMovedCount;
             int _preRemainingCount = itemStack.Count;
 
-            InventorySlot slot;
             for (int i = 0; i < PrimarySlotCount; ++i)
             {
+                System.Diagnostics.Debug.Assert(_preRemainingCount > 0);
+
                 slot = GetPrimarySlot(i);
                 System.Diagnostics.Debug.Assert(slot != null);
+
+                if (slot.Empty == true)
+                {
+                    if (emptySlot == null)
+                    {
+                        emptySlot = slot;
+                    }
+
+                    continue;
+                }
 
                 _preMovedCount = slot.PreMove(itemStack, _preRemainingCount);
 
@@ -355,31 +369,47 @@ namespace MinecraftServerEngine
                 _preRemainingCount = _preMovedCount;
                 slots.Enqueue(slot);
 
-
                 if (_preRemainingCount == 0)
                 {
                     break;
                 }
+
             }
 
-            if (_preRemainingCount > 0)
+            
+            if (
+                _preRemainingCount > 0 &&
+                emptySlot == null
+                )
             {
-                return;
+                return false;
             }
+            System.Diagnostics.Debug.Assert(itemStack.MaxCount >= Item.MinCount);
+            System.Diagnostics.Debug.Assert(_preRemainingCount <= itemStack.MaxCount);
 
-            while (slots.Empty == false)
+            System.Diagnostics.Debug.Assert(slots != null);
+            while (slots.Length > 0)
             {
+                System.Diagnostics.Debug.Assert(itemStack != null);
+
                 slot = slots.Dequeue();
 
                 slot.Move(ref itemStack);
 
-                if (itemStack == null)
+                if (slot.MoveAll(ref itemStack) == true)
                 {
                     break;
                 }
             }
 
-            return;
+            if (itemStack != null)
+            {
+                System.Diagnostics.Debug.Assert(emptySlot != null);
+                System.Diagnostics.Debug.Assert(emptySlot.Empty == true);
+                emptySlot.MoveAll(ref itemStack);
+            }
+
+            return true;
         }
 
         public bool GiveItemStacksFromLeftInPrimary(IReadOnlyItem item, int count)
@@ -445,6 +475,7 @@ namespace MinecraftServerEngine
 
             }
 
+            System.Diagnostics.Debug.Assert(item.MaxCount >= Item.MinCount);
             if (
                 _preRemainingCount > 0 && 
                 _preRemainingCount > (emptySlots.Length * item.MaxCount)
@@ -844,7 +875,7 @@ namespace MinecraftServerEngine
             return GiveItemStacksFromLeftInPrimary(item, count);
         }
 
-        public void GiveItemStack(ref ItemStack itemStack)
+        public bool GiveItemStack(ref ItemStack itemStack)
         {
             if (_disposed == true)
             {
@@ -853,10 +884,10 @@ namespace MinecraftServerEngine
 
             if (itemStack == null)
             {
-                return;
+                return true;
             }
 
-            GiveItemStackFromLeftInPrimary(ref itemStack);
+            return GiveItemStackFromLeftInPrimary(ref itemStack);
         }
 
         public ItemStack[] TakeItemStacks(IReadOnlyItem item, int count)

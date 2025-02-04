@@ -100,16 +100,16 @@ namespace MinecraftServerEngine
             }
         }
 
-        internal void Move(InventorySlot from)
+        internal void Move(InventorySlot fromSlot)
         {
-            System.Diagnostics.Debug.Assert(from != null);
+            System.Diagnostics.Debug.Assert(fromSlot != null);
 
-            if (from.Empty)
+            if (fromSlot.Empty == true)
             {
                 return;
             }
 
-            ref ItemStack stackFrom = ref from._itemStack;
+            ref ItemStack stackFrom = ref fromSlot._itemStack;
 
             if (Empty == true)
             {
@@ -122,22 +122,40 @@ namespace MinecraftServerEngine
             _itemStack.Move(ref stackFrom);
         }
 
-        internal void Move(ref ItemStack from)
+        internal bool Move(ref ItemStack fromItemStack)
         {
-            if (from == null)
+            if (fromItemStack == null)
             {
-                return;
+                return true;
             }
 
             if (Empty == true)
             {
-                _itemStack = from;
-                from = null;
+                _itemStack = fromItemStack;
+                fromItemStack = null;
 
-                return;
+                return true;
             }
 
-            _itemStack.Move(ref from);
+            return _itemStack.Move(ref fromItemStack);
+        }
+
+        internal bool MoveAll(ref ItemStack fromItemStack)
+        {
+            if (fromItemStack == null)
+            {
+                return true;
+            }
+
+            if (Empty == true)
+            {
+                _itemStack = fromItemStack;
+                fromItemStack = null;
+
+                return true;
+            }
+
+            return _itemStack.MoveAll(ref fromItemStack);
         }
 
         //internal int PreMove(ItemStack from, int count)

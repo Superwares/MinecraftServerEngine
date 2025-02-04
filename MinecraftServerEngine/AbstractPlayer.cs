@@ -769,7 +769,7 @@ namespace MinecraftServerEngine
 
         }
 
-        public void GiveItemStack(ref ItemStack itemStack)
+        public bool GiveItemStack(ref ItemStack itemStack)
         {
             if (_disposed == true)
             {
@@ -780,7 +780,7 @@ namespace MinecraftServerEngine
 
             if (itemStack == null)
             {
-                return;
+                return true;
             }
 
             System.Diagnostics.Debug.Assert(InventoryLocker != null);
@@ -792,12 +792,12 @@ namespace MinecraftServerEngine
                 {
                     System.Diagnostics.Debug.Assert(Inventory != null);
                     System.Diagnostics.Debug.Assert(Conn.Window != null);
-                    Conn.Window.GiveItemStack(Inventory, ref itemStack);
+                    return Conn.Window.GiveItemStack(Inventory, ref itemStack);
                 }
                 else
                 {
                     System.Diagnostics.Debug.Assert(Inventory != null);
-                    Inventory.GiveItemStack(ref itemStack);
+                    return Inventory.GiveItemStack(ref itemStack);
                 }
             }
             finally

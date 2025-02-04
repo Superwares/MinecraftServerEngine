@@ -206,6 +206,11 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_count > 0);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fromItemStack"></param>
+        /// <returns>isMoved</returns>
         internal bool Move(ref ItemStack fromItemStack)
         {
             System.Diagnostics.Debug.Assert(fromItemStack != null);
@@ -229,6 +234,39 @@ namespace MinecraftServerEngine
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fromItemStack"></param>
+        /// <returns>isAllMoved</returns>
+        internal bool MoveAll(ref ItemStack fromItemStack)
+        {
+            System.Diagnostics.Debug.Assert(fromItemStack != null);
+
+            if (AreByteArraysEqual(Hash, fromItemStack.Hash) == false)
+            {
+                return false;
+            }
+
+            int remaning = Stack2(fromItemStack.Count);
+            System.Diagnostics.Debug.Assert(remaning >= 0);
+            System.Diagnostics.Debug.Assert(remaning <= fromItemStack.Count);
+
+            if (remaning == 0)
+            {
+                fromItemStack = null;
+
+                return true;
+            }
+            else
+            {
+                fromItemStack.Spend(fromItemStack.Count - remaning);
+                
+                return false;
+            }
+
         }
 
         internal int Move(IReadOnlyItem fromItem, int count)

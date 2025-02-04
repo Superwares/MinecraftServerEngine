@@ -465,7 +465,7 @@ namespace MinecraftServerEngine
             }
         }
 
-        internal void GiveItemStack(PlayerInventory playerInventory, ref ItemStack itemStack)
+        internal bool GiveItemStack(PlayerInventory playerInventory, ref ItemStack itemStack)
         {
             System.Diagnostics.Debug.Assert(playerInventory != null);
 
@@ -473,7 +473,7 @@ namespace MinecraftServerEngine
 
             if (itemStack == null)
             {
-                return;
+                return true;
             }
 
             System.Diagnostics.Debug.Assert(_Locker != null);
@@ -486,7 +486,7 @@ namespace MinecraftServerEngine
 
             try
             {
-                playerInventory.GiveItemStack(ref itemStack);
+                return playerInventory.GiveItemStack(ref itemStack);
             }
             finally
             {
