@@ -23,6 +23,8 @@ which significantly enhances server performance and scalability.
 ### Dynamic Entity Appearance (yet)
 다른 Entity 또는 블럭으로 변환 가능 (Hitbox 는 변하지 않음))
 
+### Dynamic Block Appearance
+
 ### Player Skin Morphing (yet)
 
 ### Ghost Players
