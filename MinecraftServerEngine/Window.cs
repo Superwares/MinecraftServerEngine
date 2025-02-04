@@ -3,6 +3,9 @@ using Containers;
 using Sync;
 
 using MinecraftPrimitives;
+using MinecraftServerEngine.Inventories;
+using MinecraftServerEngine.Items;
+using MinecraftServerEngine.Renderers;
 
 namespace MinecraftServerEngine
 {

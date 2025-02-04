@@ -1,4 +1,5 @@
-﻿using MinecraftServerEngine;
+﻿using MinecraftServerEngine.Inventories;
+using MinecraftServerEngine.Items;
 
 namespace TestMinecraftServerApplication.Items
 {
@@ -22,7 +23,7 @@ namespace TestMinecraftServerApplication.Items
                 $"Total slots     {InventoryLines * SharedInventory.SlotCountPerLine}",
             ]);
 
-        public static readonly int DefaultCount = MinecraftServerEngine.Item.MinCount;
+        public static readonly int DefaultCount = MinecraftServerEngine.Items.Item.MinCount;
 
         static GlobalChestItem()
         {

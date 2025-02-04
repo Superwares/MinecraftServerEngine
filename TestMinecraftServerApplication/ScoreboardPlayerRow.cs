@@ -4,6 +4,8 @@ using MinecraftPrimitives;
 
 namespace TestMinecraftServerApplication
 {
+    using Configs;
+
     public sealed class ScoreboardPlayerRow
     {
         //public const int PointsPerKill = 13;

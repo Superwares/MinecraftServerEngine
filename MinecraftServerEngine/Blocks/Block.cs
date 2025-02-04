@@ -1,7 +1,7 @@
 ﻿
 using Common;
 
-namespace MinecraftServerEngine
+namespace MinecraftServerEngine.Blocks
 {
     public enum Block : int
     {
@@ -148,7 +148,7 @@ namespace MinecraftServerEngine
         Bookshelf,                      // 47:0
         MossStone,                      // 48:0
         Obsidian,                       // 49:0
-        
+
         //Torch,                          // 50:0  minecraft:torch
         EastTorch,                      // 50:1  minecraft:torch
         WestTorch,                      // 50:2  minecraft:torch
@@ -298,7 +298,7 @@ namespace MinecraftServerEngine
         WestTopSpruceWoodStairs,        // 134:5
         SouthTopSpruceWoodStairs,       // 134:6
         NorthTopSpruceWoodStairs,       // 134:7
-        
+
         EastBottomBirchWoodStairs,      // 135:0
         WestBottomBirchWoodStairs,      // 135:1
         SouthBottomBirchWoodStairs,     // 135:2

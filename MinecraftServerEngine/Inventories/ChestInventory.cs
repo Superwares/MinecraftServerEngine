@@ -1,5 +1,4 @@
-﻿
-namespace MinecraftServerEngine
+﻿namespace MinecraftServerEngine.Inventories
 {
     public sealed class ChestInventory : SharedInventory
     {

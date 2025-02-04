@@ -6,6 +6,8 @@ using MinecraftPrimitives;
 
 namespace MinecraftServerEngine
 {
+    using MinecraftServerEngine.Blocks;
+    using MinecraftServerEngine.Renderers;
     using PhysicsEngine;
 
     public abstract class World : PhysicsWorld

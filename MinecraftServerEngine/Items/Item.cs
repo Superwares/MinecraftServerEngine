@@ -1,7 +1,4 @@
-﻿
-
-
-namespace MinecraftServerEngine
+﻿namespace MinecraftServerEngine.Items
 {
     public class Item : IReadOnlyItem
     {
@@ -233,7 +230,7 @@ namespace MinecraftServerEngine
         {
             if (obj is IReadOnlyItem other)
             {
-                return this.Equals(other);
+                return Equals(other);
             }
 
             return false;

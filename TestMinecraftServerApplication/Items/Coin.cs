@@ -1,5 +1,5 @@
-﻿using MinecraftServerEngine;
-using MinecraftPrimitives;
+﻿using MinecraftPrimitives;
+using MinecraftServerEngine.Items;
 
 namespace TestMinecraftServerApplication.Items
 {
@@ -15,7 +15,7 @@ namespace TestMinecraftServerApplication.Items
                 "게임의 기본 재화입니다.",
             ]);
 
-        public static readonly int DefaultCount = MinecraftServerEngine.Item.MinCount;
+        public static readonly int DefaultCount = MinecraftServerEngine.Items.Item.MinCount;
         public static readonly int MaxCount = Type.GetMaxCount();
 
     }

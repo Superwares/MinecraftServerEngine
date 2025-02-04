@@ -1,6 +1,6 @@
 ﻿
 
-namespace MinecraftServerEngine
+namespace MinecraftServerEngine.Blocks
 {
     using PhysicsEngine;
 
@@ -42,17 +42,17 @@ namespace MinecraftServerEngine
 
         public readonly Vector GetMinVector()
         {
-            double x = (double)X,
-                y = (double)Y,
-                z = (double)Z;
+            double x = X,
+                y = Y,
+                z = Z;
             return new(x, y, z);
         }
 
         public readonly Vector GetMaxVector()
         {
-            double x = (double)X + Terrain.BlockWidth,
-                y = (double)Y + Terrain.BlockHeight,
-                z = (double)Z + Terrain.BlockWidth;
+            double x = X + Terrain.BlockWidth,
+                y = Y + Terrain.BlockHeight,
+                z = Z + Terrain.BlockWidth;
             return new(x, y, z);
         }
 
@@ -63,7 +63,7 @@ namespace MinecraftServerEngine
 
         public readonly bool Equals(BlockLocation other)
         {
-            return (X == other.X) && (Y == other.Y) && (Z == other.Z);
+            return X == other.X && Y == other.Y && Z == other.Z;
         }
 
     }

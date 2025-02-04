@@ -1,5 +1,4 @@
-﻿
-namespace MinecraftServerEngine
+﻿namespace MinecraftServerEngine
 {
     public enum Particle : int
     {

@@ -1,6 +1,4 @@
-﻿
-
-namespace MinecraftServerEngine
+﻿namespace MinecraftServerEngine.Items
 {
     public interface IReadOnlyItem : System.IEquatable<IReadOnlyItem>
     {

@@ -3,6 +3,7 @@ using Common;
 
 using MinecraftPrimitives;
 using MinecraftServerEngine;
+using MinecraftServerEngine.Items;
 
 namespace TestMinecraftServerApplication.Items
 {
@@ -30,7 +31,7 @@ namespace TestMinecraftServerApplication.Items
                 $"+Speed          {MovementSpeed}/{(double)MovementSpeedDuration.Amount/(double)Time.FromSeconds(1).Amount}s",
             ]);
 
-        public static readonly int DefaultCount = MinecraftServerEngine.Item.MinCount;
+        public static readonly int DefaultCount = MinecraftServerEngine.Items.Item.MinCount;
 
         public static bool CanPurchase = true;
 

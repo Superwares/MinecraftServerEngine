@@ -1,6 +1,8 @@
 ﻿
 namespace MinecraftServerEngine
 {
+    using MinecraftServerEngine.Items;
+    using MinecraftServerEngine.Renderers;
     using PhysicsEngine;
     using Sync;
 

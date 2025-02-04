@@ -5,6 +5,7 @@ using MinecraftPrimitives;
 using MinecraftServerEngine;
 using MinecraftServerEngine.PhysicsEngine;
 using TestMinecraftServerApplication;
+using TestMinecraftServerApplication.Configs;
 
 
 const ushort port = 25565;

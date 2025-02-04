@@ -4,6 +4,8 @@ using Containers;
 
 namespace MinecraftServerEngine
 {
+    using MinecraftServerEngine.Items;
+    using MinecraftServerEngine.Renderers;
     using PhysicsEngine;
 
     public abstract class LivingEntity : Entity

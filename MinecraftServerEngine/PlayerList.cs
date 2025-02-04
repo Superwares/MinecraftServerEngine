@@ -5,6 +5,7 @@ using Containers;
 using Sync;
 
 using MinecraftPrimitives;
+using MinecraftServerEngine.Renderers;
 
 namespace MinecraftServerEngine
 {

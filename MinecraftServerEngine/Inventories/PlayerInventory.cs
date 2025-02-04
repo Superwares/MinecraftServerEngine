@@ -3,9 +3,9 @@
 using Containers;
 
 using MinecraftPrimitives;
-using static System.Reflection.Metadata.BlobBuilder;
+using MinecraftServerEngine.Items;
 
-namespace MinecraftServerEngine
+namespace MinecraftServerEngine.Inventories
 {
     public sealed class PlayerInventory : Inventory
     {
@@ -391,7 +391,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(item.MaxCount >= Item.MinCount);
             if (
                 _preRemainingCount > 0 &&
-                _preRemainingCount > (emptySlots.Length * item.MaxCount)
+                _preRemainingCount > emptySlots.Length * item.MaxCount
                 )
             {
                 return false;
@@ -521,7 +521,7 @@ namespace MinecraftServerEngine
             int k = 0;
 
             System.Diagnostics.Debug.Assert(item.Type.GetMaxCount() > 0);
-            int minLength = (int)System.Math.Ceiling((double)count / (double)item.Type.GetMaxCount());
+            int minLength = (int)System.Math.Ceiling(count / (double)item.Type.GetMaxCount());
             ItemStack[] itemStacks = new ItemStack[minLength];
 
             ItemStack takedItemStack;
@@ -733,7 +733,7 @@ namespace MinecraftServerEngine
                 System.Diagnostics.Debug.Assert(emptySlots != null);
                 emptySlots.Flush();
             }
-            
+
 
         }
 
@@ -826,10 +826,10 @@ namespace MinecraftServerEngine
                     giveSlots, giveEmptySlots);
 
                 return _TakeItemStacks(
-                    PrimarySlotCount, GetPrimarySlot, 
+                    PrimarySlotCount, GetPrimarySlot,
                     takeItem, takeCount
                     );
-            } 
+            }
             finally
             {
                 System.Diagnostics.Debug.Assert(giveSlots != null);
@@ -989,7 +989,7 @@ namespace MinecraftServerEngine
 
                 if (slotInside.Empty == true)
                 {
-                    j = (j < 0) ? i : j;
+                    j = j < 0 ? i : j;
 
                     continue;
                 }
@@ -1040,7 +1040,7 @@ namespace MinecraftServerEngine
 
                 if (slotInside.Empty == true)
                 {
-                    j = (j < 0) ? k : j;
+                    j = j < 0 ? k : j;
 
                     continue;
                 }
@@ -1089,7 +1089,7 @@ namespace MinecraftServerEngine
 
                 if (slotInside.Empty == true)
                 {
-                    j = (j < 0) ? i : j;
+                    j = j < 0 ? i : j;
 
                     continue;
                 }
@@ -1137,7 +1137,7 @@ namespace MinecraftServerEngine
 
                 if (slotInside.Empty == true)
                 {
-                    j = (j < 0) ? i : j;
+                    j = j < 0 ? i : j;
 
                     continue;
                 }

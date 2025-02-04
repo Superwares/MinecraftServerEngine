@@ -5,10 +5,12 @@ using Sync;
 
 using MinecraftPrimitives;
 using MinecraftServerEngine;
-using TestMinecraftServerApplication.Items;
 
 namespace TestMinecraftServerApplication
 {
+    using Items;
+    using Configs;
+
     public sealed class GameContext : System.IDisposable
     {
         public const int DefaultCoinAmount = 10;

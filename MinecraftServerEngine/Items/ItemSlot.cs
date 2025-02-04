@@ -4,15 +4,15 @@ using Containers;
 
 using MinecraftPrimitives;
 
-namespace MinecraftServerEngine
+namespace MinecraftServerEngine.Items
 {
-    
+
 
     internal sealed class ItemSlot
     {
 
-        
-        
+
+
         public readonly ItemType Item;
 
         private int _count;
@@ -82,7 +82,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(_count >= MinCount);
             System.Diagnostics.Debug.Assert(_count <= MaxCount);
 
-            int count = (_count / 2) + (_count % 2);
+            int count = _count / 2 + _count % 2;
             _count /= 2;
 
             System.Diagnostics.Debug.Assert(count >= MinCount);

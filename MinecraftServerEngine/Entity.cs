@@ -7,6 +7,8 @@ using Containers;
 namespace MinecraftServerEngine
 {
     using MinecraftPrimitives;
+    using MinecraftServerEngine.Blocks;
+    using MinecraftServerEngine.Renderers;
     using PhysicsEngine;
 
     public abstract class Entity : PhysicsObject

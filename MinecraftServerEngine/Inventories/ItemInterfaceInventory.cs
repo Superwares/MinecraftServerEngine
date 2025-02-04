@@ -1,7 +1,8 @@
 ﻿
 using MinecraftPrimitives;
+using MinecraftServerEngine.Items;
 
-namespace MinecraftServerEngine
+namespace MinecraftServerEngine.Inventories
 {
     public abstract class ItemInterfaceInventory : SharedInventory
     {

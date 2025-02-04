@@ -3,11 +3,14 @@ using Containers;
 
 using MinecraftPrimitives;
 using MinecraftServerEngine;
+using MinecraftServerEngine.Blocks;
+using MinecraftServerEngine.Inventories;
 using MinecraftServerEngine.PhysicsEngine;
 
 namespace TestMinecraftServerApplication
 {
     using Items;
+    using MinecraftServerEngine.Items;
 
     public sealed class SuperPlayer : AbstractPlayer
     {

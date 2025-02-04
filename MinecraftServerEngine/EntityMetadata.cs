@@ -2,6 +2,7 @@
 using Containers;
 
 using MinecraftPrimitives;
+using MinecraftServerEngine.Items;
 
 namespace MinecraftServerEngine
 {

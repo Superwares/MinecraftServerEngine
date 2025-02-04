@@ -4,10 +4,10 @@ using Containers;
 using Sync;
 
 using MinecraftPrimitives;
-using System;
-using System.Reflection;
+using MinecraftServerEngine.Items;
+using MinecraftServerEngine.Renderers;
 
-namespace MinecraftServerEngine
+namespace MinecraftServerEngine.Inventories
 {
 
     public abstract class SharedInventory : Inventory
@@ -364,7 +364,7 @@ namespace MinecraftServerEngine
 
                 if (slotInside.Empty)
                 {
-                    j = (j < 0) ? i : j;
+                    j = j < 0 ? i : j;
 
                     continue;
                 }
@@ -493,7 +493,7 @@ namespace MinecraftServerEngine
 
 
         internal virtual ItemStack DropSingle(
-            UserId userId, 
+            UserId userId,
             PlayerInventory playerInventory, int i)
         {
             int totalSlots = GetTotalSlotCount();
@@ -517,7 +517,7 @@ namespace MinecraftServerEngine
         }
 
         internal virtual ItemStack DropFull(
-            UserId userId, 
+            UserId userId,
             PlayerInventory playerInventory, int i)
         {
             int totalSlots = GetTotalSlotCount();

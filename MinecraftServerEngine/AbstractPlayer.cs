@@ -4,6 +4,9 @@ using MinecraftPrimitives;
 
 namespace MinecraftServerEngine
 {
+    using MinecraftServerEngine.Inventories;
+    using MinecraftServerEngine.Items;
+    using MinecraftServerEngine.Renderers;
     using PhysicsEngine;
 
     public abstract class AbstractPlayer : LivingEntity

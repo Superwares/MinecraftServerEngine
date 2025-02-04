@@ -5,11 +5,12 @@ using Sync;
 
 using MinecraftPrimitives;
 using MinecraftServerEngine;
+using MinecraftServerEngine.Inventories;
 
 namespace TestMinecraftServerApplication
 {
     using Items;
-    using static System.Reflection.Metadata.BlobBuilder;
+    using MinecraftServerEngine.Items;
 
     public sealed class GameContextInventory : ItemInterfaceInventory
     {

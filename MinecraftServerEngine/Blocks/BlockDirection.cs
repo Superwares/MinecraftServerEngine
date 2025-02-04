@@ -1,5 +1,4 @@
-﻿
-namespace MinecraftServerEngine
+﻿namespace MinecraftServerEngine.Blocks
 {
     public enum BlockDirection : int
     {

@@ -1,7 +1,7 @@
 ﻿
 using MinecraftPrimitives;
 
-namespace MinecraftServerEngine
+namespace MinecraftServerEngine.Items
 {
     public sealed class ItemStack : Item
     {
@@ -263,7 +263,7 @@ namespace MinecraftServerEngine
             else
             {
                 fromItemStack.Spend(fromItemStack.Count - remaning);
-                
+
                 return false;
             }
 
@@ -323,7 +323,7 @@ namespace MinecraftServerEngine
                 return false;
             }
 
-            int a = (_count % 2);
+            int a = _count % 2;
             _count /= 2;
             int count = _count + a;
 

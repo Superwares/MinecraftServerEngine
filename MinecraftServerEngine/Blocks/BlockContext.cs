@@ -6,7 +6,7 @@ using Containers;
 using MinecraftPrimitives;
 using MinecraftServerEngine.PhysicsEngine;
 
-namespace MinecraftServerEngine
+namespace MinecraftServerEngine.Blocks
 {
 
     public sealed class BlockContext : Terrain
@@ -66,7 +66,7 @@ namespace MinecraftServerEngine
                             {
                                 for (int x = 0; x < BlocksPerWidth; ++x)
                                 {
-                                    i = (((y * BlocksPerHeight) + z) * BlocksPerWidth) + x;
+                                    i = (y * BlocksPerHeight + z) * BlocksPerWidth + x;
 
                                     metadata = _data[i / 2];
 
@@ -99,17 +99,17 @@ namespace MinecraftServerEngine
                                     //    }
                                     //}
 
-                                    start = (i * bitsPerBlock) / _BITS_PER_DATA_UNIT;
-                                    offset = (i * bitsPerBlock) % _BITS_PER_DATA_UNIT;
-                                    end = (((i + 1) * bitsPerBlock) - 1) / _BITS_PER_DATA_UNIT;
+                                    start = i * bitsPerBlock / _BITS_PER_DATA_UNIT;
+                                    offset = i * bitsPerBlock % _BITS_PER_DATA_UNIT;
+                                    end = ((i + 1) * bitsPerBlock - 1) / _BITS_PER_DATA_UNIT;
 
                                     System.Diagnostics.Debug.Assert(
                                         (id & ~((1UL << bitsPerBlock) - 1UL)) == 0);
-                                    data[start] |= (id << offset);
+                                    data[start] |= id << offset;
 
                                     if (start != end)
                                     {
-                                        data[end] = id >> (_BITS_PER_DATA_UNIT - offset);
+                                        data[end] = id >> _BITS_PER_DATA_UNIT - offset;
                                     }
 
                                 }
@@ -211,19 +211,19 @@ namespace MinecraftServerEngine
                             {
                                 for (int x = 0; x < BlocksPerWidth; ++x)
                                 {
-                                    i = (((y * BlocksPerHeight) + z) * BlocksPerWidth) + x;
+                                    i = (y * BlocksPerHeight + z) * BlocksPerWidth + x;
 
-                                    start = (i * _bitsPerBlock) / _BITS_PER_DATA_UNIT;
-                                    offset = (i * _bitsPerBlock) % _BITS_PER_DATA_UNIT;
-                                    end = (((i + 1) * _bitsPerBlock) - 1) / _BITS_PER_DATA_UNIT;
+                                    start = i * _bitsPerBlock / _BITS_PER_DATA_UNIT;
+                                    offset = i * _bitsPerBlock % _BITS_PER_DATA_UNIT;
+                                    end = ((i + 1) * _bitsPerBlock - 1) / _BITS_PER_DATA_UNIT;
 
                                     System.Diagnostics.Debug.Assert(
                                         (value & ~((1UL << _bitsPerBlock) - 1UL)) == 0);
-                                    _data[start] |= (value << offset);
+                                    _data[start] |= value << offset;
 
                                     if (start != end)
                                     {
-                                        _data[end] = value >> (_BITS_PER_DATA_UNIT - offset);
+                                        _data[end] = value >> _BITS_PER_DATA_UNIT - offset;
                                     }
 
                                 }
@@ -235,9 +235,9 @@ namespace MinecraftServerEngine
                     {
                         int length = TotalBlockCount / 2;
                         _blockLights = new byte[length];
-                        System.Array.Fill<byte>(_blockLights, byte.MaxValue);
+                        System.Array.Fill(_blockLights, byte.MaxValue);
                         _skyLights = new byte[length];
-                        System.Array.Fill<byte>(_skyLights, byte.MaxValue);
+                        System.Array.Fill(_skyLights, byte.MaxValue);
                     }
 
                 }
@@ -259,18 +259,18 @@ namespace MinecraftServerEngine
 
                     int start, offset, end;
 
-                    i = (((y * BlocksPerHeight) + z) * BlocksPerWidth) + x;
-                    start = (i * _bitsPerBlock) / _BITS_PER_DATA_UNIT;
-                    offset = (i * _bitsPerBlock) % _BITS_PER_DATA_UNIT;
+                    i = (y * BlocksPerHeight + z) * BlocksPerWidth + x;
+                    start = i * _bitsPerBlock / _BITS_PER_DATA_UNIT;
+                    offset = i * _bitsPerBlock % _BITS_PER_DATA_UNIT;
                     end = ((i + 1) * _bitsPerBlock - 1) / _BITS_PER_DATA_UNIT;
 
                     if (start == end)
                     {
-                        value = (_data[start] >> offset);
+                        value = _data[start] >> offset;
                     }
                     else
                     {
-                        value = (_data[start] >> offset | _data[end] << (_BITS_PER_DATA_UNIT - offset));
+                        value = _data[start] >> offset | _data[end] << _BITS_PER_DATA_UNIT - offset;
                     }
 
                     value &= mask;
@@ -316,22 +316,22 @@ namespace MinecraftServerEngine
                             {
                                 for (int x = 0; x < BlocksPerWidth; ++x)
                                 {
-                                    i = (((y * BlocksPerHeight) + z) * BlocksPerWidth) + x;
+                                    i = (y * BlocksPerHeight + z) * BlocksPerWidth + x;
 
                                     {
-                                        start = (i * _bitsPerBlock) / _BITS_PER_DATA_UNIT;
-                                        offset = (i * _bitsPerBlock) % _BITS_PER_DATA_UNIT;
-                                        end = (((i + 1) * _bitsPerBlock) - 1) / _BITS_PER_DATA_UNIT;
+                                        start = i * _bitsPerBlock / _BITS_PER_DATA_UNIT;
+                                        offset = i * _bitsPerBlock % _BITS_PER_DATA_UNIT;
+                                        end = ((i + 1) * _bitsPerBlock - 1) / _BITS_PER_DATA_UNIT;
 
                                         if (start == end)
                                         {
-                                            value = (_data[start] >> offset);
+                                            value = _data[start] >> offset;
                                         }
                                         else
                                         {
                                             value =
-                                                (_data[start] >> offset) |
-                                                (_data[end] << (_BITS_PER_DATA_UNIT - offset));
+                                                _data[start] >> offset |
+                                                _data[end] << _BITS_PER_DATA_UNIT - offset;
                                         }
 
                                         value &= mask;
@@ -340,19 +340,19 @@ namespace MinecraftServerEngine
                                     }
 
                                     {
-                                        start = (i * bitsPerBlock) / _BITS_PER_DATA_UNIT;
-                                        offset = (i * bitsPerBlock) % _BITS_PER_DATA_UNIT;
-                                        end = (((i + 1) * bitsPerBlock) - 1) / _BITS_PER_DATA_UNIT;
+                                        start = i * bitsPerBlock / _BITS_PER_DATA_UNIT;
+                                        offset = i * bitsPerBlock % _BITS_PER_DATA_UNIT;
+                                        end = ((i + 1) * bitsPerBlock - 1) / _BITS_PER_DATA_UNIT;
 
                                         value = (ulong)id;
 
                                         System.Diagnostics.Debug.Assert(
                                             (value & ~((1UL << bitsPerBlock) - 1UL)) == 0);
-                                        data[start] |= (value << offset);
+                                        data[start] |= value << offset;
 
                                         if (start != end)
                                         {
-                                            data[end] = (value >> (_BITS_PER_DATA_UNIT - offset));
+                                            data[end] = value >> _BITS_PER_DATA_UNIT - offset;
                                         }
                                     }
 
@@ -371,39 +371,39 @@ namespace MinecraftServerEngine
                             {
                                 for (int x = 0; x < BlocksPerWidth; ++x)
                                 {
-                                    i = (((y * BlocksPerHeight) + z) * BlocksPerWidth) + x;
+                                    i = (y * BlocksPerHeight + z) * BlocksPerWidth + x;
 
                                     {
-                                        start = (i * _bitsPerBlock) / _BITS_PER_DATA_UNIT;
-                                        offset = (i * _bitsPerBlock) % _BITS_PER_DATA_UNIT;
-                                        end = (((i + 1) * _bitsPerBlock) - 1) / _BITS_PER_DATA_UNIT;
+                                        start = i * _bitsPerBlock / _BITS_PER_DATA_UNIT;
+                                        offset = i * _bitsPerBlock % _BITS_PER_DATA_UNIT;
+                                        end = ((i + 1) * _bitsPerBlock - 1) / _BITS_PER_DATA_UNIT;
 
                                         if (start == end)
                                         {
-                                            value = (_data[start] >> offset);
+                                            value = _data[start] >> offset;
                                         }
                                         else
                                         {
                                             value =
-                                                (_data[start] >> offset |
-                                                _data[end] << (_BITS_PER_DATA_UNIT - offset));
+                                                _data[start] >> offset |
+                                                _data[end] << _BITS_PER_DATA_UNIT - offset;
                                         }
 
                                         value &= mask;
                                     }
 
                                     {
-                                        start = (i * bitsPerBlock) / _BITS_PER_DATA_UNIT;
-                                        offset = (i * bitsPerBlock) % _BITS_PER_DATA_UNIT;
-                                        end = (((i + 1) * bitsPerBlock) - 1) / _BITS_PER_DATA_UNIT;
+                                        start = i * bitsPerBlock / _BITS_PER_DATA_UNIT;
+                                        offset = i * bitsPerBlock % _BITS_PER_DATA_UNIT;
+                                        end = ((i + 1) * bitsPerBlock - 1) / _BITS_PER_DATA_UNIT;
 
                                         System.Diagnostics.Debug.Assert(
                                             (value & ~((1UL << bitsPerBlock) - 1UL)) == 0);
-                                        data[start] |= (value << offset);
+                                        data[start] |= value << offset;
 
                                         if (start != end)
                                         {
-                                            data[end] = value >> (_BITS_PER_DATA_UNIT - offset);
+                                            data[end] = value >> _BITS_PER_DATA_UNIT - offset;
                                         }
                                     }
 
@@ -528,18 +528,18 @@ namespace MinecraftServerEngine
 
                     ulong value = MakeValue(id);
 
-                    int i = (((y * BlocksPerHeight) + z) * BlocksPerWidth) + x;
-                    int start = (i * _bitsPerBlock) / _BITS_PER_DATA_UNIT;
-                    int offset = (i * _bitsPerBlock) % _BITS_PER_DATA_UNIT;
+                    int i = (y * BlocksPerHeight + z) * BlocksPerWidth + x;
+                    int start = i * _bitsPerBlock / _BITS_PER_DATA_UNIT;
+                    int offset = i * _bitsPerBlock % _BITS_PER_DATA_UNIT;
                     int end = ((i + 1) * _bitsPerBlock - 1) / _BITS_PER_DATA_UNIT;
 
                     System.Diagnostics.Debug.Assert(
                         (value & ~((1UL << _bitsPerBlock) - 1UL)) == 0L);
-                    _data[start] |= (value << offset);
+                    _data[start] |= value << offset;
 
                     if (start != end)
                     {
-                        _data[end] = (value >> (_BITS_PER_DATA_UNIT - offset));
+                        _data[end] = value >> _BITS_PER_DATA_UNIT - offset;
                     }
                 }
 
@@ -608,7 +608,7 @@ namespace MinecraftServerEngine
                     SectionData section = chunkData._sections[i];
                     if (section == null) continue;
 
-                    mask |= (1 << i);  // TODO;
+                    mask |= 1 << i;  // TODO;
                     SectionData.Write(buffer, section);
                 }
 
@@ -673,7 +673,7 @@ namespace MinecraftServerEngine
                 int ySection = y / SectionData.BlocksPerHeight;
                 System.Diagnostics.Debug.Assert(ySection < SectionCount);
 
-                int yPrime = y - (ySection * SectionData.BlocksPerHeight);
+                int yPrime = y - ySection * SectionData.BlocksPerHeight;
                 System.Diagnostics.Debug.Assert(yPrime >= 0 && yPrime < SectionData.BlocksPerHeight);
 
                 SectionData section = _sections[ySection];
@@ -709,7 +709,7 @@ namespace MinecraftServerEngine
                     return defaultId;
                 }
 
-                int yPrime = y - (ySection * SectionData.BlocksPerHeight);
+                int yPrime = y - ySection * SectionData.BlocksPerHeight;
                 System.Diagnostics.Debug.Assert(yPrime >= 0 && yPrime < SectionData.BlocksPerHeight);
 
                 SectionData section = _sections[ySection];
@@ -885,8 +885,8 @@ namespace MinecraftServerEngine
             int x = loc.X / ChunkLocation.BlocksPerWidth,
                 z = loc.Z / ChunkLocation.BlocksPerWidth;
 
-            double r1 = (double)loc.X % (double)ChunkLocation.BlocksPerWidth,
-                   r2 = (double)loc.Z % (double)ChunkLocation.BlocksPerWidth;
+            double r1 = loc.X % (double)ChunkLocation.BlocksPerWidth,
+                   r2 = loc.Z % (double)ChunkLocation.BlocksPerWidth;
             if (r1 < 0.0D)
             {
                 --x;
@@ -921,9 +921,9 @@ namespace MinecraftServerEngine
                 chunk = Chunks.Lookup(locChunk);
             }
 
-            int x = loc.X - (locChunk.X * ChunkLocation.BlocksPerWidth),
+            int x = loc.X - locChunk.X * ChunkLocation.BlocksPerWidth,
                 y = loc.Y,
-                z = loc.Z - (locChunk.Z * ChunkLocation.BlocksPerWidth);
+                z = loc.Z - locChunk.Z * ChunkLocation.BlocksPerWidth;
             chunk.SetId(DefaultBlock.GetId(), x, y, z, block.GetId());
         }
 
@@ -942,9 +942,9 @@ namespace MinecraftServerEngine
 
 
             ChunkData chunk = Chunks.Lookup(locChunk);
-            int x = loc.X - (locChunk.X * ChunkLocation.BlocksPerWidth),
+            int x = loc.X - locChunk.X * ChunkLocation.BlocksPerWidth,
                 y = loc.Y,
-                z = loc.Z - (locChunk.Z * ChunkLocation.BlocksPerWidth);
+                z = loc.Z - locChunk.Z * ChunkLocation.BlocksPerWidth;
             int id = chunk.GetId(DefaultBlock.GetId(), x, y, z);
 
             int defaultBlockId = DefaultBlock.GetId();
@@ -1029,8 +1029,8 @@ namespace MinecraftServerEngine
             Vector _min = loc.GetMinVector(),
                    _max = loc.GetMaxVector();
 
-            Vector min = block.IsBottomSlab() == true ? _min : new(_min.X, _min.Y + (Terrain.BlockWidth / 2.0), _min.Z),
-                max = block.IsBottomSlab() == true ? new(_max.X, _max.Y - (Terrain.BlockWidth / 2.0), _max.Z) : _max;
+            Vector min = block.IsBottomSlab() == true ? _min : new(_min.X, _min.Y + BlockWidth / 2.0, _min.Z),
+                max = block.IsBottomSlab() == true ? new(_max.X, _max.Y - BlockWidth / 2.0, _max.Z) : _max;
             AxisAlignedBoundingBox aabb = new(max, min);
 
             queue.Enqueue(aabb);

@@ -1,6 +1,4 @@
-﻿
-
-namespace TestMinecraftServerApplication
+﻿namespace TestMinecraftServerApplication.Configs
 {
 
     public interface IConfig

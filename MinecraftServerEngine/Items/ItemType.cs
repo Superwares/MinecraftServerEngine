@@ -1,6 +1,4 @@
-﻿
-
-namespace MinecraftServerEngine
+﻿namespace MinecraftServerEngine.Items
 {
     public enum ItemType : int
     {
@@ -61,12 +59,12 @@ namespace MinecraftServerEngine
         NoteBlock,                 // 25:0  minecraft:noteblock
 
         StickyPiston,                    // 29:0  minecraft:sticky_piston
-        
+
         DeadShrub,                 // 31:0  minecraft:tallgrass
         Grass,                     // 31:1  minecraft:tallgrass
         Fern,                      // 31:2  minecraft:tallgrass
         DeadBush,                  // 32:0  minecraft:deadbush
-        
+
         Piston,                    // 33:0  minecraft:piston
 
         WhiteWool,                 // 35:0  minecraft:wool
@@ -286,7 +284,7 @@ namespace MinecraftServerEngine
         DiamondAxe,                // 279:0  minecraft:diamond_axe
 
         Stick,                     // 280:0  minecraft:stick
-        
+
         GoldenSword,               // 283:0  minecraft:golden_sword
 
         Feather,                   // 288:0  minecraft:feather

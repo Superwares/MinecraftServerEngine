@@ -1,4 +1,6 @@
 ﻿
+using MinecraftServerEngine.Blocks;
+
 namespace MinecraftServerEngine
 {
     internal static class StairsBlockDirectionExtensions

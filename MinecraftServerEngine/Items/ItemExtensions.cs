@@ -4,7 +4,7 @@ using Containers;
 using static System.Formats.Asn1.AsnWriter;
 using System.Drawing;
 
-namespace MinecraftServerEngine
+namespace MinecraftServerEngine.Items
 {
     public static class ItemExtensions
     {
@@ -22,8 +22,8 @@ namespace MinecraftServerEngine
                 int maxCount)
             {
                 System.Diagnostics.Debug.Assert(maxCount > 0);
-                System.Diagnostics.Debug.Assert(ItemStack.MinCount > 0);
-                System.Diagnostics.Debug.Assert(ItemStack.MinCount <= maxCount);
+                System.Diagnostics.Debug.Assert(Item.MinCount > 0);
+                System.Diagnostics.Debug.Assert(Item.MinCount <= maxCount);
 
                 Type = type;
                 Id = id;

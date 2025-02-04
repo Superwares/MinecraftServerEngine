@@ -6,6 +6,10 @@ using MinecraftPrimitives;
 
 namespace MinecraftServerEngine
 {
+    using Blocks;
+    using Inventories;
+    using MinecraftServerEngine.Items;
+    using MinecraftServerEngine.Renderers;
     using PhysicsEngine;
 
     internal sealed class Connection : System.IDisposable

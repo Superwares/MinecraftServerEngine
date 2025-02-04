@@ -4,10 +4,12 @@ using Common;
 
 using MinecraftPrimitives;
 using MinecraftServerEngine;
+using MinecraftServerEngine.Inventories;
 
 namespace TestMinecraftServerApplication
 {
     using Items;
+    using MinecraftServerEngine.Items;
 
     public sealed class ShopInventory : ItemInterfaceInventory
     {

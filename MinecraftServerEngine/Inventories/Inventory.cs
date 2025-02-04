@@ -2,7 +2,7 @@
 using Containers;
 using Sync;
 
-namespace MinecraftServerEngine
+namespace MinecraftServerEngine.Inventories
 {
 
     public abstract class Inventory : System.IDisposable

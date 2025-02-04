@@ -1,4 +1,4 @@
-﻿using MinecraftServerEngine;
+﻿using MinecraftServerEngine.Items;
 
 namespace TestMinecraftServerApplication.Items
 {
@@ -18,7 +18,7 @@ namespace TestMinecraftServerApplication.Items
                 $"Tier            {Tier.ToString()}",  // Quality Tier
             ]);
 
-        public static readonly int DefaultCount = MinecraftServerEngine.Item.MinCount;
+        public static readonly int DefaultCount = MinecraftServerEngine.Items.Item.MinCount;
 
 
     }

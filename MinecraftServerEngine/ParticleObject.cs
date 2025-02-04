@@ -4,6 +4,7 @@ using Containers;
 
 namespace MinecraftServerEngine
 {
+    using MinecraftServerEngine.Renderers;
     using PhysicsEngine;
 
     public abstract class ParticleObject : PhysicsObject

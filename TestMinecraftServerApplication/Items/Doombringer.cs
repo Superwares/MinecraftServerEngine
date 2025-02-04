@@ -1,5 +1,4 @@
-﻿
-using MinecraftServerEngine;
+﻿using MinecraftServerEngine.Items;
 
 namespace TestMinecraftServerApplication.Items
 {
@@ -25,7 +24,7 @@ namespace TestMinecraftServerApplication.Items
                 $"Damage          {Damage.ToString()}",
             ]);
 
-        public static readonly int DefaultCount = MinecraftServerEngine.Item.MinCount;
+        public static readonly int DefaultCount = MinecraftServerEngine.Items.Item.MinCount;
 
         public static bool CanPurchase = true;
     }

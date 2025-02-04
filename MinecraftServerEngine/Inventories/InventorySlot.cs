@@ -1,7 +1,8 @@
 ﻿
 using MinecraftPrimitives;
+using MinecraftServerEngine.Items;
 
-namespace MinecraftServerEngine
+namespace MinecraftServerEngine.Inventories
 {
 
 
@@ -20,7 +21,7 @@ namespace MinecraftServerEngine
 
         private ItemStack _itemStack = null;
         public ItemStack Stack => _itemStack;
-        internal bool Empty => (_itemStack == null);
+        internal bool Empty => _itemStack == null;
 
         public InventorySlot() { }
 
@@ -238,7 +239,7 @@ namespace MinecraftServerEngine
                 return count;
             }
 
-            int canMovedAmount = (_itemStack.MaxCount - _itemStack.Count);
+            int canMovedAmount = _itemStack.MaxCount - _itemStack.Count;
 
             if (count < canMovedAmount)
             {
@@ -262,7 +263,7 @@ namespace MinecraftServerEngine
                 return count;
             }
 
-            int canMovedAmount = (_itemStack.MaxCount - _itemStack.Count);
+            int canMovedAmount = _itemStack.MaxCount - _itemStack.Count;
 
             if (count < canMovedAmount)
             {

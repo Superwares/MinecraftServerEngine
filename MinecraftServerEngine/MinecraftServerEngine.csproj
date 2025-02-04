@@ -23,4 +23,9 @@
 		<InternalsVisibleTo Include="Testing" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Entities\" />
+	  <Folder Include="Particles\" />
+	</ItemGroup>
+
 </Project>
