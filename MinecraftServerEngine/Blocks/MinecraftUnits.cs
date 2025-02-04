@@ -3,11 +3,8 @@
 namespace MinecraftServerEngine.Blocks
 {
 
-    // TODO: Suggestion nameing: MinecraftUnits
     public static class MinecraftUnits
     {
-
-        // Blocks
 
         public const int BlocksInChunkSectionWidth = 16;
         public const int BlocksInChunkSectionHeight = 16;
