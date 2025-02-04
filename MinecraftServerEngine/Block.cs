@@ -189,6 +189,11 @@ namespace MinecraftServerEngine
         EastPumpkin,                    // 86:3
 
 
+        SouthJackOLantern,              // 86:0  minecraft:lit_pumpkin
+        WestJackOLantern,               // 86:1  minecraft:lit_pumpkin
+        NorthJackOLantern,              // 86:2  minecraft:lit_pumpkin
+        EastJackOLantern,               // 86:3  minecraft:lit_pumpkin
+
         WhiteStainedGlass,              // 95:0
         OrangeStainedGlass,             // 95:1
         MagentaStainedGlass,            // 95:2
@@ -218,6 +223,8 @@ namespace MinecraftServerEngine
         ChiseledStoneBricks,            // 98:3
         BrownMushroomBlock,             // 99:0
         RedMushroomBlock,               // 100:0
+
+
         IronBars,                       // 101:0
         GlassPane,                      // 102:0
         MelonBlock,                     // 103:0
@@ -282,6 +289,7 @@ namespace MinecraftServerEngine
         NorthTopSandstoneStairs,        // 128:7
 
         EmeraldBlock,                   // 133:0
+
         EastBottomSpruceWoodStairs,     // 134:0
         WestBottomSpruceWoodStairs,     // 134:1
         SouthBottomSpruceWoodStairs,    // 134:2
@@ -290,6 +298,7 @@ namespace MinecraftServerEngine
         WestTopSpruceWoodStairs,        // 134:5
         SouthTopSpruceWoodStairs,       // 134:6
         NorthTopSpruceWoodStairs,       // 134:7
+        
         EastBottomBirchWoodStairs,      // 135:0
         WestBottomBirchWoodStairs,      // 135:1
         SouthBottomBirchWoodStairs,     // 135:2
@@ -298,6 +307,7 @@ namespace MinecraftServerEngine
         WestTopBirchWoodStairs,         // 135:5
         SouthTopBirchWoodStairs,        // 135:6
         NorthTopBirchWoodStairs,        // 135:7
+
         EastBottomJungleWoodStairs,     // 136:0
         WestBottomJungleWoodStairs,     // 136:1
         SouthBottomJungleWoodStairs,    // 136:2
@@ -310,7 +320,7 @@ namespace MinecraftServerEngine
         CobblestoneWall,                // 139:0
         MossyCobblestoneWall,           // 139:1
 
-        RedstoneBlock,                  // 152:0 minecraft:redstone_block
+        RedstoneBlock,                  // 152:0  minecraft:redstone_block
 
         HayBale_AxisY,                  // 170:0  minecraft:hay_block
         HayBale_AxisX,                  // 170:4  minecraft:hay_block

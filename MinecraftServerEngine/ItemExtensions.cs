@@ -412,6 +412,27 @@ namespace MinecraftServerEngine
                     64),
 
                 new ItemContext(
+                    ItemType.OakWoodStairs, 53, 0, "oak_stairs",
+                    64),
+
+                new ItemContext(
+                    ItemType.DiamondBlock, 57, 0, "diamond_block",
+                    64),
+                new ItemContext(
+                    ItemType.CraftingTable, 58, 0, "crafting_table",
+                    64),
+                new ItemContext(
+                    ItemType.WheatCrops, 59, 0, "wheat",
+                    64),
+                new ItemContext(
+                    ItemType.Farmland, 60, 0, "farmland",
+                    64),
+
+                new ItemContext(
+                    ItemType.CobblestoneStairs, 67, 0, "stone_stairs",
+                    64),
+
+                new ItemContext(
                     ItemType.RedstoneOre, 73, 0, "redstone_ore",
                     64),
                 // It is not shown in client...
@@ -421,14 +442,182 @@ namespace MinecraftServerEngine
                 //    64),
 
                 new ItemContext(
+                    ItemType.OakFence, 85, 0, "fence",
+                    64),
+
+                new ItemContext(
                     ItemType.Pumpkin, 86, 0, "pumpkin",
                     64),
                 new ItemContext(
                     ItemType.JackOLantern, 91, 0, "lit_pumpkin",
                     64),
+
+                new ItemContext(
+                    ItemType.WhiteStainedGlass, 95, 0, "stained_glass",
+                    64),
+                new ItemContext(
+                    ItemType.OrangeStainedGlass, 95, 1, "stained_glass",
+                    64),
+                new ItemContext(
+                    ItemType.MagentaStainedGlass, 95, 2, "stained_glass",
+                    64),
+                new ItemContext(
+                    ItemType.LightBlueStainedGlass, 95, 3, "stained_glass",
+                    64),
+                new ItemContext(
+                    ItemType.YellowStainedGlass, 95, 4, "stained_glass",
+                    64),
+                new ItemContext(
+                    ItemType.LimeStainedGlass, 95, 5, "stained_glass",
+                    64),
+                new ItemContext(
+                    ItemType.PinkStainedGlass, 95, 6, "stained_glass",
+                    64),
+                new ItemContext(
+                    ItemType.GrayStainedGlass, 95, 7, "stained_glass",
+                    64),
+                new ItemContext(
+                    ItemType.LightGrayStainedGlass, 95, 8, "stained_glass",
+                    64),
+                new ItemContext(
+                    ItemType.CyanStainedGlass, 95, 9, "stained_glass",
+                    64),
+                new ItemContext(
+                    ItemType.PurpleStainedGlass, 95, 10, "stained_glass",
+                    64),
+                new ItemContext(
+                    ItemType.BlueStainedGlass, 95, 11, "stained_glass",
+                    64),
+                new ItemContext(
+                    ItemType.BrownStainedGlass, 95, 12, "stained_glass",
+                    64),
+                new ItemContext(
+                    ItemType.GreenStainedGlass, 95, 13, "stained_glass",
+                    64),
+                new ItemContext(
+                    ItemType.RedStainedGlass, 95, 14, "stained_glass",
+                    64),
+                new ItemContext(
+                    ItemType.BlackStainedGlass, 95, 15, "stained_glass",
+                    64),
+
+                new ItemContext(
+                    ItemType.StoneMonsterEgg, 97, 0, "monster_egg",
+                    64),
+                new ItemContext(
+                    ItemType.CobblestoneMonsterEgg, 97, 1, "monster_egg",
+                    64),
+                new ItemContext(
+                    ItemType.StoneBrickMonsterEgg, 97, 2, "monster_egg",
+                    64),
+                new ItemContext(
+                    ItemType.MossyStoneBrickMonsterEgg, 97, 3, "monster_egg",
+                    64),
+                new ItemContext(
+                    ItemType.CrackedStoneBrickMonsterEgg, 97, 4, "monster_egg",
+                    64),
+                new ItemContext(
+                    ItemType.ChiseledStoneBrickMonsterEgg, 97, 5, "monster_egg",
+                    64),
+
+                new ItemContext(
+                    ItemType.StoneBricks, 98, 0, "stonebrick",
+                    64),
+                new ItemContext(
+                    ItemType.MossyStoneBricks, 98, 1, "stonebrick",
+                    64),
+                new ItemContext(
+                    ItemType.CrackedStoneBricks, 98, 2, "stonebrick",
+                    64),
+                new ItemContext(
+                    ItemType.ChiseledStoneBricks, 98, 3, "stonebrick",
+                    64),
+                new ItemContext(
+                    ItemType.BrownMushroomBlock, 99, 0, "brown_mushroom_block",
+                    64),
+                new ItemContext(
+                    ItemType.RedMushroomBlock, 100, 0, "red_mushroom_block",
+                    64),
+
                 new ItemContext(
                     ItemType.IronBars, 101, 0, "iron_bars",
                     64),
+                new ItemContext(
+                    ItemType.GlassPane, 102, 0, "glass_pane",
+                    64),
+                new ItemContext(
+                    ItemType.MelonBlock, 103, 0, "melon_block",
+                    64),
+
+                new ItemContext(
+                    ItemType.Vines, 106, 0, "vine",
+                    64),
+
+                new ItemContext(
+                    ItemType.StoneBrickStairs, 109, 0, "stone_brick_stairs",
+                    64),
+
+                new ItemContext(
+                    ItemType.InactiveRedstoneLamp, 123, 0, "redstone_lamp",
+                    64),
+
+                // It is not working...
+                //new ItemContext(
+                //    ItemType.ActiveRedstoneLamp, 124, 0, "lit_redstone_lamp",
+                //    64),
+
+                new ItemContext(
+                    ItemType.DoubleOakWoodSlab, 125, 0, "double_wooden_slab",
+                    64),
+                new ItemContext(
+                    ItemType.DoubleSpruceWoodSlab, 125, 1, "double_wooden_slab",
+                    64),
+                new ItemContext(
+                    ItemType.DoubleBirchWoodSlab, 125, 2, "double_wooden_slab",
+                    64),
+                new ItemContext(
+                    ItemType.DoubleJungleWoodSlab, 125, 3, "double_wooden_slab",
+                    64),
+                new ItemContext(
+                    ItemType.DoubleAcaciaWoodSlab, 125, 4, "double_wooden_slab",
+                    64),
+                new ItemContext(
+                    ItemType.DoubleDarkOakWoodSlab, 125, 5, "double_wooden_slab",
+                    64),
+
+                new ItemContext(
+                    ItemType.OakWoodSlab, 126, 0, "wooden_slab",
+                    64),
+
+                new ItemContext(
+                    ItemType.SandstoneStairs, 128, 0, "sandstone_stairs",
+                    64),
+
+                new ItemContext(
+                    ItemType.EmeraldBlock, 133, 0, "emerald_block",
+                    64),
+
+                new ItemContext(
+                    ItemType.SpruceWoodStairs, 134, 0, "spruce_stairs",
+                    64),
+                new ItemContext(
+                    ItemType.BirchWoodStairs, 135, 0, "birch_stairs",
+                    64),
+                new ItemContext(
+                    ItemType.JungleWoodStairs, 136, 0, "jungle_stairs",
+                    64),
+
+                new ItemContext(
+                    ItemType.CobblestoneWall, 139, 0, "cobblestone_wall",
+                    64),
+                new ItemContext(
+                    ItemType.MossyCobblestoneWall, 139, 1, "cobblestone_wall",
+                    64),
+
+                new ItemContext(
+                    ItemType.RedstoneBlock, 152, 0, "redstone_block",
+                    64),
+
                 new ItemContext(
                     ItemType.WhiteTerracotta, 159, 0, "stained_hardened_clay",
                     64),
@@ -525,6 +714,60 @@ namespace MinecraftServerEngine
                 new ItemContext(
                     ItemType.BlackStainedGlassPane, 160, 15, "stained_glass_pane",
                     64),
+
+                new ItemContext(
+                    ItemType.HayBale, 170, 0, "hay_block",
+                    64),
+
+                new ItemContext(
+                    ItemType.WhiteCarpet, 171, 0, "carpet",
+                    64),
+                new ItemContext(
+                    ItemType.OrangeCarpet, 171, 1, "carpet",
+                    64),
+                new ItemContext(
+                    ItemType.MagentaCarpet, 171, 2, "carpet",
+                    64),
+                new ItemContext(
+                    ItemType.LightBlueCarpet, 171, 3, "carpet",
+                    64),
+                new ItemContext(
+                    ItemType.YellowCarpet, 171, 4, "carpet",
+                    64),
+                new ItemContext(
+                    ItemType.LimeCarpet, 171, 5, "carpet",
+                    64),
+                new ItemContext(
+                    ItemType.PinkCarpet, 171, 6, "carpet",
+                    64),
+                new ItemContext(
+                    ItemType.GrayCarpet, 171, 7, "carpet",
+                    64),
+                new ItemContext(
+                    ItemType.LightGrayCarpet, 171, 8, "carpet",
+                    64),
+                new ItemContext(
+                    ItemType.CyanCarpet, 171, 9, "carpet",
+                    64),
+                new ItemContext(
+                    ItemType.PurpleCarpet, 171, 10, "carpet",
+                    64),
+                new ItemContext(
+                    ItemType.BlueCarpet, 171, 11, "carpet",
+                    64),
+                new ItemContext(
+                    ItemType.BrownCarpet, 171, 12, "carpet",
+                    64),
+                new ItemContext(
+                    ItemType.GreenCarpet, 171, 13, "carpet",
+                    64),
+                new ItemContext(
+                    ItemType.RedCarpet, 171, 14, "carpet",
+                    64),
+                new ItemContext(
+                    ItemType.BlackCarpet, 171, 15, "carpet",
+                    64),
+
                 new ItemContext(
                     ItemType.IronSword, 267, 0, "iron_sword",
                     1),

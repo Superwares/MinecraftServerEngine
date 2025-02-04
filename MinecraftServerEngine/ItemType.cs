@@ -134,16 +134,93 @@ namespace MinecraftServerEngine
 
         Torch,                     // 50:0  minecraft:torch
 
+        OakWoodStairs,             // 53:0  minecraft:oak_stairs
+
+        DiamondBlock,              // 57:0  minecraft:diamond_block
+        CraftingTable,             // 58:0  minecraft:crafting_table
+        WheatCrops,                // 59:0  minecraft:wheat
+        Farmland,                  // 60:0  minecraft:farmland
+
+        CobblestoneStairs,         // 67:0  minecraft:stone_stairs
+
         RedstoneOre,               // 73:0  minecraft:redstone_ore
         // It is not shown in client...
         // It is only used for block.
         //GlowingRedstoneOre,        // 74:0  minecraft:lit_redstone_ore
 
+        OakFence,                  // 85:0  minecraft:fence
+
         Pumpkin,                   // 86:0  minecraft:pumpkin
 
         JackOLantern,              // 91:0  minecraft:lit_pumpkin
 
-        IronBars,                  // 101:0 minecraft:iron_bars
+        WhiteStainedGlass,              // 95:0  minecraft:stained_glass
+        OrangeStainedGlass,             // 95:1  minecraft:stained_glass
+        MagentaStainedGlass,            // 95:2  minecraft:stained_glass
+        LightBlueStainedGlass,          // 95:3  minecraft:stained_glass
+        YellowStainedGlass,             // 95:4  minecraft:stained_glass
+        LimeStainedGlass,               // 95:5  minecraft:stained_glass
+        PinkStainedGlass,               // 95:6  minecraft:stained_glass
+        GrayStainedGlass,               // 95:7  minecraft:stained_glass
+        LightGrayStainedGlass,          // 95:8  minecraft:stained_glass
+        CyanStainedGlass,               // 95:9  minecraft:stained_glass
+        PurpleStainedGlass,             // 95:10  minecraft:stained_glass
+        BlueStainedGlass,               // 95:11  minecraft:stained_glass
+        BrownStainedGlass,              // 95:12  minecraft:stained_glass
+        GreenStainedGlass,              // 95:13  minecraft:stained_glass
+        RedStainedGlass,                // 95:14  minecraft:stained_glass
+        BlackStainedGlass,              // 95:15  minecraft:stained_glass
+
+        StoneMonsterEgg,                // 97:0  minecraft:monster_egg
+        CobblestoneMonsterEgg,          // 97:1  minecraft:monster_egg
+        StoneBrickMonsterEgg,           // 97:2  minecraft:monster_egg
+        MossyStoneBrickMonsterEgg,      // 97:3  minecraft:monster_egg
+        CrackedStoneBrickMonsterEgg,    // 97:4  minecraft:monster_egg
+        ChiseledStoneBrickMonsterEgg,   // 97:5  minecraft:monster_egg
+
+        StoneBricks,                    // 98:0  minecraft:stonebrick
+        MossyStoneBricks,               // 98:1  minecraft:stonebrick
+        CrackedStoneBricks,             // 98:2  minecraft:stonebrick
+        ChiseledStoneBricks,            // 98:3  minecraft:stonebrick
+        BrownMushroomBlock,             // 99:0  minecraft:brown_mushroom_block
+        RedMushroomBlock,               // 100:0  minecraft:red_mushroom_block
+
+        IronBars,                       // 101:0  minecraft:iron_bars
+        GlassPane,                      // 102:0  minecraft:glass_pane
+        MelonBlock,                     // 103:0  minecraft:melon_block
+
+        Vines,                          // 106:0  minecraft:vine
+
+        StoneBrickStairs,               // 109:0  minecraft:stone_brick_stairs
+
+        InactiveRedstoneLamp,           // 123:0  minecraft:redstone_lamp
+
+        // It is not working...
+        //ActiveRedstoneLamp,             // 124:0  minecraft:lit_redstone_lamp
+
+        DoubleOakWoodSlab,              // 125:0  minecraft:double_wooden_slab
+        DoubleSpruceWoodSlab,           // 125:1  minecraft:double_wooden_slab
+        DoubleBirchWoodSlab,            // 125:2  minecraft:double_wooden_slab
+        DoubleJungleWoodSlab,           // 125:3  minecraft:double_wooden_slab
+        DoubleAcaciaWoodSlab,           // 125:4  minecraft:double_wooden_slab
+        DoubleDarkOakWoodSlab,          // 125:5  minecraft:double_wooden_slab
+
+        OakWoodSlab,                    // 126:0  minecraft:wooden_slab
+
+        SandstoneStairs,                // 128:0  minecraft:sandstone_stairs
+
+        EmeraldBlock,                   // 133:0  minecraft:emerald_block
+
+        SpruceWoodStairs,               // 134:0  minecraft:spruce_stairs
+        BirchWoodStairs,                // 135:0  minecraft:birch_stairs
+        JungleWoodStairs,               // 136:0  minecraft:jungle_stairs
+
+
+        CobblestoneWall,                // 139:0  minecraft:cobblestone_wall
+        MossyCobblestoneWall,           // 139:1  minecraft:cobblestone_wall
+
+        RedstoneBlock,                  // 152:0  minecraft:redstone_block
+
 
         WhiteTerracotta,           // 159:0  minecraft:stained_hardened_clay
         OrangeTerracotta,          // 159:1  minecraft:stained_hardened_clay
@@ -178,6 +255,25 @@ namespace MinecraftServerEngine
         GreenStainedGlassPane,     // 160:13  minecraft:stained_glass_pane
         RedStainedGlassPane,       // 160:14  minecraft:stained_glass_pane
         BlackStainedGlassPane,     // 160:15  minecraft:stained_glass_pane
+
+        HayBale,                        // 170:0  minecraft:hay_block
+
+        WhiteCarpet,                    // 171:0  minecraft:carpet
+        OrangeCarpet,                   // 171:1  minecraft:carpet
+        MagentaCarpet,                  // 171:2  minecraft:carpet
+        LightBlueCarpet,                // 171:3  minecraft:carpet
+        YellowCarpet,                   // 171:4  minecraft:carpet
+        LimeCarpet,                     // 171:5  minecraft:carpet
+        PinkCarpet,                     // 171:6  minecraft:carpet
+        GrayCarpet,                     // 171:7  minecraft:carpet
+        LightGrayCarpet,                // 171:8  minecraft:carpet
+        CyanCarpet,                     // 171:9  minecraft:carpet
+        PurpleCarpet,                   // 171:10  minecraft:carpet
+        BlueCarpet,                     // 171:11  minecraft:carpet
+        BrownCarpet,                    // 171:12  minecraft:carpet
+        GreenCarpet,                    // 171:13  minecraft:carpet
+        RedCarpet,                      // 171:14  minecraft:carpet
+        BlackCarpet,                    // 171:15  minecraft:carpet
 
         IronSword,                 // 267:0  minecraft:iron_sword
         WoodenSword,               // 268:0  minecraft:wooden_sword
