@@ -329,12 +329,16 @@ namespace MinecraftServerEngine
             RightClick(slot, cursor);
         }
 
-        private bool CanGiveItemStacksFromLeftInPrimary(
+        private bool CanGiveItemStacksFromLeft(
+            int slotCount, System.Func<int, InventorySlot> getSlot,
             IReadOnlyItem item, int count,
             Queue<InventorySlot> slots,
             Queue<InventorySlot> emptySlots
             )
         {
+            System.Diagnostics.Debug.Assert(slotCount > 0);
+            System.Diagnostics.Debug.Assert(getSlot != null);
+
             System.Diagnostics.Debug.Assert(item != null);
             System.Diagnostics.Debug.Assert(count >= 0);
 
@@ -354,11 +358,11 @@ namespace MinecraftServerEngine
             int _preMovedCount;
             int _preRemainingCount = count;
 
-            for (int i = 0; i < PrimarySlotCount; ++i)
+            for (int i = 0; i < slotCount; ++i)
             {
                 System.Diagnostics.Debug.Assert(_preRemainingCount > 0);
 
-                slot = GetPrimarySlot(i);
+                slot = getSlot(i);
                 System.Diagnostics.Debug.Assert(slot != null);
 
                 if (slot.Empty == true)
@@ -396,7 +400,7 @@ namespace MinecraftServerEngine
             return true;
         }
 
-        private void GiveItemStacksFromLeftInPrimary(
+        private void GiveItemStacksFromLeft(
             IReadOnlyItem item, int count,
             Queue<InventorySlot> slots,
             Queue<InventorySlot> emptySlots
@@ -451,8 +455,14 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(count == 0);
         }
 
-        private bool CanTakeItemStacksInPrimary(IReadOnlyItem item, int count)
+        private bool CanTakeItemStacks(
+            int slotCount, System.Func<int, InventorySlot> getSlot,
+            IReadOnlyItem item, int count
+            )
         {
+            System.Diagnostics.Debug.Assert(slotCount > 0);
+            System.Diagnostics.Debug.Assert(getSlot != null);
+
             System.Diagnostics.Debug.Assert(item != null);
             System.Diagnostics.Debug.Assert(count >= 0);
 
@@ -465,9 +475,9 @@ namespace MinecraftServerEngine
 
             InventorySlot slot;
 
-            for (int i = 0; i < PrimarySlotCount && count > 0; ++i)
+            for (int i = 0; i < slotCount && count > 0; ++i)
             {
-                slot = GetPrimarySlot(i);
+                slot = getSlot(i);
                 System.Diagnostics.Debug.Assert(slot != null);
 
                 if (slot.Empty == true)
@@ -491,7 +501,10 @@ namespace MinecraftServerEngine
             return count == 0;
         }
 
-        private ItemStack[] _TakeItemStacksInPrimary(IReadOnlyItem item, int count)
+        private ItemStack[] _TakeItemStacks(
+            int slotCount, System.Func<int, InventorySlot> getSlot,
+            IReadOnlyItem item, int count
+            )
         {
             System.Diagnostics.Debug.Assert(item != null);
             System.Diagnostics.Debug.Assert(count >= 0);
@@ -513,9 +526,9 @@ namespace MinecraftServerEngine
 
             ItemStack takedItemStack;
 
-            for (int i = 0; i < PrimarySlotCount && count > 0; ++i)
+            for (int i = 0; i < slotCount && count > 0; ++i)
             {
-                slot = GetPrimarySlot(i);
+                slot = getSlot(i);
                 System.Diagnostics.Debug.Assert(slot != null);
 
                 if (slot.Empty == true)
@@ -697,7 +710,8 @@ namespace MinecraftServerEngine
             try
             {
                 if (
-                    CanGiveItemStacksFromLeftInPrimary(
+                    CanGiveItemStacksFromLeft(
+                        MainSlotCount, GetMainSlot,
                         item, count,
                         slots, emptySlots) == false
                     )
@@ -705,7 +719,7 @@ namespace MinecraftServerEngine
                     return false;
                 }
 
-                GiveItemStacksFromLeftInPrimary(
+                GiveItemStacksFromLeft(
                     item, count,
                     slots, emptySlots);
 
@@ -742,12 +756,16 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            if (CanTakeItemStacksInPrimary(item, count) == false)
+            if (
+                CanTakeItemStacks(
+                    PrimarySlotCount, GetPrimarySlot,
+                    item, count) == false
+                )
             {
                 return null;
             }
 
-            return _TakeItemStacksInPrimary(item, count);
+            return _TakeItemStacks(PrimarySlotCount, GetPrimarySlot, item, count);
         }
 
         public ItemStack[] GiveAndTakeItemStacksFromLeftInPrimary(
@@ -787,7 +805,8 @@ namespace MinecraftServerEngine
             try
             {
                 if (
-                    CanGiveItemStacksFromLeftInPrimary(
+                    CanGiveItemStacksFromLeft(
+                        MainSlotCount, GetMainSlot,
                         giveItem, giveCount,
                         giveSlots, giveEmptySlots) == false
                     )
@@ -795,16 +814,21 @@ namespace MinecraftServerEngine
                     return null;
                 }
 
-                if (CanTakeItemStacksInPrimary(takeItem, takeCount) == false)
+                if (CanTakeItemStacks(
+                    PrimarySlotCount, GetPrimarySlot,
+                    takeItem, takeCount) == false)
                 {
                     return null;
                 }
 
-                GiveItemStacksFromLeftInPrimary(
+                GiveItemStacksFromLeft(
                     giveItem, giveCount,
                     giveSlots, giveEmptySlots);
 
-                return _TakeItemStacksInPrimary(takeItem, takeCount);
+                return _TakeItemStacks(
+                    PrimarySlotCount, GetPrimarySlot, 
+                    takeItem, takeCount
+                    );
             } 
             finally
             {
@@ -814,7 +838,6 @@ namespace MinecraftServerEngine
                 giveEmptySlots.Flush();
             }
         }
-
 
         public bool GiveItemStacks(IReadOnlyItem item, int count)
         {
