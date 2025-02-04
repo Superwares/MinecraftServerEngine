@@ -128,9 +128,6 @@ If disposable objects were used as members of class and struct, they must be dis
 	- Title 이 잘띄어지는지
 	- 중간에 사망하여도 잘 진행되는가
 
-- Block Appearance 일떄 움직이면 이전 블럭은Air 로 바뀌는데 Air 가 아닌 해당 위치의 블럭으로 바뀌어야됨.
-	- PhysicsWorld 가 World 일때만 블럭으로 변할수 있도록. 
-		- World 에만 BlockContext가 있기에	``
 - 어떤 플레이어의 인벤토리를 강제로 닫을 수 있도록.
 
 
@@ -141,7 +138,6 @@ If disposable objects were used as members of class and struct, they must be dis
 
 - 게임 시작시 떨어진 모든 아이템을 정리하기
 
-- 아이템을 Give 할때 이미 존재하는 slot 을 수색하고 꽉 채우기
 
 - 아이템 구매하면 핫바로 가도록.
 
@@ -168,3 +164,10 @@ If disposable objects were used as members of class and struct, they must be dis
 
 - DetermineToDespawnPlayerOnDisconnect 가 동적으로 적용되나 테스트해야됨.
 - Send packet 할때 TryAgain 처리해야됨.
+- Block Appearance 일떄 움직이면 이전 블럭은Air 로 바뀌는데 Air 가 아닌 해당 위치의 블럭으로 바뀌어야됨.
+	- PhysicsWorld 가 World 일때만 블럭으로 변할수 있도록. 
+		- World 에만 BlockContext가 있기에	``
+- 아이템을 Give 할때 이미 존재하는 slot 을 수색하고 꽉 채우기
+
+### Deprecated
+- Give 할때 Hotbar 먼저 다음 Main
