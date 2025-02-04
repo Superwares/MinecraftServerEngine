@@ -12,7 +12,7 @@ using MinecraftServerEngine.Protocols;
 namespace TestMinecraftServerApplication
 {
     using Items;
-    
+
 
     public sealed class SuperPlayer : AbstractPlayer
     {
@@ -41,7 +41,7 @@ namespace TestMinecraftServerApplication
 
         public SuperPlayer(
             UserId userId, string username,
-            Vector p, Angles look)
+            Vector p, EntityAngles look)
             : base(userId, username, p, look, Gamemode.Adventure)
         {
             System.Diagnostics.Debug.Assert(userId != UserId.Null);

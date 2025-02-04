@@ -2,6 +2,7 @@
 using Common;
 
 using MinecraftServerEngine;
+using MinecraftServerEngine.Entities;
 using MinecraftServerEngine.Physics;
 using TestMinecraftServerApplication;
 using TestMinecraftServerApplication.Configs;
@@ -17,7 +18,7 @@ Config.Deserialize("Config.xml");
 double worldCenterX, worldCenterZ;
 double defaultWorldBorderRadiusInMeters;
 Vector respawningPos;
-Angles respawningLook;
+EntityAngles respawningLook;
 
 {
     IConfigWorld config = Config.Instance.World;
@@ -48,7 +49,7 @@ Angles respawningLook;
         config.RespawningY,
         config.RespawningZ
         );
-    respawningLook = new Angles(
+    respawningLook = new EntityAngles(
         config.RespawningYaw,
         config.RespawningPitch
         );

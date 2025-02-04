@@ -21,7 +21,7 @@ namespace MinecraftServerEngine.Entities
 
         public ItemEntity(ItemStack stack, Vector p)
             : base(
-                  System.Guid.NewGuid(), p, new Angles(0.0F, 0.0F), false,
+                  System.Guid.NewGuid(), p, new EntityAngles(0.0F, 0.0F), false,
                   DefaultHitbox,
                   DefaultMass, DefaultMaxStepLevel)
         {

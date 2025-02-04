@@ -97,7 +97,7 @@ namespace MinecraftServerEngine.Entities
 
         private protected LivingEntity(
             System.Guid uniqueId,
-            Vector p, Angles look,
+            Vector p, EntityAngles look,
             bool noGravity,
             Hitbox hitbox,
             double m, double maxStepLevel)

@@ -333,7 +333,7 @@ namespace MinecraftServerEngine
             int idEntity,
             double additionalHealth, double maxHealth, double health,
             double movementSpeed,
-            Vector p, Angles look,
+            Vector p, EntityAngles look,
             bool blindness,
             PlayerInventory playerInventory,
             Gamemode gamemode)
@@ -518,7 +518,7 @@ namespace MinecraftServerEngine
                         if (args.Length == 6)
                         {
                             if (Vector.TryParse(args[1], args[2], args[3], out Vector v) == true &&
-                                Angles.TryParse(args[4], args[5], out Angles angles) == true)
+                                EntityAngles.TryParse(args[4], args[5], out EntityAngles angles) == true)
                             {
                                 player.Teleport(v, angles);
                             }
@@ -530,7 +530,7 @@ namespace MinecraftServerEngine
                         else if (args.Length == 7)
                         {
                             if (Vector.TryParse(args[1], args[2], args[3], out Vector v) == true &&
-                                Angles.TryParse(args[4], args[5], out Angles angles) == true &&
+                                EntityAngles.TryParse(args[4], args[5], out EntityAngles angles) == true &&
                                 args[6] != null && string.IsNullOrEmpty(args[6]) == false)
                             {
                                 string username = args[6];
@@ -1016,7 +1016,7 @@ namespace MinecraftServerEngine
                         }
 
                         Vector p = new(packet.X, packet.Y, packet.Z);
-                        Angles look = new(packet.Yaw, packet.Pitch);
+                        EntityAngles look = new(packet.Yaw, packet.Pitch);
 
                         player.ControlMovement(p);
                         player.Rotate(look);
@@ -1036,7 +1036,7 @@ namespace MinecraftServerEngine
                             break;
                         }
 
-                        Angles look = new(packet.Yaw, packet.Pitch);
+                        EntityAngles look = new(packet.Yaw, packet.Pitch);
 
                         player.Rotate(look);
                         /*player.ControlStanding(packet.OnGround);*/
@@ -1613,7 +1613,7 @@ namespace MinecraftServerEngine
             EntityRenderer.ApplyBlindness(f);
         }
 
-        internal void Teleport(Vector p, Angles look)
+        internal void Teleport(Vector p, EntityAngles look)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 

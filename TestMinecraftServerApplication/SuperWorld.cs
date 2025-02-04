@@ -37,7 +37,7 @@ namespace TestMinecraftServerApplication
         public readonly double DefaultWorldBorderRadiusInMeters;
 
         public readonly Vector RespawningPosition;
-        public readonly Angles RespawningLook;
+        public readonly EntityAngles RespawningLook;
 
 
         private IGameStage _currentGameProgressNode = new LobbyStage();
@@ -49,7 +49,7 @@ namespace TestMinecraftServerApplication
             double defaultWorldBorderRadiusInMeters,
 
             Vector respawningPos,
-            Angles respawningLook
+            EntityAngles respawningLook
             )
             : base(
                   centerX, centerZ,

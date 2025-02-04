@@ -799,8 +799,6 @@ namespace MinecraftServerEngine.Blocks
 
         public static BlockContext LoadWithRegionFiles(string folderPath)
         {
-            string regionFilePattern = @"r\.(-?\d+)\.(-?\d+)\.mca$";
-
             Table<ChunkLocation, ChunkData> chunks = new();
 
             try
@@ -825,7 +823,7 @@ namespace MinecraftServerEngine.Blocks
                     string name = fileInfo.Name;
 
                     System.Text.RegularExpressions.Match match =
-                        System.Text.RegularExpressions.Regex.Match(name, regionFilePattern);
+                        System.Text.RegularExpressions.Regex.Match(name, RegionFile.RegionFilePattern);
 
                     if (match.Success == false)
                     {

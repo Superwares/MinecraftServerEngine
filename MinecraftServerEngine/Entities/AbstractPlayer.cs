@@ -1,6 +1,5 @@
 ﻿using Sync;
 using MinecraftServerEngine.Protocols;
-using MinecraftServerEngine.Entities;
 using MinecraftServerEngine.Text;
 
 using MinecraftServerEngine.Inventories;
@@ -74,7 +73,7 @@ namespace MinecraftServerEngine.Entities
 
         protected AbstractPlayer(
             UserId userId, string username,
-            Vector p, Angles look, Gamemode gamemode)
+            Vector p, EntityAngles look, Gamemode gamemode)
             : base(
                   userId.Value,
                   p, look,
@@ -596,7 +595,7 @@ namespace MinecraftServerEngine.Entities
             base.Move(world, volume, v);
         }
 
-        public override void Teleport(Vector p, Angles look)
+        public override void Teleport(Vector p, EntityAngles look)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 

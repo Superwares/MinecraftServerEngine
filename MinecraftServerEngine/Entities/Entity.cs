@@ -72,8 +72,8 @@ namespace MinecraftServerEngine.Entities
 
         private readonly Locker LockerRotate = new();
         private bool _rotated = false;
-        private Angles _look;
-        public Angles Look => _look;
+        private EntityAngles _look;
+        public EntityAngles Look => _look;
 
 
         protected bool _sneaking = false, _sprinting = false;
@@ -96,7 +96,7 @@ namespace MinecraftServerEngine.Entities
 
         private protected Entity(
             System.Guid uniqueId,
-            Vector p, Angles look,
+            Vector p, EntityAngles look,
             bool noGravity,
             Hitbox hitbox,
             double mass, double maxStepHeight)
@@ -498,7 +498,7 @@ namespace MinecraftServerEngine.Entities
             }
         }
 
-        internal void Rotate(Angles look)
+        internal void Rotate(EntityAngles look)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
@@ -622,7 +622,7 @@ namespace MinecraftServerEngine.Entities
             ChangeForms(_sneaking, _sprinting);
         }
 
-        public virtual void Teleport(Vector p, Angles look)
+        public virtual void Teleport(Vector p, EntityAngles look)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
