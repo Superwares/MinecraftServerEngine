@@ -407,16 +407,22 @@ namespace MinecraftServerEngine
                 return true;
             }
 
+            InventorySlot slot;
+
             using Queue<InventorySlot> slots = new();
 
             int _preMovedCount;
             int _preRemainingCount = count;
 
-            InventorySlot slot;
-            for (int i = 0; i < PrimarySlotCount; ++i)
+            for (int i = 0; i < PrimarySlotCount && _preRemainingCount > 0; ++i)
             {
                 slot = GetPrimarySlot(i);
                 System.Diagnostics.Debug.Assert(slot != null);
+
+                if (slot.Empty == true)
+                {
+                    continue;
+                }
 
                 _preMovedCount = slot.PreMove(item, _preRemainingCount);
 
@@ -428,6 +434,32 @@ namespace MinecraftServerEngine
                 _preRemainingCount = _preMovedCount;
                 slots.Enqueue(slot);
 
+                if (_preRemainingCount == 0)
+                {
+                    break;
+                }
+            }
+
+
+            for (int i = 0; i < PrimarySlotCount && _preRemainingCount > 0; ++i)
+            {
+                slot = GetPrimarySlot(i);
+                System.Diagnostics.Debug.Assert(slot != null);
+
+                if (slot.Empty == false)
+                {
+                    continue;
+                }
+
+                _preMovedCount = slot.PreMove(item, _preRemainingCount);
+
+                if (_preRemainingCount == _preMovedCount)
+                {
+                    continue;
+                }
+
+                _preRemainingCount = _preMovedCount;
+                slots.Enqueue(slot);
 
                 if (_preRemainingCount == 0)
                 {
