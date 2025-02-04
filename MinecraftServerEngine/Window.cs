@@ -736,10 +736,12 @@ namespace MinecraftServerEngine
             }
             finally
             {
+                int windowId = prevSharedInventory != null ? 1 : 0;
+
                 System.Diagnostics.Debug.Assert(_Renderer != null);
                 System.Diagnostics.Debug.Assert(playerInventory != null);
                 System.Diagnostics.Debug.Assert(_Cursor != null);
-                _Renderer.Reset(playerInventory, _Cursor);
+                _Renderer.Reset2(windowId, playerInventory, _Cursor);
 
                 if (prevSharedInventory != null)
                 {

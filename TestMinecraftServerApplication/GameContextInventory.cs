@@ -195,16 +195,17 @@ namespace TestMinecraftServerApplication
 
             //ItemStack giveItem;
 
-            switch (i)
+            if (_player is SuperPlayer player)
             {
-                case int _playerSeat when (
-                    _playerSeat >= PlayerSeatSlotOffset &&
-                    _playerSeat <= PlayerSeatSlotOffset + GameContext.MaxPlayers):
-                    {
-                        int playerSeat = _playerSeat - PlayerSeatSlotOffset;
-
-                        if (_player is SuperPlayer player)
+                switch (i)
+                {
+                    case int _playerSeat when (
+                        _playerSeat >= PlayerSeatSlotOffset &&
+                        _playerSeat <= PlayerSeatSlotOffset + GameContext.MaxPlayers):
                         {
+                            int playerSeat = _playerSeat - PlayerSeatSlotOffset;
+
+
                             System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
                             bool f = SuperWorld.GameContext.AddPlayer(player);
                             if (f == false)
@@ -220,30 +221,37 @@ namespace TestMinecraftServerApplication
                             }
 
                             success = true;
+
+
                         }
+                        break;
+                    case GameSwitchSlot:
+                        {
+                            success = SuperWorld.GameContext.Ready();
 
-                    }
-                    break;
-                case GameSwitchSlot:
-                    {
-                        success = SuperWorld.GameContext.Ready();
-                    }
-                    break;
-            }
+                            if (success == true)
+                            {
+                                ItemStack droppedItemStack = player.CloseInventory();
+                                //System.Diagnostics.Debug.Assert(droppedItemStack != null);
+                            }
+                        }
+                        break;
+                }
 
-            switch (itemStack.Type)
-            {
-                case ShopItem.Type:
-                    {
-                        //giveItem = ItemStack.Create(ShopItem.Item, ShopItem.DefaultCount * itemStack.Count);
-                        //success = playerInventory.GiveItemStack(giveItem);
-                    }
-                    break;
-            }
+                switch (itemStack.Type)
+                {
+                    case ShopItem.Type:
+                        {
+                            //giveItem = ItemStack.Create(ShopItem.Item, ShopItem.DefaultCount * itemStack.Count);
+                            //success = playerInventory.GiveItemStack(giveItem);
+                        }
+                        break;
+                }
 
-            if (success == true)
-            {
-                _player.PlaySound("entity.item.pickup", 7, 1.0F, 2.0F);
+                if (success == true)
+                {
+                    _player.PlaySound("entity.item.pickup", 7, 1.0F, 2.0F);
+                }
             }
         }
 

@@ -111,6 +111,18 @@ namespace MinecraftServerEngine.Renderers
             System.Diagnostics.Debug.Assert(cursor.Empty);
 
             Update(null, playerInventory, cursor);
+
+        }
+
+        internal void Reset2(int windowId, PlayerInventory playerInventory, InventorySlot cursor)
+        {
+            System.Diagnostics.Debug.Assert(cursor.Empty);
+
+            System.Diagnostics.Debug.Assert(windowId >= byte.MinValue);
+            System.Diagnostics.Debug.Assert(windowId <= byte.MaxValue);
+            Render(new ClientboundCloseWindowPacket((byte)windowId));
+
+            Update(null, playerInventory, cursor);
         }
 
         internal bool HandleMainHandSlot(PlayerInventory playerInventory)
