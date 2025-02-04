@@ -34,9 +34,6 @@ namespace TestMinecraftServerApplication
         private Time _worldBorderOutsideDamage_startTime = Time.Now();
 
 
-        private Block _lastHideBlock = Block.Air;
-
-
         public SuperPlayer(
             UserId userId, string username,
             Vector p, Angles look)
@@ -141,6 +138,16 @@ namespace TestMinecraftServerApplication
 
         }
 
+        private void UnhideBlock(SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            SetHelmet(null);
+
+            ResetBlockAppearance();
+
+        }
+
         private void HideBlock(SuperWorld world)
         {
             System.Diagnostics.Debug.Assert(world != null);
@@ -155,37 +162,15 @@ namespace TestMinecraftServerApplication
             if (belowBlock != Block.Air && belowBlock.IsItemable() == true)
             {
                 ItemType blockItemType = belowBlock.GetItemType();
-
-                //MyConsole.Debug($"belowBlock: {belowBlock}");
-                //MyConsole.Debug($"_lastHideBlock: {_lastHideBlock}");
-                if (_lastHideBlock != belowBlock)
-                {
-                    WriteMessageInChatBox([
-                        new TextComponent($"현재 블럭: {belowBlock.GetId()}", TextColor.Gray),
-                    ]);
-                }
-
+              
                 SetHelmet(new ItemStack(blockItemType, "Below Block!"));
 
                 ApplyBlockAppearance(belowBlock);
-                _lastHideBlock = belowBlock;
             }
             else
             {
-                SetHelmet(null);
-
-                if (_lastHideBlock != Block.Air)
-                {
-                    WriteMessageInChatBox([
-                        new TextComponent($"모습 초기화!", TextColor.Gray),
-                    ]);
-                }
-                ResetBlockAppearance();
-
-                _lastHideBlock = Block.Air;
+                UnhideBlock(world);
             }
-
-
 
         }
 
@@ -242,17 +227,7 @@ namespace TestMinecraftServerApplication
                 }
                 else
                 {
-                    SetHelmet(null);
-
-                    WriteMessageInChatBox([
-                        new TextComponent($"모습 초기화!", TextColor.Gray),
-                    ]);
-
-                    ResetBlockAppearance();
-
-                    _lastHideBlock = Block.Air;
-
-                    //ApplyBilndness(false);
+                    UnhideBlock(world);
                 }
             }
         }
