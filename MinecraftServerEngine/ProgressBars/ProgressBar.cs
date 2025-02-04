@@ -1,6 +1,6 @@
 ﻿using MinecraftServerEngine.Text;
 
-namespace MinecraftServerEngine.Protocols
+namespace MinecraftServerEngine.ProgressBars
 {
     public struct ProgressBar
     {

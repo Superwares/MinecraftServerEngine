@@ -3,6 +3,7 @@ using Containers;
 
 using MinecraftServerEngine.Protocols;
 using MinecraftServerEngine.Physics;
+using MinecraftServerEngine.ProgressBars;
 
 namespace MinecraftServerEngine.Renderers
 {

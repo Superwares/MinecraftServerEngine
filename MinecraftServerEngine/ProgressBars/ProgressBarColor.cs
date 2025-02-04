@@ -1,4 +1,4 @@
-﻿namespace MinecraftServerEngine.Protocols
+﻿namespace MinecraftServerEngine.ProgressBars
 {
     public enum ProgressBarColor : int
     {

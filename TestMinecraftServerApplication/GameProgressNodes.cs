@@ -4,7 +4,7 @@ using Common;
 using Containers;
 
 using MinecraftServerEngine;
-using MinecraftServerEngine.Protocols;
+using MinecraftServerEngine.ProgressBars;
 using MinecraftServerEngine.Text;
 
 namespace TestMinecraftServerApplication
