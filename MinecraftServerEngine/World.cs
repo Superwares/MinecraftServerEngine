@@ -2,12 +2,13 @@
 using Containers;
 using Sync;
 
-using MinecraftPrimitives;
-
 namespace MinecraftServerEngine
 {
-    using MinecraftServerEngine.Blocks;
-    using MinecraftServerEngine.Renderers;
+    using Protocols;
+    using Text;
+    using Blocks;
+    using Entities;
+    using Renderers;
     using PhysicsEngine;
 
     public abstract class World : PhysicsWorld
@@ -632,7 +633,7 @@ namespace MinecraftServerEngine
 
         public System.Guid OpenProgressBar(
             TextComponent[] title, double health,
-            BossBarColor color, BossBarDivision division)
+            ProgressBarColor color, ProgressBarDivision division)
         {
             if (health < 0.0 || health > 1.0)
             {

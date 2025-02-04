@@ -1,8 +1,8 @@
 ﻿using Common;
 using Containers;
 
-using MinecraftPrimitives;
-
+using MinecraftServerEngine.Entities;
+using MinecraftServerEngine.Protocols;
 using MinecraftServerEngine.Blocks;
 using MinecraftServerEngine.Items;
 using MinecraftServerEngine.PhysicsEngine;
@@ -114,10 +114,18 @@ namespace MinecraftServerEngine.Renderers
                 flags |= 0x08;
             }
 
-            using EntityMetadata metadata = new();
-            metadata.AddByte(0, flags);
+            using MinecraftProtocolDataStream stream = new();
 
-            Render(new EntityMetadataPacket(id, metadata.WriteData()));
+            {
+                using EntityMetadata metadata = new();
+
+                metadata.AddByte(0, flags);
+                metadata.WriteData(stream);
+            }
+
+            byte[] data = stream.ReadData();
+
+            Render(new EntityMetadataPacket(id, data));
         }
 
         internal void ShowParticles(
@@ -218,17 +226,25 @@ namespace MinecraftServerEngine.Renderers
                 flags |= 0x08;
             }
 
-            using EntityMetadata metadata = new();
+            using MinecraftProtocolDataStream stream = new();
 
-            metadata.AddByte(0, flags);
-            metadata.AddByte(13, 0xFF);  // The Displayed Skin Parts bit mask
+            {
+                using EntityMetadata metadata = new();
+
+                metadata.AddByte(0, flags);
+                metadata.AddByte(13, 0xFF);  // The Displayed Skin Parts bit mask
+
+                metadata.WriteData(stream);
+            }
+
+            byte[] data = stream.ReadData();
 
             (byte x, byte y) = look.ConvertToProtocolFormat();
             Render(new SpawnNamedEntityPacket(
                 id, uniqueId,
                 p.X, p.Y, p.Z,
                 x, y,
-                metadata.WriteData()));
+                data));
         }
 
         internal void SpawnItemEntity(
@@ -240,6 +256,8 @@ namespace MinecraftServerEngine.Renderers
 
             System.Diagnostics.Debug.Assert(!Disconnected);
 
+            using MinecraftProtocolDataStream stream = new();
+
             (byte x, byte y) = look.ConvertToProtocolFormat();
             Render(new SpawnEntityPacket(
                 id, uniqueId, 2,
@@ -247,11 +265,16 @@ namespace MinecraftServerEngine.Renderers
                 x, y,
                 1, 0, 0, 0));
 
-            using EntityMetadata metadata = new();
-            metadata.AddBool(5, true);
-            metadata.AddItemStack(6, stack);
-            Render(new EntityMetadataPacket(
-                id, metadata.WriteData()));
+            {
+                using EntityMetadata metadata = new();
+                metadata.AddBool(5, true);
+                metadata.AddItemStack(6, stack);
+                metadata.WriteData(stream);
+            }
+
+            byte[] data = stream.ReadData();
+
+            Render(new EntityMetadataPacket(id, data));
         }
 
         internal void AddEffect(

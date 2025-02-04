@@ -1,6 +1,7 @@
 ﻿
-using MinecraftPrimitives;
+using MinecraftServerEngine.Entities;
 using MinecraftServerEngine.Items;
+using MinecraftServerEngine.Protocols;
 
 namespace MinecraftServerEngine.Inventories
 {

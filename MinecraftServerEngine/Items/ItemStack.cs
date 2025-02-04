@@ -1,5 +1,5 @@
-﻿
-using MinecraftPrimitives;
+﻿using MinecraftServerEngine.NBT;
+using MinecraftServerEngine.Protocols;
 
 namespace MinecraftServerEngine.Items
 {

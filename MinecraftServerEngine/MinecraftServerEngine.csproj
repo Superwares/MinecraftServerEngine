@@ -15,7 +15,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Common\Common.csproj" />
 		<ProjectReference Include="..\Containers\Containers.csproj" />
-		<ProjectReference Include="..\MinecraftPrimitives\MinecraftPrimitives.csproj" />
 		<ProjectReference Include="..\Sync\Sync.csproj" />
 	</ItemGroup>
 
@@ -24,7 +23,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Entities\" />
 	  <Folder Include="Particles\" />
 	</ItemGroup>
 

@@ -3,8 +3,10 @@ using Common;
 using Containers;
 using Sync;
 
-using MinecraftPrimitives;
 using MinecraftServerEngine;
+using MinecraftServerEngine.Entities;
+using MinecraftServerEngine.Text;
+using MinecraftServerEngine.Protocols;
 
 namespace TestMinecraftServerApplication
 {

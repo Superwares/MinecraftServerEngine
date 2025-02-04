@@ -3,7 +3,9 @@
 using Common;
 using Containers;
 
-using MinecraftPrimitives;
+using MinecraftServerEngine;
+using MinecraftServerEngine.NBT;
+using MinecraftServerEngine.Protocols;
 using MinecraftServerEngine.PhysicsEngine;
 
 namespace MinecraftServerEngine.Blocks

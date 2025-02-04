@@ -1,9 +1,10 @@
 ﻿
 using Common;
 
-using MinecraftPrimitives;
 using MinecraftServerEngine;
+using MinecraftServerEngine.Entities;
 using MinecraftServerEngine.PhysicsEngine;
+using MinecraftServerEngine.Protocols;
 
 namespace TestMinecraftServerApplication
 {

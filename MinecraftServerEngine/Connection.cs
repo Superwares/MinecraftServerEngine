@@ -2,14 +2,15 @@
 using Containers;
 using Sync;
 
-using MinecraftPrimitives;
 
 namespace MinecraftServerEngine
 {
     using Blocks;
     using Inventories;
-    using MinecraftServerEngine.Items;
-    using MinecraftServerEngine.Renderers;
+    using Entities;
+    using Protocols;
+    using Items;
+    using Renderers;
     using PhysicsEngine;
 
     internal sealed class Connection : System.IDisposable
@@ -405,11 +406,16 @@ namespace MinecraftServerEngine
             }
 
             {
+                using MinecraftProtocolDataStream stream = new();
+
                 using EntityMetadata metadata = new();
 
                 metadata.AddByte(13, 0xFF);  // The Displayed Skin Parts bit mask
+                metadata.WriteData(stream);
 
-                OutPackets.Enqueue(new EntityMetadataPacket(idEntity, metadata.WriteData()));
+                byte[] data = stream.ReadData();
+
+                OutPackets.Enqueue(new EntityMetadataPacket(idEntity, data));
             }
 
             //{
@@ -1667,13 +1673,20 @@ namespace MinecraftServerEngine
                 return;
             }
 
+            using MinecraftProtocolDataStream stream = new();
+
+            {
+                using EntityMetadata metadata = new();
+
+                //MyConsole.Debug($"UpdateAdditionalHealth's health: {health}");
+                metadata.AddFloat(11, (float)health);
+                metadata.WriteData(stream);
+            }
+
+            byte[] data = stream.ReadData();
+
             System.Diagnostics.Debug.Assert(OutPackets != null);
-            using EntityMetadata metadata = new();
-
-            //MyConsole.Debug($"UpdateAdditionalHealth's health: {health}");
-            metadata.AddFloat(11, (float)health);
-
-            OutPackets.Enqueue(new EntityMetadataPacket(entityId, metadata.WriteData()));
+            OutPackets.Enqueue(new EntityMetadataPacket(entityId, data));
         }
 
         internal void UpdateMaxHealth(int entityId, double maxHealth)
@@ -1830,6 +1843,7 @@ namespace MinecraftServerEngine
 
             bool canFly = false;
 
+            using MinecraftProtocolDataStream stream = new();
             using EntityMetadata metadata = new();
 
             if (gamemode == Gamemode.Spectator)
@@ -1843,8 +1857,12 @@ namespace MinecraftServerEngine
                 metadata.AddByte(0, 0x00);
             }
 
+            metadata.WriteData(stream);
+
+            byte[] metadataData = stream.ReadData();
+
             System.Diagnostics.Debug.Assert(OutPackets != null);
-            OutPackets.Enqueue(new EntityMetadataPacket(idEntity, metadata.WriteData()));
+            OutPackets.Enqueue(new EntityMetadataPacket(idEntity, metadataData));
             OutPackets.Enqueue(new AbilitiesPacket(
                     false, canFly, canFly, false, 0.1F, 0.0F));
         }

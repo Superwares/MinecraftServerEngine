@@ -2,7 +2,7 @@
 
 using Containers;
 
-using MinecraftPrimitives;
+using MinecraftServerEngine.Protocols;
 
 namespace MinecraftServerEngine.Items
 {

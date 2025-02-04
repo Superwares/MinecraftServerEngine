@@ -2,13 +2,16 @@
 using Containers;
 using Sync;
 
-using MinecraftPrimitives;
-using MinecraftServerEngine.Inventories;
-using MinecraftServerEngine.Items;
-using MinecraftServerEngine.Renderers;
+
 
 namespace MinecraftServerEngine
 {
+    using Inventories;
+    using Items;
+    using Renderers;
+    using Entities;
+    using Protocols;
+
     internal sealed class Window : System.IDisposable
     {
         private bool _disposed = false;

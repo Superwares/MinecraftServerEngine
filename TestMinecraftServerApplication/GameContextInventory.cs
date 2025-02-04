@@ -3,14 +3,15 @@ using Common;
 using Containers;
 using Sync;
 
-using MinecraftPrimitives;
-using MinecraftServerEngine;
 using MinecraftServerEngine.Inventories;
+using MinecraftServerEngine.Entities;
+using MinecraftServerEngine.Items;
+using MinecraftServerEngine.Protocols;
 
 namespace TestMinecraftServerApplication
 {
     using Items;
-    using MinecraftServerEngine.Items;
+
 
     public sealed class GameContextInventory : ItemInterfaceInventory
     {

@@ -1,7 +1,6 @@
 ﻿using Common;
 using Containers;
-
-using MinecraftPrimitives;
+using MinecraftServerEngine.Protocols;
 
 namespace MinecraftServerEngine.Renderers
 {

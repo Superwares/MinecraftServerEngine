@@ -2,8 +2,8 @@
 
 using Containers;
 
-using MinecraftPrimitives;
 using MinecraftServerEngine.Items;
+using MinecraftServerEngine.Protocols;
 
 namespace MinecraftServerEngine.Inventories
 {

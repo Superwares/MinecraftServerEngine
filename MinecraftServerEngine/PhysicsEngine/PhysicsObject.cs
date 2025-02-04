@@ -3,7 +3,6 @@ using Common;
 using Containers;
 using Sync;
 
-using MinecraftPrimitives;
 
 namespace MinecraftServerEngine.PhysicsEngine
 {

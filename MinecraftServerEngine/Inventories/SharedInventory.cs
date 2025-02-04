@@ -3,9 +3,10 @@
 using Containers;
 using Sync;
 
-using MinecraftPrimitives;
 using MinecraftServerEngine.Items;
 using MinecraftServerEngine.Renderers;
+using MinecraftServerEngine.Entities;
+using MinecraftServerEngine.Protocols;
 
 namespace MinecraftServerEngine.Inventories
 {

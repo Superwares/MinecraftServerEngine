@@ -1,6 +1,5 @@
 ﻿using Common;
-
-using MinecraftServerEngine;
+using MinecraftServerEngine.Entities;
 using MinecraftServerEngine.Items;
 
 namespace TestMinecraftServerApplication.Items

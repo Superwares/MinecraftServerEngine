@@ -15,4 +15,8 @@
 		<ProjectReference Include="..\Containers\Containers.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="ProgressBars\" />
+	</ItemGroup>
+
 </Project>

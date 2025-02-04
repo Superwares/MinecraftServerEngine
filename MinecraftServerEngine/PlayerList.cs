@@ -4,8 +4,8 @@ using Common;
 using Containers;
 using Sync;
 
-using MinecraftPrimitives;
 using MinecraftServerEngine.Renderers;
+using MinecraftServerEngine.Protocols;
 
 namespace MinecraftServerEngine
 {

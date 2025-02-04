@@ -4,7 +4,8 @@ using Common;
 using Containers;
 
 using MinecraftServerEngine;
-using MinecraftPrimitives;
+using MinecraftServerEngine.Protocols;
+using MinecraftServerEngine.Text;
 
 namespace TestMinecraftServerApplication
 {
@@ -390,8 +391,8 @@ namespace TestMinecraftServerApplication
                         new TextComponent($"(술래: {ctx.CurrentSeeker.Username})", TextColor.Red),
                     ],
                     progressBar,
-                    BossBarColor.Red,
-                    BossBarDivision.Notches_20);
+                    ProgressBarColor.Red,
+                    ProgressBarDivision.Notches_20);
 
                 _init = true;
             }
@@ -542,8 +543,8 @@ namespace TestMinecraftServerApplication
                         new TextComponent($"(술래: {ctx.CurrentSeeker.Username})", TextColor.Red),
                         ],
                         progressBar,
-                        BossBarColor.Red,
-                        BossBarDivision.Notches_20);
+                        ProgressBarColor.Red,
+                        ProgressBarDivision.Notches_20);
 
                     ctx.PlaySound("entity.player.levelup", 0, 0.5, 1.0);
 
@@ -583,8 +584,8 @@ namespace TestMinecraftServerApplication
                         new TextComponent($"(술래: {ctx.CurrentSeeker.Username})", TextColor.Red),
                         ],
                         progressBar,
-                        BossBarColor.Yellow,
-                        BossBarDivision.Notches_20);
+                        ProgressBarColor.Yellow,
+                        ProgressBarDivision.Notches_20);
 
                     world.DisplayTitle(
                         Time.Zero, Time.FromSeconds(1), Time.Zero,

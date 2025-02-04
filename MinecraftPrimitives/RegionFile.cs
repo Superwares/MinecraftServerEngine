@@ -1,12 +1,12 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Runtime.InteropServices;
 
 namespace MinecraftPrimitives
 {
-    public sealed class RegionFile : IDisposable
+    public sealed class RegionFile : System.IDisposable
     {
         private static readonly byte[] EMPTY_CHUNK = new byte[4096];
         private readonly FileInfo regionFile;

@@ -1,8 +1,7 @@
 ﻿using Common;
 using Containers;
 
-using MinecraftPrimitives;
-
+using MinecraftServerEngine.Protocols;
 using MinecraftServerEngine.PhysicsEngine;
 
 namespace MinecraftServerEngine.Renderers
@@ -46,7 +45,7 @@ namespace MinecraftServerEngine.Renderers
         }
 
         internal void OpenBossBar(System.Guid id, string title, double health,
-            BossBarColor color, BossBarDivision division)
+            ProgressBarColor color, ProgressBarDivision division)
         {
             System.Diagnostics.Debug.Assert(id != System.Guid.Empty);
             System.Diagnostics.Debug.Assert(title != null);

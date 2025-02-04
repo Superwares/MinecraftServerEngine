@@ -2,14 +2,15 @@
 
 using Common;
 
-using MinecraftPrimitives;
-using MinecraftServerEngine;
+using MinecraftServerEngine.Entities;
+using MinecraftServerEngine.Items;
 using MinecraftServerEngine.Inventories;
+using MinecraftServerEngine.Protocols;
 
 namespace TestMinecraftServerApplication
 {
     using Items;
-    using MinecraftServerEngine.Items;
+
 
     public sealed class ShopInventory : ItemInterfaceInventory
     {
