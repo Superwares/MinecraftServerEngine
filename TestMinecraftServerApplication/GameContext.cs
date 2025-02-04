@@ -318,7 +318,7 @@ namespace TestMinecraftServerApplication
 
         }
 
-        public void RemovePlayer(UserId userId)
+        public bool RemovePlayer(UserId userId)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
@@ -329,7 +329,7 @@ namespace TestMinecraftServerApplication
             {
                 if (_ready == true || _started == true)
                 {
-                    return;
+                    return false;
                 }
 
                 System.Diagnostics.Debug.Assert(_players != null);
@@ -346,6 +346,49 @@ namespace TestMinecraftServerApplication
                 _LockerPlayers.Release();
             }
 
+            return true;
+        }
+
+        public void TeleportTo(AbstractPlayer player, int playerSeat)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(playerSeat >= 0);
+            System.Diagnostics.Debug.Assert(playerSeat < GameContext.MaxPlayers);
+
+            if (player.Gamemode != Gamemode.Spectator)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(_LockerPlayers != null);
+            _LockerPlayers.Hold();
+
+            try
+            {
+                System.Diagnostics.Debug.Assert(_players != null);
+                System.Diagnostics.Debug.Assert(_players.Length >= playerSeat);
+
+                SuperPlayer targetPlayer = _players[playerSeat];
+
+                if (object.ReferenceEquals(player, targetPlayer) == false)
+                {
+                    System.Diagnostics.Debug.Assert(targetPlayer != null);
+                    player.Teleport(targetPlayer.Position, targetPlayer.Look);
+                }
+                
+                // TODO: Close any opened inventory...
+            }
+            catch (KeyNotFoundException)
+            {
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(_LockerPlayers != null);
+                _LockerPlayers.Release();
+            }
+
+            return ;
         }
 
         public bool Ready()

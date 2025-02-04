@@ -195,16 +195,26 @@ namespace TestMinecraftServerApplication
 
             switch (i)
             {
-                case int playerSeat when (
-                    playerSeat >= PlayerSeatSlotOffset &&
-                    playerSeat <= PlayerSeatSlotOffset + GameContext.MaxPlayers):
+                case int _playerSeat when (
+                    _playerSeat >= PlayerSeatSlotOffset &&
+                    _playerSeat <= PlayerSeatSlotOffset + GameContext.MaxPlayers):
                     {
+                        int playerSeat = _playerSeat - PlayerSeatSlotOffset;
+
                         if (_player is SuperPlayer player)
                         {
+                            System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
                             bool f = SuperWorld.GameContext.AddPlayer(player);
                             if (f == false)
                             {
-                                SuperWorld.GameContext.RemovePlayer(player.UserId);
+                                System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                                f = SuperWorld.GameContext.RemovePlayer(player.UserId);
+                            }
+
+                            if (f == false)
+                            {
+                                System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
+                                SuperWorld.GameContext.TeleportTo(player, playerSeat);
                             }
 
                             success = true;
