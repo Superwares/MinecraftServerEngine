@@ -599,48 +599,52 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            System.Diagnostics.Debug.Assert(_Locker != null);
             _Locker.Hold();
             if (_sharedInventory != null)
             {
+                System.Diagnostics.Debug.Assert(_sharedInventory.Locker != null);
                 _sharedInventory.Locker.Hold();
             }
 
             try
             {
+                System.Diagnostics.Debug.Assert(playerInventory != null);
                 playerInventory.FlushItems();
-
-                _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
 
             }
             finally
             {
+                System.Diagnostics.Debug.Assert(_Renderer != null);
+                _Renderer.Update(_sharedInventory, playerInventory, _Cursor);
+
                 if (_sharedInventory != null)
                 {
+                    System.Diagnostics.Debug.Assert(_sharedInventory.Locker != null);
                     _sharedInventory.Locker.Release();
                 }
+                System.Diagnostics.Debug.Assert(_Locker != null);
                 _Locker.Release();
             }
         }
 
         internal void Reset(
-            ConcurrentQueue<ClientboundPlayingPacket> outPackets,
             World world, AbstractPlayer player,
-            int idWindow, PlayerInventory invPrivate)
+            int idWindow, PlayerInventory playerInventory)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(outPackets != null);
             System.Diagnostics.Debug.Assert(world != null);
-            System.Diagnostics.Debug.Assert(invPrivate != null);
+            System.Diagnostics.Debug.Assert(playerInventory != null);
 
-            SharedInventory sharedInventory = _sharedInventory;
+            SharedInventory prevSharedInventory = _sharedInventory;
 
             System.Diagnostics.Debug.Assert(_Locker != null);
             _Locker.Hold();
-            if (sharedInventory != null)
+            if (prevSharedInventory != null)
             {
-                System.Diagnostics.Debug.Assert(sharedInventory != null);
-                sharedInventory.Locker.Hold();
+                System.Diagnostics.Debug.Assert(prevSharedInventory != null);
+                prevSharedInventory.Locker.Hold();
             }
 
             try
@@ -653,50 +657,99 @@ namespace MinecraftServerEngine
                 if (_sharedInventory == null)
                 {
 
-                    if (idWindow == 0)
-                    {
-                    }
-                    else if (idWindow == 1)
-                    {
-                        throw new UnexpectedValueException($"Invalid window Id: {idWindow}==1");
-                    }
+                    //if (idWindow == 0)
+                    //{
+                    //}
+                    //else if (idWindow == 1)
+                    //{
+                    //    throw new UnexpectedValueException($"Invalid window Id: {idWindow}==1");
+                    //}
 
                 }
                 else
                 {
-                    if (idWindow == 0)
-                    {
-                        throw new UnexpectedValueException($"Invalid window Id: {idWindow}==0");
-                    }
+                    //if (idWindow == 0)
+                    //{
+                    //    throw new UnexpectedValueException($"Invalid window Id: {idWindow}==0");
+                    //}
 
-                    System.Diagnostics.Debug.Assert(idWindow == 1);
+                    //System.Diagnostics.Debug.Assert(idWindow == 1);
 
-                    _sharedInventory.Close(invPrivate);
+                    _sharedInventory.Close(playerInventory);
+                    _sharedInventory = null;
                 }
 
                 ItemStack dropItem = _Cursor.DropFull();
 
                 if (dropItem != null)
                 {
+                    System.Diagnostics.Debug.Assert(world != null);
                     world.SpawnObject(new ItemEntity(dropItem, player.Position));
                 }
-
-                _Renderer.Reset(invPrivate, _Cursor);
-                _sharedInventory = null;
 
             }
             finally
             {
-                if (sharedInventory != null)
+                System.Diagnostics.Debug.Assert(_Renderer != null);
+                System.Diagnostics.Debug.Assert(_Cursor != null);
+                _Renderer.Reset(playerInventory, _Cursor);
+
+                if (prevSharedInventory != null)
                 {
-                    System.Diagnostics.Debug.Assert(sharedInventory != null);
-                    sharedInventory.Locker.Release();
+                    System.Diagnostics.Debug.Assert(prevSharedInventory != null);
+                    prevSharedInventory.Locker.Release();
                 }
                 System.Diagnostics.Debug.Assert(_Locker != null);
                 _Locker.Release();
             }
         }
 
+
+        internal ItemStack Close(PlayerInventory playerInventory)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(playerInventory != null);
+
+            SharedInventory prevSharedInventory = _sharedInventory;
+
+            System.Diagnostics.Debug.Assert(_Locker != null);
+            _Locker.Hold();
+            if (prevSharedInventory != null)
+            {
+                System.Diagnostics.Debug.Assert(prevSharedInventory != null);
+                prevSharedInventory.Locker.Hold();
+            }
+
+            try
+            {
+
+                if (_sharedInventory != null)
+                {
+                    System.Diagnostics.Debug.Assert(playerInventory != null);
+                    _sharedInventory.Close(playerInventory);
+                    _sharedInventory = null;
+                }
+
+                System.Diagnostics.Debug.Assert(_Cursor != null);
+                return _Cursor.DropFull();
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(_Renderer != null);
+                System.Diagnostics.Debug.Assert(playerInventory != null);
+                System.Diagnostics.Debug.Assert(_Cursor != null);
+                _Renderer.Reset(playerInventory, _Cursor);
+
+                if (prevSharedInventory != null)
+                {
+                    System.Diagnostics.Debug.Assert(prevSharedInventory != null);
+                    prevSharedInventory.Locker.Release();
+                }
+                System.Diagnostics.Debug.Assert(_Locker != null);
+                _Locker.Release();
+            }
+        }
 
         public void Flush(World world, PlayerInventory invPlayer)
         {
@@ -719,7 +772,6 @@ namespace MinecraftServerEngine
             }
 
         }
-
 
         public void Dispose()
         {

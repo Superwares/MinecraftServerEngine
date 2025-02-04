@@ -1,7 +1,7 @@
 ﻿using Sync;
+
 using MinecraftServerEngine.Protocols;
 using MinecraftServerEngine.Text;
-
 using MinecraftServerEngine.Inventories;
 using MinecraftServerEngine.Items;
 using MinecraftServerEngine.Renderers;
@@ -100,6 +100,27 @@ namespace MinecraftServerEngine.Entities
             Dispose(false);
         }
 
+
+        private protected override Hitbox GetHitbox()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            return _newGamemode == Gamemode.Spectator ?
+                GetSpectatorHitbox() : GetAdventureHitbox(false);
+        }
+
+        public override double GetEyeHeight()
+        {
+            double value = DefaultEyeHeight;
+
+            if (Sneaking == true)
+            {
+                value += -0.08D;
+            }
+
+            return value;
+        }
+
         public void PlaySound(string name, int category, double volume, double pitch)
         {
             if (_disposed == true)
@@ -131,49 +152,6 @@ namespace MinecraftServerEngine.Entities
         {
 
         }
-
-        //internal void Respawn()
-        //{
-        //    System.Diagnostics.Debug.Assert(_disposed == false);
-
-        //    System.Diagnostics.Debug.Assert(Gamemode != Gamemode.Spectator);
-
-        //    if (Connected == true)
-        //    {
-        //        Conn.UpdateHealth(MaxHealth);
-        //    }
-
-        //    _nextGamemode = Gamemode.Spectator;
-        //    _health = MaxHealth;
-
-        //    OnRespawn();
-        //}
-
-        //internal override void _Attack(World world, ItemStack stack)
-        //{
-        //    System.Diagnostics.Debug.Assert(world != null);
-        //    System.Diagnostics.Debug.Assert(stack != null);
-
-
-        //    if (stack.IsBreaked == true)
-        //    {
-        //        throw new System.NotImplementedException();
-
-        //        _Attack(world);
-        //    }
-        //    else
-        //    {
-        //        base._Attack(world, stack);
-        //    }
-
-        //    if (stack.IsBreaked == true)
-        //    {
-        //        throw new System.NotImplementedException();
-        //    }
-
-
-
-        //}
 
         protected override void HandleDamageEvent(World world, double amount, LivingEntity attacker)
         {
@@ -419,25 +397,6 @@ namespace MinecraftServerEngine.Entities
             Conn.SetExperience(ratio, level);
         }
 
-        private protected override Hitbox GetHitbox()
-        {
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            return _newGamemode == Gamemode.Spectator ?
-                GetSpectatorHitbox() : GetAdventureHitbox(false);
-        }
-
-        public override double GetEyeHeight()
-        {
-            double value = DefaultEyeHeight;
-
-            if (Sneaking == true)
-            {
-                value += -0.08D;
-            }
-
-            return value;
-        }
 
         private protected override void RenderSpawning(EntityRenderer renderer)
         {
@@ -675,23 +634,42 @@ namespace MinecraftServerEngine.Entities
 
         public bool OpenInventory(SharedInventory sharedInventory)
         {
+            if (sharedInventory == null)
+            {
+                throw new System.ArgumentNullException(nameof(sharedInventory));
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(sharedInventory != null);
 
-            if (Disconnected == true)
+            System.Diagnostics.Debug.Assert(InventoryLocker != null);
+            InventoryLocker.Hold();
+
+            try
             {
-                return false;
+
+                if (Disconnected == true)
+                {
+                    return false;
+                }
+
+                System.Diagnostics.Debug.Assert(Conn != null);
+                return Conn.Open(Inventory, sharedInventory);
+
             }
-
-            System.Diagnostics.Debug.Assert(Conn != null);
-            return Conn.Open(Inventory, sharedInventory);
+            finally
+            {
+                System.Diagnostics.Debug.Assert(InventoryLocker != null);
+                InventoryLocker.Release();
+            }
         }
-
-        //public void SetItemDamage(ItemStack stack)
-        //{
-        //    System
-        //}
 
         public void SetHelmet(ItemStack itemStack)
         {
@@ -810,6 +788,34 @@ namespace MinecraftServerEngine.Entities
                 InventoryLocker.Release();
             }
 
+        }
+
+        public ItemStack CloseInventory()
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(InventoryLocker != null);
+            InventoryLocker.Hold();
+
+            try
+            {
+                if (Conn == null)
+                {
+                    return null;
+                }
+
+                System.Diagnostics.Debug.Assert(Inventory != null);
+                System.Diagnostics.Debug.Assert(Conn.Window != null);
+                return Conn.Window.Close(Inventory);
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(InventoryLocker != null);
+                InventoryLocker.Release();
+            }
         }
 
         public ItemStack[] TakeItemStacks(IReadOnlyItem item, int count)
@@ -1073,10 +1079,10 @@ namespace MinecraftServerEngine.Entities
                         Conn.Dispose();
                     }
 
+                    InventoryLocker.Dispose();
                     Inventory.Dispose();
 
                     LockerGamemode.Dispose();
-                    InventoryLocker.Dispose();
                 }
 
                 // Call the appropriate methods to clean up

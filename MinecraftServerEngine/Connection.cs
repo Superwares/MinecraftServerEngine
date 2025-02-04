@@ -932,7 +932,7 @@ namespace MinecraftServerEngine
                         }
 
                         System.Diagnostics.Debug.Assert(Window != null);
-                        Window.Reset(OutPackets, world, player, packet.WindowId, playerInventory);
+                        Window.Reset(world, player, packet.WindowId, playerInventory);
                     }
                     break;
                 case ServerboundPlayingPacket.ServerboundCustomPayloadPacketId:
@@ -1454,9 +1454,9 @@ namespace MinecraftServerEngine
 
                 //if (idEntitySelf == 0)
                 //{
-                    //MyConsole.Debug($"grid: {grid}");
-                    //MyConsole.Debug($"aabbTotal: {aabbTotal}");
-                    //MyConsole.Debug($"idEntitySelf: {idEntitySelf}, count: {objs.Count}");
+                //MyConsole.Debug($"grid: {grid}");
+                //MyConsole.Debug($"aabbTotal: {aabbTotal}");
+                //MyConsole.Debug($"idEntitySelf: {idEntitySelf}, count: {objs.Count}");
                 //}
 
                 foreach (PhysicsObject obj in objs.GetKeys())
