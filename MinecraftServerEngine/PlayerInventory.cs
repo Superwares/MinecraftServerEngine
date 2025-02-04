@@ -382,11 +382,6 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            if (itemStack == null)
-            {
-                return;
-            }
-
             InventorySlot slot = GetArmorSlot(0);
 
             System.Diagnostics.Debug.Assert(slot != null);

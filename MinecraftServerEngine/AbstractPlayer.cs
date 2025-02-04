@@ -668,11 +668,6 @@ namespace MinecraftServerEngine
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            if (itemStack == null)
-            {
-                return;
-            }
-
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(InventoryLocker != null);

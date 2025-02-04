@@ -1,6 +1,8 @@
 ﻿
 using Common;
 using Containers;
+using static System.Formats.Asn1.AsnWriter;
+using System.Drawing;
 
 namespace MinecraftServerEngine
 {
@@ -10,15 +12,14 @@ namespace MinecraftServerEngine
         {
             public readonly ItemType Type;
             public readonly int Id;
+            public readonly int Metadata;
             public readonly string Name;
             public readonly int MaxCount;
-            public readonly int Metadata;
 
             public ItemContext(
                 ItemType type,
-                int id, string name,
-                int maxCount,
-                int metadata)
+                int id, int metadata, string name,
+                int maxCount)
             {
                 System.Diagnostics.Debug.Assert(maxCount > 0);
                 System.Diagnostics.Debug.Assert(ItemStack.MinCount > 0);
@@ -26,9 +27,9 @@ namespace MinecraftServerEngine
 
                 Type = type;
                 Id = id;
+                Metadata = metadata;
                 Name = name;
                 MaxCount = maxCount;
-                Metadata = metadata;
             }
 
         }
@@ -43,358 +44,591 @@ namespace MinecraftServerEngine
             ItemContext[] _map =
             {
                 new ItemContext(
-                    ItemType.WhiteWool, 35, "wool",
-                    64,
-                    0),
+                    ItemType.Stone, 1, 0, "stone",
+                    64),
                 new ItemContext(
-                    ItemType.OrangeWool, 35, "wool",
-                    64,
-                    1),
+                    ItemType.Granite, 1, 1, "stone",
+                    64),
                 new ItemContext(
-                    ItemType.MagentaWool, 35, "wool",
-                    64,
-                    2),
+                    ItemType.PolishedGranite, 1, 2, "stone",
+                    64),
                 new ItemContext(
-                    ItemType.LightBlueWool, 35, "wool",
-                    64,
-                    3),
+                    ItemType.Diorite, 1, 3, "stone",
+                    64),
                 new ItemContext(
-                    ItemType.YellowWool, 35, "wool",
-                    64,
-                    4),
+                    ItemType.PolishedDiorite, 1, 4, "stone",
+                    64),
                 new ItemContext(
-                    ItemType.LimeWool, 35, "wool",
-                    64,
-                    5),
+                    ItemType.Andesite, 1, 5, "stone",
+                    64),
                 new ItemContext(
-                    ItemType.PinkWool, 35, "wool",
-                    64,
-                    6),
+                    ItemType.PolishedAndesite, 1, 6, "stone",
+                    64),
                 new ItemContext(
-                    ItemType.GrayWool, 35, "wool",
-                    64,
-                    7),
+                    ItemType.GrassBlock, 2, 0, "grass",
+                    64),
                 new ItemContext(
-                    ItemType.LightGrayWool, 35, "wool",
-                    64,
-                    8),
+                    ItemType.Dirt, 3, 0, "dirt",
+                    64),
                 new ItemContext(
-                    ItemType.CyanWool, 35, "wool",
-                    64,
-                    9),
+                    ItemType.CoarseDirt, 3, 1, "dirt",
+                    64),
                 new ItemContext(
-                    ItemType.PurpleWool, 35, "wool",
-                    64,
-                    10),
+                    ItemType.Podzol, 3, 2, "dirt",
+                    64),
                 new ItemContext(
-                    ItemType.BlueWool, 35, "wool",
-                    64,
-                    11),
+                    ItemType.Cobblestone, 4, 0, "cobblestone",
+                    64),
                 new ItemContext(
-                    ItemType.BrownWool, 35, "wool",
-                    64,
-                    12),
+                    ItemType.OakWoodPlanks, 5, 0, "planks",
+                    64),
                 new ItemContext(
-                    ItemType.GreenWool, 35, "wool",
-                    64,
-                    13),
+                    ItemType.SpruceWoodPlanks, 5, 1, "planks",
+                    64),
                 new ItemContext(
-                    ItemType.RedWool, 35, "wool",
-                    64,
-                    14),
+                    ItemType.BirchWoodPlanks, 5, 2, "planks",
+                    64),
                 new ItemContext(
-                    ItemType.BlackWool, 35, "wool",
-                    64,
-                    15),
+                    ItemType.JungleWoodPlanks, 5, 3, "planks",
+                    64),
+                new ItemContext(
+                    ItemType.AcaciaWoodPlanks, 5, 4, "planks",
+                    64),
+                new ItemContext(
+                    ItemType.DarkOakWoodPlanks, 5, 5, "planks",
+                    64),
+                new ItemContext(
+                    ItemType.OakSapling, 6, 0, "sapling",
+                    64),
+                new ItemContext(
+                    ItemType.SpruceSapling, 6, 1, "sapling",
+                    64),
+                new ItemContext(
+                    ItemType.BirchSapling, 6, 2, "sapling",
+                    64),
+                new ItemContext(
+                    ItemType.JungleSapling, 6, 3, "sapling",
+                    64),
+                new ItemContext(
+                    ItemType.AcaciaSapling, 6, 4, "sapling",
+                    64),
+                new ItemContext(
+                    ItemType.DarkOakSapling, 6, 5, "sapling",
+                    64),
+                new ItemContext(
+                    ItemType.Bedrock, 7, 0, "bedrock",
+                    64),
+                new ItemContext(
+                    ItemType.FlowingWater, 8, 0, "flowing_water",
+                    64),
+                new ItemContext(
+                    ItemType.StillWater, 9, 0, "water",
+                    64),
+                new ItemContext(
+                    ItemType.FlowingLava, 10, 0, "flowing_lava",
+                    64),
+                new ItemContext(
+                    ItemType.StillLava, 11, 0, "lava",
+                    64),
+                new ItemContext(
+                    ItemType.Sand, 12, 0, "sand",
+                    64),
+                new ItemContext(
+                    ItemType.RedSand, 12, 1, "sand",
+                    64),
+                new ItemContext(
+                    ItemType.Gravel, 13, 0, "gravel",
+                    64),
+                new ItemContext(
+                    ItemType.GoldOre, 14, 0, "gold_ore",
+                    64),
+                new ItemContext(
+                    ItemType.IronOre, 15, 0, "iron_ore",
+                    64),
+                new ItemContext(
+                    ItemType.CoalOre, 16, 0, "coal_ore",
+                    64),
+                new ItemContext(
+                    ItemType.OakWood, 17, 0, "log",
+                    64),
+                new ItemContext(
+                    ItemType.SpruceWood, 17, 1, "log",
+                    64),
+                new ItemContext(
+                    ItemType.BirchWood, 17, 2, "log",
+                    64),
+                new ItemContext(
+                    ItemType.JungleWood, 17, 3, "log",
+                    64),
+                new ItemContext(
+                    ItemType.OakLeaves, 18, 0, "leaves",
+                    64),
+                new ItemContext(
+                    ItemType.SpruceLeaves, 18, 1, "leaves",
+                    64),
+                new ItemContext(
+                    ItemType.BirchLeaves, 18, 2, "leaves",
+                    64),
+                new ItemContext(
+                    ItemType.JungleLeaves, 18, 3, "leaves",
+                    64),
+                new ItemContext(
+                    ItemType.Sponge, 19, 0, "sponge",
+                    64),
+                new ItemContext(
+                    ItemType.WetSponge, 19, 1, "sponge",
+                    64),
+                new ItemContext(
+                    ItemType.Glass, 20, 0, "glass",
+                    64),
+                new ItemContext(
+                    ItemType.LapisLazuliOre, 21, 0, "lapis_ore",
+                    64),
+                new ItemContext(
+                    ItemType.LapisLazuliBlock, 22, 0, "lapis_block",
+                    64),
 
                 new ItemContext(
-                    ItemType.RedstoneOre, 73, "redstone_ore",
-                    64,
-                    0),
+                    ItemType.Dispenser, 23, 0, "dispenser",
+                    64),
+
+                new ItemContext(
+                    ItemType.Sandstone, 24, 0, "sandstone",
+                    64),
+                new ItemContext(
+                    ItemType.ChiseledSandstone, 24, 1, "sandstone",
+                    64),
+                new ItemContext(
+                    ItemType.SmoothSandstone, 24, 2, "sandstone",
+                    64),
+                new ItemContext(
+                    ItemType.NoteBlock, 25, 0, "noteblock",
+                    64),
+
+                new ItemContext(
+                    ItemType.StickyPiston, 29, 0, "sticky_piston",
+                    64),
+
+                new ItemContext(
+                    ItemType.DeadShrub, 31, 0, "tallgrass",
+                    64),
+                new ItemContext(
+                    ItemType.Grass, 31, 1, "tallgrass",
+                    64),
+                new ItemContext(
+                    ItemType.Fern, 31, 2, "tallgrass",
+                    64),
+                new ItemContext(
+                    ItemType.DeadBush, 32, 0, "deadbush",
+                    64),
+
+                new ItemContext(
+                    ItemType.Piston, 33, 0, "piston",
+                    64),
+
+                new ItemContext(
+                    ItemType.WhiteWool, 35, 0, "wool",
+                    64),
+                new ItemContext(
+                    ItemType.OrangeWool, 35, 1, "wool",
+                    64),
+                new ItemContext(
+                    ItemType.MagentaWool, 35, 2, "wool",
+                    64),
+                new ItemContext(
+                    ItemType.LightBlueWool, 35, 3, "wool",
+                    64),
+                new ItemContext(
+                    ItemType.YellowWool, 35, 4, "wool",
+                    64),
+                new ItemContext(
+                    ItemType.LimeWool, 35, 5, "wool",
+                    64),
+                new ItemContext(
+                    ItemType.PinkWool, 35, 6, "wool",
+                    64),
+                new ItemContext(
+                    ItemType.GrayWool, 35, 7, "wool",
+                    64),
+                new ItemContext(
+                    ItemType.LightGrayWool, 35, 8, "wool",
+                    64),
+                new ItemContext(
+                    ItemType.CyanWool, 35, 9, "wool",
+                    64),
+                new ItemContext(
+                    ItemType.PurpleWool, 35, 10, "wool",
+                    64),
+                new ItemContext(
+                    ItemType.BlueWool, 35, 11, "wool",
+                    64),
+                new ItemContext(
+                    ItemType.BrownWool, 35, 12, "wool",
+                    64),
+                new ItemContext(
+                    ItemType.GreenWool, 35, 13, "wool",
+                    64),
+                new ItemContext(
+                    ItemType.RedWool, 35, 14, "wool",
+                    64),
+                new ItemContext(
+                    ItemType.BlackWool, 35, 15, "wool",
+                    64),
+
+                new ItemContext(
+                    ItemType.Dandelion, 37, 0 , "yellow_flower",
+                    64),
+                new ItemContext(
+                    ItemType.Poppy, 38, 0, "red_flower",
+                    64),
+                new ItemContext(
+                    ItemType.BlueOrchid, 38, 1, "red_flower",
+                    64),
+                new ItemContext(
+                    ItemType.Allium, 38, 2, "red_flower",
+                    64),
+                new ItemContext(
+                    ItemType.AzureBluet, 38, 3, "red_flower",
+                    64),
+                new ItemContext(
+                    ItemType.RedTulip, 38, 4, "red_flower",
+                    64),
+                new ItemContext(
+                    ItemType.OrangeTulip, 38, 5, "red_flower",
+                    64),
+                new ItemContext(
+                    ItemType.WhiteTulip, 38, 6, "red_flower",
+                    64),
+                new ItemContext(
+                    ItemType.PinkTulip, 38, 7, "red_flower",
+                    64),
+                new ItemContext(
+                    ItemType.OxeyeDaisy, 38, 8, "red_flower",
+                    64),
+                new ItemContext(
+                    ItemType.BrownMushroom, 39, 0, "brown_mushroom",
+                    64),
+                new ItemContext(
+                    ItemType.RedMushroom, 40, 0, "red_mushroom",
+                    64),
+                new ItemContext(
+                    ItemType.GoldBlock, 41, 0, "gold_block",
+                    64),
+                new ItemContext(
+                    ItemType.IronBlock, 42, 0, "iron_block",
+                    64),
+                new ItemContext(
+                    ItemType.DoubleStoneSlab, 43, 0, "double_stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.DoubleSandstoneSlab, 43, 1, "double_stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.DoubleWoodenSlab, 43, 2, "double_stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.DoubleCobblestoneSlab, 43, 3, "double_stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.DoubleBrickSlab, 43, 4, "double_stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.DoubleStoneBrickSlab, 43, 5, "double_stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.DoubleNetherBrickSlab, 43, 6, "double_stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.DoubleQuartzSlab, 43, 7, "double_stone_slab",
+                    64),
+
+                new ItemContext(
+                    ItemType.StoneBottomSlab, 44, 0, "stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.SandstoneBottomSlab, 44, 1, "stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.WoodenBottomSlab, 44, 2, "stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.CobblestoneBottomSlab, 44, 3, "stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.BrickBottomSlab, 44, 4, "stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.StoneBrickBottomSlab, 44, 5, "stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.NetherBrickBottomSlab, 44, 6, "stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.QuartzBottomSlab, 44, 7, "stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.StoneTopSlab, 44, 8, "stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.SandstoneTopSlab, 44, 9, "stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.WoodenTopSlab, 44, 10, "stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.CobblestoneTopSlab, 44, 11, "stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.BrickTopSlab, 44, 12, "stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.StoneBrickTopSlab, 44, 13, "stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.NetherBrickTopSlab, 44, 14, "stone_slab",
+                    64),
+                new ItemContext(
+                    ItemType.QuartzTopSlab, 44, 15, "stone_slab",
+                    64),
+
+                new ItemContext(
+                    ItemType.Bricks, 45, 0, "brick_block",
+                    64),
+                new ItemContext(
+                    ItemType.TNT, 46, 0, "tnt",
+                    64),
+                new ItemContext(
+                    ItemType.Bookshelf, 47, 0, "bookshelf",
+                    64),
+                new ItemContext(
+                    ItemType.MossStone, 48, 0, "mossy_cobblestone",
+                    64),
+                new ItemContext(
+                    ItemType.Obsidian, 49, 0, "obsidian",
+                    64),
+
+                new ItemContext(
+                    ItemType.Torch, 50, 0, "torch",
+                    64),
+
+                new ItemContext(
+                    ItemType.RedstoneOre, 73, 0, "redstone_ore",
+                    64),
                 // It is not shown in client...
                 // It is only used for block.
                 //new ItemContext(
-                //    ItemType.GlowingRedstoneOre, 74, "lit_redstone_ore",
-                //    64,
-                //    0),
+                //    ItemType.GlowingRedstoneOre, 740, , "lit_redstone_ore",
+                //    64),
 
                 new ItemContext(
-                    ItemType.Pumpkin, 86, "pumpkin",
-                    64,
-                    0),
+                    ItemType.Pumpkin, 86, 0, "pumpkin",
+                    64),
                 new ItemContext(
-                    ItemType.JackOLantern, 91, "lit_pumpkin",
-                    64,
-                    0),
+                    ItemType.JackOLantern, 91, 0, "lit_pumpkin",
+                    64),
                 new ItemContext(
-                    ItemType.IronBars, 101, "iron_bars",
-                    64,
-                    0),
+                    ItemType.IronBars, 101, 0, "iron_bars",
+                    64),
                 new ItemContext(
-                    ItemType.WhiteTerracotta, 159, "stained_hardened_clay",
-                    64,
-                    0),
+                    ItemType.WhiteTerracotta, 159, 0, "stained_hardened_clay",
+                    64),
                 new ItemContext(
-                    ItemType.OrangeTerracotta, 159, "stained_hardened_clay",
-                    64,
+                    ItemType.OrangeTerracotta, 159, 1, "stained_hardened_clay",
+                    64),
+                new ItemContext(
+                    ItemType.MagentaTerracotta, 159, 2, "stained_hardened_clay",
+                    64),
+                new ItemContext(
+                    ItemType.LightBlueTerracotta, 159, 3, "stained_hardened_clay",
+                    64),
+                new ItemContext(
+                    ItemType.YellowTerracotta, 159, 4, "stained_hardened_clay",
+                    64),
+                new ItemContext(
+                    ItemType.LimeTerracotta, 159, 5, "stained_hardened_clay",
+                    64),
+                new ItemContext(
+                    ItemType.PinkTerracotta, 159, 6, "stained_hardened_clay",
+                    64),
+                new ItemContext(
+                    ItemType.GrayTerracotta, 159, 7, "stained_hardened_clay",
+                    64),
+                new ItemContext(
+                    ItemType.LightGrayTerracotta, 159, 8, "stained_hardened_clay",
+                    64),
+                new ItemContext(
+                    ItemType.CyanTerracotta, 159, 9, "stained_hardened_clay",
+                    64),
+                new ItemContext(
+                    ItemType.PurpleTerracotta, 159, 10, "stained_hardened_clay",
+                    64),
+                new ItemContext(
+                    ItemType.BlueTerracotta, 159, 11, "stained_hardened_clay",
+                    64),
+                new ItemContext(
+                    ItemType.BrownTerracotta, 159, 12, "stained_hardened_clay",
+                    64),
+                new ItemContext(
+                    ItemType.GreenTerracotta, 159, 13, "stained_hardened_clay",
+                    64),
+                new ItemContext(
+                    ItemType.RedTerracotta, 159, 14, "stained_hardened_clay",
+                    64),
+                new ItemContext(
+                    ItemType.BlackTerracotta, 159, 15, "stained_hardened_clay",
+                    64),
+                new ItemContext(
+                    ItemType.WhiteStainedGlassPane, 160, 0, "stained_glass_pane",
+                    64),
+                new ItemContext(
+                    ItemType.OrangeStainedGlassPane, 160, 1, "stained_glass_pane",
+                    64),
+                new ItemContext(
+                    ItemType.MagentaStainedGlassPane, 160, 2, "stained_glass_pane",
+                    64),
+                new ItemContext(
+                    ItemType.LightBlueStainedGlassPane, 160, 3, "stained_glass_pane",
+                    64),
+                new ItemContext(
+                    ItemType.YellowStainedGlassPane, 160, 4, "stained_glass_pane",
+                    64),
+                new ItemContext(
+                    ItemType.LimeStainedGlassPane, 160, 5, "stained_glass_pane",
+                    64),
+                new ItemContext(
+                    ItemType.PinkStainedGlassPane, 160, 6, "stained_glass_pane",
+                    64),
+                new ItemContext(
+                    ItemType.GrayStainedGlassPane, 160, 7, "stained_glass_pane",
+                    64),
+                new ItemContext(
+                    ItemType.LightGrayStainedGlassPane, 160, 8, "stained_glass_pane",
+                    64),
+                new ItemContext(
+                    ItemType.CyanStainedGlassPane, 160, 9, "stained_glass_pane",
+                    64),
+                new ItemContext(
+                    ItemType.PurpleStainedGlassPane, 160, 10, "stained_glass_pane",
+                    64),
+                new ItemContext(
+                    ItemType.BlueStainedGlassPane, 160, 11, "stained_glass_pane",
+                    64),
+                new ItemContext(
+                    ItemType.BrownStainedGlassPane, 160, 12, "stained_glass_pane",
+                    64),
+                new ItemContext(
+                    ItemType.GreenStainedGlassPane, 160, 13, "stained_glass_pane",
+                    64),
+                new ItemContext(
+                    ItemType.RedStainedGlassPane, 160, 14, "stained_glass_pane",
+                    64),
+                new ItemContext(
+                    ItemType.BlackStainedGlassPane, 160, 15, "stained_glass_pane",
+                    64),
+                new ItemContext(
+                    ItemType.IronSword, 267, 0, "iron_sword",
                     1),
                 new ItemContext(
-                    ItemType.MagentaTerracotta, 159, "stained_hardened_clay",
-                    64,
-                    2),
-                new ItemContext(
-                    ItemType.LightBlueTerracotta, 159, "stained_hardened_clay",
-                    64,
-                    3),
-                new ItemContext(
-                    ItemType.YellowTerracotta, 159, "stained_hardened_clay",
-                    64,
-                    4),
-                new ItemContext(
-                    ItemType.LimeTerracotta, 159, "stained_hardened_clay",
-                    64,
-                    5),
-                new ItemContext(
-                    ItemType.PinkTerracotta, 159, "stained_hardened_clay",
-                    64,
-                    6),
-                new ItemContext(
-                    ItemType.GrayTerracotta, 159, "stained_hardened_clay",
-                    64,
-                    7),
-                new ItemContext(
-                    ItemType.LightGrayTerracotta, 159, "stained_hardened_clay",
-                    64,
-                    8),
-                new ItemContext(
-                    ItemType.CyanTerracotta, 159, "stained_hardened_clay",
-                    64,
-                    9),
-                new ItemContext(
-                    ItemType.PurpleTerracotta, 159, "stained_hardened_clay",
-                    64,
-                    10),
-                new ItemContext(
-                    ItemType.BlueTerracotta, 159, "stained_hardened_clay",
-                    64,
-                    11),
-                new ItemContext(
-                    ItemType.BrownTerracotta, 159, "stained_hardened_clay",
-                    64,
-                    12),
-                new ItemContext(
-                    ItemType.GreenTerracotta, 159, "stained_hardened_clay",
-                    64,
-                    13),
-                new ItemContext(
-                    ItemType.RedTerracotta, 159, "stained_hardened_clay",
-                    64,
-                    14),
-                new ItemContext(
-                    ItemType.BlackTerracotta, 159, "stained_hardened_clay",
-                    64,
-                    15),
-                new ItemContext(
-                    ItemType.WhiteStainedGlassPane, 160, "stained_glass_pane",
-                    64,
-                    0),
-                new ItemContext(
-                    ItemType.OrangeStainedGlassPane, 160, "stained_glass_pane",
-                    64,
+                    ItemType.WoodenSword, 268, 0, "wooden_sword",
                     1),
                 new ItemContext(
-                    ItemType.MagentaStainedGlassPane, 160, "stained_glass_pane",
-                    64,
-                    2),
+                    ItemType.StoneSword, 272, 0, "stone_sword",
+                    1),
                 new ItemContext(
-                    ItemType.LightBlueStainedGlassPane, 160, "stained_glass_pane",
-                    64,
-                    3),
+                    ItemType.DiamondSword, 276, 0, "diamond_sword",
+                    1),
                 new ItemContext(
-                    ItemType.YellowStainedGlassPane, 160, "stained_glass_pane",
-                    64,
-                    4),
+                    ItemType.DiamondShovel, 277, 0, "diamond_shovel",
+                    1),
                 new ItemContext(
-                    ItemType.LimeStainedGlassPane, 160, "stained_glass_pane",
-                    64,
-                    5),
+                    ItemType.DiamondPickaxe, 278, 0, "diamond_pickaxe",
+                    1),
                 new ItemContext(
-                    ItemType.PinkStainedGlassPane, 160, "stained_glass_pane",
-                    64,
-                    6),
+                    ItemType.DiamondAxe, 279, 0, "diamond_axe",
+                    1),
                 new ItemContext(
-                    ItemType.GrayStainedGlassPane, 160, "stained_glass_pane",
-                    64,
-                    7),
+                    ItemType.Stick, 280, 0, "stick",
+                    64),
                 new ItemContext(
-                    ItemType.LightGrayStainedGlassPane, 160, "stained_glass_pane",
-                    64,
-                    8),
+                    ItemType.GoldenSword, 283, 0, "golden_sword",
+                    1),
                 new ItemContext(
-                    ItemType.CyanStainedGlassPane, 160, "stained_glass_pane",
-                    64,
-                    9),
+                    ItemType.Feather, 288, 0, "feather",
+                    64),
                 new ItemContext(
-                    ItemType.PurpleStainedGlassPane, 160, "stained_glass_pane",
-                    64,
-                    10),
+                    ItemType.Flint, 318, 0, "flint",
+                    64),
                 new ItemContext(
-                    ItemType.BlueStainedGlassPane, 160, "stained_glass_pane",
-                    64,
-                    11),
-                new ItemContext(
-                    ItemType.BrownStainedGlassPane, 160, "stained_glass_pane",
-                    64,
-                    12),
-                new ItemContext(
-                    ItemType.GreenStainedGlassPane, 160, "stained_glass_pane",
-                    64,
-                    13),
-                new ItemContext(
-                    ItemType.RedStainedGlassPane, 160, "stained_glass_pane",
-                    64,
-                    14),
-                new ItemContext(
-                    ItemType.BlackStainedGlassPane, 160, "stained_glass_pane",
-                    64,
-                    15),
-                new ItemContext(
-                    ItemType.IronSword, 267, "iron_sword",
-                    1,
-                    0),
-                new ItemContext(
-                    ItemType.WoodenSword, 268, "wooden_sword",
-                    1,
-                    0),
-                new ItemContext(
-                    ItemType.StoneSword, 272, "stone_sword",
-                    1,
-                    0),
-                new ItemContext(
-                    ItemType.DiamondSword, 276, "diamond_sword",
-                    1,
-                    0),
-                new ItemContext(
-                    ItemType.DiamondShovel, 277, "diamond_shovel",
-                    1,
-                    0),
-                new ItemContext(
-                    ItemType.DiamondPickaxe, 278, "diamond_pickaxe",
-                    1,
-                    0),
-                new ItemContext(
-                    ItemType.DiamondAxe, 279, "diamond_axe",
-                    1,
-                    0),
-                new ItemContext(
-                    ItemType.Stick, 280, "stick",
-                    64,
-                    0),
-                new ItemContext(
-                    ItemType.GoldenSword, 283, "golden_sword",
-                    1,
-                    0),
-                new ItemContext(
-                    ItemType.Feather, 288, "feather",
-                    64,
-                    0),
-                new ItemContext(
-                    ItemType.Flint, 318, "flint",
-                    64,
-                    0),
-                new ItemContext(
-                    ItemType.Sign, 323, "sign",
-                    64,
-                    0),
+                    ItemType.Sign, 323, 0, "sign",
+                    64),
                 //new ItemContext(
-                //    ItemType.Snowball, 332, "snowball",
-                //    1, 16,
-                //    0),
+                //    ItemType.Snowball, 3320, , "snowball",
+                //    1, 16),
                 
                 new ItemContext(
-                    ItemType.Paper, 339, "paper",
-                    64,
-                    0),
+                    ItemType.Paper, 339, 0, "paper",
+                    64),
 
                 new ItemContext(
-                    ItemType.GoldNugget, 371, "gold_nugget",
-                    64,
-                    0),
+                    ItemType.GoldNugget, 371, 0, "gold_nugget",
+                    64),
                 new ItemContext(
-                    ItemType.EyeOfEnder, 381, "ender_eye",
-                    64,
-                    0),
+                    ItemType.EyeOfEnder, 381, 0, "ender_eye",
+                    64),
                 new ItemContext(
-                    ItemType.PlayerSkull, 397, "skull",
-                    64,
-                    3),
+                    ItemType.PlayerSkull, 397, 3, "skull",
+                    64),
 
                 new ItemContext(
-                    ItemType.IronHorseArmor, 417, "iron_horse_armor",
-                    1,
-                    0),
+                    ItemType.IronHorseArmor, 417, 0, "iron_horse_armor",
+                    1),
                 new ItemContext(
-                    ItemType.GoldenHorseArmor, 418, "golden_horse_armor",
-                    1,
-                    0),
+                    ItemType.GoldenHorseArmor, 418, 0, "golden_horse_armor",
+                    1),
                 new ItemContext(
-                    ItemType.DiamondHorseArmor, 419, "diamond_horse_armor",
-                    1,
-                    0),
+                    ItemType.DiamondHorseArmor, 419, 0, "diamond_horse_armor",
+                    1),
 
                 new ItemContext(
-                    ItemType.EndCrystal, 426, "end_crystal",
-                    64,
-                    0),
+                    ItemType.EndCrystal, 426, 0, "end_crystal",
+                    64),
 
                 new ItemContext(
-                    ItemType.MusicDisc_C418_13, 2256, "record_13",
-                    1,
-                    0),
+                    ItemType.MusicDisc_C418_13, 2256, 0, "record_13",
+                    1),
                 new ItemContext(
-                    ItemType.MusicDisc_C418_cat, 2257, "record_cat",
-                    1,
-                    0),
+                    ItemType.MusicDisc_C418_cat, 2257, 0, "record_cat",
+                    1),
                 new ItemContext(
-                    ItemType.MusicDisc_C418_blocks, 2258, "record_blocks",
-                    1,
-                    0),
+                    ItemType.MusicDisc_C418_blocks, 2258, 0, "record_blocks",
+                    1),
                 new ItemContext(
-                    ItemType.MusicDisc_C418_chirp, 2259, "record_chirp",
-                    1,
-                    0),
+                    ItemType.MusicDisc_C418_chirp, 2259, 0, "record_chirp",
+                    1),
                 new ItemContext(
-                    ItemType.MusicDisc_C418_far, 2260, "record_far",
-                    1,
-                    0),
+                    ItemType.MusicDisc_C418_far, 2260, 0, "record_far",
+                    1),
                 new ItemContext(
-                    ItemType.MusicDisc_C418_mall, 2261, "record_mall",
-                    1,
-                    0),
+                    ItemType.MusicDisc_C418_mall, 2261, 0, "record_mall",
+                    1),
                 new ItemContext(
-                    ItemType.MusicDisc_C418_mellohi, 2262, "record_mellohi",
-                    1,
-                    0),
+                    ItemType.MusicDisc_C418_mellohi, 2262, 0, "record_mellohi",
+                    1),
                 new ItemContext(
-                    ItemType.MusicDisc_C418_stal, 2263, "record_stal",
-                    1,
-                    0),
+                    ItemType.MusicDisc_C418_stal, 2263, 0, "record_stal",
+                    1),
                 new ItemContext(
-                    ItemType.MusicDisc_C418_strad, 2264, "record_strad",
-                    1,
-                    0),
+                    ItemType.MusicDisc_C418_strad, 2264, 0, "record_strad",
+                    1),
                 new ItemContext(
-                    ItemType.MusicDisc_C418_ward, 2265, "record_ward",
-                    1,
-                    0),
+                    ItemType.MusicDisc_C418_ward, 2265, 0, "record_ward",
+                    1),
                 new ItemContext(
-                    ItemType.MusicDisc_C418_11, 2266, "record_11",
-                    1,
-                    0),
+                    ItemType.MusicDisc_C418_11, 2266, 0, "record_11",
+                    1),
                 new ItemContext(
-                    ItemType.MusicDisc_C418_wait, 2267, "record_wait",
-                    1,
-                    0),
+                    ItemType.MusicDisc_C418_wait, 2267, 0, "record_wait",
+                    1),
 
             };
 

@@ -369,11 +369,6 @@ namespace MinecraftServerEngine
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            if (itemStack == null)
-            {
-                return;
-            }
-
             System.Diagnostics.Debug.Assert(_Locker != null);
             _Locker.Hold();
             if (_sharedInventory != null)

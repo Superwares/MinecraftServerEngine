@@ -6,12 +6,33 @@ namespace MinecraftServerEngine
 {
     public static class BlockExtensions
     {
-        private struct BlockContext
+        private readonly struct BlockContext
         {
-            public Block Block { get; }
-            public int Id { get; }
-            public string Name;
-            public BlockShape Shape { get; }
+            public readonly Block Block;
+            public readonly int Id;
+            public readonly string Name;
+
+            public readonly bool IsItemable;
+            public readonly ItemType ItemType;
+            public readonly BlockShape Shape;
+
+            public BlockContext(
+                Block block,
+                int id,
+                string name,
+                ItemType itemType,
+                BlockShape shape)
+            {
+                Block = block;
+                Id = id;
+                Name = name;
+
+                IsItemable = true;
+                ItemType = itemType;
+
+                Shape = shape;
+            }
+
             public BlockContext(
                 Block block,
                 int id,
@@ -21,6 +42,9 @@ namespace MinecraftServerEngine
                 Block = block;
                 Id = id;
                 Name = name;
+
+                IsItemable = false;
+
                 Shape = shape;
             }
 
@@ -42,296 +66,354 @@ namespace MinecraftServerEngine
                     Block.Stone,
                     (1 << 4) | 0,
                     "stone",
+                    ItemType.Stone,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.Granite,
                     (1 << 4) | 1,
                     "stone",
+                    ItemType.Granite,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.PolishedGranite,
                     (1 << 4) | 2,
                     "stone",
+                    ItemType.PolishedGranite,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.Diorite,
                     (1 << 4) | 3,
                     "stone",
+                    ItemType.Diorite,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.PolishedDiorite,
                     (1 << 4) | 4,
                     "stone",
+                    ItemType.PolishedDiorite,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.Andesite,
                     (1 << 4) | 5,
                     "stone",
+                    ItemType.Andesite,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.PolishedAndesite,
                     (1 << 4) | 6,
                     "stone",
+                    ItemType.PolishedAndesite,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.GrassBlock,
                     (2 << 4) | 0,
                     "grass",
+                    ItemType.GrassBlock,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.Dirt,
                     (3 << 4) | 0,
                     "dirt",
+                    ItemType.Dirt,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.CoarseDirt,
                     (3 << 4) | 1,
                     "dirt",
+                    ItemType.CoarseDirt,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.Podzol,
                     (3 << 4) | 2,
                     "dirt",
+                    ItemType.Podzol,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.Cobblestone,
                     (4 << 4) | 0,
                     "cobblestone",
+                    ItemType.Cobblestone,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.OakWoodPlanks,
                     (5 << 4) | 0,
                     "planks",
+                    ItemType.OakWoodPlanks,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.SpruceWoodPlanks,
                     (5 << 4) | 1,
                     "planks",
+                    ItemType.SpruceWoodPlanks,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.BirchWoodPlanks,
                     (5 << 4) | 2,
                     "planks",
+                    ItemType.BirchWoodPlanks,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.JungleWoodPlanks,
                     (5 << 4) | 3,
                     "planks",
+                    ItemType.JungleWoodPlanks,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.AcaciaWoodPlanks,
                     (5 << 4) | 4,
                     "planks",
+                    ItemType.AcaciaWoodPlanks,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.DarkOakWoodPlanks,
                     (5 << 4) | 5,
                     "planks",
+                    ItemType.DarkOakWoodPlanks,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.OakSapling,
                     (6 << 4) | 0,
                     "sapling",
+                    ItemType.OakSapling,
                     BlockShape.None),
                 new BlockContext(
                     Block.SpruceSapling,
                     (6 << 4) | 1,
                     "sapling",
+                    ItemType.SpruceSapling,
                     BlockShape.None),
                 new BlockContext(
                     Block.BirchSapling,
                     (6 << 4) | 2,
                     "sapling",
+                    ItemType.BirchSapling,
                     BlockShape.None),
                 new BlockContext(
                     Block.JungleSapling,
                     (6 << 4) | 3,
                     "sapling",
+                    ItemType.JungleSapling,
                     BlockShape.None),
                 new BlockContext(
                     Block.AcaciaSapling,
                     (6 << 4) | 4,
                     "sapling",
+                    ItemType.AcaciaSapling,
                     BlockShape.None),
                 new BlockContext(
                     Block.DarkOakSapling,
                     (6 << 4) | 5,
                     "sapling",
+                    ItemType.DarkOakSapling,
                     BlockShape.None),
                 new BlockContext(
                     Block.Bedrock,
                     (7 << 4) | 0,
                     "bedrock",
+                    ItemType.Bedrock,
                     BlockShape.Cube),
 
                 new BlockContext(
                     Block.FlowingWater,
                     (8 << 4) | 0,
                     "flowing_water",
+                    ItemType.FlowingWater,
                     BlockShape.None),
                 new BlockContext(
                     Block.StillWater,
                     (9 << 4) | 0,
                     "water",
+                    ItemType.StillWater,
                     BlockShape.None),
                 new BlockContext(
                     Block.FlowingLava,
                     (10 << 4) | 0,
                     "flowing_lava",
+                    ItemType.FlowingLava,
                     BlockShape.None),
                 new BlockContext(
                     Block.StillLava,
                     (11 << 4) | 0,
                     "lava",
+                    ItemType.StillLava,
                     BlockShape.None),
                 new BlockContext(
                     Block.Sand,
                     (12 << 4) | 0,
                     "sand",
+                    ItemType.Sand,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.RedSand,
                     (12 << 4) | 1,
                     "sand",
+                    ItemType.RedSand,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.Gravel,
                     (13 << 4) | 0,
                     "gravel",
+                    ItemType.Gravel,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.GoldOre,
                     (14 << 4) | 0,
                     "gold_ore",
+                    ItemType.GoldOre,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.IronOre,
                     (15 << 4) | 0,
                     "iron_ore",
+                    ItemType.IronOre,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.CoalOre,
                     (16 << 4) | 0,
                     "coal_ore",
+                    ItemType.CoalOre,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.OakWood,
                     (17 << 4) | 0,
                     "log",
+                    ItemType.OakWood,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.SpruceWood,
                     (17 << 4) | 1,
                     "log",
+                    ItemType.SpruceWood,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.BirchWood,
                     (17 << 4) | 2,
                     "log",
+                    ItemType.BirchWood,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.JungleWood,
                     (17 << 4) | 3,
                     "log",
+                    ItemType.JungleWood,
                     BlockShape.Cube),
 
                 new BlockContext(
                     Block.OakLeaves,
                     (18 << 4) | 0,
                     "leaves",
+                    ItemType.OakLeaves,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.SpruceLeaves,
                     (18 << 4) | 1,
                     "leaves",
+                    ItemType.SpruceLeaves,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.BirchLeaves,
                     (18 << 4) | 2,
                     "leaves",
+                    ItemType.BirchLeaves,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.JungleLeaves,
                     (18 << 4) | 3,
                     "leaves",
+                    ItemType.JungleLeaves,
                     BlockShape.Cube),
 
                 new BlockContext(
                     Block.Sponge,
                     (19 << 4) | 0,
                     "sponge",
+                    ItemType.Sponge,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.WetSponge,
                     (19 << 4) | 1,
                     "sponge",
+                    ItemType.WetSponge,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.Glass,
                     (20 << 4) | 0,
                     "glass",
+                    ItemType.Glass,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.LapisLazuliOre,
                     (21 << 4) | 0,
                     "lapis_ore",
+                    ItemType.LapisLazuliOre,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.LapisLazuliBlock,
                     (22 << 4) | 0,
                     "lapis_block",
+                    ItemType.LapisLazuliBlock,
                     BlockShape.Cube),
 
                 new BlockContext(
                     Block.BottomDispenser,
                     (23 << 4) | 0,
                     "dispenser",
+                    ItemType.Dispenser,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.TopDispenser,
                     (23 << 4) | 1,
                     "dispenser",
+                    ItemType.Dispenser,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.NorthDispenser,
                     (23 << 4) | 2,
                     "dispenser",
+                    ItemType.Dispenser,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.SouthDispenser,
                     (23 << 4) | 3,
                     "dispenser",
+                    ItemType.Dispenser,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.WestDispenser,
                     (23 << 4) | 4,
                     "dispenser",
+                    ItemType.Dispenser,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.EastDispenser,
                     (23 << 4) | 5,
                     "dispenser",
+                    ItemType.Dispenser,
                     BlockShape.Cube),
 
                 new BlockContext(
                     Block.Sandstone,
                     (24 << 4) | 0,
                     "sandstone",
+                    ItemType.Sandstone,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.ChiseledSandstone,
                     (24 << 4) | 1,
                      "sandstone",
+                     ItemType.ChiseledSandstone,
                      BlockShape.Cube),
                 new BlockContext(
                     Block.SmoothSandstone,
                     (24 << 4) | 2,
                      "sandstone",
+                     ItemType.SmoothSandstone,
                      BlockShape.Cube),
                 new BlockContext(
                     Block.NoteBlock,
                     (25 << 4) | 0,
                      "noteblock",
+                     ItemType.NoteBlock,
                      BlockShape.Cube),
 
 
@@ -339,84 +421,99 @@ namespace MinecraftServerEngine
                     Block.BottomStickyPiston,
                     (29 << 4) | 0,
                     "sticky_piston",
+                    ItemType.StickyPiston,
                     BlockShape.Cube),
                 new BlockContext(
-                   Block.TopStickyPiston,
-                   (29 << 4) | 1,
-                   "sticky_piston",
-                   BlockShape.Cube),
+                    Block.TopStickyPiston,
+                    (29 << 4) | 1,
+                    "sticky_piston",
+                    ItemType.StickyPiston,
+                    BlockShape.Cube),
                 new BlockContext(
-                   Block.NorthStickyPiston,
-                   (29 << 4) | 2,
-                   "sticky_piston",
-                   BlockShape.Cube),
+                    Block.NorthStickyPiston,
+                    (29 << 4) | 2,
+                    "sticky_piston",
+                    ItemType.StickyPiston,
+                    BlockShape.Cube),
                 new BlockContext(
-                   Block.SouthStickyPiston,
-                   (29 << 4) | 3,
-                   "sticky_piston",
-                   BlockShape.Cube),
+                    Block.SouthStickyPiston,
+                    (29 << 4) | 3,
+                    "sticky_piston",
+                    ItemType.StickyPiston,
+                    BlockShape.Cube),
                 new BlockContext(
-                   Block.WestStickyPiston,
-                   (29 << 4) | 4,
-                   "sticky_piston",
-                   BlockShape.Cube),
+                    Block.WestStickyPiston,
+                    (29 << 4) | 4,
+                    "sticky_piston",
+                    ItemType.StickyPiston,
+                    BlockShape.Cube),
                 new BlockContext(
-                   Block.EastStickyPiston,
-                   (29 << 4) | 5,
-                   "sticky_piston",
-                   BlockShape.Cube),
-
-
+                    Block.EastStickyPiston,
+                    (29 << 4) | 5,
+                    "sticky_piston",
+                    ItemType.StickyPiston,
+                    BlockShape.Cube),
 
                 new BlockContext(
                     Block.DeadShrub,
                     (31 << 4) | 0,
                     "tallgrass",
+                    ItemType.DeadShrub,
                     BlockShape.None),
                 new BlockContext(
                     Block.Grass,
                     (31 << 4) | 1,
                     "tallgrass",
+                    ItemType.Grass,
                     BlockShape.None),
                 new BlockContext(
                     Block.Fern,
                     (31 << 4) | 2,
                     "tallgrass",
+                    ItemType.Fern,
                     BlockShape.None),
                 new BlockContext(
                     Block.DeadBush,
                     (32 << 4) | 0,
                     "deadbush",
+                    ItemType.DeadBush,
                     BlockShape.None),
+
                 new BlockContext(
                     Block.BottomPiston,
                     (33 << 4) | 0,
                     "piston",
+                    ItemType.Piston,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.TopPiston,
                     (33 << 4) | 1,
                     "piston",
+                    ItemType.Piston,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.NorthPiston,
                     (33 << 4) | 2,
                     "piston",
+                    ItemType.Piston,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.SouthPiston,
                     (33 << 4) | 3,
                     "piston",
+                    ItemType.Piston,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.WestPiston,
                     (33 << 4) | 4,
                     "piston",
+                    ItemType.Piston,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.EastPiston,
                     (33 << 4) | 5,
                     "piston",
+                    ItemType.Piston,
                     BlockShape.Cube),
 
 
@@ -424,81 +521,97 @@ namespace MinecraftServerEngine
                     Block.WhiteWool,
                     (35 << 4) | 0,
                     "wool",
+                    ItemType.WhiteWool,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.OrangeWool,
                     (35 << 4) | 1,
                     "wool",
+                    ItemType.OrangeWool,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.MagentaWool,
                     (35 << 4) | 2,
                     "wool",
+                    ItemType.MagentaWool,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.LightBlueWool,
                     (35 << 4) | 3,
                     "wool",
+                    ItemType.LightBlueWool,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.YellowWool,
                     (35 << 4) | 4,
                     "wool",
+                    ItemType.YellowWool,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.LimeWool,
                     (35 << 4) | 5,
                     "wool",
+                    ItemType.LimeWool,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.PinkWool,
                     (35 << 4) | 6,
                     "wool",
+                    ItemType.PinkWool,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.GrayWool,
                     (35 << 4) | 7,
                     "wool",
+                    ItemType.GrayWool,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.LightGrayWool,
                     (35 << 4) | 8,
                     "wool",
+                    ItemType.LightGrayWool,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.CyanWool,
                     (35 << 4) | 9,
                     "wool",
+                    ItemType.CyanWool,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.PurpleWool,
                     (35 << 4) | 10,
                     "wool",
+                    ItemType.PurpleWool,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.BlueWool,
                     (35 << 4) | 11,
                     "wool",
+                    ItemType.BlueWool,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.BrownWool,
                     (35 << 4) | 12,
                     "wool",
+                    ItemType.BrownWool,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.GreenWool,
                     (35 << 4) | 13,
                     "wool",
+                    ItemType.GreenWool,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.RedWool,
                     (35 << 4) | 14,
                     "wool",
+                    ItemType.RedWool,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.BlackWool,
                     (35 << 4) | 15,
                     "wool",
+                    ItemType.BlackWool,
                     BlockShape.Cube),
 
 
@@ -506,112 +619,134 @@ namespace MinecraftServerEngine
                     Block.Dandelion,
                     (37 << 4) | 0,
                     "yellow_flower",
+                    ItemType.Dandelion,
                     BlockShape.None),
                 new BlockContext(
                     Block.Poppy,
                     (38 << 4) | 0,
                     "red_flower",
+                    ItemType.Poppy,
                     BlockShape.None),
                 new BlockContext(
                     Block.BlueOrchid,
                     (38 << 4) | 1,
                     "red_flower",
+                    ItemType.BlueOrchid,
                     BlockShape.None),
                 new BlockContext(
                     Block.Allium,
                     (38 << 4) | 2,
                     "red_flower",
+                    ItemType.Allium,
                     BlockShape.None),
                 new BlockContext(
                     Block.AzureBluet,
                     (38 << 4) | 3,
                     "red_flower",
+                    ItemType.AzureBluet,
                     BlockShape.None),
                 new BlockContext(
                     Block.RedTulip,
                     (38 << 4) | 4,
                     "red_flower",
+                    ItemType.RedTulip,
                     BlockShape.None),
                 new BlockContext(
                     Block.OrangeTulip,
                     (38 << 4) | 5,
                     "red_flower",
+                    ItemType.OrangeTulip,
                     BlockShape.None),
                 new BlockContext(
                     Block.WhiteTulip,
                     (38 << 4) | 6,
                     "red_flower",
+                    ItemType.WhiteTulip,
                     BlockShape.None),
                 new BlockContext(
                     Block.PinkTulip,
                     (38 << 4) | 7,
                     "red_flower",
+                    ItemType.PinkTulip,
                     BlockShape.None),
                 new BlockContext(
                     Block.OxeyeDaisy,
                     (38 << 4) | 8,
                     "red_flower",
+                    ItemType.OxeyeDaisy,
                     BlockShape.None),
                 new BlockContext(
                     Block.BrownMushroom,
                     (39 << 4) | 0,
                     "brown_mushroom",
+                    ItemType.BrownMushroom,
                     BlockShape.None),
                 new BlockContext(
                     Block.RedMushroom,
                     (40 << 4) | 0,
                     "red_mushroom",
+                    ItemType.RedMushroom,
                     BlockShape.None),
 
                 new BlockContext(
                     Block.GoldBlock,
                     (41 << 4) | 0,
                     "gold_block",
+                    ItemType.GoldBlock,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.IronBlock,
                     (42 << 4) | 0,
                     "iron_block",
+                    ItemType.IronBlock,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.DoubleStoneSlab,
                     (43 << 4) | 0,
                     "double_stone_slab",
+                    ItemType.DoubleStoneSlab,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.DoubleSandstoneSlab,
                     (43 << 4) | 1,
                     "double_stone_slab",
+                    ItemType.DoubleSandstoneSlab,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.DoubleWoodenSlab,
                     (43 << 4) | 2,
                     "double_stone_slab",
+                    ItemType.DoubleWoodenSlab,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.DoubleCobblestoneSlab,
                     (43 << 4) | 3,
                     "double_stone_slab",
+                    ItemType.DoubleCobblestoneSlab,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.DoubleBrickSlab,
                     (43 << 4) | 4,
                     "double_stone_slab",
+                    ItemType.DoubleBrickSlab,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.DoubleStoneBrickSlab,
                     (43 << 4) | 5,
                     "double_stone_slab",
+                    ItemType.DoubleStoneBrickSlab,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.DoubleNetherBrickSlab,
                     (43 << 4) | 6,
                     "double_stone_slab",
+                    ItemType.DoubleNetherBrickSlab,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.DoubleQuartzSlab,
                     (43 << 4) | 7,
                     "double_stone_slab",
+                    ItemType.DoubleQuartzSlab,
                     BlockShape.Cube),
 
 
@@ -619,108 +754,129 @@ namespace MinecraftServerEngine
                     Block.StoneBottomSlab,
                     (44 << 4) | 0,
                     "stone_slab",
+                    ItemType.StoneBottomSlab,
                     BlockShape.Slab),
                 new BlockContext(
                     Block.SandstoneBottomSlab,
                     (44 << 4) | 1,
                     "stone_slab",
+                    ItemType.SandstoneBottomSlab,
                     BlockShape.Slab),
                 new BlockContext(
                     Block.WoodenBottomSlab,
                     (44 << 4) | 2,
                     "stone_slab",
+                    ItemType.WoodenBottomSlab,
                     BlockShape.Slab),
                 new BlockContext(
                     Block.CobblestoneBottomSlab,
                     (44 << 4) | 3,
                     "stone_slab",
+                    ItemType.CobblestoneBottomSlab,
                     BlockShape.Slab),
                 new BlockContext(
                     Block.BrickBottomSlab,
                     (44 << 4) | 4,
                     "stone_slab",
+                    ItemType.BrickBottomSlab,
                     BlockShape.Slab),
                 new BlockContext(
                     Block.StoneBrickBottomSlab,
                     (44 << 4) | 5,
                     "stone_slab",
+                    ItemType.StoneBrickBottomSlab,
                     BlockShape.Slab),
                 new BlockContext(
                     Block.NetherBrickBottomSlab,
                     (44 << 4) | 6,
                     "stone_slab",
+                    ItemType.NetherBrickBottomSlab,
                     BlockShape.Slab),
                 new BlockContext(
                     Block.QuartzBottomSlab,
                     (44 << 4) | 7,
                     "stone_slab",
+                    ItemType.QuartzBottomSlab,
                     BlockShape.Slab),
 
                 new BlockContext(
                     Block.StoneTopSlab,
                     (44 << 4) | 8,
                     "stone_slab",
+                    ItemType.StoneTopSlab,
                     BlockShape.Slab),
                 new BlockContext(
                     Block.SandstoneTopSlab,
                     (44 << 4) | 9,
                     "stone_slab",
+                    ItemType.SandstoneTopSlab,
                     BlockShape.Slab),
                 new BlockContext(
                     Block.WoodenTopSlab,
                     (44 << 4) | 10,
                     "stone_slab",
+                    ItemType.WoodenTopSlab,
                     BlockShape.Slab),
                 new BlockContext(
                     Block.CobblestoneTopSlab,
                     (44 << 4) | 11,
                     "stone_slab",
+                    ItemType.CobblestoneTopSlab,
                     BlockShape.Slab),
                 new BlockContext(
                     Block.BrickTopSlab,
                     (44 << 4) | 12,
                     "stone_slab",
+                    ItemType.BrickTopSlab,
                     BlockShape.Slab),
                 new BlockContext(
                     Block.StoneBrickTopSlab,
                     (44 << 4) | 13,
                     "stone_slab",
+                    ItemType.StoneBrickTopSlab,
                     BlockShape.Slab),
                 new BlockContext(
                     Block.NetherBrickTopSlab,
                     (44 << 4) | 14,
                     "stone_slab",
+                    ItemType.NetherBrickTopSlab,
                     BlockShape.Slab),
                 new BlockContext(
                     Block.QuartzTopSlab,
                     (44 << 4) | 15,
                     "stone_slab",
+                    ItemType.QuartzTopSlab,
                     BlockShape.Slab),
 
                 new BlockContext(
                     Block.Bricks,
                     (45 << 4) | 0,
                     "brick_block",
+                    ItemType.Bricks,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.TNT,
                     (46 << 4) | 0,
                     "tnt",
+                    ItemType.TNT,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.Bookshelf,
                     (47 << 4) | 0,
                     "bookshelf",
+                    ItemType.Bookshelf,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.MossStone,
                     (48 << 4) | 0,
                     "mossy_cobblestone",
+                    ItemType.MossStone,
                     BlockShape.Cube),
                 new BlockContext(
                     Block.Obsidian,
                     (49 << 4) | 0,
                     "obsidian",
+                    ItemType.Obsidian,
                     BlockShape.Cube),
 
 
@@ -728,31 +884,37 @@ namespace MinecraftServerEngine
                 //    Block.Torch,
                 //    (50 << 4) | 0,
                 //    "torch",
+                //    ItemType.Torch,
                 //    BlockShape.None),
                 new BlockContext(
                     Block.EastTorch,
                     (50 << 4) | 1,
                     "torch",
+                    ItemType.Torch,
                     BlockShape.None),
                 new BlockContext(
                     Block.WestTorch,
                     (50 << 4) | 2,
                     "torch",
+                    ItemType.Torch,
                     BlockShape.None),
                 new BlockContext(
                     Block.SouthTorch,
                     (50 << 4) | 3,
                     "torch",
+                    ItemType.Torch,
                     BlockShape.None),
                 new BlockContext(
                     Block.NorthTorch,
                     (50 << 4) | 4,
                     "torch",
+                    ItemType.Torch,
                     BlockShape.None),
                 new BlockContext(
                     Block.Torch,
                     (50 << 4) | 5,
                     "torch",
+                    ItemType.Torch,
                     BlockShape.None),
 
                 new BlockContext(
@@ -760,7 +922,6 @@ namespace MinecraftServerEngine
                     (51 << 4) | 0,
                     "fire",
                     BlockShape.None),
-
 
                 new BlockContext(
                     Block.EastBottomOakWoodStairs,
@@ -1573,21 +1734,6 @@ namespace MinecraftServerEngine
             foreach (BlockContext ctx in _map)
             {
                 _BLOCK_ENUM_TO_CTX_MAP.Insert(ctx.Block, ctx);
-                //try
-                //{
-
-                //}
-                //catch (DuplicateKeyException)
-                //{
-                //    // continue.
-                //    // We must handle the same block with different block id like below:
-                //    /**
-                //     * 18:0 <- 18:4
-                //     * 18:1 <- 18:5
-                //     * 18:2 <- 18:6  (I discover this error...)
-                //     * 18:3 <- 18:7
-                //     */
-                //}
             }
 
         }
@@ -1612,6 +1758,21 @@ namespace MinecraftServerEngine
         public static int GetId(this Block block)
         {
             return _BLOCK_ENUM_TO_CTX_MAP.Lookup(block).Id;
+        }
+
+        public static bool IsItemable(this Block block)
+        {
+            return _BLOCK_ENUM_TO_CTX_MAP.Lookup(block).IsItemable;
+        }
+
+        public static ItemType GetItemType(this Block block)
+        {
+            bool f = _BLOCK_ENUM_TO_CTX_MAP.Lookup(block).IsItemable;
+            if (f == false)
+            {
+                throw new System.InvalidOperationException("Block is not itemable");
+            }
+            return _BLOCK_ENUM_TO_CTX_MAP.Lookup(block).ItemType;
         }
 
         public static BlockShape GetShape(this Block block)

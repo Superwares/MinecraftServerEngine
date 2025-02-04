@@ -152,8 +152,10 @@ namespace TestMinecraftServerApplication
             //Block block = world.BlockContext.GetBlock(blockLoc);
             Block belowBlock = world.BlockContext.GetBlock(belowBlockLoc);
 
-            if (belowBlock != Block.Air)
+            if (belowBlock != Block.Air && belowBlock.IsItemable() == true)
             {
+                ItemType blockItemType = belowBlock.GetItemType();
+
                 //MyConsole.Debug($"belowBlock: {belowBlock}");
                 //MyConsole.Debug($"_lastHideBlock: {_lastHideBlock}");
                 if (_lastHideBlock != belowBlock)
@@ -162,12 +164,15 @@ namespace TestMinecraftServerApplication
                         new TextComponent($"현재 블럭: {belowBlock.GetId()}", TextColor.Gray),
                     ]);
                 }
+
+                SetHelmet(new ItemStack(blockItemType, "Below Block!"));
+
                 ApplyBlockAppearance(belowBlock);
                 _lastHideBlock = belowBlock;
             }
             else
             {
-
+                SetHelmet(null);
 
                 if (_lastHideBlock != Block.Air)
                 {
@@ -212,7 +217,7 @@ namespace TestMinecraftServerApplication
             {
                 if (f == true)
                 {
-                    SetHelmet(new ItemStack(ItemType.RedstoneOre, "Hello"));
+                    
 
                     HideBlock(world);
 
@@ -237,6 +242,8 @@ namespace TestMinecraftServerApplication
                 }
                 else
                 {
+                    SetHelmet(null);
+
                     WriteMessageInChatBox([
                         new TextComponent($"모습 초기화!", TextColor.Gray),
                     ]);
