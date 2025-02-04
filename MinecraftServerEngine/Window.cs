@@ -98,7 +98,7 @@ namespace MinecraftServerEngine
                 _sharedInventory.Locker.Hold();
             }
 
-            ItemStack dropItem = null;
+            ItemStack droppedItemStack = null;
 
             try
             {
@@ -116,10 +116,10 @@ namespace MinecraftServerEngine
                                     default:
                                         throw new UnexpectedValueException($"Invalid button number: {button}, in mode {mode}");
                                     case 0:
-                                        dropItem = _Cursor.DropFull();
+                                        droppedItemStack = _Cursor.DropFull();
                                         break;
                                     case 1:
-                                        dropItem = _Cursor.DropSingle();
+                                        droppedItemStack = _Cursor.DropSingle();
                                         break;
 
                                 }
@@ -138,7 +138,10 @@ namespace MinecraftServerEngine
                                 }
                                 else
                                 {
-                                    _sharedInventory.LeftClick(userId, player, playerInventory, i, _Cursor);
+                                    System.Diagnostics.Debug.Assert(world != null);
+                                    System.Diagnostics.Debug.Assert(player != null);
+                                    System.Diagnostics.Debug.Assert(_Cursor != null);
+                                    _sharedInventory.LeftClick(world, userId, player, i, _Cursor);
                                 }
                                 break;
                             case 1:
@@ -148,7 +151,10 @@ namespace MinecraftServerEngine
                                 }
                                 else
                                 {
-                                    _sharedInventory.RightClick(userId, player, playerInventory, i, _Cursor);
+                                    System.Diagnostics.Debug.Assert(world != null);
+                                    System.Diagnostics.Debug.Assert(player != null);
+                                    System.Diagnostics.Debug.Assert(_Cursor != null);
+                                    _sharedInventory.RightClick(world, userId, player, i, _Cursor);
                                 }
                                 break;
                         }
@@ -208,21 +214,21 @@ namespace MinecraftServerEngine
                             case 0:
                                 if (_sharedInventory == null)
                                 {
-                                    dropItem = playerInventory.DropSingle(i);
+                                    droppedItemStack = playerInventory.DropSingle(i);
                                 }
                                 else
                                 {
-                                    dropItem = _sharedInventory.DropSingle(userId, playerInventory, i);
+                                    droppedItemStack = _sharedInventory.DropSingle(userId, playerInventory, i);
                                 }
                                 break;
                             case 1:
                                 if (_sharedInventory == null)
                                 {
-                                    dropItem = playerInventory.DropFull(i);
+                                    droppedItemStack = playerInventory.DropFull(i);
                                 }
                                 else
                                 {
-                                    dropItem = _sharedInventory.DropFull(userId, playerInventory, i);
+                                    droppedItemStack = _sharedInventory.DropFull(userId, playerInventory, i);
                                 }
                                 break;
                         }
@@ -233,9 +239,10 @@ namespace MinecraftServerEngine
                         break;
                 }
 
-                if (dropItem != null)
+                if (droppedItemStack != null)
                 {
-                    world.SpawnObject(new ItemEntity(dropItem, player.Position));
+                    System.Diagnostics.Debug.Assert(world != null);
+                    world.SpawnObject(new ItemEntity(droppedItemStack, player.Position));
                 }
 
                 player.UpdateEquipmentsData();

@@ -3,6 +3,7 @@ using Common;
 using Containers;
 using Sync;
 
+using MinecraftServerEngine;
 using MinecraftServerEngine.Inventories;
 using MinecraftServerEngine.Entities;
 using MinecraftServerEngine.Items;
@@ -187,16 +188,18 @@ namespace TestMinecraftServerApplication
         }
 
         protected override void OnLeftClickSharedItem(
+            World world,
             UserId userId,
             AbstractPlayer _player, PlayerInventory playerInventory,
             int i, ItemStack itemStack)
         {
-            bool success = false;
-
-            //ItemStack giveItem;
-
             if (_player is SuperPlayer player)
             {
+                bool success = false;
+
+                ItemStack droppedItemStack = null;
+                //ItemStack giveItem;
+
                 switch (i)
                 {
                     case int _playerSeat when (
@@ -231,8 +234,7 @@ namespace TestMinecraftServerApplication
 
                             if (success == true)
                             {
-                                ItemStack droppedItemStack = player.CloseInventory();
-                                //System.Diagnostics.Debug.Assert(droppedItemStack != null);
+                                droppedItemStack = player.CloseInventory();
                             }
                         }
                         break;
@@ -252,12 +254,19 @@ namespace TestMinecraftServerApplication
                 {
                     _player.PlaySound("entity.item.pickup", 7, 1.0F, 2.0F);
                 }
+
+                if (droppedItemStack != null)
+                {
+                    world.SpawnObject(new ItemEntity(droppedItemStack, player.Position));
+                }
             }
         }
 
 
         protected override void OnRightClickSharedItem(
-            UserId userId, AbstractPlayer player, PlayerInventory playerInventory,
+            World world,
+            UserId userId, 
+            AbstractPlayer player, PlayerInventory playerInventory,
             int i, ItemStack itemStack)
         {
             bool success = false;

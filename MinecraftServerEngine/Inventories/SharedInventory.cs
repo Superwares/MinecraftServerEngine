@@ -250,13 +250,17 @@ namespace MinecraftServerEngine.Inventories
         }
 
         internal virtual void LeftClick(
-            UserId userId, AbstractPlayer player, PlayerInventory playerInventory,
+            World world,
+            UserId userId, 
+            AbstractPlayer player, 
             int i, InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            System.Diagnostics.Debug.Assert(world != null);
+
             System.Diagnostics.Debug.Assert(userId != UserId.Null);
-            System.Diagnostics.Debug.Assert(playerInventory != null);
+            System.Diagnostics.Debug.Assert(player != null);
 
             int totalSlots = GetTotalSlotCount();
             System.Diagnostics.Debug.Assert(totalSlots > 0);
@@ -269,7 +273,7 @@ namespace MinecraftServerEngine.Inventories
 
             try
             {
-                System.Diagnostics.Debug.Assert(Renderers.Contains(playerInventory));
+                //System.Diagnostics.Debug.Assert(Renderers.Contains(player.Inventory));
 
                 if (i < totalSlots)
                 {
@@ -282,7 +286,9 @@ namespace MinecraftServerEngine.Inventories
                 else
                 {
                     int j = i - totalSlots;
-                    playerInventory.LeftClickInPrimary(j, cursor);
+
+                    System.Diagnostics.Debug.Assert(player.Inventory != null);
+                    player.Inventory.LeftClickInPrimary(j, cursor);
                 }
 
             }
@@ -294,13 +300,17 @@ namespace MinecraftServerEngine.Inventories
         }
 
         internal virtual void RightClick(
-            UserId userId, AbstractPlayer player, PlayerInventory playerInventory,
+            World world,
+            UserId userId, 
+            AbstractPlayer player, 
             int i, InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            System.Diagnostics.Debug.Assert(world != null);
+
             System.Diagnostics.Debug.Assert(userId != UserId.Null);
-            System.Diagnostics.Debug.Assert(playerInventory != null);
+            System.Diagnostics.Debug.Assert(player != null);
 
             int totalSlots = GetTotalSlotCount();
             System.Diagnostics.Debug.Assert(totalSlots > 0);
@@ -308,13 +318,12 @@ namespace MinecraftServerEngine.Inventories
             System.Diagnostics.Debug.Assert(i >= 0);
             System.Diagnostics.Debug.Assert(i < totalSlots + PlayerInventory.PrimarySlotCount);
             System.Diagnostics.Debug.Assert(cursor != null);
-            System.Diagnostics.Debug.Assert(playerInventory != null);
 
             HoldLocker();
 
             try
             {
-                System.Diagnostics.Debug.Assert(Renderers.Contains(playerInventory));
+                //System.Diagnostics.Debug.Assert(Renderers.Contains(player.Inventory));
 
                 if (i < totalSlots)
                 {
@@ -327,7 +336,9 @@ namespace MinecraftServerEngine.Inventories
                 else
                 {
                     int j = i - totalSlots;
-                    playerInventory.RightClickInPrimary(j, cursor);
+
+                    System.Diagnostics.Debug.Assert(player.Inventory != null);
+                    player.Inventory.RightClickInPrimary(j, cursor);
                 }
             }
             finally

@@ -2,6 +2,7 @@
 
 using Common;
 
+using MinecraftServerEngine;
 using MinecraftServerEngine.Entities;
 using MinecraftServerEngine.Items;
 using MinecraftServerEngine.Inventories;
@@ -291,12 +292,15 @@ namespace TestMinecraftServerApplication
         }
 
         protected override void OnLeftClickSharedItem(
-            UserId userId, AbstractPlayer player, PlayerInventory playerInventory,
+            World world,
+            UserId userId, 
+            AbstractPlayer player, PlayerInventory playerInventory,
             int i, ItemStack itemStack)
         {
-
-            //MyConsole.Debug($"UserId: {userId}");
-            //MyConsole.Debug($"i: {i}, ItemStack: {itemStack}");
+            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(userId != UserId.Null);
+            System.Diagnostics.Debug.Assert(player != null);
+            System.Diagnostics.Debug.Assert(playerInventory != null);
 
             bool success = false;
             ItemStack[] taked;
@@ -533,9 +537,16 @@ namespace TestMinecraftServerApplication
         }
 
         protected override void OnRightClickSharedItem(
-            UserId userId, AbstractPlayer player, PlayerInventory playerInventory,
+            World world,
+            UserId userId, 
+            AbstractPlayer player, PlayerInventory playerInventory,
             int i, ItemStack itemStack)
         {
+            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(userId != UserId.Null);
+            System.Diagnostics.Debug.Assert(player != null);
+            System.Diagnostics.Debug.Assert(playerInventory != null);
+
             bool success = false;
 
             ItemStack[] taked;

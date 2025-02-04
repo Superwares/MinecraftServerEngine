@@ -37,19 +37,23 @@ namespace MinecraftServerEngine.Inventories
 
 
         protected virtual void OnLeftClickSharedItem(
-            UserId userId, AbstractPlayer player,
-            PlayerInventory playerInventory,
+            World world,
+            UserId userId, 
+            AbstractPlayer player, PlayerInventory playerInventory,
             int i, ItemStack itemStack)
         { }
 
         protected virtual void OnRightClickSharedItem(
-            UserId userId, AbstractPlayer player,
-            PlayerInventory playerInventory,
+            World world,
+            UserId userId, 
+            AbstractPlayer player, PlayerInventory playerInventory,
             int i, ItemStack itemStack)
         { }
 
         internal override void LeftClick(
-            UserId userId, AbstractPlayer player, PlayerInventory playerInventory,
+            World world,
+            UserId userId,
+            AbstractPlayer player,
             int i, InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
@@ -70,14 +74,18 @@ namespace MinecraftServerEngine.Inventories
 
                 if (i < totalSlots)
                 {
-                    InventorySlot slot = GetSlot(playerInventory, i);
+                    System.Diagnostics.Debug.Assert(player.Inventory != null);
+                    InventorySlot slot = GetSlot(player.Inventory, i);
 
                     System.Diagnostics.Debug.Assert(slot != null);
 
                     if (slot.Empty == false)
                     {
+                        System.Diagnostics.Debug.Assert(player.Inventory != null);
                         OnLeftClickSharedItem(
-                            userId, player, playerInventory,
+                            world,
+                            userId, 
+                            player, player.Inventory,
                             i, slot.Stack);
                     }
 
@@ -91,7 +99,9 @@ namespace MinecraftServerEngine.Inventories
         }
 
         internal override void RightClick(
-            UserId userId, AbstractPlayer player, PlayerInventory playerInventory,
+            World world,
+            UserId userId,
+            AbstractPlayer player,
             int i, InventorySlot cursor)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
@@ -112,14 +122,18 @@ namespace MinecraftServerEngine.Inventories
 
                 if (i < totalSlots)
                 {
-                    InventorySlot slot = GetSlot(playerInventory, i);
+                    System.Diagnostics.Debug.Assert(player.Inventory != null);
+                    InventorySlot slot = GetSlot(player.Inventory, i);
 
                     System.Diagnostics.Debug.Assert(slot != null);
 
                     if (slot.Empty == false)
                     {
+                        System.Diagnostics.Debug.Assert(player.Inventory != null);
                         OnRightClickSharedItem(
-                            userId, player, playerInventory,
+                            world,
+                            userId, 
+                            player, player.Inventory,
                             i, slot.Stack);
                     }
 
