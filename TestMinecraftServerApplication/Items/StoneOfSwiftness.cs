@@ -13,6 +13,8 @@ namespace TestMinecraftServerApplication.Items
         internal const ItemType Type = ItemType.Flint;
         internal const string Name = "Stone of Swiftness";
 
+        internal const Particle EmitParticle = Particle.Spell;
+
         internal readonly static Time EmitParticleInterval = MinecraftTimes.TimePerTick;
         internal readonly static Time Duration = Time.FromSeconds(5);
         internal readonly static int MaxParticleEmits = (int)System.Math.Ceiling(

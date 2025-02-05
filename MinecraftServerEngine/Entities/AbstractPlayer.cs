@@ -274,33 +274,6 @@ namespace MinecraftServerEngine.Entities
             }
         }
 
-        protected override void _AddAdditionalHealth(double amount)
-        {
-            System.Diagnostics.Debug.Assert(amount >= 0.0D);
-
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            System.Diagnostics.Debug.Assert(LockerHealths != null);
-            LockerHealths.Hold();
-
-            try
-            {
-                base._AddAdditionalHealth(amount);
-
-                if (Connected == true)
-                {
-                    System.Diagnostics.Debug.Assert(AdditionalHealth >= 0.0);
-                    Conn.UpdateAdditionalHealth(Id, AdditionalHealth);
-                }
-
-            }
-            finally
-            {
-                System.Diagnostics.Debug.Assert(LockerHealths != null);
-                LockerHealths.Release();
-            }
-        }
-
         protected override void _SetMovementSpeed(double amount)
         {
             System.Diagnostics.Debug.Assert(amount >= 0.0);

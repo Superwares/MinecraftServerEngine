@@ -511,8 +511,7 @@ namespace MinecraftServerEngine.Entities
             try
             {
                 System.Diagnostics.Debug.Assert(amount >= 0.0);
-                _additionalHealth += amount;
-
+                _SetAdditionalHealth(_additionalHealth + amount);
             }
             finally
             {

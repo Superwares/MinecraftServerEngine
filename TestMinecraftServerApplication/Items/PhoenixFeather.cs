@@ -2,7 +2,6 @@
 using Common;
 
 using MinecraftServerEngine;
-using MinecraftServerEngine.Entities;
 using MinecraftServerEngine.Items;
 
 namespace TestMinecraftServerApplication.Items
@@ -13,11 +12,16 @@ namespace TestMinecraftServerApplication.Items
         public const ItemType Type = ItemType.Feather;
         public const string Name = "Phoenix Feather";
 
-        public const Particle EmitParticle = Particle.Flame;
+        public const Particle PhoenixParticle = Particle.Lava;
+        public const Particle HealParticle = Particle.Heart;
+        public const int HealParticleCountInOneEmit = 10;
 
-        public const double AdditionalHearts = 23.0;
+        public readonly static Time EmitInterval = Time.FromMilliseconds(250);
+        public readonly static int MaxEmits = 20;
+        public readonly static Time Duration =  EmitInterval * MaxEmits;
+
+        public const double AdditionalHeartsIncrease = 1.0;
         public const double MovementSpeedIncrease = 0.1;
-        public readonly static Time MovementSpeedDuration = Time.FromSeconds(5);
 
         public const int PurchasePrice = 190;
         public const int SellPrice = 180;
@@ -27,8 +31,8 @@ namespace TestMinecraftServerApplication.Items
             Name,
             [
                 $"Tier            {Tier.ToString()}",  // Quality Tier
-                $"+Hearts         {AdditionalHearts}",
-                $"+Speed          {MovementSpeedIncrease}/{(double)MovementSpeedDuration.Amount/(double)Time.FromSeconds(1).Amount}s",
+                $"+Hearts         {AdditionalHeartsIncrease * MaxEmits}",
+                $"+Speed          +{MovementSpeedIncrease}/{Duration.Amount/Time.FromSeconds(1).Amount}s",
             ]);
 
         public static readonly int DefaultCount = MinecraftServerEngine.Items.Item.MinCount;

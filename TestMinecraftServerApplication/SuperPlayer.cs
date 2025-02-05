@@ -19,8 +19,6 @@ namespace TestMinecraftServerApplication
     public sealed class SuperPlayer : AbstractPlayer
     {
 
-
-
         public const double DefaultAttackDamage = 1.0;
 
         public readonly static Time WorldBorderOutsideDamageInterval = Time.FromSeconds(1);
@@ -96,7 +94,7 @@ namespace TestMinecraftServerApplication
             }
         }
 
-        private void EnqueueSkill(
+        private bool EnqueueSkill(
             IReadOnlyItem item, int count,
             ISkillProgressNode skillNode)
         {
@@ -113,7 +111,7 @@ namespace TestMinecraftServerApplication
             {
                 if (_RunningSkillNodeNames.Contains(skillNode.Name) == true)
                 {
-                    return;
+                    return false;
                 }
 
                 if (count > 0)
@@ -121,7 +119,7 @@ namespace TestMinecraftServerApplication
                     ItemStack[] takedItemStacks = TakeItemStacks(item, count);
                     if (takedItemStacks == null)
                     {
-                        return;
+                        return false;
                     }
                 }
 
@@ -131,6 +129,8 @@ namespace TestMinecraftServerApplication
                 _SkillQueue.Enqueue(skillNode);
 
                 _RunningSkillNodeNames.Insert(skillNode.Name);
+
+                return true;
             }
             finally
             {
@@ -567,133 +567,6 @@ namespace TestMinecraftServerApplication
             return true;
         }
 
-        private void UseBlastCore(SuperWorld world)
-        {
-            System.Diagnostics.Debug.Assert(world != null);
-
-            Vector v = new Vector(Position.X, Position.Y + GetEyeHeight(), Position.Z);
-            Vector d;
-
-            AxisAlignedBoundingBox aabb = AxisAlignedBoundingBox.Generate(v, BlastCore.Radius);
-
-            using Tree<PhysicsObject> objs = new();
-
-            System.Diagnostics.Debug.Assert(world != null);
-            world.SearchObjects(objs, aabb, true, this);
-
-            foreach (PhysicsObject obj in objs.GetKeys())
-            {
-                if (obj is LivingEntity livingEntity)
-                {
-                    livingEntity.Damage(BlastCore.Damage, this);
-
-                    d = livingEntity.Position - v;
-                    d *= BlastCore.Power;
-                    d += new Vector(0.0, 0.3, 0.0);
-                    d = d.Clamp(MinecraftPhysics.MinVelocity, MinecraftPhysics.MaxVelocity);
-
-                    livingEntity.ApplyForce(d);
-                }
-            }
-
-            world.PlaySound("block.end_gateway.spawn", 0, v, 1.0, 1.5);
-
-            EmitParticles(BlastCore.EffectParticle, 1.0, 10);
-
-        }
-
-        private void UseDash(SuperWorld world)
-        {
-            System.Diagnostics.Debug.Assert(world != null);
-
-            ItemStack[] takedItemStacks = TakeItemStacks(Dash.Item, Dash.DefaultCount);
-            if (takedItemStacks == null)
-            {
-                return;
-            }
-
-            System.Diagnostics.Debug.Assert(takedItemStacks.Length > 0);
-
-            Vector d = Look.GetUnitVector() + new Vector(0.0, 0.1, 0.0);
-
-            ApplyForce(d * Dash.Power);
-
-            EmitParticles(Particle.InstantSpell, 0.1, 150);
-
-            world.PlaySound("entity.llama.swag", 0, Position, 0.5, 1.0);
-        }
-
-        private void UseHint(SuperWorld world)
-        {
-            System.Diagnostics.Debug.Assert(world != null);
-
-            ItemStack[] takedItemStacks = TakeItemStacks(Hint.Item, Hint.DefaultCount);
-            if (takedItemStacks == null)
-            {
-                return;
-            }
-
-            System.Diagnostics.Debug.Assert(takedItemStacks.Length > 0);
-
-            foreach (AbstractPlayer player in world.Players)
-            {
-                System.Diagnostics.Debug.Assert(player != null);
-
-                if (object.ReferenceEquals(player, this) == true)
-                {
-                    continue;
-                }
-                Vector offset = new Vector(0.0, player.GetEyeHeight(), 0.0);
-                Vector v = player.Position + offset;
-
-                world.PlaySound("entity.firework.large_blast", 0, v, 1.0, 2.0);
-
-                player.EmitParticles(Particle.FireworksSpark, offset, 0.1, 100);
-            }
-
-        }
-
-
-        private void UseChaosSwap(SuperWorld world)
-        {
-            System.Diagnostics.Debug.Assert(world != null);
-
-            ItemStack[] takedItemStacks = TakeItemStacks(ChaosSwap.Item, ChaosSwap.DefaultCount);
-            if (takedItemStacks == null)
-            {
-                return;
-            }
-
-            int i = 0;
-            AbstractPlayer[] targetPlayers = new AbstractPlayer[world.AllPlayers];
-
-            foreach (AbstractPlayer player in world.Players)
-            {
-                if (player.Gamemode != Gamemode.Adventure)
-                {
-                    continue;
-                }
-
-                targetPlayers[i++] = player;
-            }
-
-            if (i > 0)
-            {
-                System.Random random = new System.Random();
-                AbstractPlayer randomPlayer = targetPlayers[random.Next(i)];
-
-                randomPlayer.Teleport(Position, Look);
-                Teleport(randomPlayer.Position, randomPlayer.Look);
-
-                EmitParticles(Particle.InstantSpell, 0.1, 150);
-
-                world.PlaySound("entity.llama.swag", 0, Position, 0.5, 1.0);
-            }
-
-
-        }
-
-
         private bool HandleDoombringerAttack(SuperWorld world, double attackCharge)
         {
             System.Diagnostics.Debug.Assert(world != null);
@@ -738,19 +611,6 @@ namespace TestMinecraftServerApplication
             {
                 livingEntity.Damage(damage, this);
 
-                //System.Diagnostics.Debug.Assert(health >= 0.0);
-                //if (
-                //    livingEntity is SuperPlayer &&
-                //    damaged == true &&
-                //    health == 0.0 &&
-                //    SuperWorld.GameContext.IsStarted == true
-                //    )
-                //{
-                //    System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
-                //    System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                //    SuperWorld.GameContext.HandleKillEvent(this);
-                //}
-
                 livingEntity.ApplyForce(d * knockbackScale);
 
                 Vector v = new(
@@ -769,6 +629,233 @@ namespace TestMinecraftServerApplication
             return false;
         }
 
+        private void UseBlastCoreItem(SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            Vector v = new Vector(Position.X, Position.Y + GetEyeHeight(), Position.Z);
+            Vector d;
+
+            AxisAlignedBoundingBox aabb = AxisAlignedBoundingBox.Generate(v, BlastCore.Radius);
+
+            using Tree<PhysicsObject> objs = new();
+
+            System.Diagnostics.Debug.Assert(world != null);
+            world.SearchObjects(objs, aabb, true, this);
+
+            foreach (PhysicsObject obj in objs.GetKeys())
+            {
+                if (obj is LivingEntity livingEntity)
+                {
+                    livingEntity.Damage(BlastCore.Damage, this);
+
+                    d = livingEntity.Position - v;
+                    d *= BlastCore.Power;
+                    d += new Vector(0.0, 0.3, 0.0);
+                    d = d.Clamp(MinecraftPhysics.MinVelocity, MinecraftPhysics.MaxVelocity);
+
+                    livingEntity.ApplyForce(d);
+                }
+            }
+
+            world.PlaySound("block.end_gateway.spawn", 0, v, 1.0, 1.5);
+
+            EmitParticles(BlastCore.EffectParticle, 1.0, 10);
+
+        }
+
+        private void UseDashItem(SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            ItemStack[] takedItemStacks = TakeItemStacks(Dash.Item, Dash.DefaultCount);
+            if (takedItemStacks == null)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(takedItemStacks.Length > 0);
+
+            Vector d = Look.GetUnitVector() + new Vector(0.0, 0.1, 0.0);
+
+            ApplyForce(d * Dash.Power);
+
+            EmitParticles(Particle.InstantSpell, 0.1, 150);
+
+            world.PlaySound("entity.llama.swag", 0, Position, 0.5, 1.0);
+        }
+
+        private void UseHintItem(SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            ItemStack[] takedItemStacks = TakeItemStacks(Hint.Item, Hint.DefaultCount);
+            if (takedItemStacks == null)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(takedItemStacks.Length > 0);
+
+            foreach (AbstractPlayer player in world.Players)
+            {
+                System.Diagnostics.Debug.Assert(player != null);
+
+                if (object.ReferenceEquals(player, this) == true)
+                {
+                    continue;
+                }
+                Vector offset = new Vector(0.0, player.GetEyeHeight(), 0.0);
+                Vector v = player.Position + offset;
+
+                world.PlaySound("entity.firework.large_blast", 0, v, 1.0, 2.0);
+
+                player.EmitParticles(Particle.FireworksSpark, offset, 0.1, 100);
+            }
+
+        }
+
+        private void UseChaosSwapItem(SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            ItemStack[] takedItemStacks = TakeItemStacks(ChaosSwap.Item, ChaosSwap.DefaultCount);
+            if (takedItemStacks == null)
+            {
+                return;
+            }
+
+            int i = 0;
+            AbstractPlayer[] targetPlayers = new AbstractPlayer[world.AllPlayers];
+
+            foreach (AbstractPlayer player in world.Players)
+            {
+                if (player.Gamemode != Gamemode.Adventure)
+                {
+                    continue;
+                }
+
+                targetPlayers[i++] = player;
+            }
+
+            if (i > 0)
+            {
+                System.Random random = new System.Random();
+                AbstractPlayer randomPlayer = targetPlayers[random.Next(i)];
+
+                randomPlayer.Teleport(Position, Look);
+                Teleport(randomPlayer.Position, randomPlayer.Look);
+
+                EmitParticles(Particle.InstantSpell, 0.1, 150);
+
+                world.PlaySound("entity.llama.swag", 0, Position, 0.5, 1.0);
+            }
+
+
+        }
+
+        private void UseEclipseCrystalItem(SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            ItemStack[] takedItemStacks = TakeItemStacks(EclipseCrystal.Item, EclipseCrystal.DefaultCount);
+            if (takedItemStacks == null)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(takedItemStacks.Length > 0);
+
+            world.ChangeWorldBorderSize(
+                world.DefaultWorldBorderRadiusInMeters / 2.0,
+                Time.FromMilliseconds(400)
+                );
+
+            world.ChangeWorldTimeOfDay(
+                MinecraftTimes.NighttimeMid,
+                Time.FromSeconds(1)
+                );
+
+            foreach (AbstractPlayer player in world.Players)
+            {
+                Vector v = new(player.Position.X, player.Position.Y + player.GetEyeHeight(), player.Position.Z);
+                world.PlaySound("block.end_portal.spawn", 6, v, 1.0, 2.0);
+
+                if (object.ReferenceEquals(this, player) == false)
+                {
+                    player.Damage(EclipseCrystal.Damage, this);
+                }
+            }
+
+            //System.Diagnostics.Debug.Assert(EclipseCrystal.CanPurchase == false);
+            EclipseCrystal.CanPurchase = true;
+
+            _ShopInventory.ResetEclipseCrystalSlot(null);
+        }
+
+        private void UseStoneOfSwiftnessItem(SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            EnqueueSkill(
+                StoneOfSwiftness.Item, StoneOfSwiftness.DefaultCount,
+                new StoneOfSwiftnessSkillNode());
+        }
+
+        private void UseEmergencyEscapeItem(SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            ItemStack[] takedItemStacks = TakeItemStacks(EmergencyEscape.Item, EmergencyEscape.DefaultCount);
+            if (takedItemStacks == null)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.Assert(takedItemStacks.Length > 0);
+
+            ApplyForce(new Vector(0.0, EmergencyEscape.Power, 0.0));
+
+            _running_EmergencyEscape = true;
+            _startTime_EmergencyEscape = Time.Now();
+
+            world.PlaySound(EmergencyEscape.LaunchSoundName, 0, Position, 0.8, 1.5);
+        }
+
+        private bool UsePhoenixFeatherItem(World world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            return EnqueueSkill(
+                PhoenixFeather.Item, PhoenixFeather.DefaultCount,
+                new PhoenixFeatherSkillNode());
+
+            //ItemStack[] takedItemStacks = TakeItemStacks(PhoenixFeather.Item, PhoenixFeather.DefaultCount);
+            //if (takedItemStacks == null)
+            //{
+            //    return false;
+            //}
+
+            /*AddAdditionalHealth(PhoenixFeather.AdditionalHearts);
+            SetMovementSpeed(PhoenixFeather.MovementSpeedIncrease);*/
+
+            //EmitParticles(Particle.Lava, 0.8, 1_000);
+
+            //_speedup_running = true;
+            //_speedup_duration = PhoenixFeather.MovementSpeedDuration;
+            //_speedup_startTime = Time.Now();
+
+            //throw new System.NotImplementedException();
+
+            //world.PlaySound("block.anvil.land", 4, Position, 1.0, 2.0);
+
+            //PhoenixFeather.CanPurchase = true;
+            //_ShopInventory.ResetPhoenixFeatherSlot(null);
+
+            //return true;
+        }
 
         protected override void OnAttack(World _world, double attackCharge)
         {
@@ -813,25 +900,25 @@ namespace TestMinecraftServerApplication
                         break;
 
                     case BlastCore.Type:
-                        UseBlastCore(world);
+                        UseBlastCoreItem(world);
                         break;
                     case Doombringer.Type:
                         breaked = HandleDoombringerAttack(world, attackCharge);
                         break;
 
                     case StoneOfSwiftness.Type:
-                        UseStoneOfSwiftness(world);
+                        UseStoneOfSwiftnessItem(world);
                         break;
 
                     case Dash.Type:
-                        UseDash(world);
+                        UseDashItem(world);
                         break;
                     case Hint.Type:
-                        UseHint(world);
+                        UseHintItem(world);
                         break;
 
                     case ChaosSwap.Type:
-                        UseChaosSwap(world);
+                        UseChaosSwapItem(world);
                         break;
                 }
 
@@ -842,74 +929,6 @@ namespace TestMinecraftServerApplication
 
             }
 
-        }
-
-        private void UseEclipseCrystal(SuperWorld world)
-        {
-            System.Diagnostics.Debug.Assert(world != null);
-
-            ItemStack[] takedItemStacks = TakeItemStacks(EclipseCrystal.Item, EclipseCrystal.DefaultCount);
-            if (takedItemStacks == null)
-            {
-                return;
-            }
-
-            System.Diagnostics.Debug.Assert(takedItemStacks.Length > 0);
-
-            world.ChangeWorldBorderSize(
-                world.DefaultWorldBorderRadiusInMeters / 2.0,
-                Time.FromMilliseconds(400)
-                );
-
-            world.ChangeWorldTimeOfDay(
-                MinecraftTimes.NighttimeMid,
-                Time.FromSeconds(1)
-                );
-
-            foreach (AbstractPlayer player in world.Players)
-            {
-                Vector v = new(player.Position.X, player.Position.Y + player.GetEyeHeight(), player.Position.Z);
-                world.PlaySound("block.end_portal.spawn", 6, v, 1.0, 2.0);
-
-                if (object.ReferenceEquals(this, player) == false)
-                {
-                    player.Damage(EclipseCrystal.Damage, this);
-                }
-            }
-
-            //System.Diagnostics.Debug.Assert(EclipseCrystal.CanPurchase == false);
-            EclipseCrystal.CanPurchase = true;
-
-            _ShopInventory.ResetEclipseCrystalSlot(null);
-        }
-
-        private void UseStoneOfSwiftness(SuperWorld world)
-        {
-            System.Diagnostics.Debug.Assert(world != null);
-
-            EnqueueSkill(
-                StoneOfSwiftness.Item, StoneOfSwiftness.DefaultCount,
-                new StoneOfSwiftnessSkill());
-        }
-
-        private void UseEmergencyEscape(SuperWorld world)
-        {
-            System.Diagnostics.Debug.Assert(world != null);
-
-            ItemStack[] takedItemStacks = TakeItemStacks(EmergencyEscape.Item, EmergencyEscape.DefaultCount);
-            if (takedItemStacks == null)
-            {
-                return;
-            }
-
-            System.Diagnostics.Debug.Assert(takedItemStacks.Length > 0);
-
-            ApplyForce(new Vector(0.0, EmergencyEscape.Power, 0.0));
-
-            _running_EmergencyEscape = true;
-            _startTime_EmergencyEscape = Time.Now();
-
-            world.PlaySound(EmergencyEscape.LaunchSoundName, 0, Position, 0.8, 1.5);
         }
 
         protected override void OnUseItem(World _world, ItemStack itemStack)
@@ -935,30 +954,30 @@ namespace TestMinecraftServerApplication
                         break;
 
                     case BlastCore.Type:
-                        UseBlastCore(world);
+                        UseBlastCoreItem(world);
                         itemStack.Damage(1);
                         break;
                     case EclipseCrystal.Type:
-                        UseEclipseCrystal(world);
+                        UseEclipseCrystalItem(world);
                         break;
 
                     case StoneOfSwiftness.Type:
-                        UseStoneOfSwiftness(world);
+                        UseStoneOfSwiftnessItem(world);
                         break;
 
                     case EmergencyEscape.Type:
-                        UseEmergencyEscape(world);
+                        UseEmergencyEscapeItem(world);
                         break;
 
                     case Dash.Type:
-                        UseDash(world);
+                        UseDashItem(world);
                         break;
                     case Hint.Type:
-                        UseHint(world);
+                        UseHintItem(world);
                         break;
 
                     case ChaosSwap.Type:
-                        UseChaosSwap(world);
+                        UseChaosSwapItem(world);
                         break;
                 }
             }
@@ -982,37 +1001,6 @@ namespace TestMinecraftServerApplication
 
         }
 
-        private bool UsePhoenixFeather(World world)
-        {
-            System.Diagnostics.Debug.Assert(world != null);
-
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            ItemStack[] takedItemStacks = TakeItemStacks(PhoenixFeather.Item, PhoenixFeather.DefaultCount);
-            if (takedItemStacks == null)
-            {
-                return false;
-            }
-
-            AddAdditionalHealth(PhoenixFeather.AdditionalHearts);
-            SetMovementSpeed(PhoenixFeather.MovementSpeedIncrease);
-
-            EmitParticles(Particle.Lava, 0.8, 1_000);
-
-            //_speedup_running = true;
-            //_speedup_duration = PhoenixFeather.MovementSpeedDuration;
-            //_speedup_startTime = Time.Now();
-
-            throw new System.NotImplementedException();
-
-            //world.PlaySound("block.anvil.land", 4, Position, 1.0, 2.0);
-
-            //PhoenixFeather.CanPurchase = true;
-            //_ShopInventory.ResetPhoenixFeatherSlot(null);
-
-            return true;
-        }
-
         protected override void OnDeath(World world)
         {
             System.Diagnostics.Debug.Assert(world != null);
@@ -1022,7 +1010,7 @@ namespace TestMinecraftServerApplication
             HealFully();
 
             if (
-                UsePhoenixFeather(world) == false &&
+                UsePhoenixFeatherItem(world) == false &&
                 SuperWorld.GameContext.IsStarted == true &&
                 Gamemode != Gamemode.Spectator
                 )
@@ -1042,7 +1030,6 @@ namespace TestMinecraftServerApplication
 
         }
 
-
         protected override void OnDeath(World world, LivingEntity attacker)
         {
             System.Diagnostics.Debug.Assert(world != null);
@@ -1053,7 +1040,7 @@ namespace TestMinecraftServerApplication
             HealFully();
 
             if (
-                UsePhoenixFeather(world) == false &&
+                UsePhoenixFeatherItem(world) == false &&
                 SuperWorld.GameContext.IsStarted == true &&
                 Gamemode != Gamemode.Spectator
                 )

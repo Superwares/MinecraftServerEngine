@@ -9,7 +9,7 @@ using TestMinecraftServerApplication.Items;
 
 namespace TestMinecraftServerApplication.SkillProgressNodes
 {
-    internal sealed class StoneOfSwiftnessSkill : ISkillProgressNode
+    internal sealed class StoneOfSwiftnessSkillNode : ISkillProgressNode
     {
         public string Name => $"{StoneOfSwiftness.Name}'s Skill";
 
@@ -54,10 +54,10 @@ namespace TestMinecraftServerApplication.SkillProgressNodes
                     emits = StoneOfSwiftness.MaxParticleEmits - _currentEmit;
                 }
 
-                for (int i = 0; i < _currentEmit; ++i)
+                for (int i = 0; i < emits; ++i)
                 {
                     System.Diagnostics.Debug.Assert(player != null);
-                    player.EmitParticles(Particle.Spell, new Vector(0.0, 0.1, 0.0), 0.1, 1);
+                    player.EmitParticles(StoneOfSwiftness.EmitParticle, new Vector(0.0, 0.1, 0.0), 0.1, 1);
                 }
 
                 System.Diagnostics.Debug.Assert(emits > 0);
