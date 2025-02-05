@@ -92,6 +92,8 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            //MyConsole.Debug($"{_currentGameProgressNode.GetType().Name}");
+
             bool canNext = _currentGameProgressNode.StartRoutine(GameContext, this);
 
             if (canNext == true)

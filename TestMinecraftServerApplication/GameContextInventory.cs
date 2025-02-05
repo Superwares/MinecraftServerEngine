@@ -232,7 +232,7 @@ namespace TestMinecraftServerApplication
                         {
                             success = SuperWorld.GameContext.Ready();
 
-                            if (success == true)
+                            if (success == true)   
                             {
                                 droppedItemStack = player.CloseInventory();
                             }

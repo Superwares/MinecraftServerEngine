@@ -45,13 +45,15 @@ namespace TestMinecraftServerApplication.GameStages
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 
-            return new GameStartStage();
+             return new GameStartStage();
         }
 
         public bool StartRoutine(GameContext ctx, SuperWorld world)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
             System.Diagnostics.Debug.Assert(world != null);
+
+            //MyConsole.Debug($"_count: {_count}");
 
             if (ctx.IsBeforeFirstRound == true && _printMessage == false)
             {

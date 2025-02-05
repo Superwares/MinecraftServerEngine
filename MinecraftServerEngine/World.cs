@@ -1048,6 +1048,8 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            //MyConsole.Debug("control players!");
+
             while (_ObjectQueue.DequeuePlayer(out AbstractPlayer player))
             {
                 System.Diagnostics.Debug.Assert(player != null);
@@ -1268,6 +1270,8 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            //MyConsole.Debug("Start world routine!");
+
             if (_worldBorder_transitionStartTime > Time.Zero)
             {
                 System.Diagnostics.Debug.Assert(LockerWorldBorder != null);
@@ -1388,6 +1392,8 @@ namespace MinecraftServerEngine
         internal void StartObjectRoutines()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
+
+            //MyConsole.Debug("Start object routine!");
 
             while (_ObjectQueue.Dequeue(out PhysicsObject obj) == true)
             {

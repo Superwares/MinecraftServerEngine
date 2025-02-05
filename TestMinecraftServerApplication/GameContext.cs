@@ -605,6 +605,30 @@ namespace TestMinecraftServerApplication
 
         }
 
+        public void GiveCoins()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_ready == true);
+            System.Diagnostics.Debug.Assert(_started == true);
+
+            System.Diagnostics.Debug.Assert(_LockerPlayers != null);
+            _LockerPlayers.Hold();
+
+            try
+            {
+                foreach (SuperPlayer player in _players)
+                {
+                    player.GiveItemStacks(Coin.Item, Coin.DefaultCount * 1);
+                }
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(_LockerPlayers != null);
+                _LockerPlayers.Release();
+            }
+        }
+
         public void HandleKillEvent(SuperPlayer player)
         {
             System.Diagnostics.Debug.Assert(player != null);

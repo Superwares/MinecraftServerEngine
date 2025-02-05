@@ -399,6 +399,14 @@ namespace TestMinecraftServerApplication
             }
         }
 
+        protected override void OnItemDrop(World world, ItemStack itemStack)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(itemStack != null);
+            
+            world.SpawnObject(new ItemEntity(itemStack, Position));
+        }
+
         private void HandleDefaultAttack(SuperWorld world, double attackCharge)
         {
             System.Diagnostics.Debug.Assert(world != null);
@@ -449,8 +457,8 @@ namespace TestMinecraftServerApplication
                     livingEntity.Position.Y + livingEntity.GetEyeHeight(),
                     livingEntity.Position.Z);
 
-                world.PlaySound("entity.player.hurt", 7, v, 1.0F, 2.0F);
-                world.PlaySound("entity.player.attack.strong", 7, Position, 1.0F, 2.0F);
+                world.PlaySound("entity.player.hurt", 7, v, 0.5, 1.0);
+                world.PlaySound("entity.player.attack.strong", 7, Position, 0.5, 1.0);
             }
         }
 
@@ -505,7 +513,8 @@ namespace TestMinecraftServerApplication
                     livingEntity.Position.Y + livingEntity.GetEyeHeight(),
                     livingEntity.Position.Z);
 
-                world.PlaySound("entity.player.attack.strong", 7, v, 1.0F, 2.0F);
+                world.PlaySound("entity.player.hurt", 7, v, 0.5, 1.0);
+                world.PlaySound("entity.player.attack.strong", 7, Position, 0.5, 1.0);
             }
 
             return true;

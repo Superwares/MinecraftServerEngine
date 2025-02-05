@@ -143,6 +143,7 @@ namespace MinecraftServerEngine.Inventories
                 UpdateRendering(userId);
             }
 
+            System.Diagnostics.Debug.Assert(Locker != null);
             Locker.Release();
         }
 

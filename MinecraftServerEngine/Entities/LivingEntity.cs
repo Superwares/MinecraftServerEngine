@@ -148,6 +148,7 @@ namespace MinecraftServerEngine.Entities
         protected internal virtual void OnAttack(World world, double attackCharge) { }
         protected internal virtual void OnAttack(World world, ItemStack itemStack, double attackCharge) { }
         protected internal virtual void OnItemBreak(World world, ItemStack itemStack) { }
+        protected internal virtual void OnItemDrop(World world, ItemStack itemStack) { }
         protected internal virtual void OnUseItem(World world, ItemStack itemStack) { }
         protected internal virtual void OnUseEntity(World world, Entity entity) { }
 

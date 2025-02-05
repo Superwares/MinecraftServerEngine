@@ -14,6 +14,8 @@ namespace TestMinecraftServerApplication.GameStages
         public readonly static Time NormalTimeDuration = Time.FromMinutes(2);
         public readonly static Time BurningTimeDuration = Time.FromMinutes(1);
 
+        public readonly static Time CoinGiveInterval = Time.FromSeconds(1);
+
         //public readonly static Time NormalTimeDuration = Time.FromSeconds(30);  // for debug
         //public readonly static Time BurningTimeDuration = Time.FromSeconds(5);  // for debug
 
@@ -40,6 +42,9 @@ namespace TestMinecraftServerApplication.GameStages
         private System.Guid _progressBarId = System.Guid.Empty;
 
         private bool _initNormal = false, _initBurning = false;
+
+
+        private Time _lastCoinGiveTime = Time.Now();
 
         public FindHidersStage()
         {
@@ -103,6 +108,17 @@ namespace TestMinecraftServerApplication.GameStages
                 //    ]);
 
                 return true;
+            }
+
+            {
+                Time elapsedGiveCoinTime = Time.Now() - _lastCoinGiveTime;
+                if (elapsedGiveCoinTime > CoinGiveInterval)
+                {
+                    System.Diagnostics.Debug.Assert(ctx != null);
+                    ctx.GiveCoins();
+
+                    _lastCoinGiveTime = Time.Now();
+                }
             }
 
             Time elapsedTime = Time.Now() - _StartTime;
