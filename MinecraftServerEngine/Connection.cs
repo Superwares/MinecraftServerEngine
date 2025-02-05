@@ -1093,44 +1093,18 @@ namespace MinecraftServerEngine
                         {
                             default:
                                 /*Console.Printl($"ActionId: {packet.ActionId}");*/
-                                throw new UnexpectedValueException("EntityAction.ActoinId");
+                                throw new UnexpectedValueException("Entity action id");
                             case 0:
-                                //MyConsole.Debug("Seanking!");
-                                if (player.Sneaking)
-                                {
-                                    throw new UnexpectedValueException($"Invalid action id: {packet.ActionId}");
-                                }
-
                                 player.Sneak(world);
-
                                 break;
                             case 1:
-                                //MyConsole.Debug("Unseanking!");
-                                if (!player.Sneaking)
-                                {
-                                    throw new UnexpectedValueException($"Invalid action id: {packet.ActionId}");
-                                }
-
                                 player.Unsneak(world);
-
                                 break;
                             case 3:
-                                if (player.Sprinting)
-                                {
-                                    throw new UnexpectedValueException($"Invalid action id: {packet.ActionId}");
-                                }
-
                                 player.Sprint(world);
-
                                 break;
                             case 4:
-                                if (!player.Sprinting)
-                                {
-                                    throw new UnexpectedValueException($"Invalid action id: {packet.ActionId}");
-                                }
-
                                 player.Unsprint(world);
-
                                 break;
                         }
 

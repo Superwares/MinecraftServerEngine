@@ -568,12 +568,17 @@ namespace MinecraftServerEngine.Entities
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(!Sneaking);
+            //System.Diagnostics.Debug.Assert(!Sneaking);
+
+            if (_sneaking == true)
+            {
+                return;
+            }
 
             _sneaking = true;
 
             OnSneak(world, _sneaking);
-
+            
             ChangeForms(_sneaking, _sprinting);
         }
 
@@ -583,8 +588,13 @@ namespace MinecraftServerEngine.Entities
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(Sneaking);
+            //System.Diagnostics.Debug.Assert(Sneaking);
 
+            if (_sneaking == false)
+            {
+                return;
+            }
+                
             _sneaking = false;
 
             OnSneak(world, _sneaking);
@@ -598,7 +608,10 @@ namespace MinecraftServerEngine.Entities
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(!Sprinting);
+            if (_sprinting == true)
+            {
+                return;
+            }
 
             _sprinting = true;
 
@@ -613,7 +626,10 @@ namespace MinecraftServerEngine.Entities
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(Sprinting);
+            if (_sprinting == false)
+            {
+                return;
+            }
 
             _sprinting = false;
 
