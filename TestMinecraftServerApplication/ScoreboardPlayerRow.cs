@@ -46,7 +46,7 @@ namespace TestMinecraftServerApplication
             int DefaultAdditionalPoints;
 
 
-            IConfigGameScoreboard config = Config.Instance.Game?.Scoreboard;
+            IConfigGameScoreboard config = ConfigXml.Config.Game?.Scoreboard;
 
             if (config == null)
             {

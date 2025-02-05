@@ -4,10 +4,12 @@
     {
         public IConfigGameScoreboard Scoreboard { get; }
 
-        public IConfigGameRound Round { get; }
 
         public int KillCoins { get; }
-        public int DefaultCoins { get; }
+        public int InitCoins { get; }
+
+
+        public IConfigGameRound Round { get; }
 
     }
 
@@ -21,8 +23,8 @@
         [System.Xml.Serialization.XmlElement("KillCoins")]
         public int KillCoins { get; set; }
 
-        [System.Xml.Serialization.XmlElement("DefaultCoins")]
-        public int DefaultCoins { get; set; }
+        [System.Xml.Serialization.XmlElement("InitCoins")]
+        public int InitCoins { get; set; }
 
 
         [System.Xml.Serialization.XmlElement("Round")]

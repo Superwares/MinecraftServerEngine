@@ -2,6 +2,9 @@
 {
     public interface IConfigGameRound
     {
+        public int NormalTimeInSeconds { get; }
+        public int BurningTimeInSeconds { get; }
+
         public int SurvivingCoins { get; }
 
         public int SeekerWinAdditionalPoints { get; }
@@ -12,6 +15,11 @@
 
     public class ConfigGameRound : IConfigGameRound
     {
+        [System.Xml.Serialization.XmlElement("NormalTimeInSeconds")]
+        public int NormalTimeInSeconds { get; set; }
+
+        [System.Xml.Serialization.XmlElement("BurningTimeInSeconds")]
+        public int BurningTimeInSeconds { get; set; }
 
 
         [System.Xml.Serialization.XmlElement("SurvivingCoins")]

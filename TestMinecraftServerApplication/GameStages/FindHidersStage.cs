@@ -6,13 +6,16 @@ using Containers;
 using MinecraftServerEngine;
 using MinecraftServerEngine.ProgressBars;
 using MinecraftServerEngine.Text;
+using TestMinecraftServerApplication.Configs;
 
 namespace TestMinecraftServerApplication.GameStages
 {
     public sealed class FindHidersStage : IGameStage
     {
-        public readonly static Time NormalTimeDuration = Time.FromMinutes(2);
-        public readonly static Time BurningTimeDuration = Time.FromMinutes(1);
+        public const int DefaultNormalTimeInSeconds = 200;
+        public const int DefaultBurningTimeInSeconds = 60;
+        public readonly static Time NormalDuration;
+        public readonly static Time BurningDuration;
 
         public readonly static Time CoinGiveInterval = Time.FromSeconds(1);
 
@@ -45,6 +48,56 @@ namespace TestMinecraftServerApplication.GameStages
 
 
         private Time _lastCoinGiveTime = Time.Now();
+
+        static FindHidersStage() 
+        {
+            int normalTimeInSeconds;
+            int burningTimeInSeconds;
+
+            IConfigGameRound config = ConfigXml.Config.Game?.Round;
+
+            if (config == null)
+            {
+                MyConsole.Warn($"Config.Game.Round is null. Using defaults: " +
+                    $"Config.Game.Round.NormalTimeInSeconds={DefaultNormalTimeInSeconds}, " +
+                    $"Config.Game.Round.BurningTimeInSeconds={DefaultBurningTimeInSeconds}");
+
+                System.Diagnostics.Debug.Assert(DefaultNormalTimeInSeconds > 0);
+                System.Diagnostics.Debug.Assert(DefaultBurningTimeInSeconds > 0);
+                config = new ConfigGameRound()
+                {
+                    NormalTimeInSeconds = DefaultNormalTimeInSeconds,
+
+                    BurningTimeInSeconds = DefaultBurningTimeInSeconds,
+
+                };
+            }
+
+            normalTimeInSeconds = config.NormalTimeInSeconds;
+            burningTimeInSeconds = config.BurningTimeInSeconds;
+
+            if (config.NormalTimeInSeconds <= 0)
+            {
+                MyConsole.Warn($"Config.Game.Round.NormalTimeInSeconds <= 0. Using defaults: " +
+                    $"Config.Game.Round.NormalTimeInSeconds={DefaultNormalTimeInSeconds}");
+
+                System.Diagnostics.Debug.Assert(DefaultNormalTimeInSeconds > 0);
+                normalTimeInSeconds = DefaultNormalTimeInSeconds;
+            }
+
+            if (config.BurningTimeInSeconds <= 0)
+            {
+                MyConsole.Warn($"Config.Game.Round.BurningTimeInSeconds <= 0. Using defaults: " +
+                    $"Config.Game.Round.BurningTimeInSeconds={DefaultBurningTimeInSeconds}");
+
+
+                System.Diagnostics.Debug.Assert(DefaultBurningTimeInSeconds > 0);
+                burningTimeInSeconds = DefaultBurningTimeInSeconds;
+            }
+
+            NormalDuration = Time.FromSeconds(normalTimeInSeconds);
+            BurningDuration = Time.FromSeconds(burningTimeInSeconds);
+        }
 
         public FindHidersStage()
         {
@@ -124,9 +177,9 @@ namespace TestMinecraftServerApplication.GameStages
             Time elapsedTime = Time.Now() - _StartTime;
             double progressBar;
 
-            if (elapsedTime < NormalTimeDuration)
+            if (elapsedTime < NormalDuration)
             {
-                progressBar = 1.0 - elapsedTime.Amount / (double)NormalTimeDuration.Amount;
+                progressBar = 1.0 - elapsedTime.Amount / (double)NormalDuration.Amount;
                 System.Diagnostics.Debug.Assert(progressBar >= 0.0);
                 System.Diagnostics.Debug.Assert(progressBar <= 1.0);
 
@@ -156,7 +209,7 @@ namespace TestMinecraftServerApplication.GameStages
                 }
 
             }
-            else if (elapsedTime - NormalTimeDuration < BurningTimeDuration)
+            else if (elapsedTime - NormalDuration < BurningDuration)
             {
                 if (ctx.IsBeforeFirstRound == true && printMessage0 == false)
                 {
@@ -165,7 +218,7 @@ namespace TestMinecraftServerApplication.GameStages
                     printMessage0 = true;
                 }
 
-                progressBar = 1.0 - (elapsedTime - NormalTimeDuration).Amount / (double)BurningTimeDuration.Amount;
+                progressBar = 1.0 - (elapsedTime - NormalDuration).Amount / (double)BurningDuration.Amount;
                 System.Diagnostics.Debug.Assert(progressBar >= 0.0);
                 System.Diagnostics.Debug.Assert(progressBar <= 1.0);
 

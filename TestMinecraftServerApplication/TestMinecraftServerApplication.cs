@@ -13,7 +13,7 @@ const ushort port = 25565;
 
 MyConsole.Info("Hello, World!");
 
-Config.Deserialize("Config.xml");
+ConfigXml.Deserialize("Config.xml");
 
 double worldCenterX, worldCenterZ;
 double defaultWorldBorderRadiusInMeters;
@@ -21,7 +21,7 @@ Vector respawningPos;
 EntityAngles respawningLook;
 
 {
-    IConfigWorld config = Config.Instance.World;
+    IConfigWorld config = ConfigXml.Config.World;
 
     if (config == null)
     {

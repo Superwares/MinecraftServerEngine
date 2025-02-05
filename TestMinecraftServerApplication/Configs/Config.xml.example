@@ -23,9 +23,15 @@
 		<!--The number of coins awarded for a kill in the game-->
 		<KillCoins>59</KillCoins>
 		<!--The default number of coins a player starts with in the game-->
-		<DefaultCoins>110</DefaultCoins>
+		<InitCoins>110</InitCoins>
 
 		<Round>
+			<!--The normal duration of a round in seconds-->
+			<NormalTimeInSeconds>200</NormalTimeInSeconds>
+			
+			<!--The duration of the burning phase of a round in seconds-->
+			<BurningTimeInSeconds>60</BurningTimeInSeconds>
+			
 			<!--The number of coins awarded for surviving the round in the game-->
 			<SurvivingCoins>31</SurvivingCoins>
 
