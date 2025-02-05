@@ -705,7 +705,7 @@ namespace TestMinecraftServerApplication
 
         }
 
-        public void HandleKillEventForSeeker()
+        public void HandleKillEventForSeeker(UserId userId)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
@@ -718,6 +718,11 @@ namespace TestMinecraftServerApplication
             try
             {
                 if (_inRound == false)
+                {
+                    return;
+                }
+
+                if (_currentSeeker.UserId == userId)
                 {
                     return;
                 }

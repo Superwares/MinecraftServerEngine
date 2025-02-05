@@ -1028,7 +1028,7 @@ namespace TestMinecraftServerApplication
 
                 System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
                 System.Diagnostics.Debug.Assert(UserId != UserId.Null);
-                SuperWorld.GameContext.HandleKillEventForSeeker();
+                SuperWorld.GameContext.HandleKillEventForSeeker(UserId);
 
                 System.Diagnostics.Debug.Assert(SuperWorld.GameContext != null);
                 System.Diagnostics.Debug.Assert(UserId != UserId.Null);
