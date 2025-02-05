@@ -568,7 +568,7 @@ namespace MinecraftServerEngine.Entities
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            //System.Diagnostics.Debug.Assert(!Sneaking);
+            System.Diagnostics.Debug.Assert(!Sneaking);
 
             if (_sneaking == true)
             {
@@ -588,7 +588,7 @@ namespace MinecraftServerEngine.Entities
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            //System.Diagnostics.Debug.Assert(Sneaking);
+            System.Diagnostics.Debug.Assert(Sneaking);
 
             if (_sneaking == false)
             {
@@ -608,6 +608,8 @@ namespace MinecraftServerEngine.Entities
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
+            System.Diagnostics.Debug.Assert(!Sprinting);
+
             if (_sprinting == true)
             {
                 return;
@@ -625,6 +627,8 @@ namespace MinecraftServerEngine.Entities
             System.Diagnostics.Debug.Assert(world != null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
+
+            System.Diagnostics.Debug.Assert(Sprinting);
 
             if (_sprinting == false)
             {

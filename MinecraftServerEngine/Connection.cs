@@ -1084,26 +1084,46 @@ namespace MinecraftServerEngine
                     {
                         EntityActionPacket packet = EntityActionPacket.Read(buffer);
 
-                        if (!_TeleportRecords.Empty)
-                        {
-                            break;
-                        }
+                        //if (!_TeleportRecords.Empty)
+                        //{
+                        //    break;
+                        //}
 
                         switch (packet.ActionId)
                         {
                             default:
                                 /*Console.Printl($"ActionId: {packet.ActionId}");*/
-                                throw new UnexpectedValueException("Entity action id");
+                                throw new UnexpectedValueException($"Entity action id ({packet.ActionId})");
                             case 0:
+                                if (player.Sneaking == true)
+                                {
+                                    throw new UnexpectedValueException($"Entity action id ({packet.ActionId})");
+                                }
+
                                 player.Sneak(world);
                                 break;
                             case 1:
+                                if (player.Sneaking == false)
+                                {
+                                    throw new UnexpectedValueException($"Entity action id ({packet.ActionId})");
+                                }
+
                                 player.Unsneak(world);
                                 break;
                             case 3:
+                                if (player.Sprinting == true)
+                                {
+                                    throw new UnexpectedValueException($"Entity action id ({packet.ActionId})");
+                                }
+
                                 player.Sprint(world);
                                 break;
                             case 4:
+                                if (player.Sprinting == false)
+                                {
+                                    throw new UnexpectedValueException($"Entity action id ({packet.ActionId})");
+                                }
+
                                 player.Unsprint(world);
                                 break;
                         }
