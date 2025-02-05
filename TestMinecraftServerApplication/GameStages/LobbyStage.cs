@@ -4,7 +4,7 @@ namespace TestMinecraftServerApplication.GameStages
 {
     public sealed class LobbyStage : IGameStage
     {
-        public IGameStage CreateNextNode(GameContext ctx)
+        public IGameStage CreateNextStage(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 

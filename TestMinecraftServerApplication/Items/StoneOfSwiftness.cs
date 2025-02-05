@@ -1,23 +1,30 @@
 ﻿using Common;
+
+using MinecraftServerEngine;
 using MinecraftServerEngine.Entities;
 using MinecraftServerEngine.Items;
 
 namespace TestMinecraftServerApplication.Items
 {
-    public static class StoneOfSwiftness
+    internal static class StoneOfSwiftness
     {
-        public const ItemQualityTier Tier = ItemQualityTier.Basic;
+        internal const ItemQualityTier Tier = ItemQualityTier.Basic;
 
-        public const ItemType Type = ItemType.Flint;
-        public const string Name = "Stone of Swiftness";
+        internal const ItemType Type = ItemType.Flint;
+        internal const string Name = "Stone of Swiftness";
 
-        public const double MovementSpeed = LivingEntity.DefaultMovementSpeed + 0.2;
-        public readonly static Time Duration = Time.FromSeconds(5);
+        internal readonly static Time EmitParticleInterval = MinecraftTimes.TimePerTick;
+        internal readonly static Time Duration = Time.FromSeconds(5);
+        internal readonly static int MaxParticleEmits = (int)System.Math.Ceiling(
+                (double)Duration.Amount / (double)EmitParticleInterval.Amount
+                );
 
-        public const int PurchasePrice = 15;
-        public const int SellPrice = 11;
+        internal const double MovementSpeedIncrease = 0.2;
 
-        public readonly static IReadOnlyItem Item = new Item(
+        internal const int PurchasePrice = 15;
+        internal const int SellPrice = 11;
+
+        internal readonly static IReadOnlyItem Item = new Item(
             Type,
             Name,
             [
@@ -25,7 +32,12 @@ namespace TestMinecraftServerApplication.Items
                 $"Duration        {(double)Duration.Amount/(double)Time.FromSeconds(1).Amount}s",
             ]);
 
-        public static readonly int DefaultCount = MinecraftServerEngine.Items.Item.MinCount;
+        internal static readonly int DefaultCount = MinecraftServerEngine.Items.Item.MinCount;
+
+        static StoneOfSwiftness()
+        {
+         
+        }
 
     }
 }

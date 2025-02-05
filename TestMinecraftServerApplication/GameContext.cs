@@ -19,14 +19,12 @@ namespace TestMinecraftServerApplication
 
         public const double DefaultPlayerAdditionalHealth = 0.0;
         public const double DefaultPlayerMaxHealth = 20.0;
-        public const double DefaultPlayerMovementSpeed = LivingEntity.DefaultMovementSpeed;
 
         public const double DefaultSeekerAdditionalHealth = 100.0;
         public const double DefaultSeekerMaxHealth = 20.0;
-        public const double DefaultSeekerMovementSpeed = LivingEntity.DefaultMovementSpeed;
 
         public const double BurnedSeekerMaxHealth = 80.0;
-        public const double BurnedSeekerMovementSpeed = LivingEntity.DefaultMovementSpeed + 0.1;
+        public const double BurnedSeekerMovementSpeedIncrease = 0.1;
 
         public const int DefaultSeekerHints = 3;
 
@@ -513,7 +511,7 @@ namespace TestMinecraftServerApplication
 
                 player.SetAdditionalHealth(DefaultPlayerAdditionalHealth);
                 player.SetMaxHealth(DefaultPlayerMaxHealth);
-                player.SetMovementSpeed(DefaultPlayerMovementSpeed);
+                player.ResetMovementSpeed();
 
                 player.HealFully();
             }
@@ -573,7 +571,7 @@ namespace TestMinecraftServerApplication
 
             _currentSeeker.SetAdditionalHealth(DefaultSeekerAdditionalHealth);
             _currentSeeker.SetMaxHealth(DefaultSeekerMaxHealth);
-            player.SetMovementSpeed(DefaultSeekerMovementSpeed);
+            player.ResetMovementSpeed();
 
             _currentSeeker.HealFully();
 
@@ -829,7 +827,7 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(_currentSeeker != null);
             _currentSeeker.SetMaxHealth(BurnedSeekerMaxHealth);
-            _currentSeeker.SetMovementSpeed(BurnedSeekerMovementSpeed);
+            _currentSeeker.AddMovementSpeed(BurnedSeekerMovementSpeedIncrease);
             _currentSeeker.HealFully();
         }
 

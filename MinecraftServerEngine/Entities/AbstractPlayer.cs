@@ -12,6 +12,8 @@ namespace MinecraftServerEngine.Entities
 
     public abstract class AbstractPlayer : LivingEntity
     {
+
+
         public const double HitboxWidth = 0.6D;
 
         private static Hitbox GetAdventureHitbox(bool sneaking)
@@ -306,8 +308,8 @@ namespace MinecraftServerEngine.Entities
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(LockerMovementSpeed != null);
-            LockerMovementSpeed.Hold();
+            System.Diagnostics.Debug.Assert(_LockerMovementSpeed != null);
+            _LockerMovementSpeed.Hold();
 
             try
             {
@@ -322,8 +324,8 @@ namespace MinecraftServerEngine.Entities
             }
             finally
             {
-                System.Diagnostics.Debug.Assert(LockerMovementSpeed != null);
-                LockerMovementSpeed.Release();
+                System.Diagnostics.Debug.Assert(_LockerMovementSpeed != null);
+                _LockerMovementSpeed.Release();
             }
         }
 

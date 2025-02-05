@@ -96,7 +96,7 @@ namespace TestMinecraftServerApplication
 
             if (canNext == true)
             {
-                _currentGameProgressNode = _currentGameProgressNode.CreateNextNode(GameContext);
+                _currentGameProgressNode = _currentGameProgressNode.CreateNextStage(GameContext);
             }
         }
 

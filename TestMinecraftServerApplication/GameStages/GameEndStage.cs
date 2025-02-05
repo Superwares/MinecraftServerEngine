@@ -16,7 +16,7 @@ namespace TestMinecraftServerApplication.GameStages
 
         private readonly Time _StartTime = Time.Now();
 
-        public IGameStage CreateNextNode(GameContext ctx)
+        public IGameStage CreateNextStage(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 

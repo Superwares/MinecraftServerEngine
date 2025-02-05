@@ -10,8 +10,11 @@ namespace MinecraftServerEngine.Entities
 {
     public abstract class LivingEntity : Entity
     {
-        public const double DefaultMovementSpeed = 0.099999988079071;
 
+        public const double MinMovementSpeed = 0.0;
+        public const double MaxMovementSpeed = 1024.0;
+
+         
         private bool _disposed = false;
 
         /**
@@ -70,8 +73,8 @@ namespace MinecraftServerEngine.Entities
             }
         }
 
-        protected readonly Locker LockerMovementSpeed = new();
-        protected double _movementSpeed = DefaultMovementSpeed;
+        protected readonly Locker _LockerMovementSpeed = new();
+        protected double _movementSpeed;
         public double MovementSpeed
         {
             get
@@ -95,6 +98,9 @@ namespace MinecraftServerEngine.Entities
         private readonly Queue<(double damage, LivingEntity attacker)> _DamageQueue = new();  // Disposable
 
 
+        public abstract double DefaultMovementSpeed { get; }
+
+
         private protected LivingEntity(
             System.Guid uniqueId,
             Vector p, EntityAngles look,
@@ -104,6 +110,7 @@ namespace MinecraftServerEngine.Entities
             : base(uniqueId, p, look, noGravity, hitbox, m, maxStepLevel)
         {
             _health = _maxHealth;
+            _movementSpeed = DefaultMovementSpeed;
         }
 
         ~LivingEntity()
@@ -112,6 +119,8 @@ namespace MinecraftServerEngine.Entities
 
             Dispose(false);
         }
+
+        
 
         public abstract double GetEyeHeight();
 
@@ -222,7 +231,7 @@ namespace MinecraftServerEngine.Entities
         {
             if (amount < 0.0)
             {
-                throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
+                throw new System.ArgumentOutOfRangeException(nameof(amount), $"Amount cannot be less than {MinMovementSpeed}");
             }
 
             if (_disposed == true)
@@ -512,35 +521,11 @@ namespace MinecraftServerEngine.Entities
             }
         }
 
-        protected virtual void _SetMovementSpeed(double amount)
-        {
-            System.Diagnostics.Debug.Assert(amount >= 0.0);
-            System.Diagnostics.Debug.Assert(amount <= 1024.0);
-
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            System.Diagnostics.Debug.Assert(LockerMovementSpeed != null);
-            LockerMovementSpeed.Hold();
-
-            try
-            {
-                System.Diagnostics.Debug.Assert(amount >= 0.0);
-                System.Diagnostics.Debug.Assert(amount <= 1024.0);
-                _movementSpeed = amount;
-
-            }
-            finally
-            {
-                System.Diagnostics.Debug.Assert(LockerMovementSpeed != null);
-                LockerMovementSpeed.Release();
-            }
-        }
-
         public void Heal(double amount)
         {
             if (amount < 0.0)
             {
-                throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
+                throw new System.ArgumentOutOfRangeException(nameof(amount), $"Amount cannot be less than {MinMovementSpeed}");
             }
 
             if (_disposed == true)
@@ -578,7 +563,7 @@ namespace MinecraftServerEngine.Entities
         {
             if (amount < 0.0)
             {
-                throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
+                throw new System.ArgumentOutOfRangeException(nameof(amount), $"Amount cannot be less than {MinMovementSpeed}");
             }
 
             if (_disposed == true)
@@ -597,7 +582,7 @@ namespace MinecraftServerEngine.Entities
         {
             if (amount < 0.0)
             {
-                throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
+                throw new System.ArgumentOutOfRangeException(nameof(amount), $"Amount cannot be less than {MinMovementSpeed}");
             }
 
             if (_disposed == true)
@@ -612,15 +597,113 @@ namespace MinecraftServerEngine.Entities
             _AddAdditionalHealth(amount);
         }
 
+        protected virtual void _SetMovementSpeed(double amount)
+        {
+            System.Diagnostics.Debug.Assert(amount >= MinMovementSpeed);
+            System.Diagnostics.Debug.Assert(amount <= MaxMovementSpeed);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_LockerMovementSpeed != null);
+            _LockerMovementSpeed.Hold();
+
+            try
+            {
+                System.Diagnostics.Debug.Assert(amount >= MinMovementSpeed);
+                System.Diagnostics.Debug.Assert(amount <= MaxMovementSpeed);
+                _movementSpeed = amount;
+
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(_LockerMovementSpeed != null);
+                _LockerMovementSpeed.Release();
+            }
+        }
+
+        private void _SetUpperMovementSpeed(double amount)
+        {
+            System.Diagnostics.Debug.Assert(amount >= MinMovementSpeed);
+            System.Diagnostics.Debug.Assert(amount <= MaxMovementSpeed);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_LockerMovementSpeed != null);
+            _LockerMovementSpeed.Hold();
+
+            try
+            {
+                if (amount > _movementSpeed)
+                {
+                    _SetMovementSpeed(amount);
+                }
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(_LockerMovementSpeed != null);
+                _LockerMovementSpeed.Release();
+            }
+        }
+
+        private void _AddMovementSpeed(double amount)
+        {
+            System.Diagnostics.Debug.Assert(amount >= MinMovementSpeed);
+            System.Diagnostics.Debug.Assert(amount <= MaxMovementSpeed);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_LockerMovementSpeed != null);
+            _LockerMovementSpeed.Hold();
+
+            try
+            {
+                double movementSpeed = _movementSpeed + amount;
+                _SetMovementSpeed(movementSpeed > MaxMovementSpeed ? MaxMovementSpeed : movementSpeed);
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(_LockerMovementSpeed != null);
+                _LockerMovementSpeed.Release();
+            }
+        }
+
+        private void _RemoveMovementSpeed(double amount)
+        {
+            System.Diagnostics.Debug.Assert(amount >= MinMovementSpeed);
+            System.Diagnostics.Debug.Assert(amount <= MaxMovementSpeed);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_LockerMovementSpeed != null);
+            _LockerMovementSpeed.Hold();
+
+            try
+            {
+                double movementSpeed = _movementSpeed - amount;
+                _SetMovementSpeed((movementSpeed < MinMovementSpeed) ? MinMovementSpeed : movementSpeed);
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(_LockerMovementSpeed != null);
+                _LockerMovementSpeed.Release();
+            }
+        }
+
         public void SetMovementSpeed(double amount)
         {
-            if (amount < 0.0)
+            if (amount < MinMovementSpeed)
             {
-                throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be negative.");
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(amount), 
+                    $"Amount cannot be less than {MinMovementSpeed}"
+                    );
             }
-            if (amount > 1024.0)
+            if (amount > MaxMovementSpeed)
             {
-                throw new System.ArgumentOutOfRangeException(nameof(amount), "Amount cannot be greater than 1024.0.");
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(amount), 
+                    $"Amount cannot be greater than {MaxMovementSpeed}"
+                    );
             }
 
             if (_disposed == true)
@@ -628,12 +711,114 @@ namespace MinecraftServerEngine.Entities
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            System.Diagnostics.Debug.Assert(amount >= 0.0);
-            System.Diagnostics.Debug.Assert(amount <= 1024.0);
+            System.Diagnostics.Debug.Assert(amount >= MinMovementSpeed);
+            System.Diagnostics.Debug.Assert(amount <= MaxMovementSpeed);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             _SetMovementSpeed(amount);
+        }
+
+        public void SetUpperMovementSpeed(double amount)
+        {
+            if (amount < MinMovementSpeed)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(amount), 
+                    $"Amount cannot be less than {MinMovementSpeed}"
+                    );
+            }
+            if (amount > MaxMovementSpeed)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(amount), 
+                    $"Amount cannot be greater than {MaxMovementSpeed}"
+                    );
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(amount >= MinMovementSpeed);
+            System.Diagnostics.Debug.Assert(amount <= MaxMovementSpeed);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _SetUpperMovementSpeed(amount);
+        }
+    
+        public void AddMovementSpeed(double amount)
+        {
+            if (amount < MinMovementSpeed)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(amount), 
+                    $"Amount cannot be less than {MinMovementSpeed}"
+                    );
+            }
+            if (amount > MaxMovementSpeed)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(amount), 
+                    $"Amount cannot be greater than {MaxMovementSpeed}"
+                    );
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(amount >= MinMovementSpeed);
+            System.Diagnostics.Debug.Assert(amount <= MaxMovementSpeed);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _AddMovementSpeed(amount);
+        }
+
+        public void RemoveMovementSpeed(double amount)
+        {
+            if (amount < MinMovementSpeed)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(amount), 
+                    $"Amount cannot be less than {MinMovementSpeed}"
+                    );
+            }
+            if (amount > MaxMovementSpeed)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(amount), 
+                    $"Amount cannot be greater than {MaxMovementSpeed}"
+                    );
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(amount >= MinMovementSpeed);
+            System.Diagnostics.Debug.Assert(amount <= MaxMovementSpeed);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _RemoveMovementSpeed(amount);
+        }
+
+        public void ResetMovementSpeed()
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _SetMovementSpeed(DefaultMovementSpeed);
         }
 
         public void HealFully()
@@ -657,8 +842,8 @@ namespace MinecraftServerEngine.Entities
                     System.Diagnostics.Debug.Assert(LockerHealths != null);
                     LockerHealths.Dispose();
 
-                    System.Diagnostics.Debug.Assert(LockerMovementSpeed != null);
-                    LockerMovementSpeed.Dispose();
+                    System.Diagnostics.Debug.Assert(_LockerMovementSpeed != null);
+                    _LockerMovementSpeed.Dispose();
 
                     System.Diagnostics.Debug.Assert(_LockerDamage != null);
                     _LockerDamage.Dispose();

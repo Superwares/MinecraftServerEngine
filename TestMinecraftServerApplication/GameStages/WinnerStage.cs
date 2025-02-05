@@ -99,7 +99,7 @@ namespace TestMinecraftServerApplication.GameStages
         private bool _fireworkTwinkle_9 = false;
 
 
-        public IGameStage CreateNextNode(GameContext ctx)
+        public IGameStage CreateNextStage(GameContext ctx)
         {
             System.Diagnostics.Debug.Assert(ctx != null);
 

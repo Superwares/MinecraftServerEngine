@@ -1,4 +1,5 @@
-﻿using Common;
+﻿using Sync;
+using Common;
 using Containers;
 
 using MinecraftServerEngine;
@@ -9,13 +10,16 @@ using MinecraftServerEngine.Entities;
 using MinecraftServerEngine.Items;
 using MinecraftServerEngine.Protocols;
 
+using TestMinecraftServerApplication.SkillProgressNodes;
+
 namespace TestMinecraftServerApplication
 {
     using Items;
 
-
     public sealed class SuperPlayer : AbstractPlayer
     {
+
+
 
         public const double DefaultAttackDamage = 1.0;
 
@@ -24,13 +28,13 @@ namespace TestMinecraftServerApplication
 
         private bool _disposed = false;
 
-        private readonly static ChestInventory ChestInventory = new(GlobalChestItem.InventoryLines);
-        private readonly static ShopInventory ShopInventory = new();
+        private readonly static ChestInventory _ChestInventory = new(GlobalChestItem.InventoryLines);
+        private readonly static ShopInventory _ShopInventory = new();
 
-        private bool _speedup_running = false;
-        private Time _speedup_duration = Time.Zero;
-        private Time _speedup_startTime = Time.Zero;
-        private int _speedup_x = 0;
+        private readonly Locker _LockerSkills = new();
+        private readonly Set<string> _RunningSkillNodeNames = new();
+        private readonly Queue<ISkillProgressNode> _SkillQueue = new();
+
 
         private bool _running_EmergencyEscape = false;
         private Time _startTime_EmergencyEscape = Time.Zero;
@@ -38,6 +42,8 @@ namespace TestMinecraftServerApplication
 
         private Time _worldBorderOutsideDamage_startTime = Time.Now();
 
+
+        public override double DefaultMovementSpeed => 0.099999988079071;
 
         public SuperPlayer(
             UserId userId, string username,
@@ -53,23 +59,99 @@ namespace TestMinecraftServerApplication
             GiveItemStacks(ShopItem.Item, ShopItem.DefaultCount);
         }
 
+        ~SuperPlayer()
+        {
+            System.Diagnostics.Debug.Assert(false);
+
+            Dispose(false);
+        }
+
+        private double GenerateRandomValueBetween(double min, double max)
+        {
+            System.Random random = new System.Random();
+            return min + (random.NextDouble() * (max - min));
+        }
+
+        private void CloseAllSkills()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_LockerSkills != null);
+            _LockerSkills.Hold();
+
+            try
+            {
+                ISkillProgressNode skillNode;
+
+                System.Diagnostics.Debug.Assert(_SkillQueue != null);
+                while (_SkillQueue.Dequeue(out skillNode) == true)
+                {
+                    skillNode.Close(this);
+                }
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(_LockerSkills != null);
+                _LockerSkills.Release();
+            }
+        }
+
+        private void EnqueueSkill(
+            IReadOnlyItem item, int count,
+            ISkillProgressNode skillNode)
+        {
+            System.Diagnostics.Debug.Assert(item != null);
+            System.Diagnostics.Debug.Assert(count >= 0);
+            System.Diagnostics.Debug.Assert(skillNode != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_LockerSkills != null);
+            _LockerSkills.Hold();
+
+            try
+            {
+                if (_RunningSkillNodeNames.Contains(skillNode.Name) == true)
+                {
+                    return;
+                }
+
+                if (count > 0)
+                {
+                    ItemStack[] takedItemStacks = TakeItemStacks(item, count);
+                    if (takedItemStacks == null)
+                    {
+                        return;
+                    }
+                }
+
+                //MyConsole.Debug("Enqueue skill!");
+
+                System.Diagnostics.Debug.Assert(_SkillQueue != null);
+                _SkillQueue.Enqueue(skillNode);
+
+                _RunningSkillNodeNames.Insert(skillNode.Name);
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(_LockerSkills != null);
+                _LockerSkills.Release();
+            }
+        }
+
         public void Reset()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             FlushItems();
 
-            SwitchGamemode(Gamemode.Adventure);
+            CloseAllSkills();
 
             GiveItemStacks(GamePanel.Item, GamePanel.DefaultCount);
             GiveItemStacks(ShopItem.Item, ShopItem.DefaultCount);
-        }
 
-        ~SuperPlayer()
-        {
-            System.Diagnostics.Debug.Assert(false);
-
-            Dispose(false);
+            SwitchGamemode(Gamemode.Adventure);
+            ResetMovementSpeed();
         }
 
         protected override void OnDespawn(PhysicsWorld _world)
@@ -87,12 +169,6 @@ namespace TestMinecraftServerApplication
 
         }
 
-        private double GenerateRandomValueBetween(double min, double max)
-        {
-            System.Random random = new System.Random();
-            return min + (random.NextDouble() * (max - min));
-        }
-
         public override void StartRoutine(PhysicsWorld _world)
         {
             System.Diagnostics.Debug.Assert(_world != null);
@@ -101,19 +177,53 @@ namespace TestMinecraftServerApplication
 
             if (_world is SuperWorld world)
             {
-                if (_speedup_running == true && _speedup_x++ % 10 == 0)
+                System.Diagnostics.Debug.Assert(_SkillQueue != null);
+                if (_SkillQueue.Empty == false)
                 {
-                    EmitParticles(Particle.Spell, 1.0, 1);
+                    int currentSkill = 0;
+                    ISkillProgressNode skillNode;
 
-                    Time elapsedTime = Time.Now() - _speedup_startTime;
-                    if (elapsedTime > _speedup_duration)
+                    System.Diagnostics.Debug.Assert(_SkillQueue != null);
+                    while (
+                        currentSkill++ < _SkillQueue.Length && 
+                        _SkillQueue.Dequeue(out skillNode) == true
+                        )
                     {
-                        SetMovementSpeed(DefaultMovementSpeed);
+                        System.Diagnostics.Debug.Assert(currentSkill >= 0);
 
-                        _speedup_running = false;
-                        _speedup_startTime = Time.Zero;
+                        System.Diagnostics.Debug.Assert(skillNode != null);
+                        if (skillNode.Start(world, this) == true)
+                        {
+                            //MyConsole.Debug("Close skill!");
+                            skillNode.Close(this);
+
+                            System.Diagnostics.Debug.Assert(_RunningSkillNodeNames != null);
+                            _RunningSkillNodeNames.Extract(skillNode.Name);
+
+                            skillNode = skillNode.CreateNextNode();
+
+                        }
+
+                        if (skillNode != null)
+                        {
+                            _SkillQueue.Enqueue(skillNode);
+                        }
                     }
                 }
+
+                //if (_speedup_running == true && _speedup_x++ % 10 == 0)
+                //{
+                //    EmitParticles(Particle.Spell, 1.0, 1);
+
+                //    Time elapsedTime = Time.Now() - _speedup_startTime;
+                //    if (elapsedTime > _speedup_duration)
+                //    {
+                //        SetMovementSpeed(DefaultMovementSpeed);
+
+                //        _speedup_running = false;
+                //        _speedup_startTime = Time.Zero;
+                //    }
+                //}
 
                 if (_running_EmergencyEscape == true)
                 {
@@ -267,7 +377,7 @@ namespace TestMinecraftServerApplication
                         //System.Diagnostics.Debug.Assert(BlastCore.CanPurchase == false);
                         BlastCore.CanPurchase = true;
 
-                        ShopInventory.ResetBlastCoreSlot(null);
+                        _ShopInventory.ResetBlastCoreSlot(null);
                     }
                     break;
                 case EclipseCrystal.Type:
@@ -275,7 +385,7 @@ namespace TestMinecraftServerApplication
                         //System.Diagnostics.Debug.Assert(EclipseCrystal.CanPurchase == false);
                         EclipseCrystal.CanPurchase = true;
 
-                        ShopInventory.ResetEclipseCrystalSlot(null);
+                        _ShopInventory.ResetEclipseCrystalSlot(null);
                     }
                     break;
                 case Doombringer.Type:
@@ -283,7 +393,7 @@ namespace TestMinecraftServerApplication
                         //System.Diagnostics.Debug.Assert(Doombringer.CanPurchase == false);
                         Doombringer.CanPurchase = true;
 
-                        ShopInventory.ResetDoombringerSlot(null);
+                        _ShopInventory.ResetDoombringerSlot(null);
                     }
                     break;
             }
@@ -752,7 +862,7 @@ namespace TestMinecraftServerApplication
                         itemStack.Damage(1);
                     }
                 }
-                
+
             }
 
         }
@@ -793,32 +903,16 @@ namespace TestMinecraftServerApplication
             //System.Diagnostics.Debug.Assert(EclipseCrystal.CanPurchase == false);
             EclipseCrystal.CanPurchase = true;
 
-            ShopInventory.ResetEclipseCrystalSlot(null);
+            _ShopInventory.ResetEclipseCrystalSlot(null);
         }
 
         private void UseStoneOfSwiftness(SuperWorld world)
         {
             System.Diagnostics.Debug.Assert(world != null);
 
-            ItemStack[] takedItemStacks = TakeItemStacks(StoneOfSwiftness.Item, StoneOfSwiftness.DefaultCount);
-            if (takedItemStacks == null)
-            {
-                return;
-            }
-
-            System.Diagnostics.Debug.Assert(takedItemStacks.Length > 0);
-
-            System.Diagnostics.Debug.Assert(takedItemStacks != null);
-            System.Diagnostics.Debug.Assert(takedItemStacks.Length == 1);
-            System.Diagnostics.Debug.Assert(takedItemStacks[0].Count == StoneOfSwiftness.DefaultCount);
-
-            _speedup_running = true;
-            _speedup_duration = StoneOfSwiftness.Duration;
-            _speedup_startTime = Time.Now();
-
-            SetMovementSpeed(StoneOfSwiftness.MovementSpeed);
-
-            world.PlaySound("block.anvil.land", 4, Position, 0.8, 1.5);
+            EnqueueSkill(
+                StoneOfSwiftness.Item, StoneOfSwiftness.DefaultCount,
+                new StoneOfSwiftnessSkill());
         }
 
         private void UseEmergencyEscape(SuperWorld world)
@@ -853,14 +947,14 @@ namespace TestMinecraftServerApplication
                 switch (itemStack.Type)
                 {
                     case ShopItem.Type:
-                        OpenInventory(ShopInventory);
+                        OpenInventory(_ShopInventory);
                         break;
                     case GamePanel.Type:
                         OpenInventory(GameContext.Inventory);
                         break;
 
                     case GlobalChestItem.Type:
-                        OpenInventory(ChestInventory);
+                        OpenInventory(_ChestInventory);
                         break;
 
                     case BlastCore.Type:
@@ -924,18 +1018,20 @@ namespace TestMinecraftServerApplication
             }
 
             AddAdditionalHealth(PhoenixFeather.AdditionalHearts);
-            SetMovementSpeed(PhoenixFeather.MovementSpeed);
+            SetMovementSpeed(PhoenixFeather.MovementSpeedIncrease);
 
             EmitParticles(Particle.Lava, 0.8, 1_000);
 
-            _speedup_running = true;
-            _speedup_duration = PhoenixFeather.MovementSpeedDuration;
-            _speedup_startTime = Time.Now();
+            //_speedup_running = true;
+            //_speedup_duration = PhoenixFeather.MovementSpeedDuration;
+            //_speedup_startTime = Time.Now();
 
-            world.PlaySound("block.anvil.land", 4, Position, 1.0, 2.0);
+            throw new System.NotImplementedException();
 
-            PhoenixFeather.CanPurchase = true;
-            ShopInventory.ResetPhoenixFeatherSlot(null);
+            //world.PlaySound("block.anvil.land", 4, Position, 1.0, 2.0);
+
+            //PhoenixFeather.CanPurchase = true;
+            //_ShopInventory.ResetPhoenixFeatherSlot(null);
 
             return true;
         }
@@ -1015,7 +1111,9 @@ namespace TestMinecraftServerApplication
                 if (disposing == true)
                 {
                     // Dispose managed resources.
-
+                    _LockerSkills.Dispose();
+                    _RunningSkillNodeNames.Dispose();
+                    _SkillQueue.Dispose();
                 }
 
                 // Call the appropriate methods to clean up

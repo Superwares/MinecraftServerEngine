@@ -16,7 +16,7 @@ namespace TestMinecraftServerApplication.Items
         public const Particle EmitParticle = Particle.Flame;
 
         public const double AdditionalHearts = 23.0;
-        public const double MovementSpeed = LivingEntity.DefaultMovementSpeed + 0.1;
+        public const double MovementSpeedIncrease = 0.1;
         public readonly static Time MovementSpeedDuration = Time.FromSeconds(5);
 
         public const int PurchasePrice = 190;
@@ -28,7 +28,7 @@ namespace TestMinecraftServerApplication.Items
             [
                 $"Tier            {Tier.ToString()}",  // Quality Tier
                 $"+Hearts         {AdditionalHearts}",
-                $"+Speed          {MovementSpeed}/{(double)MovementSpeedDuration.Amount/(double)Time.FromSeconds(1).Amount}s",
+                $"+Speed          {MovementSpeedIncrease}/{(double)MovementSpeedDuration.Amount/(double)Time.FromSeconds(1).Amount}s",
             ]);
 
         public static readonly int DefaultCount = MinecraftServerEngine.Items.Item.MinCount;
