@@ -845,6 +845,10 @@ namespace TestMinecraftServerApplication
                             breaked = HandleDoombringerAttack(world, attackCharge);
                             break;
 
+                        case StoneOfSwiftness.Type:
+                            UseStoneOfSwiftness(world);
+                            break;
+
                         case Dash.Type:
                             UseDash(world);
                             break;
