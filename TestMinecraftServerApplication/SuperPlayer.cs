@@ -781,20 +781,7 @@ namespace TestMinecraftServerApplication
 
             if (_world is SuperWorld world)
             {
-                Vector eyeOrigin = GetEyeOrigin();
-                Vector d = Look.GetUnitVector();
-                Vector scaled_d = d * GetEyeHeight();
-
-                PhysicsObject obj = world.SearchClosestObject(eyeOrigin, scaled_d, this);
-
-                if (obj is ItemEntity itemEntity)
-                {
-                    itemEntity.PickUp(this);
-                }
-                else
-                {
-                    HandleDefaultAttack(world, attackCharge);
-                }
+                HandleDefaultAttack(world, attackCharge);
 
             }
         }
@@ -810,61 +797,47 @@ namespace TestMinecraftServerApplication
 
             if (_world is SuperWorld world)
             {
+                bool breaked = false;
 
-                Vector eyeOrigin = GetEyeOrigin();
-                Vector d = Look.GetUnitVector();
-                Vector scaled_d = d * GetEyeHeight();
-
-                PhysicsObject obj = world.SearchClosestObject(eyeOrigin, scaled_d, this);
-
-                if (obj is ItemEntity itemEntity)
+                switch (itemStack.Type)
                 {
-                    itemEntity.PickUp(this);
+                    default:
+                        HandleDefaultAttack(world, attackCharge);
+                        breaked = true;
+                        break;
+                    case WoodenSword.Type:
+                        breaked = HandleWoodenSwordAttack(world, attackCharge);
+                        break;
+                    case BalloonBasher.Type:
+                        breaked = HandleBalloonBasherAttack(world, attackCharge);
+                        break;
+
+                    case BlastCore.Type:
+                        UseBlastCore(world);
+                        break;
+                    case Doombringer.Type:
+                        breaked = HandleDoombringerAttack(world, attackCharge);
+                        break;
+
+                    case StoneOfSwiftness.Type:
+                        UseStoneOfSwiftness(world);
+                        break;
+
+                    case Dash.Type:
+                        UseDash(world);
+                        break;
+                    case Hint.Type:
+                        UseHint(world);
+                        break;
+
+                    case ChaosSwap.Type:
+                        UseChaosSwap(world);
+                        break;
                 }
-                else
+
+                if (breaked == true)
                 {
-                    bool breaked = false;
-
-                    switch (itemStack.Type)
-                    {
-                        default:
-                            HandleDefaultAttack(world, attackCharge);
-                            breaked = true;
-                            break;
-                        case WoodenSword.Type:
-                            breaked = HandleWoodenSwordAttack(world, attackCharge);
-                            break;
-                        case BalloonBasher.Type:
-                            breaked = HandleBalloonBasherAttack(world, attackCharge);
-                            break;
-
-                        case BlastCore.Type:
-                            UseBlastCore(world);
-                            break;
-                        case Doombringer.Type:
-                            breaked = HandleDoombringerAttack(world, attackCharge);
-                            break;
-
-                        case StoneOfSwiftness.Type:
-                            UseStoneOfSwiftness(world);
-                            break;
-
-                        case Dash.Type:
-                            UseDash(world);
-                            break;
-                        case Hint.Type:
-                            UseHint(world);
-                            break;
-
-                        case ChaosSwap.Type:
-                            UseChaosSwap(world);
-                            break;
-                    }
-
-                    if (breaked == true)
-                    {
-                        itemStack.Damage(1);
-                    }
+                    itemStack.Damage(1);
                 }
 
             }
@@ -1101,6 +1074,26 @@ namespace TestMinecraftServerApplication
 
             }
 
+
+        }
+
+        protected override void OnPressHandSwapButton(World world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            Vector eyeOrigin = GetEyeOrigin();
+            Vector d = Look.GetUnitVector();
+            Vector scaled_d = d * GetEyeHeight();
+
+            PhysicsObject obj = world.SearchClosestObject(eyeOrigin, scaled_d, this);
+
+            if (obj is ItemEntity itemEntity)
+            {
+                itemEntity.PickUp(this);
+                Animate(EntityAnimation.SwingMainArm);
+            }
 
         }
 

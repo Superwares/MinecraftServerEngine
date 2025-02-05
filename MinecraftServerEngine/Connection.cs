@@ -1042,42 +1042,44 @@ namespace MinecraftServerEngine
                         /*player.ControlStanding(packet.OnGround);*/
                     }
                     break;
-                //case ServerboundPlayingPacket.PlayerDigPacketId:
-                //    throw new UnexpectedPacketException();
-                //{
+                case ServerboundPlayingPacket.PlayerDigPacketId:
+                    {
+                        PlayerDigPacket packet = PlayerDigPacket.Read(buffer);
 
-                //    var packet = PlayerDigPacket.Read(buffer);
+                        //MyConsole.Debug("PlayerDigPacket!");
+                        //MyConsole.Debug($"\tStatus: {packet.Status}");
+                        switch (packet.Status)
+                        {
+                            default:
+                                break;
+                            case 0:  // Started digging
+                                if (_startDigging == true)
+                                {
+                                    throw new UnexpectedValueException("PlayerDigPacket.Status");
+                                }
 
-                //    Console.Printl("PlayerDigPacket!");
-                //    Console.Printl($"\tStatus: {packet.Status}");
-                //    switch (packet.Status)
-                //    {
-                //        default:
-                //            throw new System.NotImplementedException();
-                //        case 0:  // Started digging
-                //            if (_startDigging)
-                //            {
-                //                throw new UnexpectedValueException("PlayerDigPacket.Status");
-                //            }
+                                _startDigging = true;
+                                System.Diagnostics.Debug.Assert(!_attackWhenDigging);
+                                break;
+                            case 1:  // Cancelled digging
 
-                //            _startDigging = true;
-                //            System.Diagnostics.Debug.Assert(!_attackWhenDigging);
-                //            break;
-                //        case 1:  // Cancelled digging
+                                _startDigging = false;
+                                _attackWhenDigging = false;
+                                break;
+                            case 2:  // Finished digging
 
-                //            _startDigging = false;
-                //            _attackWhenDigging = false;
-                //            break;
-                //        case 2:  // Finished digging
+                                // TODO: Send Block Change Packet, 0x0B.
 
-                //            // TODO: Send Block Change Packet, 0x0B.
-
-                //            _startDigging = false;
-                //            _attackWhenDigging = false;
-                //            break;
-                //    }
-                //}
-                //break;
+                                _startDigging = false;
+                                _attackWhenDigging = false;
+                                break;
+                            case 6:
+                                System.Diagnostics.Debug.Assert(player != null);
+                                player.OnPressHandSwapButton(world);
+                                break;
+                        }
+                    }
+                    break;
                 case ServerboundPlayingPacket.EntityActionPacketId:
                     {
                         EntityActionPacket packet = EntityActionPacket.Read(buffer);

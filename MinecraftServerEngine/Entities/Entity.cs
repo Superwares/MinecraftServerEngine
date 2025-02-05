@@ -816,6 +816,13 @@ namespace MinecraftServerEngine.Entities
             _fakeBlockApplied = true;
             _fakeBlock = block;
         }
+        
+        protected internal virtual void OnPressHandSwapButton(World world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+        }
 
         internal override void Flush(PhysicsWorld _world)
         {
