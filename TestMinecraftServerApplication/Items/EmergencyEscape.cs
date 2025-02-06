@@ -2,6 +2,7 @@
 
 using MinecraftServerEngine;
 using MinecraftServerEngine.Items;
+using MinecraftServerEngine.Particles;
 
 namespace TestMinecraftServerApplication.Items
 {

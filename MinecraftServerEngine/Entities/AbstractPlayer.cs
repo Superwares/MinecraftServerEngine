@@ -6,6 +6,7 @@ using MinecraftServerEngine.Inventories;
 using MinecraftServerEngine.Items;
 using MinecraftServerEngine.Renderers;
 using MinecraftServerEngine.Physics;
+using MinecraftServerEngine.Particles;
 
 namespace MinecraftServerEngine.Entities
 {
@@ -16,7 +17,7 @@ namespace MinecraftServerEngine.Entities
 
         public const double HitboxWidth = 0.6D;
 
-        private static Hitbox GetAdventureHitbox(bool sneaking)
+        private static EntityHitbox GetAdventureHitbox(bool sneaking)
         {
             double w = HitboxWidth, h;
             if (sneaking == true)
@@ -28,12 +29,12 @@ namespace MinecraftServerEngine.Entities
                 h = 1.8D;
             }
 
-            return new Hitbox(w, h);
+            return new EntityHitbox(w, h);
         }
 
-        private static Hitbox GetSpectatorHitbox()
+        private static EntityHitbox GetSpectatorHitbox()
         {
-            return Hitbox.Empty;
+            return EntityHitbox.Empty;
         }
 
         public const double DefaultMass = 1.0D;
@@ -103,7 +104,7 @@ namespace MinecraftServerEngine.Entities
         }
 
 
-        private protected override Hitbox GetHitbox()
+        private protected override EntityHitbox GetHitbox()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 

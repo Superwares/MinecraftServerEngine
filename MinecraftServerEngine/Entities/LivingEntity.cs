@@ -105,7 +105,7 @@ namespace MinecraftServerEngine.Entities
             System.Guid uniqueId,
             Vector p, EntityAngles look,
             bool noGravity,
-            Hitbox hitbox,
+            EntityHitbox hitbox,
             double m, double maxStepLevel)
             : base(uniqueId, p, look, noGravity, hitbox, m, maxStepLevel)
         {

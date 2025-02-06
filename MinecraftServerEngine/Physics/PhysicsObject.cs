@@ -6,6 +6,8 @@ using Sync;
 
 namespace MinecraftServerEngine.Physics
 {
+    using BoundingVolumes;
+
     public abstract class PhysicsObject : System.IDisposable
     {
         internal abstract class Movement
@@ -77,33 +79,44 @@ namespace MinecraftServerEngine.Physics
         private bool _disposed = false;
 
 
-        protected Vector _p;
-        public Vector Position => _p;
-
-
         private readonly double _m;
-        public double Mass => _m;
+        public double Mass
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(_m >= 0);
+                return _m;
+            }
+        }
 
         internal readonly Queue<Vector> Forces = new();  // Disposable
+
 
         private Vector _v;
         public Vector Velocity => _v;
 
+
         private BoundingVolume _volume;
-        public BoundingVolume BoundingVolume => _volume;
+        public BoundingVolume BoundingVolume
+        {
+            get
+            {
+                System.Diagnostics.Debug.Assert(_volume != null);
+                return _volume;
+            }
+        }
+
 
         internal readonly Movement _Movement;
 
+
         internal PhysicsObject(
-            Vector p,
             double m, BoundingVolume volume,
             Movement movement)
         {
             System.Diagnostics.Debug.Assert(volume != null);
             System.Diagnostics.Debug.Assert(m > 0.0D);
             System.Diagnostics.Debug.Assert(movement != null);
-
-            _p = p;
 
             _m = m;
 

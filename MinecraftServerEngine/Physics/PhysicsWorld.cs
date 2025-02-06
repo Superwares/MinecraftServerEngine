@@ -7,6 +7,8 @@ using Sync;
 
 namespace MinecraftServerEngine.Physics
 {
+    using BoundingVolumes;
+
     public abstract class PhysicsWorld : System.IDisposable
     {
 
@@ -331,14 +333,19 @@ namespace MinecraftServerEngine.Physics
 
                     //objs.Insert(objInCell);
 
-                    AxisAlignedBoundingBox minAABB = objInCell.BoundingVolume.GetMinBoundingBox();
+                    //AxisAlignedBoundingBox minAABB = objInCell.BoundingVolume.GetMinBoundingBox();
 
                     //minAABB.Move(-1 * origin);
 
-                    if (minAABB.Intersects(o, d) == true)
+                    if (objInCell.BoundingVolume.Intersects(o, d) == true)
                     {
                         objs.Insert(objInCell);
                     }
+
+                    //if (minAABB.Intersects(o, d) == true)
+                    //{
+                    //    objs.Insert(objInCell);
+                    //}
 
                 }
             }
@@ -352,8 +359,10 @@ namespace MinecraftServerEngine.Physics
 
             Grid grid = Grid.Generate(aabb);
 
-            double a = double.PositiveInfinity;
-            PhysicsObject objFound = null;
+            double t_min = double.PositiveInfinity;
+            double t;
+
+            PhysicsObject obj_min = null;
 
             foreach (Cell cell in grid.GetCells())
             {
@@ -364,31 +373,38 @@ namespace MinecraftServerEngine.Physics
 
                 Tree<PhysicsObject> objectsInCell = CellToObjects.Lookup(cell);
                 System.Diagnostics.Debug.Assert(objectsInCell != null);
-                foreach (PhysicsObject objInCell in objectsInCell.GetKeys())
+                foreach (PhysicsObject obj in objectsInCell.GetKeys())
                 {
-                    System.Diagnostics.Debug.Assert(objInCell != null);
-                    if (ReferenceEquals(objInCell, exceptObj) == true)
+                    System.Diagnostics.Debug.Assert(obj != null);
+                    if (ReferenceEquals(obj, exceptObj) == true)
                     {
                         continue;
                     }
 
                     //objs.Insert(objInCell);
 
-                    AxisAlignedBoundingBox minAABB = objInCell.BoundingVolume.GetMinBoundingBox();
+                    //AxisAlignedBoundingBox minAABB = objInCell.BoundingVolume.GetMinBoundingBox();
 
                     //minAABB.Move(-1 * origin);
 
-                    if (
-                        minAABB.Intersects(o, d) == true
-                        && a > Vector.GetLengthSquared(objInCell.Position, o))
+                    t = obj.BoundingVolume.TestIntersection(o, d);
+                    if (t >= 0.0 && t < t_min)
                     {
-                        objFound = objInCell;
+                        t_min = t;
+                        obj_min = obj;
                     }
+
+                    //if (
+                    //    minAABB.Intersects(o, d) == true
+                    //    && a > Vector.GetLengthSquared(objInCell.Position, o))
+                    //{
+                    //    objFound = objInCell;
+                    //}
 
                 }
             }
 
-            return objFound;
+            return obj_min;
         }
 
         private void InsertObjectToCell(Cell cell, PhysicsObject obj)

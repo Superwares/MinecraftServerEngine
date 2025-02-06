@@ -3,6 +3,7 @@
 using MinecraftServerEngine;
 using MinecraftServerEngine.Entities;
 using MinecraftServerEngine.Items;
+using MinecraftServerEngine.Particles;
 
 namespace TestMinecraftServerApplication.Items
 {

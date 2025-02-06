@@ -6,6 +6,7 @@ using MinecraftServerEngine.Protocols;
 using MinecraftServerEngine.Blocks;
 using MinecraftServerEngine.Items;
 using MinecraftServerEngine.Physics;
+using MinecraftServerEngine.Particles;
 
 namespace MinecraftServerEngine.Renderers
 {

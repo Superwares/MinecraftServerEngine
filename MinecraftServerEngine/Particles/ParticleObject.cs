@@ -5,7 +5,7 @@ using Containers;
 using MinecraftServerEngine.Renderers;
 using MinecraftServerEngine.Physics;
 
-namespace MinecraftServerEngine.Entities
+namespace MinecraftServerEngine.Particles
 {
     public abstract class ParticleObject : PhysicsObject
     {

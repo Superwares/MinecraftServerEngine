@@ -8,7 +8,7 @@ namespace MinecraftServerEngine.Entities
 {
     public sealed class ItemEntity : Entity
     {
-        private static readonly Hitbox DefaultHitbox = new(0.25D, 0.25D);
+        private static readonly EntityHitbox DefaultHitbox = new(0.25D, 0.25D);
         public const double DefaultMass = 1.0D;
         public const double DefaultMaxStepLevel = 0.0D;
 
@@ -36,7 +36,7 @@ namespace MinecraftServerEngine.Entities
             Dispose(false);
         }
 
-        private protected override Hitbox GetHitbox()
+        private protected override EntityHitbox GetHitbox()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 

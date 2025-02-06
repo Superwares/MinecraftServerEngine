@@ -6,68 +6,27 @@ using Containers;
 using MinecraftServerEngine.Blocks;
 using MinecraftServerEngine.Renderers;
 using MinecraftServerEngine.Physics;
+using MinecraftServerEngine.Particles;
 
 namespace MinecraftServerEngine.Entities
 {
 
     public abstract class Entity : PhysicsObject
     {
-        private protected readonly struct Hitbox : System.IEquatable<Hitbox>
-        {
-            internal static Hitbox Empty = new(0.0D, 0.0D);
-
-            private readonly double Width, Height;
-            /*public readonly double EyeHeight, MaxStepHeight;*/
-
-            internal Hitbox(double w, double h)
-            {
-                System.Diagnostics.Debug.Assert(w >= 0.0D);
-                System.Diagnostics.Debug.Assert(h >= 0.0D);
-
-                Width = w;
-                Height = h;
-            }
-
-            internal readonly BoundingVolume Convert(Vector p)
-            {
-                if (Width == 0.0D || Height == 0.0D)
-                {
-                    System.Diagnostics.Debug.Assert(Width == 0.0D);
-                    System.Diagnostics.Debug.Assert(Height == 0.0D);
-
-                    return new EmptyBoundingVolume(p);
-                }
-
-                System.Diagnostics.Debug.Assert(Width > 0.0D);
-                System.Diagnostics.Debug.Assert(Height > 0.0D);
-
-                double w = Width / 2.0D;
-
-                Vector max = new(p.X + w, p.Y + Height, p.Z + w),
-                       min = new(p.X - w, p.Y, p.Z - w);
-                return new AxisAlignedBoundingBox(max, min);
-            }
-
-            public readonly override string ToString()
-            {
-                throw new System.NotImplementedException();
-            }
-
-            public readonly bool Equals(Hitbox other)
-            {
-                throw new System.NotImplementedException();
-            }
-        }
-
         private bool _disposed = false;
 
 
         public readonly int Id;
         public readonly System.Guid UniqueId;
 
+
         private bool _hasMovement = false;
 
         internal readonly ConcurrentTree<EntityRenderer> Renderers = new();  // Disposable
+
+
+        protected Vector _p;
+        public Vector Position => _p;
 
 
         private readonly Locker LockerRotate = new();
@@ -98,12 +57,14 @@ namespace MinecraftServerEngine.Entities
             System.Guid uniqueId,
             Vector p, EntityAngles look,
             bool noGravity,
-            Hitbox hitbox,
+            EntityHitbox hitbox,
             double mass, double maxStepHeight)
-            : base(p, mass, hitbox.Convert(p), new StepableMovement(maxStepHeight))
+            : base(mass, hitbox.Convert(p), new StepableMovement(maxStepHeight))
         {
             Id = EntityIdAllocator.Allocate();
             UniqueId = uniqueId;
+
+            _p = p;
 
             System.Diagnostics.Debug.Assert(!_rotated);
             _look = look;
@@ -121,7 +82,7 @@ namespace MinecraftServerEngine.Entities
             Dispose(false);
         }
 
-        private protected abstract Hitbox GetHitbox();
+        private protected abstract EntityHitbox GetHitbox();
 
         private protected abstract void RenderSpawning(EntityRenderer renderer);
 
@@ -172,7 +133,7 @@ namespace MinecraftServerEngine.Entities
 
         protected override (BoundingVolume, bool noGravity) GetCurrentStatus()
         {
-            Hitbox hitbox = GetHitbox();
+            EntityHitbox hitbox = GetHitbox();
 
             Forces.Enqueue(
                 -1.0D *

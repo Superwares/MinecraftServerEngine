@@ -12,6 +12,20 @@ namespace MinecraftServerEngine.Physics
             return (max1 < min2 || max2 < min1);
         }
 
+        public static double TestNonOverlappingRanges(
+            double max1, double min1, double max2, double min2)
+        {
+            System.Diagnostics.Debug.Assert(max1 > min1);
+            System.Diagnostics.Debug.Assert(max2 > min2);
+
+            if (max1 < min2 || max2 < min1)
+            {
+                return -1;
+            }
+
+            throw new System.NotImplementedException();
+        }
+
         // returns collided, updated.
         public static (bool, bool) FindCollisionInterval1(
             double max1, double min1,

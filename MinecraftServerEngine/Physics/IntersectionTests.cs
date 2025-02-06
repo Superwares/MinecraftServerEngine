@@ -4,26 +4,62 @@ using Common;
 
 namespace MinecraftServerEngine.Physics
 {
+    using BoundingVolumes;
+
     internal static class IntersectionTests
     {
 
         public static bool TestFixedAndFixed(
-            AxisAlignedBoundingBox aabb1, AxisAlignedBoundingBox aabb2)
+            AxisAlignedBoundingBox aabb0, AxisAlignedBoundingBox aabb1)
         {
-            return !Equations.IsNonOverlappingRanges(
-                    aabb1.Max.X, aabb1.Min.X, aabb2.Max.X, aabb2.Min.X) &&
-                !Equations.IsNonOverlappingRanges(
-                    aabb1.Max.Y, aabb1.Min.Y, aabb2.Max.Y, aabb2.Min.Y) &&
-                !Equations.IsNonOverlappingRanges(
-                    aabb1.Max.Z, aabb1.Min.Z, aabb2.Max.Z, aabb2.Min.Z);
+            System.Diagnostics.Debug.Assert(aabb0 != null);
+            System.Diagnostics.Debug.Assert(aabb1 != null);
+
+            return Equations.IsNonOverlappingRanges(
+                    aabb0.MaxVector.X, aabb0.MinVector.X, 
+                    aabb1.MaxVector.X, aabb1.MinVector.X) == false
+                && Equations.IsNonOverlappingRanges(
+                    aabb0.MaxVector.Y, aabb0.MinVector.Y, 
+                    aabb1.MaxVector.Y, aabb1.MinVector.Y) == false
+                && Equations.IsNonOverlappingRanges(
+                    aabb0.MaxVector.Z, aabb0.MinVector.Z, 
+                    aabb1.MaxVector.Z, aabb1.MinVector.Z) == false;
+        }
+
+        public static bool TestFixedAndFixed(
+            AxisAlignedBoundingBox aabb, OrientedBoundingBox obb)
+        {
+            System.Diagnostics.Debug.Assert(aabb != null);
+            System.Diagnostics.Debug.Assert(obb != null);
+
+        }
+
+        public static bool TestFixedAndFixed(
+            OrientedBoundingBox obb, AxisAlignedBoundingBox aabb)
+        {
+            System.Diagnostics.Debug.Assert(obb != null);
+            System.Diagnostics.Debug.Assert(aabb != null);
+
+            return TestFixedAndFixed(aabb, obb);
+        }
+
+        public static bool TestFixedAndFixed(
+            OrientedBoundingBox obb0, OrientedBoundingBox obb1)
+        {
+            System.Diagnostics.Debug.Assert(obb0 != null);
+            System.Diagnostics.Debug.Assert(obb1 != null);
+
         }
 
         public static bool TestFixedAndFixed(
             AxisAlignedBoundingBox aabb, CompoundBoundingVolume cbv)
         {
+            System.Diagnostics.Debug.Assert(aabb != null);
+            System.Diagnostics.Debug.Assert(cbv != null);
+
             foreach (BoundingVolume volume in cbv.Volumes)
             {
-                if (volume.TestIntersection(aabb))
+                if (volume.TestIntersection(aabb) == true)
                 {
                     return true;
                 }
@@ -35,15 +71,21 @@ namespace MinecraftServerEngine.Physics
         public static bool TestFixedAndFixed(
             CompoundBoundingVolume cbv, AxisAlignedBoundingBox aabb)
         {
+            System.Diagnostics.Debug.Assert(cbv != null);
+            System.Diagnostics.Debug.Assert(aabb != null);
+
             return TestFixedAndFixed(aabb, cbv);
         }
 
         public static bool TestFixedAndFixed(
-            CompoundBoundingVolume cbv1, CompoundBoundingVolume cbv2)
+            CompoundBoundingVolume cbv0, CompoundBoundingVolume cbv1)
         {
-            foreach (BoundingVolume volume in cbv1.Volumes)
+            System.Diagnostics.Debug.Assert(cbv0 != null);
+            System.Diagnostics.Debug.Assert(cbv1 != null);
+
+            foreach (BoundingVolume volume in cbv0.Volumes)
             {
-                if (volume.TestIntersection(cbv2))
+                if (volume.TestIntersection(cbv1) == true)
                 {
                     return true;
                 }
@@ -64,16 +106,16 @@ namespace MinecraftServerEngine.Physics
             double t = 0.0D, tPrime = 1.0D;
 
             return Equations.F1(
-                    aabb1.Max.X, aabb1.Min.X, 
-                    aabb2.Max.X, aabb2.Min.X, v.X,
+                    aabb1.MaxVector.X, aabb1.MinVector.X, 
+                    aabb2.MaxVector.X, aabb2.MinVector.X, v.X,
                     ref t, ref tPrime) &&
                 Equations.F1(
-                    aabb1.Max.Y, aabb1.Min.Y, 
-                    aabb2.Max.Y, aabb2.Min.Y, v.Y,
+                    aabb1.MaxVector.Y, aabb1.MinVector.Y, 
+                    aabb2.MaxVector.Y, aabb2.MinVector.Y, v.Y,
                     ref t, ref tPrime) && 
                 Equations.F1(
-                    aabb1.Max.Z, aabb1.Min.Z, 
-                    aabb2.Max.Z, aabb2.Min.Z, v.Z,
+                    aabb1.MaxVector.Z, aabb1.MinVector.Z, 
+                    aabb2.MaxVector.Z, aabb2.MinVector.Z, v.Z,
                     ref t, ref tPrime);
         }
 

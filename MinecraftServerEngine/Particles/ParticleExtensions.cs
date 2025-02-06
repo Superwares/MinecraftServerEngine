@@ -1,4 +1,4 @@
-﻿namespace MinecraftServerEngine
+﻿namespace MinecraftServerEngine.Particles
 {
     using Physics;
 

@@ -15,6 +15,7 @@ using TestMinecraftServerApplication.SkillProgressNodes;
 namespace TestMinecraftServerApplication
 {
     using Items;
+    using MinecraftServerEngine.Particles;
 
     public sealed class SuperPlayer : AbstractPlayer
     {

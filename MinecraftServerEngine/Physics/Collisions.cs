@@ -2,6 +2,8 @@
 
 namespace MinecraftServerEngine.Physics
 {
+    using BoundingVolumes;
+
     internal static class Collisions
     {
         // returns axis, t
@@ -12,9 +14,9 @@ namespace MinecraftServerEngine.Physics
             System.Diagnostics.Debug.Assert(aabb1 != null);
             System.Diagnostics.Debug.Assert(aabb2 != null);
 
-            if ((aabb2.Min.X < aabb1.Max.X && aabb1.Min.X < aabb2.Max.X) &&
-                (aabb2.Min.Y < aabb1.Max.Y && aabb1.Min.Y < aabb2.Max.Y) &&
-                (aabb2.Min.Z < aabb1.Max.Z && aabb1.Min.Z < aabb2.Max.Z))
+            if ((aabb2.MinVector.X < aabb1.MaxVector.X && aabb1.MinVector.X < aabb2.MaxVector.X) &&
+                (aabb2.MinVector.Y < aabb1.MaxVector.Y && aabb1.MinVector.Y < aabb2.MaxVector.Y) &&
+                (aabb2.MinVector.Z < aabb1.MaxVector.Z && aabb1.MinVector.Z < aabb2.MaxVector.Z))
             {
                 return (-1, 0.0D);
             }
@@ -26,8 +28,8 @@ namespace MinecraftServerEngine.Physics
             bool collided, updated;
 
             (collided, updated) = Equations.FindCollisionInterval1(
-                aabb1.Max.Y, aabb1.Min.Y,
-                aabb2.Max.Y, aabb2.Min.Y, v.Y,
+                aabb1.MaxVector.Y, aabb1.MinVector.Y,
+                aabb2.MaxVector.Y, aabb2.MinVector.Y, v.Y,
                 ref t, ref tPrime);
             if (!collided)
             {
@@ -42,8 +44,8 @@ namespace MinecraftServerEngine.Physics
             }
 
             (collided, updated) = Equations.FindCollisionInterval1(
-                aabb1.Max.X, aabb1.Min.X,
-                aabb2.Max.X, aabb2.Min.X, v.X,
+                aabb1.MaxVector.X, aabb1.MinVector.X,
+                aabb2.MaxVector.X, aabb2.MinVector.X, v.X,
                 ref t, ref tPrime);
             if (!collided)
             {
@@ -58,8 +60,8 @@ namespace MinecraftServerEngine.Physics
             }
 
             (collided, updated) = Equations.FindCollisionInterval1(
-                aabb1.Max.Z, aabb1.Min.Z,
-                aabb2.Max.Z, aabb2.Min.Z, v.Z,
+                aabb1.MaxVector.Z, aabb1.MinVector.Z,
+                aabb2.MaxVector.Z, aabb2.MinVector.Z, v.Z,
                 ref t, ref tPrime);
             if (!collided)
             {

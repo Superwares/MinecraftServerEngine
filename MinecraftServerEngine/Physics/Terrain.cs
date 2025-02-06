@@ -4,6 +4,8 @@ using Containers;
 
 namespace MinecraftServerEngine.Physics
 {
+    using BoundingVolumes;
+
     public abstract class Terrain : System.IDisposable
     {
     

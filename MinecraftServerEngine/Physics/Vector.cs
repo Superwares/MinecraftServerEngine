@@ -54,33 +54,37 @@ namespace MinecraftServerEngine.Physics
             return new(s / v.X, s / v.Y, s / v.Z);
         }
 
-        public static double GetLengthSquared(Vector v1, Vector v2)
+        public static void Rotate(Angles angles, Vector[] vectors)
         {
-            double dx = v1.X - v2.X,
-                   dy = v1.Y - v2.Y,
-                   dz = v1.Z - v2.Z;
-            return (dx * dx) + (dy * dy) + (dz * dz);
-        }
+            // Calculate the rotation matrix from the angles
+            double cosRoll = System.Math.Cos(angles.Roll);
+            double sinRoll = System.Math.Sin(angles.Roll);
+            double cosPitch = System.Math.Cos(angles.Pitch);
+            double sinPitch = System.Math.Sin(angles.Pitch);
+            double cosYaw = System.Math.Cos(angles.Yaw);
+            double sinYaw = System.Math.Sin(angles.Yaw);
 
-        public static double GetLength(Vector v1, Vector v2)
-        {
-            double s = GetLengthSquared(v1, v2);
-            return Math.Sqrt(s);
-        }
+            // Rotation matrix components
+            double m11 = cosYaw * cosPitch;
+            double m12 = cosYaw * sinPitch * sinRoll - sinYaw * cosRoll;
+            double m13 = cosYaw * sinPitch * cosRoll + sinYaw * sinRoll;
 
-        public static bool TryParse(string _x, string _y, string _z, out Vector v)
-        {
-            if (
-                double.TryParse(_x, out double x) == false ||
-                double.TryParse(_y, out double y) == false ||
-                double.TryParse(_z, out double z) == false)
+            double m21 = sinYaw * cosPitch;
+            double m22 = sinYaw * sinPitch * sinRoll + cosYaw * cosRoll;
+            double m23 = sinYaw * sinPitch * cosRoll - cosYaw * sinRoll;
+
+            double m31 = -sinPitch;
+            double m32 = cosPitch * sinRoll;
+            double m33 = cosPitch * cosRoll;
+
+            for (int i = 0; i < vectors.Length; ++i)
             {
-                v = Zero;
-                return false;
+                vectors[i] = new Vector(
+                    (vectors[i].X * m11) + (vectors[i].Y * m12) + (vectors[i].Z * m13),
+                    (vectors[i].X * m21) + (vectors[i].Y * m22) + (vectors[i].Z * m23),
+                    (vectors[i].X * m31) + (vectors[i].Y * m32) + (vectors[i].Z * m33)
+                );
             }
-
-            v = new Vector(x, y, z);
-            return true;
         }
 
         public Vector(double x, double y, double z)
@@ -97,6 +101,25 @@ namespace MinecraftServerEngine.Physics
         {
             double s = GetLengthSquared();
             return Math.Sqrt(s);
+        }
+
+        public static double GetLengthSquared(Vector v1, Vector v2)
+        {
+            double dx = v1.X - v2.X,
+                   dy = v1.Y - v2.Y,
+                   dz = v1.Z - v2.Z;
+            return (dx * dx) + (dy * dy) + (dz * dz);
+        }
+
+        public static double GetLength(Vector v1, Vector v2)
+        {
+            double s = GetLengthSquared(v1, v2);
+            return Math.Sqrt(s);
+        }
+
+        public Vector Abs()
+        {
+            return new Vector(Math.Abs(X), Math.Abs(Y), Math.Abs(Z));
         }
 
         /// <summary>
@@ -153,6 +176,21 @@ namespace MinecraftServerEngine.Physics
             }
 
             return new Vector(x, y, z);
+        }
+
+        public static bool TryParse(string _x, string _y, string _z, out Vector v)
+        {
+            if (
+                double.TryParse(_x, out double x) == false ||
+                double.TryParse(_y, out double y) == false ||
+                double.TryParse(_z, out double z) == false)
+            {
+                v = Zero;
+                return false;
+            }
+
+            v = new Vector(x, y, z);
+            return true;
         }
 
         public override readonly string ToString()
