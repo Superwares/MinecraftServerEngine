@@ -4,10 +4,14 @@ namespace MinecraftServerEngine.Physics
 {
     public readonly struct Vector : System.IEquatable<Vector>
     {
+        public const int Dimension = 3;
+
 
         public static readonly Vector Zero = new(0.0D, 0.0D, 0.0D);
 
+
         public readonly double X, Y, Z;
+
 
         public static bool operator !=(Vector v1, Vector v2)
         {
@@ -87,6 +91,51 @@ namespace MinecraftServerEngine.Physics
             }
         }
 
+        public static Vector Rotate(Angles angles, Vector vector)
+        {
+            // Calculate the rotation matrix from the angles
+            double cosRoll = System.Math.Cos(angles.Roll);
+            double sinRoll = System.Math.Sin(angles.Roll);
+            double cosPitch = System.Math.Cos(angles.Pitch);
+            double sinPitch = System.Math.Sin(angles.Pitch);
+            double cosYaw = System.Math.Cos(angles.Yaw);
+            double sinYaw = System.Math.Sin(angles.Yaw);
+
+            // Rotation matrix components
+            double m11 = cosYaw * cosPitch;
+            double m12 = cosYaw * sinPitch * sinRoll - sinYaw * cosRoll;
+            double m13 = cosYaw * sinPitch * cosRoll + sinYaw * sinRoll;
+
+            double m21 = sinYaw * cosPitch;
+            double m22 = sinYaw * sinPitch * sinRoll + cosYaw * cosRoll;
+            double m23 = sinYaw * sinPitch * cosRoll - cosYaw * sinRoll;
+
+            double m31 = -sinPitch;
+            double m32 = cosPitch * sinRoll;
+            double m33 = cosPitch * cosRoll;
+
+            return new Vector(
+                (vector.X * m11) + (vector.Y * m12) + (vector.Z * m13),
+                (vector.X * m21) + (vector.Y * m22) + (vector.Z * m23),
+                (vector.X * m31) + (vector.Y * m32) + (vector.Z * m33)
+            );
+        }
+    
+        public static Vector CrossProduct(Vector v1, Vector v2)
+        {
+            return new Vector(
+                (v1.Y * v2.Z) - (v1.Z * v2.Y),
+                (v1.Z * v2.X) - (v1.X * v2.Z),
+                (v1.X * v2.Y) - (v1.Y * v2.X)
+            );
+        }
+
+        public static double DotProduct(Vector v1, Vector v2)
+        {
+            return (v1.X * v2.X) + (v1.Y * v2.Y) + (v1.Z * v2.Z);
+        }
+
+
         public Vector(double x, double y, double z)
         {
             X = x; Y = y; Z = z;
@@ -120,6 +169,21 @@ namespace MinecraftServerEngine.Physics
         public Vector Abs()
         {
             return new Vector(Math.Abs(X), Math.Abs(Y), Math.Abs(Z));
+        }
+
+        public Vector Rotate(Angles angles)
+        {
+            return Vector.Rotate(angles, this);
+        }
+
+        public Vector CrossProduct(Vector other)
+        {
+            return Vector.CrossProduct(this, other);
+        }
+
+        public double DotProduct(Vector other)
+        {
+            return Vector.DotProduct(this, other);
         }
 
         /// <summary>

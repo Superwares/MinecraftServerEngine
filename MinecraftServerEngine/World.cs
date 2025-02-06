@@ -10,7 +10,8 @@ namespace MinecraftServerEngine
     using Entities;
     using Renderers;
     using Physics;
-    using MinecraftServerEngine.ProgressBars;
+    using Physics.BoundingVolumes;
+    using ProgressBars;
 
     public abstract class World : PhysicsWorld
     {

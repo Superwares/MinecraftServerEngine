@@ -4,6 +4,8 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
 {
     public sealed class AxisAlignedBoundingBox : BoundingVolume
     {
+        private const int _VertexCount = 8;
+
         //internal static AxisAlignedBoundingBox Generate(Vector p, double r)
         //{
         //    System.Diagnostics.Debug.Assert(r > 0.0D);
@@ -12,6 +14,18 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
         //        min = new(p.X - r, p.Y - r, p.Z - r);
         //    return new AxisAlignedBoundingBox(max, min);
         //}
+
+        public readonly static Vector[] Axes = [new(1.0, 0.0, 0.0), new(0.0, 1.0, 0.0), new(0.0, 0.0, 1.0)];
+
+        
+
+        private Vector _max, _min;
+        public Vector MaxVector => _max;
+        public Vector MinVector => _min;
+
+
+        internal readonly Vector[] Vertices = new Vector[_VertexCount];
+
 
         public static AxisAlignedBoundingBox Generate(Vector p, Vector d)
         {
@@ -50,10 +64,23 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
             return new AxisAlignedBoundingBox(max, min);
         }
 
+        private static void FindVertices(Vector[] vertices, Vector max, Vector min)
+        {
+            System.Diagnostics.Debug.Assert(vertices.Length == _VertexCount);
 
-        private Vector _max, _min;
-        public Vector MaxVector => _max;
-        public Vector MinVector => _min;
+            System.Diagnostics.Debug.Assert(max.X >= min.X);
+            System.Diagnostics.Debug.Assert(max.Y >= min.Y);
+            System.Diagnostics.Debug.Assert(max.Z >= min.Z);
+
+            vertices[0] = min;
+            vertices[1] = new Vector(max.X, min.Y, min.Z);
+            vertices[2] = new Vector(min.X, max.Y, min.Z);
+            vertices[3] = new Vector(max.X, max.Y, min.Z);
+            vertices[4] = new Vector(min.X, min.Y, max.Z);
+            vertices[5] = new Vector(max.X, min.Y, max.Z);
+            vertices[6] = new Vector(min.X, max.Y, max.Z);
+            vertices[7] = max;
+        }
 
         internal AxisAlignedBoundingBox(Vector max, Vector min)
         {
@@ -63,6 +90,8 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
 
             _max = max;
             _min = min;
+
+            FindVertices(Vertices, _max, _min);
         }
 
 
@@ -150,6 +179,8 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
             System.Diagnostics.Debug.Assert(MaxVector.X >= MinVector.X);
             System.Diagnostics.Debug.Assert(MaxVector.Y >= MinVector.Y);
             System.Diagnostics.Debug.Assert(MaxVector.Z >= MinVector.Z);
+
+            FindVertices(Vertices, _max, _min);
         }
 
         internal override void Move(Vector v)
@@ -159,12 +190,16 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
             System.Diagnostics.Debug.Assert(MaxVector.Z >= MinVector.Z);
 
             _max = _max + v; _min = _min + v;
+
+            FindVertices(Vertices, _max, _min);
         }
 
         internal override void ExtendAndMove(Vector extents, Vector v)
         {
             Extend(extents);
             Move(v);
+
+            FindVertices(Vertices, _max, _min);
         }
 
 

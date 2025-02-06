@@ -1,6 +1,10 @@
-﻿namespace MinecraftServerEngine.Particles
+﻿
+using MinecraftServerEngine.Physics;
+using MinecraftServerEngine.Physics.BoundingVolumes;
+
+namespace MinecraftServerEngine.Particles
 {
-    using Physics;
+    
 
     internal static class ParticleExtensions
     {

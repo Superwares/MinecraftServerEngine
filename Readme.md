@@ -141,7 +141,7 @@ If disposable objects were used as members of class and struct, they must be dis
 
 - 아이템 구매하면 핫바로 가도록.
 
-- turn off debug console print...
+- turn off debug console print when releasing.
 
 - Move objects task 도 Ensure one tick 을 풀수 있는지 검토하기...
 
@@ -159,6 +159,9 @@ If disposable objects were used as members of class and struct, they must be dis
 - queue 에 배열을 넣으면 그대로 enqueue 되도록.
 
 - data sturucture 의 Count -> Length
+
+- entity relative move 의 최대값을 넘어갈때 teleport 해야됨.
+	- 첫 접속시 월드가 로드가 안되어서 아래로 떨어지다가 다시 월드가 로드되고 위로 올라올때 relative move 의 최대값을 넘어갑니다.
 
 ### Done 
 

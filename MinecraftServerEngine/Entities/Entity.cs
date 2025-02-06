@@ -6,6 +6,7 @@ using Containers;
 using MinecraftServerEngine.Blocks;
 using MinecraftServerEngine.Renderers;
 using MinecraftServerEngine.Physics;
+using MinecraftServerEngine.Physics.BoundingVolumes;
 using MinecraftServerEngine.Particles;
 
 namespace MinecraftServerEngine.Entities

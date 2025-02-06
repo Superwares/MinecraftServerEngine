@@ -32,6 +32,20 @@ namespace MinecraftServerEngine.Physics
             System.Diagnostics.Debug.Assert(aabb != null);
             System.Diagnostics.Debug.Assert(obb != null);
 
+            Vector[] axes = Equations.FindPotentialAxes(AxisAlignedBoundingBox.Axes, obb.Axes);
+
+            foreach (Vector axis in axes)
+            {
+                (double min_aabb, double max_aabb) = Equations.FindAxisInterval(axis, aabb.Vertices);
+                (double min_obb, double max_obb) = Equations.FindAxisInterval(axis, obb.Vertices);
+
+                if (max_aabb < min_obb || min_aabb < max_obb)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public static bool TestFixedAndFixed(
@@ -49,6 +63,20 @@ namespace MinecraftServerEngine.Physics
             System.Diagnostics.Debug.Assert(obb0 != null);
             System.Diagnostics.Debug.Assert(obb1 != null);
 
+            Vector[] axes = Equations.FindPotentialAxes(obb0.Axes, obb1.Axes);
+
+            foreach (Vector axis in axes)
+            {
+                (double min0, double max0) = Equations.FindAxisInterval(axis, obb0.Vertices);
+                (double min1, double max1) = Equations.FindAxisInterval(axis, obb1.Vertices);
+
+                if (max0 < min1 || min0 < max1)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public static bool TestFixedAndFixed(

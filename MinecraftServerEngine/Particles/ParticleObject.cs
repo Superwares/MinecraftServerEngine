@@ -4,6 +4,7 @@ using Containers;
 
 using MinecraftServerEngine.Renderers;
 using MinecraftServerEngine.Physics;
+using MinecraftServerEngine.Physics.BoundingVolumes;
 
 namespace MinecraftServerEngine.Particles
 {
@@ -184,7 +185,7 @@ namespace MinecraftServerEngine.Particles
             Vector p, double r, double m,
             byte red, byte green, byte blue,
             Movement movement)
-            : base(p, m, AxisAlignedBoundingBox.Generate(p, GetMiddleRadius(r)), movement)
+            : base(m, AxisAlignedBoundingBox.Generate(p, GetMiddleRadius(r)), movement)
         {
             System.Diagnostics.Debug.Assert(movement != null);
 

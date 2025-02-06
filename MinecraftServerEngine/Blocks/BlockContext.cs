@@ -6,6 +6,7 @@ using Containers;
 using MinecraftServerEngine.NBT;
 using MinecraftServerEngine.Protocols;
 using MinecraftServerEngine.Physics;
+using MinecraftServerEngine.Physics.BoundingVolumes;
 
 namespace MinecraftServerEngine.Blocks
 {

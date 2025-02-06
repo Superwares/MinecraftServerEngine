@@ -3,7 +3,6 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
 {
     internal sealed class OrientedBoundingBox : BoundingVolume
     {
-        private const int _AxisCount = 3;
         private const int _VertexCount = 8;
         private readonly static double[] _Signs = [-1.0, 1.0];
 
@@ -16,13 +15,13 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
         private Angles _angles;
         public Angles Angles => _angles;
 
-        internal readonly Vector[] Axes = new Vector[_AxisCount];
+        internal readonly Vector[] Axes = new Vector[Vector.Dimension];
         internal readonly Vector[] Vertices = new Vector[_VertexCount];
 
-        private void CalculateCorners(Vector[] vertices, Vector[] axes, Vector extents, Vector c)
+        private static void FindVertices(Vector[] vertices, Vector[] axes, Vector extents, Vector c)
         {
             System.Diagnostics.Debug.Assert(vertices.Length == _VertexCount);
-            System.Diagnostics.Debug.Assert(axes.Length == _AxisCount);
+            System.Diagnostics.Debug.Assert(axes.Length == Vector.Dimension);
 
             System.Diagnostics.Debug.Assert(extents.X > 0.0);
             System.Diagnostics.Debug.Assert(extents.Y > 0.0);
@@ -58,7 +57,7 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
 
             Vector.Rotate(_angles, Axes);
 
-            CalculateCorners(Vertices, Axes, _extents, _center);
+            FindVertices(Vertices, Axes, _extents, _center);
        
         }
 
@@ -89,14 +88,14 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
         {
             _extents += extents.Abs();
 
-            CalculateCorners(Vertices, Axes, _extents, _center);
+            FindVertices(Vertices, Axes, _extents, _center);
         }
 
         internal override void Move(Vector v)
         {
             _center += v;
 
-            CalculateCorners(Vertices, Axes, _extents, _center);
+            FindVertices(Vertices, Axes, _extents, _center);
         }
 
         internal void Rotate(Angles angles)
@@ -110,7 +109,7 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
 
             Vector.Rotate(_angles, Axes);
 
-            CalculateCorners(Vertices, Axes, _extents, _center);
+            FindVertices(Vertices, Axes, _extents, _center);
         }
 
         internal override void ExtendAndMove(Vector extents, Vector v)
@@ -118,7 +117,7 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
             _extents += extents.Abs();
             _center += v;
 
-            CalculateCorners(Vertices, Axes, _extents, _center);
+            FindVertices(Vertices, Axes, _extents, _center);
         }
 
         internal void ExtendAndRotate(Vector extents, Angles angles)
@@ -133,7 +132,7 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
 
             Vector.Rotate(_angles, Axes);
 
-            CalculateCorners(Vertices, Axes, _extents, _center);
+            FindVertices(Vertices, Axes, _extents, _center);
         }
 
         internal void MoveAndRotate(Vector v, Angles angles)
@@ -148,7 +147,7 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
 
             Vector.Rotate(_angles, Axes);
 
-            CalculateCorners(Vertices, Axes, _extents, _center);
+            FindVertices(Vertices, Axes, _extents, _center);
         }
 
         internal void ExtendAndMoveAndRotate(Vector extents, Vector v, Angles angles)
@@ -164,7 +163,7 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
 
             Vector.Rotate(_angles, Axes);
 
-            CalculateCorners(Vertices, Axes, _extents, _center);
+            FindVertices(Vertices, Axes, _extents, _center);
         }
 
         internal override double TestIntersection(Vector o, Vector d)

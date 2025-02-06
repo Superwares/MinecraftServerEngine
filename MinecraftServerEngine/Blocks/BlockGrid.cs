@@ -1,4 +1,5 @@
 ﻿using MinecraftServerEngine.Physics;
+using MinecraftServerEngine.Physics.BoundingVolumes;
 
 namespace MinecraftServerEngine.Blocks
 {
@@ -38,7 +39,7 @@ namespace MinecraftServerEngine.Blocks
         {
             if (volume is AxisAlignedBoundingBox aabb)
             {
-                return BlockGrid.Generate(aabb.Max, aabb.Min);
+                return BlockGrid.Generate(aabb.MaxVector, aabb.MinVector);
             }
             else
             {

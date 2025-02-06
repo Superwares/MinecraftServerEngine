@@ -95,8 +95,8 @@ namespace MinecraftServerEngine.Physics
             {
                 System.Diagnostics.Debug.Assert(aabb != null);
 
-                Cell max = Cell.GenerateForMax(aabb.Max),
-                     min = Cell.GenerateForMin(aabb.Min);
+                Cell max = Cell.GenerateForMax(aabb.MaxVector),
+                     min = Cell.GenerateForMin(aabb.MinVector);
 
                 return new(max, min);
             }
@@ -312,21 +312,23 @@ namespace MinecraftServerEngine.Physics
 
             AxisAlignedBoundingBox aabb = AxisAlignedBoundingBox.Generate(o, d);
 
+            double t;
+
             Grid grid = Grid.Generate(aabb);
 
             foreach (Cell cell in grid.GetCells())
             {
-                if (!CellToObjects.Contains(cell))
+                if (CellToObjects.Contains(cell) == false)
                 {
                     continue;
                 }
 
                 Tree<PhysicsObject> objectsInCell = CellToObjects.Lookup(cell);
                 System.Diagnostics.Debug.Assert(objectsInCell != null);
-                foreach (PhysicsObject objInCell in objectsInCell.GetKeys())
+                foreach (PhysicsObject obj in objectsInCell.GetKeys())
                 {
-                    System.Diagnostics.Debug.Assert(objInCell != null);
-                    if (objs.Contains(objInCell) == true)
+                    System.Diagnostics.Debug.Assert(obj != null);
+                    if (objs.Contains(obj) == true)
                     {
                         continue;
                     }
@@ -337,10 +339,16 @@ namespace MinecraftServerEngine.Physics
 
                     //minAABB.Move(-1 * origin);
 
-                    if (objInCell.BoundingVolume.Intersects(o, d) == true)
+                    t = obj.BoundingVolume.TestIntersection(o, d);
+                    if (t >= 0.0)
                     {
-                        objs.Insert(objInCell);
+                        objs.Insert(obj);
                     }
+
+                    //if (obj.BoundingVolume.Intersects(o, d) == true)
+                    //{
+                    //    objs.Insert(obj);
+                    //}
 
                     //if (minAABB.Intersects(o, d) == true)
                     //{
@@ -366,7 +374,7 @@ namespace MinecraftServerEngine.Physics
 
             foreach (Cell cell in grid.GetCells())
             {
-                if (!CellToObjects.Contains(cell))
+                if (CellToObjects.Contains(cell) == false)
                 {
                     continue;
                 }

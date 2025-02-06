@@ -22,10 +22,7 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
             _p += v;
         }
 
-        internal override bool Intersects(Vector o, Vector d)
-        {
-            return false;
-        }
+        
 
         internal override Vector GetCenter()
         {
@@ -47,12 +44,22 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
             return new(_p, _p);
         }
 
+        internal override double TestIntersection(Vector o, Vector d)
+        {
+            return -1;
+        }
+
         internal override bool TestIntersection(BoundingVolume volume)
         {
             return false;
         }
 
+        internal override void ExtendAndMove(Vector extents, Vector v)
+        {
+            throw new System.NotImplementedException();
+        }
 
+        
     }
 
 }

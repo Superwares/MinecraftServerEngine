@@ -132,7 +132,8 @@ namespace MinecraftServerEngine.Protocols
             when (e.SocketErrorCode == System.Net.Sockets.SocketError.WouldBlock)
             {
                 //throw new TryAgainException();
-                System.Diagnostics.Debug.Assert(size == 1);
+                System.Diagnostics.Debug.Assert(data != null);
+                //System.Diagnostics.Debug.Assert(size == 1);
                 return 0;
             }
             catch (System.Net.Sockets.SocketException e)
@@ -213,7 +214,7 @@ namespace MinecraftServerEngine.Protocols
             {
                 //throw new TryAgainException();
                 System.Diagnostics.Debug.Assert(data != null);
-                System.Diagnostics.Debug.Assert(data.Length == 1);
+                //System.Diagnostics.Debug.Assert(data.Length == 1);
                 return 0;
             }
             catch (System.Net.Sockets.SocketException e)

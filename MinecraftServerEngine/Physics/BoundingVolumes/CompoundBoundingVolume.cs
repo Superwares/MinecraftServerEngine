@@ -12,19 +12,6 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
             Volumes = volumes;
         }
 
-        internal override void Extend(Vector v)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        internal override void Move(Vector v)
-        {
-            throw new System.NotImplementedException();
-        }
-        internal override bool Intersects(Vector o, Vector d)
-        {
-            throw new System.NotImplementedException();
-        }
 
         internal override Vector GetCenter()
         {
@@ -42,6 +29,25 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
         }
 
         public override AxisAlignedBoundingBox GetMinBoundingBox()
+        {
+            throw new System.NotImplementedException();
+        }
+        internal override void Extend(Vector v)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        internal override void Move(Vector v)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        internal override void ExtendAndMove(Vector extents, Vector v)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        internal override double TestIntersection(Vector o, Vector d)
         {
             throw new System.NotImplementedException();
         }
