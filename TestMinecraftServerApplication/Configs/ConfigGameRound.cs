@@ -1,42 +1,76 @@
 ﻿namespace TestMinecraftServerApplication.Configs
 {
-    public interface IConfigGameRound
+
+    internal sealed class ConfigGameRound
     {
-        public int NormalTimeInSeconds { get; }
-        public int BurningTimeInSeconds { get; }
 
-        public int SurvivingCoins { get; }
+        internal readonly int NormalTimeInSeconds;
+        internal readonly int BurningTimeInSeconds;
 
-        public int SeekerWinAdditionalPoints { get; }
-        public int SeekerWinCoins { get; }
-        public int HiderWinAdditionalPoints { get; }
-        public int HiderWinCoins { get; }
-    }
+        internal readonly int SurvivingCoins;
+        
+        internal readonly int SeekerWinAdditionalPoints;
+        internal readonly int SeekerWinCoins;
+        internal readonly int HiderWinAdditionalPoints;
+        internal readonly int HiderWinCoins;
 
-    public class ConfigGameRound : IConfigGameRound
-    {
-        [System.Xml.Serialization.XmlElement("NormalTimeInSeconds")]
-        public int NormalTimeInSeconds { get; set; }
+        internal ConfigGameRound(System.Xml.XmlNode node)
+        {
+            foreach (System.Xml.XmlNode _node in node.ChildNodes)
+            {
+                if (_node.NodeType != System.Xml.XmlNodeType.Element)
+                {
+                    continue;
+                }
 
-        [System.Xml.Serialization.XmlElement("BurningTimeInSeconds")]
-        public int BurningTimeInSeconds { get; set; }
+                switch (_node.Name)
+                {
+                    case nameof(NormalTimeInSeconds):
+                        if (int.TryParse(_node.InnerText, out NormalTimeInSeconds) == false)
+                        {
+                            throw new System.InvalidOperationException($"Invalid integer value for \"{nameof(NormalTimeInSeconds)}\"");
+                        }
+                        break;
+                    case nameof(BurningTimeInSeconds):
+                        if (int.TryParse(_node.InnerText, out BurningTimeInSeconds) == false)
+                        {
+                            throw new System.InvalidOperationException($"Invalid integer value for \"{nameof(BurningTimeInSeconds)}\"");
+                        }
+                        break;
+                    case nameof(SurvivingCoins):
+                        if (int.TryParse(_node.InnerText, out SurvivingCoins) == false)
+                        {
+                            throw new System.InvalidOperationException($"Invalid integer value for \"{nameof(SurvivingCoins)}\"");
+                        }
+                        break;
+                    case nameof(SeekerWinAdditionalPoints):
+                        if (int.TryParse(_node.InnerText, out SeekerWinAdditionalPoints) == false)
+                        {
+                            throw new System.InvalidOperationException($"Invalid integer value for \"{nameof(SeekerWinAdditionalPoints)}\"");
+                        }
+                        break;
+                    case nameof(SeekerWinCoins):
+                        if (int.TryParse(_node.InnerText, out SeekerWinCoins) == false)
+                        {
+                            throw new System.InvalidOperationException($"Invalid integer value for \"{nameof(SeekerWinCoins)}\"");
+                        }
+                        break;
+                    case nameof(HiderWinAdditionalPoints):
+                        if (int.TryParse(_node.InnerText, out HiderWinAdditionalPoints) == false)
+                        {
+                            throw new System.InvalidOperationException($"Invalid integer value for \"{nameof(HiderWinAdditionalPoints)}\"");
+                        }
+                        break;
+                    case nameof(HiderWinCoins):
+                        if (int.TryParse(_node.InnerText, out HiderWinCoins) == false)
+                        {
+                            throw new System.InvalidOperationException($"Invalid integer value for \"{nameof(HiderWinCoins)}\"");
+                        }
+                        break;
+                }
+            }
+        }
 
-
-        [System.Xml.Serialization.XmlElement("SurvivingCoins")]
-        public int SurvivingCoins { get; set; }
-
-
-        [System.Xml.Serialization.XmlElement("SeekerWinAdditionalPoints")]
-        public int SeekerWinAdditionalPoints { get; set; }
-
-        [System.Xml.Serialization.XmlElement("SeekerWinCoins")]
-        public int SeekerWinCoins { get; set; }
-
-        [System.Xml.Serialization.XmlElement("HiderWinAdditionalPoints")]
-        public int HiderWinAdditionalPoints { get; set; }
-
-        [System.Xml.Serialization.XmlElement("HiderWinCoins")]
-        public int HiderWinCoins { get; set; }
     }
 
 }

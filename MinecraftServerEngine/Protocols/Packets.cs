@@ -1269,11 +1269,7 @@
             buffer.WriteByte(WindowId);
             buffer.WriteString(WindowType);
 
-            var data = new
-            {
-                text = WindowTitle,
-            };
-            string jsonString = System.Text.Json.JsonSerializer.Serialize(data);
+            string jsonString = $"{{\"text\":\"{WindowTitle}\"}}";
 
             buffer.WriteString(jsonString);
             buffer.WriteByte(SlotCount);

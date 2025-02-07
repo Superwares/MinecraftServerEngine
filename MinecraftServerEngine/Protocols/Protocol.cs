@@ -806,41 +806,41 @@ namespace MinecraftServerEngine.Protocols
                         System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(inPacket.Username) == false);
                         string username = inPacket.Username;
 
-                        try
-                        {
-                            // TODO: Refactoring
+                        //try
+                        //{
+                        //    // TODO: Refactoring
 
-                            // TODO: Use own http client in common library.
-                            using System.Net.Http.HttpClient httpClient = new();
-                            string url = string.Format(
-                                "https://api.mojang.com/users/profiles/minecraft/{0}",
-                                username);
+                        //    // TODO: Use own http client in common library.
+                        //    using System.Net.Http.HttpClient httpClient = new();
+                        //    string url = string.Format(
+                        //        "https://api.mojang.com/users/profiles/minecraft/{0}",
+                        //        username);
 
-                            using System.Net.Http.HttpRequestMessage request = new(System.Net.Http.HttpMethod.Get, url);
+                        //    using System.Net.Http.HttpRequestMessage request = new(System.Net.Http.HttpMethod.Get, url);
 
-                            // TODO: handle HttpRequestException
-                            using System.Net.Http.HttpResponseMessage response = httpClient.Send(request);
+                        //    // TODO: handle HttpRequestException
+                        //    using System.Net.Http.HttpResponseMessage response = httpClient.Send(request);
 
-                            using System.IO.Stream stream = response.Content.ReadAsStream();
-                            using System.IO.StreamReader reader = new(stream);
-                            string str = reader.ReadToEnd();
-                            System.Collections.Generic.Dictionary<string, string> dictionary = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, string>>(str);
-                            System.Diagnostics.Debug.Assert(dictionary != null);
+                        //    using System.IO.Stream stream = response.Content.ReadAsStream();
+                        //    using System.IO.StreamReader reader = new(stream);
+                        //    string str = reader.ReadToEnd();
+                        //    System.Collections.Generic.Dictionary<string, string> dictionary = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, string>>(str);
+                        //    System.Diagnostics.Debug.Assert(dictionary != null);
 
-                            userId = System.Guid.Parse(dictionary["id"]);
+                        //    userId = System.Guid.Parse(dictionary["id"]);
 
-                            //System.Diagnostics.Debug.Assert(string.Equals(dictionary["name"], username) == true);
-                            username = dictionary["name"];  // TODO: check username is valid
+                        //    //System.Diagnostics.Debug.Assert(string.Equals(dictionary["name"], username) == true);
+                        //    username = dictionary["name"];  // TODO: check username is valid
 
-                            // TODO: Handle to throw exception
-                            /*System.Diagnostics.Debug.Assert(inPacket.Username == username);*/
-                        }
-                        catch (System.Exception e)
-                        {
-                            MyConsole.Warn(e.Message);
+                        //    // TODO: Handle to throw exception
+                        //    /*System.Diagnostics.Debug.Assert(inPacket.Username == username);*/
+                        //}
+                        //catch (System.Exception e)
+                        //{
+                        //    MyConsole.Warn(e.Message);
 
-                            userId = System.Guid.NewGuid();
-                        }
+                        //    userId = System.Guid.NewGuid();
+                        //}
 
                         //System.Diagnostics.Debug.Assert(userId != System.Guid.Empty);
                         //System.Diagnostics.Debug.Assert(username != null);
@@ -852,39 +852,39 @@ namespace MinecraftServerEngine.Protocols
 
                         UserProperty[] properties = null;
 
-                        try
-                        {
-                            // TODO: Refactoring
+                        //try
+                        //{
+                        //    // TODO: Refactoring
 
-                            using System.Net.Http.HttpClient httpClient = new();
-                            string url = string.Format(
-                                "https://sessionserver.mojang.com/session/minecraft/profile/{0}?unsigned=false",
-                                userId.ToString());
+                        //    using System.Net.Http.HttpClient httpClient = new();
+                        //    string url = string.Format(
+                        //        "https://sessionserver.mojang.com/session/minecraft/profile/{0}?unsigned=false",
+                        //        userId.ToString());
 
-                            using System.Net.Http.HttpRequestMessage request = new(System.Net.Http.HttpMethod.Get, url);
+                        //    using System.Net.Http.HttpRequestMessage request = new(System.Net.Http.HttpMethod.Get, url);
 
-                            // TODO: handle HttpRequestException
-                            using System.Net.Http.HttpResponseMessage response = httpClient.Send(request);
+                        //    // TODO: handle HttpRequestException
+                        //    using System.Net.Http.HttpResponseMessage response = httpClient.Send(request);
 
-                            using System.IO.Stream stream = response.Content.ReadAsStream();
-                            using System.IO.StreamReader reader = new(stream);
-                            string str = reader.ReadToEnd();
-                            var jsonResponse = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(str);
+                        //    using System.IO.Stream stream = response.Content.ReadAsStream();
+                        //    using System.IO.StreamReader reader = new(stream);
+                        //    string str = reader.ReadToEnd();
+                        //    var jsonResponse = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(str);
 
-                            var propertiesArray = jsonResponse.GetProperty("properties").EnumerateArray();
-                            properties = System.Linq.Enumerable.ToArray(
-                                System.Linq.Enumerable.Select(propertiesArray,
-                                prop => new UserProperty(
-                                    prop.GetProperty("name").GetString(),
-                                    prop.GetProperty("value").GetString(),
-                                    prop.GetProperty("signature").GetString()
-                                )));
+                        //    var propertiesArray = jsonResponse.GetProperty("properties").EnumerateArray();
+                        //    properties = System.Linq.Enumerable.ToArray(
+                        //        System.Linq.Enumerable.Select(propertiesArray,
+                        //        prop => new UserProperty(
+                        //            prop.GetProperty("name").GetString(),
+                        //            prop.GetProperty("value").GetString(),
+                        //            prop.GetProperty("signature").GetString()
+                        //        )));
 
-                        }
-                        catch (System.Exception e)
-                        {
-                            MyConsole.Warn(e.Message);
-                        }
+                        //}
+                        //catch (System.Exception e)
+                        //{
+                        //    MyConsole.Warn(e.Message);
+                        //}
 
                         User user = new(client, userId, username, properties);
 

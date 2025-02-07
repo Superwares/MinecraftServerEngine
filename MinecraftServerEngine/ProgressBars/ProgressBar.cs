@@ -34,30 +34,8 @@ namespace MinecraftServerEngine.ProgressBars
             Title = new TextComponent[title.Length];
             System.Array.Copy(title, Title, title.Length);
 
-            {
-                System.Diagnostics.Debug.Assert(title != null);
-
-                var extra = new object[title.Length];
-
-                for (int i = 0; i < title.Length; ++i)
-                {
-                    TextComponent component = title[i];
-
-                    extra[i] = new
-                    {
-                        text = component.Text,
-                        color = component.Color.GetName(),
-                    };
-                }
-
-                var _data = new
-                {
-                    text = "",
-                    extra,
-                };
-
-                TitleData = System.Text.Json.JsonSerializer.Serialize(_data);
-            }
+            System.Diagnostics.Debug.Assert(title != null);
+            TitleData = TextComponent.GenerateJsonString(title);
 
             _health = health;
             Color = color;

@@ -1,35 +1,59 @@
-﻿namespace TestMinecraftServerApplication.Configs
+﻿using MinecraftServerEngine;
+
+namespace TestMinecraftServerApplication.Configs
 {
-    public interface IConfigGame
+
+    internal class ConfigGame
     {
-        public IConfigGameScoreboard Scoreboard { get; }
+        internal readonly ConfigGameScoreboard Scoreboard;
 
+        internal readonly int KillCoins;
+        internal readonly int InitCoins;
 
-        public int KillCoins { get; }
-        public int InitCoins { get; }
+        internal readonly ConfigGameRound Round;
 
+        internal ConfigGame(System.Xml.XmlNode node)
+        {
+            foreach (System.Xml.XmlNode _node in node.ChildNodes)
+            {
+                if (_node.NodeType != System.Xml.XmlNodeType.Element)
+                {
+                    continue;
+                }
 
-        public IConfigGameRound Round { get; }
+                switch (_node.Name)
+                {
+                    case nameof(Scoreboard):
+                        Scoreboard = new ConfigGameScoreboard(_node);
+                        break;
+                    case nameof(KillCoins):
+                        if (int.TryParse(_node.InnerText, out KillCoins) == false)
+                        {
+                            throw new System.InvalidOperationException($"Invalid integer value for \"{nameof(KillCoins)}\"");
+                        }
+                        break;
+                    case nameof(InitCoins):
+                        if (int.TryParse(_node.InnerText, out InitCoins) == false)
+                        {
+                            throw new System.InvalidOperationException($"Invalid integer value for \"{nameof(InitCoins)}\"");
+                        }
+                        break;
+                    case nameof(Round):
+                        Round = new ConfigGameRound(_node);
+                        break;
+                }
+            }
 
-    }
+            if (Scoreboard == null)
+            {
+                throw new System.InvalidOperationException($"\"{nameof(Scoreboard)}\" element not found");
+            }
 
-    public class ConfigGame : IConfigGame
-    {
-        [System.Xml.Serialization.XmlElement("Scoreboard")]
-        public ConfigGameScoreboard Scoreboard { get; set; }
-        IConfigGameScoreboard IConfigGame.Scoreboard => Scoreboard;
-
-
-        [System.Xml.Serialization.XmlElement("KillCoins")]
-        public int KillCoins { get; set; }
-
-        [System.Xml.Serialization.XmlElement("InitCoins")]
-        public int InitCoins { get; set; }
-
-
-        [System.Xml.Serialization.XmlElement("Round")]
-        public ConfigGameRound Round { get; set; }
-        IConfigGameRound IConfigGame.Round => Round;
+            if (Round == null)
+            {
+                throw new System.InvalidOperationException($"\"{nameof(Round)}\" element not found");
+            }
+        }
     }
 
 }

@@ -74,7 +74,7 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
 
         internal override Vector GetCenter()
         {
-            throw new System.NotImplementedException();
+            return _center;
         }
 
         internal override double GetHeight()

@@ -439,351 +439,351 @@ namespace MinecraftServerEngine
             Dispose(false);
         }
 
-        private string HandleCommandLineText(
-            string text,
-            World world, AbstractPlayer player)
-        {
-            System.Diagnostics.Debug.Assert(world != null);
-            System.Diagnostics.Debug.Assert(player != null);
+//        private string HandleCommandLineText(
+//            string text,
+//            World world, AbstractPlayer player)
+//        {
+//            System.Diagnostics.Debug.Assert(world != null);
+//            System.Diagnostics.Debug.Assert(player != null);
 
-            if (text == null || string.IsNullOrEmpty(text))
-            {
-                return null;
-            }
+//            if (text == null || string.IsNullOrEmpty(text))
+//            {
+//                return null;
+//            }
 
-            string[] args = text.Split(' ', System.StringSplitOptions.TrimEntries | System.StringSplitOptions.RemoveEmptyEntries);
+//            string[] args = text.Split(' ', System.StringSplitOptions.TrimEntries | System.StringSplitOptions.RemoveEmptyEntries);
 
-            if (args.Length == 0)
-            {
-                return null;
-            }
+//            if (args.Length == 0)
+//            {
+//                return null;
+//            }
 
-            string command = args[0];
+//            string command = args[0];
 
-            switch (command)
-            {
-                default:
-                    return $"Error: Unknown command \"{command}\"!";
-                case "item-types":
-                    {
-                        string output = "Item types: [\n";
+//            switch (command)
+//            {
+//                default:
+//                    return $"Error: Unknown command \"{command}\"!";
+//                case "item-types":
+//                    {
+//                        string output = "Item types: [\n";
 
-                        foreach (ItemType item in System.Enum.GetValues(typeof(ItemType)))
-                        {
-                            output += $"{(int)item}: {item},\n";
-                        }
+//                        foreach (ItemType item in System.Enum.GetValues(typeof(ItemType)))
+//                        {
+//                            output += $"{(int)item}: {item},\n";
+//                        }
 
-                        output += "]";
-                        return output;
-                    }
-                case "blocks":
-                    {
-                        string output = "Blocks: [\n";
+//                        output += "]";
+//                        return output;
+//                    }
+//                case "blocks":
+//                    {
+//                        string output = "Blocks: [\n";
 
-                        foreach (Block item in System.Enum.GetValues(typeof(Block)))
-                        {
-                            output += $"{(int)item}: {item},\n";
-                        }
+//                        foreach (Block item in System.Enum.GetValues(typeof(Block)))
+//                        {
+//                            output += $"{(int)item}: {item},\n";
+//                        }
 
-                        output += "]";
-                        return output;
-                    }
-                case "gamemodes":
-                    {
-                        string output = "Gamemodes: [\n";
+//                        output += "]";
+//                        return output;
+//                    }
+//                case "gamemodes":
+//                    {
+//                        string output = "Gamemodes: [\n";
 
-                        foreach (Gamemode item in System.Enum.GetValues(typeof(Gamemode)))
-                        {
-                            output += $"{(int)item}: {item},\n";
-                        }
+//                        foreach (Gamemode item in System.Enum.GetValues(typeof(Gamemode)))
+//                        {
+//                            output += $"{(int)item}: {item},\n";
+//                        }
 
-                        output += "]";
-                        return output;
-                    }
-                case "teleport":
-                case "tp":
-                    {
-                        const string usage = "\n" +
-"Usage:\n" +
-"\n" +
-"/teleport <x> <y> <z> <yaw> <pitch> \n" +
-"\n" +
-"* Teleports the command issuer (you) to the specified coordinates <x>, <y>, <z>, <yaw>, and <pitch>. \n" +
-"\n" +
-"/teleport <x> <y> <z> <yaw> <pitch> <username> \n" +
-"\n" +
-"* Teleports the specified player to the coordinates <x>, <y>, <z>, <yaw>, and <pitch>. \n" +
-"\n" +
-"/teleport <from username> <to username> \n" +
-"\n" +
-"* Teleports the player specified as <from username> to the location of the player specified as <to username>. \n";
-                        if (args.Length == 6)
-                        {
-                            if (Vector.TryParse(args[1], args[2], args[3], out Vector v) == true &&
-                                EntityAngles.TryParse(args[4], args[5], out EntityAngles angles) == true)
-                            {
-                                player.Teleport(v, angles);
-                            }
-                            else
-                            {
-                                return $"Error: Invalid arguments!\n {usage}";
-                            }
-                        }
-                        else if (args.Length == 7)
-                        {
-                            if (Vector.TryParse(args[1], args[2], args[3], out Vector v) == true &&
-                                EntityAngles.TryParse(args[4], args[5], out EntityAngles angles) == true &&
-                                args[6] != null && string.IsNullOrEmpty(args[6]) == false)
-                            {
-                                string username = args[6];
+//                        output += "]";
+//                        return output;
+//                    }
+//                case "teleport":
+//                case "tp":
+//                    {
+//                        const string usage = "\n" +
+//"Usage:\n" +
+//"\n" +
+//"/teleport <x> <y> <z> <yaw> <pitch> \n" +
+//"\n" +
+//"* Teleports the command issuer (you) to the specified coordinates <x>, <y>, <z>, <yaw>, and <pitch>. \n" +
+//"\n" +
+//"/teleport <x> <y> <z> <yaw> <pitch> <username> \n" +
+//"\n" +
+//"* Teleports the specified player to the coordinates <x>, <y>, <z>, <yaw>, and <pitch>. \n" +
+//"\n" +
+//"/teleport <from username> <to username> \n" +
+//"\n" +
+//"* Teleports the player specified as <from username> to the location of the player specified as <to username>. \n";
+//                        if (args.Length == 6)
+//                        {
+//                            if (Vector.TryParse(args[1], args[2], args[3], out Vector v) == true &&
+//                                EntityAngles.TryParse(args[4], args[5], out EntityAngles angles) == true)
+//                            {
+//                                player.Teleport(v, angles);
+//                            }
+//                            else
+//                            {
+//                                return $"Error: Invalid arguments!\n {usage}";
+//                            }
+//                        }
+//                        else if (args.Length == 7)
+//                        {
+//                            if (Vector.TryParse(args[1], args[2], args[3], out Vector v) == true &&
+//                                EntityAngles.TryParse(args[4], args[5], out EntityAngles angles) == true &&
+//                                args[6] != null && string.IsNullOrEmpty(args[6]) == false)
+//                            {
+//                                string username = args[6];
 
-                                try
-                                {
-                                    AbstractPlayer targetPlayer = world.PlayersByUsername.Lookup(username);
-                                    targetPlayer.Teleport(v, angles);
-                                }
-                                catch (KeyNotFoundException)
-                                {
-                                    return $"Error: Player \"{username}\" not found!\n {usage}";
-                                }
+//                                try
+//                                {
+//                                    AbstractPlayer targetPlayer = world.PlayersByUsername.Lookup(username);
+//                                    targetPlayer.Teleport(v, angles);
+//                                }
+//                                catch (KeyNotFoundException)
+//                                {
+//                                    return $"Error: Player \"{username}\" not found!\n {usage}";
+//                                }
 
-                            }
-                            else
-                            {
-                                return $"Error: Invalid arguments!\n {usage}";
-                            }
-                        }
-                        else if (args.Length == 3)
-                        {
-                            if (args[1] != null && string.IsNullOrEmpty(args[1]) == false &&
-                                args[2] != null && string.IsNullOrEmpty(args[2]) == false)
-                            {
-                                string fromUsername = args[1];
-                                string toUsername = args[2];
+//                            }
+//                            else
+//                            {
+//                                return $"Error: Invalid arguments!\n {usage}";
+//                            }
+//                        }
+//                        else if (args.Length == 3)
+//                        {
+//                            if (args[1] != null && string.IsNullOrEmpty(args[1]) == false &&
+//                                args[2] != null && string.IsNullOrEmpty(args[2]) == false)
+//                            {
+//                                string fromUsername = args[1];
+//                                string toUsername = args[2];
 
-                                try
-                                {
-                                    AbstractPlayer fromPlayer = world.PlayersByUsername.Lookup(fromUsername);
-                                    AbstractPlayer toPlayer = world.PlayersByUsername.Lookup(toUsername);
-                                    fromPlayer.Teleport(toPlayer.Position, toPlayer.Look);
-                                }
-                                catch (KeyNotFoundException)
-                                {
-                                    return $"Error: Player \"{fromUsername}\" or \"{toUsername}\" not found!\n {usage}";
-                                }
+//                                try
+//                                {
+//                                    AbstractPlayer fromPlayer = world.PlayersByUsername.Lookup(fromUsername);
+//                                    AbstractPlayer toPlayer = world.PlayersByUsername.Lookup(toUsername);
+//                                    fromPlayer.Teleport(toPlayer.Position, toPlayer.Look);
+//                                }
+//                                catch (KeyNotFoundException)
+//                                {
+//                                    return $"Error: Player \"{fromUsername}\" or \"{toUsername}\" not found!\n {usage}";
+//                                }
 
-                            }
-                            else
-                            {
-                                return $"Error: Invalid arguments!\n {usage}";
-                            }
-                        }
-                        else
-                        {
-                            return $"Error: Invalid arguments!\n {usage}";
-                        }
-                    }
+//                            }
+//                            else
+//                            {
+//                                return $"Error: Invalid arguments!\n {usage}";
+//                            }
+//                        }
+//                        else
+//                        {
+//                            return $"Error: Invalid arguments!\n {usage}";
+//                        }
+//                    }
 
-                    break;
-                case "gamemode":
-                case "gm":
-                    {
-                        const string usage = "\n" +
-"Usage:\n" +
-"\n" +
-"/gamemode <Adventure|Spectator> \n" +
-"\n" +
-"* Changes the game mode of the command issuer (you) to the specified mode.\n" +
-"- Adventure: Sets your game mode to adventure mode, where you can interact with objects but cannot break or place blocks.\n" +
-"- Spectator: Sets your game mode to spectator mode, where you can fly around and observe the world without interacting with it.\n";
+//                    break;
+//                case "gamemode":
+//                case "gm":
+//                    {
+//                        const string usage = "\n" +
+//"Usage:\n" +
+//"\n" +
+//"/gamemode <Adventure|Spectator> \n" +
+//"\n" +
+//"* Changes the game mode of the command issuer (you) to the specified mode.\n" +
+//"- Adventure: Sets your game mode to adventure mode, where you can interact with objects but cannot break or place blocks.\n" +
+//"- Spectator: Sets your game mode to spectator mode, where you can fly around and observe the world without interacting with it.\n";
 
-                        if (args.Length == 2)
-                        {
-                            if (
-                                System.Enum.TryParse(args[1], out Gamemode gamemode) == true &&
-                                System.Enum.IsDefined(typeof(Gamemode), gamemode) == true)
-                            {
-                                player.SwitchGamemode(gamemode);
-                            }
-                            else
-                            {
-                                return $"Error: Invalid arguments!\n {usage}";
-                            }
-                        }
-                        else
-                        {
-                            return $"Error: Invalid arguments!\n {usage}";
-                        }
+//                        if (args.Length == 2)
+//                        {
+//                            if (
+//                                System.Enum.TryParse(args[1], out Gamemode gamemode) == true &&
+//                                System.Enum.IsDefined(typeof(Gamemode), gamemode) == true)
+//                            {
+//                                player.SwitchGamemode(gamemode);
+//                            }
+//                            else
+//                            {
+//                                return $"Error: Invalid arguments!\n {usage}";
+//                            }
+//                        }
+//                        else
+//                        {
+//                            return $"Error: Invalid arguments!\n {usage}";
+//                        }
 
-                    }
-                    break;
-                case "give":
-                    {
-                        const string usage = "\n" +
-"Usage:\n" +
-"\n" +
-"/give <item-type> <name> <amount> [username] \n" +
-"\n" +
-"* Gives the specified item to the command issuer (you) or to another player if a username is specified.\n" +
-"- <item-type>: The name of the item type you want to receive.\n" +
-"  Example: 'DiamondSword', 'Stick', 'Snowball'.\n" +
-"- <name>: An optional custom name for the item.\n" +
-"  Example: 'Excalibur', 'Magic Wand'.\n" +
-"- <amount>: The number of items to give.\n" +
-"  Example: 1, 32, 64.\n" +
-"  Note: Each item has a predefined minimum and maximum amount. If the specified amount is outside this range, it will be adjusted to the nearest valid value.\n" +
-"- [username]: An optional username of the player to receive the item. If specified, the item will be given to the specified player instead of you.\n";
+//                    }
+//                    break;
+//                case "give":
+//                    {
+//                        const string usage = "\n" +
+//"Usage:\n" +
+//"\n" +
+//"/give <item-type> <name> <amount> [username] \n" +
+//"\n" +
+//"* Gives the specified item to the command issuer (you) or to another player if a username is specified.\n" +
+//"- <item-type>: The name of the item type you want to receive.\n" +
+//"  Example: 'DiamondSword', 'Stick', 'Snowball'.\n" +
+//"- <name>: An optional custom name for the item.\n" +
+//"  Example: 'Excalibur', 'Magic Wand'.\n" +
+//"- <amount>: The number of items to give.\n" +
+//"  Example: 1, 32, 64.\n" +
+//"  Note: Each item has a predefined minimum and maximum amount. If the specified amount is outside this range, it will be adjusted to the nearest valid value.\n" +
+//"- [username]: An optional username of the player to receive the item. If specified, the item will be given to the specified player instead of you.\n";
 
-                        if (args.Length >= 4)
-                        {
-                            if (
-                                System.Enum.TryParse(args[1], out ItemType itemType) == true &&
-                                System.Enum.IsDefined(typeof(ItemType), itemType) == true &&
-                                args[2] != null && string.IsNullOrEmpty(args[2]) == false &&
-                                int.TryParse(args[3], out int amount) == true)
-                            {
-                                string name = args[2];
+//                        if (args.Length >= 4)
+//                        {
+//                            if (
+//                                System.Enum.TryParse(args[1], out ItemType itemType) == true &&
+//                                System.Enum.IsDefined(typeof(ItemType), itemType) == true &&
+//                                args[2] != null && string.IsNullOrEmpty(args[2]) == false &&
+//                                int.TryParse(args[3], out int amount) == true)
+//                            {
+//                                string name = args[2];
 
-                                if (amount > itemType.GetMaxCount())
-                                {
-                                    amount = itemType.GetMaxCount();
-                                }
+//                                if (amount > itemType.GetMaxCount())
+//                                {
+//                                    amount = itemType.GetMaxCount();
+//                                }
 
-                                if (amount < Item.MinCount)
-                                {
-                                    amount = Item.MinCount;
-                                }
+//                                if (amount < Item.MinCount)
+//                                {
+//                                    amount = Item.MinCount;
+//                                }
 
-                                string username = args.Length >= 5 ? args[4] : null;
+//                                string username = args.Length >= 5 ? args[4] : null;
 
-                                try
-                                {
-                                    ItemStack itemStack = new(itemType, name, amount);
+//                                try
+//                                {
+//                                    ItemStack itemStack = new(itemType, name, amount);
 
-                                    if (username == null)
-                                    {
-                                        player.GiveItemStack(ref itemStack);
-                                    }
-                                    else
-                                    {
-                                        AbstractPlayer targetPlayer = world.PlayersByUsername.Lookup(username);
-                                        targetPlayer.GiveItemStack(ref itemStack);
-                                    }
+//                                    if (username == null)
+//                                    {
+//                                        player.GiveItemStack(ref itemStack);
+//                                    }
+//                                    else
+//                                    {
+//                                        AbstractPlayer targetPlayer = world.PlayersByUsername.Lookup(username);
+//                                        targetPlayer.GiveItemStack(ref itemStack);
+//                                    }
 
-                                }
-                                catch (KeyNotFoundException)
-                                {
-                                    return $"Error: Player \"{username}\" not found!\n {usage}";
-                                }
-                            }
-                            else
-                            {
-                                return $"Error: Invalid arguments!\n {usage}";
-                            }
-                        }
-                        else
-                        {
-                            return $"Error: Invalid arguments!\n {usage}";
-                        }
+//                                }
+//                                catch (KeyNotFoundException)
+//                                {
+//                                    return $"Error: Player \"{username}\" not found!\n {usage}";
+//                                }
+//                            }
+//                            else
+//                            {
+//                                return $"Error: Invalid arguments!\n {usage}";
+//                            }
+//                        }
+//                        else
+//                        {
+//                            return $"Error: Invalid arguments!\n {usage}";
+//                        }
 
-                    }
-                    break;
-                case "world-time":
-                case "wt":
-                    {
-                        const string usage = "\n" +
-"Usage:\n" +
-"\n" +
-"/world-time next <ticks> <transition seconds> \n" +
-"\n" +
-"/world-time add <ticks> <transition seconds>\n";
+//                    }
+//                    break;
+//                case "world-time":
+//                case "wt":
+//                    {
+//                        const string usage = "\n" +
+//"Usage:\n" +
+//"\n" +
+//"/world-time next <ticks> <transition seconds> \n" +
+//"\n" +
+//"/world-time add <ticks> <transition seconds>\n";
 
-                        if (args.Length == 4)
-                        {
-                            if (args[1] == "next")
-                            {
-                                if (
-                                    int.TryParse(args[2], out int ticks) == true &&
-                                    int.TryParse(args[3], out int seconds) == true
-                                    )
-                                {
-                                    Time worldTime = MinecraftTimes.TimePerTick * ticks;
-                                    Time transitionTime = Time.FromSeconds(seconds);
+//                        if (args.Length == 4)
+//                        {
+//                            if (args[1] == "next")
+//                            {
+//                                if (
+//                                    int.TryParse(args[2], out int ticks) == true &&
+//                                    int.TryParse(args[3], out int seconds) == true
+//                                    )
+//                                {
+//                                    Time worldTime = MinecraftTimes.TimePerTick * ticks;
+//                                    Time transitionTime = Time.FromSeconds(seconds);
 
-                                    System.Diagnostics.Debug.Assert(world != null);
-                                    world.ChangeWorldTimeToNextDay(worldTime, transitionTime);
-                                }
-                                else
-                                {
-                                    return $"Error: Invalid arguments!\n {usage}";
-                                }
-                            }
-                            else if (args[1] == "add")
-                            {
-                                if (
-                                    int.TryParse(args[2], out int ticks) == true &&
-                                    int.TryParse(args[3], out int seconds) == true
-                                    )
-                                {
-                                    Time addingWorldTime = MinecraftTimes.TimePerTick * ticks;
-                                    Time transitionTime = Time.FromSeconds(seconds);
+//                                    System.Diagnostics.Debug.Assert(world != null);
+//                                    world.ChangeWorldTimeToNextDay(worldTime, transitionTime);
+//                                }
+//                                else
+//                                {
+//                                    return $"Error: Invalid arguments!\n {usage}";
+//                                }
+//                            }
+//                            else if (args[1] == "add")
+//                            {
+//                                if (
+//                                    int.TryParse(args[2], out int ticks) == true &&
+//                                    int.TryParse(args[3], out int seconds) == true
+//                                    )
+//                                {
+//                                    Time addingWorldTime = MinecraftTimes.TimePerTick * ticks;
+//                                    Time transitionTime = Time.FromSeconds(seconds);
 
-                                    System.Diagnostics.Debug.Assert(world != null);
-                                    world.AddTimeToWorld(addingWorldTime, transitionTime);
-                                }
-                                else
-                                {
-                                    return $"Error: Invalid arguments!\n {usage}";
-                                }
-                            }
-                            else
-                            {
-                                return $"Error: Invalid arguments!\n {usage}";
-                            }
-                        }
-                        else
-                        {
-                            return $"Error: Invalid arguments!\n {usage}";
-                        }
-                    }
-                    break;
-                case "world-border":
-                case "wb":
-                    {
-                        const string usage = "\n" +
-"Usage:\n" +
-"\n" +
-"/world-border <radius meters> <transition ms per meter> \n";
+//                                    System.Diagnostics.Debug.Assert(world != null);
+//                                    world.AddTimeToWorld(addingWorldTime, transitionTime);
+//                                }
+//                                else
+//                                {
+//                                    return $"Error: Invalid arguments!\n {usage}";
+//                                }
+//                            }
+//                            else
+//                            {
+//                                return $"Error: Invalid arguments!\n {usage}";
+//                            }
+//                        }
+//                        else
+//                        {
+//                            return $"Error: Invalid arguments!\n {usage}";
+//                        }
+//                    }
+//                    break;
+//                case "world-border":
+//                case "wb":
+//                    {
+//                        const string usage = "\n" +
+//"Usage:\n" +
+//"\n" +
+//"/world-border <radius meters> <transition ms per meter> \n";
 
-                        if (args.Length == 3)
-                        {
-                            if (
-                                    double.TryParse(args[1], out double radiusInMeters) == true &&
-                                    int.TryParse(args[2], out int transitionMsPerMeter) == true &&
-                                    transitionMsPerMeter >= 0
-                                    )
-                            {
-                                System.Diagnostics.Debug.Assert(transitionMsPerMeter >= 0);
-                                Time transitionTimePerMeter = Time.FromMilliseconds(transitionMsPerMeter);
+//                        if (args.Length == 3)
+//                        {
+//                            if (
+//                                    double.TryParse(args[1], out double radiusInMeters) == true &&
+//                                    int.TryParse(args[2], out int transitionMsPerMeter) == true &&
+//                                    transitionMsPerMeter >= 0
+//                                    )
+//                            {
+//                                System.Diagnostics.Debug.Assert(transitionMsPerMeter >= 0);
+//                                Time transitionTimePerMeter = Time.FromMilliseconds(transitionMsPerMeter);
 
-                                System.Diagnostics.Debug.Assert(world != null);
-                                world.ChangeWorldBorderSize(radiusInMeters, transitionTimePerMeter);
-                            }
-                            else
-                            {
-                                return $"Error: Invalid arguments!\n {usage}";
-                            }
-                        }
-                        else
-                        {
-                            return $"Error: Invalid arguments!\n {usage}";
-                        }
-                    }
-                    break;
-            }
+//                                System.Diagnostics.Debug.Assert(world != null);
+//                                world.ChangeWorldBorderSize(radiusInMeters, transitionTimePerMeter);
+//                            }
+//                            else
+//                            {
+//                                return $"Error: Invalid arguments!\n {usage}";
+//                            }
+//                        }
+//                        else
+//                        {
+//                            return $"Error: Invalid arguments!\n {usage}";
+//                        }
+//                    }
+//                    break;
+//            }
 
-            return null;
-        }
+//            return null;
+//        }
 
         private void RecvDataAndHandle(
             MinecraftProtocolDataStream buffer,
@@ -841,33 +841,33 @@ namespace MinecraftServerEngine
                     break;
                 case ServerboundPlayingPacket.ServerboundChatMessagePacketId:
                     {
-                        ServerboundChatMessagePacket packet = ServerboundChatMessagePacket.Read(buffer);
+                        //ServerboundChatMessagePacket packet = ServerboundChatMessagePacket.Read(buffer);
 
-                        string text = packet.Text, output = null;
-                        if (text.StartsWith('/') == true)
-                        {
-                            text = text.Substring(1);
-                            output = HandleCommandLineText(text, world, player);
-                        }
-                        else
-                        {
-                            MyConsole.Warn("Handling of normal chat messages is not implemented yet...");
-                        }
+                        //string text = packet.Text, output = null;
+                        //if (text.StartsWith('/') == true)
+                        //{
+                        //    text = text.Substring(1);
+                        //    output = HandleCommandLineText(text, world, player);
+                        //}
+                        //else
+                        //{
+                        //    MyConsole.Warn("Handling of normal chat messages is not implemented yet...");
+                        //}
 
-                        if (output != null)
-                        {
-                            var data = new
-                            {
-                                text = output.TrimEnd('\n'),
-                            };
+                        //if (output != null)
+                        //{
+                        //    var data = new
+                        //    {
+                        //        text = output.TrimEnd('\n'),
+                        //    };
 
-                            string jsonString = System.Text.Json.JsonSerializer.Serialize(data);
+                        //    string jsonString = System.Text.Json.JsonSerializer.Serialize(data);
 
-                            OutPackets.Enqueue(new ClientboundChatmessagePacket(
-                                jsonString, 0));
-                        }
+                        //    OutPackets.Enqueue(new ClientboundChatmessagePacket(
+                        //        jsonString, 0));
+                        //}
 
-
+                        throw new System.NotImplementedException();
                     }
                     break;
                 case ServerboundPlayingPacket.SettingsPacketId:

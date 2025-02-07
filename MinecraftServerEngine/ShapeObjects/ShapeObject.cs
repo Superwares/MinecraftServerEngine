@@ -27,11 +27,13 @@ namespace MinecraftServerEngine.ShapeObjects
 
     //    internal readonly ConcurrentTree<EntityRenderer> Renderers = new();  // Disposable
 
-    //    private protected ShapeObject(Vector c, double mass) 
-    //        : base(mass, new OrientedBoundingBox(), new WallPharsing())
+    //    private protected ShapeObject(
+    //        double mass,
+    //        BoundingVolume bv)
+    //        : base(mass, bv, new WallPharsing())
     //    {
 
-    //        _center = c;
+    //        _center = bv.GetCenter();
     //    }
 
 

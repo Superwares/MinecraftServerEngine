@@ -51,52 +51,67 @@ namespace TestMinecraftServerApplication.GameStages
 
         static FindHidersStage() 
         {
-            int normalTimeInSeconds;
-            int burningTimeInSeconds;
+            //int normalTimeInSeconds;
+            //int burningTimeInSeconds;
 
-            IConfigGameRound config = ConfigXml.Config.Game?.Round;
+            //IConfigGameRound config = ConfigXml.Config.Game?.Round;
 
-            if (config == null)
-            {
-                MyConsole.Warn($"Config.Game.Round is null. Using defaults: " +
-                    $"Config.Game.Round.NormalTimeInSeconds={DefaultNormalTimeInSeconds}, " +
-                    $"Config.Game.Round.BurningTimeInSeconds={DefaultBurningTimeInSeconds}");
+            //if (config == null)
+            //{
+            //    MyConsole.Warn($"Config.Game.Round is null. Using defaults: " +
+            //        $"Config.Game.Round.NormalTimeInSeconds={DefaultNormalTimeInSeconds}, " +
+            //        $"Config.Game.Round.BurningTimeInSeconds={DefaultBurningTimeInSeconds}");
 
-                System.Diagnostics.Debug.Assert(DefaultNormalTimeInSeconds > 0);
-                System.Diagnostics.Debug.Assert(DefaultBurningTimeInSeconds > 0);
-                config = new ConfigGameRound()
-                {
-                    NormalTimeInSeconds = DefaultNormalTimeInSeconds,
+            //    System.Diagnostics.Debug.Assert(DefaultNormalTimeInSeconds > 0);
+            //    System.Diagnostics.Debug.Assert(DefaultBurningTimeInSeconds > 0);
+            //    config = new ConfigGameRound()
+            //    {
+            //        NormalTimeInSeconds = DefaultNormalTimeInSeconds,
 
-                    BurningTimeInSeconds = DefaultBurningTimeInSeconds,
+            //        BurningTimeInSeconds = DefaultBurningTimeInSeconds,
 
-                };
-            }
+            //    };
+            //}
 
-            normalTimeInSeconds = config.NormalTimeInSeconds;
-            burningTimeInSeconds = config.BurningTimeInSeconds;
+            //normalTimeInSeconds = config.NormalTimeInSeconds;
+            //burningTimeInSeconds = config.BurningTimeInSeconds;
+
+            //if (config.NormalTimeInSeconds <= 0)
+            //{
+            //    MyConsole.Warn($"Config.Game.Round.NormalTimeInSeconds <= 0. Using defaults: " +
+            //        $"Config.Game.Round.NormalTimeInSeconds={DefaultNormalTimeInSeconds}");
+
+            //    System.Diagnostics.Debug.Assert(DefaultNormalTimeInSeconds > 0);
+            //    normalTimeInSeconds = DefaultNormalTimeInSeconds;
+            //}
+
+            //if (config.BurningTimeInSeconds <= 0)
+            //{
+            //    MyConsole.Warn($"Config.Game.Round.BurningTimeInSeconds <= 0. Using defaults: " +
+            //        $"Config.Game.Round.BurningTimeInSeconds={DefaultBurningTimeInSeconds}");
+
+
+            //    System.Diagnostics.Debug.Assert(DefaultBurningTimeInSeconds > 0);
+            //    burningTimeInSeconds = DefaultBurningTimeInSeconds;
+            //}
+
+            //NormalDuration = Time.FromSeconds(normalTimeInSeconds);
+            //BurningDuration = Time.FromSeconds(burningTimeInSeconds);
+
+            ConfigGameRound config = ConfigXml.GetConfig().Game.Round;
 
             if (config.NormalTimeInSeconds <= 0)
             {
-                MyConsole.Warn($"Config.Game.Round.NormalTimeInSeconds <= 0. Using defaults: " +
-                    $"Config.Game.Round.NormalTimeInSeconds={DefaultNormalTimeInSeconds}");
-
-                System.Diagnostics.Debug.Assert(DefaultNormalTimeInSeconds > 0);
-                normalTimeInSeconds = DefaultNormalTimeInSeconds;
+                throw new System.InvalidOperationException($"The value for \"{nameof(config.NormalTimeInSeconds)}\" must be > 0");
             }
 
             if (config.BurningTimeInSeconds <= 0)
             {
-                MyConsole.Warn($"Config.Game.Round.BurningTimeInSeconds <= 0. Using defaults: " +
-                    $"Config.Game.Round.BurningTimeInSeconds={DefaultBurningTimeInSeconds}");
-
-
-                System.Diagnostics.Debug.Assert(DefaultBurningTimeInSeconds > 0);
-                burningTimeInSeconds = DefaultBurningTimeInSeconds;
+                throw new System.InvalidOperationException($"The value for \"{nameof(config.BurningTimeInSeconds)}\" must be > 0");
             }
 
-            NormalDuration = Time.FromSeconds(normalTimeInSeconds);
-            BurningDuration = Time.FromSeconds(burningTimeInSeconds);
+            NormalDuration = Time.FromSeconds(config.NormalTimeInSeconds);
+            BurningDuration = Time.FromSeconds(config.BurningTimeInSeconds);
         }
 
         public FindHidersStage()

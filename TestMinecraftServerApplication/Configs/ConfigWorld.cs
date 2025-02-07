@@ -1,45 +1,84 @@
-﻿namespace TestMinecraftServerApplication.Configs
+﻿using MinecraftServerEngine;
+
+namespace TestMinecraftServerApplication.Configs
 {
-    public interface IConfigWorld
+
+    internal class ConfigWorld 
     {
-        public double CenterX { get; }
-        public double CenterZ { get; }
-        public double DefaultWorldBorderRadiusInMeters { get; }
+        internal readonly double CenterX;
+        internal readonly double CenterZ;
+        internal readonly double DefaultWorldBorderRadiusInMeters;
 
-        public double RespawningX { get; }
-        public double RespawningY { get; }
-        public double RespawningZ { get; }
-        public double RespawningYaw { get; }
-        public double RespawningPitch { get; }
-    }
+        internal readonly double RespawningX;
+        internal readonly double RespawningY;
+        internal readonly double RespawningZ;
+        internal readonly double RespawningYaw;
+        internal readonly double RespawningPitch;
 
-    public class ConfigWorld : IConfigWorld
-    {
-        [System.Xml.Serialization.XmlElement("CenterX")]
-        public double CenterX { get; set; }
+        internal ConfigWorld(System.Xml.XmlNode node)
+        {
+            foreach (System.Xml.XmlNode _node in node.ChildNodes)
+            {
+                if (_node.NodeType != System.Xml.XmlNodeType.Element)
+                {
+                    continue;
+                }
 
-        [System.Xml.Serialization.XmlElement("CenterZ")]
-        public double CenterZ { get; set; }
+                switch (_node.Name)
+                {
+                    case nameof(CenterX):
+                        if (double.TryParse(_node.InnerText, out CenterX) == false)
+                        {
+                            throw new System.InvalidOperationException($"Invalid double value for \"{nameof(CenterX)}\"");
+                        }
+                        break;
+                    case nameof(CenterZ):
+                        if (double.TryParse(_node.InnerText, out CenterZ) == false)
+                        {
+                            throw new System.InvalidOperationException($"Invalid double value for \"{nameof(CenterZ)}\"");
+                        }
+                        break;
+                    case nameof(DefaultWorldBorderRadiusInMeters):
+                        if (double.TryParse(_node.InnerText, out DefaultWorldBorderRadiusInMeters) == false)
+                        {
+                            throw new System.InvalidOperationException($"Invalid double value for \"{nameof(DefaultWorldBorderRadiusInMeters)}\"");
+                        }
+                        break;
 
-        [System.Xml.Serialization.XmlElement("DefaultWorldBorderRadiusInMeters")]
-        public double DefaultWorldBorderRadiusInMeters { get; set; }
+                    case nameof(RespawningX):
+                        if (double.TryParse(_node.InnerText, out RespawningX) == false)
+                        {
+                            throw new System.InvalidOperationException($"Invalid double value for \"{nameof(RespawningX)}\"");
+                        }
+                        break;
+                    case nameof(RespawningY):
+                        if (double.TryParse(_node.InnerText, out RespawningY) == false)
+                        {
+                            throw new System.InvalidOperationException($"Invalid double value for \"{nameof(RespawningY)}\"");
+                        }
+                        break;
+                    case nameof(RespawningZ):
+                        if (double.TryParse(_node.InnerText, out RespawningZ) == false)
+                        {
+                            throw new System.InvalidOperationException($"Invalid double value for \"{nameof(RespawningZ)}\"");
+                        }
+                        break;
+                    case nameof(RespawningYaw):
+                        if (double.TryParse(_node.InnerText, out RespawningYaw) == false)
+                        {
+                            throw new System.InvalidOperationException($"Invalid double value for \"{nameof(RespawningYaw)}\"");
+                        }
+                        break;
+                    case nameof(RespawningPitch):
+                        if (double.TryParse(_node.InnerText, out RespawningPitch) == false)
+                        {
+                            throw new System.InvalidOperationException($"Invalid double value for \"{nameof(RespawningPitch)}\"");
+                        }
+                        break;
+                }
+            }
 
-
-
-        [System.Xml.Serialization.XmlElement("RespawningX")]
-        public double RespawningX { get; set; }
-
-        [System.Xml.Serialization.XmlElement("RespawningY")]
-        public double RespawningY { get; set; }
-
-        [System.Xml.Serialization.XmlElement("RespawningZ")]
-        public double RespawningZ { get; set; }
-        [System.Xml.Serialization.XmlElement("RespawningYaw")]
-        public double RespawningYaw { get; set; }
-        [System.Xml.Serialization.XmlElement("RespawningPitch")]
-        public double RespawningPitch { get; set; }
-
-
+        }
     }
 
 }

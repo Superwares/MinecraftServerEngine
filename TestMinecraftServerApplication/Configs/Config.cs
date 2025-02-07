@@ -1,26 +1,44 @@
 ﻿namespace TestMinecraftServerApplication.Configs
 {
 
-    public interface IConfig
+
+
+    internal class Config
     {
-        public IConfigWorld World { get; }
-
-        public IConfigGame Game { get; }
-    }
+        internal readonly ConfigWorld World;
+        internal readonly ConfigGame Game;
 
 
-    [System.Xml.Serialization.XmlRoot("Config")]
-    public class Config : IConfig
-    {
-        [System.Xml.Serialization.XmlElement("World")]
-        public ConfigWorld World { get; set; }
-        IConfigWorld IConfig.World => World;
+        internal Config(System.Xml.XmlNode node)
+        {
+            foreach (System.Xml.XmlNode _node in node.ChildNodes)
+            {
+                if (_node.NodeType != System.Xml.XmlNodeType.Element)
+                {
+                    continue;
+                }
 
+                switch (_node.Name)
+                {
+                    case nameof(World):
+                        World = new ConfigWorld(_node);
+                        break;
+                    case nameof(Game):
+                        Game = new ConfigGame(_node);
+                        break;
+                }
+            }
 
-        [System.Xml.Serialization.XmlElement("Game")]
-        public ConfigGame Game { get; set; }
-        IConfigGame IConfig.Game => Game;
+            if (World == null)
+            {
+                throw new System.InvalidOperationException($"\"{nameof(World)}\" element not found");
+            }
 
+            if (Game == null)
+            {
+                throw new System.InvalidOperationException($"\"{nameof(Game)}\" element not found");
+            }
+        }
         
     }
 }

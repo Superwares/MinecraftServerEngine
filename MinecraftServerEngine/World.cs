@@ -598,29 +598,7 @@ namespace MinecraftServerEngine
                 return;
             }
 
-            var extra = new object[components.Length];
-
-            for (int i = 0; i < components.Length; ++i)
-            {
-                TextComponent component = components[i];
-
-                extra[i] = new
-                {
-                    text = component.Text,
-                    color = component.Color.GetName(),
-                };
-            }
-
-            var chat = new
-            {
-                text = "",
-                extra = extra,
-            };
-
-            string data = System.Text.Json.JsonSerializer.Serialize(chat);
-
-            // TODO: 1tick = 50ms, make this variable to single constant.
-
+            string data = TextComponent.GenerateJsonString(components);
             foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())
             {
                 System.Diagnostics.Debug.Assert(renderer != null);
@@ -770,26 +748,7 @@ namespace MinecraftServerEngine
                 components = [];
             }
 
-            var extra = new object[components.Length];
-
-            for (int i = 0; i < components.Length; ++i)
-            {
-                TextComponent component = components[i];
-
-                extra[i] = new
-                {
-                    text = component.Text,
-                    color = component.Color.GetName(),
-                };
-            }
-
-            var chat = new
-            {
-                text = "",
-                extra = extra,
-            };
-
-            string data = System.Text.Json.JsonSerializer.Serialize(chat);
+            string data = TextComponent.GenerateJsonString(components);
 
             System.Diagnostics.Debug.Assert(WorldRenderersByUserId != null);
             foreach (WorldRenderer renderer in WorldRenderersByUserId.GetValues())

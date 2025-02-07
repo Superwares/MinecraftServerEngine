@@ -333,8 +333,7 @@ namespace MinecraftServerEngine.Entities
             {
                 if (_teleported == true)
                 {
-                    System.Diagnostics.Debug.Assert(Renderers.Empty == false);
-                    if (_fakeBlockApplied == false)
+                    if (_fakeBlockApplied == false && Renderers.Empty == false)
                     {
                         System.Diagnostics.Debug.Assert(Renderers != null);
                         foreach (EntityRenderer renderer in Renderers.GetKeys())

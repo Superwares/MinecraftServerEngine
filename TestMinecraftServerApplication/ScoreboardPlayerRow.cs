@@ -40,38 +40,46 @@ namespace TestMinecraftServerApplication
 
         static ScoreboardPlayerRow()
         {
-            int PointsPerKill;
-            int PointsPerDeath;
-            int PoinsPerSurviving;
-            int DefaultAdditionalPoints;
+            //int PointsPerKill;
+            //int PointsPerDeath;
+            //int PoinsPerSurviving;
+            //int DefaultAdditionalPoints;
 
 
-            IConfigGameScoreboard config = ConfigXml.Config.Game?.Scoreboard;
+            //IConfigGameScoreboard config = ConfigXml.GetConfig().Game?.Scoreboard;
 
-            if (config == null)
-            {
-                MyConsole.Warn("Config.Game.Scroeboard is null");
+            //if (config == null)
+            //{
+            //    MyConsole.Warn("Config.Game.Scroeboard is null");
 
-                config = new ConfigGameScoreboard()
-                {
-                    PointsPerKill = 13,
-                    PointsPerDeath = -8,
-                    PoinsPerSurviving = 10,
+            //    config = new ConfigGameScoreboard()
+            //    {
+            //        PointsPerKill = 13,
+            //        PointsPerDeath = -8,
+            //        PoinsPerSurviving = 10,
 
-                    DefaultAdditionalPoints = 30,
-                };
-            }
+            //        DefaultAdditionalPoints = 30,
+            //    };
+            //}
+
+            //PointsPerKill = config.PointsPerKill;
+            //PointsPerDeath = config.PointsPerDeath;
+            //PoinsPerSurviving = config.PoinsPerSurviving;
+            //DefaultAdditionalPoints = config.DefaultAdditionalPoints;
+
+            //ScoreboardPlayerRow.PointsPerKill = PointsPerKill;
+            //ScoreboardPlayerRow.PointsPerDeath = PointsPerDeath;
+            //ScoreboardPlayerRow.PoinsPerSurviving = PoinsPerSurviving;
+
+            //ScoreboardPlayerRow.DefaultAdditionalPoints = DefaultAdditionalPoints;
+
+            ConfigGameScoreboard config = ConfigXml.GetConfig().Game.Scoreboard;
 
             PointsPerKill = config.PointsPerKill;
             PointsPerDeath = config.PointsPerDeath;
             PoinsPerSurviving = config.PoinsPerSurviving;
+
             DefaultAdditionalPoints = config.DefaultAdditionalPoints;
-
-            ScoreboardPlayerRow.PointsPerKill = PointsPerKill;
-            ScoreboardPlayerRow.PointsPerDeath = PointsPerDeath;
-            ScoreboardPlayerRow.PoinsPerSurviving = PoinsPerSurviving;
-
-            ScoreboardPlayerRow.DefaultAdditionalPoints = DefaultAdditionalPoints;
         }
 
         public ScoreboardPlayerRow(UserId id, string username)

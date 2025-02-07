@@ -74,112 +74,149 @@ namespace TestMinecraftServerApplication
 
         static GameContext()
         {
-            int killCoins;
-            int initCoins;
+            //int killCoins;
+            //int initCoins;
 
-            int survivingRoundCoins;
+            //int survivingRoundCoins;
 
-            int roundSeekerWinAdditionalPoints;
-            int roundSeekerWinCoins;
-            int roundHiderWinAdditionalPoints;
-            int roundHiderWinCoins;
+            //int roundSeekerWinAdditionalPoints;
+            //int roundSeekerWinCoins;
+            //int roundHiderWinAdditionalPoints;
+            //int roundHiderWinCoins;
 
-            IConfigGame config = ConfigXml.Config.Game;
+            //ConfigGame config = ConfigXml.GetConfig().Game;
 
-            if (config == null)
-            {
-                MyConsole.Warn($"Config.Game is null. Using defaults: " +
-                    $"Config.Game.KillCoins={DefaultKillCoins}, " +
-                    $"Config.Game.InitCoins={DefaultInitCoins}, " +
-                    $"Config.Game.Round.SurvivingCoins={DefaultRoundSurvivingCoins}, " +
-                    $"Config.Game.Round.SeekerWinAdditionalPoints={DefaultRoundSeekerWinAdditionalPoints}, " +
-                    $"Config.Game.Round.SeekerWinCoins={DefaultRoundSeekerWinCoins}, " +
-                    $"Config.Game.Round.HiderWinAdditionalPoints={DefaultRoundHiderWinAdditionalPoints}, " +
-                    $"Config.Game.Round.HiderWinCoins={DefaultRoundHiderWinCoins}"
-                    );
+            //if (config == null)
+            //{
+            //    MyConsole.Warn($"Config.Game is null. Using defaults: " +
+            //        $"Config.Game.KillCoins={DefaultKillCoins}, " +
+            //        $"Config.Game.InitCoins={DefaultInitCoins}, " +
+            //        $"Config.Game.Round.SurvivingCoins={DefaultRoundSurvivingCoins}, " +
+            //        $"Config.Game.Round.SeekerWinAdditionalPoints={DefaultRoundSeekerWinAdditionalPoints}, " +
+            //        $"Config.Game.Round.SeekerWinCoins={DefaultRoundSeekerWinCoins}, " +
+            //        $"Config.Game.Round.HiderWinAdditionalPoints={DefaultRoundHiderWinAdditionalPoints}, " +
+            //        $"Config.Game.Round.HiderWinCoins={DefaultRoundHiderWinCoins}"
+            //        );
 
-                System.Diagnostics.Debug.Assert(DefaultKillCoins >= 0);
-                System.Diagnostics.Debug.Assert(DefaultInitCoins >= 0);
-                System.Diagnostics.Debug.Assert(DefaultRoundSurvivingCoins >= 0);
-                System.Diagnostics.Debug.Assert(DefaultRoundSeekerWinCoins >= 0);
-                System.Diagnostics.Debug.Assert(DefaultRoundHiderWinCoins >= 0);
-                config = new ConfigGame()
-                {
-                    KillCoins = DefaultKillCoins,
-                    InitCoins = DefaultInitCoins,
+            //    System.Diagnostics.Debug.Assert(DefaultKillCoins >= 0);
+            //    System.Diagnostics.Debug.Assert(DefaultInitCoins >= 0);
+            //    System.Diagnostics.Debug.Assert(DefaultRoundSurvivingCoins >= 0);
+            //    System.Diagnostics.Debug.Assert(DefaultRoundSeekerWinCoins >= 0);
+            //    System.Diagnostics.Debug.Assert(DefaultRoundHiderWinCoins >= 0);
+            //    config = new ConfigGame()
+            //    {
+            //        KillCoins = DefaultKillCoins,
+            //        InitCoins = DefaultInitCoins,
 
-                    Round = new ConfigGameRound()
-                    {
-                        SurvivingCoins = DefaultRoundSurvivingCoins,
+            //        Round = new ConfigGameRound()
+            //        {
+            //            SurvivingCoins = DefaultRoundSurvivingCoins,
 
-                        SeekerWinAdditionalPoints = DefaultRoundSeekerWinAdditionalPoints,
-                        SeekerWinCoins = DefaultRoundSeekerWinCoins,
-                        HiderWinAdditionalPoints = DefaultRoundHiderWinAdditionalPoints,
-                        HiderWinCoins = DefaultRoundHiderWinCoins,
-                    },
+            //            SeekerWinAdditionalPoints = DefaultRoundSeekerWinAdditionalPoints,
+            //            SeekerWinCoins = DefaultRoundSeekerWinCoins,
+            //            HiderWinAdditionalPoints = DefaultRoundHiderWinAdditionalPoints,
+            //            HiderWinCoins = DefaultRoundHiderWinCoins,
+            //        },
 
-                };
-            }
+            //    };
+            //}
 
-            killCoins = config.KillCoins;
-            initCoins = config.InitCoins;
+            //killCoins = config.KillCoins;
+            //initCoins = config.InitCoins;
 
-            survivingRoundCoins = config.Round.SurvivingCoins;
+            //survivingRoundCoins = config.Round.SurvivingCoins;
 
-            roundSeekerWinAdditionalPoints = config.Round.SeekerWinAdditionalPoints;
-            roundSeekerWinCoins = config.Round.SeekerWinCoins;
-            roundHiderWinAdditionalPoints = config.Round.HiderWinAdditionalPoints;
-            roundHiderWinCoins = config.Round.HiderWinCoins;
+            //roundSeekerWinAdditionalPoints = config.Round.SeekerWinAdditionalPoints;
+            //roundSeekerWinCoins = config.Round.SeekerWinCoins;
+            //roundHiderWinAdditionalPoints = config.Round.HiderWinAdditionalPoints;
+            //roundHiderWinCoins = config.Round.HiderWinCoins;
+
+            //if (config.KillCoins < 0)
+            //{
+            //    MyConsole.Warn($"Config.Game.KillCoins value is negative: {config.KillCoins}");
+
+            //    System.Diagnostics.Debug.Assert(DefaultKillCoins >= 0);
+            //    killCoins = DefaultKillCoins;
+            //}
+
+            //if (config.InitCoins < 0)
+            //{
+            //    MyConsole.Warn($"Config.Game.InitCoins value is negative: {config.InitCoins}");
+
+            //    System.Diagnostics.Debug.Assert(DefaultInitCoins >= 0);
+            //    initCoins = DefaultInitCoins;
+            //}
+
+            //if (config.Round.SurvivingCoins < 0)
+            //{
+            //    MyConsole.Warn($"Config.Game.Round.SurvivingCoins value is negative: {config.Round.SurvivingCoins}");
+
+            //    System.Diagnostics.Debug.Assert(DefaultRoundSurvivingCoins >= 0);
+            //    survivingRoundCoins = DefaultRoundSurvivingCoins;
+            //}
+
+            //if (config.Round.SeekerWinCoins < 0)
+            //{
+            //    MyConsole.Warn($"Config.Game.Round.SeekerWinCoins value is negative: {config.Round.SeekerWinCoins}");
+
+            //    System.Diagnostics.Debug.Assert(DefaultRoundSeekerWinCoins >= 0);
+            //    roundSeekerWinCoins = DefaultRoundSeekerWinCoins;
+            //}
+
+            //if (config.Round.HiderWinCoins < 0)
+            //{
+            //    MyConsole.Warn($"Config.Game.Round.HiderWinCoins value is negative: {config.Round.HiderWinCoins}");
+
+            //    System.Diagnostics.Debug.Assert(DefaultRoundHiderWinCoins >= 0);
+            //    roundHiderWinCoins = DefaultRoundHiderWinCoins;
+            //}
+
+            //KillCoins = killCoins;
+            //InitCoins = initCoins;
+
+            //RoundSurvivingCoins = survivingRoundCoins;
+
+            //RoundSeekerWinAdditionalPoints = roundSeekerWinAdditionalPoints;
+            //RoundSeekerWinCoins = roundSeekerWinCoins;
+            //RoundHiderWinAdditionalPoints = roundHiderWinAdditionalPoints;
+            //RoundHiderWinCoins = roundHiderWinCoins;
+
+            ConfigGame config = ConfigXml.GetConfig().Game;
 
             if (config.KillCoins < 0)
             {
-                MyConsole.Warn($"Config.Game.KillCoins value is negative: {config.KillCoins}");
-
-                System.Diagnostics.Debug.Assert(DefaultKillCoins >= 0);
-                killCoins = DefaultKillCoins;
+                throw new System.InvalidOperationException($"The value for \"{nameof(config.KillCoins)}\" must be >= 0");
             }
 
             if (config.InitCoins < 0)
             {
-                MyConsole.Warn($"Config.Game.InitCoins value is negative: {config.InitCoins}");
-
-                System.Diagnostics.Debug.Assert(DefaultInitCoins >= 0);
-                initCoins = DefaultInitCoins;
+                throw new System.InvalidOperationException($"The value for \"{nameof(config.InitCoins)}\" must be >= 0");
             }
 
             if (config.Round.SurvivingCoins < 0)
             {
-                MyConsole.Warn($"Config.Game.Round.SurvivingCoins value is negative: {config.Round.SurvivingCoins}");
-
-                System.Diagnostics.Debug.Assert(DefaultRoundSurvivingCoins >= 0);
-                survivingRoundCoins = DefaultRoundSurvivingCoins;
+                throw new System.InvalidOperationException($"The value for \"{nameof(config.Round.SurvivingCoins)}\" must be >= 0");
             }
 
             if (config.Round.SeekerWinCoins < 0)
             {
-                MyConsole.Warn($"Config.Game.Round.SeekerWinCoins value is negative: {config.Round.SeekerWinCoins}");
-
-                System.Diagnostics.Debug.Assert(DefaultRoundSeekerWinCoins >= 0);
-                roundSeekerWinCoins = DefaultRoundSeekerWinCoins;
+                throw new System.InvalidOperationException($"The value for \"{nameof(config.Round.SeekerWinCoins)}\" must be >= 0");
             }
 
             if (config.Round.HiderWinCoins < 0)
             {
-                MyConsole.Warn($"Config.Game.Round.HiderWinCoins value is negative: {config.Round.HiderWinCoins}");
-
-                System.Diagnostics.Debug.Assert(DefaultRoundHiderWinCoins >= 0);
-                roundHiderWinCoins = DefaultRoundHiderWinCoins;
+                throw new System.InvalidOperationException($"The value for \"{nameof(config.Round.HiderWinCoins)}\" must be >= 0");
             }
 
-            KillCoins = killCoins;
-            InitCoins = initCoins;
+            KillCoins = config.KillCoins;
+            InitCoins = config.InitCoins;
 
-            RoundSurvivingCoins = survivingRoundCoins;
+            RoundSurvivingCoins = config.Round.SurvivingCoins;
 
-            RoundSeekerWinAdditionalPoints = roundSeekerWinAdditionalPoints;
-            RoundSeekerWinCoins = roundSeekerWinCoins;
-            RoundHiderWinAdditionalPoints = roundHiderWinAdditionalPoints;
-            RoundHiderWinCoins = roundHiderWinCoins;
+            RoundSeekerWinAdditionalPoints = config.Round.SeekerWinAdditionalPoints;
+            RoundSeekerWinCoins = config.Round.SeekerWinCoins;
+            RoundHiderWinAdditionalPoints = config.Round.HiderWinAdditionalPoints;
+            RoundHiderWinCoins = config.Round.HiderWinCoins;
 
         }
 
@@ -248,7 +285,7 @@ namespace TestMinecraftServerApplication
         }
 
 
-        private List<SuperPlayer> _prevSeekers = new();
+        private readonly List<SuperPlayer> _PrevSeekers = new();
         private SuperPlayer _currentSeeker = null;
         private int _currentRoundIndex = -1;
         public bool IsBeforeFirstRound
@@ -480,8 +517,8 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(_started == false);
             _started = true;
 
-            System.Diagnostics.Debug.Assert(_prevSeekers != null);
-            System.Diagnostics.Debug.Assert(_prevSeekers.Length == 0);
+            System.Diagnostics.Debug.Assert(_PrevSeekers != null);
+            System.Diagnostics.Debug.Assert(_PrevSeekers.Length == 0);
             System.Diagnostics.Debug.Assert(_currentSeeker == null);
             System.Diagnostics.Debug.Assert(_currentRoundIndex < 0);
 
@@ -521,7 +558,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(_ready == true);
             System.Diagnostics.Debug.Assert(_started == true);
 
-            System.Diagnostics.Debug.Assert(_prevSeekers != null);
+            System.Diagnostics.Debug.Assert(_PrevSeekers != null);
             System.Diagnostics.Debug.Assert(_currentSeeker == null);
             ++_currentRoundIndex;
 
@@ -561,9 +598,9 @@ namespace TestMinecraftServerApplication
             bool prevSeeker = false;
             for (int i = 0; i < _players.Length; ++i)
             {
-                for (int j = 0; j < _prevSeekers.Length; ++j)
+                for (int j = 0; j < _PrevSeekers.Length; ++j)
                 {
-                    if (object.ReferenceEquals(_prevSeekers[j], _players[i]) == true)
+                    if (object.ReferenceEquals(_PrevSeekers[j], _players[i]) == true)
                     {
                         prevSeeker = true;
                         break;
@@ -581,7 +618,7 @@ namespace TestMinecraftServerApplication
                 indices.Append(i);
             }
 
-            return _players.Length - _prevSeekers.Length;
+            return _players.Length - _PrevSeekers.Length;
         }
 
         public void SeletSeeker(SuperPlayer player)
@@ -930,9 +967,9 @@ namespace TestMinecraftServerApplication
                         ]);
                 }
 
-                System.Diagnostics.Debug.Assert(_prevSeekers != null);
+                System.Diagnostics.Debug.Assert(_PrevSeekers != null);
                 System.Diagnostics.Debug.Assert(_currentSeeker != null);
-                _prevSeekers.Append(_currentSeeker);
+                _PrevSeekers.Append(_currentSeeker);
 
                 _currentSeeker = null;
                 _hiderWin = false;
@@ -1033,7 +1070,7 @@ namespace TestMinecraftServerApplication
                 _hiderWin = false;
                 _seekerWin = false;
 
-                _prevSeekers.Flush();
+                _PrevSeekers.Flush();
                 _currentSeeker = null;
                 _currentRoundIndex = -1;
 
@@ -1079,7 +1116,7 @@ namespace TestMinecraftServerApplication
                     _LockerPlayers.Dispose();
                     _players.Dispose();
 
-                    _prevSeekers.Dispose();
+                    _PrevSeekers.Dispose();
 
                     _LockerScoreboard.Dispose();
                     _ScoreboardByUserId.Dispose();

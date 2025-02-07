@@ -15,61 +15,18 @@ MyConsole.Info("Hello, World!");
 
 ConfigXml.Deserialize("Config.xml");
 
-double worldCenterX, worldCenterZ;
-double defaultWorldBorderRadiusInMeters;
-Vector respawningPos;
-EntityAngles respawningLook;
+ConfigWorld config = ConfigXml.GetConfig().World;
 
+double worldCenterX = config.CenterX;
+double worldCenterZ = config.CenterZ;
+double defaultWorldBorderRadiusInMeters = config.DefaultWorldBorderRadiusInMeters;
+Vector respawningPos = new(config.RespawningX, config.RespawningY, config.RespawningZ);
+EntityAngles respawningLook = new(config.RespawningYaw, config.RespawningPitch) ;
+
+if (config.DefaultWorldBorderRadiusInMeters <= 0)
 {
-    IConfigWorld config = ConfigXml.Config.World;
-
-    if (config == null)
-    {
-        MyConsole.Warn("Config.World is null");
-
-        config = new ConfigWorld()
-        {
-            CenterX = 0.0,
-            CenterZ = 0.0,
-            DefaultWorldBorderRadiusInMeters = World.MaxWorldBorderRadiusInMeters,
-
-            RespawningX = 0.0,
-            RespawningY = 0.0,
-            RespawningZ = 0.0,
-            RespawningYaw = 0.0,
-            RespawningPitch = 0.0,
-        };
-    }
-
-    worldCenterX = config.CenterX;
-    worldCenterZ = config.CenterZ;
-
-    respawningPos = new Vector(
-        config.RespawningX,
-        config.RespawningY,
-        config.RespawningZ
-        );
-    respawningLook = new EntityAngles(
-        config.RespawningYaw,
-        config.RespawningPitch
-        );
-
-    if (config.DefaultWorldBorderRadiusInMeters <= 0)
-    {
-        MyConsole.Warn(
-            $"Config.World.DefaultWorldBorderRadiusInMeters must be greater than 0: " +
-            $"{config.DefaultWorldBorderRadiusInMeters}");
-
-        defaultWorldBorderRadiusInMeters = World.MaxWorldBorderRadiusInMeters;
-    }
-    else
-    {
-        defaultWorldBorderRadiusInMeters = config.DefaultWorldBorderRadiusInMeters;
-    }
-
+    throw new System.InvalidOperationException($"The value for \"{nameof(config.DefaultWorldBorderRadiusInMeters)}\" must be > 0");
 }
-
-
 
 using World world = new SuperWorld(
     worldCenterX, worldCenterZ,
