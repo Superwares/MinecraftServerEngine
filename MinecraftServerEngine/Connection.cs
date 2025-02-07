@@ -1980,13 +1980,20 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(UserId != UserId.Null);
             id = UserId;
 
+            System.Diagnostics.Debug.Assert(_EntityRenderer != null);
             _EntityRenderer.Disconnect();
+            System.Diagnostics.Debug.Assert(_ParticleObjectRenderer != null);
             _ParticleObjectRenderer.Disconnect();
+            System.Diagnostics.Debug.Assert(_ShapeObjectRenderer != null);
             _ShapeObjectRenderer.Disconnect();
 
+            System.Diagnostics.Debug.Assert(Window != null);
             Window.Flush(world, invPlayer);
 
+            System.Diagnostics.Debug.Assert(world != null);
             world.Disconnect(UserId);
+
+            //MyConsole.Debug("Flush Connection!");
         }
 
         public void Dispose()
