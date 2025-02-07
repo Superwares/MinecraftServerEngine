@@ -1,7 +1,7 @@
 ﻿
 namespace MinecraftServerEngine.Physics.BoundingVolumes
 {
-    internal sealed class OrientedBoundingBox : BoundingVolume
+    public sealed class OrientedBoundingBox : BoundingVolume
     {
         private const int _VertexCount = 8;
         private readonly static double[] _Signs = [-1.0, 1.0];
@@ -15,8 +15,8 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
         private Angles _angles;
         public Angles Angles => _angles;
 
-        internal readonly Vector[] Axes = new Vector[Vector.Dimension];
-        internal readonly Vector[] Vertices = new Vector[_VertexCount];
+        public readonly Vector[] Axes = new Vector[Vector.Dimension];
+        public readonly Vector[] Vertices = new Vector[_VertexCount];
 
         private static void FindVertices(Vector[] vertices, Vector[] axes, Vector extents, Vector c)
         {
@@ -58,13 +58,37 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
             Vector.Rotate(_angles, Axes);
 
             FindVertices(Vertices, Axes, _extents, _center);
-       
+
         }
 
 
         public override AxisAlignedBoundingBox GetMinBoundingBox()
         {
-            throw new System.NotImplementedException();
+            double maxX = double.NegativeInfinity;
+            double maxY = double.NegativeInfinity;
+            double maxZ = double.NegativeInfinity;
+
+            double minX = double.PositiveInfinity;
+            double minY = double.PositiveInfinity;
+            double minZ = double.PositiveInfinity;
+
+
+            foreach (Vector vertex in Vertices)
+            {
+                if (vertex.X > maxX) { maxX = vertex.X; }
+                if (vertex.Y > maxY) { maxY = vertex.Y; }
+                if (vertex.Z > maxZ) { maxZ = vertex.Z; }
+
+                if (vertex.X < minX) { minX = vertex.X; }
+                if (vertex.Y < minY) { minY = vertex.Y; }
+                if (vertex.Z < minZ) { minZ = vertex.Z; }
+
+            }
+
+            return new AxisAlignedBoundingBox(
+                new Vector(maxX, maxY, maxZ),
+                new Vector(minX, minY, minZ)
+                );
         }
 
         internal override Vector GetBottomCenter()
@@ -82,7 +106,19 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
             throw new System.NotImplementedException();
         }
 
+        internal void SetAngles(Angles angles)
+        {
+            _angles += angles;
 
+            // Rotate the default axes
+            Axes[0] = new Vector(1, 0, 0);
+            Axes[1] = new Vector(0, 1, 0);
+            Axes[2] = new Vector(0, 0, 1);
+
+            Vector.Rotate(_angles, Axes);
+
+            FindVertices(Vertices, Axes, _extents, _center);
+        }
 
         internal override void Extend(Vector extents)
         {
@@ -168,7 +204,7 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
 
         internal override double TestIntersection(Vector o, Vector d)
         {
-            throw new System.NotImplementedException();
+            return -1;
         }
 
         internal override bool TestIntersection(BoundingVolume volume)

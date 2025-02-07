@@ -10,16 +10,16 @@ namespace Containers
     {
         private bool _disposed = false;
 
-        protected const int MinLength = 16;
+        protected const int MinActualLength = 16;
         protected const int ExpansionFactor = 2;
         protected const float LoadFactor = 0.75F;
         protected const int Constant = 5;
 
         private readonly System.Collections.Generic.IEqualityComparer<K> Comparer;
 
-        protected bool[] _flags = new bool[MinLength];
-        protected K[] _keys = new K[MinLength];
-        protected int _length = MinLength;
+        protected bool[] _flags = new bool[MinActualLength];
+        protected K[] _keys = new K[MinActualLength];
+        protected int _length = MinActualLength;
         protected int _count = 0;
 
         public int Count
@@ -72,9 +72,9 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_length >= MinLength);
+            System.Diagnostics.Debug.Assert(_flags.Length >= MinActualLength);
+            System.Diagnostics.Debug.Assert(_keys.Length >= MinActualLength);
+            System.Diagnostics.Debug.Assert(_length >= MinActualLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
             bool[] oldFlags = _flags;
@@ -128,9 +128,9 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_length >= MinLength);
+            System.Diagnostics.Debug.Assert(_flags.Length >= MinActualLength);
+            System.Diagnostics.Debug.Assert(_keys.Length >= MinActualLength);
+            System.Diagnostics.Debug.Assert(_length >= MinActualLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
             int index = -1;
@@ -186,9 +186,9 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_length >= MinLength);
+            System.Diagnostics.Debug.Assert(_flags.Length >= MinActualLength);
+            System.Diagnostics.Debug.Assert(_keys.Length >= MinActualLength);
+            System.Diagnostics.Debug.Assert(_length >= MinActualLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
             if (_count == 0)
@@ -275,9 +275,9 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_length >= MinLength);
+            System.Diagnostics.Debug.Assert(_flags.Length >= MinActualLength);
+            System.Diagnostics.Debug.Assert(_keys.Length >= MinActualLength);
+            System.Diagnostics.Debug.Assert(_length >= MinActualLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
             if (_count == 0)
             {
@@ -314,9 +314,9 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_length >= MinLength);
+            System.Diagnostics.Debug.Assert(_flags.Length >= MinActualLength);
+            System.Diagnostics.Debug.Assert(_keys.Length >= MinActualLength);
+            System.Diagnostics.Debug.Assert(_length >= MinActualLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
             if (_count == 0)
@@ -342,9 +342,9 @@ namespace Containers
                 }
             }
 
-            _flags = new bool[MinLength];
-            _keys = new K[MinLength];
-            _length = MinLength;
+            _flags = new bool[MinActualLength];
+            _keys = new K[MinActualLength];
+            _length = MinActualLength;
             _count = 0;
 
             return keys;
@@ -357,9 +357,9 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_length >= MinLength);
+            System.Diagnostics.Debug.Assert(_flags.Length >= MinActualLength);
+            System.Diagnostics.Debug.Assert(_keys.Length >= MinActualLength);
+            System.Diagnostics.Debug.Assert(_length >= MinActualLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
             if (Empty)

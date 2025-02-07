@@ -10,12 +10,23 @@ namespace MinecraftServerEngine.Physics
 
     public abstract class PhysicsObject : System.IDisposable
     {
-        internal abstract class Movement
+        internal abstract class PhysicsObjectMovement
         {
             internal abstract Vector Resolve(Terrain terrain, BoundingVolume volume, Vector v);
         }
 
-        internal sealed class WallPharsing : Movement
+        internal sealed class EmptyMovement : PhysicsObjectMovement
+        {
+            internal override Vector Resolve(Terrain terrain, BoundingVolume volume, Vector v)
+            {
+                System.Diagnostics.Debug.Assert(terrain != null);
+                System.Diagnostics.Debug.Assert(volume != null);
+
+                return v;
+            }
+        }
+
+        internal sealed class WallPharsingMovement : PhysicsObjectMovement
         {
             internal override Vector Resolve(Terrain terrain, BoundingVolume volume, Vector v)
             {
@@ -28,11 +39,11 @@ namespace MinecraftServerEngine.Physics
             }
         }
 
-        internal abstract class NoneWallPharsing : Movement
+        internal abstract class NoneWallPharsingMovement : PhysicsObjectMovement
         {
         }
 
-        internal sealed class SimpleMovement : NoneWallPharsing
+        internal sealed class SimpleMovement : NoneWallPharsingMovement
         {
             internal override Vector Resolve(Terrain terrain, BoundingVolume volume, Vector v)
             {
@@ -43,7 +54,7 @@ namespace MinecraftServerEngine.Physics
             }
         }
 
-        internal class SmoothMovement : NoneWallPharsing
+        internal class SmoothMovement : NoneWallPharsingMovement
         {
             internal readonly double MaxStepHeight;
 
@@ -80,14 +91,7 @@ namespace MinecraftServerEngine.Physics
 
 
         private readonly double _m;
-        public double Mass
-        {
-            get
-            {
-                System.Diagnostics.Debug.Assert(_m >= 0);
-                return _m;
-            }
-        }
+        public double Mass => _m;
 
         internal readonly Queue<Vector> Forces = new();  // Disposable
 
@@ -96,33 +100,26 @@ namespace MinecraftServerEngine.Physics
         public Vector Velocity => _v;
 
 
-        private BoundingVolume _volume;
-        public BoundingVolume BoundingVolume
-        {
-            get
-            {
-                System.Diagnostics.Debug.Assert(_volume != null);
-                return _volume;
-            }
-        }
+        private BoundingVolume _bv;
+        public BoundingVolume BoundingVolume => _bv;
 
 
-        internal readonly Movement _Movement;
+        private readonly PhysicsObjectMovement _Movement;
 
 
         internal PhysicsObject(
-            double m, BoundingVolume volume,
-            Movement movement)
+            double m, BoundingVolume bv,
+            PhysicsObjectMovement movement)
         {
-            System.Diagnostics.Debug.Assert(volume != null);
-            System.Diagnostics.Debug.Assert(m > 0.0D);
+            System.Diagnostics.Debug.Assert(bv != null);
+            System.Diagnostics.Debug.Assert(m >= 0.0D);
             System.Diagnostics.Debug.Assert(movement != null);
 
             _m = m;
 
             _v = new(0.0D, 0.0D, 0.0D);
 
-            _volume = volume;
+            _bv = bv;
 
             _Movement = movement;
         }
@@ -143,38 +140,27 @@ namespace MinecraftServerEngine.Physics
 
         protected internal virtual void OnDespawn(PhysicsWorld world) { }
 
-        public abstract void StartRoutine(PhysicsWorld world);
-
-        public virtual void ApplyForce(Vector v)
+        public virtual void StartRoutine(PhysicsWorld world) 
         {
-            if (v.X < MinecraftPhysics.MinVelocity || v.X > MinecraftPhysics.MaxVelocity)
-            {
-                throw new System.ArgumentOutOfRangeException(
-                    nameof(v),
-                    "The force vector's X component is out of the allowed range.");
-            }
-            if (v.Y < MinecraftPhysics.MinVelocity || v.Y > MinecraftPhysics.MaxVelocity)
-            {
-                throw new System.ArgumentOutOfRangeException(
-                    nameof(v),
-                    "The force vector's Y component is out of the allowed range.");
-            }
-            if (v.Z < MinecraftPhysics.MinVelocity || v.Z > MinecraftPhysics.MaxVelocity)
-            {
-                throw new System.ArgumentOutOfRangeException(
-                    nameof(v),
-                    "The force vector's Z component is out of the allowed range.");
-            }
+            System.Diagnostics.Debug.Assert(world != null);
+        }
 
+        private protected virtual void _ApplyForce(Vector v)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(Forces != null);
+            Forces.Enqueue(v);
+        }
+
+        public void ApplyForce(Vector v)
+        {
             if (_disposed == true)
             {
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            System.Diagnostics.Debug.Assert(Forces != null);
-            Forces.Enqueue(v);
+            _ApplyForce(v);
         }
 
         protected abstract (BoundingVolume, bool noGravity) GetCurrentStatus();
@@ -183,9 +169,14 @@ namespace MinecraftServerEngine.Physics
         {
             System.Diagnostics.Debug.Assert(terrain != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             (BoundingVolume volume, bool noGravity) = GetCurrentStatus();
+
+            if (_m == 0.0)
+            {
+                return (volume, Vector.Zero);
+            }
 
             if (noGravity == false)
             {
@@ -224,7 +215,7 @@ namespace MinecraftServerEngine.Physics
 
             System.Diagnostics.Debug.Assert(Forces.Empty);
 
-            _volume = volume;
+            _bv = volume;
             _v = v;
         }
 

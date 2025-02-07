@@ -64,6 +64,8 @@ namespace TestMinecraftServerApplication
 
             RespawningPosition = respawningPos;
             RespawningLook = respawningLook;
+
+            SpawnObject(new HyperBeamObject());
         }
 
         ~SuperWorld()

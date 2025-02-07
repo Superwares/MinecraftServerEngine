@@ -994,8 +994,6 @@ namespace MinecraftServerEngine
             ObjectSpawningPool.Enqueue(obj);
         }
 
-
-
         internal void StartTask()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);

@@ -63,23 +63,23 @@ namespace MinecraftServerEngine.Physics
             // Calculate the rotation matrix from the angles
             double cosRoll = System.Math.Cos(angles.Roll);
             double sinRoll = System.Math.Sin(angles.Roll);
-            double cosPitch = System.Math.Cos(angles.Pitch);
-            double sinPitch = System.Math.Sin(angles.Pitch);
             double cosYaw = System.Math.Cos(angles.Yaw);
             double sinYaw = System.Math.Sin(angles.Yaw);
+            double cosPitch = System.Math.Cos(angles.Pitch);
+            double sinPitch = System.Math.Sin(angles.Pitch);
 
             // Rotation matrix components
-            double m11 = cosYaw * cosPitch;
-            double m12 = cosYaw * sinPitch * sinRoll - sinYaw * cosRoll;
-            double m13 = cosYaw * sinPitch * cosRoll + sinYaw * sinRoll;
+            double m11 = cosPitch * cosYaw;
+            double m12 = cosPitch * sinYaw * sinRoll - sinPitch * cosRoll;
+            double m13 = cosPitch * sinYaw * cosRoll + sinPitch * sinRoll;
 
-            double m21 = sinYaw * cosPitch;
-            double m22 = sinYaw * sinPitch * sinRoll + cosYaw * cosRoll;
-            double m23 = sinYaw * sinPitch * cosRoll - cosYaw * sinRoll;
+            double m21 = sinPitch * cosYaw;
+            double m22 = sinPitch * sinYaw * sinRoll + cosPitch * cosRoll;
+            double m23 = sinPitch * sinYaw * cosRoll - cosPitch * sinRoll;
 
-            double m31 = -sinPitch;
-            double m32 = cosPitch * sinRoll;
-            double m33 = cosPitch * cosRoll;
+            double m31 = -sinYaw;
+            double m32 = cosYaw * sinRoll;
+            double m33 = cosYaw * cosRoll;
 
             for (int i = 0; i < vectors.Length; ++i)
             {
@@ -96,23 +96,23 @@ namespace MinecraftServerEngine.Physics
             // Calculate the rotation matrix from the angles
             double cosRoll = System.Math.Cos(angles.Roll);
             double sinRoll = System.Math.Sin(angles.Roll);
-            double cosPitch = System.Math.Cos(angles.Pitch);
-            double sinPitch = System.Math.Sin(angles.Pitch);
             double cosYaw = System.Math.Cos(angles.Yaw);
             double sinYaw = System.Math.Sin(angles.Yaw);
+            double cosPitch = System.Math.Cos(angles.Pitch);
+            double sinPitch = System.Math.Sin(angles.Pitch);
 
             // Rotation matrix components
-            double m11 = cosYaw * cosPitch;
-            double m12 = cosYaw * sinPitch * sinRoll - sinYaw * cosRoll;
-            double m13 = cosYaw * sinPitch * cosRoll + sinYaw * sinRoll;
+            double m11 = cosPitch * cosYaw;
+            double m12 = cosPitch * sinYaw * sinRoll - sinPitch * cosRoll;
+            double m13 = cosPitch * sinYaw * cosRoll + sinPitch * sinRoll;
 
-            double m21 = sinYaw * cosPitch;
-            double m22 = sinYaw * sinPitch * sinRoll + cosYaw * cosRoll;
-            double m23 = sinYaw * sinPitch * cosRoll - cosYaw * sinRoll;
+            double m21 = sinPitch * cosYaw;
+            double m22 = sinPitch * sinYaw * sinRoll + cosPitch * cosRoll;
+            double m23 = sinPitch * sinYaw * cosRoll - cosPitch * sinRoll;
 
-            double m31 = -sinPitch;
-            double m32 = cosPitch * sinRoll;
-            double m33 = cosPitch * cosRoll;
+            double m31 = -sinYaw;
+            double m32 = cosYaw * sinRoll;
+            double m33 = cosYaw * cosRoll;
 
             return new Vector(
                 (vector.X * m11) + (vector.Y * m12) + (vector.Z * m13),
@@ -259,7 +259,7 @@ namespace MinecraftServerEngine.Physics
 
         public override readonly string ToString()
         {
-            return $"( X: {X}, Y: {Y}, Z: {Z} )";
+            return $"[{X},{Y},{Z}]";
         }
 
         public readonly bool Equals(Vector other)

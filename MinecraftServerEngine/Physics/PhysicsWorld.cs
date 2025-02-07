@@ -101,6 +101,18 @@ namespace MinecraftServerEngine.Physics
                 return new(max, min);
             }
 
+            private static Grid Generate(OrientedBoundingBox obb)
+            {
+                System.Diagnostics.Debug.Assert(obb != null);
+
+                AxisAlignedBoundingBox minAABB = obb.GetMinBoundingBox();
+
+                Cell max = Cell.GenerateForMax(minAABB.MaxVector),
+                     min = Cell.GenerateForMin(minAABB.MinVector);
+
+                return new(max, min);
+            }
+
             public static Grid Generate(BoundingVolume volume)
             {
                 System.Diagnostics.Debug.Assert(volume != null);
@@ -113,6 +125,8 @@ namespace MinecraftServerEngine.Physics
                         return null;
                     case AxisAlignedBoundingBox aabb:
                         return Generate(aabb);
+                    case OrientedBoundingBox obb:
+                        return Generate(obb);
                 }
 
             }

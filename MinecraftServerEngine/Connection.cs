@@ -14,6 +14,7 @@ namespace MinecraftServerEngine
     using Physics;
     using Physics.BoundingVolumes;
     using Particles;
+    using ShapeObjects;
 
     internal sealed class Connection : System.IDisposable
     {
@@ -313,8 +314,9 @@ namespace MinecraftServerEngine
         private int _dChunkRendering = MinRenderDistance;
 
 
-        private readonly EntityRenderer EntityRenderer;
-        private readonly ParticleObjectRenderer ParticleObjectRenderer;
+        private readonly EntityRenderer _EntityRenderer;
+        private readonly ParticleObjectRenderer _ParticleObjectRenderer;
+        private readonly ShapeObjectRenderer _ShapeObjectRenderer;
 
 
         private readonly ChunkingHelper _ChunkingHelprt;  // Dispoasble
@@ -355,8 +357,9 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(MaxRenderDistance >= MAxEntityRanderDistance);
 
             ChunkLocation loc = ChunkLocation.Generate(p);
-            EntityRenderer = new EntityRenderer(OutPackets, loc, _dEntityRendering, blindness);
-            ParticleObjectRenderer = new ParticleObjectRenderer(OutPackets, loc, _dEntityRendering);
+            _EntityRenderer = new EntityRenderer(OutPackets, loc, _dEntityRendering, blindness);
+            _ParticleObjectRenderer = new ParticleObjectRenderer(OutPackets, loc, _dEntityRendering);
+            _ShapeObjectRenderer = new ShapeObjectRenderer(OutPackets, loc, _dEntityRendering);
 
             _ChunkingHelprt = new ChunkingHelper(loc, _dChunkRendering);
 
@@ -825,8 +828,9 @@ namespace MinecraftServerEngine
 
                         Vector p = new(record.Position.X, record.Position.Y, record.Position.Z);
                         ChunkLocation locChunk = ChunkLocation.Generate(p);
-                        EntityRenderer.Update(locChunk);
-                        ParticleObjectRenderer.Update(locChunk);
+                        _EntityRenderer.Update(locChunk);
+                        _ParticleObjectRenderer.Update(locChunk);
+                        _ShapeObjectRenderer.Update(locChunk);
 
                         //if (player.Sneaking)
                         //{
@@ -884,8 +888,9 @@ namespace MinecraftServerEngine
                         _dChunkRendering = d;
                         _dEntityRendering = System.Math.Min(d, MAxEntityRanderDistance);
 
-                        EntityRenderer.Update(_dEntityRendering);
-                        ParticleObjectRenderer.Update(_dEntityRendering);
+                        _EntityRenderer.Update(_dEntityRendering);
+                        _ParticleObjectRenderer.Update(_dEntityRendering);
+                        _ShapeObjectRenderer.Update(_dEntityRendering);
                     }
                     break;
                 case ServerboundPlayingPacket.ServerboundConfirmTransactionPacketId:
@@ -1003,9 +1008,9 @@ namespace MinecraftServerEngine
                         /*player.ControlStanding(packet.OnGround);*/
 
                         ChunkLocation locChunk = ChunkLocation.Generate(p);
-                        EntityRenderer.Update(locChunk);
-                        ParticleObjectRenderer.Update(locChunk);
-
+                        _EntityRenderer.Update(locChunk);
+                        _ParticleObjectRenderer.Update(locChunk);
+                        _ShapeObjectRenderer.Update(locChunk);
                     }
                     break;
                 case ServerboundPlayingPacket.PlayerPosAndLookPacketId:
@@ -1025,8 +1030,9 @@ namespace MinecraftServerEngine
                         /*player.ControlStanding(packet.OnGround);*/
 
                         ChunkLocation locChunk = ChunkLocation.Generate(p);
-                        EntityRenderer.Update(locChunk);
-                        ParticleObjectRenderer.Update(locChunk);
+                        _EntityRenderer.Update(locChunk);
+                        _ParticleObjectRenderer.Update(locChunk);
+                        _ShapeObjectRenderer.Update(locChunk);
                     }
                     break;
                 case ServerboundPlayingPacket.PlayerLookPacketId:
@@ -1426,7 +1432,7 @@ namespace MinecraftServerEngine
 
         }
 
-        internal void LoadWorld(int idEntitySelf, World world, Vector p, bool blindness)
+        internal void LoadWorld(int selfEntityId, World world, Vector p, bool blindness)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
@@ -1465,14 +1471,18 @@ namespace MinecraftServerEngine
                         default:
                             throw new System.NotImplementedException();
                         case ParticleObject particleObj:
-                            particleObj.ApplyRenderer(ParticleObjectRenderer);
+                            particleObj.ApplyRenderer(_ParticleObjectRenderer);
                             break;
                         case Entity entity:
-                            if (entity.Id != idEntitySelf)
+                            if (entity.Id != selfEntityId)
                             {
-                                entity.ApplyRenderer(EntityRenderer);
+                                entity.ApplyRenderer(_EntityRenderer);
                             }
                             break;
+                        case ShapeObject shapeObj:
+                            shapeObj.ApplyRenderer(_ShapeObjectRenderer);
+                            break;
+
                     }
                 }
             }
@@ -1608,7 +1618,7 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            EntityRenderer.ApplyBlindness(f);
+            _EntityRenderer.ApplyBlindness(f);
         }
 
         internal void Teleport(Vector p, EntityAngles look)
@@ -1970,8 +1980,8 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(UserId != UserId.Null);
             id = UserId;
 
-            EntityRenderer.Disconnect();
-            ParticleObjectRenderer.Disconnect();
+            _EntityRenderer.Disconnect();
+            _ParticleObjectRenderer.Disconnect();
 
             Window.Flush(world, invPlayer);
 

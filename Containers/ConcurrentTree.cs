@@ -76,13 +76,18 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
+            System.Diagnostics.Debug.Assert(Locker != null);
             Locker.Read();
 
-            bool f = base.Contains(key);
-
-            Locker.Release();
-
-            return f;
+            try
+            {
+                return base.Contains(key);
+            } 
+            finally
+            {
+                System.Diagnostics.Debug.Assert(Locker != null);
+                Locker.Release();
+            }
         }
 
         public override K[] Flush()
@@ -108,9 +113,9 @@ namespace Containers
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            System.Diagnostics.Debug.Assert(_flags.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_keys.Length >= MinLength);
-            System.Diagnostics.Debug.Assert(_length >= MinLength);
+            System.Diagnostics.Debug.Assert(_flags.Length >= MinActualLength);
+            System.Diagnostics.Debug.Assert(_keys.Length >= MinActualLength);
+            System.Diagnostics.Debug.Assert(_length >= MinActualLength);
             System.Diagnostics.Debug.Assert(_count >= 0);
 
             Locker.Read();

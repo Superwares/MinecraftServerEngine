@@ -21,10 +21,6 @@ namespace MinecraftServerEngine.Entities
         public readonly System.Guid UniqueId;
 
 
-        private bool _hasMovement = false;
-
-        internal readonly ConcurrentTree<EntityRenderer> Renderers = new();  // Disposable
-
 
         protected Vector _p;
         public Vector Position => _p;
@@ -52,6 +48,13 @@ namespace MinecraftServerEngine.Entities
         // TransformAppearance
 
         private readonly bool NoGravity;
+
+
+
+        private bool _canHaveMovement = false;
+
+        internal readonly ConcurrentTree<EntityRenderer> Renderers = new();  // Disposable
+
 
 
         private protected Entity(
@@ -158,7 +161,7 @@ namespace MinecraftServerEngine.Entities
 
             if (volume is not EmptyBoundingVolume)
             {
-                System.Diagnostics.Debug.Assert(!_hasMovement);
+                System.Diagnostics.Debug.Assert(_canHaveMovement == false);
 
                 using Queue<EntityRenderer> queue = new();
 
@@ -258,8 +261,8 @@ namespace MinecraftServerEngine.Entities
                 }
 
 
-                System.Diagnostics.Debug.Assert(_hasMovement == false);
-                _hasMovement = true;
+                System.Diagnostics.Debug.Assert(_canHaveMovement == false);
+                _canHaveMovement = true;
                 return true;
             }
             else
@@ -300,8 +303,8 @@ namespace MinecraftServerEngine.Entities
                     }
                 }
 
-                System.Diagnostics.Debug.Assert(_hasMovement == false);
-                _hasMovement = false;
+                System.Diagnostics.Debug.Assert(_canHaveMovement == false);
+                _canHaveMovement = false;
                 return false;
             }
 
@@ -331,6 +334,8 @@ namespace MinecraftServerEngine.Entities
 
             if (shouldMovementRendering == true)
             {
+                System.Diagnostics.Debug.Assert(_canHaveMovement == true);
+
                 if (_teleported == true)
                 {
                     if (_fakeBlockApplied == false && Renderers.Empty == false)
@@ -348,8 +353,6 @@ namespace MinecraftServerEngine.Entities
                     _rotated = false;
                     _teleported = false;
                 }
-
-                System.Diagnostics.Debug.Assert(_hasMovement == true);
 
                 if (_world is World world && _fakeBlockApplied == true)
                 {
@@ -411,7 +414,7 @@ namespace MinecraftServerEngine.Entities
                     }
                 }
 
-                _hasMovement = false;
+                _canHaveMovement = false;
 
             }
             else if (_teleported == true)
@@ -860,7 +863,7 @@ namespace MinecraftServerEngine.Entities
             // Check to see if Dispose has already been called.
             if (_disposed == false)
             {
-                System.Diagnostics.Debug.Assert(_hasMovement == false);
+                System.Diagnostics.Debug.Assert(_canHaveMovement == false);
 
                 // If disposing equals true, dispose all managed
                 // and unmanaged resources.

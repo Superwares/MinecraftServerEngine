@@ -184,7 +184,7 @@ namespace MinecraftServerEngine.Particles
         internal ParticleObject(
             Vector p, double r, double m,
             byte red, byte green, byte blue,
-            Movement movement)
+            PhysicsObjectMovement movement)
             : base(m, AxisAlignedBoundingBox.Generate(p, GetMiddleRadius(r)), movement)
         {
             System.Diagnostics.Debug.Assert(movement != null);
@@ -287,7 +287,7 @@ namespace MinecraftServerEngine.Particles
         protected FreeParticle(
             Vector p, double r, double m,
             byte red, byte green, byte blue)
-            : base(p, r, m, red, green, blue, new WallPharsing())
+            : base(p, r, m, red, green, blue, new WallPharsingMovement())
         {
 
         }

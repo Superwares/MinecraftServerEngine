@@ -36,6 +36,9 @@ which significantly enhances server performance and scalability.
 
 ## Code Conventions
 
+- 무조건 {} 브라켓을 사용해야됨.
+- 무조건 == true 또는 == false 로 조건문을 사용해야됨.
+
 ### Types
 
 The following list is available value types.
@@ -159,6 +162,7 @@ If disposable objects were used as members of class and struct, they must be dis
 - queue 에 배열을 넣으면 그대로 enqueue 되도록.
 
 - data sturucture 의 Count -> Length
+	- hashtable, tree 같은 경우는 length 와 count 의 개념이 다르기 때문에 그대로 냅두기.
 
 - entity relative move 의 최대값을 넘어갈때 teleport 해야됨.
 	- 첫 접속시 월드가 로드가 안되어서 아래로 떨어지다가 다시 월드가 로드되고 위로 올라올때 relative move 의 최대값을 넘어갑니다.

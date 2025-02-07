@@ -459,7 +459,7 @@ namespace MinecraftServerEngine.Entities
             }
         }
 
-        public override void ApplyForce(Vector force)
+        private protected override void _ApplyForce(Vector force)
         {
             if (force.X < MinecraftPhysics.MinVelocity || force.X > MinecraftPhysics.MaxVelocity)
             {
@@ -494,7 +494,7 @@ namespace MinecraftServerEngine.Entities
                 Conn.ApplyVelocity(Id, v);
             }
 
-            base.ApplyForce(force);
+            base._ApplyForce(force);
         }
 
         internal override void Move(PhysicsWorld world, BoundingVolume volume, Vector v)

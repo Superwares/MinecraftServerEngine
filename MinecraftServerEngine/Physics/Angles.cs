@@ -7,14 +7,6 @@ namespace MinecraftServerEngine.Physics
     /// </summary>
     public readonly struct Angles
     {
-        public static Angles operator +(Angles angles1, Angles angles2)
-        {
-            return new(
-                angles1.Roll + angles2.Roll, 
-                angles1.Yaw + angles2.Yaw, 
-                angles1.Pitch + angles2.Pitch
-                );
-        }
 
         /// <summary>
         /// Gets the roll angle (based on x axis).
@@ -30,6 +22,24 @@ namespace MinecraftServerEngine.Physics
         /// Gets the pitch angle (based on z axis).
         /// </summary>
         public double Pitch { get; }
+
+        public static Angles operator +(Angles angles1, Angles angles2)
+        {
+            return new(
+                angles1.Roll + angles2.Roll, 
+                angles1.Yaw + angles2.Yaw, 
+                angles1.Pitch + angles2.Pitch
+                );
+        }
+
+        public static Angles CreateByDegrees(double roll, double yaw, double pitch)
+        {
+            return new Angles(
+                roll * (System.Math.PI / 180.0),
+                yaw * (System.Math.PI / 180.0),
+                pitch * (System.Math.PI / 180.0)
+                );
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Angles"/> struct.

@@ -18,7 +18,7 @@ namespace MinecraftServerEngine.Renderers
 
 
         private ChunkLocation _loc;
-        private int _d = -1;
+        private int _d = -1;  // render distance
 
 
         internal PhysicsObjectRenderer(
