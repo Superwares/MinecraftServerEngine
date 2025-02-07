@@ -28,7 +28,7 @@ namespace TestMinecraftServerApplication
 
             world.SearchObjects(objs, BoundingVolume, true);
 
-            MyConsole.Debug($"objs: {objs.Count}");
+            //MyConsole.Debug($"objs: {objs.Count}");
 
             if (BoundingVolume is OrientedBoundingBox obb) 
             {
