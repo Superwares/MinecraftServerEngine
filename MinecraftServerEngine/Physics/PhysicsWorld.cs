@@ -263,14 +263,14 @@ namespace MinecraftServerEngine.Physics
 
 
         public void SearchObjects(
-            Tree<PhysicsObject> objs, AxisAlignedBoundingBox minBoundingBox,
+            Tree<PhysicsObject> objs, BoundingVolume bv,
             bool strict, PhysicsObject exceptObj = null)
         {
-            System.Diagnostics.Debug.Assert(minBoundingBox != null);
+            System.Diagnostics.Debug.Assert(bv != null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            Grid grid = Grid.Generate(minBoundingBox);
+            Grid grid = Grid.Generate(bv);
 
             foreach (Cell cell in grid.GetCells())
             {
@@ -281,29 +281,29 @@ namespace MinecraftServerEngine.Physics
 
                 Tree<PhysicsObject> objectsInCell = CellToObjects.Lookup(cell);
                 System.Diagnostics.Debug.Assert(objectsInCell != null);
-                foreach (PhysicsObject objInCell in objectsInCell.GetKeys())
+                foreach (PhysicsObject obj in objectsInCell.GetKeys())
                 {
-                    if (ReferenceEquals(objInCell, exceptObj) == true)
+                    if (ReferenceEquals(obj, exceptObj) == true)
                     {
                         continue;
                     }
 
-                    System.Diagnostics.Debug.Assert(objInCell != null);
-                    if (objs.Contains(objInCell))
+                    System.Diagnostics.Debug.Assert(obj != null);
+                    if (objs.Contains(obj))
                     {
                         continue;
                     }
 
                     if (strict == true)
                     {
-                        if (objInCell.BoundingVolume.TestIntersection(minBoundingBox) == true)
+                        if (obj.BoundingVolume.TestIntersection(bv) == true)
                         {
-                            objs.Insert(objInCell);
+                            objs.Insert(obj);
                         }
                     }
                     else
                     {
-                        objs.Insert(objInCell);
+                        objs.Insert(obj);
                     }
                 }
             }

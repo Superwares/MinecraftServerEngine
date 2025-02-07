@@ -26,9 +26,7 @@ namespace TestMinecraftServerApplication
 
             using Tree<PhysicsObject> objs = new();
 
-            AxisAlignedBoundingBox minBoundingBox = BoundingVolume.GetMinBoundingBox();
-
-            world.SearchObjects(objs, minBoundingBox, true);
+            world.SearchObjects(objs, BoundingVolume, true);
 
             MyConsole.Debug($"objs: {objs.Count}");
 

@@ -1470,14 +1470,14 @@ namespace MinecraftServerEngine
                     {
                         default:
                             throw new System.NotImplementedException();
-                        case ParticleObject particleObj:
-                            particleObj.ApplyRenderer(_ParticleObjectRenderer);
-                            break;
                         case Entity entity:
                             if (entity.Id != selfEntityId)
                             {
                                 entity.ApplyRenderer(_EntityRenderer);
                             }
+                            break;
+                        case ParticleObject particleObj:
+                            particleObj.ApplyRenderer(_ParticleObjectRenderer);
                             break;
                         case ShapeObject shapeObj:
                             shapeObj.ApplyRenderer(_ShapeObjectRenderer);
@@ -1982,6 +1982,7 @@ namespace MinecraftServerEngine
 
             _EntityRenderer.Disconnect();
             _ParticleObjectRenderer.Disconnect();
+            _ShapeObjectRenderer.Disconnect();
 
             Window.Flush(world, invPlayer);
 

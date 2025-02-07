@@ -810,7 +810,7 @@ namespace MinecraftServerEngine.Entities
 
         internal override void Flush(PhysicsWorld _world)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(Renderers != null);
             if (Renderers.Empty == false)

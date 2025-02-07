@@ -200,6 +200,32 @@ namespace MinecraftServerEngine.ShapeObjects
             base.Move(_world, volume, v);
         }
 
+        internal override void Flush(PhysicsWorld _world)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(Renderers != null);
+            if (Renderers.Empty == false)
+            {
+                System.Diagnostics.Debug.Assert(Renderers != null);
+                ShapeObjectRenderer[] renderers = Renderers.Flush();
+
+                //foreach (ShapeObjectRenderer renderer in renderers)
+                //{
+                //    System.Diagnostics.Debug.Assert(renderer != null);
+                //    if (renderer.Disconnected == true)
+                //    {
+                //        continue;
+                //    }
+
+                    
+                //}
+
+            }
+
+            base.Flush(_world);
+        }
+
         protected override void Dispose(bool disposing)
         {
             // Check to see if Dispose has already been called.

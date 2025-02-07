@@ -22,6 +22,8 @@ namespace MinecraftServerEngine.Renderers
             double speed, int count,
             double r, double g, double b)
         {
+            System.Diagnostics.Debug.Assert(Disconnected == false);
+
             System.Diagnostics.Debug.Assert(r >= 0.0D);
             System.Diagnostics.Debug.Assert(r <= 1.0D);
             System.Diagnostics.Debug.Assert(g >= 0.0D);

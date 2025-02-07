@@ -39,7 +39,7 @@ namespace MinecraftServerEngine.Physics
                 (double min_aabb, double max_aabb) = Equations.FindAxisInterval(axis, aabb.Vertices);
                 (double min_obb, double max_obb) = Equations.FindAxisInterval(axis, obb.Vertices);
 
-                if (max_aabb < min_obb || min_aabb < max_obb)
+                if (max_aabb < min_obb || min_aabb > max_obb)
                 {
                     return false;
                 }

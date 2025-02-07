@@ -26,7 +26,7 @@ namespace MinecraftServerEngine.Renderers
             int id,
             Vector p, Vector pPrev, EntityAngles look)
         {
-            System.Diagnostics.Debug.Assert(!Disconnected);
+            System.Diagnostics.Debug.Assert(Disconnected == false);
 
             double dx = (p.X - pPrev.X) * (32 * 128),
                 dy = (p.Y - pPrev.Y) * (32 * 128),
@@ -47,7 +47,7 @@ namespace MinecraftServerEngine.Renderers
 
         internal void RelMove(int id, Vector p, Vector pPrev)
         {
-            System.Diagnostics.Debug.Assert(!Disconnected);
+            System.Diagnostics.Debug.Assert(Disconnected == false);
 
             double dx = (p.X - pPrev.X) * (32 * 128),
                 dy = (p.Y - pPrev.Y) * (32 * 128),
@@ -65,7 +65,7 @@ namespace MinecraftServerEngine.Renderers
 
         internal void Rotate(int id, EntityAngles look)
         {
-            System.Diagnostics.Debug.Assert(!Disconnected);
+            System.Diagnostics.Debug.Assert(Disconnected == false);
 
             (byte x, byte y) = look.ConvertToProtocolFormat();
             Render(new EntityLookPacket(id, x, y, false));
@@ -74,14 +74,14 @@ namespace MinecraftServerEngine.Renderers
 
         internal void Stand(int id)
         {
-            System.Diagnostics.Debug.Assert(!Disconnected);
+            System.Diagnostics.Debug.Assert(Disconnected == false);
 
             Render(new EntityPacket(id));
         }
 
         internal void Teleport(int id, Vector p, EntityAngles look, bool onGround)
         {
-            System.Diagnostics.Debug.Assert(!Disconnected);
+            System.Diagnostics.Debug.Assert(Disconnected == false);
 
             (byte x, byte y) = look.ConvertToProtocolFormat();
             Render(new EntityTeleportPacket(
@@ -102,7 +102,7 @@ namespace MinecraftServerEngine.Renderers
 
         internal void ChangeForms(int id, bool sneaking, bool sprinting)
         {
-            System.Diagnostics.Debug.Assert(!Disconnected);
+            System.Diagnostics.Debug.Assert(Disconnected == false);
 
             byte flags = 0x00;
 
@@ -135,6 +135,8 @@ namespace MinecraftServerEngine.Renderers
             double speed, int count,
             double r, double g, double b)
         {
+            System.Diagnostics.Debug.Assert(Disconnected == false);
+
             System.Diagnostics.Debug.Assert(r >= 0.0D);
             System.Diagnostics.Debug.Assert(r <= 1.0D);
             System.Diagnostics.Debug.Assert(g >= 0.0D);
@@ -214,7 +216,7 @@ namespace MinecraftServerEngine.Renderers
         {
             System.Diagnostics.Debug.Assert(uniqueId != System.Guid.Empty);
 
-            System.Diagnostics.Debug.Assert(!Disconnected);
+            System.Diagnostics.Debug.Assert(Disconnected == false);
 
             byte flags = 0x00;
 
@@ -255,7 +257,7 @@ namespace MinecraftServerEngine.Renderers
         {
             System.Diagnostics.Debug.Assert(uniqueId != System.Guid.Empty);
 
-            System.Diagnostics.Debug.Assert(!Disconnected);
+            System.Diagnostics.Debug.Assert(Disconnected == false);
 
             using MinecraftProtocolDataStream stream = new();
 

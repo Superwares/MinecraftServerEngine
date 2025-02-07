@@ -296,6 +296,8 @@ namespace MinecraftServerEngine.Physics.BoundingVolumes
                     throw new System.NotImplementedException();
                 case AxisAlignedBoundingBox aabb:
                     return IntersectionTests.TestFixedAndFixed(this, aabb);
+                case OrientedBoundingBox obb:
+                    return IntersectionTests.TestFixedAndFixed(this, obb);
                 case CompoundBoundingVolume cbv:
                     return IntersectionTests.TestFixedAndFixed(this, cbv);
             }
