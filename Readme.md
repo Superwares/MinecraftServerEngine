@@ -18,6 +18,8 @@ which significantly enhances server performance and scalability.
 
 ### Continuous Physics
 
+### OBB Object Handling
+
 ### Single World
 
 ### Dynamic Entity Appearance (yet)
