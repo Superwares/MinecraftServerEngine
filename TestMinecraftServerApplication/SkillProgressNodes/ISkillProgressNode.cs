@@ -1,5 +1,6 @@
 ﻿
 
+using MinecraftServerEngine.Physics;
 
 namespace TestMinecraftServerApplication.SkillProgressNodes
 {
@@ -9,7 +10,7 @@ namespace TestMinecraftServerApplication.SkillProgressNodes
 
         ISkillProgressNode CreateNextNode();
 
-        bool Start(SuperWorld world, SuperPlayer player);
-        void Close(SuperPlayer player);
+        bool Start(SuperWorld world, PhysicsObject obj);
+        void Close(PhysicsObject obj);
     }
 }

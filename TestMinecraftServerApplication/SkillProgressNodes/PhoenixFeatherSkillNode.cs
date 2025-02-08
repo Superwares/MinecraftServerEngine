@@ -3,7 +3,6 @@ using Common;
 
 using MinecraftServerEngine;
 using MinecraftServerEngine.Physics;
-using System;
 using TestMinecraftServerApplication.Items;
 
 namespace TestMinecraftServerApplication.SkillProgressNodes
@@ -76,87 +75,97 @@ namespace TestMinecraftServerApplication.SkillProgressNodes
             return null;
         }
 
-        public bool Start(SuperWorld world, SuperPlayer player)
+        public bool Start(SuperWorld world, PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(world != null);
-            System.Diagnostics.Debug.Assert(player != null);
+            System.Diagnostics.Debug.Assert(obj != null);
 
-            if (_init == false)
+            if (obj is SuperPlayer player)
             {
-                _lastEmitTime = Time.Now() - PhoenixFeather.EmitInterval;
-
-                System.Diagnostics.Debug.Assert(player != null);
-                System.Diagnostics.Debug.Assert(PhoenixFeather.MovementSpeedIncrease >= 0.0);
-                player.AddMovementSpeed(PhoenixFeather.MovementSpeedIncrease);
-
-                player.EmitParticles(PhoenixFeather.PhoenixParticle, 0.8, 1_000);
-
-                player.HealFully();
-
-                world.PlaySound("block.anvil.land", 4, player.Position, 1.0, 2.0);
-
-                _init = true;
-            }
-
-            Time elapsedTime = Time.Now() - _lastEmitTime;
-            if (elapsedTime >= PhoenixFeather.EmitInterval)
-            {
-                int emits = (int)System.Math.Floor(
-                    (double)elapsedTime.Amount / (double)PhoenixFeather.EmitInterval.Amount
-                    );
-
-                if (_currentEmit + emits > PhoenixFeather.MaxEmits)
+                if (_init == false)
                 {
-                    emits = PhoenixFeather.MaxEmits - _currentEmit;
-                }
+                    _lastEmitTime = Time.Now() - PhoenixFeather.EmitInterval;
 
-                for (int i = 0; i < emits; ++i)
-                {
                     System.Diagnostics.Debug.Assert(player != null);
-                    player.AddAdditionalHealth(PhoenixFeather.AdditionalHeartsIncrease);
+                    System.Diagnostics.Debug.Assert(PhoenixFeather.MovementSpeedIncrease >= 0.0);
+                    player.AddMovementSpeed(PhoenixFeather.MovementSpeedIncrease);
 
-                    if (i % 2 == 0)
-                    {
-                        world.PlaySound("block.note.bell", 4, player.Position, 1.0, 2.0);
-                    }
-                    else
-                    {
-                        world.PlaySound("block.note.chime", 4, player.Position, 1.0, 2.0);
-                    }
+                    player.EmitParticles(PhoenixFeather.PhoenixParticle, 0.8, 1_000);
 
-                    for (int k = 0; k < PhoenixFeather.HealParticleCountInOneEmit; ++k)
-                    {
-                        int j = new System.Random().Next(RandomPointsInSphere.Length);
-                        player.EmitParticles(
-                            PhoenixFeather.HealParticle,
-                            new Vector(0.0, player.GetEyeHeight(), 0.0) + RandomPointsInSphere[j],
-                            0.4,
-                            1
-                        );
-                    }
+                    player.HealFully();
 
-                    
+                    world.PlaySound("block.anvil.land", 4, player.Position, 1.0, 2.0);
+
+                    _init = true;
                 }
 
-                System.Diagnostics.Debug.Assert(emits > 0);
-                _currentEmit += emits;
+                Time elapsedTime = Time.Now() - _lastEmitTime;
+                if (elapsedTime >= PhoenixFeather.EmitInterval)
+                {
+                    int emits = (int)System.Math.Floor(
+                        (double)elapsedTime.Amount / (double)PhoenixFeather.EmitInterval.Amount
+                        );
 
-                _lastEmitTime = Time.Now();
+                    if (_currentEmit + emits > PhoenixFeather.MaxEmits)
+                    {
+                        emits = PhoenixFeather.MaxEmits - _currentEmit;
+                    }
+
+                    for (int i = 0; i < emits; ++i)
+                    {
+                        System.Diagnostics.Debug.Assert(player != null);
+                        player.AddAdditionalHealth(PhoenixFeather.AdditionalHeartsIncrease);
+
+                        if (i % 2 == 0)
+                        {
+                            world.PlaySound("block.note.bell", 4, player.Position, 1.0, 2.0);
+                        }
+                        else
+                        {
+                            world.PlaySound("block.note.chime", 4, player.Position, 1.0, 2.0);
+                        }
+
+                        for (int k = 0; k < PhoenixFeather.HealParticleCountInOneEmit; ++k)
+                        {
+                            int j = new System.Random().Next(RandomPointsInSphere.Length);
+                            player.EmitParticles(
+                                PhoenixFeather.HealParticle,
+                                new Vector(0.0, player.GetEyeHeight(), 0.0) + RandomPointsInSphere[j],
+                                0.4,
+                                1
+                            );
+                        }
+
+
+                    }
+
+                    System.Diagnostics.Debug.Assert(emits > 0);
+                    _currentEmit += emits;
+
+                    _lastEmitTime = Time.Now();
+                }
+
+                System.Diagnostics.Debug.Assert(_currentEmit >= 0);
+                System.Diagnostics.Debug.Assert(_currentEmit <= PhoenixFeather.MaxEmits);
+                return _currentEmit == PhoenixFeather.MaxEmits;
             }
 
-            System.Diagnostics.Debug.Assert(_currentEmit >= 0);
-            System.Diagnostics.Debug.Assert(_currentEmit <= PhoenixFeather.MaxEmits);
-            return _currentEmit == PhoenixFeather.MaxEmits;
+            throw new System.InvalidOperationException("The provided object is not a SuperPlayer");
         }
 
-        public void Close(SuperPlayer player)
+        public void Close(PhysicsObject obj)
         {
-            System.Diagnostics.Debug.Assert(player != null);
+            System.Diagnostics.Debug.Assert(obj != null);
 
-            System.Diagnostics.Debug.Assert(PhoenixFeather.MovementSpeedIncrease >= 0.0);
-            player.RemoveMovementSpeed(PhoenixFeather.MovementSpeedIncrease);
+            if (obj is SuperPlayer player)
+            {
+                System.Diagnostics.Debug.Assert(PhoenixFeather.MovementSpeedIncrease >= 0.0);
+                player.RemoveMovementSpeed(PhoenixFeather.MovementSpeedIncrease);
 
-            PhoenixFeather.CanPurchase = true;
+                PhoenixFeather.CanPurchase = true;
+            }
+
+            
         }
     }
 }

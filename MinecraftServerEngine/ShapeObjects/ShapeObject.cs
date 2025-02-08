@@ -183,6 +183,8 @@ namespace MinecraftServerEngine.ShapeObjects
                     }
 
                     Renderers.Extract(renderer);
+
+                    //MyConsole.Debug("Extract Renderer!");
                 }
 
 

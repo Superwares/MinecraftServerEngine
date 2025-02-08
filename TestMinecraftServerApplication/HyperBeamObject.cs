@@ -1,42 +1,147 @@
 ﻿using Common;
+using Sync;
 using Containers;
 
+using MinecraftServerEngine;
+using MinecraftServerEngine.Entities;
+using MinecraftServerEngine.ShapeObjects;
+using MinecraftServerEngine.Particles;
 using MinecraftServerEngine.Physics;
 using MinecraftServerEngine.Physics.BoundingVolumes;
-using MinecraftServerEngine.Particles;
-using MinecraftServerEngine.ShapeObjects;
 
+using TestMinecraftServerApplication.SkillProgressNodes;
+using TestMinecraftServerApplication.Items;
+using System.Runtime.Intrinsics;
 
 namespace TestMinecraftServerApplication
 {
     internal sealed class HyperBeamObject : CylinderObject
     {
-        public HyperBeamObject() 
-            : base(
-                  new Vector(151.5, 15.0, 214.5),
-                  new Vector(1.0, 1.0, 1.0), 
-                  Angles.CreateByDegrees(0.0, 45.0, 0.0)
-                  )
+
+
+        private bool _disposed = false;
+
+        private readonly Queue<ISkillProgressNode> _SkillQueue = new();
+        
+        private static Angles GenerateAngles(EntityAngles _angles)
         {
+            Angles offset = Angles.CreateByDegrees(0.0, -90.0, 0.0);
+            //Angles angles = Angles.CreateByDegrees(0, -1 * _angles.Yaw, _angles.Pitch) + offset;
+            Angles angles = Angles.CreateByDegrees(0.0, -1 * _angles.Yaw, 0.0) + offset;
+
+            return angles;
+
         }
 
-        public override void StartRoutine(PhysicsWorld world)
+        private static Vector CalculateCenter(Vector v, EntityAngles _angles)
         {
-            System.Diagnostics.Debug.Assert(world != null);
+            Vector u = new(0, 0, 1);
 
-            using Tree<PhysicsObject> objs = new();
+            //Angles angles = Angles.CreateByDegrees(0, -1 * _angles.Yaw, _angles.Pitch);
+            Angles angles = Angles.CreateByDegrees(0.0, -1 * _angles.Yaw, 0.0);
 
-            world.SearchObjects(objs, BoundingVolume, true);
+            //Angles angles = GenerateAngles(_angles);
+            //Vector u = _angles.ToUnitVector();
+            Vector d = u.Rotate(angles) * HyperBeam.HalfLength;
 
-            //MyConsole.Debug($"objs: {objs.Count}");
+            return v + d;
+        }
 
-            if (BoundingVolume is OrientedBoundingBox obb) 
+        public HyperBeamObject(Vector v, EntityAngles _angles)
+            : base(
+                  CalculateCenter(v, _angles),
+                  new Vector(HyperBeam.HalfLength, HyperBeam.Radius, HyperBeam.Radius),
+                  GenerateAngles(_angles)
+                  )
+        {
+            System.Diagnostics.Debug.Assert(_SkillQueue != null);
+            _SkillQueue.Enqueue(new HyperBeamChargingSkillNode());
+
+        }
+
+
+
+        public override void StartRoutine(PhysicsWorld _world)
+        {
+            System.Diagnostics.Debug.Assert(_world != null);
+
+            //using Tree<PhysicsObject> objs = new();
+
+            //_world.SearchObjects(objs, BoundingVolume, true);
+
+            ////MyConsole.Debug($"objs: {objs.Count}");
+
+            //if (BoundingVolume is OrientedBoundingBox obb)
+            //{
+            //    EmitParticles(Particle.Reddust, obb.Center, 0.0000001, 1, 0.0, 0.0, 0.0);
+
+            //    foreach (Vector vertex in obb.Vertices)
+            //    {
+            //        EmitParticles(Particle.Reddust, vertex, 0.0000001, 1, 0.0, 0.0, 0.0);
+            //    }
+            //}
+
+            if (_world is SuperWorld world)
             {
-                foreach (Vector vertex in obb.Vertices)
+                System.Diagnostics.Debug.Assert(_SkillQueue != null);
+                if (_SkillQueue.Empty == false)
                 {
-                    EmitParticles(Particle.Reddust, vertex, 0.0000001, 1, 0.0, 0.0, 0.0);
+                    int currentSkill = 0;
+                    ISkillProgressNode skillNode;
+
+                    System.Diagnostics.Debug.Assert(_SkillQueue != null);
+                    while (
+                        currentSkill++ < _SkillQueue.Length &&
+                        _SkillQueue.Dequeue(out skillNode) == true
+                        )
+                    {
+                        System.Diagnostics.Debug.Assert(currentSkill >= 0);
+
+                        System.Diagnostics.Debug.Assert(skillNode != null);
+                        if (skillNode.Start(world, this) == true)
+                        {
+                            //MyConsole.Debug("Close skill!");
+                            skillNode.Close(this);
+
+                            skillNode = skillNode.CreateNextNode();
+                        }
+
+                        if (skillNode != null)
+                        {
+                            _SkillQueue.Enqueue(skillNode);
+                        }
+                    }
                 }
             }
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            // Check to see if Dispose has already been called.
+            if (_disposed == false)
+            {
+
+                // If disposing equals true, dispose all managed
+                // and unmanaged resources.
+                if (disposing == true)
+                {
+                    // Dispose managed resources.
+                    _SkillQueue.Dispose();
+                }
+
+                // Call the appropriate methods to clean up
+                // unmanaged resources here.
+                // If disposing is false,
+                // only the following code is executed.
+                //CloseHandle(handle);
+                //handle = IntPtr.Zero;
+
+                // Note disposing has been done.
+                _disposed = true;
+            }
+
+            base.Dispose(disposing);
+        }
+
     }
 }

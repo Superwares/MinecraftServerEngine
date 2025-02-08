@@ -68,21 +68,27 @@ namespace MinecraftServerEngine.Entities
             Pitch = pitch;
         }
 
-        public Vector GetUnitVector()
+        public Vector ToUnitVector()
         {
             /**
              * Reference: https://www.spigotmc.org/threads/converting-a-yaw-and-a-pitch-to-a-vector.639501/
              */
 
-            double yaw = (Yaw + 90.0D) * System.Math.PI / 180;
-            double pitch = (Pitch + 90.0D) * System.Math.PI / 180;
+            double yaw = (Yaw + 90.0) * (System.Math.PI / 180.0);
+            double pitch = (Pitch + 90.0) * (System.Math.PI / 180.0);
 
-            double x = System.Math.Sin(pitch) * System.Math.Cos(yaw),
-                y = System.Math.Cos(pitch),
-                z = System.Math.Sin(pitch) * System.Math.Sin(yaw);
+            double x = System.Math.Sin(pitch) * System.Math.Cos(yaw);
+            double y = System.Math.Cos(pitch);
+            double z = System.Math.Sin(pitch) * System.Math.Sin(yaw);
 
             return new Vector(x, y, z);
         }
+
+        //public Angles ToAngles()
+        //{
+        //    Vector u = ToUnitVector();
+        //    return Angles.FromUnitVector(u);
+        //}
 
         internal readonly (byte, byte) ConvertToProtocolFormat()
         {

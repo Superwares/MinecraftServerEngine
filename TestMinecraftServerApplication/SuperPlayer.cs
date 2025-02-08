@@ -440,7 +440,7 @@ namespace TestMinecraftServerApplication
             }
 
             Vector o = GetEyeOrigin();
-            Vector d = Look.GetUnitVector();
+            Vector d = Look.ToUnitVector();
             Vector d_prime = d * directionScale;
 
             //MyConsole.Debug($"Eye origin: {eyeOrigin}, Scaled direction vector: {scaled_d}");
@@ -497,7 +497,7 @@ namespace TestMinecraftServerApplication
 
 
             Vector o = GetEyeOrigin();
-            Vector d = Look.GetUnitVector();
+            Vector d = Look.ToUnitVector();
             Vector d_prime = d * directionScale;
 
             //MyConsole.Debug($"Eye origin: {eyeOrigin}, Scaled direction vector: {scaled_d}");
@@ -555,7 +555,7 @@ namespace TestMinecraftServerApplication
 
 
             Vector o = GetEyeOrigin();
-            Vector d = Look.GetUnitVector();
+            Vector d = Look.ToUnitVector();
             Vector d_prime = d * directionScale;
 
             Vector k = new(0.0, 1.0, 0.0);
@@ -611,7 +611,7 @@ namespace TestMinecraftServerApplication
 
 
             Vector o = GetEyeOrigin();
-            Vector d = Look.GetUnitVector();
+            Vector d = Look.ToUnitVector();
             Vector d_prime = d * directionScale;
 
             //MyConsole.Debug($"Eye origin: {eyeOrigin}, Scaled direction vector: {scaled_d}");
@@ -687,7 +687,7 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(takedItemStacks.Length > 0);
 
-            Vector d = Look.GetUnitVector() + new Vector(0.0, 0.1, 0.0);
+            Vector d = Look.ToUnitVector() + new Vector(0.0, 0.1, 0.0);
 
             ApplyForce(d * Dash.Power);
 
@@ -1082,7 +1082,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             Vector eyeOrigin = GetEyeOrigin();
-            Vector d = Look.GetUnitVector();
+            Vector d = Look.ToUnitVector();
             Vector scaled_d = d * GetEyeHeight();
 
             PhysicsObject obj = world.SearchClosestObject(eyeOrigin, scaled_d, this);
