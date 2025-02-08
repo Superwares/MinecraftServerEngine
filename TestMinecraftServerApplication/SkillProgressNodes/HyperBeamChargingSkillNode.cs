@@ -27,50 +27,65 @@ namespace TestMinecraftServerApplication.SkillProgressNodes
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(_obj != null);
 
+            const double ParticleInterval = HyperBeam.ChargingParticleInterval;
+            const int ParticlePlanes = (int)(HyperBeam.Length / ParticleInterval) + 1;
+
+            //const double ChargingLength = HyperBeam.Length + 1;
+
+            Time elapsedTime = Time.Now() - _startTime;
+
+            System.Diagnostics.Debug.Assert(_chargingIndex <= ParticlePlanes);
+            if (_chargingIndex == ParticlePlanes)
+            {
+                if (elapsedTime > Time.FromSeconds(1))
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
             if (_obj is HyperBeamObject obj && obj.BoundingVolume is OrientedBoundingBox obb)
             {
-                Time elapsedTime = Time.Now() - _startTime;
+                
 
                 if (elapsedTime >= HyperBeam.ChargingInterval)
                 {
-                    const double ChargingLength = HyperBeam.Length + 1;
 
                     Vector u = new(1.0, 0.0, 0.0);
                     u = u.Rotate(obb.Angles);
 
-                    Vector d = u * (_chargingIndex++ % ChargingLength);
-                    Vector o = d + obb.Center - u * obb.Extents.X;
+                    Vector d = u * ((_chargingIndex++ % ParticlePlanes) * ParticleInterval);
+                    Vector o = d + obb.Center - (u * obb.Extents.X);
 
-                    const double Radius = HyperBeam.Radius;
-                    const int NumberOfPoints = 10;
+                    const double CircleRadius = HyperBeam.Radius;
+                    const int CirclePoints = 35;
 
-                    double angleIncrement = 2 * System.Math.PI / NumberOfPoints;
+                    double angleIncrement = 2 * System.Math.PI / CirclePoints;
 
-                    Vector[] vertices = new Vector[NumberOfPoints];
+                    Vector[] vertices = new Vector[CirclePoints];
 
-                    for (int i = 0; i < NumberOfPoints; i++)
+                    for (int i = 0; i < CirclePoints; i++)
                     {
                         double angle = i * angleIncrement;
-                        double x = Radius * System.Math.Cos(angle);
-                        double y = Radius * System.Math.Sin(angle);
+                        double x = CircleRadius * System.Math.Cos(angle);
+                        double y = CircleRadius * System.Math.Sin(angle);
 
                         vertices[i] = new Vector(0, x, y);
                     }
 
                     Vector.Rotate(obb.Angles, vertices);
 
-                    for (int i = 0; i < NumberOfPoints; i++)
+                    for (int i = 0; i < CirclePoints; i++)
                     {
-                        obj.EmitParticles(Particle.Reddust, vertices[i] + o, 0.1, 1, 1.0, 0.0001, 0.0001);  // black
+                        Vector v = vertices[i] + o;
+                        obj.EmitRgbParticle(v, 0.0, 0.0, 0.0);  // Black
                     }
+
+                    world.PlaySound("entity.experience_orb.pickup", 0, o, 1.0, 2.0);
 
                     _startTime = _startTime + HyperBeam.ChargingInterval;
-
-                    System.Diagnostics.Debug.Assert(_chargingIndex <= ChargingLength);
-                    if (_chargingIndex == ChargingLength)
-                    {
-                        return true;
-                    }
+                    
                 }
 
                 return false;
