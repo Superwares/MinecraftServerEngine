@@ -43,7 +43,8 @@ namespace MinecraftServerEngine.Entities
 
         private bool _prevFakeBlockApplied = false, _fakeBlockApplied = false;
         private Block _prevFakeBlock, _fakeBlock;
-    
+
+
 
         private readonly bool _NoGravity;
 

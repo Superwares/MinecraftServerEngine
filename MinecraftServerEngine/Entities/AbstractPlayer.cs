@@ -56,6 +56,12 @@ namespace MinecraftServerEngine.Entities
 
         public bool IsBlindness => _blindness;
 
+
+
+        private bool _canDespawn = true;
+        public bool CanDespawn => _canDespawn;
+
+
         private static EntityHitbox GetAdventureHitbox(bool sneaking)
         {
             double w = HitboxWidth, h;
@@ -127,6 +133,8 @@ namespace MinecraftServerEngine.Entities
             return value;
         }
 
+        public virtual void OnRespawn() { }
+
         public void PlaySound(string name, int category, double volume, double pitch)
         {
             if (_disposed == true)
@@ -153,9 +161,24 @@ namespace MinecraftServerEngine.Entities
             }
         }
 
-        public virtual void OnRespawn()
+        public void DisableDespawning()
         {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
 
+            _canDespawn = false;
+        }
+
+        public void EnableDespawning()
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            _canDespawn = true;
         }
 
         protected override void HandleDamageEvent(World world, double amount, LivingEntity attacker)

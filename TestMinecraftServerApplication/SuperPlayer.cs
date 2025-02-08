@@ -877,10 +877,7 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(world != null);
 
-            world.SpawnObject(new HyperBeamObject(
-                Position + new Vector(0.0, GetEyeHeight(), 0.0),
-                Look
-                ));
+            world.SpawnObject(new HyperBeamObject(this));
         }
 
         protected override void OnAttack(World _world, double attackCharge)

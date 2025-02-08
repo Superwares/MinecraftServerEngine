@@ -379,39 +379,15 @@ namespace MinecraftServerEngine
 
         internal readonly ConcurrentTable<int, Entity> EntitiesById = new();  // Disposable
         internal readonly ConcurrentTable<UserId, AbstractPlayer> PlayersByUserId = new();  // Disposable
-        public int AllPlayers
-        {
-            get
-            {
-                if (_disposed == true)
-                {
-                    throw new System.ObjectDisposedException(GetType().Name);
-                }
-
-                System.Diagnostics.Debug.Assert(PlayersByUserId != null);
-                return PlayersByUserId.Count;
-            }
-        }
-        public System.Collections.Generic.IEnumerable<AbstractPlayer> Players
-        {
-            get
-            {
-                if (_disposed == true)
-                {
-                    throw new System.ObjectDisposedException(GetType().Name);
-                }
-
-                System.Diagnostics.Debug.Assert(PlayersByUserId != null);
-                return PlayersByUserId.GetValues();
-            }
-        }
+        public int AllPlayers => PlayersByUserId.Count;
+        public System.Collections.Generic.IEnumerable<AbstractPlayer> Players => PlayersByUserId.GetValues();
 
 
         internal readonly ConcurrentTable<string, AbstractPlayer> PlayersByUsername = new();  // Disposable
 
         internal readonly ConcurrentMap<UserId, WorldRenderer> WorldRenderersByUserId = new();  // Disposable
 
-        private readonly ConcurrentTable<UserId, AbstractPlayer> DisconnectedPlayers = new(); // Disposable
+        private readonly ConcurrentTable<UserId, AbstractPlayer> _DisconnectedPlayers = new(); // Disposable
 
         public readonly BlockContext BlockContext;  // Disposable
 
@@ -962,8 +938,10 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            System.Diagnostics.Debug.Assert(PlayerList != null);
             PlayerList.Disconnect(id);
 
+            System.Diagnostics.Debug.Assert(WorldRenderersByUserId != null);
             WorldRenderersByUserId.Extract(id);
 
             // TODO: world border
@@ -976,6 +954,7 @@ namespace MinecraftServerEngine
 
         public void SpawnObject(PhysicsObject obj)
         {
+            // TODO: remove this condition for spawn fake player?
             if (obj is AbstractPlayer)
             {
                 throw new System.ArgumentException("Cannot spawn an AbstractPlayer object.");
@@ -1020,29 +999,31 @@ namespace MinecraftServerEngine
 
         internal void HandlePlayerDisconnections()
         {
-            bool despawned = CanDespawnPlayerOnDisconnect();
+            bool canDespawn = CanDespawnPlayerOnDisconnect();
             bool cleanup;
 
             while (_ObjectQueue.DequeuePlayer(out AbstractPlayer player))
             {
                 System.Diagnostics.Debug.Assert(player != null);
 
-                if (despawned == false)
+                if (canDespawn == false || player.CanDespawn == false)
                 {
                     if (player.HandleDisconnection(out UserId userId, this) == true)
                     {
                         System.Diagnostics.Debug.Assert(userId != UserId.Null);
 
-                        DisconnectedPlayers.Insert(userId, player);
+                        System.Diagnostics.Debug.Assert(_DisconnectedPlayers != null);
+                        _DisconnectedPlayers.Insert(userId, player);
                     }
                 }
                 else
                 {
                     cleanup = false;
 
-                    if (DisconnectedPlayers.Contains(player.UserId) == true)
+                    System.Diagnostics.Debug.Assert(_DisconnectedPlayers != null);
+                    if (_DisconnectedPlayers.Contains(player.UserId) == true)
                     {
-                        DisconnectedPlayers.Extract(player.UserId);
+                        _DisconnectedPlayers.Extract(player.UserId);
 
                         cleanup = true;
                     }
@@ -1150,9 +1131,10 @@ namespace MinecraftServerEngine
 
             AbstractPlayer player;
 
-            if (DisconnectedPlayers.Contains(user.Id) == true)
+            System.Diagnostics.Debug.Assert(_DisconnectedPlayers != null);
+            if (_DisconnectedPlayers.Contains(user.Id) == true)
             {
-                player = DisconnectedPlayers.Extract(user.Id);
+                player = _DisconnectedPlayers.Extract(user.Id);
                 System.Diagnostics.Debug.Assert(player != null);
             }
             else
@@ -1394,7 +1376,7 @@ namespace MinecraftServerEngine
 
                 System.Diagnostics.Debug.Assert(EntitiesById.Empty == true);
 
-                System.Diagnostics.Debug.Assert(DisconnectedPlayers.Empty == true);
+                System.Diagnostics.Debug.Assert(_DisconnectedPlayers.Empty == true);
 
                 // If disposing equals true, dispose all managed
                 // and unmanaged resources.
@@ -1413,7 +1395,7 @@ namespace MinecraftServerEngine
 
                     WorldRenderersByUserId.Dispose();
 
-                    DisconnectedPlayers.Dispose();
+                    _DisconnectedPlayers.Dispose();
 
                     BlockContext.Dispose();
 

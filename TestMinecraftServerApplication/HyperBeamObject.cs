@@ -22,7 +22,10 @@ namespace TestMinecraftServerApplication
         private bool _disposed = false;
 
         private readonly Queue<ISkillProgressNode> _SkillQueue = new();
-        
+
+        private SuperPlayer _caster = null;
+        internal SuperPlayer Caster => _caster;
+
         private static Angles GenerateAngles(EntityAngles _angles)
         {
             Angles offset = Angles.CreateByDegrees(0.0, -90.0, 0.0);
@@ -44,18 +47,26 @@ namespace TestMinecraftServerApplication
             return v + d;
         }
 
-        public HyperBeamObject(Vector v, EntityAngles _angles)
+        public HyperBeamObject(SuperPlayer player)
             : base(
-                  CalculateCenter(v, _angles),
+                  CalculateCenter(player.Position + new Vector(0.0, player.GetEyeHeight(), 0.0), player.Look),
                   new Vector(HyperBeam.HalfLength, HyperBeam.Radius, HyperBeam.Radius),
-                  GenerateAngles(_angles)
+                  GenerateAngles(player.Look)
                   )
         {
             System.Diagnostics.Debug.Assert(_SkillQueue != null);
             _SkillQueue.Enqueue(new HyperBeamChargingSkillNode());
 
+            player.DisableDespawning();
+            _caster = player;
         }
 
+        protected override void OnDespawn(PhysicsWorld world)
+        {
+            System.Diagnostics.Debug.Assert(_caster != null);
+            _caster.EnableDespawning();
+            _caster = null;
+        }
 
         protected override bool HandleDespawning()
         {
@@ -64,7 +75,7 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(_SkillQueue != null);
             return _SkillQueue.Empty == true;
         }
-
+    
         public override void StartRoutine(PhysicsWorld _world)
         {
             System.Diagnostics.Debug.Assert(_world != null);
@@ -111,6 +122,8 @@ namespace TestMinecraftServerApplication
                             skillNode.Close(this);
 
                             skillNode = skillNode.CreateNextNode();
+
+                            
                         }
 
                         if (skillNode != null)
@@ -127,6 +140,7 @@ namespace TestMinecraftServerApplication
             // Check to see if Dispose has already been called.
             if (_disposed == false)
             {
+                System.Diagnostics.Debug.Assert(_caster == null);
 
                 // If disposing equals true, dispose all managed
                 // and unmanaged resources.
