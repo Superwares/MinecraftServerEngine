@@ -34,9 +34,11 @@ namespace TestMinecraftServerApplication.SkillProgressNodes
 
                 if (elapsedTime >= HyperBeam.ChargingInterval)
                 {
-                    Vector u = obb.Angles.ToUnitVector();
+                    Vector u = new(1.0, 0.0, 0.0);
+                    u = u.Rotate(obb.Angles);
+                    
                     Vector d = u * (_chargingIndex++ % (HyperBeam.Length + 1));
-                    Vector o = d + obb.Center;
+                    Vector o = d + obb.Center - (u * obb.Extents.X);
 
                     const double Radius = HyperBeam.Radius;
                     const int NumberOfPoints = 10;

@@ -37,11 +37,8 @@ namespace TestMinecraftServerApplication
         {
             Vector u = new(0, 0, 1);
 
-            //Angles angles = Angles.CreateByDegrees(0, -1 * _angles.Yaw, _angles.Pitch);
             Angles angles = Angles.CreateByDegrees(0.0, -1 * _angles.Yaw, 0.0);
 
-            //Angles angles = GenerateAngles(_angles);
-            //Vector u = _angles.ToUnitVector();
             Vector d = u.Rotate(angles) * HyperBeam.HalfLength;
 
             return v + d;
@@ -65,21 +62,21 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(_world != null);
 
-            //using Tree<PhysicsObject> objs = new();
+            using Tree<PhysicsObject> objs = new();
 
-            //_world.SearchObjects(objs, BoundingVolume, true);
+            _world.SearchObjects(objs, BoundingVolume, true);
 
-            ////MyConsole.Debug($"objs: {objs.Count}");
+            MyConsole.Debug($"objs: {objs.Count}");
 
-            //if (BoundingVolume is OrientedBoundingBox obb)
-            //{
-            //    EmitParticles(Particle.Reddust, obb.Center, 0.0000001, 1, 0.0, 0.0, 0.0);
+            if (BoundingVolume is OrientedBoundingBox obb)
+            {
+                EmitParticles(Particle.Reddust, obb.Center, 0.0000001, 1, 0.0, 0.0, 0.0);
 
-            //    foreach (Vector vertex in obb.Vertices)
-            //    {
-            //        EmitParticles(Particle.Reddust, vertex, 0.0000001, 1, 0.0, 0.0, 0.0);
-            //    }
-            //}
+                foreach (Vector vertex in obb.Vertices)
+                {
+                    EmitParticles(Particle.Reddust, vertex, 0.0000001, 1, 0.0, 0.0, 0.0);
+                }
+            }
 
             if (_world is SuperWorld world)
             {

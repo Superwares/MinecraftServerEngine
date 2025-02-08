@@ -41,28 +41,6 @@ namespace MinecraftServerEngine.Physics
                 );
         }
 
-        /// <summary>
-        /// Converts a unit vector to angles (roll, yaw, pitch).
-        /// </summary>
-        /// <param name="vector">The unit vector.</param>
-        /// <returns>An instance of <see cref="Angles"/> representing the roll, yaw, and pitch.</returns>
-        public static Angles FromUnitVector(Vector vector)
-        {
-            double x = vector.X;
-            double y = vector.Y;
-            double z = vector.Z;
-
-            // Calculate yaw (rotation around the Y-axis)
-            double yaw = System.Math.Atan2(y, x);
-
-            // Calculate pitch (rotation around the X-axis)
-            double pitch = System.Math.Asin(z);
-
-            // Calculate roll (rotation around the Z-axis)
-            double roll = 0; // Assuming roll is zero for a unit vector
-
-            return new Angles(roll, yaw, pitch);
-        }
 
 
         public static Angles GetFromStartToEnd(Angles from, Angles to)
@@ -85,26 +63,6 @@ namespace MinecraftServerEngine.Physics
             Roll = roll;
             Yaw = yaw;
             Pitch = pitch;
-        }
-
-        /// <summary>
-        /// Gets the unit vector of the angles.
-        /// </summary>
-        /// <returns>A tuple representing the unit vector (x, y, z).</returns>
-        public Vector ToUnitVector()
-        {
-            //double cosRoll = System.Math.Cos(Roll);
-            //double sinRoll = System.Math.Sin(Roll);
-            double cosYaw = System.Math.Cos(Yaw);
-            double sinYaw = System.Math.Sin(Yaw);
-            double cosPitch = System.Math.Cos(Pitch);
-            double sinPitch = System.Math.Sin(Pitch);
-
-            double x = cosYaw * cosPitch;
-            double y = sinYaw * cosPitch;
-            double z = sinPitch;
-
-            return new Vector(x, y, z);
         }
 
         public override string ToString()
