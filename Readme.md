@@ -124,14 +124,14 @@ If disposable objects were used as members of class and struct, they must be dis
 - y < 0 으로 떨어지면 Arrert 해결하기
 - Connection 대신 AbstractPlayer 안에서 Connection 에서의 로직을 모두 처리하기
 	- 따로 분리해서 코드 중복이 늘어남
-- 룰렛 돌릴때 (random seeker, winners) 에서 띵띵띵 소리 추가
-	- abstract player 전용 play sound 기능 추가.
+	- 
+
 - 술래 사망시 라운드가 종료되는가. 
 	- Progress Bar 가 잘 닫히는지
 	- Title 이 잘띄어지는지
 	- 중간에 사망하여도 잘 진행되는가
 
-- 어떤 플레이어의 인벤토리를 강제로 닫을 수 있도록.
+
 
 
 - 클라이언트가 처음 접속할떄 느려짐
@@ -142,11 +142,9 @@ If disposable objects were used as members of class and struct, they must be dis
 - 게임 시작시 떨어진 모든 아이템을 정리하기
 
 
-- 아이템 구매하면 핫바로 가도록.
-
 - turn off debug console print when releasing.
 
-- Move objects task 도 Ensure one tick 을 풀수 있는지 검토하기...
+
 
 - 패킷 전송시 압축하여 전송하기
 	- SetCompressionPacket
@@ -164,8 +162,7 @@ If disposable objects were used as members of class and struct, they must be dis
 - data sturucture 의 Count -> Length
 	- hashtable, tree 같은 경우는 length 와 count 의 개념이 다르기 때문에 그대로 냅두기.
 
-- entity relative move 의 최대값을 넘어갈때 teleport 해야됨.
-	- 첫 접속시 월드가 로드가 안되어서 아래로 떨어지다가 다시 월드가 로드되고 위로 올라올때 relative move 의 최대값을 넘어갑니다.
+
 
 ### Done 
 
@@ -175,6 +172,14 @@ If disposable objects were used as members of class and struct, they must be dis
 	- PhysicsWorld 가 World 일때만 블럭으로 변할수 있도록. 
 		- World 에만 BlockContext가 있기에	``
 - 아이템을 Give 할때 이미 존재하는 slot 을 수색하고 꽉 채우기
+- Move objects task 도 Ensure one tick 을 풀수 있는지 검토하기...
+- 어떤 플레이어의 인벤토리를 강제로 닫을 수 있도록.
+- 룰렛 돌릴때 (random seeker, winners) 에서 띵띵띵 소리 추가
+	- abstract player 전용 play sound 기능 추가.
+- entity relative move 의 최대값을 넘어갈때 teleport 해야됨.
+	- 첫 접속시 월드가 로드가 안되어서 아래로 떨어지다가 다시 월드가 로드되고 위로 올라올때 relative move 의 최대값을 넘어갑니다.
+
 
 ### Deprecated
 - Give 할때 Hotbar 먼저 다음 Main
+- - 아이템 구매하면 핫바로 가도록.
