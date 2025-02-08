@@ -616,6 +616,7 @@ namespace MinecraftServerEngine.Entities
                 LockerTeleport.Release();
             }
         }
+        
         internal virtual void _Animate(EntityAnimation animation)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
