@@ -8,25 +8,33 @@ using TestMinecraftServerApplication;
 using TestMinecraftServerApplication.Configs;
 
 
-const ushort port = 25565;
-
 
 MyConsole.Info("Hello, World!");
 
+
+
 ConfigXml.Deserialize("Config.xml");
 
-ConfigWorld config = ConfigXml.GetConfig().World;
+ConfigServer configServer = ConfigXml.GetConfig().Server;
 
-double worldCenterX = config.CenterX;
-double worldCenterZ = config.CenterZ;
-double defaultWorldBorderRadiusInMeters = config.DefaultWorldBorderRadiusInMeters;
-Vector respawningPos = new(config.RespawningX, config.RespawningY, config.RespawningZ);
-EntityAngles respawningLook = new(config.RespawningYaw, config.RespawningPitch) ;
+ConfigWorld configWorld = ConfigXml.GetConfig().World;
 
-if (config.DefaultWorldBorderRadiusInMeters <= 0)
+
+
+ushort port = configServer.Port;
+
+double worldCenterX = configWorld.CenterX;
+double worldCenterZ = configWorld.CenterZ;
+double defaultWorldBorderRadiusInMeters = configWorld.DefaultWorldBorderRadiusInMeters;
+Vector respawningPos = new(configWorld.RespawningX, configWorld.RespawningY, configWorld.RespawningZ);
+EntityAngles respawningLook = new(configWorld.RespawningYaw, configWorld.RespawningPitch) ;
+
+if (configWorld.DefaultWorldBorderRadiusInMeters <= 0)
 {
-    throw new System.InvalidOperationException($"The value for \"{nameof(config.DefaultWorldBorderRadiusInMeters)}\" must be > 0");
+    throw new System.InvalidOperationException($"The value for \"{nameof(configWorld.DefaultWorldBorderRadiusInMeters)}\" must be > 0");
 }
+
+
 
 using World world = new SuperWorld(
     worldCenterX, worldCenterZ,
@@ -36,5 +44,6 @@ using World world = new SuperWorld(
     );
 
 using MinecraftServerFramework framework = new(world);
+
 framework.Run(port);
 

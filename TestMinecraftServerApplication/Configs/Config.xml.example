@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Config>
+	<Server>
+		<Port>25565</Port>
+	</Server>
+	
 	<World>
 		<CenterX>120.0</CenterX>
 		<CenterZ>216.0</CenterZ>

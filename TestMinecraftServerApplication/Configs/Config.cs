@@ -5,6 +5,7 @@
 
     internal class Config
     {
+        internal readonly ConfigServer Server;
         internal readonly ConfigWorld World;
         internal readonly ConfigGame Game;
 
@@ -20,6 +21,9 @@
 
                 switch (_node.Name)
                 {
+                    case nameof(Server):
+                        Server = new ConfigServer(_node);
+                        break;
                     case nameof(World):
                         World = new ConfigWorld(_node);
                         break;
@@ -27,6 +31,11 @@
                         Game = new ConfigGame(_node);
                         break;
                 }
+            }
+
+            if (Server == null)
+            {
+                throw new System.InvalidOperationException($"\"{nameof(Server)}\" element not found");
             }
 
             if (World == null)
