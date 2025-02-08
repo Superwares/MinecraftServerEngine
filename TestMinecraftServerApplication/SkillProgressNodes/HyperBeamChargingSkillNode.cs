@@ -19,7 +19,7 @@ namespace TestMinecraftServerApplication.SkillProgressNodes
 
         public ISkillProgressNode CreateNextNode()
         {
-            return new HyperBeamActualDamagingSkillNode();
+            return new HyperBeamDamagingSkillNode();
         }
 
         public bool Start(SuperWorld world, PhysicsObject _obj)

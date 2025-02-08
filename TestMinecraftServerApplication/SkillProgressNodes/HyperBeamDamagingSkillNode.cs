@@ -12,7 +12,7 @@ using TestMinecraftServerApplication.Items;
 
 namespace TestMinecraftServerApplication.SkillProgressNodes
 {
-    internal sealed class HyperBeamActualDamagingSkillNode : ISkillProgressNode
+    internal sealed class HyperBeamDamagingSkillNode : ISkillProgressNode
     {
         public string Name => $"{HyperBeam.Name}'s Actual Damaging Skill Node";
 
