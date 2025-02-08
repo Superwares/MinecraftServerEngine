@@ -55,7 +55,7 @@ namespace MinecraftServerEngine
                 Queue<ChunkLocation> newChunks, Queue<ChunkLocation> outOfRangeChunks,
                 ChunkLocation loc, int d)
             {
-                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_disposed == false);
 
                 System.Diagnostics.Debug.Assert(d > 0);
                 System.Diagnostics.Debug.Assert(MaxLoadCount > 0);
@@ -174,7 +174,7 @@ namespace MinecraftServerEngine
             public void Dispose()
             {
                 // Assertions.
-                System.Diagnostics.Debug.Assert(!_disposed);
+                System.Diagnostics.Debug.Assert(_disposed == false);
 
                 // Release resources.
                 LoadedChunks.Dispose();
@@ -293,6 +293,8 @@ namespace MinecraftServerEngine
 
         private bool _disposed = false;
 
+
+
         private readonly UserId UserId;
 
         private readonly MinecraftClient Client;  // Dispoasble
@@ -300,7 +302,8 @@ namespace MinecraftServerEngine
 
 
         private bool _disconnected = false;
-        public bool Disconnected => _disconnected;
+        internal bool IsDisconnected => _disconnected;
+
 
         private LoginSuccessPacket _LoginSuccessPacket = null;
         private JoinGamePacket _JoinGamePacket = null;
@@ -330,11 +333,13 @@ namespace MinecraftServerEngine
 
         internal readonly Window Window;  // Disposable
 
+
+
         internal Connection(
             UserId userId, string username,
             MinecraftClient client,
             World world,
-            int idEntity,
+            int entityId,
             double additionalHealth, double maxHealth, double health,
             double movementSpeed,
             Vector p, EntityAngles look,
@@ -374,7 +379,7 @@ namespace MinecraftServerEngine
             _LoginSuccessPacket = new LoginSuccessPacket(userId.Value, username);
 
             System.Diagnostics.Debug.Assert(_JoinGamePacket == null);
-            _JoinGamePacket = new JoinGamePacket(idEntity, 2, 0, 2, "default", false);
+            _JoinGamePacket = new JoinGamePacket(entityId, 2, 0, 2, "default", false);
 
             int payload = Random.NextInt();
             OutPackets.Enqueue(new TeleportPacket(
@@ -387,21 +392,21 @@ namespace MinecraftServerEngine
             _TeleportRecords.Enqueue(report);
 
             System.Diagnostics.Debug.Assert(additionalHealth >= 0.0);
-            UpdateAdditionalHealth(idEntity, additionalHealth);
+            UpdateAdditionalHealth(entityId, additionalHealth);
 
             System.Diagnostics.Debug.Assert(maxHealth >= health);
             System.Diagnostics.Debug.Assert(maxHealth > 0.0);
             System.Diagnostics.Debug.Assert(health >= 0.0);
-            UpdateMaxHealth(idEntity, maxHealth);
+            UpdateMaxHealth(entityId, maxHealth);
             UpdateHealth(health);
 
-            UpdateMovementSpeed(idEntity, movementSpeed);
+            UpdateMovementSpeed(entityId, movementSpeed);
 
-            SetGamemode(idEntity, gamemode);
+            SetGamemode(entityId, gamemode);
 
             {
                 OutPackets.Enqueue(new EntityPropertiesPacket(
-                idEntity,
+                entityId,
                 [
                     ("generic.attackSpeed", 4.0),   // 5 ticks, 0.25 seconds
                     //("generic.attackSpeed", 1.0),   // 20 ticks, 1 seconds
@@ -420,7 +425,7 @@ namespace MinecraftServerEngine
 
                 byte[] data = stream.ReadData();
 
-                OutPackets.Enqueue(new EntityMetadataPacket(idEntity, data));
+                OutPackets.Enqueue(new EntityMetadataPacket(entityId, data));
             }
 
             //{
@@ -790,14 +795,13 @@ namespace MinecraftServerEngine
 
         private void RecvDataAndHandle(
             MinecraftProtocolDataStream buffer,
-            World world, AbstractPlayer player, PlayerInventory playerInventory)
+            World world, AbstractPlayer player)
         {
             System.Diagnostics.Debug.Assert(buffer != null);
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(player != null);
-            System.Diagnostics.Debug.Assert(playerInventory != null);
 
-            if (_disconnected)
+            if (_disconnected == true)
             {
                 throw new DisconnectedClientException();
             }
@@ -922,7 +926,7 @@ namespace MinecraftServerEngine
 
                         System.Diagnostics.Debug.Assert(Window != null);
                         Window.Handle(
-                            UserId, world, player, playerInventory,
+                            UserId, world, player, player.Inventory,
                             packet.WindowId, packet.Mode, packet.Button, packet.Slot);
 
                         OutPackets.Enqueue(new ClientboundConfirmTransactionPacket(
@@ -940,7 +944,7 @@ namespace MinecraftServerEngine
                         }
 
                         System.Diagnostics.Debug.Assert(Window != null);
-                        Window.Reset(world, player, packet.WindowId, playerInventory);
+                        Window.Reset(world, player, packet.WindowId, player.Inventory);
                     }
                     break;
                 case ServerboundPlayingPacket.ServerboundCustomPayloadPacketId:
@@ -1104,7 +1108,7 @@ namespace MinecraftServerEngine
                                 /*Console.Printl($"ActionId: {packet.ActionId}");*/
                                 throw new UnexpectedValueException($"Entity action id ({packet.ActionId})");
                             case 0:
-                                if (player.Sneaking == true)
+                                if (player.IsSneaking == true)
                                 {
                                     throw new UnexpectedValueException($"Entity action id ({packet.ActionId})");
                                 }
@@ -1112,7 +1116,7 @@ namespace MinecraftServerEngine
                                 player.Sneak(world);
                                 break;
                             case 1:
-                                if (player.Sneaking == false)
+                                if (player.IsSneaking == false)
                                 {
                                     throw new UnexpectedValueException($"Entity action id ({packet.ActionId})");
                                 }
@@ -1120,7 +1124,7 @@ namespace MinecraftServerEngine
                                 player.Unsneak(world);
                                 break;
                             case 3:
-                                if (player.Sprinting == true)
+                                if (player.IsSprinting == true)
                                 {
                                     throw new UnexpectedValueException($"Entity action id ({packet.ActionId})");
                                 }
@@ -1128,7 +1132,7 @@ namespace MinecraftServerEngine
                                 player.Sprint(world);
                                 break;
                             case 4:
-                                if (player.Sprinting == false)
+                                if (player.IsSprinting == false)
                                 {
                                     throw new UnexpectedValueException($"Entity action id ({packet.ActionId})");
                                 }
@@ -1153,7 +1157,7 @@ namespace MinecraftServerEngine
                             throw new UnexpectedValueException("ServerboundHeldItemSlotPacket.Slot");
                         }
 
-                        playerInventory.ChangeActiveMainHandIndex(packet.Slot);
+                        player.Inventory.ChangeActiveMainHandIndex(packet.Slot);
                         player.UpdateEquipmentsData();
                     }
                     break;
@@ -1180,7 +1184,7 @@ namespace MinecraftServerEngine
                                      * Handle breakable of item before attacks. 
                                      * Because this item can be broken by another places (ex. Inventory interface).
                                      */
-                                    mainHandItemStack = Window.HandleMainHandSlot(playerInventory);
+                                    mainHandItemStack = Window.HandleMainHandSlot(player.Inventory);
 
                                     if (mainHandItemStack != null)
                                     {
@@ -1204,7 +1208,7 @@ namespace MinecraftServerEngine
                                  * Handle breakable of item before attacks. 
                                  * Because this item can be broken by another places (ex. Inventory interface).
                                  */
-                                mainHandItemStack = Window.HandleMainHandSlot(playerInventory);
+                                mainHandItemStack = Window.HandleMainHandSlot(player.Inventory);
 
                                 if (mainHandItemStack != null)
                                 {
@@ -1222,7 +1226,7 @@ namespace MinecraftServerEngine
                                 mainHandItemStack.IsBreaked == true)
                             {
 
-                                Window.UpdateMainHandSlot(playerInventory);
+                                Window.UpdateMainHandSlot(player.Inventory);
 
                                 player._ItemBreak(world, mainHandItemStack);
 
@@ -1236,7 +1240,7 @@ namespace MinecraftServerEngine
                                  mainHandItemStack.CheckHash(mainHandItemStackHash) == false)
                             {
                                 //MyConsole.Debug("Different status of prev and current item!");
-                                Window.UpdateMainHandSlot(playerInventory);
+                                Window.UpdateMainHandSlot(player.Inventory);
 
                                 player.UpdateEquipmentsData();
                             }
@@ -1275,7 +1279,7 @@ namespace MinecraftServerEngine
                         {
                             /*Console.Printl("UseItem!");*/
 
-                            mainHandItemStack = playerInventory.GetMainHandSlot().Stack;
+                            mainHandItemStack = player.Inventory.GetMainHandSlot().Stack;
 
                             if (mainHandItemStack != null)
                             {
@@ -1287,7 +1291,7 @@ namespace MinecraftServerEngine
                         {
                             /*Console.Printl("UseItem!");*/
 
-                            mainHandItemStack = playerInventory.GetOffHandSlot().Stack;
+                            mainHandItemStack = player.Inventory.GetOffHandSlot().Stack;
 
                             if (mainHandItemStack != null)
                             {
@@ -1306,7 +1310,7 @@ namespace MinecraftServerEngine
                             )
                         {
 
-                            Window.UpdateMainHandSlot(playerInventory);
+                            Window.UpdateMainHandSlot(player.Inventory);
 
                             player._ItemBreak(world, mainHandItemStack);
 
@@ -1321,7 +1325,7 @@ namespace MinecraftServerEngine
                              )
                         {
                             //MyConsole.Debug("Different status of prev and current item!");
-                            Window.UpdateMainHandSlot(playerInventory);
+                            Window.UpdateMainHandSlot(player.Inventory);
 
                             player.UpdateEquipmentsData();
                         }
@@ -1341,49 +1345,14 @@ namespace MinecraftServerEngine
 
         }
 
-        long ticks = 0;
-
         internal void Control(
             World world,
-            AbstractPlayer player, PlayerInventory invPlayer)
+            AbstractPlayer player)
         {
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(player != null);
-            System.Diagnostics.Debug.Assert(invPlayer != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
-
-            /*if (serverTicks == 200)  // 10 seconds
-            {
-                System.Diagnostics.Debug.Assert(_window != null);
-                _window.OpenWindowWithPublicInventory(
-                    _OUT_PACKETS,
-                    player._selfInventory,
-                    world._Inventory);
-            }*/
-
-            /*{
-                using Buffer buffer2 = new();
-
-                ParticlesPacket packet2 = new(
-                    30, true,
-                    0.0F, 102.0F, 0.0F,
-                    0.001F, 0.999F, 0.999F,
-                    1.0F,
-                    0);
-
-                SendPacket(buffer2, packet2);
-            }*/
-
-            ++ticks;
-
-            /*if (ticks == 20)
-            {
-                using Buffer buffer2 = new();
-
-                UpdateHealthPacket packet = new(0.00001F, 20, 0.0F);
-                SendPacket(buffer2, packet);
-            }*/
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             using MinecraftProtocolDataStream buffer = new();
 
@@ -1395,9 +1364,7 @@ namespace MinecraftServerEngine
                     {
                         while (true)
                         {
-                            RecvDataAndHandle(
-                                buffer,
-                                world, player, invPlayer);
+                            RecvDataAndHandle(buffer, world, player);
                         }
                     }
                     catch (TryAgainException)
@@ -1425,6 +1392,7 @@ namespace MinecraftServerEngine
             }
             catch (DisconnectedClientException)
             {
+                System.Diagnostics.Debug.Assert(buffer != null);
                 buffer.Flush();
 
                 _disconnected = true;
@@ -1515,51 +1483,10 @@ namespace MinecraftServerEngine
 
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="packet"></param>
-        /// <exception cref="DisconnectedClientException"></exception>
-        /// <exception cref="TryAgainException"></exception>
-        private void SendPacket(MinecraftProtocolDataStream buffer, ClientboundLoginPacket packet)
-        {
-            System.Diagnostics.Debug.Assert(buffer != null);
-            System.Diagnostics.Debug.Assert(packet != null);
-
-            System.Diagnostics.Debug.Assert(!_disposed);
-            System.Diagnostics.Debug.Assert(!_disconnected);
-
-            packet.Write(buffer);
-            Client.Send(buffer);
-
-            System.Diagnostics.Debug.Assert(buffer.Empty);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="packet"></param>
-        /// <exception cref="DisconnectedClientException"></exception>
-        /// <exception cref="TryAgainException"></exception>
-        private void SendPacket(MinecraftProtocolDataStream buffer, ClientboundPlayingPacket packet)
-        {
-            System.Diagnostics.Debug.Assert(buffer != null);
-            System.Diagnostics.Debug.Assert(packet != null);
-
-            System.Diagnostics.Debug.Assert(!_disposed);
-            System.Diagnostics.Debug.Assert(!_disconnected);
-
-            packet.Write(buffer);
-            Client.Send(buffer);
-
-            System.Diagnostics.Debug.Assert(buffer.Empty);
-        }
 
         internal void ApplyVelocity(int id, Vector v)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (_disconnected == true)
             {
@@ -1617,14 +1544,14 @@ namespace MinecraftServerEngine
 
         internal void ApplyBilndness(bool f)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             _EntityRenderer.ApplyBlindness(f);
         }
 
         internal void Teleport(Vector p, EntityAngles look)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (_disconnected)
             {
@@ -1717,10 +1644,9 @@ namespace MinecraftServerEngine
                 ]));
         }
 
-
         internal void UpdateHealth(double health)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (_disconnected == true)
             {
@@ -1753,8 +1679,6 @@ namespace MinecraftServerEngine
                 ]));
         }
 
-
-
         internal void Animate(int entityId, EntityAnimation animation)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
@@ -1782,7 +1706,9 @@ namespace MinecraftServerEngine
         }
 
         internal void PlaySound(
-            string name, int category, Vector p, double volume, double pitch)
+            string name, int category, 
+            Vector p, 
+            double volume, double pitch)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
             if (_disconnected == true)
@@ -1807,10 +1733,21 @@ namespace MinecraftServerEngine
 
         internal void EmitParticles(
             Particle particle, Vector v,
-            double speed, int count,
-            double r, double g, double b)
+            double extra, int count,
+            double offsetX, double offsetY, double offsetZ)
         {
+            System.Diagnostics.Debug.Assert(offsetX >= 0.0D);
+            System.Diagnostics.Debug.Assert(offsetX <= 1.0D);
+            System.Diagnostics.Debug.Assert(offsetY >= 0.0D);
+            System.Diagnostics.Debug.Assert(offsetY <= 1.0D);
+            System.Diagnostics.Debug.Assert(offsetZ >= 0.0D);
+            System.Diagnostics.Debug.Assert(offsetZ <= 1.0D);
+            System.Diagnostics.Debug.Assert(extra >= 0.0);
+            System.Diagnostics.Debug.Assert(extra <= 1.0);
+            System.Diagnostics.Debug.Assert(count >= 0);
+
             System.Diagnostics.Debug.Assert(_disposed == false);
+
             if (_disconnected == true)
             {
                 return;
@@ -1820,16 +1757,16 @@ namespace MinecraftServerEngine
             OutPackets.Enqueue(new ParticlesPacket(
                 (int)particle, true,
                 (float)v.X, (float)v.Y, (float)v.Z,
-                (float)r, (float)g, (float)b,
-                (float)speed, count));
+                (float)offsetX, (float)offsetY, (float)offsetZ,
+                (float)extra, count));
         }
 
         internal void SetExperience(double ratio, int level)
         {
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
             System.Diagnostics.Debug.Assert(ratio >= 0 && ratio <= 1);
             System.Diagnostics.Debug.Assert(level >= 0);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (_disconnected == true)
             {
@@ -1840,9 +1777,9 @@ namespace MinecraftServerEngine
             OutPackets.Enqueue(new SetExperiencePacket((float)ratio, level, 0));
         }
 
-        internal void SetGamemode(int idEntity, Gamemode gamemode)
+        internal void SetGamemode(int entityId, Gamemode gamemode)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (_disconnected == true)
             {
@@ -1870,23 +1807,66 @@ namespace MinecraftServerEngine
             byte[] metadataData = stream.ReadData();
 
             System.Diagnostics.Debug.Assert(OutPackets != null);
-            OutPackets.Enqueue(new EntityMetadataPacket(idEntity, metadataData));
+            OutPackets.Enqueue(new EntityMetadataPacket(entityId, metadataData));
             OutPackets.Enqueue(new AbilitiesPacket(
                     false, canFly, canFly, false, 0.1F, 0.0F));
         }
 
-        internal bool Open(PlayerInventory invPri, SharedInventory invPub)
+        internal bool Open(PlayerInventory playerInventory, SharedInventory sharedInventory)
         {
-            System.Diagnostics.Debug.Assert(invPri != null);
-            System.Diagnostics.Debug.Assert(invPub != null);
+            System.Diagnostics.Debug.Assert(playerInventory != null);
+            System.Diagnostics.Debug.Assert(sharedInventory != null);
 
             if (_disconnected == true)
             {
                 return false;
             }
 
-            return Window.Open(UserId, OutPackets, invPri, invPub);
+            return Window.Open(UserId, OutPackets, playerInventory, sharedInventory);
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="packet"></param>
+        /// <exception cref="DisconnectedClientException"></exception>
+        /// <exception cref="TryAgainException"></exception>
+        private void SendPacket(MinecraftProtocolDataStream buffer, ClientboundLoginPacket packet)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+            System.Diagnostics.Debug.Assert(packet != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+            System.Diagnostics.Debug.Assert(!_disconnected);
+
+            packet.Write(buffer);
+            Client.Send(buffer);
+
+            System.Diagnostics.Debug.Assert(buffer.Empty);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="packet"></param>
+        /// <exception cref="DisconnectedClientException"></exception>
+        /// <exception cref="TryAgainException"></exception>
+        private void SendPacket(MinecraftProtocolDataStream buffer, ClientboundPlayingPacket packet)
+        {
+            System.Diagnostics.Debug.Assert(buffer != null);
+            System.Diagnostics.Debug.Assert(packet != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+            System.Diagnostics.Debug.Assert(!_disconnected);
+
+            packet.Write(buffer);
+            Client.Send(buffer);
+
+            System.Diagnostics.Debug.Assert(buffer.Empty);
+        }
+
 
         internal void SendData()
         {
@@ -1973,7 +1953,7 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(invPlayer != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(_disconnected);
 

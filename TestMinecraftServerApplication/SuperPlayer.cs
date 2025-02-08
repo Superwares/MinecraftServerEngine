@@ -305,7 +305,7 @@ namespace TestMinecraftServerApplication
             //ResetBlockAppearance();
             if (_world is SuperWorld world)
             {
-                if (Sneaking == true)
+                if (IsSneaking == true)
                 {
                     HideBlock(world);
                 }

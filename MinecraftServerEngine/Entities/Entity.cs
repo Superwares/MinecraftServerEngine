@@ -26,15 +26,15 @@ namespace MinecraftServerEngine.Entities
         public Vector Position => _p;
 
 
-        private readonly Locker LockerRotate = new();
+        private readonly Locker _LockerRotate = new();
         private bool _rotated = false;
         private EntityAngles _look;
         public EntityAngles Look => _look;
 
 
         protected bool _sneaking = false, _sprinting = false;
-        public bool Sneaking => _sneaking;
-        public bool Sprinting => _sprinting;
+        public bool IsSneaking => _sneaking;
+        public bool IsSprinting => _sprinting;
 
 
         protected readonly Locker LockerTeleport = new();
@@ -43,18 +43,14 @@ namespace MinecraftServerEngine.Entities
 
         private bool _prevFakeBlockApplied = false, _fakeBlockApplied = false;
         private Block _prevFakeBlock, _fakeBlock;
-
-        // ApplyBlockAppearance
-        // TransformAppearance
+    
 
         private readonly bool NoGravity;
-
 
 
         private bool _canHaveMovement = false;
 
         internal readonly ConcurrentTree<EntityRenderer> Renderers = new();  // Disposable
-
 
 
         private protected Entity(
@@ -88,14 +84,24 @@ namespace MinecraftServerEngine.Entities
 
         private protected abstract EntityHitbox GetHitbox();
 
+        protected override (BoundingVolume, bool noGravity) GetCurrentStatus()
+        {
+            EntityHitbox hitbox = GetHitbox();
+
+            Forces.Enqueue(
+                -1.0D *
+                new Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
+                Velocity);  // Damping Force
+
+            BoundingVolume volume = _teleported ? hitbox.Convert(_pTeleport) : hitbox.Convert(_p);
+            return (volume, NoGravity || volume is EmptyBoundingVolume);
+        }
+
         private protected abstract void RenderSpawning(EntityRenderer renderer);
 
-
         protected virtual void OnMove(PhysicsWorld world) { }
-
         protected virtual void OnSneak(World world, bool f) { }
         protected virtual void OnSprint(World world, bool f) { }
-
 
 
         //protected (Vector, Vector) GetRay()
@@ -108,7 +114,7 @@ namespace MinecraftServerEngine.Entities
         {
             System.Diagnostics.Debug.Assert(renderer != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             if (BoundingVolume is EmptyBoundingVolume)
             {
@@ -133,19 +139,6 @@ namespace MinecraftServerEngine.Entities
             {
                 RenderSpawning(renderer);
             }
-        }
-
-        protected override (BoundingVolume, bool noGravity) GetCurrentStatus()
-        {
-            EntityHitbox hitbox = GetHitbox();
-
-            Forces.Enqueue(
-                -1.0D *
-                new Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
-                Velocity);  // Damping Force
-
-            BoundingVolume volume = _teleported ? hitbox.Convert(_pTeleport) : hitbox.Convert(_p);
-            return (volume, NoGravity || volume is EmptyBoundingVolume);
         }
 
         private bool HandleRendering(
@@ -447,7 +440,7 @@ namespace MinecraftServerEngine.Entities
 
         internal void SetEntityStatus(byte v)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(Renderers != null);
             if (Renderers.Empty == true)
@@ -464,10 +457,10 @@ namespace MinecraftServerEngine.Entities
 
         internal void Rotate(EntityAngles look)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(LockerTeleport != null);
-            LockerRotate.Hold();
+            _LockerRotate.Hold();
 
             try
             {
@@ -479,17 +472,14 @@ namespace MinecraftServerEngine.Entities
             finally
             {
                 System.Diagnostics.Debug.Assert(LockerTeleport != null);
-                LockerRotate.Release();
+                _LockerRotate.Release();
             }
         }
 
 
-
-
-
         private void ChangeForms(bool sneaking, bool sprinting)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(Renderers != null);
             if (Renderers.Empty == true)
@@ -503,7 +493,6 @@ namespace MinecraftServerEngine.Entities
                 renderer.ChangeForms(Id, sneaking, sprinting);
             }
         }
-
 
         // Entity's forms was reset after teleported in minecraft client...
         private void ResetForms()
@@ -530,9 +519,9 @@ namespace MinecraftServerEngine.Entities
         {
             System.Diagnostics.Debug.Assert(world != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(!Sneaking);
+            System.Diagnostics.Debug.Assert(!IsSneaking);
 
             if (_sneaking == true)
             {
@@ -550,9 +539,9 @@ namespace MinecraftServerEngine.Entities
         {
             System.Diagnostics.Debug.Assert(world != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(Sneaking);
+            System.Diagnostics.Debug.Assert(IsSneaking);
 
             if (_sneaking == false)
             {
@@ -570,9 +559,9 @@ namespace MinecraftServerEngine.Entities
         {
             System.Diagnostics.Debug.Assert(world != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(!Sprinting);
+            System.Diagnostics.Debug.Assert(!IsSprinting);
 
             if (_sprinting == true)
             {
@@ -590,9 +579,9 @@ namespace MinecraftServerEngine.Entities
         {
             System.Diagnostics.Debug.Assert(world != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(Sprinting);
+            System.Diagnostics.Debug.Assert(IsSprinting);
 
             if (_sprinting == false)
             {
@@ -678,14 +667,14 @@ namespace MinecraftServerEngine.Entities
             double speed, int count,
             double offsetX, double offsetY, double offsetZ)
         {
-            System.Diagnostics.Debug.Assert(offsetX >= 0.0D);
-            System.Diagnostics.Debug.Assert(offsetX <= 1.0D);
-            System.Diagnostics.Debug.Assert(offsetY >= 0.0D);
-            System.Diagnostics.Debug.Assert(offsetY <= 1.0D);
-            System.Diagnostics.Debug.Assert(offsetZ >= 0.0D);
-            System.Diagnostics.Debug.Assert(offsetZ <= 1.0D);
-            System.Diagnostics.Debug.Assert(speed >= 0.0F);
-            System.Diagnostics.Debug.Assert(speed <= 1.0F);
+            System.Diagnostics.Debug.Assert(offsetX >= 0.0);
+            System.Diagnostics.Debug.Assert(offsetX <= 1.0);
+            System.Diagnostics.Debug.Assert(offsetY >= 0.0);
+            System.Diagnostics.Debug.Assert(offsetY <= 1.0);
+            System.Diagnostics.Debug.Assert(offsetZ >= 0.0);
+            System.Diagnostics.Debug.Assert(offsetZ <= 1.0);
+            System.Diagnostics.Debug.Assert(speed >= 0.0);
+            System.Diagnostics.Debug.Assert(speed <= 1.0);
             System.Diagnostics.Debug.Assert(count >= 0);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
@@ -825,9 +814,15 @@ namespace MinecraftServerEngine.Entities
             Particle particle,
             double speed, int count)
         {
+            EmitParticles(particle, speed, count, 0.0F, 0.0F, 0.0F);
+        }
+
+        public void ApplyBlockAppearance(Block block)
+        {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            EmitParticles(particle, speed, count, 0.0F, 0.0F, 0.0F);
+            _fakeBlockApplied = true;
+            _fakeBlock = block;
         }
 
         public void ResetBlockAppearance()
@@ -838,14 +833,6 @@ namespace MinecraftServerEngine.Entities
             _fakeBlock = Block.Air;
         }
 
-        public void ApplyBlockAppearance(Block block)
-        {
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            _fakeBlockApplied = true;
-            _fakeBlock = block;
-        }
-        
         protected internal virtual void OnPressHandSwapButton(World world)
         {
             System.Diagnostics.Debug.Assert(world != null);
@@ -918,7 +905,7 @@ namespace MinecraftServerEngine.Entities
                     EntityIdAllocator.Deallocate(Id);
                     Renderers.Dispose();
 
-                    LockerRotate.Dispose();
+                    _LockerRotate.Dispose();
                     LockerTeleport.Dispose();
                 }
 
@@ -958,7 +945,7 @@ namespace MinecraftServerEngine.Entities
     //    public override void Dispose()
     //    {
     //        // Assertions.
-    //        System.Diagnostics.Debug.Assert(!_disposed);
+    //        System.Diagnostics.Debug.Assert(_disposed == false);
 
     //        // Release resources.
 
@@ -990,7 +977,7 @@ namespace MinecraftServerEngine.Entities
     //    public override void Dispose()
     //    {
     //        // Assertions.
-    //        System.Diagnostics.Debug.Assert(!_disposed);
+    //        System.Diagnostics.Debug.Assert(_disposed == false);
 
     //        // Release resources.
 

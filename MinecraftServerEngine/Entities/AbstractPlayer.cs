@@ -18,6 +18,44 @@ namespace MinecraftServerEngine.Entities
 
         public const double HitboxWidth = 0.6D;
 
+        public const double DefaultMass = 1.0D;
+        public const double DefaultMaxStepLevel = 0.6;
+        public const double DefaultEyeHeight = 1.62D;
+
+       
+
+        private bool _disposed = false;
+
+        private readonly Locker _LockerInventory = new();
+        internal readonly PlayerInventory Inventory = new();
+
+
+        public readonly UserId UserId;
+        public readonly string Username;
+
+        private Connection _Connection;
+        public bool IsDisconnected => _Connection == null;
+        public bool IsConnected => _Connection != null;
+
+
+        private Vector _pControl;
+
+
+        private Locker _LockerGamemode = new();
+        private Gamemode _newGamemode, _gamemode;
+        public Gamemode Gamemode => _newGamemode;
+
+
+        private float _experienceBarRatio = 0.0F;
+        private int _experienceLevel = 0;
+        public float ExperienceBarRatio => _experienceBarRatio;
+        public int ExperienceLevel => _experienceLevel;
+
+
+        private bool _blindness = false;
+
+        public bool IsBlindness => _blindness;
+
         private static EntityHitbox GetAdventureHitbox(bool sneaking)
         {
             double w = HitboxWidth, h;
@@ -38,42 +76,6 @@ namespace MinecraftServerEngine.Entities
             return EntityHitbox.Empty;
         }
 
-        public const double DefaultMass = 1.0D;
-        public const double DefaultMaxStepLevel = 0.6;
-        public const double DefaultEyeHeight = 1.62D;
-
-
-        private bool _disposed = false;
-
-        private readonly Locker InventoryLocker = new();
-        internal readonly PlayerInventory Inventory = new();
-
-
-        public readonly UserId UserId;
-        public readonly string Username;
-
-        private Connection Conn;
-        public bool Disconnected => Conn == null;
-        public bool Connected => !Disconnected;
-
-
-        private Vector _pControl;
-
-
-        private Locker LockerGamemode = new();
-        private Gamemode _newGamemode, _gamemode;
-        public Gamemode Gamemode => _newGamemode;
-
-
-        private float _experienceBarRatio = 0.0F;
-        private int _experienceLevel = 0;
-        public float ExperienceBarRatio => _experienceBarRatio;
-        public int ExperienceLevel => _experienceLevel;
-
-
-        private bool _blindness = false;
-
-        public bool Blindness => _blindness;
 
         protected AbstractPlayer(
             UserId userId, string username,
@@ -90,8 +92,8 @@ namespace MinecraftServerEngine.Entities
             UserId = userId;
             Username = username;
 
-            System.Diagnostics.Debug.Assert(Sneaking == false);
-            System.Diagnostics.Debug.Assert(Sprinting == false);
+            System.Diagnostics.Debug.Assert(IsSneaking == false);
+            System.Diagnostics.Debug.Assert(IsSprinting == false);
 
             _newGamemode = gamemode;
             _gamemode = gamemode;
@@ -117,7 +119,7 @@ namespace MinecraftServerEngine.Entities
         {
             double value = DefaultEyeHeight;
 
-            if (Sneaking == true)
+            if (IsSneaking == true)
             {
                 value += -0.08D;
             }
@@ -144,13 +146,12 @@ namespace MinecraftServerEngine.Entities
 
             Vector p = new(Position.X, Position.Y + GetEyeHeight(), Position.Z);
 
-            if (Connected == true)
+            if (IsConnected == true)
             {
-                System.Diagnostics.Debug.Assert(Conn != null);
-                Conn.PlaySound(name, category, p, volume, pitch);
+                System.Diagnostics.Debug.Assert(_Connection != null);
+                _Connection.PlaySound(name, category, p, volume, pitch);
             }
         }
-
 
         public virtual void OnRespawn()
         {
@@ -172,12 +173,12 @@ namespace MinecraftServerEngine.Entities
             {
                 base.HandleDamageEvent(world, amount, attacker);
 
-                if (Connected == true)
+                if (IsConnected == true)
                 {
                     System.Diagnostics.Debug.Assert(AdditionalHealth >= 0.0);
                     System.Diagnostics.Debug.Assert(Health >= 0.0);
-                    Conn.UpdateAdditionalHealth(Id, AdditionalHealth);
-                    Conn.UpdateHealth(Health);
+                    _Connection.UpdateAdditionalHealth(Id, AdditionalHealth);
+                    _Connection.UpdateHealth(Health);
                 }
 
             }
@@ -203,10 +204,10 @@ namespace MinecraftServerEngine.Entities
             {
                 double health = base._Heal(amount);
 
-                if (Connected == true)
+                if (IsConnected == true)
                 {
                     System.Diagnostics.Debug.Assert(Health >= 0.0);
-                    Conn.UpdateHealth(Health);
+                    _Connection.UpdateHealth(Health);
                 }
 
                 System.Diagnostics.Debug.Assert(health >= 0.0);
@@ -233,12 +234,12 @@ namespace MinecraftServerEngine.Entities
             {
                 base._SetMaxHealth(amount);
 
-                if (Connected == true)
+                if (IsConnected == true)
                 {
                     System.Diagnostics.Debug.Assert(MaxHealth >= 0.0);
                     System.Diagnostics.Debug.Assert(Health >= 0.0);
-                    Conn.UpdateMaxHealth(Id, MaxHealth);
-                    Conn.UpdateHealth(Health);
+                    _Connection.UpdateMaxHealth(Id, MaxHealth);
+                    _Connection.UpdateHealth(Health);
                 }
 
             }
@@ -262,10 +263,10 @@ namespace MinecraftServerEngine.Entities
             {
                 base._SetAdditionalHealth(amount);
 
-                if (Connected == true)
+                if (IsConnected == true)
                 {
                     System.Diagnostics.Debug.Assert(AdditionalHealth >= 0.0);
-                    Conn.UpdateAdditionalHealth(Id, AdditionalHealth);
+                    _Connection.UpdateAdditionalHealth(Id, AdditionalHealth);
                 }
 
             }
@@ -290,31 +291,17 @@ namespace MinecraftServerEngine.Entities
             {
                 base._SetMovementSpeed(amount);
 
-                if (Connected == true)
+                if (IsConnected == true)
                 {
                     System.Diagnostics.Debug.Assert(MovementSpeed >= 0.0);
                     System.Diagnostics.Debug.Assert(MovementSpeed <= 1024.0);
-                    Conn.UpdateMovementSpeed(Id, MovementSpeed);
+                    _Connection.UpdateMovementSpeed(Id, MovementSpeed);
                 }
             }
             finally
             {
                 System.Diagnostics.Debug.Assert(_LockerMovementSpeed != null);
                 _LockerMovementSpeed.Release();
-            }
-        }
-
-        internal override void _AddEffect(
-            byte effectId,
-            byte amplifier, int duration, byte flags)
-        {
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            base._AddEffect(effectId, amplifier, duration, flags);
-
-            if (Connected)
-            {
-                Conn.AddEffect(Id, effectId, amplifier, duration, flags);
             }
         }
 
@@ -340,9 +327,23 @@ namespace MinecraftServerEngine.Entities
                 speed, count,
                 r, g, b);
 
-            if (Connected == true)
+            if (IsConnected == true)
             {
-                Conn.EmitParticles(particle, v, (float)speed, count, (float)r, (float)g, (float)b);
+                _Connection.EmitParticles(particle, v, (float)speed, count, (float)r, (float)g, (float)b);
+            }
+        }
+
+        internal override void _AddEffect(
+            byte effectId,
+            byte amplifier, int duration, byte flags)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            base._AddEffect(effectId, amplifier, duration, flags);
+
+            if (IsConnected)
+            {
+                _Connection.AddEffect(Id, effectId, amplifier, duration, flags);
             }
         }
 
@@ -371,9 +372,8 @@ namespace MinecraftServerEngine.Entities
             _experienceBarRatio = ratio;
             _experienceLevel = level;
 
-            Conn.SetExperience(ratio, level);
+            _Connection.SetExperience(ratio, level);
         }
-
 
         private protected override void RenderSpawning(EntityRenderer renderer)
         {
@@ -385,7 +385,7 @@ namespace MinecraftServerEngine.Entities
             renderer.SpawnPlayer(
                 Id, UniqueId,
                 Position, Look,
-                Sneaking, Sprinting);
+                IsSneaking, IsSprinting);
 
             {
                 using MinecraftProtocolDataStream stream = new();
@@ -407,43 +407,18 @@ namespace MinecraftServerEngine.Entities
             }
         }
 
-        internal void Connect(MinecraftClient client, World world, UserId id)
-        {
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            System.Diagnostics.Debug.Assert(client != null);
-            System.Diagnostics.Debug.Assert(world != null);
-            System.Diagnostics.Debug.Assert(id != UserId.Null);
-
-            _pControl = Position;
-
-            Conn = new Connection(
-                UserId, Username,
-                client,
-                world,
-                Id,
-                AdditionalHealth, MaxHealth, Health,
-                MovementSpeed,
-                Position, Look,
-                Blindness,
-                Inventory,
-                _gamemode);
-
-            SetExperience(ExperienceBarRatio, ExperienceLevel);
-        }
-
         public void SwitchGamemode(Gamemode gamemode)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            LockerGamemode.Hold();
+            _LockerGamemode.Hold();
 
             if (_newGamemode != gamemode)
             {
                 _newGamemode = gamemode;
             }
 
-            LockerGamemode.Release();
+            _LockerGamemode.Release();
         }
 
         public void ApplyBilndness(bool f)
@@ -452,10 +427,10 @@ namespace MinecraftServerEngine.Entities
 
             _blindness = f;
 
-            if (Connected == true)
+            if (IsConnected == true)
             {
-                System.Diagnostics.Debug.Assert(Conn != null);
-                Conn.ApplyBilndness(_blindness);
+                System.Diagnostics.Debug.Assert(_Connection != null);
+                _Connection.ApplyBilndness(_blindness);
             }
         }
 
@@ -487,11 +462,11 @@ namespace MinecraftServerEngine.Entities
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            if (Connected == true)
+            if (IsConnected == true)
             {
-                System.Diagnostics.Debug.Assert(Conn != null);
+                System.Diagnostics.Debug.Assert(_Connection != null);
                 Vector v = force / Mass;
-                Conn.ApplyVelocity(Id, v);
+                _Connection.ApplyVelocity(Id, v);
             }
 
             base._ApplyForce(force);
@@ -504,7 +479,7 @@ namespace MinecraftServerEngine.Entities
 
             System.Diagnostics.Debug.Assert(volume != null);
 
-            if (Connected == true)
+            if (IsConnected == true)
             {
                 // TODO: Check the difference between _p and p. and predict movement....
                 /*Console.Printl($"p: {p}, _p: {_p}, ");
@@ -522,7 +497,7 @@ namespace MinecraftServerEngine.Entities
 
                 if (_gamemode != _newGamemode)
                 {
-                    Conn.SetGamemode(Id, _newGamemode);
+                    _Connection.SetGamemode(Id, _newGamemode);
                 }
             }
 
@@ -540,12 +515,12 @@ namespace MinecraftServerEngine.Entities
 
             try
             {
-                if (Connected == true)
+                if (IsConnected == true)
                 {
                     _pControl = p;
 
-                    System.Diagnostics.Debug.Assert(Conn != null);
-                    Conn.Teleport(p, look);
+                    System.Diagnostics.Debug.Assert(_Connection != null);
+                    _Connection.Teleport(p, look);
                 }
 
                 base.Teleport(p, look);
@@ -559,25 +534,6 @@ namespace MinecraftServerEngine.Entities
             }
         }
 
-        internal void ControlMovement(Vector p)
-        {
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            _pControl = p;
-        }
-
-        internal void Control(World world)
-        {
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            if (Connected == true)
-            {
-                System.Diagnostics.Debug.Assert(Conn != null);
-
-                Conn.Control(world, this, Inventory);
-            }
-
-        }
 
         // deprecated...  Replace to the OnDespawn when player is disconnected and world can despawn the player on disconnect.
         //protected internal virtual void OnDisconnected()
@@ -588,18 +544,18 @@ namespace MinecraftServerEngine.Entities
         //    }
         //}
 
-        public bool HandleDisconnection(out UserId userId, World world)
+        internal bool HandleDisconnection(out UserId userId, World world)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(world != null);
 
-            if (Conn != null && Conn.Disconnected == true)
+            if (IsConnected == true && _Connection.IsDisconnected == true)
             {
-                Conn.Flush(out userId, world, Inventory);
-                Conn.Dispose();
+                _Connection.Flush(out userId, world, Inventory);
+                _Connection.Dispose();
 
-                Conn = null;
+                _Connection = null;
 
                 return true;
             }
@@ -607,7 +563,6 @@ namespace MinecraftServerEngine.Entities
             userId = UserId.Null;
             return false;
         }
-
 
         public bool OpenInventory(SharedInventory sharedInventory)
         {
@@ -626,25 +581,25 @@ namespace MinecraftServerEngine.Entities
 
             System.Diagnostics.Debug.Assert(sharedInventory != null);
 
-            System.Diagnostics.Debug.Assert(InventoryLocker != null);
-            InventoryLocker.Hold();
+            System.Diagnostics.Debug.Assert(_LockerInventory != null);
+            _LockerInventory.Hold();
 
             try
             {
 
-                if (Disconnected == true)
+                if (IsDisconnected == true)
                 {
                     return false;
                 }
 
-                System.Diagnostics.Debug.Assert(Conn != null);
-                return Conn.Open(Inventory, sharedInventory);
+                System.Diagnostics.Debug.Assert(_Connection != null);
+                return _Connection.Open(Inventory, sharedInventory);
 
             }
             finally
             {
-                System.Diagnostics.Debug.Assert(InventoryLocker != null);
-                InventoryLocker.Release();
+                System.Diagnostics.Debug.Assert(_LockerInventory != null);
+                _LockerInventory.Release();
             }
         }
 
@@ -657,16 +612,16 @@ namespace MinecraftServerEngine.Entities
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            System.Diagnostics.Debug.Assert(InventoryLocker != null);
-            InventoryLocker.Hold();
+            System.Diagnostics.Debug.Assert(_LockerInventory != null);
+            _LockerInventory.Hold();
 
             try
             {
-                if (Conn != null)
+                if (IsConnected == true)
                 {
                     System.Diagnostics.Debug.Assert(Inventory != null);
-                    System.Diagnostics.Debug.Assert(Conn.Window != null);
-                    Conn.Window.SetHelmet(Inventory, itemStack);
+                    System.Diagnostics.Debug.Assert(_Connection.Window != null);
+                    _Connection.Window.SetHelmet(Inventory, itemStack);
                 }
                 else
                 {
@@ -679,8 +634,8 @@ namespace MinecraftServerEngine.Entities
             }
             finally
             {
-                System.Diagnostics.Debug.Assert(InventoryLocker != null);
-                InventoryLocker.Release();
+                System.Diagnostics.Debug.Assert(_LockerInventory != null);
+                _LockerInventory.Release();
             }
         }
 
@@ -703,16 +658,16 @@ namespace MinecraftServerEngine.Entities
                 return true;
             }
 
-            System.Diagnostics.Debug.Assert(InventoryLocker != null);
-            InventoryLocker.Hold();
+            System.Diagnostics.Debug.Assert(_LockerInventory != null);
+            _LockerInventory.Hold();
 
             try
             {
-                if (Conn != null)
+                if (IsConnected == true)
                 {
                     System.Diagnostics.Debug.Assert(Inventory != null);
-                    System.Diagnostics.Debug.Assert(Conn.Window != null);
-                    return Conn.Window.GiveItemStacks(Inventory, item, count);
+                    System.Diagnostics.Debug.Assert(_Connection.Window != null);
+                    return _Connection.Window.GiveItemStacks(Inventory, item, count);
                 }
                 else
                 {
@@ -722,8 +677,8 @@ namespace MinecraftServerEngine.Entities
             }
             finally
             {
-                System.Diagnostics.Debug.Assert(InventoryLocker != null);
-                InventoryLocker.Release();
+                System.Diagnostics.Debug.Assert(_LockerInventory != null);
+                _LockerInventory.Release();
             }
 
         }
@@ -742,16 +697,16 @@ namespace MinecraftServerEngine.Entities
                 return true;
             }
 
-            System.Diagnostics.Debug.Assert(InventoryLocker != null);
-            InventoryLocker.Hold();
+            System.Diagnostics.Debug.Assert(_LockerInventory != null);
+            _LockerInventory.Hold();
 
             try
             {
-                if (Conn != null)
+                if (IsConnected == true)
                 {
                     System.Diagnostics.Debug.Assert(Inventory != null);
-                    System.Diagnostics.Debug.Assert(Conn.Window != null);
-                    return Conn.Window.GiveItemStack(Inventory, ref itemStack);
+                    System.Diagnostics.Debug.Assert(_Connection.Window != null);
+                    return _Connection.Window.GiveItemStack(Inventory, ref itemStack);
                 }
                 else
                 {
@@ -761,38 +716,10 @@ namespace MinecraftServerEngine.Entities
             }
             finally
             {
-                System.Diagnostics.Debug.Assert(InventoryLocker != null);
-                InventoryLocker.Release();
+                System.Diagnostics.Debug.Assert(_LockerInventory != null);
+                _LockerInventory.Release();
             }
 
-        }
-
-        public ItemStack CloseInventory()
-        {
-            if (_disposed == true)
-            {
-                throw new System.ObjectDisposedException(GetType().Name);
-            }
-
-            System.Diagnostics.Debug.Assert(InventoryLocker != null);
-            InventoryLocker.Hold();
-
-            try
-            {
-                if (Conn == null)
-                {
-                    return null;
-                }
-
-                System.Diagnostics.Debug.Assert(Inventory != null);
-                System.Diagnostics.Debug.Assert(Conn.Window != null);
-                return Conn.Window.Close(Inventory);
-            }
-            finally
-            {
-                System.Diagnostics.Debug.Assert(InventoryLocker != null);
-                InventoryLocker.Release();
-            }
         }
 
         public ItemStack[] TakeItemStacks(IReadOnlyItem item, int count)
@@ -816,7 +743,7 @@ namespace MinecraftServerEngine.Entities
             System.Diagnostics.Debug.Assert(count >= 0);
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            InventoryLocker.Hold();
+            _LockerInventory.Hold();
 
             try
             {
@@ -825,9 +752,9 @@ namespace MinecraftServerEngine.Entities
                     return [];
                 }
 
-                if (Conn != null)
+                if (IsConnected == true)
                 {
-                    return Conn.Window.TakeItemStacks(Inventory, item, count);
+                    return _Connection.Window.TakeItemStacks(Inventory, item, count);
                 }
                 else
                 {
@@ -836,7 +763,7 @@ namespace MinecraftServerEngine.Entities
             }
             finally
             {
-                InventoryLocker.Release();
+                _LockerInventory.Release();
             }
 
         }
@@ -872,15 +799,15 @@ namespace MinecraftServerEngine.Entities
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            InventoryLocker.Hold();
+            _LockerInventory.Hold();
 
             try
             {
 
 
-                if (Conn != null)
+                if (IsConnected == true)
                 {
-                    return Conn.Window.GiveAndTakeItemStacks(Inventory,
+                    return _Connection.Window.GiveAndTakeItemStacks(Inventory,
                         giveItem, giveCount, takeItem, takeCount);
                 }
                 else
@@ -891,22 +818,50 @@ namespace MinecraftServerEngine.Entities
             }
             finally
             {
-                InventoryLocker.Release();
+                _LockerInventory.Release();
             }
 
+        }
+
+        public ItemStack CloseInventory()
+        {
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(_LockerInventory != null);
+            _LockerInventory.Hold();
+
+            try
+            {
+                if (_Connection == null)
+                {
+                    return null;
+                }
+
+                System.Diagnostics.Debug.Assert(Inventory != null);
+                System.Diagnostics.Debug.Assert(_Connection.Window != null);
+                return _Connection.Window.Close(Inventory);
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(_LockerInventory != null);
+                _LockerInventory.Release();
+            }
         }
 
         public void FlushItems()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            InventoryLocker.Hold();
+            _LockerInventory.Hold();
 
             try
             {
-                if (Conn != null)
+                if (IsConnected == true)
                 {
-                    Conn.Window.FlushItems(Inventory);
+                    _Connection.Window.FlushItems(Inventory);
                 }
                 else
                 {
@@ -915,7 +870,7 @@ namespace MinecraftServerEngine.Entities
             }
             finally
             {
-                InventoryLocker.Release();
+                _LockerInventory.Release();
             }
 
         }
@@ -927,7 +882,7 @@ namespace MinecraftServerEngine.Entities
                 throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            if (Connected == false)
+            if (IsConnected == false)
             {
                 return;
             }
@@ -939,7 +894,7 @@ namespace MinecraftServerEngine.Entities
 
             string data = TextComponent.GenerateJsonString(components);
 
-            Conn.OutPackets.Enqueue(new ClientboundChatmessagePacket(data, 0x00));
+            _Connection.OutPackets.Enqueue(new ClientboundChatmessagePacket(data, 0x00));
         }
 
         internal override void _Animate(EntityAnimation animation)
@@ -948,9 +903,9 @@ namespace MinecraftServerEngine.Entities
 
             base._Animate(animation);
 
-            if (Connected == true)
+            if (IsConnected == true)
             {
-                Conn.Animate(Id, animation);
+                _Connection.Animate(Id, animation);
             }
         }
 
@@ -991,34 +946,87 @@ namespace MinecraftServerEngine.Entities
 
         }
 
+        internal void Connect(MinecraftClient client, World world, UserId id)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(client != null);
+            System.Diagnostics.Debug.Assert(world != null);
+            System.Diagnostics.Debug.Assert(id != UserId.Null);
+
+            _pControl = Position;
+
+            _Connection = new Connection(
+                UserId, Username,
+                client,
+                world,
+                Id,
+                AdditionalHealth, MaxHealth, Health,
+                MovementSpeed,
+                Position, Look,
+                IsBlindness,
+                Inventory,
+                _gamemode);
+
+            SetExperience(ExperienceBarRatio, ExperienceLevel);
+        }
+
+        internal void ControlMovement(Vector p)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _pControl = p;
+        }
+
+        internal void Control(World world)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (IsConnected == true)
+            {
+                System.Diagnostics.Debug.Assert(_Connection != null);
+                _Connection.Control(world, this);
+            }
+
+        }
+
         public void LoadWorld(World world)
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            if (Disconnected == true)
+            if (IsDisconnected == true)
             {
                 return;
             }
 
-            System.Diagnostics.Debug.Assert(Conn != null);
-            Conn.LoadWorld(
+            System.Diagnostics.Debug.Assert(_Connection != null);
+            _Connection.LoadWorld(
                 Id,
                 world,
                 Position,
-                Blindness);
+                IsBlindness);
         }
 
         public void SendData()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            if (Disconnected == true)
+            if (IsDisconnected == true)
             {
                 return;
             }
 
-            System.Diagnostics.Debug.Assert(Conn != null);
-            Conn.SendData();
+            System.Diagnostics.Debug.Assert(_Connection != null);
+            _Connection.SendData();
+        }
+
+        internal override void Flush(PhysicsWorld _world)
+        {
+            System.Diagnostics.Debug.Assert(_world != null);
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            base.Flush(_world);
         }
 
         protected override void Dispose(bool disposing)
@@ -1032,15 +1040,15 @@ namespace MinecraftServerEngine.Entities
                 if (disposing == true)
                 {
                     // Dispose managed resources.
-                    if (Disconnected == false)
+                    if (IsDisconnected == false)
                     {
-                        Conn.Dispose();
+                        _Connection.Dispose();
                     }
 
-                    InventoryLocker.Dispose();
+                    _LockerInventory.Dispose();
                     Inventory.Dispose();
 
-                    LockerGamemode.Dispose();
+                    _LockerGamemode.Dispose();
                 }
 
                 // Call the appropriate methods to clean up
