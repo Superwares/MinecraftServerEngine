@@ -311,7 +311,7 @@ namespace MinecraftServerEngine
                         () => World.DestroyObjects()),
 
                     new Task(  // 4
-                        true,  // EnsureOneTick
+                        false,  // EnsureOneTick
                         true,  // Parallel
                         () => World.MoveObjects()),
 
