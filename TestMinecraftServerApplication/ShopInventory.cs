@@ -23,6 +23,7 @@ namespace TestMinecraftServerApplication
         public const int BlastCoreSlot = UniqueItemLineOffset + 3;
         public const int EclipseCrystalSlot = UniqueItemLineOffset + 5;
         public const int PhoenixFeatherSlot = UniqueItemLineOffset + 6;
+        public const int HyperBeamSlot = UniqueItemLineOffset + 7;
         public const int DoombringerSlot = UniqueItemLineOffset + 8;
 
 
@@ -105,6 +106,26 @@ namespace TestMinecraftServerApplication
                     $"왼클릭(구매)          {PhoenixFeather.PurchasePrice * Coin.DefaultCount} Coins",
                     // Right-click (Sell)
                     $"우클릭(판매)          {PhoenixFeather.SellPrice * Coin.DefaultCount} Coins",
+                    $"구매자                {username}",
+                ]));
+        }
+        
+        public void ResetHyperBeamSlot(string username)
+        {
+            if (username == null || string.IsNullOrEmpty(username) == true)
+            {
+                username = "없음";
+            }
+
+            SetSlot(HyperBeamSlot, ItemStack.Create(HyperBeam.Item, HyperBeam.DefaultCount, [
+                    $"",
+                    // A devastating beam that can obliterate anything in its path.
+                    $"모든 것을 파괴할 수 있는 파괴적인 빔.",
+                    $"",
+                    // Left-click (Purchase)
+                    $"왼클릭(구매)          {HyperBeam.PurchasePrice * Coin.DefaultCount} Coins",
+                    // Right-click (Sell)
+                    $"우클릭(판매)          {HyperBeam.SellPrice * Coin.DefaultCount} Coins",
                     $"구매자                {username}",
                 ]));
         }
@@ -254,6 +275,7 @@ namespace TestMinecraftServerApplication
                 ResetBlastCoreSlot(null);
                 ResetEclipseCrystalSlot(null);
                 ResetPhoenixFeatherSlot(null);
+                ResetHyperBeamSlot(null);
                 ResetDoombringerSlot(null);
             }
 
@@ -380,31 +402,6 @@ namespace TestMinecraftServerApplication
                     }
                     break;
 
-                //case BalloonBasher.Type:
-                //    {
-                //        if (BalloonBasher.CanPurchase == false)
-                //        {
-                //            break;
-                //        }
-
-                //        taked = playerInventory.GiveAndTakeItemStacks(
-                //           BalloonBasher.Item, BalloonBasher.DefaultCount,
-                //           Coin.Item, Coin.DefaultCount * BalloonBasher.PurchasePrice);
-
-                //        if (taked != null && SuperWorld.GameContext.IsStarted == true)
-                //        {
-                //            System.Diagnostics.Debug.Assert(player.Username != null);
-                //            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(player.Username) == false);
-                //            System.Diagnostics.Debug.Assert(i == BalloonBasherSlot);
-                //            ResetBalloonBasherSlot(player.Username);
-
-                //            BalloonBasher.CanPurchase = false;
-                //        }
-
-                //        success = (taked != null);
-
-                //    }
-                //    break;
                 case BlastCore.Type:
                     {
                         if (BlastCore.CanPurchase == false)
@@ -474,6 +471,31 @@ namespace TestMinecraftServerApplication
                             ResetPhoenixFeatherSlot(player.Username);
 
                             PhoenixFeather.CanPurchase = false;
+                        }
+
+                        success = (taked != null);
+
+                    }
+                    break;
+                case HyperBeam.Type:
+                    {
+                        if (HyperBeam.CanPurchase == false)
+                        {
+                            break;
+                        }
+
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                           HyperBeam.Item, HyperBeam.DefaultCount,
+                           Coin.Item, Coin.DefaultCount * HyperBeam.PurchasePrice);
+
+                        if (taked != null && SuperWorld.GameContext.IsStarted == true)
+                        {
+                            System.Diagnostics.Debug.Assert(player.Username != null);
+                            System.Diagnostics.Debug.Assert(string.IsNullOrEmpty(player.Username) == false);
+                            System.Diagnostics.Debug.Assert(i == HyperBeamSlot);
+                            ResetHyperBeamSlot(player.Username);
+
+                            HyperBeam.CanPurchase = false;
                         }
 
                         success = (taked != null);
@@ -623,29 +645,6 @@ namespace TestMinecraftServerApplication
                     }
                     break;
 
-                //case BalloonBasher.Type:
-                //    {
-                //        if (BalloonBasher.CanPurchase == true)
-                //        {
-                //            break;
-                //        }
-
-                //        taked = playerInventory.GiveAndTakeItemStacks(
-                //            Coin.Item, Coin.DefaultCount * BalloonBasher.SellPrice,
-                //            BalloonBasher.Item, BalloonBasher.DefaultCount);
-
-                //        if (taked != null && SuperWorld.GameContext.IsStarted == true)
-                //        {
-                //            System.Diagnostics.Debug.Assert(i == BalloonBasherSlot);
-                //            ResetBalloonBasherSlot(null);
-
-                //            BalloonBasher.CanPurchase = true;
-                //        }
-
-                //        success = taked != null;
-
-                //    }
-                //    break;
                 case BlastCore.Type:
                     {
                         taked = playerInventory.GiveAndTakeItemStacks(
@@ -694,6 +693,24 @@ namespace TestMinecraftServerApplication
                             ResetPhoenixFeatherSlot(null);
 
                             PhoenixFeather.CanPurchase = true;
+                        }
+
+                        success = taked != null;
+
+                    }
+                    break;
+                case HyperBeam.Type:
+                    {
+                        taked = playerInventory.GiveAndTakeItemStacks(
+                            Coin.Item, Coin.DefaultCount * HyperBeam.SellPrice,
+                            HyperBeam.Item, HyperBeam.DefaultCount);
+
+                        if (taked != null && SuperWorld.GameContext.IsStarted == true)
+                        {
+                            System.Diagnostics.Debug.Assert(i == HyperBeamSlot);
+                            ResetHyperBeamSlot(null);
+
+                            HyperBeam.CanPurchase = true;
                         }
 
                         success = taked != null;

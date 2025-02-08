@@ -57,26 +57,36 @@ namespace TestMinecraftServerApplication
         }
 
 
+        protected override bool HandleDespawning()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(_SkillQueue != null);
+            return _SkillQueue.Empty == true;
+        }
 
         public override void StartRoutine(PhysicsWorld _world)
         {
             System.Diagnostics.Debug.Assert(_world != null);
 
-            using Tree<PhysicsObject> objs = new();
+            //using Tree<PhysicsObject> objs = new();
 
-            _world.SearchObjects(objs, BoundingVolume, true);
+            //_world.SearchObjects(objs, BoundingVolume, true);
 
-            MyConsole.Debug($"objs: {objs.Count}");
+            //if (objs.Count > 0)
+            //{
+            //    MyConsole.Debug($"Detected!: {objs.Count}");
+            //}
 
-            if (BoundingVolume is OrientedBoundingBox obb)
-            {
-                EmitParticles(Particle.Reddust, obb.Center, 0.0000001, 1, 0.0, 0.0, 0.0);
+            //if (BoundingVolume is OrientedBoundingBox obb)
+            //{
+            //    EmitParticles(Particle.Reddust, obb.Center, 0.0000001, 1, 0.0, 0.0, 0.0);
 
-                foreach (Vector vertex in obb.Vertices)
-                {
-                    EmitParticles(Particle.Reddust, vertex, 0.0000001, 1, 0.0, 0.0, 0.0);
-                }
-            }
+            //    foreach (Vector vertex in obb.Vertices)
+            //    {
+            //        EmitParticles(Particle.Reddust, vertex, 0.0000001, 1, 0.0, 0.0, 0.0);
+            //    }
+            //}
 
             if (_world is SuperWorld world)
             {

@@ -5,7 +5,6 @@ using Common;
 using MinecraftServerEngine.Particles;
 using MinecraftServerEngine.Physics;
 using MinecraftServerEngine.Physics.BoundingVolumes;
-
 using TestMinecraftServerApplication.Items;
 
 namespace TestMinecraftServerApplication.SkillProgressNodes
@@ -20,25 +19,27 @@ namespace TestMinecraftServerApplication.SkillProgressNodes
 
         public ISkillProgressNode CreateNextNode()
         {
-            throw new System.NotImplementedException();
+            return new HyperBeamActualDamagingSkillNode();
         }
 
         public bool Start(SuperWorld world, PhysicsObject _obj)
         {
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(_obj != null);
-            
+
             if (_obj is HyperBeamObject obj && obj.BoundingVolume is OrientedBoundingBox obb)
             {
                 Time elapsedTime = Time.Now() - _startTime;
 
                 if (elapsedTime >= HyperBeam.ChargingInterval)
                 {
+                    const double ChargingLength = HyperBeam.Length + 1;
+
                     Vector u = new(1.0, 0.0, 0.0);
                     u = u.Rotate(obb.Angles);
-                    
-                    Vector d = u * (_chargingIndex++ % (HyperBeam.Length + 1));
-                    Vector o = d + obb.Center - (u * obb.Extents.X);
+
+                    Vector d = u * (_chargingIndex++ % ChargingLength);
+                    Vector o = d + obb.Center - u * obb.Extents.X;
 
                     const double Radius = HyperBeam.Radius;
                     const int NumberOfPoints = 10;
@@ -60,10 +61,16 @@ namespace TestMinecraftServerApplication.SkillProgressNodes
 
                     for (int i = 0; i < NumberOfPoints; i++)
                     {
-                        obj.EmitParticles(Particle.Reddust, (vertices[i] + o), 0.1, 1, 0.0, 0.0, 0.0);
+                        obj.EmitParticles(Particle.Reddust, vertices[i] + o, 0.1, 1, 1.0, 0.0001, 0.0001);  // black
                     }
 
                     _startTime = _startTime + HyperBeam.ChargingInterval;
+
+                    System.Diagnostics.Debug.Assert(_chargingIndex <= ChargingLength);
+                    if (_chargingIndex == ChargingLength)
+                    {
+                        return true;
+                    }
                 }
 
                 return false;

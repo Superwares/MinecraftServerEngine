@@ -14,10 +14,23 @@ namespace TestMinecraftServerApplication.Items
 
         internal const ItemQualityTier Tier = ItemQualityTier.Unique;
 
-        internal const ItemType Type = ItemType.MusicDisc_C418_blocks;
+        internal const ItemType Type = ItemType.MusicDisc_C418_chirp;
         internal const string Name = "Hyper Beam";
 
         internal static readonly Time ChargingInterval = Time.FromMilliseconds(100);
 
+        public const int PurchasePrice = 190;
+        public const int SellPrice = 180;
+
+        public readonly static IReadOnlyItem Item = new Item(
+            Type,
+            Name,
+            [
+                $"Tier            {Tier.ToString()}",  // Quality Tier
+            ]);
+
+        public static readonly int DefaultCount = MinecraftServerEngine.Items.Item.MinCount;
+
+        public static bool CanPurchase = true;
     }
 }

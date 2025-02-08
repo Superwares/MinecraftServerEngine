@@ -179,6 +179,11 @@ namespace TestMinecraftServerApplication
 
             if (_world is SuperWorld world)
             {
+                //EmitParticles(Particle.Reddust, Vector.Zero, 0.1, 1, 1, 0.0001, 0.0001);
+
+                //EmitParticles(Particle.Reddust, Vector.Zero, 1.0, 0, 0.00001, 0.50001, 0.00001);
+                //EmitRgbParticle(Vector.Zero, 1.0, 1.0, 1.0);
+
                 System.Diagnostics.Debug.Assert(_SkillQueue != null);
                 if (_SkillQueue.Empty == false)
                 {
@@ -868,6 +873,16 @@ namespace TestMinecraftServerApplication
             //return true;
         }
 
+        private void UseHyperBeamItem(SuperWorld world)
+        {
+            System.Diagnostics.Debug.Assert(world != null);
+
+            world.SpawnObject(new HyperBeamObject(
+                Position + new Vector(0.0, GetEyeHeight(), 0.0),
+                Look
+                ));
+        }
+
         protected override void OnAttack(World _world, double attackCharge)
         {
             System.Diagnostics.Debug.Assert(_world != null);
@@ -989,6 +1004,10 @@ namespace TestMinecraftServerApplication
 
                     case ChaosSwap.Type:
                         UseChaosSwapItem(world);
+                        break;
+
+                    case HyperBeam.Type:
+                        UseHyperBeamItem(world);
                         break;
                 }
             }

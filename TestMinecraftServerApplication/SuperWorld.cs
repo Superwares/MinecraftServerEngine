@@ -65,10 +65,10 @@ namespace TestMinecraftServerApplication
             RespawningPosition = respawningPos;
             RespawningLook = respawningLook;
 
-            SpawnObject(new HyperBeamObject(
-                new Vector(151.5, 14.0 + AbstractPlayer.DefaultEyeHeight, 214.5), 
-                new EntityAngles(30, -30)
-                ));
+            //SpawnObject(new HyperBeamObject(
+            //    new Vector(151.5, 14.0 + AbstractPlayer.DefaultEyeHeight, 214.5), 
+            //    new EntityAngles(30, -30)
+            //    ));
         }
 
         ~SuperWorld()

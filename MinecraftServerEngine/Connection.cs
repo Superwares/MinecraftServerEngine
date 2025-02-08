@@ -1831,7 +1831,6 @@ namespace MinecraftServerEngine
             System.Diagnostics.Debug.Assert(ratio >= 0 && ratio <= 1);
             System.Diagnostics.Debug.Assert(level >= 0);
 
-
             if (_disconnected == true)
             {
                 return;

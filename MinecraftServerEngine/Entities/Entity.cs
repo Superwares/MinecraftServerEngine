@@ -676,14 +676,14 @@ namespace MinecraftServerEngine.Entities
         internal virtual void _EmitParticles(
             Particle particle, Vector v,
             double speed, int count,
-            double r, double g, double b)
+            double offsetX, double offsetY, double offsetZ)
         {
-            System.Diagnostics.Debug.Assert(r >= 0.0D);
-            System.Diagnostics.Debug.Assert(r <= 1.0D);
-            System.Diagnostics.Debug.Assert(g >= 0.0D);
-            System.Diagnostics.Debug.Assert(g <= 1.0D);
-            System.Diagnostics.Debug.Assert(b >= 0.0D);
-            System.Diagnostics.Debug.Assert(b <= 1.0D);
+            System.Diagnostics.Debug.Assert(offsetX >= 0.0D);
+            System.Diagnostics.Debug.Assert(offsetX <= 1.0D);
+            System.Diagnostics.Debug.Assert(offsetY >= 0.0D);
+            System.Diagnostics.Debug.Assert(offsetY <= 1.0D);
+            System.Diagnostics.Debug.Assert(offsetZ >= 0.0D);
+            System.Diagnostics.Debug.Assert(offsetZ <= 1.0D);
             System.Diagnostics.Debug.Assert(speed >= 0.0F);
             System.Diagnostics.Debug.Assert(speed <= 1.0F);
             System.Diagnostics.Debug.Assert(count >= 0);
@@ -699,14 +699,14 @@ namespace MinecraftServerEngine.Entities
             foreach (EntityRenderer renderer in Renderers.GetKeys())
             {
                 System.Diagnostics.Debug.Assert(renderer != null);
-                renderer.ShowParticles(particle, v, (float)speed, count, (float)r, (float)g, (float)b);
+                renderer.ShowParticles(particle, v, (float)speed, count, (float)offsetX, (float)offsetY, (float)offsetZ);
             }
         }
 
         public void EmitParticles(
             Particle particle, Vector offset,
             double speed, int count,
-            double red, double green, double blue)
+            double offsetX, double offsetY, double offsetZ)
         {
             if (speed < 0.0 || speed > 1.0)
             {
@@ -717,6 +717,42 @@ namespace MinecraftServerEngine.Entities
                 throw new System.ArgumentOutOfRangeException(nameof(count));
             }
 
+            if (offsetX < 0.0 || offsetX > 1.0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(offsetX));
+            }
+            if (offsetY < 0.0 || offsetY > 1.0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(offsetY));
+            }
+            if (offsetZ < 0.0 || offsetZ > 1.0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(offsetZ));
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            _EmitParticles(particle, Position + offset, speed, count, offsetX, offsetY, offsetZ);
+        }
+
+        public void EmitParticles(
+            Particle particle, Vector offset,
+            double speed, int count)
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            EmitParticles(particle, offset, speed, count, 0.0F, 0.0F, 0.0F);
+        }
+
+        public void EmitRgbParticle(
+            Vector offset,
+            double red, double green, double blue)
+        {
             if (red < 0.0 || red > 1.0)
             {
                 throw new System.ArgumentOutOfRangeException(nameof(red));
@@ -730,18 +766,27 @@ namespace MinecraftServerEngine.Entities
                 throw new System.ArgumentOutOfRangeException(nameof(blue));
             }
 
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            _EmitParticles(particle, Position + offset, speed, count, red, green, blue);
-        }
+            if (red == 0.0)
+            {
+                red = 0.00001;
+            }
+            if (green == 0.0)
+            {
+                green = 0.00001;
+            }
+            if (blue == 0.0)
+            {
+                blue = 0.00001;
+            }
 
-        public void EmitParticles(
-            Particle particle, Vector offset,
-            double speed, int count)
-        {
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            EmitParticles(particle, offset, speed, count, 0.0F, 0.0F, 0.0F);
+            _EmitParticles(Particle.Reddust, Position + offset, 1.0, 0, red, green, blue);
         }
 
         public void EmitParticles(

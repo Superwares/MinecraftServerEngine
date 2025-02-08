@@ -87,7 +87,7 @@ namespace MinecraftServerEngine.ShapeObjects
         public void EmitParticles(
             Particle particle, Vector v,
             double speed, int count,
-            double red, double green, double blue)
+            double offsetX, double offsetY, double offsetZ)
         {
             if (speed < 0.0 || speed > 1.0)
             {
@@ -98,6 +98,39 @@ namespace MinecraftServerEngine.ShapeObjects
                 throw new System.ArgumentOutOfRangeException(nameof(count));
             }
 
+            if (offsetX < 0.0 || offsetX > 1.0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(offsetX));
+            }
+            if (offsetY < 0.0 || offsetY > 1.0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(offsetY));
+            }
+            if (offsetZ < 0.0 || offsetZ > 1.0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(offsetZ));
+            }
+
+            if (_disposed == true)
+            {
+                throw new System.ObjectDisposedException(GetType().Name);
+            }
+
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            System.Diagnostics.Debug.Assert(Renderers != null);
+            if (Renderers.Empty == true)
+            {
+                return;
+            }
+
+            _EmitParticles(particle, v, speed, count, offsetX, offsetY, offsetZ);
+        }
+
+        public void EmitRgbParticle(
+            Vector v,
+            double red, double green, double blue)
+        {
             if (red < 0.0 || red > 1.0)
             {
                 throw new System.ArgumentOutOfRangeException(nameof(red));
@@ -111,15 +144,27 @@ namespace MinecraftServerEngine.ShapeObjects
                 throw new System.ArgumentOutOfRangeException(nameof(blue));
             }
 
-            System.Diagnostics.Debug.Assert(_disposed == false);
-
-            System.Diagnostics.Debug.Assert(Renderers != null);
-            if (Renderers.Empty == true)
+            if (_disposed == true)
             {
-                return;
+                throw new System.ObjectDisposedException(GetType().Name);
             }
 
-            _EmitParticles(particle, v, speed, count, red, green, blue);
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (red == 0.0)
+            {
+                red = 0.00001;
+            }
+            if (green == 0.0)
+            {
+                green = 0.00001;
+            }
+            if (blue == 0.0)
+            {
+                blue = 0.00001;
+            }
+
+            _EmitParticles(Particle.Reddust, v, 1.0, 0, red, green, blue);
         }
 
         internal void ApplyRenderer(ShapeObjectRenderer renderer)
