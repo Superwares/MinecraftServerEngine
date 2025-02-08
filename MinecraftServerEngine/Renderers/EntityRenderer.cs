@@ -22,15 +22,27 @@ namespace MinecraftServerEngine.Renderers
 
         }
 
-        internal void RelMoveAndRotate(
-            int id,
-            Vector p, Vector pPrev, EntityAngles look)
+        internal void Teleport(int id, Vector p, EntityAngles look, bool onGround)
         {
             System.Diagnostics.Debug.Assert(Disconnected == false);
 
-            double dx = (p.X - pPrev.X) * (32 * 128),
-                dy = (p.Y - pPrev.Y) * (32 * 128),
-                dz = (p.Z - pPrev.Z) * (32 * 128);
+            (byte x, byte y) = look.ConvertToProtocolFormat();
+            Render(new EntityTeleportPacket(
+                id,
+                p.X, p.Y, p.Z,
+                x, y,
+                onGround));
+        }
+
+        internal void RelativeMoveAndRotate(
+            int id,
+            Vector prevPos,  Vector pos, EntityAngles look)
+        {
+            System.Diagnostics.Debug.Assert(Disconnected == false);
+
+            double dx = (pos.X - prevPos.X) * (32 * 128),
+                dy = (pos.Y - prevPos.Y) * (32 * 128),
+                dz = (pos.Z - prevPos.Z) * (32 * 128);
             System.Diagnostics.Debug.Assert(dx >= short.MinValue && dx <= short.MaxValue);
             System.Diagnostics.Debug.Assert(dy >= short.MinValue && dy <= short.MaxValue);
             System.Diagnostics.Debug.Assert(dz >= short.MinValue && dz <= short.MaxValue);
@@ -45,16 +57,52 @@ namespace MinecraftServerEngine.Renderers
 
         }
 
-        internal void RelMove(int id, Vector p, Vector pPrev)
+        internal void RelativeMove(int id, Vector prevPos, Vector pos)
         {
             System.Diagnostics.Debug.Assert(Disconnected == false);
 
-            double dx = (p.X - pPrev.X) * (32 * 128),
-                dy = (p.Y - pPrev.Y) * (32 * 128),
-                dz = (p.Z - pPrev.Z) * (32 * 128);
+            double dx = (pos.X - prevPos.X) * (32 * 128);
+            double dy = (pos.Y - prevPos.Y) * (32 * 128);
+            double dz = (pos.Z - prevPos.Z) * (32 * 128);
+            
             System.Diagnostics.Debug.Assert(dx >= short.MinValue && dx <= short.MaxValue);
             System.Diagnostics.Debug.Assert(dy >= short.MinValue && dy <= short.MaxValue);
             System.Diagnostics.Debug.Assert(dz >= short.MinValue && dz <= short.MaxValue);
+
+            Render(new EntityRelMovePacket(
+                id,
+                (short)dx, (short)dy, (short)dz,
+                false));
+
+        }
+
+        internal void RelativeMoveAndRotate(
+            int id,
+            double dx, double dy, double dz, EntityAngles look)
+        {
+            System.Diagnostics.Debug.Assert(dx >= short.MinValue && dx <= short.MaxValue);
+            System.Diagnostics.Debug.Assert(dy >= short.MinValue && dy <= short.MaxValue);
+            System.Diagnostics.Debug.Assert(dz >= short.MinValue && dz <= short.MaxValue);
+            
+            System.Diagnostics.Debug.Assert(Disconnected == false);
+
+            (byte x, byte y) = look.ConvertToProtocolFormat();
+            Render(new EntityRelMoveLookPacket(
+                id,
+                (short)dx, (short)dy, (short)dz,
+                x, y,
+                false));
+            Render(new EntityHeadLookPacket(id, x));
+
+        }
+
+        internal void RelativeMove(int id, double dx, double dy, double dz)
+        {
+            System.Diagnostics.Debug.Assert(dx >= short.MinValue && dx <= short.MaxValue);
+            System.Diagnostics.Debug.Assert(dy >= short.MinValue && dy <= short.MaxValue);
+            System.Diagnostics.Debug.Assert(dz >= short.MinValue && dz <= short.MaxValue);
+
+            System.Diagnostics.Debug.Assert(Disconnected == false);
 
             Render(new EntityRelMovePacket(
                 id,
@@ -79,18 +127,7 @@ namespace MinecraftServerEngine.Renderers
             Render(new EntityPacket(id));
         }
 
-        internal void Teleport(int id, Vector p, EntityAngles look, bool onGround)
-        {
-            System.Diagnostics.Debug.Assert(Disconnected == false);
-
-            (byte x, byte y) = look.ConvertToProtocolFormat();
-            Render(new EntityTeleportPacket(
-                id,
-                p.X, p.Y, p.Z,
-                x, y,
-                onGround));
-        }
-
+      
         internal void SetBlockAppearance(Block block, BlockLocation loc)
         {
             System.Diagnostics.Debug.Assert(Disconnected == false);

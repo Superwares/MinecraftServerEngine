@@ -45,7 +45,7 @@ namespace MinecraftServerEngine.Entities
         private Block _prevFakeBlock, _fakeBlock;
     
 
-        private readonly bool NoGravity;
+        private readonly bool _NoGravity;
 
 
         private bool _canHaveMovement = false;
@@ -72,7 +72,7 @@ namespace MinecraftServerEngine.Entities
             System.Diagnostics.Debug.Assert(!_sneaking);
             System.Diagnostics.Debug.Assert(!_sprinting);
 
-            NoGravity = noGravity;
+            _NoGravity = noGravity;
         }
 
         ~Entity()
@@ -94,7 +94,7 @@ namespace MinecraftServerEngine.Entities
                 Velocity);  // Damping Force
 
             BoundingVolume volume = _teleported ? hitbox.Convert(_pTeleport) : hitbox.Convert(_p);
-            return (volume, NoGravity || volume is EmptyBoundingVolume);
+            return (volume, _NoGravity || volume is EmptyBoundingVolume);
         }
 
         private protected abstract void RenderSpawning(EntityRenderer renderer);
@@ -364,27 +364,68 @@ namespace MinecraftServerEngine.Entities
                 }
                 else if (moved == true && _rotated == true)
                 {
-                    System.Diagnostics.Debug.Assert(Renderers != null);
-                    foreach (EntityRenderer renderer in Renderers.GetKeys())
+                    double dx = (p.X - _p.X) * (32 * 128);
+                    double dy = (p.Y - _p.Y) * (32 * 128);
+                    double dz = (p.Z - _p.Z) * (32 * 128);
+
+                    if (
+                        dx < short.MinValue || dx > short.MaxValue ||
+                        dy < short.MinValue || dy > short.MaxValue ||
+                        dz < short.MinValue || dz > short.MaxValue
+                        )
                     {
-                        System.Diagnostics.Debug.Assert(renderer != null);
-                        renderer.RelMoveAndRotate(Id, p, _p, _look);
+                        System.Diagnostics.Debug.Assert(Renderers != null);
+                        foreach (EntityRenderer renderer in Renderers.GetKeys())
+                        {
+                            System.Diagnostics.Debug.Assert(renderer != null);
+                            renderer.Teleport(Id, p, _look, false);
+                        }
                     }
+                    else
+                    {
+                        System.Diagnostics.Debug.Assert(Renderers != null);
+                        foreach (EntityRenderer renderer in Renderers.GetKeys())
+                        {
+                            System.Diagnostics.Debug.Assert(renderer != null);
+                            renderer.RelativeMoveAndRotate(Id, dx, dy, dz, _look);
+                        }
+                    }
+                    
                 }
                 else if (moved == true)
                 {
-                    System.Diagnostics.Debug.Assert(!_rotated);
+                    System.Diagnostics.Debug.Assert(_rotated == false);
 
-                    System.Diagnostics.Debug.Assert(Renderers != null);
-                    foreach (EntityRenderer renderer in Renderers.GetKeys())
+                    double dx = (p.X - _p.X) * (32 * 128);
+                    double dy = (p.Y - _p.Y) * (32 * 128);
+                    double dz = (p.Z - _p.Z) * (32 * 128);
+
+                    if (
+                        dx < short.MinValue || dx > short.MaxValue ||
+                        dy < short.MinValue || dy > short.MaxValue ||
+                        dz < short.MinValue || dz > short.MaxValue
+                        )
                     {
-                        System.Diagnostics.Debug.Assert(renderer != null);
-                        renderer.RelMove(Id, p, _p);
+                        System.Diagnostics.Debug.Assert(Renderers != null);
+                        foreach (EntityRenderer renderer in Renderers.GetKeys())
+                        {
+                            System.Diagnostics.Debug.Assert(renderer != null);
+                            renderer.Teleport(Id, p, _look, false);
+                        }
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.Assert(Renderers != null);
+                        foreach (EntityRenderer renderer in Renderers.GetKeys())
+                        {
+                            System.Diagnostics.Debug.Assert(renderer != null);
+                            renderer.RelativeMove(Id, dx, dy, dz);
+                        }
                     }
                 }
                 else if (_rotated == true)
                 {
-                    System.Diagnostics.Debug.Assert(!moved);
+                    System.Diagnostics.Debug.Assert(moved == false);
 
                     System.Diagnostics.Debug.Assert(Renderers != null);
                     foreach (EntityRenderer renderer in Renderers.GetKeys())
@@ -396,8 +437,8 @@ namespace MinecraftServerEngine.Entities
                 }
                 else
                 {
-                    System.Diagnostics.Debug.Assert(!moved);
-                    System.Diagnostics.Debug.Assert(!_rotated);
+                    System.Diagnostics.Debug.Assert(moved == false);
+                    System.Diagnostics.Debug.Assert(_rotated == false);
 
                     System.Diagnostics.Debug.Assert(Renderers != null);
                     foreach (EntityRenderer renderer in Renderers.GetKeys())
