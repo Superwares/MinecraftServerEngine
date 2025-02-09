@@ -7,6 +7,7 @@ using MinecraftServerEngine.NBT;
 using MinecraftServerEngine.Protocols;
 using MinecraftServerEngine.Physics;
 using MinecraftServerEngine.Physics.BoundingVolumes;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace MinecraftServerEngine.Blocks
 {
@@ -155,7 +156,8 @@ namespace MinecraftServerEngine.Blocks
 
                         int start, offset, end;
 
-                        if (bitsPerBlock == MaxBitsPerBlock) {
+                        if (bitsPerBlock == MaxBitsPerBlock)
+                        {
 
                             for (int y = 0; y < BlocksInHeight; ++y)
                             {
@@ -394,7 +396,7 @@ namespace MinecraftServerEngine.Blocks
                     {
                         System.Diagnostics.Debug.Assert(TotalBlockCount % 2 == 0);
                         int length = TotalBlockCount / 2;
-                        
+
                         _blockLights = new byte[length];
                         System.Array.Fill(_blockLights, byte.MaxValue);
 
@@ -606,7 +608,7 @@ namespace MinecraftServerEngine.Blocks
                     else
                     {
                         System.Diagnostics.Debug.Assert(_palette != null);
-                        
+
                         System.Diagnostics.Debug.Assert(_bitsPerBlock >= 4);
                         System.Diagnostics.Debug.Assert(_bitsPerBlock <= 8);
 
@@ -1234,8 +1236,8 @@ namespace MinecraftServerEngine.Blocks
             Vector min = block.IsBottomSlab() == true
                 ? _min
                 : new(_min.X, _min.Y + MinecraftUnits.BlockWidth / 2.0, _min.Z);
-            Vector max = block.IsBottomSlab() == true 
-                ? new(_max.X, _max.Y - MinecraftUnits.BlockWidth / 2.0, _max.Z) 
+            Vector max = block.IsBottomSlab() == true
+                ? new(_max.X, _max.Y - MinecraftUnits.BlockWidth / 2.0, _max.Z)
                 : _max;
 
             AxisAlignedBoundingBox aabb = new(max, min);
@@ -1244,7 +1246,7 @@ namespace MinecraftServerEngine.Blocks
             return;
         }
 
-        private (BlockDirection, bool, int) DetermineStairsBlockShape(
+        private (BlockDirection d, bool bottom, int shape) DetermineStairsBlockShape(
             BlockLocation loc, Block block)
         {
             System.Diagnostics.Debug.Assert(block.IsStairs() == true);
@@ -1266,14 +1268,12 @@ namespace MinecraftServerEngine.Blocks
                     {
                         if (d2 == d.RotateCCW())
                         {
-                            // outer left
-                            return (d, bottom, 1);
+                            return (d, bottom, 1);  // outer left
                         }
                         else
                         {
                             System.Diagnostics.Debug.Assert(d2 == d.RotateCW());
-                            // outer right
-                            return (d, bottom, 2);
+                            return (d, bottom, 2);  // outer right
                         }
                     }
                 }
@@ -1294,22 +1294,19 @@ namespace MinecraftServerEngine.Blocks
                     {
                         if (d4 == d.RotateCCW())
                         {
-                            // inner left
-                            return (d, bottom, 3);
+                            return (d, bottom, 3);  // inner left
                         }
                         else
                         {
                             System.Diagnostics.Debug.Assert(d4 == d.RotateCW());
-                            // inner right
-                            return (d, bottom, 4);
+                            return (d, bottom, 4);  // inner right
                         }
                     }
                 }
             }
 
 
-            // straight
-            return (d, bottom, 0);
+            return (d, bottom, 0);  // straight
         }
 
         private void GenerateBoundingBoxForStairsBlock(
@@ -1319,9 +1316,195 @@ namespace MinecraftServerEngine.Blocks
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            (BlockDirection d, bool bottom, int b) = DetermineStairsBlockShape(loc, block);
+            (BlockDirection d, bool bottom, int shape) = DetermineStairsBlockShape(loc, block);
 
-            throw new System.NotImplementedException();
+            Vector _min = loc.GetMinVector();
+            Vector _max = loc.GetMaxVector();
+
+            Vector min = Vector.Zero, max = Vector.Zero;
+            Vector min2 = Vector.Zero, max2 = Vector.Zero;
+
+            const double HalfBlockWidth = MinecraftUnits.BlockWidth / 2.0;
+
+            Vector slabMin = (bottom == true)
+                ? _min
+                : new(_min.X, _min.Y + HalfBlockWidth, _min.Z);
+            Vector slabMax = (bottom == true)
+                ? new(_max.X, _max.Y - HalfBlockWidth, _max.Z)
+                : _max;
+
+            Vector nonSlabMin = (bottom == true)
+                ? new(_min.X, _min.Y + HalfBlockWidth, _min.Z)
+                : _min;
+            Vector nonSlabMax = (bottom == true)
+                ? _max
+                : new(_max.X, _max.Y - HalfBlockWidth, _max.Z);
+
+            if (shape == 0)  // straight
+            {
+                switch (d)
+                {
+                    default:
+                        throw new System.NotSupportedException(
+                            $"The stairs block is not supported for the direction {d}"
+                            );
+                    case BlockDirection.Front:  // NORTH
+                        min = nonSlabMin;
+                        max = new(nonSlabMax.X, nonSlabMax.Y, nonSlabMax.Z - HalfBlockWidth);
+                        break;
+                    case BlockDirection.Back:  // SOUTH
+                        min = new(nonSlabMin.X, nonSlabMin.Y, nonSlabMin.Z + HalfBlockWidth);
+                        max = nonSlabMax;
+                        break;
+                    case BlockDirection.Left:  // WEST
+                        min = nonSlabMin;
+                        max = new(nonSlabMax.X - HalfBlockWidth, nonSlabMax.Y, nonSlabMax.Z);
+                        break;
+                    case BlockDirection.Right:  // EAST
+                        min = new(nonSlabMin.X + HalfBlockWidth, nonSlabMin.Y, nonSlabMin.Z);
+                        max = nonSlabMax;
+                        break;
+                }
+            }
+            else
+            {
+                int a = -1;
+
+                if (d == BlockDirection.Front && shape == 1)  // North && Outer left
+                {
+                    a = 0;
+                }
+                else if (d == BlockDirection.Front && shape == 2)  // North && Outer right
+                {
+                    a = 1;
+                }
+                else if (d == BlockDirection.Right && shape == 1)  // East && Outer left
+                {
+                    a = 1;
+                }
+                else if (d == BlockDirection.Right && shape == 2)  // East && Outer right
+                {
+                    a = 2;
+                }
+                else if (d == BlockDirection.Back && shape == 1)  // South && Outer left
+                {
+                    a = 2;
+                }
+                else if (d == BlockDirection.Back && shape == 2)  // South && Outer right
+                {
+                    a = 3;
+                }
+                else if (d == BlockDirection.Left && shape == 1)  // West && Outer left
+                {
+                    a = 3;
+                }
+                else if (d == BlockDirection.Left && shape == 2)  // West && Outer right
+                {
+                    a = 0;
+                }
+
+                else if (d == BlockDirection.Front && shape == 3)  // North && Inner left
+                {
+                    a = 4;
+                }
+                else if (d == BlockDirection.Front && shape == 4)  // North && Inner right
+                {
+                    a = 5;
+                }
+                else if (d == BlockDirection.Right && shape == 3)  // East && Inner left
+                {
+                    a = 5;
+                }
+                else if (d == BlockDirection.Right && shape == 4)  // East && Inner right
+                {
+                    a = 6;
+                }
+                else if (d == BlockDirection.Back && shape == 3)  // South && Inner left
+                {
+                    a = 6;
+                }
+                else if (d == BlockDirection.Back && shape == 4)  // South && Inner right
+                {
+                    a = 7;
+                }
+                else if (d == BlockDirection.Left && shape == 3)  // West && Inner left
+                {
+                    a = 7;
+                }
+                else if (d == BlockDirection.Left && shape == 4)  // West && Inner right
+                {
+                    a = 4;
+                }
+
+                System.Diagnostics.Debug.Assert(a >= 0);
+
+                switch (a)
+                {
+                    default:
+                        throw new System.NotSupportedException($"Invalid stairs shape");
+                    case 0:
+                        min = nonSlabMin;
+                        max = new(nonSlabMax.X - HalfBlockWidth, nonSlabMax.Y, nonSlabMax.Z - HalfBlockWidth);
+                        break;
+                    case 1:
+                        min = new(nonSlabMin.X + HalfBlockWidth, nonSlabMin.Y, nonSlabMin.Z);
+                        max = new(nonSlabMax.X, nonSlabMax.Y, nonSlabMax.Z - HalfBlockWidth);
+                        break;
+                    case 2:
+                        min = new(nonSlabMin.X + HalfBlockWidth, nonSlabMin.Y, nonSlabMin.Z + HalfBlockWidth);
+                        max = nonSlabMax;
+                        break;
+                    case 3:
+                        min = new(nonSlabMin.X, nonSlabMin.Y, nonSlabMin.Z + HalfBlockWidth);
+                        max = new(nonSlabMax.X - HalfBlockWidth, nonSlabMax.Y, nonSlabMax.Z);
+                        break;
+
+                    case 4:
+                        min = nonSlabMin;
+                        max = new(nonSlabMax.X, nonSlabMax.Y, nonSlabMax.Z - HalfBlockWidth);
+
+                        min2 = new(nonSlabMin.X, nonSlabMin.Y, nonSlabMin.Z + HalfBlockWidth);
+                        max2 = new(nonSlabMax.X - HalfBlockWidth, nonSlabMax.Y, nonSlabMax.Z);
+
+                        break;
+                    case 5:
+                        min = nonSlabMin;
+                        max = new(nonSlabMax.X, nonSlabMax.Y, nonSlabMax.Z - HalfBlockWidth);
+
+                        min2 = new(nonSlabMin.X + HalfBlockWidth, nonSlabMin.Y, nonSlabMin.Z + HalfBlockWidth);
+                        max2 = nonSlabMax;
+
+                        break;
+                    case 6:
+                        min = new(nonSlabMin.X, nonSlabMin.Y, nonSlabMin.Z + HalfBlockWidth);
+                        max = nonSlabMax;
+
+                        min2 = new(nonSlabMin.X + HalfBlockWidth, nonSlabMin.Y, nonSlabMin.Z);
+                        max2 = new(nonSlabMax.X, nonSlabMax.Y, nonSlabMax.Z - HalfBlockWidth);
+
+                        break;
+                    case 7:
+                        min = new(nonSlabMin.X, nonSlabMin.Y, nonSlabMin.Z + HalfBlockWidth);
+                        max = nonSlabMax;
+
+                        min2 = nonSlabMin;
+                        max2 = new(nonSlabMax.X - HalfBlockWidth, nonSlabMax.Y, nonSlabMax.Z - HalfBlockWidth);
+
+                        break;
+                }
+            }
+
+            queue.Enqueue(new AxisAlignedBoundingBox(slabMax, slabMin));
+
+            if (max != Vector.Zero && min != Vector.Zero)
+            {
+                queue.Enqueue(new AxisAlignedBoundingBox(max, min));
+            }
+
+            if (max2 != Vector.Zero && min2 != Vector.Zero)
+            {
+                queue.Enqueue(new AxisAlignedBoundingBox(max2, min2));
+            }
         }
 
         private void GenerateBoundingBoxForCarpetBlock(
@@ -1367,7 +1550,7 @@ namespace MinecraftServerEngine.Blocks
                         GenerateBoundingBoxForSlabBlock(queue, loc, block);
                         break;
                     case BlockShape.Stairs:
-                        //GenerateBoundingBoxForStairsBlock(queue, loc, block);
+                        GenerateBoundingBoxForStairsBlock(queue, loc, block);
                         break;
                     case BlockShape.Fence:
                         // TODO
@@ -1383,7 +1566,7 @@ namespace MinecraftServerEngine.Blocks
                         break;
                 }
             }
-            
+
         }
 
         internal (int, byte[]) GetChunkData(ChunkLocation loc)
