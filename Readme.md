@@ -151,8 +151,7 @@ If disposable objects were used as members of class and struct, they must be dis
 - 패킷 전송시 압축하여 전송하기
 	- SetCompressionPacket
 
-- Block appearance 일때 머리에 블럭 씌우기
-	- 실제 인벤토리에 아이템을 넣지 말고 보이는 것만 으로 처리
+
 - Entity appearance 일떄 머리에 해당 entity 에 맞는 모자? 씌우기
 	- 실제 인벤토리에 아이템을 넣지 말고 보이는 것만 으로 처리
 
@@ -164,7 +163,7 @@ If disposable objects were used as members of class and struct, they must be dis
 - data sturucture 의 Count -> Length
 	- hashtable, tree 같은 경우는 length 와 count 의 개념이 다르기 때문에 그대로 냅두기.
 
-- offline player 를 계단이나 반블럭으로 밀었을시 올라가야됨. (중요도 상)
+
 - offline player 를 밀칠때와 online player를 밀칠때 밀치기 정도가 다름 (중요도 하)
 
 - 평면에서 길찾고 움직이는 Entity AI
@@ -185,7 +184,10 @@ If disposable objects were used as members of class and struct, they must be dis
 - entity relative move 의 최대값을 넘어갈때 teleport 해야됨.
 	- 첫 접속시 월드가 로드가 안되어서 아래로 떨어지다가 다시 월드가 로드되고 위로 올라올때 relative move 의 최대값을 넘어갑니다.
 - offline player 를 벽으로 밀어낸뒤 해당 player 가 online 으로 접속하면 벽을 넘어갈수 있음.
-
+- offline player 를 계단이나 반블럭으로 밀었을시 올라가야됨. (중요도 상)
+- 
 ### Deprecated
 - Give 할때 Hotbar 먼저 다음 Main
-- - 아이템 구매하면 핫바로 가도록.
+- 아이템 구매하면 핫바로 가도록.
+- Block appearance 일때 머리에 블럭 씌우기
+	- 실제 인벤토리에 아이템을 넣지 말고 보이는 것만 으로 처리
