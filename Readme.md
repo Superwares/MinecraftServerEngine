@@ -170,8 +170,6 @@ If disposable objects were used as members of class and struct, they must be dis
 - 평면에서 길찾고 움직이는 Entity AI
 
 
-- offline player 를 벽으로 밀어낸뒤 해당 player 가 online 으로 접속하면 벽을 넘어갈수 있음.
-
 ### Done 
 
 - DetermineToDespawnPlayerOnDisconnect 가 동적으로 적용되나 테스트해야됨.
@@ -186,7 +184,7 @@ If disposable objects were used as members of class and struct, they must be dis
 	- abstract player 전용 play sound 기능 추가.
 - entity relative move 의 최대값을 넘어갈때 teleport 해야됨.
 	- 첫 접속시 월드가 로드가 안되어서 아래로 떨어지다가 다시 월드가 로드되고 위로 올라올때 relative move 의 최대값을 넘어갑니다.
-
+- offline player 를 벽으로 밀어낸뒤 해당 player 가 online 으로 접속하면 벽을 넘어갈수 있음.
 
 ### Deprecated
 - Give 할때 Hotbar 먼저 다음 Main
