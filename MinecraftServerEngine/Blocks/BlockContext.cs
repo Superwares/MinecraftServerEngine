@@ -41,6 +41,14 @@ namespace MinecraftServerEngine.Blocks
 
                 private byte[] _blockLights, _skyLights;
 
+                private static int GetDataLengthByBitsPerBlock(int _bitsPerBlock)
+                {
+                    int a = TotalBlockCount * _bitsPerBlock;
+                    System.Diagnostics.Debug.Assert(a % _BITS_PER_DATA_UNIT == 0);
+                    int length = a / _BITS_PER_DATA_UNIT;
+                    return length;
+                }
+
                 internal static SectionData Load(NBTTagCompound section)
                 {
                     byte[] blocks = section.GetNBTTag<NBTTagByteArray>("Blocks").Data;
@@ -63,7 +71,7 @@ namespace MinecraftServerEngine.Blocks
                     byte bitsPerBlock = MaxBitsPerBlock;
                     (int, int)[] palette = [];
 
-                    int dataLength = GetDataLength(bitsPerBlock);
+                    int dataLength = GetDataLengthByBitsPerBlock(bitsPerBlock);
                     ulong[] data = new ulong[dataLength];
 
                     {
@@ -166,13 +174,6 @@ namespace MinecraftServerEngine.Blocks
 
                 }
 
-                private static int GetDataLength(int _bitsPerBlock)
-                {
-                    int a = TotalBlockCount * _bitsPerBlock;
-                    System.Diagnostics.Debug.Assert(a % _BITS_PER_DATA_UNIT == 0);
-                    int length = a / _BITS_PER_DATA_UNIT;
-                    return length;
-                }
 
                 private SectionData(
                     byte bitsPerBlock,
@@ -195,7 +196,7 @@ namespace MinecraftServerEngine.Blocks
                     _palette = [(defaultId, TotalBlockCount)];
 
                     {
-                        int length = GetDataLength(_bitsPerBlock);
+                        int length = GetDataLengthByBitsPerBlock(_bitsPerBlock);
                         _data = new ulong[length];
 
                         int i;
@@ -299,7 +300,7 @@ namespace MinecraftServerEngine.Blocks
                     System.Diagnostics.Debug.Assert(_palette != null);
                     System.Diagnostics.Debug.Assert(bitsPerBlock > _bitsPerBlock);
 
-                    int length = GetDataLength(bitsPerBlock);
+                    int length = GetDataLengthByBitsPerBlock(bitsPerBlock);
                     var data = new ulong[length];
 
                     ulong mask = (1UL << bitsPerBlock) - 1UL;
