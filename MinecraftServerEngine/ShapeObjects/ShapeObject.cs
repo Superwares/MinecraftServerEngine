@@ -193,6 +193,36 @@ namespace MinecraftServerEngine.ShapeObjects
             System.Diagnostics.Debug.Assert(_disposed == false);
         }
 
+        internal override void PreMove()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            using Queue<ShapeObjectRenderer> queue = new();
+
+            System.Diagnostics.Debug.Assert(Renderers != null);
+            foreach (ShapeObjectRenderer renderer in Renderers.GetKeys())
+            {
+                System.Diagnostics.Debug.Assert(renderer != null);
+
+                if (renderer.IsDisconnected == false)
+                {
+                    continue;
+                }
+
+                queue.Enqueue(renderer);
+            }
+
+            while (queue.Empty == false)
+            {
+                ShapeObjectRenderer renderer = queue.Dequeue();
+
+                Renderers.Extract(renderer);
+            }
+
+            base.PreMove();
+        }
+
+
         internal override void Move(PhysicsWorld _world, BoundingVolume volume, Vector v)
         {
             System.Diagnostics.Debug.Assert(_world != null);

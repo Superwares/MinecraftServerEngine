@@ -163,6 +163,11 @@ namespace MinecraftServerEngine.Physics
             _ApplyForce(v);
         }
 
+        internal virtual void PreMove()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+        }
+
         protected abstract (BoundingVolume, bool noGravity) GetCurrentStatus();
 
         internal (BoundingVolume, Vector) Integrate(Terrain terrain)
@@ -181,7 +186,7 @@ namespace MinecraftServerEngine.Physics
             Forces.Enqueue(
                 -1.0D *
                 new Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
-                _v
+                _v 
                 );  // Damping Force
 
             //MyConsole.Debug($"canForce: {canForce}");
@@ -224,7 +229,7 @@ namespace MinecraftServerEngine.Physics
             System.Diagnostics.Debug.Assert(world != null);
             System.Diagnostics.Debug.Assert(volume != null);
 
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             System.Diagnostics.Debug.Assert(Forces.Empty);
 
@@ -236,7 +241,7 @@ namespace MinecraftServerEngine.Physics
 
         internal virtual void Flush(PhysicsWorld world)
         {
-            System.Diagnostics.Debug.Assert(!_disposed);
+            System.Diagnostics.Debug.Assert(_disposed == false);
         }
 
         public void Dispose()

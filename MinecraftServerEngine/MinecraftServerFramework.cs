@@ -313,6 +313,10 @@ namespace MinecraftServerEngine
                     new Task(  // 4
                         false,  // EnsureOneTick
                         true,  // Parallel
+                        () => World.PreMoveObjects()),
+                    new Task(  // 4
+                        true,  // EnsureOneTick
+                        true,  // Parallel
                         () => World.MoveObjects()),
 
                     new Task(  // 5

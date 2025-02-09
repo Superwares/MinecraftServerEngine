@@ -415,6 +415,11 @@ namespace MinecraftServerEngine
         private Time _worldTime_transitionTime = Time.Zero;
 
 
+        //private System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+        // System.Diagnostics.Stopwatch.Frequency: Gets the frequency of the timer as the number of ticks per second. This field is read-only
+        //private readonly static long _NanosecondsPerTick = 1_000_000_000L / System.Diagnostics.Stopwatch.Frequency;
+
 
         public World(
             double centerX, double centerZ,
@@ -1104,10 +1109,24 @@ namespace MinecraftServerEngine
             }
         }
 
-        internal void MoveObjects()
+        internal void PreMoveObjects()
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            while (_ObjectQueue.Dequeue(out PhysicsObject obj) == true)
+            {
+                System.Diagnostics.Debug.Assert(obj != null);
+
+                obj.PreMove();
+
+                _ObjectQueue.Enqueue(obj);
+            }
+
+        }
+
+        internal void MoveObjects()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
 
             while (_ObjectQueue.Dequeue(out PhysicsObject obj) == true)
             {

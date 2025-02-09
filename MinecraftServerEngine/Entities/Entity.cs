@@ -137,6 +137,35 @@ namespace MinecraftServerEngine.Entities
             }
         }
 
+        internal override void PreMove()
+        {
+            System.Diagnostics.Debug.Assert(_disposed == false);
+
+            using Queue<EntityRenderer> queue = new();
+
+            System.Diagnostics.Debug.Assert(Renderers != null);
+            foreach (EntityRenderer renderer in Renderers.GetKeys())
+            {
+                System.Diagnostics.Debug.Assert(renderer != null);
+
+                if (renderer.IsDisconnected == false)
+                {
+                    continue;
+                }
+
+                queue.Enqueue(renderer);
+            }
+
+            while (queue.Empty == false)
+            {
+                EntityRenderer renderer = queue.Dequeue();
+
+                Renderers.Extract(renderer);
+            }
+
+            base.PreMove();
+        }
+
         private bool HandleRendering(
             PhysicsWorld _world,
             BlockLocation prevBlockLocation,
@@ -512,7 +541,6 @@ namespace MinecraftServerEngine.Entities
                 _LockerRotate.Release();
             }
         }
-
 
         private void ChangeForms(bool sneaking, bool sprinting)
         {
