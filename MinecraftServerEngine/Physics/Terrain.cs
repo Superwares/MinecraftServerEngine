@@ -252,7 +252,7 @@ namespace MinecraftServerEngine.Physics
 
             if (axis == 0)  // Y
             {
-                if (v.Y < 0.0D)
+                if (v.Y <= 0.0)
                 {
                     onGround = true;
                 }
