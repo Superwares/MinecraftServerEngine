@@ -294,6 +294,8 @@ namespace MinecraftServerEngine.Physics
 
             if (queue.Empty == true)
             {
+                //MyConsole.Debug($"Empty!");
+
                 volume.Move(v);
                 return v;
             }

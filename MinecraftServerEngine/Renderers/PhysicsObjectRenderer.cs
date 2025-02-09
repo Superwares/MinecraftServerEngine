@@ -14,7 +14,7 @@ namespace MinecraftServerEngine.Renderers
         // This is different from the actual disconnection with the Connection.
         // It means the actual disconnection of the Renderer.
         private bool _disconnected = false;
-        public bool Disconnected => _disconnected;
+        public bool IsDisconnected => _disconnected;
 
 
         private ChunkLocation _loc;
@@ -67,10 +67,11 @@ namespace MinecraftServerEngine.Renderers
 
         public bool CanRender(Vector p)
         {
-            if (_disconnected == true)
-            {
-                return false;
-            }
+            System.Diagnostics.Debug.Assert(_disconnected == false);
+            //if (_disconnected == true)
+            //{
+            //    return false;
+            //}
 
             if (_blindness == true)
             {

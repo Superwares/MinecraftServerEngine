@@ -415,8 +415,6 @@ namespace MinecraftServerEngine
         private Time _worldTime_transitionTime = Time.Zero;
 
 
-        private Time _lastMoveTime = Time.Now();
-
 
         public World(
             double centerX, double centerZ,
@@ -1110,16 +1108,12 @@ namespace MinecraftServerEngine
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            Time currentMoveTime = Time.Now();
 
-            Time dt = currentMoveTime - _lastMoveTime;
-            _lastMoveTime = currentMoveTime;
-
-            while (_ObjectQueue.Dequeue(out PhysicsObject obj))
+            while (_ObjectQueue.Dequeue(out PhysicsObject obj) == true)
             {
                 System.Diagnostics.Debug.Assert(obj != null);
 
-                (BoundingVolume volume, Vector v) = IntegrateObject(dt, BlockContext, obj);
+                (BoundingVolume volume, Vector v) = IntegrateObject(BlockContext, obj);
 
                 obj.Move(this, volume, v);
 

@@ -89,11 +89,6 @@ namespace MinecraftServerEngine.Entities
         {
             EntityHitbox hitbox = GetHitbox();
 
-            Forces.Enqueue(
-                -1.0D *
-                new Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
-                Velocity);  // Damping Force
-
             BoundingVolume volume = _teleported ? hitbox.Convert(_pTeleport) : hitbox.Convert(_p);
             return (volume, _NoGravity || volume is EmptyBoundingVolume);
         }
@@ -184,7 +179,7 @@ namespace MinecraftServerEngine.Entities
                         {
                             EntityRenderer renderer = queue.Dequeue();
 
-                            if (renderer.Disconnected == false)
+                            if (renderer.IsDisconnected == false)
                             {
                                 renderer.SetBlockAppearance(prevBlock, prevBlockLocation);
                             }
@@ -198,7 +193,7 @@ namespace MinecraftServerEngine.Entities
                         {
                             EntityRenderer renderer = queue.Dequeue();
 
-                            if (renderer.Disconnected == false)
+                            if (renderer.IsDisconnected == false)
                             {
                                 renderer.DestroyEntity(Id);
                             }
@@ -245,7 +240,7 @@ namespace MinecraftServerEngine.Entities
                     {
                         EntityRenderer renderer = queue.Dequeue();
 
-                        if (renderer.Disconnected == false)
+                        if (renderer.IsDisconnected == false)
                         {
                             renderer.DestroyEntity(Id);
                         }
@@ -273,7 +268,7 @@ namespace MinecraftServerEngine.Entities
                     foreach (EntityRenderer renderer in renderers)
                     {
                         System.Diagnostics.Debug.Assert(renderer != null);
-                        if (renderer.Disconnected == true)
+                        if (renderer.IsDisconnected == true)
                         {
                             continue;
                         }
@@ -287,7 +282,7 @@ namespace MinecraftServerEngine.Entities
                     foreach (EntityRenderer renderer in renderers)
                     {
                         System.Diagnostics.Debug.Assert(renderer != null);
-                        if (renderer.Disconnected == true)
+                        if (renderer.IsDisconnected == true)
                         {
                             continue;
                         }
@@ -903,7 +898,7 @@ namespace MinecraftServerEngine.Entities
                     foreach (EntityRenderer renderer in renderers)
                     {
                         System.Diagnostics.Debug.Assert(renderer != null);
-                        if (renderer.Disconnected == true)
+                        if (renderer.IsDisconnected == true)
                         {
                             continue;
                         }
@@ -917,7 +912,7 @@ namespace MinecraftServerEngine.Entities
                     foreach (EntityRenderer renderer in renderers)
                     {
                         System.Diagnostics.Debug.Assert(renderer != null);
-                        if (renderer.Disconnected == true)
+                        if (renderer.IsDisconnected == true)
                         {
                             continue;
                         }

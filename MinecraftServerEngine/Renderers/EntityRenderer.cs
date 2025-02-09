@@ -24,7 +24,7 @@ namespace MinecraftServerEngine.Renderers
 
         internal void Teleport(int id, Vector p, EntityAngles look, bool onGround)
         {
-            System.Diagnostics.Debug.Assert(Disconnected == false);
+            System.Diagnostics.Debug.Assert(IsDisconnected == false);
 
             (byte x, byte y) = look.ConvertToProtocolFormat();
             Render(new EntityTeleportPacket(
@@ -38,7 +38,7 @@ namespace MinecraftServerEngine.Renderers
             int id,
             Vector prevPos,  Vector pos, EntityAngles look)
         {
-            System.Diagnostics.Debug.Assert(Disconnected == false);
+            System.Diagnostics.Debug.Assert(IsDisconnected == false);
 
             double dx = (pos.X - prevPos.X) * (32 * 128),
                 dy = (pos.Y - prevPos.Y) * (32 * 128),
@@ -59,7 +59,7 @@ namespace MinecraftServerEngine.Renderers
 
         internal void RelativeMove(int id, Vector prevPos, Vector pos)
         {
-            System.Diagnostics.Debug.Assert(Disconnected == false);
+            System.Diagnostics.Debug.Assert(IsDisconnected == false);
 
             double dx = (pos.X - prevPos.X) * (32 * 128);
             double dy = (pos.Y - prevPos.Y) * (32 * 128);
@@ -84,7 +84,7 @@ namespace MinecraftServerEngine.Renderers
             System.Diagnostics.Debug.Assert(dy >= short.MinValue && dy <= short.MaxValue);
             System.Diagnostics.Debug.Assert(dz >= short.MinValue && dz <= short.MaxValue);
             
-            System.Diagnostics.Debug.Assert(Disconnected == false);
+            System.Diagnostics.Debug.Assert(IsDisconnected == false);
 
             (byte x, byte y) = look.ConvertToProtocolFormat();
             Render(new EntityRelMoveLookPacket(
@@ -102,7 +102,7 @@ namespace MinecraftServerEngine.Renderers
             System.Diagnostics.Debug.Assert(dy >= short.MinValue && dy <= short.MaxValue);
             System.Diagnostics.Debug.Assert(dz >= short.MinValue && dz <= short.MaxValue);
 
-            System.Diagnostics.Debug.Assert(Disconnected == false);
+            System.Diagnostics.Debug.Assert(IsDisconnected == false);
 
             Render(new EntityRelMovePacket(
                 id,
@@ -113,7 +113,7 @@ namespace MinecraftServerEngine.Renderers
 
         internal void Rotate(int id, EntityAngles look)
         {
-            System.Diagnostics.Debug.Assert(Disconnected == false);
+            System.Diagnostics.Debug.Assert(IsDisconnected == false);
 
             (byte x, byte y) = look.ConvertToProtocolFormat();
             Render(new EntityLookPacket(id, x, y, false));
@@ -122,7 +122,7 @@ namespace MinecraftServerEngine.Renderers
 
         internal void Stand(int id)
         {
-            System.Diagnostics.Debug.Assert(Disconnected == false);
+            System.Diagnostics.Debug.Assert(IsDisconnected == false);
 
             Render(new EntityPacket(id));
         }
@@ -130,7 +130,7 @@ namespace MinecraftServerEngine.Renderers
       
         internal void SetBlockAppearance(Block block, BlockLocation loc)
         {
-            System.Diagnostics.Debug.Assert(Disconnected == false);
+            System.Diagnostics.Debug.Assert(IsDisconnected == false);
 
             int blockId = block.GetId();
             //int blockId = Block.Podzol.GetId();
@@ -139,7 +139,7 @@ namespace MinecraftServerEngine.Renderers
 
         internal void ChangeForms(int id, bool sneaking, bool sprinting)
         {
-            System.Diagnostics.Debug.Assert(Disconnected == false);
+            System.Diagnostics.Debug.Assert(IsDisconnected == false);
 
             byte flags = 0x00;
 
@@ -172,7 +172,7 @@ namespace MinecraftServerEngine.Renderers
             double extra, int count,
             double offsetX, double offsetY, double offsetZ)
         {
-            System.Diagnostics.Debug.Assert(Disconnected == false);
+            System.Diagnostics.Debug.Assert(IsDisconnected == false);
 
             System.Diagnostics.Debug.Assert(offsetX >= 0.0D);
             System.Diagnostics.Debug.Assert(offsetX <= 1.0D);
@@ -219,7 +219,7 @@ namespace MinecraftServerEngine.Renderers
             System.Diagnostics.Debug.Assert(mainHand != null);
             System.Diagnostics.Debug.Assert(offHand != null);
 
-            System.Diagnostics.Debug.Assert(Disconnected == false);
+            System.Diagnostics.Debug.Assert(IsDisconnected == false);
 
             Render(new EntityEquipmentPacket(id, 0, mainHand));
             Render(new EntityEquipmentPacket(id, 1, offHand));
@@ -233,14 +233,14 @@ namespace MinecraftServerEngine.Renderers
         {
             System.Diagnostics.Debug.Assert(pickupCount >= Item.MinCount);
 
-            System.Diagnostics.Debug.Assert(Disconnected == false);
+            System.Diagnostics.Debug.Assert(IsDisconnected == false);
 
             Render(new ItemCollectingPacket(itemEntityId, collectorEntityId, pickupCount));
         }
 
         internal void SetEntityStatus(int id, byte v)
         {
-            System.Diagnostics.Debug.Assert(Disconnected == false);
+            System.Diagnostics.Debug.Assert(IsDisconnected == false);
 
             Render(new EntityStatusPacket(id, v));
         }
@@ -253,7 +253,7 @@ namespace MinecraftServerEngine.Renderers
         {
             System.Diagnostics.Debug.Assert(uniqueId != System.Guid.Empty);
 
-            System.Diagnostics.Debug.Assert(Disconnected == false);
+            System.Diagnostics.Debug.Assert(IsDisconnected == false);
 
             byte flags = 0x00;
 
@@ -294,7 +294,7 @@ namespace MinecraftServerEngine.Renderers
         {
             System.Diagnostics.Debug.Assert(uniqueId != System.Guid.Empty);
 
-            System.Diagnostics.Debug.Assert(Disconnected == false);
+            System.Diagnostics.Debug.Assert(IsDisconnected == false);
 
             using MinecraftProtocolDataStream stream = new();
 
@@ -321,21 +321,21 @@ namespace MinecraftServerEngine.Renderers
             int entityId, byte effectId,
             byte amplifier, int duration, byte flags)
         {
-            System.Diagnostics.Debug.Assert(Disconnected == false);
+            System.Diagnostics.Debug.Assert(IsDisconnected == false);
 
             Render(new EntityEffectPacket(entityId, effectId, amplifier, duration, flags));
         }
 
         internal void Animate(int id, EntityAnimation animation)
         {
-            System.Diagnostics.Debug.Assert(Disconnected == false);
+            System.Diagnostics.Debug.Assert(IsDisconnected == false);
 
             Render(new ClientboundAnimationPacket(id, (byte)animation));
         }
 
         internal void DestroyEntity(int id)
         {
-            System.Diagnostics.Debug.Assert(Disconnected == false);
+            System.Diagnostics.Debug.Assert(IsDisconnected == false);
 
             Render(new DestroyEntitiesPacket(id));
         }

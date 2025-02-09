@@ -223,7 +223,7 @@ namespace MinecraftServerEngine.ShapeObjects
                 {
                     ShapeObjectRenderer renderer = queue.Dequeue();
 
-                    if (renderer.Disconnected == false)
+                    if (renderer.IsDisconnected == false)
                     {
                     }
 

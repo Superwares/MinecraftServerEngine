@@ -165,7 +165,7 @@ namespace MinecraftServerEngine.Physics
 
         protected abstract (BoundingVolume, bool noGravity) GetCurrentStatus();
 
-        internal (BoundingVolume, Vector) Integrate(Time dt, Terrain terrain)
+        internal (BoundingVolume, Vector) Integrate(Terrain terrain)
         {
             System.Diagnostics.Debug.Assert(terrain != null);
 
@@ -178,10 +178,16 @@ namespace MinecraftServerEngine.Physics
                 return (volume, Vector.Zero);
             }
 
+            Forces.Enqueue(
+                -1.0D *
+                new Vector(1.0D - 0.91D, 1.0D - 0.9800000190734863D, 1.0D - 0.91D) *
+                _v
+                );  // Damping Force
+
+            //MyConsole.Debug($"canForce: {canForce}");
             if (noGravity == false)
             {
-                double x = 0.08 * ((double)dt.Amount / (double)MinecraftTimes.TimePerTick.Amount);
-                Forces.Enqueue(_m * x * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
+                Forces.Enqueue(_m * 0.08 * new Vector(0.0D, -1.0D, 0.0D));  // Gravity
             }
 
             Vector v = _v;
@@ -195,9 +201,15 @@ namespace MinecraftServerEngine.Physics
                 v += (force / _m);
             }
 
+            //if (v != Vector.Zero)
+            //{
+            //    MyConsole.Debug($"v: {v}");
+            //}
+
             double s = v.GetLengthSquared();
-            System.Diagnostics.Debug.Assert(s >= 0.0D);
-            if (s == 0.0D)
+
+            System.Diagnostics.Debug.Assert(s >= 0.0);
+            if (s == 0.0)
             {
                 return (volume, v);
             }

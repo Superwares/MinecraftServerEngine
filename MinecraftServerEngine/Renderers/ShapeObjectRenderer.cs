@@ -22,7 +22,7 @@ namespace MinecraftServerEngine.Renderers
             double extra, int count,
             double offsetX, double offsetY, double offsetZ)
         {
-            System.Diagnostics.Debug.Assert(Disconnected == false);
+            System.Diagnostics.Debug.Assert(IsDisconnected == false);
 
             System.Diagnostics.Debug.Assert(offsetX >= 0.0D);
             System.Diagnostics.Debug.Assert(offsetX <= 1.0D);
