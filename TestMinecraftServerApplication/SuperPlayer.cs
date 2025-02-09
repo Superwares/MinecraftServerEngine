@@ -888,6 +888,10 @@ namespace TestMinecraftServerApplication
 
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            if (Gamemode != Gamemode.Adventure)
+            {
+                return;
+            }
 
             if (_world is SuperWorld world)
             {
@@ -904,6 +908,11 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(attackCharge <= 1.0);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (Gamemode != Gamemode.Adventure)
+            {
+                return;
+            }
 
             if (_world is SuperWorld world)
             {
@@ -960,6 +969,11 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(itemStack != null);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (Gamemode != Gamemode.Adventure)
+            {
+                return;
+            }
 
             if (_world is SuperWorld world)
             {
@@ -1096,6 +1110,11 @@ namespace TestMinecraftServerApplication
             System.Diagnostics.Debug.Assert(world != null);
 
             System.Diagnostics.Debug.Assert(_disposed == false);
+
+            if (Gamemode != Gamemode.Adventure)
+            {
+                return;
+            }
 
             Vector eyeOrigin = GetEyeOrigin();
             Vector d = Look.ToUnitVector();
