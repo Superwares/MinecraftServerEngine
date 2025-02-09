@@ -30,6 +30,7 @@ namespace MinecraftServerEngine.Blocks
                 internal const int TotalBlockCount = MinecraftUnits.BlocksInChunkSection;
 
                 internal const byte MaxBitsPerBlock = 13;
+                internal const byte MinBitsPerBlock = 4;
                 internal const int MaxMetadataBits = 4;
 
                 private byte _bitsPerBlock;
@@ -47,6 +48,11 @@ namespace MinecraftServerEngine.Blocks
                     System.Diagnostics.Debug.Assert(a % _BITS_PER_DATA_UNIT == 0);
                     int length = a / _BITS_PER_DATA_UNIT;
                     return length;
+                }
+
+                private static ulong GetBlockIdMask(byte bitsPerBlock)
+                {
+                    return (1UL << bitsPerBlock) - 1UL;
                 }
 
                 internal static SectionData Load(NBTTagCompound section)
@@ -68,90 +74,244 @@ namespace MinecraftServerEngine.Blocks
                         return null;
                     }
 
-                    byte bitsPerBlock = MaxBitsPerBlock;
-                    (int, int)[] palette = [];
+                    using Map<int, int> paletteMap = new();
 
-                    int dataLength = GetDataLengthByBitsPerBlock(bitsPerBlock);
-                    ulong[] data = new ulong[dataLength];
+                    (int, int)[] palette = null;
 
+                    try
                     {
+                        int id;
+                        int count;
+
                         int i;
                         ulong metadata;
-                        ulong id;
+                        ulong value;
+
+                        byte block;
+
+                        for (i = 0; i < TotalBlockCount; ++i)
+                        {
+                            metadata = _data[i / 2];
+
+                            if (i % 2 == 0)
+                            {
+                                metadata &= 0b00001111;
+                            }
+                            else
+                            {
+                                metadata = metadata >> 4;
+                            }
+
+                            block = blocks[i];
+
+                            value = (ulong)block << 4 | metadata;
+
+                            System.Diagnostics.Debug.Assert(value <= int.MaxValue);
+                            System.Diagnostics.Debug.Assert(value >= 0);
+                            id = (int)value;
+
+                            if (paletteMap.Contains(id) == true)
+                            {
+                                count = paletteMap.Extract(id);
+                            }
+                            else
+                            {
+                                count = 0;
+                            }
+
+                            paletteMap.Insert(id, count + 1);
+                        }
+
+                        int paletteLength = paletteMap.Count;
+
+                        byte bitsPerBlock;
+                        if (paletteLength <= 0b_0000_1111U)
+                        {
+                            bitsPerBlock = MinBitsPerBlock;
+                        }
+                        else if (paletteLength <= 0b_0001_1111U)
+                        {
+                            bitsPerBlock = 5;
+                        }
+                        else if (paletteLength <= 0b_0011_1111U)
+                        {
+                            bitsPerBlock = 6;
+                        }
+                        else if (paletteLength <= 0b_0111_1111U)
+                        {
+                            bitsPerBlock = 7;
+                        }
+                        else if (paletteLength <= 0b_1111_1111U)
+                        {
+                            bitsPerBlock = 8;
+                        }
+                        else
+                        {
+                            bitsPerBlock = MaxBitsPerBlock;
+                        }
+
+                        int dataLength = GetDataLengthByBitsPerBlock(bitsPerBlock);
+                        ulong[] data = new ulong[dataLength];
 
                         int start, offset, end;
 
-                        for (int y = 0; y < BlocksInHeight; ++y)
-                        {
-                            for (int z = 0; z < BlocksInWidth; ++z)
+                        if (bitsPerBlock == MaxBitsPerBlock) {
+
+                            for (int y = 0; y < BlocksInHeight; ++y)
                             {
-                                for (int x = 0; x < BlocksInWidth; ++x)
+                                for (int z = 0; z < BlocksInWidth; ++z)
                                 {
-                                    i = (y * BlocksInHeight + z) * BlocksInWidth + x;
-
-                                    metadata = _data[i / 2];
-
-                                    if (i % 2 == 0)
+                                    for (int x = 0; x < BlocksInWidth; ++x)
                                     {
-                                        metadata &= 0b00001111;
+                                        i = (y * BlocksInHeight + z) * BlocksInWidth + x;
+
+                                        metadata = _data[i / 2];
+
+                                        if (i % 2 == 0)
+                                        {
+                                            metadata &= 0b00001111;
+                                        }
+                                        else
+                                        {
+                                            metadata = metadata >> 4;
+                                        }
+
+                                        block = blocks[i];
+
+                                        value = (ulong)block << 4 | metadata;
+
+                                        System.Diagnostics.Debug.Assert(bitsPerBlock == MaxBitsPerBlock);
+
+                                        start = i * bitsPerBlock / _BITS_PER_DATA_UNIT;
+                                        offset = i * bitsPerBlock % _BITS_PER_DATA_UNIT;
+                                        end = ((i + 1) * bitsPerBlock - 1) / _BITS_PER_DATA_UNIT;
+
+                                        System.Diagnostics.Debug.Assert(
+                                            (value & ~GetBlockIdMask(bitsPerBlock)) == 0);
+                                        data[start] |= value << offset;
+
+                                        if (start != end)
+                                        {
+                                            data[end] = value >> _BITS_PER_DATA_UNIT - offset;
+                                        }
+
                                     }
-                                    else
-                                    {
-                                        metadata = metadata >> 4;
-                                    }
-
-                                    byte block = blocks[i];
-
-                                    id = (ulong)block << 4 | metadata;
-
-                                    start = i * bitsPerBlock / _BITS_PER_DATA_UNIT;
-                                    offset = i * bitsPerBlock % _BITS_PER_DATA_UNIT;
-                                    end = ((i + 1) * bitsPerBlock - 1) / _BITS_PER_DATA_UNIT;
-
-                                    System.Diagnostics.Debug.Assert(
-                                        (id & ~((1UL << bitsPerBlock) - 1UL)) == 0);
-                                    data[start] |= id << offset;
-
-                                    if (start != end)
-                                    {
-                                        data[end] = id >> _BITS_PER_DATA_UNIT - offset;
-                                    }
-
                                 }
                             }
                         }
-                    }
+                        else
+                        {
+                            System.Diagnostics.Debug.Assert(bitsPerBlock >= MinBitsPerBlock);
+                            System.Diagnostics.Debug.Assert(bitsPerBlock <= MaxBitsPerBlock);
+                            palette = new (int, int)[paletteMap.Count];
 
-                    System.Diagnostics.Debug.Assert(TotalBlockCount % 2 == 0);
-                    if (skyLights == null || skyLights.Length != TotalBlockCount / 2)
+                            int paletteIndex = 0;
+
+                            foreach ((int id, int count) node in paletteMap.GetElements())
+                            {
+                                palette[paletteIndex++] = (node.id, node.count);
+                            }
+
+
+                            for (int y = 0; y < BlocksInHeight; ++y)
+                            {
+                                for (int z = 0; z < BlocksInWidth; ++z)
+                                {
+                                    for (int x = 0; x < BlocksInWidth; ++x)
+                                    {
+                                        i = (y * BlocksInHeight + z) * BlocksInWidth + x;
+
+                                        metadata = _data[i / 2];
+
+                                        if (i % 2 == 0)
+                                        {
+                                            metadata &= 0b00001111;
+                                        }
+                                        else
+                                        {
+                                            metadata = metadata >> 4;
+                                        }
+
+                                        block = blocks[i];
+
+                                        value = (ulong)block << 4 | metadata;
+
+                                        for (paletteIndex = 0; paletteIndex < palette.Length; ++paletteIndex)
+                                        {
+                                            (id, _) = palette[paletteIndex];
+
+                                            System.Diagnostics.Debug.Assert(value <= int.MaxValue);
+                                            if ((int)value == id)
+                                            {
+                                                System.Diagnostics.Debug.Assert(paletteIndex >= 0);
+                                                value = (ulong)paletteIndex;
+                                                break;
+                                            }
+                                        }
+
+                                        System.Diagnostics.Debug.Assert(bitsPerBlock < MaxBitsPerBlock);
+                                        System.Diagnostics.Debug.Assert(bitsPerBlock >= MinBitsPerBlock);
+
+                                        start = i * bitsPerBlock / _BITS_PER_DATA_UNIT;
+                                        offset = i * bitsPerBlock % _BITS_PER_DATA_UNIT;
+                                        end = ((i + 1) * bitsPerBlock - 1) / _BITS_PER_DATA_UNIT;
+
+                                        System.Diagnostics.Debug.Assert(
+                                            (value & ~GetBlockIdMask(bitsPerBlock)) == 0);
+                                        data[start] |= value << offset;
+
+                                        if (start != end)
+                                        {
+                                            data[end] = value >> _BITS_PER_DATA_UNIT - offset;
+                                        }
+
+                                    }
+                                }
+                            }
+                        }
+
+                        System.Diagnostics.Debug.Assert(TotalBlockCount % 2 == 0);
+                        if (skyLights == null || skyLights.Length != TotalBlockCount / 2)
+                        {
+                            skyLights = new byte[TotalBlockCount / 2];
+                        }
+
+                        System.Diagnostics.Debug.Assert(TotalBlockCount % 2 == 0);
+                        if (skyLights == null || blockLights.Length != TotalBlockCount / 2)
+                        {
+                            blockLights = new byte[TotalBlockCount / 2];
+                        }
+
+                        return new SectionData(bitsPerBlock, palette, data, blockLights, skyLights);
+                    }
+                    finally
                     {
-                        skyLights = new byte[TotalBlockCount / 2];
+                        System.Diagnostics.Debug.Assert(paletteMap != null);
+                        paletteMap.Flush();
                     }
-
-                    System.Diagnostics.Debug.Assert(TotalBlockCount % 2 == 0);
-                    if (skyLights == null || blockLights.Length != TotalBlockCount / 2)
-                    {
-                        blockLights = new byte[TotalBlockCount / 2];
-                    }
-
-                    return new SectionData(bitsPerBlock, palette, data, blockLights, skyLights);
                 }
 
                 internal static void Write(MinecraftProtocolDataStream buffer, SectionData sectionData)
                 {
-                    byte bitCount = sectionData._bitsPerBlock;
-                    buffer.WriteByte(bitCount);
+                    System.Diagnostics.Debug.Assert(buffer != null);
+                    System.Diagnostics.Debug.Assert(sectionData != null);
+
+                    byte bitsPerBlock = sectionData._bitsPerBlock;
+                    buffer.WriteByte(bitsPerBlock);
 
                     (int, int)[] palette = sectionData._palette;
-                    System.Diagnostics.Debug.Assert(palette != null);
-                    if (bitCount == 13)
+                    if (bitsPerBlock == 13)
                     {
+                        System.Diagnostics.Debug.Assert(palette == null);
                         buffer.WriteInt(0, true);
                     }
                     else
                     {
-                        System.Diagnostics.Debug.Assert(bitCount >= 4 && bitCount <= 8);
+                        System.Diagnostics.Debug.Assert(bitsPerBlock >= 4);
+                        System.Diagnostics.Debug.Assert(bitsPerBlock <= 8);
 
+                        System.Diagnostics.Debug.Assert(palette != null);
+                        System.Diagnostics.Debug.Assert(palette.Length > 0);
                         int length = palette.Length;
                         buffer.WriteInt(length, true);
 
@@ -191,7 +351,7 @@ namespace MinecraftServerEngine.Blocks
 
                 internal SectionData(int defaultId)
                 {
-                    _bitsPerBlock = 4;
+                    _bitsPerBlock = MinBitsPerBlock;
 
                     _palette = [(defaultId, TotalBlockCount)];
 
@@ -200,7 +360,7 @@ namespace MinecraftServerEngine.Blocks
                         _data = new ulong[length];
 
                         int i;
-                        ulong value = (ulong)defaultId;
+                        ulong value = 0;
 
                         int start, offset, end;
 
@@ -232,9 +392,12 @@ namespace MinecraftServerEngine.Blocks
                     }
 
                     {
+                        System.Diagnostics.Debug.Assert(TotalBlockCount % 2 == 0);
                         int length = TotalBlockCount / 2;
+                        
                         _blockLights = new byte[length];
                         System.Array.Fill(_blockLights, byte.MaxValue);
+
                         _skyLights = new byte[length];
                         System.Array.Fill(_skyLights, byte.MaxValue);
                     }
@@ -279,15 +442,17 @@ namespace MinecraftServerEngine.Blocks
 
                     value &= mask;
 
+                    System.Diagnostics.Debug.Assert(_bitsPerBlock <= MaxBitsPerBlock);
                     if (_bitsPerBlock == 13)
                     {
+                        System.Diagnostics.Debug.Assert(_palette == null);
+
                         System.Diagnostics.Debug.Assert(value <= int.MaxValue);
                         return (int)value;
                     }
                     else
                     {
                         System.Diagnostics.Debug.Assert(_palette != null);
-
                         (int id, var _) = _palette[value];
                         return id;
                     }
@@ -297,21 +462,23 @@ namespace MinecraftServerEngine.Blocks
                 {
                     System.Diagnostics.Debug.Assert(_disposed == false);
 
-                    System.Diagnostics.Debug.Assert(_palette != null);
                     System.Diagnostics.Debug.Assert(bitsPerBlock > _bitsPerBlock);
 
                     int length = GetDataLengthByBitsPerBlock(bitsPerBlock);
                     var data = new ulong[length];
 
-                    ulong mask = (1UL << bitsPerBlock) - 1UL;
+                    ulong mask = GetBlockIdMask(bitsPerBlock);
 
                     int i;
                     ulong value;
 
                     int start, offset, end;
 
+                    System.Diagnostics.Debug.Assert(_bitsPerBlock <= MaxBitsPerBlock);
                     if (bitsPerBlock == 13)
                     {
+                        System.Diagnostics.Debug.Assert(_palette == null);
+
                         int id;
 
                         for (int y = 0; y < BlocksInHeight; ++y)
@@ -351,7 +518,7 @@ namespace MinecraftServerEngine.Blocks
                                         value = (ulong)id;
 
                                         System.Diagnostics.Debug.Assert(
-                                            (value & ~((1UL << bitsPerBlock) - 1UL)) == 0);
+                                            (value & ~GetBlockIdMask(bitsPerBlock)) == 0);
                                         data[start] |= value << offset;
 
                                         if (start != end)
@@ -367,7 +534,10 @@ namespace MinecraftServerEngine.Blocks
                     }
                     else
                     {
-                        System.Diagnostics.Debug.Assert(bitsPerBlock > 4 && bitsPerBlock <= 8);
+                        System.Diagnostics.Debug.Assert(_palette != null);
+
+                        System.Diagnostics.Debug.Assert(bitsPerBlock > 4);
+                        System.Diagnostics.Debug.Assert(bitsPerBlock <= 8);
 
                         for (int y = 0; y < BlocksInHeight; ++y)
                         {
@@ -402,7 +572,7 @@ namespace MinecraftServerEngine.Blocks
                                         end = ((i + 1) * bitsPerBlock - 1) / _BITS_PER_DATA_UNIT;
 
                                         System.Diagnostics.Debug.Assert(
-                                            (value & ~((1UL << bitsPerBlock) - 1UL)) == 0);
+                                            (value & ~GetBlockIdMask(bitsPerBlock)) == 0);
                                         data[start] |= value << offset;
 
                                         if (start != end)
@@ -426,6 +596,7 @@ namespace MinecraftServerEngine.Blocks
 
                     ulong value;
 
+                    System.Diagnostics.Debug.Assert(_bitsPerBlock <= MaxBitsPerBlock);
                     if (_bitsPerBlock == 13)
                     {
                         System.Diagnostics.Debug.Assert(_palette == null);
@@ -435,7 +606,10 @@ namespace MinecraftServerEngine.Blocks
                     else
                     {
                         System.Diagnostics.Debug.Assert(_palette != null);
-                        System.Diagnostics.Debug.Assert(_bitsPerBlock >= 4 && _bitsPerBlock <= 8);
+                        
+                        System.Diagnostics.Debug.Assert(_bitsPerBlock >= 4);
+                        System.Diagnostics.Debug.Assert(_bitsPerBlock <= 8);
+
                         System.Diagnostics.Debug.Assert(_palette.Length > 0);
 
                         int indexPalette = -1;
@@ -461,47 +635,49 @@ namespace MinecraftServerEngine.Blocks
                         {
                             System.Diagnostics.Debug.Assert(indexPalette == -1);
 
-                            int length = _palette.Length;
-                            int lengthNew = length + 1;
+                            int paletteLength = _palette.Length;
+                            int newPaletteLength = paletteLength + 1;
 
                             byte bitsPerBlock;
-                            if (lengthNew <= 0b_00001111U)
+                            if (newPaletteLength <= 0b_0000_1111U)
                             {
-                                bitsPerBlock = 4;
+                                bitsPerBlock = MinBitsPerBlock;
                             }
-                            else if (lengthNew <= 0b_00011111U)
+                            else if (newPaletteLength <= 0b_0001_1111U)
                             {
                                 bitsPerBlock = 5;
                             }
-                            else if (lengthNew <= 0b_00111111U)
+                            else if (newPaletteLength <= 0b_0011_1111U)
                             {
                                 bitsPerBlock = 6;
                             }
-                            else if (lengthNew <= 0b_01111111U)
+                            else if (newPaletteLength <= 0b_0111_1111U)
                             {
                                 bitsPerBlock = 7;
                             }
-                            else if (lengthNew <= 0b_11111111U)
+                            else if (newPaletteLength <= 0b_1111_1111U)
                             {
                                 bitsPerBlock = 8;
                             }
                             else
                             {
-                                bitsPerBlock = 13;
+                                bitsPerBlock = MaxBitsPerBlock;
                             }
 
+                            System.Diagnostics.Debug.Assert(bitsPerBlock <= MaxBitsPerBlock);
+                            System.Diagnostics.Debug.Assert(bitsPerBlock >= MinBitsPerBlock);
                             if (bitsPerBlock > _bitsPerBlock)
                             {
                                 ExpandData(bitsPerBlock);
                             }
 
                             {
-                                var paletteNew = new (int, int)[lengthNew];
+                                (int, int)[] newPalette = new (int, int)[newPaletteLength];
 
-                                System.Array.Copy(_palette, paletteNew, length);
-                                paletteNew[length] = (id, 1);
+                                System.Array.Copy(_palette, newPalette, paletteLength);
+                                newPalette[paletteLength] = (id, 1);
 
-                                _palette = paletteNew;
+                                _palette = newPalette;
                             }
 
                             if (bitsPerBlock == 13)
@@ -513,7 +689,7 @@ namespace MinecraftServerEngine.Blocks
                                 System.Diagnostics.Debug.Assert(
                                     bitsPerBlock >= 4 && bitsPerBlock <= 8);
 
-                                value = (ulong)length;
+                                value = (ulong)paletteLength;
                             }
 
                         }
@@ -546,7 +722,6 @@ namespace MinecraftServerEngine.Blocks
                         _data[end] = value >> _BITS_PER_DATA_UNIT - offset;
                     }
                 }
-
 
                 public void Dispose()
                 {
