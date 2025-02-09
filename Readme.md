@@ -169,6 +169,9 @@ If disposable objects were used as members of class and struct, they must be dis
 
 - 평면에서 길찾고 움직이는 Entity AI
 
+
+- offline player 를 벽으로 밀어낸뒤 해당 player 가 online 으로 접속하면 벽을 넘어갈수 있음.
+
 ### Done 
 
 - DetermineToDespawnPlayerOnDisconnect 가 동적으로 적용되나 테스트해야됨.
