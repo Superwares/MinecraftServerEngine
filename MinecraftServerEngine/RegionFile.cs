@@ -10,6 +10,7 @@ namespace MinecraftServerEngine
 {
     public sealed class RegionFile : System.IDisposable
     {
+        public const string RegionFileSearchPattern = @"*.mca";
         public const string RegionFilePattern = @"r\.(-?\d+)\.(-?\d+)\.mca$";
 
         private static readonly byte[] EMPTY_CHUNK = new byte[4096];

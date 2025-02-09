@@ -17,16 +17,16 @@ namespace MinecraftServerEngine.Blocks
         private sealed class ChunkData : System.IDisposable
         {
 
-            public const int BlocksPerWidth = MinecraftUnits.BlocksInChunkWidth;
-            public const int BlocksPerHeight = MinecraftUnits.BlocksInChunkHeight;
-            public const int SectionCount = MinecraftUnits.ChunkSectionsInChunkHeight;
+            public const int BlocksInWidth = MinecraftUnits.BlocksInChunkWidth;
+            public const int BlocksInHeight = MinecraftUnits.BlocksInChunkHeight;
+            public const int SectionsInHeight = MinecraftUnits.ChunkSectionsInChunkHeight;
 
             private sealed class SectionData : System.IDisposable
             {
                 private bool _disposed = false;
 
-                public const int BlocksPerWidth = ChunkData.BlocksPerWidth;
-                public const int BlocksPerHeight = MinecraftUnits.BlocksInChunkSectionHeight;
+                public const int BlocksInWidth = MinecraftUnits.BlocksInChunkSectionWidth;
+                public const int BlocksInHeight = MinecraftUnits.BlocksInChunkSectionHeight;
                 public const int TotalBlockCount = MinecraftUnits.BlocksInChunkSection;
 
                 public const byte MaxBitsPerBlock = 13;
@@ -67,13 +67,13 @@ namespace MinecraftServerEngine.Blocks
 
                         int start, offset, end;
 
-                        for (int y = 0; y < BlocksPerHeight; ++y)
+                        for (int y = 0; y < BlocksInHeight; ++y)
                         {
-                            for (int z = 0; z < BlocksPerWidth; ++z)
+                            for (int z = 0; z < BlocksInWidth; ++z)
                             {
-                                for (int x = 0; x < BlocksPerWidth; ++x)
+                                for (int x = 0; x < BlocksInWidth; ++x)
                                 {
-                                    i = (y * BlocksPerHeight + z) * BlocksPerWidth + x;
+                                    i = (y * BlocksInHeight + z) * BlocksInWidth + x;
 
                                     metadata = _data[i / 2];
 
@@ -89,22 +89,6 @@ namespace MinecraftServerEngine.Blocks
                                     byte block = blocks[i];
 
                                     id = (ulong)block << 4 | metadata;
-
-                                    //if (id != 0)
-                                    //{
-                                    //    Block _block = BlockExtensions.ToBlock((int)id, 0);
-                                    //    if (_block == 0)
-                                    //    {
-                                    //        //                                            MyConsole.Warn(
-                                    //        //$"It is not exists block id in this engine. \n" +
-                                    //        //$"\tblock: {block} (0x{block:X}, 0b{System.Convert.ToString(block, 2).PadLeft(MaxBitsPerBlock - MaxMetadataBits, '0')}), \n" +
-                                    //        //$"\tmetadata: {metadata} (0x{metadata:X}, 0b{System.Convert.ToString((long)metadata, 2).PadLeft(MaxMetadataBits, '0')}), \n" +
-                                    //        //$"\tid: {id} 0b{System.Convert.ToString((long)id, 2).PadLeft(MaxBitsPerBlock, '0')})"
-                                    //        //                                                );
-
-                                    //        id = 0;
-                                    //    }
-                                    //}
 
                                     start = i * bitsPerBlock / _BITS_PER_DATA_UNIT;
                                     offset = i * bitsPerBlock % _BITS_PER_DATA_UNIT;
@@ -212,13 +196,13 @@ namespace MinecraftServerEngine.Blocks
 
                         int start, offset, end;
 
-                        for (int y = 0; y < BlocksPerHeight; ++y)
+                        for (int y = 0; y < BlocksInHeight; ++y)
                         {
-                            for (int z = 0; z < BlocksPerWidth; ++z)
+                            for (int z = 0; z < BlocksInWidth; ++z)
                             {
-                                for (int x = 0; x < BlocksPerWidth; ++x)
+                                for (int x = 0; x < BlocksInWidth; ++x)
                                 {
-                                    i = (y * BlocksPerHeight + z) * BlocksPerWidth + x;
+                                    i = (y * BlocksInHeight + z) * BlocksInWidth + x;
 
                                     start = i * _bitsPerBlock / _BITS_PER_DATA_UNIT;
                                     offset = i * _bitsPerBlock % _BITS_PER_DATA_UNIT;
@@ -260,9 +244,9 @@ namespace MinecraftServerEngine.Blocks
                 {
                     System.Diagnostics.Debug.Assert(_disposed == false);
 
-                    System.Diagnostics.Debug.Assert(x >= 0 && x <= BlocksPerWidth);
-                    System.Diagnostics.Debug.Assert(z >= 0 && z <= BlocksPerWidth);
-                    System.Diagnostics.Debug.Assert(y >= 0 && y <= BlocksPerHeight);
+                    System.Diagnostics.Debug.Assert(x >= 0 && x <= BlocksInWidth);
+                    System.Diagnostics.Debug.Assert(z >= 0 && z <= BlocksInWidth);
+                    System.Diagnostics.Debug.Assert(y >= 0 && y <= BlocksInHeight);
 
                     ulong mask = (1UL << _bitsPerBlock) - 1UL;
 
@@ -271,7 +255,7 @@ namespace MinecraftServerEngine.Blocks
 
                     int start, offset, end;
 
-                    i = (y * BlocksPerHeight + z) * BlocksPerWidth + x;
+                    i = (y * BlocksInHeight + z) * BlocksInWidth + x;
                     start = i * _bitsPerBlock / _BITS_PER_DATA_UNIT;
                     offset = i * _bitsPerBlock % _BITS_PER_DATA_UNIT;
                     end = ((i + 1) * _bitsPerBlock - 1) / _BITS_PER_DATA_UNIT;
@@ -322,13 +306,13 @@ namespace MinecraftServerEngine.Blocks
                     {
                         int id;
 
-                        for (int y = 0; y < BlocksPerHeight; ++y)
+                        for (int y = 0; y < BlocksInHeight; ++y)
                         {
-                            for (int z = 0; z < BlocksPerWidth; ++z)
+                            for (int z = 0; z < BlocksInWidth; ++z)
                             {
-                                for (int x = 0; x < BlocksPerWidth; ++x)
+                                for (int x = 0; x < BlocksInWidth; ++x)
                                 {
-                                    i = (y * BlocksPerHeight + z) * BlocksPerWidth + x;
+                                    i = (y * BlocksInHeight + z) * BlocksInWidth + x;
 
                                     {
                                         start = i * _bitsPerBlock / _BITS_PER_DATA_UNIT;
@@ -377,13 +361,13 @@ namespace MinecraftServerEngine.Blocks
                     {
                         System.Diagnostics.Debug.Assert(bitsPerBlock > 4 && bitsPerBlock <= 8);
 
-                        for (int y = 0; y < BlocksPerHeight; ++y)
+                        for (int y = 0; y < BlocksInHeight; ++y)
                         {
-                            for (int z = 0; z < BlocksPerWidth; ++z)
+                            for (int z = 0; z < BlocksInWidth; ++z)
                             {
-                                for (int x = 0; x < BlocksPerWidth; ++x)
+                                for (int x = 0; x < BlocksInWidth; ++x)
                                 {
-                                    i = (y * BlocksPerHeight + z) * BlocksPerWidth + x;
+                                    i = (y * BlocksInHeight + z) * BlocksInWidth + x;
 
                                     {
                                         start = i * _bitsPerBlock / _BITS_PER_DATA_UNIT;
@@ -534,13 +518,13 @@ namespace MinecraftServerEngine.Blocks
                 {
                     System.Diagnostics.Debug.Assert(_disposed == false);
 
-                    System.Diagnostics.Debug.Assert(x >= 0 && x <= BlocksPerWidth);
-                    System.Diagnostics.Debug.Assert(y >= 0 && y <= BlocksPerHeight);
-                    System.Diagnostics.Debug.Assert(z >= 0 && z <= BlocksPerWidth);
+                    System.Diagnostics.Debug.Assert(x >= 0 && x <= BlocksInWidth);
+                    System.Diagnostics.Debug.Assert(y >= 0 && y <= BlocksInHeight);
+                    System.Diagnostics.Debug.Assert(z >= 0 && z <= BlocksInWidth);
 
                     ulong value = MakeValue(id);
 
-                    int i = (y * BlocksPerHeight + z) * BlocksPerWidth + x;
+                    int i = (y * BlocksInHeight + z) * BlocksInWidth + x;
                     int start = i * _bitsPerBlock / _BITS_PER_DATA_UNIT;
                     int offset = i * _bitsPerBlock % _BITS_PER_DATA_UNIT;
                     int end = ((i + 1) * _bitsPerBlock - 1) / _BITS_PER_DATA_UNIT;
@@ -602,9 +586,9 @@ namespace MinecraftServerEngine.Blocks
             {
                 System.Diagnostics.Debug.Assert(sectionList != null);
 
-                SectionData[] sections = new SectionData[SectionCount];
+                SectionData[] sections = new SectionData[SectionsInHeight];
 
-                bool[] prevChecks = new bool[SectionCount];
+                bool[] prevChecks = new bool[SectionsInHeight];
 
                 foreach (NBTTagCompound section in sectionList.Data)
                 {
@@ -628,7 +612,7 @@ namespace MinecraftServerEngine.Blocks
                 using MinecraftProtocolDataStream buffer = new();
 
                 int mask = 0;
-                for (int i = 0; i < SectionCount; ++i)
+                for (int i = 0; i < SectionsInHeight; ++i)
                 {
                     SectionData section = chunkData._sections[i];
                     if (section == null) continue;
@@ -638,9 +622,9 @@ namespace MinecraftServerEngine.Blocks
                 }
 
                 // TODO
-                for (int z = 0; z < BlocksPerWidth; ++z)
+                for (int z = 0; z < BlocksInWidth; ++z)
                 {
-                    for (int x = 0; x < BlocksPerWidth; ++x)
+                    for (int x = 0; x < BlocksInWidth; ++x)
                     {
                         buffer.WriteByte(127);  // Void Biome
                     }
@@ -654,12 +638,12 @@ namespace MinecraftServerEngine.Blocks
                 using MinecraftProtocolDataStream buffer = new();
 
                 int mask = 0;
-                System.Diagnostics.Debug.Assert(SectionCount == 16);
+                System.Diagnostics.Debug.Assert(SectionsInHeight == 16);
 
                 // TODO: biomes
-                for (int z = 0; z < BlocksPerWidth; ++z)
+                for (int z = 0; z < BlocksInWidth; ++z)
                 {
-                    for (int x = 0; x < BlocksPerWidth; ++x)
+                    for (int x = 0; x < BlocksInWidth; ++x)
                     {
                         buffer.WriteByte(127);  // Void Biome
                     }
@@ -671,14 +655,14 @@ namespace MinecraftServerEngine.Blocks
             private ChunkData(SectionData[] sections)
             {
                 System.Diagnostics.Debug.Assert(sections != null);
-                System.Diagnostics.Debug.Assert(sections.Length == SectionCount);
+                System.Diagnostics.Debug.Assert(sections.Length == SectionsInHeight);
 
                 _sections = sections;
             }
 
             public ChunkData()
             {
-                _sections = new SectionData[SectionCount];
+                _sections = new SectionData[SectionsInHeight];
             }
 
             ~ChunkData()
@@ -692,16 +676,16 @@ namespace MinecraftServerEngine.Blocks
             {
                 System.Diagnostics.Debug.Assert(_disposed == false);
 
-                System.Diagnostics.Debug.Assert(x >= 0 && x < BlocksPerWidth);
-                System.Diagnostics.Debug.Assert(z >= 0 && z < BlocksPerWidth);
+                System.Diagnostics.Debug.Assert(x >= 0 && x < BlocksInWidth);
+                System.Diagnostics.Debug.Assert(z >= 0 && z < BlocksInWidth);
 
                 System.Diagnostics.Debug.Assert(y >= 0);
 
-                int ySection = y / SectionData.BlocksPerHeight;
-                System.Diagnostics.Debug.Assert(ySection < SectionCount);
+                int ySection = y / SectionData.BlocksInHeight;
+                System.Diagnostics.Debug.Assert(ySection < SectionsInHeight);
 
-                int yPrime = y - ySection * SectionData.BlocksPerHeight;
-                System.Diagnostics.Debug.Assert(yPrime >= 0 && yPrime < SectionData.BlocksPerHeight);
+                int yPrime = y - ySection * SectionData.BlocksInHeight;
+                System.Diagnostics.Debug.Assert(yPrime >= 0 && yPrime < SectionData.BlocksInHeight);
 
                 SectionData section = _sections[ySection];
                 if (section == null)
@@ -722,22 +706,22 @@ namespace MinecraftServerEngine.Blocks
             {
                 System.Diagnostics.Debug.Assert(_disposed == false);
 
-                System.Diagnostics.Debug.Assert(x >= 0 && x < BlocksPerWidth);
-                System.Diagnostics.Debug.Assert(z >= 0 && z < BlocksPerWidth);
+                System.Diagnostics.Debug.Assert(x >= 0 && x < BlocksInWidth);
+                System.Diagnostics.Debug.Assert(z >= 0 && z < BlocksInWidth);
 
                 if (y < 0)
                 {
                     return defaultId;
                 }
 
-                int ySection = y / SectionData.BlocksPerHeight;
-                if (ySection >= SectionCount)
+                int ySection = y / SectionData.BlocksInHeight;
+                if (ySection >= SectionsInHeight)
                 {
                     return defaultId;
                 }
 
-                int yPrime = y - ySection * SectionData.BlocksPerHeight;
-                System.Diagnostics.Debug.Assert(yPrime >= 0 && yPrime < SectionData.BlocksPerHeight);
+                int yPrime = y - ySection * SectionData.BlocksInHeight;
+                System.Diagnostics.Debug.Assert(yPrime >= 0 && yPrime < SectionData.BlocksInHeight);
 
                 SectionData section = _sections[ySection];
                 if (section == null)
@@ -808,7 +792,7 @@ namespace MinecraftServerEngine.Blocks
 
                 string[] regionFiles = System.IO.Directory.GetFiles(
                     folderPath,
-                    "*.mca",
+                    RegionFile.RegionFileSearchPattern,
                     System.IO.SearchOption.TopDirectoryOnly);
 
                 foreach (string filename in regionFiles)

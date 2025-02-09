@@ -3,7 +3,7 @@
 
 namespace MinecraftServerEngine.Protocols
 {
-    public sealed class ConnectionListener : IConnectionListener
+    public sealed class ConnectionListener : System.IDisposable
     {
         private bool _disposed = false;
 
@@ -11,14 +11,14 @@ namespace MinecraftServerEngine.Protocols
 
         ~ConnectionListener() => System.Diagnostics.Debug.Assert(false);
 
-        public void AddUser(User user)
+        internal void AddUser(User user)
         {
             System.Diagnostics.Debug.Assert(!_disposed);
 
             Users.Enqueue(user);
         }
 
-        public void Accept(World world)
+        internal void Accept(World world)
         {
             System.Diagnostics.Debug.Assert(world != null);
 

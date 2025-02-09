@@ -69,7 +69,7 @@ namespace MinecraftServerEngine.Physics
 
             public override string ToString()
             {
-                return $"( X: {X}, Z: {Z} )";
+                return $"[{X},{Z}]";
             }
 
             public readonly bool Equals(Cell other)
@@ -236,12 +236,12 @@ namespace MinecraftServerEngine.Physics
 
         }
 
+
         private bool _disposed = false;
 
-        private readonly ReadLocker RLocker = new();  // Disposable
-        private readonly Table<Cell, ConcurrentTree<PhysicsObject>> CellToObjects = new();  // Disposable
-
-        private readonly ConcurrentTable<PhysicsObject, Grid> ObjectToGrid = new();  // Disposable
+        private readonly ReadLocker ReadLocker = new();  // Disposable
+        private readonly Table<Cell, ConcurrentTree<PhysicsObject>> _CellToObjects = new();  // Disposable
+        private readonly ConcurrentTable<PhysicsObject, Grid> _ObjectToGrid = new();  // Disposable
 
         public PhysicsWorld() { }
 
@@ -274,12 +274,12 @@ namespace MinecraftServerEngine.Physics
 
             foreach (Cell cell in grid.GetCells())
             {
-                if (!CellToObjects.Contains(cell))
+                if (!_CellToObjects.Contains(cell))
                 {
                     continue;
                 }
 
-                Tree<PhysicsObject> objectsInCell = CellToObjects.Lookup(cell);
+                Tree<PhysicsObject> objectsInCell = _CellToObjects.Lookup(cell);
                 System.Diagnostics.Debug.Assert(objectsInCell != null);
                 foreach (PhysicsObject obj in objectsInCell.GetKeys())
                 {
@@ -332,12 +332,12 @@ namespace MinecraftServerEngine.Physics
 
             foreach (Cell cell in grid.GetCells())
             {
-                if (CellToObjects.Contains(cell) == false)
+                if (_CellToObjects.Contains(cell) == false)
                 {
                     continue;
                 }
 
-                Tree<PhysicsObject> objectsInCell = CellToObjects.Lookup(cell);
+                Tree<PhysicsObject> objectsInCell = _CellToObjects.Lookup(cell);
                 System.Diagnostics.Debug.Assert(objectsInCell != null);
                 foreach (PhysicsObject obj in objectsInCell.GetKeys())
                 {
@@ -388,12 +388,12 @@ namespace MinecraftServerEngine.Physics
 
             foreach (Cell cell in grid.GetCells())
             {
-                if (CellToObjects.Contains(cell) == false)
+                if (_CellToObjects.Contains(cell) == false)
                 {
                     continue;
                 }
 
-                Tree<PhysicsObject> objectsInCell = CellToObjects.Lookup(cell);
+                Tree<PhysicsObject> objectsInCell = _CellToObjects.Lookup(cell);
                 System.Diagnostics.Debug.Assert(objectsInCell != null);
                 foreach (PhysicsObject obj in objectsInCell.GetKeys())
                 {
@@ -435,20 +435,20 @@ namespace MinecraftServerEngine.Physics
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            RLocker.Hold();
+            ReadLocker.Hold();
 
             ConcurrentTree<PhysicsObject> objs;
-            if (!CellToObjects.Contains(cell))
+            if (!_CellToObjects.Contains(cell))
             {
                 objs = new ConcurrentTree<PhysicsObject>();
-                CellToObjects.Insert(cell, objs);
+                _CellToObjects.Insert(cell, objs);
             }
             else
             {
-                objs = CellToObjects.Lookup(cell);
+                objs = _CellToObjects.Lookup(cell);
             }
 
-            RLocker.Release();
+            ReadLocker.Release();
 
             System.Diagnostics.Debug.Assert(objs != null);
             objs.Insert(obj);
@@ -460,8 +460,8 @@ namespace MinecraftServerEngine.Physics
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(CellToObjects.Contains(cell));
-            Tree<PhysicsObject> objs = CellToObjects.Lookup(cell);
+            System.Diagnostics.Debug.Assert(_CellToObjects.Contains(cell));
+            Tree<PhysicsObject> objs = _CellToObjects.Lookup(cell);
 
             System.Diagnostics.Debug.Assert(objs != null);
             objs.Extract(obj);
@@ -488,8 +488,8 @@ namespace MinecraftServerEngine.Physics
                 }
             }
 
-            System.Diagnostics.Debug.Assert(!ObjectToGrid.Contains(obj));
-            ObjectToGrid.Insert(obj, grid);
+            System.Diagnostics.Debug.Assert(!_ObjectToGrid.Contains(obj));
+            _ObjectToGrid.Insert(obj, grid);
         }
 
         private protected void CloseObjectMapping(PhysicsObject obj)
@@ -498,8 +498,8 @@ namespace MinecraftServerEngine.Physics
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            System.Diagnostics.Debug.Assert(ObjectToGrid.Contains(obj));
-            Grid grid = ObjectToGrid.Extract(obj);
+            System.Diagnostics.Debug.Assert(_ObjectToGrid.Contains(obj));
+            Grid grid = _ObjectToGrid.Extract(obj);
 
             if (grid != null)
             {
@@ -518,8 +518,8 @@ namespace MinecraftServerEngine.Physics
 
             BoundingVolume volume = obj.BoundingVolume;
 
-            System.Diagnostics.Debug.Assert(ObjectToGrid.Contains(obj));
-            Grid gridPrev = ObjectToGrid.Extract(obj);
+            System.Diagnostics.Debug.Assert(_ObjectToGrid.Contains(obj));
+            Grid gridPrev = _ObjectToGrid.Extract(obj);
             Grid grid = Grid.Generate(volume);
 
             if (grid != null)
@@ -574,7 +574,7 @@ namespace MinecraftServerEngine.Physics
                 }
             }
 
-            ObjectToGrid.Insert(obj, grid);
+            _ObjectToGrid.Insert(obj, grid);
         }
 
         private protected (BoundingVolume, Vector) IntegrateObject(
@@ -604,10 +604,10 @@ namespace MinecraftServerEngine.Physics
                 if (disposing == true)
                 {
                     // Dispose managed resources.
-                    RLocker.Dispose();
+                    ReadLocker.Dispose();
 
-                    CellToObjects.Dispose();
-                    ObjectToGrid.Dispose();
+                    _CellToObjects.Dispose();
+                    _ObjectToGrid.Dispose();
                 }
 
                 // Call the appropriate methods to clean up
