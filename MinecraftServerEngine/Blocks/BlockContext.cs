@@ -17,20 +17,20 @@ namespace MinecraftServerEngine.Blocks
         private sealed class ChunkData : System.IDisposable
         {
 
-            public const int BlocksInWidth = MinecraftUnits.BlocksInChunkWidth;
-            public const int BlocksInHeight = MinecraftUnits.BlocksInChunkHeight;
-            public const int SectionsInHeight = MinecraftUnits.ChunkSectionsInChunkHeight;
+            internal const int BlocksInWidth = MinecraftUnits.BlocksInChunkWidth;
+            internal const int BlocksInHeight = MinecraftUnits.BlocksInChunkHeight;
+            internal const int SectionsInHeight = MinecraftUnits.ChunkSectionsInChunkHeight;
 
             private sealed class SectionData : System.IDisposable
             {
                 private bool _disposed = false;
 
-                public const int BlocksInWidth = MinecraftUnits.BlocksInChunkSectionWidth;
-                public const int BlocksInHeight = MinecraftUnits.BlocksInChunkSectionHeight;
-                public const int TotalBlockCount = MinecraftUnits.BlocksInChunkSection;
+                internal const int BlocksInWidth = MinecraftUnits.BlocksInChunkSectionWidth;
+                internal const int BlocksInHeight = MinecraftUnits.BlocksInChunkSectionHeight;
+                internal const int TotalBlockCount = MinecraftUnits.BlocksInChunkSection;
 
-                public const byte MaxBitsPerBlock = 13;
-                public const int MaxMetadataBits = 4;
+                internal const byte MaxBitsPerBlock = 13;
+                internal const int MaxMetadataBits = 4;
 
                 private byte _bitsPerBlock;
 
@@ -41,15 +41,21 @@ namespace MinecraftServerEngine.Blocks
 
                 private byte[] _blockLights, _skyLights;
 
-                public static SectionData Load(NBTTagCompound section)
+                internal static SectionData Load(NBTTagCompound section)
                 {
                     byte[] blocks = section.GetNBTTag<NBTTagByteArray>("Blocks").Data;
-                    byte[] _data = section.GetNBTTag<NBTTagByteArray>("Data").Data;
+                    byte[] _data = section.GetNBTTag<NBTTagByteArray>("Data").Data;  // array of metadata
 
                     byte[] skyLights = section.GetNBTTag<NBTTagByteArray>("SkyLight").Data;
                     byte[] blockLights = section.GetNBTTag<NBTTagByteArray>("BlockLight").Data;
 
-                    if (blocks.Length != TotalBlockCount)
+                    if (blocks == null || _data == null)
+                    {
+                        return null;
+                    }
+
+                    System.Diagnostics.Debug.Assert(TotalBlockCount % 2 == 0);
+                    if (blocks.Length != TotalBlockCount || _data.Length != (TotalBlockCount / 2))
                     {
                         return null;
                     }
@@ -108,13 +114,14 @@ namespace MinecraftServerEngine.Blocks
                         }
                     }
 
-
-                    if (skyLights.Length != TotalBlockCount / 2)
+                    System.Diagnostics.Debug.Assert(TotalBlockCount % 2 == 0);
+                    if (skyLights == null || skyLights.Length != TotalBlockCount / 2)
                     {
                         skyLights = new byte[TotalBlockCount / 2];
                     }
 
-                    if (blockLights.Length != TotalBlockCount / 2)
+                    System.Diagnostics.Debug.Assert(TotalBlockCount % 2 == 0);
+                    if (skyLights == null || blockLights.Length != TotalBlockCount / 2)
                     {
                         blockLights = new byte[TotalBlockCount / 2];
                     }
@@ -122,7 +129,7 @@ namespace MinecraftServerEngine.Blocks
                     return new SectionData(bitsPerBlock, palette, data, blockLights, skyLights);
                 }
 
-                public static void Write(MinecraftProtocolDataStream buffer, SectionData sectionData)
+                internal static void Write(MinecraftProtocolDataStream buffer, SectionData sectionData)
                 {
                     byte bitCount = sectionData._bitsPerBlock;
                     buffer.WriteByte(bitCount);
@@ -171,8 +178,8 @@ namespace MinecraftServerEngine.Blocks
                     byte bitsPerBlock,
                     (int, int)[] palette,
                     ulong[] data,
-                    byte[] blockLights,
-                    byte[] skyLights)
+                    byte[] blockLights, byte[] skyLights
+                    )
                 {
                     _bitsPerBlock = bitsPerBlock;
                     _palette = palette;
@@ -181,7 +188,7 @@ namespace MinecraftServerEngine.Blocks
                     _skyLights = skyLights;
                 }
 
-                public SectionData(int defaultId)
+                internal SectionData(int defaultId)
                 {
                     _bitsPerBlock = 4;
 
@@ -240,7 +247,7 @@ namespace MinecraftServerEngine.Blocks
                     Dispose(false);
                 }
 
-                public int GetId(int x, int y, int z)
+                internal int GetId(int x, int y, int z)
                 {
                     System.Diagnostics.Debug.Assert(_disposed == false);
 
@@ -514,7 +521,7 @@ namespace MinecraftServerEngine.Blocks
                     return value;
                 }
 
-                public void SetId(int x, int y, int z, int id)
+                internal void SetId(int x, int y, int z, int id)
                 {
                     System.Diagnostics.Debug.Assert(_disposed == false);
 
@@ -778,11 +785,11 @@ namespace MinecraftServerEngine.Blocks
 
         private bool _disposed = false;
 
-        public static readonly Block DefaultBlock = Block.Air;
+        public const Block DefaultBlock = Block.Air;
 
-        private readonly Table<ChunkLocation, ChunkData> Chunks;  // Disposable
+        private readonly Table<ChunkLocation, ChunkData> _Chunks;  // Disposable
 
-        public static BlockContext LoadWithRegionFiles(string folderPath)
+        internal static BlockContext LoadWithRegionFiles(string folderPath)
         {
             Table<ChunkLocation, ChunkData> chunks = new();
 
@@ -878,12 +885,12 @@ namespace MinecraftServerEngine.Blocks
 
         private BlockContext(Table<ChunkLocation, ChunkData> chunks)
         {
-            Chunks = chunks;
+            _Chunks = chunks;
         }
 
         private BlockContext()
         {
-            Chunks = new Table<ChunkLocation, ChunkData>();
+            _Chunks = new Table<ChunkLocation, ChunkData>();
 
             BlockLocation loc = new(0, 100, 0);
 
@@ -925,7 +932,7 @@ namespace MinecraftServerEngine.Blocks
             ChunkData chunk;
 
             ChunkLocation locChunk = BlockToChunk(loc);
-            if (Chunks.Contains(locChunk) == false)
+            if (_Chunks.Contains(locChunk) == false)
             {
                 if (block == DefaultBlock)
                 {
@@ -933,11 +940,11 @@ namespace MinecraftServerEngine.Blocks
                 }
 
                 chunk = new ChunkData();
-                Chunks.Insert(locChunk, chunk);
+                _Chunks.Insert(locChunk, chunk);
             }
             else
             {
-                chunk = Chunks.Lookup(locChunk);
+                chunk = _Chunks.Lookup(locChunk);
             }
 
             int x = loc.X - (locChunk.X * MinecraftUnits.BlocksInChunkWidth),
@@ -954,13 +961,13 @@ namespace MinecraftServerEngine.Blocks
             }
 
             ChunkLocation locChunk = BlockToChunk(loc);
-            if (Chunks.Contains(locChunk) == false)
+            if (_Chunks.Contains(locChunk) == false)
             {
                 return DefaultBlock;
             }
 
 
-            ChunkData chunk = Chunks.Lookup(locChunk);
+            ChunkData chunk = _Chunks.Lookup(locChunk);
             int x = loc.X - (locChunk.X * MinecraftUnits.BlocksInChunkWidth),
                 y = loc.Y,
                 z = loc.Z - (locChunk.Z * MinecraftUnits.BlocksInChunkWidth);
@@ -1207,9 +1214,9 @@ namespace MinecraftServerEngine.Blocks
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
-            if (Chunks.Contains(loc))
+            if (_Chunks.Contains(loc))
             {
-                ChunkData data = Chunks.Lookup(loc);
+                ChunkData data = _Chunks.Lookup(loc);
                 return ChunkData.Write(data);
             }
             else
@@ -1228,13 +1235,13 @@ namespace MinecraftServerEngine.Blocks
                 if (disposing == true)
                 {
                     // Dispose managed resources.
-                    (ChunkLocation, ChunkData)[] _chunks = Chunks.Flush();
+                    (ChunkLocation, ChunkData)[] _chunks = _Chunks.Flush();
                     for (int i = 0; i < _chunks.Length; ++i)
                     {
                         (var _, ChunkData data) = _chunks[i];
                         data.Dispose();
                     }
-                    Chunks.Dispose();
+                    _Chunks.Dispose();
                 }
 
                 // Call the appropriate methods to clean up
