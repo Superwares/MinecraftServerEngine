@@ -578,14 +578,14 @@ namespace MinecraftServerEngine.Physics
         }
 
         private protected (BoundingVolume, Vector) IntegrateObject(
-            Terrain terrain, PhysicsObject obj)
+            Time dt, Terrain terrain, PhysicsObject obj)
         {
             System.Diagnostics.Debug.Assert(terrain != null);
             System.Diagnostics.Debug.Assert(obj != null);
 
             System.Diagnostics.Debug.Assert(!_disposed);
 
-            return obj.Integrate(terrain);
+            return obj.Integrate(dt, terrain);
         }
 
         public void Dispose()

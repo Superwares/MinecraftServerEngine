@@ -24,6 +24,12 @@ namespace Common
             return new((long)(t.Amount * amount));
         }
 
+        public static Time operator *(double amount, Time t)
+        {
+            // TODO: Assertion of value range
+            return new((long)(t.Amount * amount));
+        }
+
         public static Time operator /(Time t, double amount)
         {
             // TODO: Assertion of value range
@@ -31,6 +37,12 @@ namespace Common
         }
 
         public static Time operator *(Time t, int amount)
+        {
+            // TODO: Assertion of value range
+            return new(t.Amount * amount);
+        }
+
+        public static Time operator *(int amount, Time t)
         {
             // TODO: Assertion of value range
             return new(t.Amount * amount);

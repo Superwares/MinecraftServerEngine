@@ -165,6 +165,7 @@ If disposable objects were used as members of class and struct, they must be dis
 
 
 - offline player 를 밀칠때와 online player를 밀칠때 밀치기 정도가 다름 (중요도 하)
+- 중력 상수 정확히 넣고 검토하기
 
 - 평면에서 길찾고 움직이는 Entity AI
 
