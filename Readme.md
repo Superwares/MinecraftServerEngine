@@ -164,7 +164,10 @@ If disposable objects were used as members of class and struct, they must be dis
 - data sturucture 의 Count -> Length
 	- hashtable, tree 같은 경우는 length 와 count 의 개념이 다르기 때문에 그대로 냅두기.
 
+- offline player 를 계단이나 반블럭으로 밀었을시 올라가야됨. (중요도 상)
+- offline player 를 밀칠때와 online player를 밀칠때 밀치기 정도가 다름 (중요도 하)
 
+- 평면에서 길찾고 움직이는 Entity AI
 
 ### Done 
 

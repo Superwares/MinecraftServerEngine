@@ -89,6 +89,8 @@ namespace TestMinecraftServerApplication
         {
             System.Diagnostics.Debug.Assert(_disposed == false);
 
+            return false;
+
             System.Diagnostics.Debug.Assert(GameContext != null);
             return GameContext.IsStarted == false;
         }
