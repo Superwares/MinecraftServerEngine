@@ -8,12 +8,34 @@ namespace MinecraftServerEngine.Physics
 
     public abstract class Terrain : System.IDisposable
     {
-    
+
         private bool _disposed = false;
+
+        // In minecraft client,
+        // when online, a player cannot be passed through a wall if pushed into a wall,
+        // but if an offline player is pushed into a wall and then reconnects,
+        // the player will pass through the wall, so an error needs to be added.
+        private static double AddError(double t)
+        {
+            System.Diagnostics.Debug.Assert(t <= 1.0D);
+            System.Diagnostics.Debug.Assert(t >= 0.0D);
+
+            if (t > 0.0)
+            {
+                t -= 0.00001;  // error
+            }
+
+            if (t < 0.0)
+            {
+                t = 0.0;
+            }
+
+            return t;
+        }
 
         public Terrain()
         {
-            
+
         }
 
         ~Terrain()
@@ -24,7 +46,7 @@ namespace MinecraftServerEngine.Physics
         }
 
         protected abstract void GenerateBoundingBoxForBlock(
-            Queue<AxisAlignedBoundingBox> queue, 
+            Queue<AxisAlignedBoundingBox> queue,
             AxisAlignedBoundingBox volume);
 
         private Vector ResolveCollisionsOnGround(
@@ -37,7 +59,7 @@ namespace MinecraftServerEngine.Physics
             System.Diagnostics.Debug.Assert(maxStepHeight >= 0.0D);
 
             System.Diagnostics.Debug.Assert(!_disposed);
-            
+
             int axis;
             double t;
 
@@ -68,12 +90,17 @@ namespace MinecraftServerEngine.Physics
                     }
                 }
 
-                if (axis ==  -1)
+                if (axis == -1)
                 {
                     volume.Move(vUp);
                 }
                 else if (axis == 0)
                 {
+                    System.Diagnostics.Debug.Assert(t <= 1.0D);
+                    System.Diagnostics.Debug.Assert(t >= 0.0D);
+
+                    t = AddError(t);
+
                     volume.Move(vUp * t);
                 }
                 else
@@ -109,6 +136,11 @@ namespace MinecraftServerEngine.Physics
                 }
                 else if (axis == 1 || axis == 2)
                 {
+                    System.Diagnostics.Debug.Assert(t <= 1.0D);
+                    System.Diagnostics.Debug.Assert(t >= 0.0D);
+
+                    t = AddError(t);
+
                     volume.Move(v * t);
                 }
                 else
@@ -147,13 +179,18 @@ namespace MinecraftServerEngine.Physics
                 }
                 else if (axis == 0)
                 {
+                    System.Diagnostics.Debug.Assert(t <= 1.0D);
+                    System.Diagnostics.Debug.Assert(t >= 0.0D);
+
+                    t = AddError(t);
+
                     volume.Move(vDown * t);
                 }
                 else
                 {
                     System.Diagnostics.Debug.Assert(false);
                 }
-                
+
             }
 
             return Vector.Zero;
@@ -205,6 +242,9 @@ namespace MinecraftServerEngine.Physics
             System.Diagnostics.Debug.Assert(axis < 3);
             System.Diagnostics.Debug.Assert(t <= 1.0D);
             System.Diagnostics.Debug.Assert(t >= 0.0D);
+
+            t = AddError(t);
+
             Vector vPrime = v * (1 - t);
 
             v = v * t;
@@ -232,8 +272,8 @@ namespace MinecraftServerEngine.Physics
                 System.Diagnostics.Debug.Assert(false);
             }
 
-            return onGround ? 
-                ResolveCollisionsOnGround(queue, volume, maxStepHeight, vPrime) : 
+            return onGround == true ?
+                ResolveCollisionsOnGround(queue, volume, maxStepHeight, vPrime) :
                 ResolveCollisions(queue, volume, maxStepHeight, vPrime);
         }
 
@@ -309,8 +349,11 @@ namespace MinecraftServerEngine.Physics
             }
 
             System.Diagnostics.Debug.Assert(axis < 3);
-            System.Diagnostics.Debug.Assert(t <= 1.0D);
-            System.Diagnostics.Debug.Assert(t >= 0.0D);
+            System.Diagnostics.Debug.Assert(t <= 1.0);
+            System.Diagnostics.Debug.Assert(t >= 0.0);
+
+            t = AddError(t);
+
             v = v * t;
             volume.Move(v);
 
@@ -333,7 +376,7 @@ namespace MinecraftServerEngine.Physics
                 if (disposing == true)
                 {
                     // Dispose managed resources.
-                    
+
                 }
 
                 // Call the appropriate methods to clean up
